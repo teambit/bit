@@ -20,7 +20,6 @@ import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
 import BitMap from '../bit-map';
-import type { ComponentMapFile } from '../bit-map/component-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
@@ -924,7 +923,7 @@ export default class Component {
     return this.fromObject(object);
   }
 
-  static loadFromFileSystem({
+  static async loadFromFileSystem({
     bitDir,
     componentMap,
     id,
@@ -936,7 +935,7 @@ export default class Component {
     id: BitId,
     consumer: Consumer,
     componentFromModel: Component
-  }): Component {
+  }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
@@ -946,10 +945,11 @@ export default class Component {
     let devPackageDependencies;
     let peerPackageDependencies;
     let bitJson = consumerBitJson;
-    const getLoadedFiles = (files: ComponentMapFile[]): SourceFile[] => {
+    const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
-      const filesKeysToDelete = [];
-      files.forEach((file, key) => {
+      await componentMap.trackDirectoryChanges(consumer, id);
+      const filesToDelete = [];
+      componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
           const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
@@ -959,21 +959,19 @@ export default class Component {
         } catch (err) {
           if (!(err instanceof FileSourceNotFound)) throw err;
           logger.warn(`a file ${filePath} will be deleted from bit.map as it does not exist on the file system`);
-          filesKeysToDelete.push(key);
+          filesToDelete.push(file);
         }
       });
-      if (filesKeysToDelete.length && !sourceFiles.length) {
+      if (filesToDelete.length && !sourceFiles.length) {
         throw new MissingFilesFromComponent(id.toString());
       }
-      if (filesKeysToDelete.length) {
-        filesKeysToDelete.forEach(key => files.splice(key, 1));
+      if (filesToDelete.length) {
+        componentMap.removeFiles(filesToDelete);
         bitMap.hasChanged = true;
       }
-
       return sourceFiles;
     };
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
-    const files = componentMap.files;
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
@@ -1008,7 +1006,7 @@ export default class Component {
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
       mainFile: componentMap.mainFile,
-      files: getLoadedFiles(files),
+      files: await getLoadedFiles(),
       dists,
       packageDependencies,
       devPackageDependencies,

@@ -25,12 +25,14 @@ import { BitId } from '../../../bit-id';
 import type { BitIdStr } from '../../../bit-id/bit-id';
 import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME } from '../../../constants';
 import logger from '../../../logger/logger';
-import PathsNotExist from './exceptions/paths-not-exist';
-import MissingComponentIdForImportedComponent from './exceptions/missing-id-imported-component';
-import IncorrectIdForImportedComponent from './exceptions/incorrect-id-imported-component';
-import NoFiles from './exceptions/no-files';
-import DuplicateIds from './exceptions/duplicate-ids';
-import EmptyDirectory from './exceptions/empty-directory';
+import {
+  PathsNotExist,
+  MissingComponentIdForImportedComponent,
+  IncorrectIdForImportedComponent,
+  NoFiles,
+  DuplicateIds,
+  EmptyDirectory
+} from './exceptions';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
@@ -82,9 +84,10 @@ export type AddProps = {
   id?: string,
   main?: PathOsBased,
   namespace?: string,
-  tests: PathOrDSL[],
-  exclude: PathOrDSL[],
-  override: boolean
+  tests?: PathOrDSL[],
+  exclude?: PathOrDSL[],
+  override: boolean,
+  writeToBitMap?: boolean
 };
 
 export default class AddComponents {
@@ -96,7 +99,8 @@ export default class AddComponents {
   namespace: ?string;
   tests: PathOrDSL[];
   exclude: PathOrDSL[];
-  override: boolean;
+  override: boolean; // (default = false) replace the files array or only add files.
+  writeToBitMap: boolean; // (default = true)
   warnings: Object;
   ignoreList: string[];
   gitIgnore: any;
@@ -107,9 +111,10 @@ export default class AddComponents {
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
-    this.tests = addProps.tests;
-    this.exclude = addProps.exclude;
+    this.tests = addProps.tests || [];
+    this.exclude = addProps.exclude || [];
     this.override = addProps.override;
+    this.writeToBitMap = addProps.writeToBitMap !== undefined ? addProps.writeToBitMap : true;
     this.warnings = {};
   }
 
@@ -294,10 +299,6 @@ export default class AddComponents {
     const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
-        const absoluteComponentPath = path.resolve(componentPath);
-        const splitPath = absoluteComponentPath.split(path.sep);
-        const lastDir = splitPath[splitPath.length - 1];
-        const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
 
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
@@ -317,11 +318,16 @@ export default class AddComponents {
         const resolvedMainFile = this._addMainFileToFiles(files);
 
         if (!finalBitId) {
+          const absoluteComponentPath = path.resolve(componentPath);
+          const splitPath = absoluteComponentPath.split(path.sep);
+          const lastDir = splitPath[splitPath.length - 1];
+          const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
           const idFromPath = BitId.getValidBitId(nameSpaceOrDir, lastDir);
           finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
         }
 
-        const trackDir = Object.keys(componentPathsStats).length === 1 ? relativeComponentPath : undefined;
+        const trackDir =
+          Object.keys(componentPathsStats).length === 1 && !this.exclude.length ? relativeComponentPath : undefined;
 
         return { componentId: finalBitId, files, mainFile: resolvedMainFile, trackDir };
       }
@@ -450,7 +456,7 @@ export default class AddComponents {
         if (addedResult) addedComponents.push(addedResult);
       }
     }
-    await this.bitMap.write();
+    if (this.writeToBitMap) await this.bitMap.write();
     return { addedComponents, warnings: this.warnings };
   }
 }

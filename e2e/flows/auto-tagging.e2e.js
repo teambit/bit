@@ -113,6 +113,62 @@ describe('auto tagging functionality', function () {
         expect(result.trim()).to.equal('got is-type v2 and got is-string'); // notice the "v2"
       });
     });
+    describe('with dependents tests failing', () => {
+      let commitOutput;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.importTester('bit.envs/testers/mocha@0.0.4');
+        helper.addNpmPackage('chai', '4.1.2');
+        helper.createFile('utils', 'is-type.js', fixtures.isType);
+        helper.addComponent('utils/is-type.js');
+        helper.createFile('utils', 'is-string.js', fixtures.isString);
+        helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(false));
+
+        helper.addComponentWithOptions('utils/is-string.js', { t: 'utils/is-string.spec.js' });
+        helper.tagAllWithoutMessage('--force'); // is-string tests are failing so it must uses 'force'
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        helper.importComponent('utils/is-type');
+
+        const isTypeFixtureChanged = "module.exports = function isType() { return 'got is-type'; }";
+        helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureChanged); // modify is-type
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('components pending to be tagged automatically');
+      });
+      describe('tagging without --verbose flag', () => {
+        before(() => {
+          try {
+            commitOutput = helper.commitComponent('utils/is-type');
+          } catch (err) {
+            commitOutput = err.toString();
+          }
+        });
+        it('should not auto-tag the dependents', () => {
+          expect(commitOutput).to.have.string("component's tests has failed, please fix them before tagging");
+        });
+      });
+      describe('tagging with --verbose flag', () => {
+        before(() => {
+          try {
+            commitOutput = helper.commitComponent('utils/is-type --verbose');
+          } catch (err) {
+            commitOutput = err.toString() + err.stdout.toString();
+          }
+        });
+        it('should not auto-tag the dependents', () => {
+          expect(commitOutput).to.have.string("component's tests has failed, please fix them before tagging");
+        });
+        it('should display the failing tests results', () => {
+          expect(commitOutput).to.have.string('tests failed');
+          expect(commitOutput).to.have.string(
+            "expected 'got is-type and got is-string' to not equal 'got is-type and got is-string'"
+          );
+        });
+      });
+    });
   });
 
   // todo: this was implemented in https://github.com/teambit/bit/pull/603, remove the 'skip' once merging it.

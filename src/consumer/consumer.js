@@ -308,10 +308,7 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: ?string, verbose?: boolean, dontPrintEnvMsg: boolean) {
-    if (!rawId) {
-      throw new Error('you must specify bit id for importing');
-    } // @TODO - make a normal error message
+  importEnvironment(rawId: string, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     const bitId = BitId.parse(rawId);
     return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
@@ -522,15 +519,9 @@ export default class Consumer {
     );
   }
 
-  async listComponentsForAutoTagging(modifiedComponents: BitId[]) {
+  async listComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<ModelComponent[]> {
     const candidateComponents = await this.candidateComponentsForAutoTagging(modifiedComponents);
     return this.scope.bumpDependenciesVersions(candidateComponents, modifiedComponents, false);
-  }
-
-  async bumpDependenciesVersions(committedComponents: Component[]) {
-    const committedComponentsIds = committedComponents.map(committedComponent => committedComponent.id);
-    const candidateComponents = await this.candidateComponentsForAutoTagging(committedComponentsIds);
-    return this.scope.bumpDependenciesVersions(candidateComponents, committedComponentsIds, true);
   }
 
   /**
@@ -688,7 +679,7 @@ export default class Consumer {
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
     }
-    const committedComponents = await this.scope.putMany({
+    return this.scope.putMany({
       consumerComponents: components,
       message,
       exactVersion,
@@ -697,9 +688,6 @@ export default class Consumer {
       consumer: this,
       verbose
     });
-    const autoUpdatedComponents = await this.bumpDependenciesVersions(committedComponents);
-
-    return { components, autoUpdatedComponents };
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {

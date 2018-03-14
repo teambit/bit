@@ -278,7 +278,7 @@ export default class Scope {
     force: ?boolean,
     consumer: Consumer,
     verbose?: boolean
-  }): Promise<ComponentWithDependencies> {
+  }): Promise<{ components: Component[], autoUpdatedComponents: ComponentModel[] }> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
@@ -302,6 +302,36 @@ export default class Scope {
       throw new CyclicDependencies(e);
     }
 
+    const componentsToTag = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
+    const componentsToTagIds = componentsToTag.map(c => c.id);
+    const componentsToTagIdsLatest = await this.latestVersions(componentsToTagIds, false);
+    const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
+    const autoTagComponents = await this.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
+    // this.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
+    const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.id()));
+    const autoTagConsumerComponents = autoTagComponentsLoaded.components;
+    const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
+
+    logger.debug('scope.putMany: sequentially build all components');
+    await this.buildMultiple(componentsToBuildAndTest, consumer, verbose);
+
+    logger.debug('scope.putMany: sequentially test all components');
+    let testsResults = [];
+    try {
+      testsResults = await this.testMultiple({
+        components: componentsToBuildAndTest,
+        consumer,
+        verbose,
+        rejectOnFailure: !force
+      });
+    } catch (err) {
+      // if force is true, ignore the tests and continue
+      if (!force) {
+        if (!verbose) throw new ComponentSpecsFailed();
+        throw err;
+      }
+    }
+    logger.debug('scope.putMany: sequentially persist all components');
     const getFlattenForDependency = async (dependency, cache) => {
       // Try to get the flatten dependencies from cache
       let flattenedDependencies = cache.get(dependency.id.toString());
@@ -330,7 +360,6 @@ export default class Scope {
 
       return flattenedDependencies;
     };
-
     const getFlattenForComponent = async (consumerComponent, cache, dev = false) => {
       const dependencies = dev ? consumerComponent.devDependencies : consumerComponent.dependencies;
       const flattenedDependenciesP = dependencies.get().map(dependency => getFlattenForDependency(dependency, cache));
@@ -340,28 +369,6 @@ export default class Scope {
       return R.uniqBy(predicate)(flattenedDependencies);
     };
 
-    logger.debug('scope.putMany: sequentially build all components');
-    const componentsToBuild = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
-    await this.buildMultiple(componentsToBuild, consumer, verbose);
-
-    logger.debug('scope.putMany: sequentially test all components');
-    let testsResults = [];
-    try {
-      testsResults = await this.testMultiple({
-        components: componentsToBuild,
-        consumer,
-        verbose,
-        rejectOnFailure: !force
-      });
-    } catch (err) {
-      // if force is true, ignore the tests and continue
-      if (!force) {
-        if (!verbose) throw new ComponentSpecsFailed();
-        throw err;
-      }
-    }
-
-    logger.debug('scope.putMany: sequentially persist all components');
     const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
       const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
       // This happens when there is a dependency which have been already committed
@@ -420,9 +427,11 @@ export default class Scope {
       (promise, func) => promise.then(result => func().then(Array.prototype.concat.bind(result))),
       Promise.resolve([])
     );
+    const taggedIds = components.map(c => c.id);
+    const autoUpdatedComponents = await this.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
     await this.objects.persist();
 
-    return components;
+    return { components, autoUpdatedComponents };
   }
 
   /**
@@ -1130,11 +1139,11 @@ export default class Scope {
     verbose,
     dontPrintEnvMsg
   }: {
-    ids: [{ componentId: BitId, type: string }],
+    ids: [{ componentId: BitId, type?: string }],
     verbose?: boolean,
     dontPrintEnvMsg?: boolean
-  }): Promise<any> {
-    logger.debug(`scope.installEnvironment, ids: ${ids.join(', ')}`);
+  }): Promise<ComponentWithDependencies[]> {
+    logger.debug(`scope.installEnvironment, ids: ${ids.map(id => id.componentId).join(', ')}`);
     const componentsDir = this.getComponentsPath();
     const isolateOpts = {
       writeBitDependencies: false,
@@ -1152,6 +1161,10 @@ export default class Scope {
     const nonExistingEnvsIds = uniqIds.filter((id) => {
       return !this.loadEnvironment(id.componentId, { pathOnly: true });
     });
+    if (!nonExistingEnvsIds.length) {
+      logger.debug('scope.installEnvironment, all environment were successfully loaded, nothing to install');
+      return [];
+    }
 
     const importEnv = async (id) => {
       let concreteId = id.componentId;
@@ -1162,17 +1175,23 @@ export default class Scope {
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       await env.create();
-      const isolatedComponent = await env.isolateComponent(id.componentId, isolateOpts);
-      if (!dontPrintEnvMsg) console.log(chalk.bold.green(`successfully installed the ${id.componentId} ${id.type}`));
+      const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
+      if (!dontPrintEnvMsg) {
+        console.log(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`));
+      }
       return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
   }
 
-  async bumpDependenciesVersions(componentsToUpdate: BitId[], committedComponents: BitId[], persist: boolean) {
+  async bumpDependenciesVersions(
+    componentsToUpdate: BitId[],
+    committedComponents: BitId[],
+    persist: boolean
+  ): Promise<ComponentModel[]> {
     const componentsObjects = await this.sources.getMany(componentsToUpdate);
     const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
-      const component = componentObjects.component;
+      const component: ComponentModel = componentObjects.component;
       if (!component) return null;
       const latestVersion: Version = await component.loadVersion(component.latest(), this.objects);
       let pendingUpdate = false;
@@ -1197,17 +1216,15 @@ export default class Scope {
         }
       });
       if (pendingUpdate) {
-        if (!persist) return componentObjects.component;
+        if (!persist) return component;
         const message = 'bump dependencies versions';
-        return this.sources.putAdditionalVersion(componentObjects.component, latestVersion, message);
+        return this.sources.putAdditionalVersion(component, latestVersion, message);
       }
       return null;
     });
     const updatedComponentsAll = await Promise.all(componentsToUpdateP);
     const updatedComponents = removeNils(updatedComponentsAll);
-    if (!R.isEmpty(updatedComponents) && persist) {
-      await this.objects.persist();
-    }
+
     return updatedComponents;
   }
 
