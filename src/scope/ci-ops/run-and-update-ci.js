@@ -39,9 +39,8 @@ async function runAndUpdateCI({
     await addCIAttrsInTheModel({ startTime });
     return { specsResults: testResults, dists };
   } catch (e) {
-    return addCIAttrsInTheModel({ error: e, startTime }).then(() => {
-      throw e;
-    });
+    await addCIAttrsInTheModel({ error: e, startTime });
+    throw e;
   }
 }
 
