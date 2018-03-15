@@ -17,7 +17,7 @@ export default class CiUpdate extends Command {
     ['k', 'keep', 'keep test environment after run (default false)'],
     ['o', 'output [file]', 'save ci results to file system']
   ];
-  /* changed command to private so bit will not print {"payload":"","headers":{"version":"0.12.10-dev.1"}} when it fails */
+  /* changed command to not private so bit will not print {"payload":"","headers":{"version":"0.12.10-dev.1"}} when it fails */
   private = false;
 
   action(
