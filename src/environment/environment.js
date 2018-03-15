@@ -17,6 +17,7 @@ export type IsolateOptions = {
   npmLinks: ?boolean, // Fix the links to dependencies to be links to the package
   saveDependenciesAsComponents: ?boolean, // import the dependencies as bit components instead of as npm packages
   installPackages: ?boolean, // Install the package dependencies
+  installPeerDependencies: ?boolean, // Install the peer package dependencies
   noPackageJson: ?boolean, // Don't write the package.json
   override: ?boolean, // Override existing files in the folder
   excludeRegistryPrefix: ?boolean, // exclude the registry prefix from the component's name in the package.json
@@ -67,6 +68,7 @@ export default class Environment {
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
+      installPeerDependencies: !!opts.installPackages, // convert to boolean
       addToRootPackageJson: false,
       verbose: opts.verbose,
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,

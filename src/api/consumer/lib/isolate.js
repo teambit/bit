@@ -9,6 +9,7 @@ export type IsolateOptions = {
   writeBitDependencies: ?boolean,
   npmLinks: ?boolean,
   installPackages: ?boolean,
+  installPeerDependencies: ?boolean,
   dist: ?boolean,
   conf: ?boolean,
   noPackageJson: ?boolean,
