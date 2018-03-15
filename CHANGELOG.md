@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - enable running build/test from internal directory of a scope
+- fix exit status when ci-update fails 
 
 ## [0.12.10-dev.1] - 2018-03-14
 
