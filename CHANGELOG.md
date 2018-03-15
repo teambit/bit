@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix catastrophic backtracking when using Regex to find JSDoc
+
 ## [0.12.10-dev.1] - 2018-03-14
 
 - test components candidates for auto-tag before tagging them
