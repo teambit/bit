@@ -58,7 +58,10 @@ function run({
       env
     });
 
-    process.on('exit', () => {
+    child.on('exit', (code, signal) => {
+      if (code !== 0) reject();
+    });
+    process.on('exit', (code, signal) => {
       child.kill('SIGKILL');
     });
 
