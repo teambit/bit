@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.10-dev.2] - 2018-03-15
+
 - fix catastrophic backtracking when using Regex to find JSDoc
 - enable running build/test from internal directory of a scope
 - fix exit status when ci-update fails
-- add option to install peer dependencies in isolated envs
+- add an option to install peer dependencies in isolated envs
 
 ## [0.12.10-dev.1] - 2018-03-14
 
