@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import * as fixtures from '../fixtures/fixtures';
 
 describe('bit export command', function () {
   this.timeout(0);
@@ -332,6 +333,76 @@ describe('bit export command', function () {
     });
     it('should throw an error saying the component was already exported', () => {
       expect(errorOutput.includes('has been already exported')).to.be.true;
+    });
+  });
+
+  describe('remote scope with is-string2 and a dependency is-type with version 0.0.2 only', () => {
+    let output;
+    let remote2;
+    let remote2Path;
+    before(() => {
+      // step1: export is-type and is-string1 both 0.0.1 to remote1
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-string1.js', fixtures.isString);
+      helper.addComponent('utils/is-type.js');
+      helper.addComponent('utils/is-string1.js');
+      helper.tagAllWithoutMessage('', '0.0.1');
+      helper.exportAllComponents();
+
+      // step2: export is-type@0.0.2 and is-string2 to remote1
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type');
+      helper.commitComponent('utils/is-type', undefined, '0.0.2 --force');
+      helper.exportAllComponents();
+      const isType = helper.getRequireBitPath('utils', 'is-type');
+      helper.createFile(
+        'utils',
+        'is-string2.js',
+        `const isType = require('${
+          isType
+        }'); module.exports = function isString() { return isType() +  ' and got is-string'; };`
+      );
+      helper.addComponent('utils/is-string2.js');
+      helper.commitComponent('utils/is-string2');
+      helper.exportAllComponents();
+
+      // step3: export is-string2 to remote2, so then it will have only the 0.0.2 version of the is-type dependency
+      const { scopeName, scopePath } = helper.getNewBareScope();
+      remote2 = scopeName;
+      remote2Path = scopePath;
+      helper.addRemoteScope(scopePath);
+      helper.exportComponent('utils/is-string2', remote2);
+    });
+    it('should have is-type@0.0.2 on that remote', () => {
+      const isType = helper.catComponent(`${helper.remoteScope}/utils/is-type@0.0.2`, remote2Path);
+      expect(isType).to.have.property('files');
+    });
+    it('should not have is-type@0.0.1 on that remote', () => {
+      let isType;
+      try {
+        isType = helper.catComponent(`${helper.remoteScope}/utils/is-type@0.0.1`, remote2Path);
+      } catch (err) {
+        isType = err.toString();
+      }
+      expect(isType).to.have.string('component was not found');
+    });
+    describe('export a component is-string1 with a dependency is-type of version 0.0.1', () => {
+      before(() => {
+        helper.importComponent('utils/is-string1');
+        output = helper.exportComponent('utils/is-string1', remote2);
+      });
+      it('should not throw an error saying it does not have the version 0.0.1 of the dependency', () => {
+        expect(output).to.not.have.string('failed loading version 0.0.1');
+      });
+      it('should show a successful message', () => {
+        expect(output).to.have.string('exported 1 components to scope');
+      });
+      it('should fetch is-type@0.0.1 from remote1', () => {
+        const isType = helper.catComponent(`${helper.remoteScope}/utils/is-type@0.0.1`, remote2Path);
+        expect(isType).to.have.property('files');
+      });
     });
   });
 });
