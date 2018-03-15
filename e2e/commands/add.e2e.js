@@ -375,7 +375,9 @@ describe('bit add command', function () {
     });
     it('Should show component as modified', () => {
       const output = helper.runCmd('bit s');
-      expect(output).to.have.string('modified components\n     > bar/foo');
+      expect(output).to.have.string(
+        'modified components\n(use "bit tag --all [version]" to lock a version with all your changes)\n\n     > bar/foo'
+      );
     });
     it('Should be added to the existing component', () => {
       expect(files).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });

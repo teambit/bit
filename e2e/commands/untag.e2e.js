@@ -54,9 +54,6 @@ describe('bit untag command', function () {
       });
       it('bit status should show the component as staged', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.have.a.string('no new components');
-        expect(output).to.have.a.string('no modified components');
-        expect(output).to.not.have.a.string('no staged components');
         expect(output).to.have.a.string('staged components');
       });
     });

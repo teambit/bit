@@ -50,9 +50,7 @@ describe('peer-dependencies functionality', function () {
       });
       it('should not be shown as modified', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.have.a.string('no new components');
-        expect(output).to.have.a.string('no modified components');
-        expect(output).to.have.a.string('no staged components');
+        expect(output).to.have.a.string('nothing to tag or export');
       });
       describe('and the package.json of the component was changed to remove the peerDependencies', () => {
         before(() => {
@@ -72,7 +70,7 @@ describe('peer-dependencies functionality', function () {
         });
         it('should not be shown as modified', () => {
           const output = helper.runCmd('bit status');
-          expect(output).to.have.a.string('no modified components');
+          expect(output).to.have.a.string('nothing to tag or export');
         });
       });
     });

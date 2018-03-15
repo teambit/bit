@@ -6,7 +6,7 @@ import BitsrcTester, { username } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
-describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
+describe.only('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
@@ -86,7 +86,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      describe('exporting with --eject option', () => {
+      describe.skip('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
         let isStringId;

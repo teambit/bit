@@ -3,12 +3,14 @@ import chalk from 'chalk';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 
 export const missingDependenciesLabels = {
-  missingPackagesDependenciesOnFs: 'missing packages dependencies',
-  missingComponents: 'missing components',
-  untrackedDependencies: 'untracked file dependencies',
-  missingDependenciesOnFs: 'non-existing dependency files',
-  missingLinks: 'missing bind links',
-  relativeComponents: 'relative components (should be absolute)'
+  missingPackagesDependenciesOnFs:
+    'missing packages dependencies (use your package manager to make sure all package dependencies are installed)',
+  missingComponents:
+    'missing components (use "bit import" or your package manager to make sure all components are installed)',
+  untrackedDependencies: 'untracked file dependencies (use "bit add <file>" to track untracked files as components)',
+  missingDependenciesOnFs: 'non-existing dependency files (please make sure all files exists on your workspace)',
+  missingLinks: 'missing links (use "bit link" to build missing component links)',
+  relativeComponents: 'components with relative import statements (please use absolute paths for imported components)'
 };
 
 export default function missingDepsTemplate(components: ConsumerComponent[]) {
