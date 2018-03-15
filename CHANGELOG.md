@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix catastrophic backtracking when using Regex to find JSDoc
+- enable running build/test from internal directory of a scope
 
 ## [0.12.10-dev.1] - 2018-03-14
 
