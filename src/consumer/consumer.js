@@ -276,9 +276,11 @@ export default class Consumer {
         }
         throw err;
       }
+
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
-      component.componentMap = componentMap;
+      // reload component map as it may be changed after calling Component.loadFromFileSystem()
+      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
       component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
