@@ -100,8 +100,8 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string): Object {
-    const result = this.runCmd(`bit cat-component ${id}`);
+  catComponent(id: string, cwd?: string): Object {
+    const result = this.runCmd(`bit cat-component ${id}`, cwd);
     return JSON.parse(result);
   }
 
@@ -270,8 +270,8 @@ export default class Helper {
     return this.runCmd(`bit list ${options}`);
   }
 
-  getNewBareScope() {
-    const scopeName = generateRandomStr();
+  getNewBareScope(scopeNameSuffix?: string = '-remote2') {
+    const scopeName = generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
     this.runCmd('bit init --bare', scopePath);
