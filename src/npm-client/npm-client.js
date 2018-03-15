@@ -6,6 +6,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER } from '../constants';
+import type { PathOsBased } from '../utils/path';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -67,7 +68,8 @@ type installArgs = {
   useWorkspaces: boolean,
   dirs: string[],
   rootDir: ?string, // Used for yarn workspace
-  installRootPackageJson: ?boolean,
+  installRootPackageJson: boolean,
+  installPeerDependencies: boolean,
   verbose: boolean
 };
 
@@ -144,6 +146,78 @@ const _installInOneDirectory = ({
 };
 
 /**
+ * Get peer dependencies for directory
+ * you should run this after you run npm install
+ * internally it uses npm list -j
+ */
+const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
+  const packageManager = DEFAULT_PACKAGE_MANAGER;
+
+  const parsePeers = (deps: Object): Object => {
+    const result = {};
+    R.forEachObjIndexed((dep) => {
+      if (dep.peerMissing) {
+        const name = dep.required.name;
+        const version = dep.required.version;
+        result[name] = version;
+      }
+    }, deps);
+    return result;
+  };
+
+  return execa(packageManager, ['list', '-j'], { cwd: dir })
+    .then((res) => {
+      const resObject = JSON.parse(res.stdout);
+      const peers = parsePeers(resObject.dependencies);
+      return peers;
+    })
+    .catch((err) => {
+      const resObject = JSON.parse(err.stdout);
+      const peers = parsePeers(resObject.dependencies);
+      return peers;
+    });
+};
+
+/**
+ * A wrapper function to call the install
+ * then get the peers
+ * then install the peers
+ */
+const _installInOneDirectoryWithPeerOption = async ({
+  modules = [],
+  packageManager = DEFAULT_PACKAGE_MANAGER,
+  packageManagerArgs = [],
+  packageManagerProcessOptions = {},
+  dir,
+  installPeerDependencies = false,
+  verbose = false
+}): Promise<PackageManagerResults | PackageManagerResults[]> => {
+  const rootDirResults = await _installInOneDirectory({
+    modules,
+    packageManager,
+    packageManagerArgs,
+    packageManagerProcessOptions,
+    dir,
+    installPeerDependencies,
+    verbose
+  });
+
+  if (installPeerDependencies) {
+    const peers = await _getPeerDeps(dir);
+    const peerResults = await _installInOneDirectory({
+      modules: peers,
+      packageManager,
+      packageManagerArgs,
+      packageManagerProcessOptions,
+      dir,
+      verbose
+    });
+    return [rootDirResults, peerResults];
+  }
+  return rootDirResults;
+};
+
+/**
  * when modules is empty, it runs 'npm install' without any package, which installs according to package.json file
  */
 const installAction = async ({
@@ -155,15 +229,17 @@ const installAction = async ({
   dirs = [],
   rootDir,
   installRootPackageJson = false,
+  installPeerDependencies = false,
   verbose = false
 }: installArgs): Promise<PackageManagerResults | PackageManagerResults[]> => {
   if (useWorkspaces && packageManager === 'yarn') {
-    return _installInOneDirectory({
+    await _installInOneDirectoryWithPeerOption({
       modules,
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,
       dir: rootDir,
+      installPeerDependencies,
       verbose
     });
   }
@@ -171,22 +247,36 @@ const installAction = async ({
   const results = [];
   if (installRootPackageJson) {
     // installation of the root package.json has to be completed before installing the sub-directories package.json.
-    const rootDirResults = await _installInOneDirectory({
+    const rootDirResults = await _installInOneDirectoryWithPeerOption({
       modules,
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,
       dir: rootDir,
+      installPeerDependencies,
       verbose
     });
-    results.push(rootDirResults);
+    if (Array.isArray(rootDirResults)) {
+      results.concat(rootDirResults);
+    } else {
+      results.push(rootDirResults);
+    }
   }
 
   const promises = dirs.map(dir =>
-    _installInOneDirectory({ modules, packageManager, packageManagerArgs, packageManagerProcessOptions, dir, verbose })
+    _installInOneDirectoryWithPeerOption({
+      modules,
+      packageManager,
+      packageManagerArgs,
+      packageManagerProcessOptions,
+      dir,
+      installPeerDependencies,
+      verbose
+    })
   );
 
-  return results.concat(await Promise.all(promises));
+  const promisesResults = await Promise.all(promises);
+  return results.concat(R.flatten(promisesResults));
 };
 
 const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) => {

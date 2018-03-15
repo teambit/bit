@@ -660,6 +660,7 @@ export default class Component {
         verbose,
         dist: true,
         installPackages: true,
+        installPeerDependencies: true,
         noPackageJson: false
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');

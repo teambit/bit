@@ -81,6 +81,7 @@ export type IsolateOptions = {
   write_bit_dependencies: ?boolean,
   links: ?boolean,
   install_packages: ?boolean,
+  installPeerDependencies: ?boolean,
   no_package_json: ?boolean,
   override: ?boolean
 };
