@@ -320,6 +320,9 @@ export default class Component {
           const context: Object = {
             componentObject: this.toObject()
           };
+
+          // Change the cwd to make sure we found the needed files
+          process.chdir(componentRoot);
           return compiler.compile(files, rootDistFolder, context);
         })
         .catch((e) => {
@@ -595,7 +598,16 @@ export default class Component {
     }
     logger.debug('Environment components are installed.');
 
-    const run = async (mainFile: PathOsBased, distTestFiles: Dist[], actualTesterFilePath: PathOsBased) => {
+    const run = async (
+      mainFile: PathOsBased,
+      distTestFiles: Dist[],
+      actualTesterFilePath: PathOsBased,
+      cwd?: PathOsBased
+    ) => {
+      // Change the cwd to make sure we found the needed files
+      if (cwd) {
+        process.chdir(cwd);
+      }
       loader.start(BEFORE_RUNNING_SPECS);
       const specsResultsP = distTestFiles.map(async (testFile) => {
         return specsRunner.run({
@@ -637,7 +649,7 @@ export default class Component {
       const testDists = !this.dists.isEmpty()
         ? this.dists.get().filter(dist => dist.test)
         : this.files.filter(file => file.test);
-      return run(this.mainFile, testDists, testerFilePath);
+      return run(this.mainFile, testDists, testerFilePath, consumer.getPath());
     }
 
     const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
