@@ -69,7 +69,7 @@ describe('auto tagging functionality', function () {
         });
         it('the dependent should not be shown as modified after the commit', () => {
           const output = helper.runCmd('bit status');
-          expect(output).to.have.a.string('no modified components');
+          expect(output).to.not.have.a.string('modified components');
         });
       });
     });

@@ -328,5 +328,20 @@ describe('JSDoc Parser', () => {
         expect(doclet.properties[0].description).to.equal('The default values for parties.');
       });
     });
+
+    describe('Doc ending with more than one star', () => {
+      let doclets;
+      before(() => {
+        const file = path.join(__dirname, 'fixtures', 'endWithTwoStars.js');
+        doclets = parser(fs.readFileSync(file).toString());
+        expect(doclets).to.be.an('array');
+      });
+      it('should parse the doc and not hang due to catastrophic backtracking', () => {
+        const doclet = doclets[0];
+        expect(doclet)
+          .to.have.property('description')
+          .that.is.equal('Basic accordion component');
+      });
+    });
   });
 });

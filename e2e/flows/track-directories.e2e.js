@@ -33,8 +33,6 @@ describe('track directories functionality', function () {
       });
       it('bit status should still show the component as new', () => {
         expect(statusOutput).to.have.string('new components');
-        expect(statusOutput).to.have.string('no modified components');
-        expect(statusOutput).to.not.have.string('no new components');
       });
       it('bit status should update bitmap and add the new file', () => {
         const bitMap = helper.readBitMap();
@@ -99,8 +97,6 @@ describe('track directories functionality', function () {
           statusOutput = helper.runCmd('bit status');
         });
         it('bit status should show the component as modified', () => {
-          expect(statusOutput).to.have.string('no new components');
-          expect(statusOutput).to.not.have.string('no modified components');
           expect(statusOutput).to.have.string('modified components');
         });
         it('bit status should update bitmap and add the new file', () => {
@@ -225,8 +221,6 @@ describe('track directories functionality', function () {
         files = bitMap[barFooId].files;
       });
       it('bit status should show the component as modified', () => {
-        expect(statusOutput).to.have.string('no new components');
-        expect(statusOutput).to.not.have.string('no modified components');
         expect(statusOutput).to.have.string('modified components');
         expect(statusOutput).to.have.string('bar/foo');
       });
@@ -251,10 +245,7 @@ describe('track directories functionality', function () {
           statusOutput = helper.runCmd('bit status');
         });
         it('bit status should show the component as staged and not as modified', () => {
-          expect(statusOutput).to.have.string('no new components');
-          expect(statusOutput).to.have.string('no modified components');
           expect(statusOutput).to.have.string('staged components');
-          expect(statusOutput).to.not.have.string('no staged components');
         });
         it('should save both files to the model', () => {
           const barFoo = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);

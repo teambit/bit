@@ -272,15 +272,17 @@ export default class BitMap {
     }
 
     this.components[componentIdStr].validate();
+    this._invalidateCache();
     return this.components[componentIdStr];
   }
 
+  _invalidateCache = () => {
+    this.paths = {};
+  };
+
   _removeFromComponentsArray(componentId: BitIdStr) {
-    const invalidateCache = () => {
-      this.paths = {};
-    };
     delete this.components[componentId];
-    invalidateCache();
+    this._invalidateCache();
   }
 
   removeComponent(id: string | BitId) {

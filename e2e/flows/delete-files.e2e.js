@@ -47,8 +47,6 @@ describe('delete files from a component', function () {
     });
     it('bit status should show the component as modified', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('no new components')).to.be.true;
-      expect(output.includes('no modified components')).to.be.false;
       expect(output.includes('modified components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });

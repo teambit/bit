@@ -276,9 +276,11 @@ export default class Consumer {
         }
         throw err;
       }
+
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
-      component.componentMap = componentMap;
+      // reload component map as it may be changed after calling Component.loadFromFileSystem()
+      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
       component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -571,6 +573,12 @@ export default class Consumer {
             return result;
           }, {});
       };
+
+      // sort the files by 'relativePath' because the order can be changed when adding or renaming
+      // files in bitmap, which affects later on the model.
+      version.files = R.sortBy(R.prop('relativePath'), version.files);
+      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+
       version.packageDependencies = sortObject(version.packageDependencies);
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       // uncomment to easily understand why two components are considered as modified
@@ -707,7 +715,7 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_SEPARATOR);
-    if (pathSplit.length < 3) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+    if (pathSplit.length < 3) throw new Error(`component has an invalid require statement: ${requirePath}`);
 
     const name = pathSplit[pathSplit.length - 1];
     const box = pathSplit[pathSplit.length - 2];

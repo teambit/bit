@@ -26,7 +26,7 @@ describe('support vue files', function () {
       });
       it('should find missing vue dependencies', () => {
         const output = helper.runCmd('bit s');
-        expect(output).to.have.string(' untracked file dependencies:');
+        expect(output).to.have.string(' untracked file dependencies');
         expect(output).to.have.string('UiAutocomplete.vue -> UiAutocompleteSuggestion.vue, UiIcon.vue');
       });
       it('should say that all is resolved', () => {
@@ -43,11 +43,11 @@ describe('support vue files', function () {
       });
       it('should not display that component as modified', () => {
         const output = helper.runCmd('bit s');
-        expect(output.includes('no modified components')).to.be.true;
+        expect(output.includes('modified components')).to.be.false;
       });
       it('should not display that component as staged', () => {
         const output = helper.runCmd('bit s');
-        expect(output.includes('no staged components')).to.be.true;
+        expect(output.includes('staged components')).to.be.false;
       });
     });
     describe('import vue components', () => {
