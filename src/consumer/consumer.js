@@ -573,6 +573,12 @@ export default class Consumer {
             return result;
           }, {});
       };
+
+      // sort the files by 'relativePath' because the order can be changed when adding or renaming
+      // files in bitmap, which affects later on the model.
+      version.files = R.sortBy(R.prop('relativePath'), version.files);
+      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+
       version.packageDependencies = sortObject(version.packageDependencies);
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       // uncomment to easily understand why two components are considered as modified
