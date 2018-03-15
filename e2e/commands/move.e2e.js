@@ -203,7 +203,7 @@ describe('bit move command', function () {
     });
     it('should not recognize the component as modified', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('no modified components')).to.be.true;
+      expect(output.includes('modified components')).to.be.false;
     });
     it('should fix the links and be able to require the component with absolute syntax', () => {
       const appJS = `const barFoo = require('${helper.getRequireBitPath('bar', 'foo')}');

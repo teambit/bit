@@ -1731,10 +1731,7 @@ console.log(barFoo.default());`;
     });
     it('should not show any of the components as new or modified or deleted or staged', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('no new components')).to.be.true;
-      expect(output.includes('no modified components')).to.be.true;
-      expect(output.includes('no staged components')).to.be.true;
-      expect(output.includes('no deleted components')).to.be.true;
+      expect(output.includes('nothing to tag or export')).to.be.true;
     });
     describe('when cloning the project to somewhere else', () => {
       before(() => {
