@@ -58,6 +58,9 @@ function run({
       env
     });
 
+    child.on('exit', (code) => {
+      if (code !== 0) reject();
+    });
     process.on('exit', () => {
       child.kill('SIGKILL');
     });
