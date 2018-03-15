@@ -59,9 +59,28 @@ describe('track directories functionality', function () {
         });
       });
     });
+    describe('creating another file in the same directory and running bit-status from an inner directory', () => {
+      let statusOutput;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('utils/bar', 'foo2.js');
+        statusOutput = helper.runCmd('bit status', path.join(helper.localScopePath, 'utils'));
+      });
+      it('bit status should still show the component as new', () => {
+        expect(statusOutput).to.have.string('new components');
+      });
+      it('bit status should update bitmap and add the new file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('utils/bar');
+        const files = bitMap['utils/bar'].files;
+        expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
+        expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+      });
+    });
     describe('rename the file which is a main file', () => {
       let statusOutput;
       before(() => {
+        helper.getClonedLocalScope(localScope);
         const currentFile = path.join(helper.localScopePath, 'utils/bar/foo.js');
         const newFile = path.join(helper.localScopePath, 'utils/bar/foo2.js');
         fs.moveSync(currentFile, newFile);
