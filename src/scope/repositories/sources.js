@@ -74,7 +74,7 @@ export default class SourceRepository {
     let foundComponent = await this.findComponent(component);
     if (foundComponent instanceof Symlink) {
       const realComponentId = BitId.parse(foundComponent.getRealComponentId());
-      foundComponent = this.findComponent(Component.fromBitId(realComponentId));
+      foundComponent = await this.findComponent(Component.fromBitId(realComponentId));
     }
 
     if (foundComponent && bitId.hasVersion()) {
