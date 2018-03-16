@@ -23,7 +23,6 @@ src/cli/commands/private-cmds/_deprecate-cmd.js
 src/cli/commands/private-cmds/migrate-cmd.js
 src/cli/commands/public-cmds/isolate-cmd.js
 src/cli/commands/public-cmds/log-cmd.js
-src/cli/commands/public-cmds/untag-cmd.js
 src/cli/commands/public-cmds/watch-cmd.js
 src/consumer/bit-json/consumer-bit-json.js
 src/consumer/component/dependencies-resolver.js
