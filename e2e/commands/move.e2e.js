@@ -162,11 +162,11 @@ describe('bit move command', function () {
     });
     it('should update the file path in bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].files[0].relativePath).to.equal('utils/foo.js');
+      expect(bitMap['bar/foo@0.0.1'].files[0].relativePath).to.equal('utils/foo.js');
     });
     it('should update the mainFile of bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo.js');
+      expect(bitMap['bar/foo@0.0.1'].mainFile).to.equal('utils/foo.js');
     });
     it('should recognize the component as modified', () => {
       const output = helper.runCmd('bit status');

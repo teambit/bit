@@ -73,7 +73,6 @@ src/search/serverless-index.js
 src/utils/array/filter-async.js
 src/utils/buffer/from.js
 src/utils/path.js
-src/api/consumer/lib/export.js
 src/api/scope/lib/put.js
 src/bit-id/bit-ids.js
 src/cli/commands/private-cmds/ci-update-cmd.js
