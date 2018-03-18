@@ -472,8 +472,8 @@ export default class Helper {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
-  untrackComponent(id: string = '', cwd: string = this.localScopePath) {
-    return this.runCmd(`bit untrack ${id}`, cwd);
+  untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
+    return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
 
   getFixturesDir() {

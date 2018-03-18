@@ -99,7 +99,7 @@ describe('bit untrack command', function () {
       helper.commitComponent('bar/foo2');
       helper.createFile('bar', 'foo3.js');
       helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
-      helper.untrackComponent();
+      helper.untrackComponent('', true);
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2');
