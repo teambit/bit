@@ -137,7 +137,6 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           );
         }
 
-        componentId = dependency.id.toString();
         destination = relativePath.destinationRelativePath;
 
         depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
