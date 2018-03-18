@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.10-dev.2] - 2018-03-18
+
+- fix track-directory feature when running bit from an inner directory
+- bug fix - promise was not resolved when a component is an instance of Symlink
+
 ## [0.12.10-dev.2] - 2018-03-15
 
 - fix catastrophic backtracking when using Regex to find JSDoc
