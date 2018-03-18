@@ -267,7 +267,9 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
 
           // maybe the dependencies were imported as npm packages
           if (bitDep.startsWith('node_modules')) {
-            const depPath = path.join(consumerPath, bitDep);
+            // Add the root dir in case it exists (to make sure we search for the dependency package json in the correct place)
+            const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
+            const depPath = path.join(basePath, bitDep);
             const packageJson = driver.driver.PackageJson.findPackage(depPath);
             if (packageJson) {
               const depVersion = packageJson.version;
