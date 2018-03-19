@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.13-dev.1] - 2018-03-19
+
+- fix issue with stylus files inside vue-lookup
+
 ## [0.10.12] - 2018-03-12
 
 - insert dependency-resolutions packages code into this repo.
