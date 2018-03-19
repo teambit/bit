@@ -8,12 +8,17 @@ export default class Untrack extends Command {
   name = 'untrack [ids...]';
   description = 'untrack a new component(s)\n  https://docs.bitsrc.io/docs/cli-untrack.html';
   alias = 'u';
-  opts = [];
+  opts = [['a', 'all', 'revert add for all tracked components']];
   loader = true;
   migration = true;
 
-  action([components]: [string[]]): Promise<*> {
-    return untrack(components || []);
+  action([components]: [string[]], { all }: { all: ?boolean }): Promise<*> {
+    if ((!R.isEmpty(components) && all) || (R.isEmpty(components) && !all)) {
+      throw new Error(
+        'you can use either a specific component [id] to untrack a particular component or --all flag to untrack them all'
+      );
+    }
+    return untrack(components || [], all);
   }
 
   report({

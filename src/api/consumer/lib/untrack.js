@@ -5,7 +5,7 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
 
-export default (async function untrack(componentIds: string[]): Promise<Object> {
+export default (async function untrack(componentIds: string[], all: ?boolean): Promise<Object> {
   const untrackedComponents = [];
   const missing = [];
   const unRemovableComponents = [];
@@ -13,7 +13,7 @@ export default (async function untrack(componentIds: string[]): Promise<Object> 
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents(false);
 
-  if (R.isEmpty(componentIds)) {
+  if (all) {
     newComponents.forEach(componentId => consumer.bitMap.removeComponent(componentId));
     await consumer.bitMap.write();
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
