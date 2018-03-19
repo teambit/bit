@@ -12,6 +12,8 @@ import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
 import type { RelativePath } from './dependencies/dependency';
 import type { PathLinux } from '../../utils/path';
+import BitJson from '../bit-json';
+import Dependencies from './dependencies/dependencies';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -120,9 +122,9 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-              componentFromModel.id
-            }`
+            `the auto-generated file ${depFile} should be connected to ${
+              componentId
+            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
           );
         }
         const originallySource: PathLinux = entryComponentMap.originallySharedDir
@@ -422,7 +424,7 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
  * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
  * component.missingDependencies.missingDependenciesOnFs
  */
-export default (async function loadDependenciesForComponent(
+export async function loadDependenciesForComponent(
   component: Component,
   bitDir: string,
   consumer: Consumer,
@@ -530,4 +532,116 @@ export default (async function loadDependenciesForComponent(
   if (!R.isEmpty(missingDependencies)) component.missingDependencies = missingDependencies;
 
   return component;
-});
+}
+
+function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {
+  if (!componentFromModel) return null;
+  const id = componentFromModel
+    .getAllDependencies()
+    .find(dep => dep.id.toStringWithoutVersion() === componentId.toStringWithoutVersion());
+  if (!id) return null;
+  return id.id.toString();
+}
+
+function getIdFromBitJson(bitJson?: BitJson, componentId: BitId): ?string {
+  const getVersion = (): ?string => {
+    if (!bitJson) return null;
+    if (!bitJson.dependencies && !bitJson.devDependencies) return null;
+    if (bitJson.dependencies[componentId.toStringWithoutVersion()]) {
+      return bitJson.dependencies[componentId.toStringWithoutVersion()];
+    }
+    if (bitJson.devDependencies) {
+      return bitJson.devDependencies[componentId.toStringWithoutVersion()];
+    }
+    return null;
+  };
+  const version = getVersion();
+  if (!version) return null;
+  componentId.version = version;
+  return componentId.toString();
+}
+
+function getIdFromPackageJson(consumer: Consumer, component: Component, componentId: BitId): ?string {
+  if (!componentId.scope) return null;
+  const rootDir: PathLinux = component.componentMap.rootDir;
+  const consumerPath = consumer.getPath();
+  const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
+  const packagePath = Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
+  const depPath = path.join(basePath, packagePath);
+  const packageObject = consumer.driver.driver.resolveNodePackage(basePath, depPath);
+  if (!packageObject || R.isEmpty(packageObject)) return null;
+  const packageId = Object.keys(packageObject)[0];
+  componentId.version = packageObject[packageId];
+  return componentId.toString();
+}
+
+/**
+ * cases where dependency version may be different than the model:
+ * 1) user changed bit.json
+ * 2) user changed package.json, either, manually or by npm-install —save.
+ * 3) user updated a dependency with npm without —save.
+ * 4) user imported the dependency with different version causing the bitmap to change.
+ *
+ * Generally, the priority is as follows:
+ * 1) bit.json
+ * 2) package.json
+ * 3) .bitmap
+ * 4) model
+ */
+export async function updateDependenciesVersions(consumer: Consumer, component: Component) {
+  const updateDependencies = async (dependencies: Dependencies) => {
+    dependencies.get().forEach((dependency) => {
+      const id = dependency.id;
+      const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
+      const idFromBitJson = getIdFromBitJson(component.bitJson, id);
+      const idFromPackageJson = getIdFromPackageJson(consumer, component, id);
+      const idFromBitMap = consumer.bitMap.getExistingComponentId(id.toStringWithoutVersion());
+
+      // get from bitJson when it was changed from the model or when there is no model.
+      const getFromBitJsonIfChanged = () => {
+        // eslint-disable-line consistent-return
+        if (!idFromBitJson) return null;
+        if (!idFromModel) return idFromBitJson;
+        if (idFromBitJson !== idFromModel) return idFromBitJson;
+      };
+      // get from packageJson when it was changed from the model or when there is no model.
+      const getFromPackageJsonIfChanged = () => {
+        // eslint-disable-line consistent-return
+        if (!idFromPackageJson) return null;
+        if (!idFromModel) return idFromPackageJson;
+        if (idFromPackageJson !== idFromModel) return idFromPackageJson;
+      };
+      const getFromBitMap = () => {
+        // eslint-disable-line consistent-return
+        if (idFromBitMap) return idFromBitMap;
+      };
+      const getFromModel = () => {
+        // eslint-disable-line consistent-return
+        if (idFromModel) return idFromModel;
+      };
+      const getFromBitJsonOrPackageJson = () => {
+        // eslint-disable-line consistent-return
+        if (idFromBitJson) return idFromBitJson;
+        if (idFromPackageJson) return idFromPackageJson;
+      };
+      const strategies: Function[] = [
+        getFromBitJsonIfChanged,
+        getFromPackageJsonIfChanged,
+        getFromBitMap,
+        getFromModel,
+        getFromBitJsonOrPackageJson
+      ];
+
+      for (const strategy of strategies) {
+        const strategyId = strategy();
+        if (strategyId) {
+          dependency.id.version = BitId.parse(strategyId).version;
+          logger.debug(`found dependency version ${dependency.id.toString()} in strategy ${strategy.name}`);
+          return;
+        }
+      }
+    });
+  };
+  updateDependencies(component.dependencies);
+  updateDependencies(component.devDependencies);
+}

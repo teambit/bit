@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- support updating dependencies versions from bit.json, package.json and bitmap files
 - add all flag to untrack command
 - fix bugs when running bit commands not from the workspace root
 - fix calculation of bit dependency package json resolving

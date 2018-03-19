@@ -36,7 +36,7 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathNormalizeToLinux } from '../utils';
-import loadDependenciesForComponent from './component/dependencies-resolver';
+import { loadDependenciesForComponent, updateDependenciesVersions } from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
@@ -287,7 +287,10 @@ export default class Consumer {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
+      // @todo: check if the files were changed, and if so, skip the next line.
+      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
+      await updateDependenciesVersions(this, component);
+      return component;
     });
 
     const allComponents = [];
@@ -496,9 +499,9 @@ export default class Consumer {
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
       throw new Error(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
+        `could not move the component ${component.id} from ${oldPath} to ${
+          newPath
+        } as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -713,9 +716,9 @@ export default class Consumer {
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
   }
 
-  static getComponentIdFromNodeModulesPath(requirePath, bindingPrefix) {
+  static getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): string {
     requirePath = pathNormalizeToLinux(requirePath);
-    // Temp fix to support old components before the migraion has been running
+    // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
