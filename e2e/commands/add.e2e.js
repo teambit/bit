@@ -180,12 +180,14 @@ describe('bit add command', function () {
     it('Should throw message if adding test files without id', () => {
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'foo2.spec.js');
-      helper.addComponent(path.normalize('bar/foo2.js'));
-      const addCmd = () => helper.addComponent(` -t ${path.normalize('bar/foo2.spec.js')}`);
+      const normalizedPath = path.normalize('bar/foo2.js');
+      helper.addComponent(normalizedPath);
+      const specNormalizedPath = path.normalize('bar/foo2.spec.js');
+      const addCmd = () => helper.addComponent(` -t ${specNormalizedPath}`);
       expect(addCmd).to.throw(
         `Command failed: ${
           helper.bitBin
-        } add  -t bar/foo2.spec.js\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
+        } add  -t ${specNormalizedPath}\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
       );
     });
 
@@ -330,29 +332,32 @@ describe('bit add command', function () {
     it('Should prevent adding a file with invalid keys in namespace', () => {
       let errMsg;
       helper.createComponentBarFoo();
+      const normalizedPath = path.normalize('bar/foo.js');
       try {
-        helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar.f/foo' });
+        helper.addComponentWithOptions(normalizedPath, { i: 'bar.f/foo' });
       } catch (err) {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
         `Command failed: ${
           helper.bitBin
-        } add bar/foo.js -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
+        } add ${normalizedPath} -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it('Should prevent adding a file with invalid keys in ID', () => {
       let errMsg;
       helper.createComponentBarFoo();
+      let normalizedPath;
       try {
-        helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/fo.o' });
+        normalizedPath = path.normalize('bar/foo.js');
+        helper.addComponentWithOptions(normalizedPath, { i: 'bar/fo.o' });
       } catch (err) {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
         `Command failed: ${
           helper.bitBin
-        } add bar/foo.js -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
+        } add ${normalizedPath} -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
@@ -684,17 +689,20 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it('should throw errpr when all files are excluded', () => {
+    it('should throw error when all files are excluded', () => {
       helper.createFile('bar', 'foo1.js');
-      const addCmd = () => helper.addComponentWithOptions(path.normalize('bar/foo1.js'), { e: 'bar/foo1.js' });
-      expect(addCmd).to.throw('warning: no files to add, the following files were ignored: bar/foo1.js');
+      const normalizedPath = path.normalize('bar/foo1.js');
+      const addCmd = () => helper.addComponentWithOptions(normalizedPath, { e: 'bar/foo1.js' });
+      expect(addCmd).to.throw(`warning: no files to add, the following files were ignored: ${normalizedPath}`);
     });
     it('should throw error when main file is excluded', () => {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar', { i: 'bar/foo', e: 'bar/foo1.js', m: 'bar/foo1.js' });
       expect(addCmd).to.throw(
-        "error: a main file bar/foo1.js was not found among the component's files bar/foo2.js. please use 'bit add' --main flag to specify a different main file"
+        `error: a main file bar/foo1.js was not found among the component's files ${path.normalize(
+          'bar/foo2.js'
+        )}. please use 'bit add' --main flag to specify a different main file`
       );
     });
     it('bitMap should only contain bits that have files', () => {
