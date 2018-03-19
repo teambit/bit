@@ -412,7 +412,7 @@ export default class AddComponents {
       this.exclude
     );
     this.ignoreList = [...this.ignoreList, ...resolvedExcludedFiles];
-    this.gitIgnore = ignore().add(resolvedExcludedFiles); // add ignore list
+    this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
 
