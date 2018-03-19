@@ -255,17 +255,16 @@ export default class AddComponents {
         }
         if (fs.existsSync(generatedFile) && !foundFile) {
           const shouldIgnore = this.gitIgnore.ignores(generatedFile);
-          if (!shouldIgnore) {
+          if (shouldIgnore) {
             // check if file is in exclude list
-            files.push({
-              relativePath: pathNormalizeToLinux(generatedFile),
-              test: false,
-              name: path.basename(generatedFile)
-            });
-            mainFile = generatedFile;
-          } else {
             throw new ExcludedMainFile(generatedFile);
           }
+          files.push({
+            relativePath: pathNormalizeToLinux(generatedFile),
+            test: false,
+            name: path.basename(generatedFile)
+          });
+          mainFile = generatedFile;
         }
       });
     }
