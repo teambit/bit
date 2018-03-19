@@ -125,7 +125,7 @@ module.exports._getDependencies = function(config) {
         webpackConfig: config.webpackConfig
       });
     }
-    const dependency = isVue ? dep.dep : dep;
+    const dependency = isVue || dep.dep ? dep.dep : dep;
     if (!result) {
       debug('skipping an empty filepath resolution for partial: ' + dep);
       if (config.nonExistent[config.filename]) {
