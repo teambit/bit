@@ -177,7 +177,7 @@ describe('bit add command', function () {
       expect(files).to.deep.include(expectTestFile);
       expect(files).to.deep.include(expectImplFile);
     });
-    it.only('Should throw message if adding test files without id', () => {
+    it('Should throw message if adding test files without id', () => {
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'foo2.spec.js');
       const normalizedPath = path.normalize('bar/foo2.js');
@@ -329,7 +329,7 @@ describe('bit add command', function () {
       expect(bitMap).to.have.property('bar/foo1');
       expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED');
     });
-    it.only('Should prevent adding a file with invalid keys in namespace', () => {
+    it('Should prevent adding a file with invalid keys in namespace', () => {
       let errMsg;
       helper.createComponentBarFoo();
       const normalizedPath = path.normalize('bar/foo.js');
@@ -344,7 +344,7 @@ describe('bit add command', function () {
         } add ${normalizedPath} -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
-    it.only('Should prevent adding a file with invalid keys in ID', () => {
+    it('Should prevent adding a file with invalid keys in ID', () => {
       let errMsg;
       helper.createComponentBarFoo();
       let normalizedPath;
@@ -689,13 +689,13 @@ describe('bit add command', function () {
     beforeEach(() => {
       helper.reInitLocalScope();
     });
-    it.only('should throw error when all files are excluded', () => {
+    it('should throw error when all files are excluded', () => {
       helper.createFile('bar', 'foo1.js');
       const normalizedPath = path.normalize('bar/foo1.js');
       const addCmd = () => helper.addComponentWithOptions(normalizedPath, { e: 'bar/foo1.js' });
       expect(addCmd).to.throw(`warning: no files to add, the following files were ignored: ${normalizedPath}`);
     });
-    it.only('should throw error when main file is excluded', () => {
+    it('should throw error when main file is excluded', () => {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar', { i: 'bar/foo', e: 'bar/foo1.js', m: 'bar/foo1.js' });
