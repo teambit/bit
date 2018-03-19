@@ -837,7 +837,8 @@ export default class Consumer {
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       await Consumer.create(currentPath).then(consumer => consumer.write());
     }
-    const scopeP = Scope.load(Consumer.locateProjectScope(projectPath));
+    const scopePath = Consumer.locateProjectScope(projectPath);
+    const scopeP = Scope.load(scopePath);
     const bitJsonP = ConsumerBitJson.load(projectPath);
     return Promise.all([scopeP, bitJsonP]).then(
       ([scope, bitJson]) =>
