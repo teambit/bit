@@ -1,4 +1,4 @@
-// @flow
+/** @flow */
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
@@ -406,6 +406,13 @@ export default class AddComponents {
     const resolvedComponentPathsWithoutGitIgnore = R.flatten(
       await Promise.all(this.componentPaths.map(componentPath => glob(componentPath)))
     );
+    /** add excluded list to gitignore to remove excluded files from list */
+    const resolvedExcludedFiles = await this.getFilesAccordingToDsl(
+      resolvedComponentPathsWithoutGitIgnore,
+      this.exclude
+    );
+    this.ignoreList = [...this.ignoreList, ...resolvedExcludedFiles];
+    this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
 
