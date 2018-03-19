@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased
 
 - add all flag to untrack command
+- fix bugs when running bit commands not from the workspace root
 - fix calculation of bit dependency package json resolving
 - add main file to file list if not specified
 
