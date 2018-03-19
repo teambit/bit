@@ -620,7 +620,18 @@ describe('bit add command', function () {
       }
       expect(errMsg).to.have.string('Please wrap excluded files with quotes');
     });
-
+    // TODO: we need to implement the feature preventing -e without wrapping in quotes.
+    it('Should throw error when  main file is excluded', () => {
+      let errMsg = '';
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo2.js');
+      try {
+        helper.runCmd('bit add bar/*.js -e bar/foo2.js -m bar/foo2.js');
+      } catch (err) {
+        errMsg = err.message;
+      }
+      expect(errMsg).to.have.string('error: main file bar/foo2.js was excluded from file list');
+    });
     it('Should modify bitmap when adding component again when specifing id', () => {
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'index.js');
@@ -693,9 +704,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar', { i: 'bar/foo', e: 'bar/foo1.js', m: 'bar/foo1.js' });
-      expect(addCmd).to.throw(
-        "error: a main file bar/foo1.js was not found among the component's files bar/foo2.js. please use 'bit add' --main flag to specify a different main file"
-      );
+      expect(addCmd).to.throw('error: main file bar/foo1.js was excluded from file list');
     });
     it('bitMap should only contain bits that have files', () => {
       helper.createFile('bar', 'foo1.js');
