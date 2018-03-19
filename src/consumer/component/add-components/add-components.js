@@ -275,6 +275,14 @@ export default class AddComponents {
     if (fs.existsSync(mainPath)) {
       const shouldIgnore = this.gitIgnore.ignores(mainFileRelativeToConsumer);
       if (shouldIgnore) throw new ExcludedMainFile(mainFileRelativeToConsumer);
+      const foundFile = R.find(R.propEq('relativePath', mainFileRelativeToConsumer))(files);
+      if (!foundFile) {
+        files.push({
+          relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
+          test: false,
+          name: path.basename(mainFileRelativeToConsumer)
+        });
+      }
       return mainFileRelativeToConsumer;
     }
     return mainFile;
