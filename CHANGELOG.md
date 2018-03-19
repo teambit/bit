@@ -5,8 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [unreleased
 
+- add all flag to untrack command
+- fix bugs when running bit commands not from the workspace root
 - fix calculation of bit dependency package json resolving
 
 ## [0.12.10-dev.2] - 2018-03-18

@@ -24,7 +24,7 @@ function composeBitJsonPath(path: string) {
  */
 export function pathHasConsumer(path: string) {
   return (
-    (fs.existsSync(composeBitHiddenDirPath(path)) || composeBitGitHiddenDirPath(path)) &&
+    (fs.existsSync(composeBitHiddenDirPath(path)) || fs.existsSync(composeBitGitHiddenDirPath(path))) &&
     fs.existsSync(composeBitJsonPath(path))
   );
 }
