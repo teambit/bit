@@ -2,6 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
+import semver from 'semver';
 import { COMPONENT_ORIGINS } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
@@ -571,7 +572,9 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   const packageObject = consumer.driver.driver.resolveNodePackage(basePath, depPath);
   if (!packageObject || R.isEmpty(packageObject)) return null;
   const packageId = Object.keys(packageObject)[0];
-  componentId.version = packageObject[packageId];
+  const version = packageObject[packageId];
+  if (!semver.valid(version)) return null; // it's probably a relative path to the component
+  componentId.version = version.replace(/[^1-9.]/g, ''); // allow only numbers and dots to get an exact version
   return componentId.toString();
 }
 
