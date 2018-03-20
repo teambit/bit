@@ -576,6 +576,7 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   const packagePath = Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
   const packageName = packagePath.replace(`node_modules${path.sep}`, '');
   const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
+  if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
   const packageObject = consumer.driver.driver.resolveNodePackage(basePath, modulePath);
   if (!packageObject || R.isEmpty(packageObject)) return null;
   const packageId = Object.keys(packageObject)[0];
