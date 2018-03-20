@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- ignore files named 'LICENSE'
+
 ## [0.12.10-dev.4] - 2018-03-20
 
 - support updating dependencies versions from bit.json, package.json and bitmap files

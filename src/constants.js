@@ -52,7 +52,8 @@ export const IGNORE_LIST = [
   '**/node_modules/**',
   '**/package.json',
   '**/package-lock.json',
-  '**/yarn.lock'
+  '**/yarn.lock',
+  '**/LICENSE'
 ];
 
 export const COMPONENT_ORIGINS = {
