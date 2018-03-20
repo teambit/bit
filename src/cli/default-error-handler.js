@@ -53,7 +53,8 @@ import {
   DuplicateIds,
   NoFiles,
   EmptyDirectory,
-  MissingComponentIdForImportedComponent
+  MissingComponentIdForImportedComponent,
+  ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
@@ -167,6 +168,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
         err.files.join(', ')
       )}. please use 'bit add' --main flag to specify a different main file`
   ],
+  [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [
     MissingFilesFromComponent,
     (err) => {
