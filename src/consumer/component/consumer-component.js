@@ -411,10 +411,8 @@ export default class Component {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
 
-    const componentId = !this.scope && this.version ? this.id.cloneNoVersion() : this.id;
-
     return bitMap.addComponent({
-      componentId,
+      componentId: this.id,
       files: filesForBitMap,
       mainFile: this.mainFile,
       rootDir,

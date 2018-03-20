@@ -586,6 +586,17 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   return componentId.toString();
 }
 
+function getIdFromBitMap(consumer: Consumer, component: Component, componentId: BitId): ?string {
+  const componentMap: ComponentMap = component.componentMap;
+  if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
+    const dependencyId = componentMap.dependencies.find(
+      dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
+    );
+    if (dependencyId) return dependencyId;
+  }
+  return consumer.bitMap.getExistingComponentId(componentId.toStringWithoutVersion());
+}
+
 /**
  * The dependency version is determined by the following strategies by this order.
  * 1) if bit.json is different than the model, use bit.json
@@ -611,7 +622,7 @@ export async function updateDependenciesVersions(consumer: Consumer, component: 
       const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
       const idFromBitJson = getIdFromBitJson(component.bitJson, id);
       const idFromPackageJson = getIdFromPackageJson(consumer, component, id);
-      const idFromBitMap = consumer.bitMap.getExistingComponentId(id.toStringWithoutVersion());
+      const idFromBitMap = getIdFromBitMap(consumer, component, id);
 
       // get from bitJson when it was changed from the model or when there is no model.
       const getFromBitJsonIfChanged = () => {

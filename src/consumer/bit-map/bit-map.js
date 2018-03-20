@@ -44,8 +44,8 @@ export default class BitMap {
 
   setComponent(id: string, componentMap: ComponentMap) {
     const bitId = BitId.parse(id);
-    if (bitId.hasVersion() && !bitId.scope) {
-      throw new Error(`invalid bitmap id ${id}, a component must have a scope name when a version is included`);
+    if (!bitId.hasVersion() && bitId.scope) {
+      throw new Error(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
     this.components[id] = componentMap;
   }
@@ -348,7 +348,7 @@ export default class BitMap {
     }
     const olderComponentId = olderComponentsIds[0];
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
-    this.components[newIdString] = this.components[olderComponentId];
+    this.setComponent(newIdString, this.components[olderComponentId]);
 
     // update the dependencies array if needed
     Object.keys(this.components).forEach((componentId) => {

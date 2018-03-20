@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import * as fixtures from '../fixtures/fixtures';
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
@@ -21,7 +22,6 @@ describe('bit use command', function () {
       expect(output).to.have.string('error: component "utils/non-exist" was not found');
     });
   });
-
   describe('after the component was created', () => {
     before(() => {
       helper.createComponentBarFoo(barFooV1);
@@ -57,18 +57,87 @@ describe('bit use command', function () {
             helper.tagAllWithoutMessage('', '0.0.10');
             output = helper.runWithTryCatch('bit use 0.0.5 bar/foo');
           });
-          it.only('should display a successful message', () => {
+          it('should display a successful message', () => {
             expect(output).to.have.string('the following components were switched to version');
             expect(output).to.have.string('0.0.5');
             expect(output).to.have.string('bar/foo');
           });
           it('should revert to v1', () => {
             const fooContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js'));
-            expect(fooContent).to.equal(barFooV1);
+            expect(fooContent.toString()).to.equal(barFooV1);
           });
-          it('should not change the bitmap', () => {});
-          it('should not show the component as modified', () => {});
+          it('should update bitmap with the used version', () => {
+            const bitMap = helper.readBitMap();
+            expect(bitMap).to.have.property('bar/foo@0.0.5');
+            expect(bitMap).to.not.have.property('bar/foo');
+            expect(bitMap).to.not.have.property('bar/foo@0.0.10');
+          });
+          it('should not show the component as modified', () => {
+            const statusOutput = helper.runCmd('bit status');
+            expect(statusOutput).to.not.have.string('modified components');
+          });
         });
+      });
+    });
+  });
+  describe('components with dependencies with multiple versions', () => {
+    let localScope;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.addComponent('utils/is-type.js');
+      helper.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.addComponent('utils/is-string.js');
+      helper.createComponentBarFoo(fixtures.barFooFixture);
+      helper.addComponentBarFoo();
+      helper.commitAllComponents();
+
+      helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+      helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
+      helper.createComponentBarFoo(fixtures.barFooFixtureV2);
+      helper.commitAllComponents();
+
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+      localScope = helper.cloneLocalScope();
+    });
+    it('as an intermediate step, make sure all components have v2', () => {
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
+    });
+    describe('switching to a previous version of the main component', () => {
+      let output;
+      let bitMap;
+      before(() => {
+        output = helper.runCmd('bit use 0.0.1 bar/foo');
+        bitMap = helper.readBitMap();
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should write the files of that version for the main component and its dependencies', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('should update bitmap of the main component with the used version', () => {
+        expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+        expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@0.0.2`);
+      });
+      it('should add the dependencies to bitmap with their old versions in addition to the current versions', () => {
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.2`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
+      });
+      it('should not show any component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.not.have.string('modified components');
       });
     });
   });
