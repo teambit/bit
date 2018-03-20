@@ -562,14 +562,21 @@ function getIdFromBitJson(bitJson?: BitJson, componentId: BitId): ?string {
   return componentId.toString();
 }
 
+/**
+ * the logic of finding the dependency version in the package.json is mostly done in the driver
+ * resolveNodePackage method.
+ * it first searches in the dependent package.json and propagate up to the consumer root, if not
+ * found it goes to the dependency package.json.
+ */
 function getIdFromPackageJson(consumer: Consumer, component: Component, componentId: BitId): ?string {
   if (!componentId.scope) return null;
   const rootDir: PathLinux = component.componentMap.rootDir;
   const consumerPath = consumer.getPath();
   const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
   const packagePath = Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
-  const depPath = path.join(basePath, packagePath);
-  const packageObject = consumer.driver.driver.resolveNodePackage(basePath, depPath);
+  const packageName = packagePath.replace(`node_modules${path.sep}`, '');
+  const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
+  const packageObject = consumer.driver.driver.resolveNodePackage(basePath, modulePath);
   if (!packageObject || R.isEmpty(packageObject)) return null;
   const packageId = Object.keys(packageObject)[0];
   const version = packageObject[packageId];
@@ -602,30 +609,30 @@ export async function updateDependenciesVersions(consumer: Consumer, component: 
 
       // get from bitJson when it was changed from the model or when there is no model.
       const getFromBitJsonIfChanged = () => {
-        // eslint-disable-line consistent-return
         if (!idFromBitJson) return null;
         if (!idFromModel) return idFromBitJson;
         if (idFromBitJson !== idFromModel) return idFromBitJson;
+        return null;
       };
       // get from packageJson when it was changed from the model or when there is no model.
       const getFromPackageJsonIfChanged = () => {
-        // eslint-disable-line consistent-return
         if (!idFromPackageJson) return null;
         if (!idFromModel) return idFromPackageJson;
         if (idFromPackageJson !== idFromModel) return idFromPackageJson;
+        return null;
       };
       const getFromBitMap = () => {
-        // eslint-disable-line consistent-return
         if (idFromBitMap) return idFromBitMap;
+        return null;
       };
       const getFromModel = () => {
-        // eslint-disable-line consistent-return
         if (idFromModel) return idFromModel;
+        return null;
       };
       const getFromBitJsonOrPackageJson = () => {
-        // eslint-disable-line consistent-return
         if (idFromBitJson) return idFromBitJson;
         if (idFromPackageJson) return idFromPackageJson;
+        return null;
       };
       const strategies: Function[] = [
         getFromBitJsonIfChanged,
