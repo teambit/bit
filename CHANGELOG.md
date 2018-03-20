@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased
 
 - ignore files named 'LICENSE'
+- fix bug with resolving authored dep version
 
 ## [0.12.10-dev.4] - 2018-03-20
 
