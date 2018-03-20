@@ -574,7 +574,7 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   const packageId = Object.keys(packageObject)[0];
   const version = packageObject[packageId];
   if (!semver.valid(version)) return null; // it's probably a relative path to the component
-  componentId.version = version.replace(/[^1-9.]/g, ''); // allow only numbers and dots to get an exact version
+  componentId.version = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
   return componentId.toString();
 }
 
