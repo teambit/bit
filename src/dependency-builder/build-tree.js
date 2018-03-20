@@ -84,7 +84,7 @@ const byType = (list, bindingPrefix) => {
  * @param {any} packageFullPath full path to the package
  * @returns {Object} name and version of the package
  */
-function resolveNodePackage(cwd, packageFullPath) {
+export function resolveNodePackage(cwd: string, packageFullPath: string): Object {
   const NODE_MODULES = 'node_modules';
   const result = {};
   // Start by searching in the component dir and up from there
@@ -371,7 +371,7 @@ function updateTreeWithLinkFilesAndImportSpecifiers(tree: Tree, pathMap: PathMap
  * @param bindingPrefix
  * @return {Promise<{missing, tree}>}
  */
-export default async function getDependencyTree(baseDir: string, consumerPath: string, filePaths: string[], bindingPrefix: string): Promise<{ missing: Object, tree: Tree}> {
+export async function getDependencyTree(baseDir: string, consumerPath: string, filePaths: string[], bindingPrefix: string): Promise<{ missing: Object, tree: Tree}> {
   const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [] };
   const result = generateTree(filePaths, config);
   const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath, bindingPrefix);
