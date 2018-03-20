@@ -54,6 +54,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compilerId?: ?BitId,
   testerId?: ?BitId,
+  bitJson?: BitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
@@ -80,6 +81,7 @@ export default class Component {
   mainFile: PathOsBased;
   compilerId: ?BitId;
   testerId: ?BitId;
+  bitJson: ?BitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   flattenedDevDependencies: BitIds;
@@ -157,6 +159,7 @@ export default class Component {
     mainFile,
     compilerId,
     testerId,
+    bitJson,
     dependencies,
     devDependencies,
     flattenedDependencies,
@@ -181,6 +184,7 @@ export default class Component {
     this.mainFile = path.normalize(mainFile);
     this.compilerId = compilerId;
     this.testerId = testerId;
+    this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
@@ -1011,6 +1015,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
+      bitJson,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       dists,

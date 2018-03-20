@@ -105,9 +105,8 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  writeBitJson(bitJson: Object) {
-    const bitJsonPath = path.join(this.localScopePath, 'bit.json');
-    return fs.writeJSONSync(bitJsonPath, bitJson);
+  writeBitJson(bitJson: Object, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
 
   readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bitmap'), withoutComment: boolean = true) {
