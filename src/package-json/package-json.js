@@ -121,8 +121,15 @@ export default class PackageJson {
 
   static async load(componentRootFolder: string, throwError: boolean = true): Promise<PackageJson> {
     const composedPath = composePath(componentRootFolder);
-    if(!PackageJson.hasExisting(componentRootFolder, throwError)) return null;
+    if (!PackageJson.hasExisting(componentRootFolder, throwError)) return null;
     const componentJsonObject = await fs.readJson(composedPath);
+    return new PackageJson(componentRootFolder, componentJsonObject);
+  }
+
+  static loadSync(componentRootFolder: string, throwError: boolean = true): PackageJson {
+    const composedPath = composePath(componentRootFolder);
+    if (!PackageJson.hasExisting(componentRootFolder, throwError)) return null;
+    const componentJsonObject = fs.readJsonSync(composedPath);
     return new PackageJson(componentRootFolder, componentJsonObject);
   }
 
