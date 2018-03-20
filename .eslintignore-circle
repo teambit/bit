@@ -135,3 +135,4 @@ e2e/e2e-helper.js
 src/consumer/component/consumer-component.js
 src/scope/scope.js
 src/api/consumer/lib/global-config.js
+e2e/flows/dependencies-versions-resolution.e2e.js
