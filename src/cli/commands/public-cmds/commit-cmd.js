@@ -104,13 +104,13 @@ export default class Export extends Command {
   report(results): string {
     if (!results) return chalk.yellow('nothing to tag');
     const {
-      components,
-      autoUpdatedComponents,
+      taggedComponents,
+      autoTaggedComponents,
       warnings,
       newComponents
     }: {
-      components: Component[],
-      autoUpdatedComponents: ModelComponent[],
+      taggedComponents: Component[],
+      autoTaggedComponents: ModelComponent[],
       warnings: string[],
       newComponents: string[]
     } = results;
@@ -135,29 +135,25 @@ export default class Export extends Command {
     }
 
     // send only non new components to changed components compare
-    const changedComponents = components.filter(
+    const changedComponents = taggedComponents.filter(
       component => !newComponents.includes(component.id.toStringWithoutVersion())
     );
-    const addedComponents = components.filter(component =>
+    const addedComponents = taggedComponents.filter(component =>
       newComponents.includes(component.id.toStringWithoutVersion())
     );
-    const autoUpdatedCount = autoUpdatedComponents ? autoUpdatedComponents.length : 0;
+    const autoTaggedCount = autoTaggedComponents ? autoTaggedComponents.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';
 
     return (
       warningsOutput +
-      chalk.green(`${components.length + autoUpdatedCount} components tagged`) +
+      chalk.green(`${taggedComponents.length + autoTaggedCount} components tagged`) +
       chalk.gray(
-        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoUpdatedCount} auto-tagged`
+        ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoTaggedCount} auto-tagged`
       ) +
       outputIfExists(addedComponents, 'added components: ', true) +
       outputIfExists(changedComponents, 'changed components: ', true) +
-      outputIfExists(
-        autoUpdatedComponents,
-        'auto-tagged components (as a result of tagging their dependencies): ',
-        true
-      )
+      outputIfExists(autoTaggedComponents, 'auto-tagged components (as a result of tagging their dependencies): ', true)
     );
   }
 }

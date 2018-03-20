@@ -33,7 +33,7 @@ describe('delete files from a component', function () {
     });
     it('should delete the file from bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].files.length).to.equal(1);
+      expect(bitMap['bar/foo@0.0.1'].files.length).to.equal(1);
     });
   });
   describe('commit and then delete a file', () => {
@@ -63,7 +63,7 @@ describe('delete files from a component', function () {
     });
     it('should delete the file from bit.map', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap['bar/foo'].files.length).to.equal(1);
+      expect(bitMap['bar/foo@0.0.2'].files.length).to.equal(1);
     });
     it('should not show the deleted file in bit show command', () => {
       const output = helper.showComponent('bar/foo');

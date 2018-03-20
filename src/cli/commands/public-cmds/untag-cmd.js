@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
-import { unTagAction, unTagAllAction } from '../../../api/consumer';
+import { unTagAction } from '../../../api/consumer';
+import type { untagResult } from '../../../scope/component-ops/untag-component';
 
 const chalk = require('chalk');
 
@@ -15,19 +16,19 @@ export default class Untag extends Command {
   loader = true;
   migration = true;
 
-  action([id, version]: string[], { all, force }: { all: ?boolean, force: ?boolean }): Promise<any> {
+  action([id, version]: string[], { all, force }: { all: ?boolean, force: ?boolean }): Promise<untagResult[]> {
     if (!id && !all) {
       throw new Error('please specify a component ID or use --all flag');
     }
 
     if (all) {
       version = id;
-      return unTagAllAction(version, force);
+      return unTagAction(version, force);
     }
-    return unTagAction(id, version, force);
+    return unTagAction(version, force, id);
   }
 
-  report(results): string {
+  report(results: untagResult[]): string {
     const title = chalk.green(`${results.length} component(s) were untagged:\n`);
     const components = results.map((result) => {
       return `${chalk.cyan(result.id.toStringWithoutVersion())}. version(s): ${result.versions.join(', ')}`;

@@ -4,6 +4,8 @@ import ComponentModel from '../models/component';
 import logger from '../../logger/logger';
 import { Scope } from '..';
 
+export type untagResult = { id: BitId, versions: string[], component: ComponentModel };
+
 /**
  * If not specified version, remove all local versions.
  */
@@ -12,7 +14,7 @@ export async function removeLocalVersion(
   id: BitId,
   version?: string,
   force?: boolean = false
-): Promise<{ id: BitId, versions: string[] }> {
+): Promise<untagResult> {
   const component: ComponentModel = await scope.getComponentModel(id);
   const localVersions = component.getLocalVersions();
   if (!localVersions.length) return Promise.reject(`unable to untag ${id}, the component is not staged`);
@@ -49,10 +51,14 @@ export async function removeLocalVersion(
     await component.remove(scope.objects);
   }
 
-  return { id, versions: versionsToRemove };
+  return { id, versions: versionsToRemove, component };
 }
 
-export async function removeLocalVersionsForAllComponents(scope: Scope, version?: string, force?: boolean = false) {
+export async function removeLocalVersionsForAllComponents(
+  scope: Scope,
+  version?: string,
+  force?: boolean = false
+): Promise<untagResult[]> {
   const components = await scope.objects.listComponents(false);
   const candidateComponents = components.filter((component: ComponentModel) => {
     const localVersions = component.getLocalVersions();

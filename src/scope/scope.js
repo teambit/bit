@@ -281,7 +281,7 @@ export default class Scope {
     force: ?boolean,
     consumer: Consumer,
     verbose?: boolean
-  }): Promise<{ components: Component[], autoUpdatedComponents: ComponentModel[] }> {
+  }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
@@ -431,10 +431,10 @@ export default class Scope {
       Promise.resolve([])
     );
     const taggedIds = components.map(c => c.id);
-    const autoUpdatedComponents = await this.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
+    const autoTaggedComponents = await this.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
     await this.objects.persist();
 
-    return { components, autoUpdatedComponents };
+    return { taggedComponents: components, autoTaggedComponents };
   }
 
   /**

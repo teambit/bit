@@ -655,17 +655,8 @@ export default class Consumer {
            `
         );
       }
-
-      const latestVersionFromModel = componentFromModel.latest();
-      // Consider the following two scenarios:
-      // 1) a user tagged v1, exported, then tagged v2.
-      //    to check whether the component is modified, we've to compare FS to the v2 of the model, not v1.
-      // 2) a user imported v1 of a component from a remote, when the latest version on the remote is v2.
-      //    to check whether the component is modified, we've to compare FS to the v1 of the model, not v2.
-      //    @see reduce-path.e2e 'importing v1 of a component when a component has v2' to reproduce this case.
-      const version = status.staged ? latestVersionFromModel : versionFromFs;
-      const versionRef = componentFromModel.versions[version];
-      if (!versionRef) throw new Error(`version ${version} was not found in ${id}`);
+      const versionRef = componentFromModel.versions[versionFromFs];
+      if (!versionRef) throw new Error(`version ${versionFromFs} was not found in ${id}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;
@@ -676,7 +667,7 @@ export default class Consumer {
     return this._componentsStatusCache[id.toString()];
   }
 
-  async commit(
+  async tag(
     ids: BitId[],
     message: string,
     exactVersion: ?string,
@@ -684,7 +675,7 @@ export default class Consumer {
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean
-  ): Promise<{ components: Component[], autoUpdatedComponents: ModelComponent[] }> {
+  ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
@@ -696,7 +687,7 @@ export default class Consumer {
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
     }
-    return this.scope.putMany({
+    const { taggedComponents, autoTaggedComponents } = await this.scope.putMany({
       consumerComponents: components,
       message,
       exactVersion,
@@ -705,6 +696,17 @@ export default class Consumer {
       consumer: this,
       verbose
     });
+
+    // update bitmap
+    taggedComponents.forEach(component => this.bitMap.updateComponentId(component.id));
+    autoTaggedComponents.forEach((component) => {
+      const id = component.toBitId();
+      id.version = component.latest();
+      this.bitMap.updateComponentId(id);
+    });
+    await this.bitMap.write();
+
+    return { taggedComponents, autoTaggedComponents };
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {

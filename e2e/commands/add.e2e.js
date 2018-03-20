@@ -374,7 +374,8 @@ describe('bit add command', function () {
       helper.tagAllWithoutMessage();
       helper.addComponentWithOptions('bar/boo1.js', { i: 'bar/foo' });
       bitMap = helper.readBitMap();
-      files = bitMap['bar/foo'].files;
+      expect(bitMap).to.have.property('bar/foo@0.0.1'); // should not change the component ID
+      files = bitMap['bar/foo@0.0.1'].files;
     });
     it('Should show component as modified', () => {
       const output = helper.runCmd('bit s');
@@ -386,9 +387,6 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
       expect(files).to.be.ofSize(2);
       expect(bitMap).to.not.have.property('bar/boo1');
-    });
-    it('Should not change the component ID', () => {
-      expect(bitMap).to.have.property('bar/foo');
     });
   });
   describe('add multiple components', () => {
