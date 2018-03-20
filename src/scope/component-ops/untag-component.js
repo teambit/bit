@@ -67,7 +67,7 @@ export async function removeLocalVersionsForAllComponents(
   });
   if (!candidateComponents.length) {
     const versionOutput = version ? `${version} ` : '';
-    return Promise.reject(`No components found with local version ${versionOutput}to untag`);
+    return Promise.reject(`no components found with version ${versionOutput}to untag on your workspace`);
   }
 
   // if no version is given, there is risk of deleting dependencies version without their dependents.
