@@ -120,8 +120,8 @@ describe('track directories functionality', function () {
         });
         it('bit status should update bitmap and add the new file', () => {
           const bitMap = helper.readBitMap();
-          expect(bitMap).to.have.property('utils/bar');
-          const files = bitMap['utils/bar'].files;
+          expect(bitMap).to.have.property('utils/bar@0.0.1');
+          const files = bitMap['utils/bar@0.0.1'].files;
           expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
           expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
         });

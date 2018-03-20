@@ -71,7 +71,7 @@ describe('bit remove command', function () {
       assert.pathExists(path.join(helper.localScopePath, 'utils', 'is-type.js'), 'file should  exist');
     });
   });
-  describe('with commited components and -t=true', () => {
+  describe('with committed components and -t=true', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
@@ -81,7 +81,7 @@ describe('bit remove command', function () {
     });
     it('should  show in bitmap', () => {
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo');
+      expect(bitMap).to.have.property('bar/foo@0.0.1');
     });
     it('removed component should  be in new component', () => {
       const listOutput = helper.listLocalScope();

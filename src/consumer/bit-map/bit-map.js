@@ -316,8 +316,8 @@ export default class BitMap {
   }
 
   /**
-   * needed after exporting a component.
-   * We don't support export of nested components, only authored or imported. For authored/imported components, could be
+   * needed after exporting or tagging a component.
+   * We don't support export/tag of nested components, only authored or imported. For authored/imported components, could be
    * in the file-system only one instance with the same box-name and component-name. As a result, we can strip the
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
@@ -341,6 +341,15 @@ export default class BitMap {
     const olderComponentId = olderComponentsIds[0];
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
     this.components[newIdString] = this.components[olderComponentId];
+
+    // update the dependencies array if needed
+    Object.keys(this.components).forEach((componentId) => {
+      const component = this.components[componentId];
+      if (component.dependencies && component.dependencies.includes(olderComponentId)) {
+        component.dependencies = component.dependencies.filter(dependency => dependency !== olderComponentId);
+        component.dependencies.push(newIdString);
+      }
+    });
     this._removeFromComponentsArray(olderComponentId);
   }
 
