@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+## [0.12.10-dev.4] - 2018-03-20
+
 - support updating dependencies versions from bit.json, package.json and bitmap files
 - add all flag to untrack command
 - fix bugs when running bit commands not from the workspace root
@@ -14,7 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix issue with stylus dependencies from vue files
 - add main file to file list if not specified
 
-## [0.12.10-dev.2] - 2018-03-18
+## [0.12.10-dev.3] - 2018-03-18
 
 - fix track-directory feature when running bit from an inner directory
 - bug fix - promise was not resolved when a component is an instance of Symlink
