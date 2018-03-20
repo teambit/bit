@@ -1,6 +1,7 @@
-import { getDependencyTree, resolveNodePackage } from './build-tree';
+import { getDependencyTree, resolveNodePackage, resolveModulePath } from './build-tree';
 
 export {
   resolveNodePackage,
+  resolveModulePath,
   getDependencyTree
 };

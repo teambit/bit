@@ -168,7 +168,7 @@ function resolvePackageNameByPath(packagePath) {
 }
 
 /**
- * Recursivly search for node module inside node_modules dir
+ * Recursively search for node module inside node_modules dir
  * This function propegate up until it get's to the root provided then stops
  *
  * @param {string} nmPath - package name
@@ -176,7 +176,7 @@ function resolvePackageNameByPath(packagePath) {
  * @param {string} root - path to dir to stop the search
  * @returns The resolved path for the package directory
  */
-function resolveModulePath(nmPath, workingDir, root) {
+export function resolveModulePath(nmPath: string, workingDir: string, root: string) {
   const pathToCheck = path.resolve(workingDir, 'node_modules', nmPath);
 
   if (fs.existsSync(pathToCheck)) {

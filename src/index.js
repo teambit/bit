@@ -1,6 +1,6 @@
 import 'regenerator-runtime/runtime';
 // import { bindAction, bindSpecificComponentsAction } from './actions';
-import { getDependencyTree, resolveNodePackage } from './dependency-builder';
+import { getDependencyTree, resolveNodePackage, resolveModulePath } from './dependency-builder';
 import PackageJson from './package-json/package-json';
 
 // const lifecycleHooks = {
@@ -18,6 +18,7 @@ module.exports = {
   // bindSpecificComponents: bindSpecificComponentsAction,
   getDependencyTree,
   resolveNodePackage,
+  resolveModulePath,
   PackageJson
 };
 
