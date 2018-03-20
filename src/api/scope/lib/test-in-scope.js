@@ -4,6 +4,7 @@ import { BitId } from '../../../bit-id';
 import { loadScope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
+import SpecsResults from '../../../consumer/specs-results';
 
 export default function testInScope({
   id,
@@ -11,17 +12,15 @@ export default function testInScope({
   verbose, // gets called during CI, verbose is always true
   scopePath,
   directory,
-  keep,
-  isCI = true
+  keep
 }: {
   id: string,
   save?: ?boolean,
   verbose?: ?boolean,
   scopePath: string,
   directory?: string,
-  keep?: boolean,
-  isCI?: boolean
-}) {
+  keep?: boolean
+}): Promise<?SpecsResults> {
   logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
     return loadScope(scopePath || process.cwd())
@@ -34,8 +33,7 @@ export default function testInScope({
           verbose,
           isolated: true,
           directory,
-          keep,
-          isCI
+          keep
         });
       })
       .catch(e => Promise.reject(e));
@@ -49,8 +47,7 @@ export default function testInScope({
         bitId,
         save,
         verbose,
-        isolated: true,
-        isCI
+        isolated: true
       });
     });
   }

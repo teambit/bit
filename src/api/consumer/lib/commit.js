@@ -29,7 +29,7 @@ export async function commitAction(args: {
     const componentStatus = await consumer.getComponentStatusById(BitId.parse(id));
     if (componentStatus.modified === false) return null;
   }
-  const commitResults = await consumer.commit(
+  const commitResults = await consumer.tag(
     [id],
     message,
     validExactVersion,
@@ -90,7 +90,7 @@ export async function commitAllAction(args: {
     includeImported
   );
   if (R.isEmpty(commitPendingComponents)) return null;
-  const commitResults = await consumer.commit(
+  const commitResults = await consumer.tag(
     commitPendingComponents,
     message,
     validExactVersion,

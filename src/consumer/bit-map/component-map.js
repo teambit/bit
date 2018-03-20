@@ -192,11 +192,14 @@ export default class ComponentMap {
   async trackDirectoryChanges(consumer: Consumer, id: BitId) {
     const trackDir = this.getTrackDir();
     if (trackDir) {
+      const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
+      const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
       const addParams = {
-        componentPaths: [trackDir],
+        componentPaths: [trackDirRelative || '.'],
         id: id.toString(),
         override: false, // this makes sure to not override existing files of componentMap
-        writeToBitMap: false
+        writeToBitMap: false,
+        origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
       const addComponents = new AddComponents(consumer, addParams);

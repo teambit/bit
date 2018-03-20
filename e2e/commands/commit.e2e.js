@@ -535,7 +535,9 @@ describe('bit tag command', function () {
     });
     it('should not tag and throw an error regarding the relative syntax', () => {
       expect(output).to.have.string('error: issues found with the following component dependencies');
-      expect(output).to.have.string('relative components (should be absolute):');
+      expect(output).to.have.string(
+        'components with relative import statements (please use absolute paths for imported components)'
+      );
       expect(output).to.have.string(`${helper.remoteScope}/utils/is-type@0.0.1`);
     });
   });
@@ -708,8 +710,10 @@ describe('bit tag command', function () {
       };
       const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
-      expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
-      expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
+      expect(dependencies.find(dep => dep.id === 'utils/is-string@0.0.1').relativePaths[0]).to.deep.equal(
+        depPathsIsString
+      );
+      expect(dependencies.find(dep => dep.id === 'utils/is-type@0.0.1').relativePaths[0]).to.deep.equal(depPathsIsType);
     });
 
     it('should add dependencies for non-main files regardless whether they are required from the main file', () => {
@@ -740,8 +744,10 @@ describe('bit tag command', function () {
       };
       const depPathsIsType = { sourceRelativePath: 'utils/is-type.js', destinationRelativePath: 'utils/is-type.js' };
 
-      expect(dependencies.find(dep => dep.id === 'utils/is-string').relativePaths[0]).to.deep.equal(depPathsIsString);
-      expect(dependencies.find(dep => dep.id === 'utils/is-type').relativePaths[0]).to.deep.equal(depPathsIsType);
+      expect(dependencies.find(dep => dep.id === 'utils/is-string@0.0.1').relativePaths[0]).to.deep.equal(
+        depPathsIsString
+      );
+      expect(dependencies.find(dep => dep.id === 'utils/is-type@0.0.1').relativePaths[0]).to.deep.equal(depPathsIsType);
     });
 
     it.skip('should persist all models in the scope', () => {});
@@ -762,7 +768,7 @@ describe('bit tag command', function () {
       helper.deleteFile('bar/foo.js');
       helper.commitAllComponents();
       const bitMap = helper.readBitMap();
-      const files = bitMap['bar/foo'].files;
+      const files = bitMap['bar/foo@0.0.1'].files;
       expect(files).to.be.ofSize(1);
       expect(files[0].name).to.equal('index.js');
     });

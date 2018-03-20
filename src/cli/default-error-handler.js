@@ -53,7 +53,8 @@ import {
   DuplicateIds,
   NoFiles,
   EmptyDirectory,
-  MissingComponentIdForImportedComponent
+  MissingComponentIdForImportedComponent,
+  ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
@@ -123,7 +124,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
-  [ScopeNotFound, () => 'error: scope not found. to create a new scope, please use `bit init --bare`'],
+  [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
   [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
   [
     BuildException,
@@ -167,6 +168,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
         err.files.join(', ')
       )}. please use 'bit add' --main flag to specify a different main file`
   ],
+  [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [
     MissingFilesFromComponent,
     (err) => {

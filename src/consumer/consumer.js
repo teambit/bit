@@ -36,7 +36,7 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathNormalizeToLinux } from '../utils';
-import loadDependenciesForComponent from './component/dependencies-resolver';
+import { loadDependenciesForComponent, updateDependenciesVersions } from './component/dependencies-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
@@ -276,16 +276,21 @@ export default class Consumer {
         }
         throw err;
       }
+
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
-      component.componentMap = componentMap;
+      // reload component map as it may be changed after calling Component.loadFromFileSystem()
+      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
       component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
       }
-      return loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
+      // @todo: check if the files were changed, and if so, skip the next line.
+      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
+      await updateDependenciesVersions(this, component);
+      return component;
     });
 
     const allComponents = [];
@@ -347,6 +352,7 @@ export default class Consumer {
     writeDists = true,
     saveDependenciesAsComponents = false,
     installNpmPackages = true,
+    installPeerDependencies = false,
     addToRootPackageJson = true,
     verbose = false, // display the npm output
     excludeRegistryPrefix = false
@@ -362,6 +368,7 @@ export default class Consumer {
     writeDists?: boolean,
     saveDependenciesAsComponents?: boolean, // as opposed to npm packages
     installNpmPackages?: boolean,
+    installPeerDependencies?: boolean,
     addToRootPackageJson?: boolean,
     verbose?: boolean,
     excludeRegistryPrefix?: boolean
@@ -469,7 +476,13 @@ export default class Consumer {
 
     await this.bitMap.write();
     if (installNpmPackages) {
-      await installNpmPackagesForComponents(this, componentsWithDependencies, verbose, silentPackageManagerResult);
+      await installNpmPackagesForComponents(
+        this,
+        componentsWithDependencies,
+        verbose,
+        silentPackageManagerResult,
+        installPeerDependencies
+      );
     }
     if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
 
@@ -542,8 +555,6 @@ export default class Consumer {
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
       // sometime dependencies from the FS don't have an exact version.
-      // in case of auto-tag, the files can be identical between the model and the FS, but the dependency version would
-      // be different. We don't want to show the component as modified in such cases, so copy the version from the model
       const copyDependenciesVersionsFromModelToFS = (dev = false) => {
         const dependenciesFS = dev ? version.devDependencies : version.dependencies;
         const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
@@ -552,7 +563,7 @@ export default class Consumer {
           const dependencyFromModel = dependenciesModel
             .get()
             .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
-          if (dependencyFromModel) {
+          if (dependencyFromModel && !dependency.id.hasVersion()) {
             dependency.id = dependencyFromModel.id;
           }
         });
@@ -571,6 +582,12 @@ export default class Consumer {
             return result;
           }, {});
       };
+
+      // sort the files by 'relativePath' because the order can be changed when adding or renaming
+      // files in bitmap, which affects later on the model.
+      version.files = R.sortBy(R.prop('relativePath'), version.files);
+      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+
       version.packageDependencies = sortObject(version.packageDependencies);
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       // uncomment to easily understand why two components are considered as modified
@@ -638,17 +655,8 @@ export default class Consumer {
            `
         );
       }
-
-      const latestVersionFromModel = componentFromModel.latest();
-      // Consider the following two scenarios:
-      // 1) a user tagged v1, exported, then tagged v2.
-      //    to check whether the component is modified, we've to compare FS to the v2 of the model, not v1.
-      // 2) a user imported v1 of a component from a remote, when the latest version on the remote is v2.
-      //    to check whether the component is modified, we've to compare FS to the v1 of the model, not v2.
-      //    @see reduce-path.e2e 'importing v1 of a component when a component has v2' to reproduce this case.
-      const version = status.staged ? latestVersionFromModel : versionFromFs;
-      const versionRef = componentFromModel.versions[version];
-      if (!versionRef) throw new Error(`version ${version} was not found in ${id}`);
+      const versionRef = componentFromModel.versions[versionFromFs];
+      if (!versionRef) throw new Error(`version ${versionFromFs} was not found in ${id}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;
@@ -659,7 +667,7 @@ export default class Consumer {
     return this._componentsStatusCache[id.toString()];
   }
 
-  async commit(
+  async tag(
     ids: BitId[],
     message: string,
     exactVersion: ?string,
@@ -667,7 +675,7 @@ export default class Consumer {
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean
-  ): Promise<{ components: Component[], autoUpdatedComponents: ModelComponent[] }> {
+  ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
@@ -679,7 +687,7 @@ export default class Consumer {
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
     }
-    return this.scope.putMany({
+    const { taggedComponents, autoTaggedComponents } = await this.scope.putMany({
       consumerComponents: components,
       message,
       exactVersion,
@@ -688,6 +696,17 @@ export default class Consumer {
       consumer: this,
       verbose
     });
+
+    // update bitmap
+    taggedComponents.forEach(component => this.bitMap.updateComponentId(component.id));
+    autoTaggedComponents.forEach((component) => {
+      const id = component.toBitId();
+      id.version = component.latest();
+      this.bitMap.updateComponentId(id);
+    });
+    await this.bitMap.write();
+
+    return { taggedComponents, autoTaggedComponents };
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
@@ -697,9 +716,9 @@ export default class Consumer {
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
   }
 
-  static getComponentIdFromNodeModulesPath(requirePath, bindingPrefix) {
+  static getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): string {
     requirePath = pathNormalizeToLinux(requirePath);
-    // Temp fix to support old components before the migraion has been running
+    // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
@@ -707,7 +726,7 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_SEPARATOR);
-    if (pathSplit.length < 3) throw new Error(`require statement ${requirePath} of the bit component is invalid`);
+    if (pathSplit.length < 3) throw new Error(`component has an invalid require statement: ${requirePath}`);
 
     const name = pathSplit[pathSplit.length - 1];
     const box = pathSplit[pathSplit.length - 2];
@@ -821,7 +840,8 @@ export default class Consumer {
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       await Consumer.create(currentPath).then(consumer => consumer.write());
     }
-    const scopeP = Scope.load(Consumer.locateProjectScope(projectPath));
+    const scopePath = Consumer.locateProjectScope(projectPath);
+    const scopeP = Scope.load(scopePath);
     const bitJsonP = ConsumerBitJson.load(projectPath);
     return Promise.all([scopeP, bitJsonP]).then(
       ([scope, bitJson]) =>

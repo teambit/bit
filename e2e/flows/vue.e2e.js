@@ -26,7 +26,7 @@ describe('support vue files', function () {
       });
       it('should find missing vue dependencies', () => {
         const output = helper.runCmd('bit s');
-        expect(output).to.have.string(' untracked file dependencies:');
+        expect(output).to.have.string(' untracked file dependencies');
         expect(output).to.have.string('UiAutocomplete.vue -> UiAutocompleteSuggestion.vue, UiIcon.vue');
       });
       it('should say that all is resolved', () => {
@@ -43,11 +43,47 @@ describe('support vue files', function () {
       });
       it('should not display that component as modified', () => {
         const output = helper.runCmd('bit s');
-        expect(output.includes('no modified components')).to.be.true;
+        expect(output.includes('modified components')).to.be.false;
       });
       it('should not display that component as staged', () => {
         const output = helper.runCmd('bit s');
-        expect(output.includes('no staged components')).to.be.true;
+        expect(output.includes('staged components')).to.be.false;
+      });
+    });
+    describe('add vue files that import stylus files ', () => {
+      before(() => {
+        helper.addComponent(path.normalize('StylusExample.vue'));
+      });
+      it('should find missing vue dependencies', () => {
+        const output = helper.runCmd('bit s');
+        expect(output).to.have.string(' untracked file dependencies');
+        expect(output).to.have.string('StylusExample.vue -> stylus/main.styl');
+      });
+      it('should find missing vue dependencies', () => {
+        helper.addComponent(path.normalize('stylus/main.styl'));
+        const output = helper.runCmd('bit s');
+        expect(output).to.have.string(' untracked file dependencies');
+        expect(output).to.have.string('stylus/main.styl -> stylus/second.styl');
+      });
+      it('should say that all is resolved', () => {
+        helper.addComponent(path.normalize('stylus/second.styl'));
+        const output = helper.runCmd('bit s');
+        expect(output.includes('no new components')).to.be.false;
+      });
+      it('should display that component as a new component', () => {
+        const output = helper.runCmd('bit s');
+        expect(output.includes('new components')).to.be.true;
+        expect(output.includes(`${helper.localScope}/stylus-example`)).to.be.true;
+        expect(output.includes('stylus/main')).to.be.true;
+        expect(output.includes('stylus/second')).to.be.true;
+      });
+      it('should not display that component as modified', () => {
+        const output = helper.runCmd('bit s');
+        expect(output.includes('modified components')).to.be.false;
+      });
+      it('should not display that component as staged', () => {
+        const output = helper.runCmd('bit s');
+        expect(output.includes('staged components')).to.be.false;
       });
     });
     describe('import vue components', () => {
@@ -56,7 +92,7 @@ describe('support vue files', function () {
         helper.copyFixtureComponents('vue');
         helper.addComponent(path.normalize('directives/*.js'));
         helper.addComponent(path.normalize('styles/*'));
-        helper.addComponent(`${path.normalize('*.vue')} -n vue`);
+        helper.addComponent('UiAutocomplete.vue UiAutocompleteSuggestion.vue UiIcon.vue -n vue');
         helper.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {

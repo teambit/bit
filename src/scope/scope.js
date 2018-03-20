@@ -57,6 +57,8 @@ import { RemovedObjects } from './removed-components';
 import DependencyGraph from './graph/graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import { ComponentSpecsFailed } from '../consumer/exceptions';
+import Dists from '../consumer/component/sources/dists';
+import SpecsResults from '../consumer/specs-results';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -79,6 +81,7 @@ export type IsolateOptions = {
   write_bit_dependencies: ?boolean,
   links: ?boolean,
   install_packages: ?boolean,
+  installPeerDependencies: ?boolean,
   no_package_json: ?boolean,
   override: ?boolean
 };
@@ -168,7 +171,7 @@ export default class Scope {
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
     // Add the new / updated objects
-    this.objects.addMany(resultObjects.newObjects);
+    this.objects.addMany(resultObjects.newObjects, true);
     // Remove old objects
     await this.objects.removeMany(resultObjects.refsToRemove);
     // Persists new / remove objects
@@ -278,7 +281,7 @@ export default class Scope {
     force: ?boolean,
     consumer: Consumer,
     verbose?: boolean
-  }): Promise<{ components: Component[], autoUpdatedComponents: ComponentModel[] }> {
+  }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
     // TODO: Change the return type
     loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
     const topSort = new Toposort();
@@ -428,10 +431,10 @@ export default class Scope {
       Promise.resolve([])
     );
     const taggedIds = components.map(c => c.id);
-    const autoUpdatedComponents = await this.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
+    const autoTaggedComponents = await this.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
     await this.objects.persist();
 
-    return { components, autoUpdatedComponents };
+    return { taggedComponents: components, autoTaggedComponents };
   }
 
   /**
@@ -1252,8 +1255,7 @@ export default class Scope {
     verbose,
     isolated,
     directory,
-    keep,
-    isCI = false
+    keep
   }: {
     bitId: BitId,
     consumer?: ?Consumer,
@@ -1261,9 +1263,8 @@ export default class Scope {
     verbose?: ?boolean,
     isolated?: boolean,
     directory?: string,
-    keep?: boolean,
-    isCI?: boolean
-  }): Promise<?any> {
+    keep?: boolean
+  }): Promise<?SpecsResults> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run specs on remote component');
     }
@@ -1276,8 +1277,7 @@ export default class Scope {
       verbose,
       isolated,
       directory,
-      keep,
-      isCI
+      keep
     });
   }
 
@@ -1287,22 +1287,20 @@ export default class Scope {
     consumer,
     verbose,
     directory,
-    keep,
-    isCI
+    keep
   }: {
     bitId: BitId,
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory: ?string,
-    keep: ?boolean,
-    isCI: ?boolean
-  }): Promise<string> {
+    keep: ?boolean
+  }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new Error('cannot run build on remote component');
     }
     const component: Component = await this.loadComponent(bitId);
-    return component.build({ scope: this, save, consumer, verbose, directory, keep, isCI });
+    return component.build({ scope: this, save, consumer, verbose, directory, keep });
   }
 
   /**

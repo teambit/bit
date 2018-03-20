@@ -11,16 +11,14 @@ export default function buildInScope({
   verbose,
   scopePath,
   directory,
-  keep,
-  isCI = true
+  keep
 }: {
   id: string,
   save: ?boolean,
   verbose: ?boolean,
   scopePath: string,
   directory: ?string,
-  keep: boolean,
-  isCI: boolean
+  keep: boolean
 }) {
   logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
   function loadFromScope(initialError: ?Error) {
@@ -28,7 +26,7 @@ export default function buildInScope({
       .catch(newErr => Promise.reject(initialError || newErr))
       .then((scope: Scope) => {
         const bitId = BitId.parse(id);
-        return scope.build({ bitId, save, verbose, directory, keep, isCI });
+        return scope.build({ bitId, save, verbose, directory, keep });
       })
       .catch(e => Promise.reject(e));
   }

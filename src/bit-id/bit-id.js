@@ -18,10 +18,10 @@ export type BitIdProps = {
 export type BitIdStr = string;
 
 export default class BitId {
-  name: string;
-  box: string;
-  version: ?string;
   scope: ?string;
+  box: string;
+  name: string;
+  version: ?string;
 
   constructor({ scope, box, name, version }: BitIdProps) {
     this.scope = scope || null;

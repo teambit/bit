@@ -33,8 +33,6 @@ describe('track directories functionality', function () {
       });
       it('bit status should still show the component as new', () => {
         expect(statusOutput).to.have.string('new components');
-        expect(statusOutput).to.have.string('no modified components');
-        expect(statusOutput).to.not.have.string('no new components');
       });
       it('bit status should update bitmap and add the new file', () => {
         const bitMap = helper.readBitMap();
@@ -61,9 +59,28 @@ describe('track directories functionality', function () {
         });
       });
     });
+    describe('creating another file in the same directory and running bit-status from an inner directory', () => {
+      let statusOutput;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('utils/bar', 'foo2.js');
+        statusOutput = helper.runCmd('bit status', path.join(helper.localScopePath, 'utils'));
+      });
+      it('bit status should still show the component as new', () => {
+        expect(statusOutput).to.have.string('new components');
+      });
+      it('bit status should update bitmap and add the new file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('utils/bar');
+        const files = bitMap['utils/bar'].files;
+        expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
+        expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
+      });
+    });
     describe('rename the file which is a main file', () => {
       let statusOutput;
       before(() => {
+        helper.getClonedLocalScope(localScope);
         const currentFile = path.join(helper.localScopePath, 'utils/bar/foo.js');
         const newFile = path.join(helper.localScopePath, 'utils/bar/foo2.js');
         fs.moveSync(currentFile, newFile);
@@ -99,14 +116,12 @@ describe('track directories functionality', function () {
           statusOutput = helper.runCmd('bit status');
         });
         it('bit status should show the component as modified', () => {
-          expect(statusOutput).to.have.string('no new components');
-          expect(statusOutput).to.not.have.string('no modified components');
           expect(statusOutput).to.have.string('modified components');
         });
         it('bit status should update bitmap and add the new file', () => {
           const bitMap = helper.readBitMap();
-          expect(bitMap).to.have.property('utils/bar');
-          const files = bitMap['utils/bar'].files;
+          expect(bitMap).to.have.property('utils/bar@0.0.1');
+          const files = bitMap['utils/bar@0.0.1'].files;
           expect(files).to.deep.include({ relativePath: 'utils/bar/foo.js', test: false, name: 'foo.js' });
           expect(files).to.deep.include({ relativePath: 'utils/bar/foo2.js', test: false, name: 'foo2.js' });
         });
@@ -225,8 +240,6 @@ describe('track directories functionality', function () {
         files = bitMap[barFooId].files;
       });
       it('bit status should show the component as modified', () => {
-        expect(statusOutput).to.have.string('no new components');
-        expect(statusOutput).to.not.have.string('no modified components');
         expect(statusOutput).to.have.string('modified components');
         expect(statusOutput).to.have.string('bar/foo');
       });
@@ -251,10 +264,7 @@ describe('track directories functionality', function () {
           statusOutput = helper.runCmd('bit status');
         });
         it('bit status should show the component as staged and not as modified', () => {
-          expect(statusOutput).to.have.string('no new components');
-          expect(statusOutput).to.have.string('no modified components');
           expect(statusOutput).to.have.string('staged components');
-          expect(statusOutput).to.not.have.string('no staged components');
         });
         it('should save both files to the model', () => {
           const barFoo = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);

@@ -110,14 +110,13 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  catComponent(id: string): Object {
-    const result = this.runCmd(`bit cat-component ${id}`);
+  catComponent(id: string, cwd?: string): Object {
+    const result = this.runCmd(`bit cat-component ${id}`, cwd);
     return JSON.parse(result);
   }
 
-  writeBitJson(bitJson: Object) {
-    const bitJsonPath = path.join(this.localScopePath, 'bit.json');
-    return fs.writeJSONSync(bitJsonPath, bitJson);
+  writeBitJson(bitJson: Object, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
 
   readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bitmap'), withoutComment: boolean = true) {
@@ -280,8 +279,8 @@ export default class Helper {
     return this.runCmd(`bit list ${options}`);
   }
 
-  getNewBareScope() {
-    const scopeName = generateRandomStr();
+  getNewBareScope(scopeNameSuffix?: string = '-remote2') {
+    const scopeName = generateRandomStr() + scopeNameSuffix;
     const scopePath = path.join(this.e2eDir, scopeName);
     fs.emptyDirSync(scopePath);
     this.runCmd('bit init --bare', scopePath);
@@ -482,8 +481,8 @@ export default class Helper {
     return this.runCmd(`bit add ${filePaths}`, cwd);
   }
 
-  untrackComponent(id: string = '', cwd: string = this.localScopePath) {
-    return this.runCmd(`bit untrack ${id}`, cwd);
+  untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
+    return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
 
   getFixturesDir() {

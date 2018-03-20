@@ -78,19 +78,15 @@ export default class ComponentVersion {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 
-  toObjects(repo: Repository): Promise<ComponentObjects> {
-    return this.getVersion(repo)
-      .then(version =>
-        Promise.all([
-          this.component.asRaw(repo),
-          version.collectRaw(repo),
-          version.asRaw(repo),
-          repo.getScopeMetaObject()
-        ])
-      )
-      .then(
-        ([compObject, objects, version, scopeMeta]) =>
-          new ComponentObjects(compObject, objects.concat([version, scopeMeta]))
-      );
+  async toObjects(repo: Repository): Promise<ComponentObjects> {
+    const version = await this.getVersion(repo);
+    if (!version) throw new Error(`failed loading version ${this.version} of ${this.component.id()}`);
+    const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
+      this.component.asRaw(repo),
+      version.collectRaw(repo),
+      version.asRaw(repo),
+      repo.getScopeMetaObject()
+    ]);
+    return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
   }
 }

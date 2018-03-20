@@ -58,17 +58,7 @@ describe('bit untrack command', function () {
       const bitMap = helper.readBitMapWithoutVersion();
       expect(output).to.have.string('error: unable to untrack bar/foo, please use the bit remove command.');
       expect(Object.keys(bitMap)).to.be.ofSize(1);
-      expect(bitMap).to.have.property('bar/foo');
-    });
-    it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
-      helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.commitComponent('bar/foo');
-      const output = helper.untrackComponent('bar/foo');
-      const bitMap = helper.readBitMapWithoutVersion();
-      expect(output).to.have.string('error: unable to untrack bar/foo, please use the bit remove command.');
-      expect(Object.keys(bitMap)).to.be.ofSize(1);
-      expect(bitMap).to.have.property('bar/foo');
+      expect(bitMap).to.have.property('bar/foo@0.0.1');
     });
     it('Should resolve and untrack component and add global as prefix component ', () => {
       helper.createFile('bar', 'foo.js');
@@ -77,8 +67,7 @@ describe('bit untrack command', function () {
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(0);
     });
-
-    it('Should remove 2 new components and keep commited component', () => {
+    it('Should remove 2 new components and keep tagged component', () => {
       helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
@@ -89,9 +78,9 @@ describe('bit untrack command', function () {
       helper.untrackComponent('bar/foo bar/foo3');
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
-      expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('bar/foo2@0.0.1');
     });
-    it('Should remove all new components and keep commited component', () => {
+    it('Should remove all new components and keep tagged component', () => {
       helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
@@ -99,10 +88,10 @@ describe('bit untrack command', function () {
       helper.commitComponent('bar/foo2');
       helper.createFile('bar', 'foo3.js');
       helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
-      helper.untrackComponent();
+      helper.untrackComponent('', true);
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
-      expect(bitMap).to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('bar/foo2@0.0.1');
     });
     it('Should not show component if bit.json is corrupted', () => {
       helper.corruptBitJson();
