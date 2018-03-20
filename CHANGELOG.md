@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix bugs when running bit commands not from the workspace root
 - fix calculation of bit dependency package json resolving
 - fix issue with stylus dependencies from vue files
+- add main file to file list if not specified
 
 ## [0.12.10-dev.2] - 2018-03-18
 

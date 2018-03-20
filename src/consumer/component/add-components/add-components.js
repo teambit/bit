@@ -31,7 +31,8 @@ import {
   IncorrectIdForImportedComponent,
   NoFiles,
   DuplicateIds,
-  EmptyDirectory
+  EmptyDirectory,
+  ExcludedMainFile
 } from './exceptions';
 import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
@@ -253,6 +254,11 @@ export default class AddComponents {
           mainFile = foundFile.relativePath;
         }
         if (fs.existsSync(generatedFile) && !foundFile) {
+          const shouldIgnore = this.gitIgnore.ignores(generatedFile);
+          if (shouldIgnore) {
+            // check if file is in exclude list
+            throw new ExcludedMainFile(generatedFile);
+          }
           files.push({
             relativePath: pathNormalizeToLinux(generatedFile),
             test: false,
@@ -266,6 +272,16 @@ export default class AddComponents {
     const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
     const mainPath = path.join(this.consumer.getPath(), mainFileRelativeToConsumer);
     if (fs.existsSync(mainPath)) {
+      const shouldIgnore = this.gitIgnore.ignores(mainFileRelativeToConsumer);
+      if (shouldIgnore) throw new ExcludedMainFile(mainFileRelativeToConsumer);
+      const foundFile = R.find(R.propEq('relativePath', mainFileRelativeToConsumer))(files);
+      if (!foundFile) {
+        files.push({
+          relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
+          test: false,
+          name: path.basename(mainFileRelativeToConsumer)
+        });
+      }
       return mainFileRelativeToConsumer;
     }
     return mainFile;
@@ -309,13 +325,13 @@ export default class AddComponents {
 
         if (!filteredMatches.length) throw new EmptyDirectory();
 
-        let files = filteredMatches.map((match: PathOsBased) => {
+        let filteredMatchedFiles = filteredMatches.map((match: PathOsBased) => {
           return { relativePath: pathNormalizeToLinux(match), test: false, name: path.basename(match) };
         });
 
         // merge test files with files
-        files = await this._mergeTestFilesWithFiles(files);
-        const resolvedMainFile = this._addMainFileToFiles(files);
+        filteredMatchedFiles = await this._mergeTestFilesWithFiles(filteredMatchedFiles);
+        const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
 
         if (!finalBitId) {
           const absoluteComponentPath = path.resolve(componentPath);
@@ -329,7 +345,7 @@ export default class AddComponents {
         const trackDir =
           Object.keys(componentPathsStats).length === 1 && !this.exclude.length ? relativeComponentPath : undefined;
 
-        return { componentId: finalBitId, files, mainFile: resolvedMainFile, trackDir };
+        return { componentId: finalBitId, files: filteredMatchedFiles, mainFile: resolvedMainFile, trackDir };
       }
       // is file
       const resolvedPath = path.resolve(componentPath);
