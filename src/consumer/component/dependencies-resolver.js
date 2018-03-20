@@ -587,17 +587,22 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
 }
 
 /**
+ * The dependency version is determined by the following strategies by this order.
+ * 1) if bit.json is different than the model, use bit.json
+ * 2) if package.json is different than the model, use package.json. to find the package.json follow this steps:
+ * 2 a) search in the component directory for package.json and look for dependencies or devDependencies with the name of the dependency
+ * 2 b) if not found there, propagate until you reach the consumer root directory.
+ * 2 c) if not found, go directly to the dependency directory and find the version in its package.json
+ * 3) if bitmap has a version, use it.
+ * 4) use the model if it has a version
+ * 5) use the version from bit.json (regardless the status of the model)
+ * 6) use the version from package.json (regardless the status of the model)
+ *
  * cases where dependency version may be different than the model:
  * 1) user changed bit.json
  * 2) user changed package.json, either, manually or by npm-install —save.
  * 3) user updated a dependency with npm without —save.
  * 4) user imported the dependency with different version causing the bitmap to change.
- *
- * Generally, the priority is as follows:
- * 1) bit.json
- * 2) package.json
- * 3) .bitmap
- * 4) model
  */
 export async function updateDependenciesVersions(consumer: Consumer, component: Component) {
   const updateDependencies = async (dependencies: Dependencies) => {
