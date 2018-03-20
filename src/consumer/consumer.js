@@ -555,8 +555,6 @@ export default class Consumer {
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
       // sometime dependencies from the FS don't have an exact version.
-      // in case of auto-tag, the files can be identical between the model and the FS, but the dependency version would
-      // be different. We don't want to show the component as modified in such cases, so copy the version from the model
       const copyDependenciesVersionsFromModelToFS = (dev = false) => {
         const dependenciesFS = dev ? version.devDependencies : version.dependencies;
         const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
@@ -565,7 +563,7 @@ export default class Consumer {
           const dependencyFromModel = dependenciesModel
             .get()
             .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
-          if (dependencyFromModel) {
+          if (dependencyFromModel && !dependency.id.hasVersion()) {
             dependency.id = dependencyFromModel.id;
           }
         });
