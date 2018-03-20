@@ -58,7 +58,6 @@ describe('auto tagging functionality', function () {
         // notice the "v2" (!)
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
-      // @todo: remove the 'skip' after merging PR https://github.com/teambit/bit/pull/851
       describe('auto-tagging after export', () => {
         before(() => {
           helper.getClonedLocalScope(clonedScope);
