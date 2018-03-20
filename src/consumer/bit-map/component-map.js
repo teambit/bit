@@ -198,7 +198,8 @@ export default class ComponentMap {
         componentPaths: [trackDirRelative || '.'],
         id: id.toString(),
         override: false, // this makes sure to not override existing files of componentMap
-        writeToBitMap: false
+        writeToBitMap: false,
+        origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
       const addComponents = new AddComponents(consumer, addParams);

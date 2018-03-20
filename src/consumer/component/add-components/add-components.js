@@ -34,7 +34,7 @@ import {
   EmptyDirectory,
   ExcludedMainFile
 } from './exceptions';
-import type { ComponentMapFile } from '../../../consumer/bit-map/component-map';
+import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
 
@@ -88,7 +88,8 @@ export type AddProps = {
   tests?: PathOrDSL[],
   exclude?: PathOrDSL[],
   override: boolean,
-  writeToBitMap?: boolean
+  writeToBitMap?: boolean,
+  origin?: ComponentOrigin
 };
 
 export default class AddComponents {
@@ -105,6 +106,7 @@ export default class AddComponents {
   warnings: Object;
   ignoreList: string[];
   gitIgnore: any;
+  origin: ComponentOrigin;
   constructor(consumer: Consumer, addProps: AddProps) {
     this.consumer = consumer;
     this.bitMap = consumer.bitMap;
@@ -116,6 +118,7 @@ export default class AddComponents {
     this.exclude = addProps.exclude || [];
     this.override = addProps.override;
     this.writeToBitMap = addProps.writeToBitMap !== undefined ? addProps.writeToBitMap : true;
+    this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {};
   }
 
@@ -343,7 +346,11 @@ export default class AddComponents {
         }
 
         const trackDir =
-          Object.keys(componentPathsStats).length === 1 && !this.exclude.length ? relativeComponentPath : undefined;
+          Object.keys(componentPathsStats).length === 1 &&
+          !this.exclude.length &&
+          this.origin === COMPONENT_ORIGINS.AUTHORED
+            ? relativeComponentPath
+            : undefined;
 
         return { componentId: finalBitId, files: filteredMatchedFiles, mainFile: resolvedMainFile, trackDir };
       }
