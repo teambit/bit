@@ -299,8 +299,6 @@ describe('bit add command', function () {
     it('Should throw error when no index file is found', () => {
       const file1 = 'foo1.js';
       const file2 = 'foo2.js';
-      const file1Path = path.normalize(`bar/${file1}`);
-      const file2Path = path.normalize(`bar/${file2}`);
       helper.createFile('bar', file1);
       helper.createFile('bar', file2);
 
