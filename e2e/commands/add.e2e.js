@@ -185,9 +185,9 @@ describe('bit add command', function () {
       const specNormalizedPath = path.normalize('bar/foo2.spec.js');
       const addCmd = () => helper.addComponent(` -t ${specNormalizedPath}`);
       expect(addCmd).to.throw(
-        `Command failed: ${
-          helper.bitBin
-        } add  -t ${specNormalizedPath}\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
+        `Command failed: ${helper.bitBin} add  -t ${
+          specNormalizedPath
+        }\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
       );
     });
 
@@ -308,7 +308,7 @@ describe('bit add command', function () {
       expect(addCmd).to.throw(
         `Command failed: ${
           helper.bitBin
-        } add bar -n test\nerror: a main file index.[js, ts, jsx, tsx, css, scss, less, sass] was not found among the component's files ${file1Path}, ${file2Path}. please use 'bit add' --main flag to specify a different main file`
+        } add bar -n test\nerror: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file\n`
       );
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
@@ -339,9 +339,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } add ${normalizedPath} -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
+        `Command failed: ${helper.bitBin} add ${
+          normalizedPath
+        } -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it('Should prevent adding a file with invalid keys in ID', () => {
@@ -355,9 +355,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } add ${normalizedPath} -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
+        `Command failed: ${helper.bitBin} add ${
+          normalizedPath
+        } -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
@@ -843,9 +843,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${
-            helper.bitBin
-          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
+          `Command failed: ${helper.bitBin} add ${
+            barFoo2Path
+          } -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
         );
       });
     });
