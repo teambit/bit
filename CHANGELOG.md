@@ -7,38 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
-## [0.12.10-dev.5] - 2018-03-21
+## [0.12.10] - 2018-03-21
 
-- ignore files named 'LICENSE'
-- fix bug with resolving authored dep version
-
-## [0.12.10-dev.4] - 2018-03-20
-
-- support updating dependencies versions from bit.json, package.json and bitmap files
-- add all flag to untrack command
-- fix bugs when running bit commands not from the workspace root
-- fix calculation of bit dependency package json resolving
-- fix issue with stylus dependencies from vue files
-- add main file to file list if not specified
-
-## [0.12.10-dev.3] - 2018-03-18
-
-- fix track-directory feature when running bit from an inner directory
-- bug fix - promise was not resolved when a component is an instance of Symlink
-
-## [0.12.10-dev.2] - 2018-03-15
-
-- fix catastrophic backtracking when using Regex to find JSDoc
-- enable running build/test from internal directory of a scope
-- fix exit status when ci-update fails
-- add an option to install peer dependencies in isolated envs
-
-## [0.12.10-dev.1] - 2018-03-14
-
-- test components candidates for auto-tag before tagging them
-- show a component as modified (bit status) in case a new file has added to its rootDir or one of the files has renamed
+### New
 - track directories for files changes and update .bitmap automatically
+- show a component as modified (bit status) in case a new file has added to its rootDir or one of the files has renamed
+- support updating dependencies versions from bit.json, package.json and bitmap files
+- add an option to install peer dependencies in an isolated environment
+- add the main file to file list if not specified during `bit add`
+- add `--all` flag to `bit untrack` command
+
+### Changes
+- ignore files named 'LICENSE'
+- test components candidates for auto-tag before tagging them
+
+### Bug Fixes
+- fix an issue with stylus dependencies from Vue files
+- fix catastrophic backtracking when using Regex to find JSDoc
 - fix environment import of latest version when an older version is imported
+- fix exit status when ci-update fails
+- fix bugs when running bit commands not from the workspace root
 
 ## [0.12.9] - 2018-03-14
 
