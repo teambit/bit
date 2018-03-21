@@ -13,7 +13,7 @@ export default (async function switchVersion(consumer: Consumer, version: string
       throw new Error(`component ${component.id.toString()} doesn't have any version yet`);
     }
     if (!componentModel.hasVersion(version)) {
-      throw new Error(`component ${component.id.toString()} doesn't have version ${version}`);
+      throw new Error(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
     }
     const latestVersionFromModel = componentModel.latest();
     const latestVersionRef = componentModel.versions[latestVersionFromModel];
@@ -21,7 +21,7 @@ export default (async function switchVersion(consumer: Consumer, version: string
     const isModified = await consumer.isComponentModified(latestComponentVersion, component);
     if (isModified) {
       throw new Error(
-        `component ${component.id.toString()} is modified, merging your changes is not supported just yet, please revert your local changes and try again`
+        `component ${component.id.toStringWithoutVersion()} is modified, merging your changes is not supported just yet, please revert your local changes and try again`
       );
     }
     const versionRef = componentModel.versions[version];

@@ -1,8 +1,10 @@
 import fs from 'fs-extra';
 import path from 'path';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+
+chai.use(require('chai-fs'));
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
@@ -113,7 +115,7 @@ describe('bit use command', function () {
       let output;
       let bitMap;
       before(() => {
-        output = helper.runCmd('bit use 0.0.1 bar/foo');
+        output = helper.useVersion('0.0.1', 'bar/foo');
         bitMap = helper.readBitMap();
       });
       it('should display a successful message', () => {
@@ -139,6 +141,41 @@ describe('bit use command', function () {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.not.have.string('modified components');
       });
+    });
+    describe.skip('importing individually a nested component', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.importComponent('utils/is-string');
+      });
+      // currently it behaves the same as 'bit import' of an older version.
+      // it leaves the current version is components dir and write the old version in .dependencies
+      // this way if there is another component that depends on the current version of the nested,
+      // it won't be broken.
+      it('should rewrite the component in components dir or leave it and write the old version in .dependencies?', () => {});
+    });
+  });
+  describe('as AUTHORED when the recent version has new files', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagAllWithoutMessage();
+      helper.createFile('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar', { i: 'bar/foo' });
+      helper.tagAllWithoutMessage();
+
+      helper.useVersion('0.0.1', 'bar/foo');
+    });
+    it('should not delete the new files', () => {
+      // because the author may still need them
+      expect(path.join(helper.localScopePath, 'bar/foo2.js')).to.be.a.file();
+    });
+    it('should update bitmap to not track the new files', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo@0.0.1');
+      expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+      expect(bitMap['bar/foo@0.0.1'].files).to.be.lengthOf(1);
+      expect(bitMap['bar/foo@0.0.1'].files[0].name).to.equal('foo.js');
     });
   });
 });
