@@ -164,9 +164,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     MissingMainFile,
     err =>
-      `error: a main file ${chalk.bold(err.mainFile)} was not found among the component's files ${chalk.bold(
-        err.files.join(', ')
-      )}. please use 'bit add' --main flag to specify a different main file`
+      'error: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file'
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [
