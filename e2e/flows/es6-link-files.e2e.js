@@ -99,6 +99,60 @@ describe('es6 components with link files', function () {
     });
   });
 
+  describe('when a component uses link file to import multiple members with export default as syntax', () => {
+    let utilIndexFixture;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createFile('utils', 'is-array.js', isArrayFixture);
+      helper.addComponent('utils/is-array.js');
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      utilIndexFixture =
+        "export { default as isArray } from './is-array'; export { default as isString } from './is-string'; ";
+      helper.createFile('utils', 'index.js', utilIndexFixture);
+      const fooBarFixture =
+        "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+    });
+    describe('when the project cloned to somewhere else as AUTHORED', () => {
+      before(() => {
+        helper.mimicGitCloneLocalProject(false);
+        helper.addRemoteScope();
+        helper.runCmd('bit import --write --force');
+      });
+      it('should not override the original link file', () => {
+        const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));
+        expect(currentUtilIndex.toString()).to.equal(utilIndexFixture);
+      });
+    });
+    describe('when importing the component', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo ');
+      });
+      it('should auto-generate a link file', () => {
+        const currentUtilIndex = fs.readFileSync(
+          path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+        );
+        expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
+      });
+      it('should rewrite the relevant part of the link file', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-string and got foo');
+      });
+    });
+  });
+
   describe('when the link file uses default-import and specific-import together', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
