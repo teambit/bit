@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support link-files with "export { default as ... }"; syntax
+
 ## [0.10.13] - 2018-03-21
 
 - fix issue with stylus files inside vue-lookup
