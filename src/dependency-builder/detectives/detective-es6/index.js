@@ -42,6 +42,15 @@ module.exports = function(src, options) {
       case 'ExportAllDeclaration':
         if (node.source && node.source.value) {
           dependencies.push(node.source.value);
+          node.specifiers.forEach((specifier) => {
+            var specifierValue = {
+              isDefault: specifier.local.name === 'default', // e.g. export { default as isArray } from './is-array';
+              name: specifier.exported.name
+            };
+            importSpecifiers[node.source.value]
+              ? importSpecifiers[node.source.value].push(specifierValue)
+              : importSpecifiers[node.source.value] = [specifierValue];
+          });
         }
         break;
       case 'CallExpression':
