@@ -299,8 +299,6 @@ describe('bit add command', function () {
     it('Should throw error when no index file is found', () => {
       const file1 = 'foo1.js';
       const file2 = 'foo2.js';
-      const file1Path = path.normalize(`bar/${file1}`);
-      const file2Path = path.normalize(`bar/${file2}`);
       helper.createFile('bar', file1);
       helper.createFile('bar', file2);
 
@@ -308,9 +306,7 @@ describe('bit add command', function () {
       expect(addCmd).to.throw(
         `Command failed: ${
           helper.bitBin
-        } add bar -n test\nerror: a main file index.[js, ts, jsx, tsx, css, scss, less, sass] was not found among the component's files ${
-          file1Path
-        }, ${file2Path}. please use 'bit add' --main flag to specify a different main file`
+        } add bar -n test\nerror: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file\n`
       );
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {

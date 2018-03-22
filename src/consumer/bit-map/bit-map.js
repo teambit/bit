@@ -450,7 +450,7 @@ export default class BitMap {
     });
     if (R.isEmpty(allChanges)) {
       const errorMsg = isPathDir
-        ? `neither one of the files use the directory ${from}`
+        ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
       throw new Error(errorMsg);
     }

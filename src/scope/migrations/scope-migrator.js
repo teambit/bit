@@ -31,7 +31,7 @@ let globalVerbose: boolean = false;
 const refsIndex = {};
 
 /**
- * Running migration process for scope 
+ * Running migration process for scope
  * @param {string} scopeVersion - The current scope version
  * @param {Object} migratonManifest - A manifest which define what migrations to run
  * @param {BitRawObject} objects - Scope's raw objects
@@ -90,7 +90,7 @@ const _runAllVersionMigrationsForObject = (rawObject: BitRawObject): Function =>
 
 /**
  * Run specific migration function on an object
- * @param {BitRawObject} rawObject 
+ * @param {BitRawObject} rawObject
  */
 const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migration: MigrationDeclaration) => {
   logger.debug(`running migration: ${migration.name} on object ${rawObject.ref} (${rawObject.id})`);
@@ -108,7 +108,7 @@ const _runOneMigrationForObject = (rawObject: BitRawObject): Function => (migrat
 /**
  * Adds all the refs from the raw object to a global index
  * To improve performence in case we need to update objet in case the id of the ref has been changed
- * @param {BitRawObject} rawObject 
+ * @param {BitRawObject} rawObject
  */
 function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: BitRawObject) {
   const refs = rawObject.refs();
@@ -120,8 +120,8 @@ function _addObjectRefsToIndex(index: { [string]: BitRawObject }, rawObject: Bit
 /**
  * Update a refrence for an object and return the parsed real object
  * @param {*} index - refs index in order to update refs if needed
- * @param {*} oldRef 
- * @param {*} newRef 
+ * @param {*} oldRef
+ * @param {*} newRef
  */
 const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string, newRef: string): BitObject => {
   // If the object doesn't has a dependent object return null
@@ -133,9 +133,9 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
   const realObject = index[oldRef].toRealObject();
   if (oldRef !== newRef) {
     // Get the dependent object and replace the ref to the new one
-    logger.debug(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is: ${newRef}`);
+    logger.debug(`replacing reference for ${realObject.id()} old ref was: ${oldRef} new ref is: ${newRef}`);
     if (globalVerbose) {
-      console.log(`replacing refrence for ${realObject.id()} old ref was: ${oldRef} new ref is: ${newRef}`);
+      console.log(`replacing reference for ${realObject.id()} old ref was: ${oldRef} new ref is: ${newRef}`);
     }
     realObject.replaceRef(new Ref(oldRef), new Ref(newRef));
   }
