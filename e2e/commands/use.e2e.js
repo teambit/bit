@@ -8,6 +8,7 @@ chai.use(require('chai-fs'));
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
+const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 
 describe('bit use command', function () {
   this.timeout(0);
@@ -47,11 +48,9 @@ describe('bit use command', function () {
         before(() => {
           helper.createComponentBarFoo(barFooV2);
         });
-        it('should show an error for now until is implemented', () => {
+        it('should show an error saying the component already uses that version', () => {
           const output = helper.runWithTryCatch('bit use 0.0.5 bar/foo');
-          expect(output).to.have.string(
-            'component bar/foo is modified, merging your changes is not supported just yet, please revert your local changes and try again'
-          );
+          expect(output).to.have.string('component bar/foo uses 0.0.5 already');
         });
         describe('and tagged again', () => {
           let output;
@@ -177,5 +176,17 @@ describe('bit use command', function () {
       expect(bitMap['bar/foo@0.0.1'].files).to.be.lengthOf(1);
       expect(bitMap['bar/foo@0.0.1'].files[0].name).to.equal('foo.js');
     });
+  });
+  describe('modified component', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo(barFooV1);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.createComponentBarFoo(barFooV2);
+      helper.commitComponentBarFoo();
+      helper.createComponentBarFoo(barFooV3);
+    });
+    it('should', () => {});
   });
 });
