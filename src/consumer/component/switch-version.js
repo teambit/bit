@@ -30,7 +30,7 @@ export default (async function switchVersion(
   version: string,
   ids: BitId[],
   promptMergeOptions?: boolean,
-  mergeStrategy: MergeStrategy
+  mergeStrategy?: MergeStrategy
 ) {
   const { components } = await consumer.loadComponents(ids);
   const allComponentsP = components.map((component: Component) => {
@@ -140,7 +140,7 @@ async function applyVersion(
   id: BitId,
   componentFromFS: Component,
   mergeResults: MergeResults,
-  mergeStrategy: MergeStrategy
+  mergeStrategy?: MergeStrategy
 ): Promise<{ id: BitId[], filesStatus: { [string]: string } }> {
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
@@ -172,7 +172,7 @@ async function applyVersion(
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
-async function applyModifiedVersion(mergeResults: MergeResults, mergeStrategy: MergeStrategy): Promise<Object> {
+async function applyModifiedVersion(mergeResults: MergeResults, mergeStrategy?: MergeStrategy): Promise<Object> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {

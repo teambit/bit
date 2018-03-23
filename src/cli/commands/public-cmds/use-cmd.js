@@ -40,7 +40,7 @@ export default class Use extends Command {
       manual: ?boolean
     }
   ): Promise<*> {
-    let mergeStrategy: MergeStrategy;
+    let mergeStrategy: ?MergeStrategy;
     if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
       throw new Error('please choose only one options from: ours, theirs or manual');
     }
