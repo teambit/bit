@@ -9,7 +9,10 @@ import { Tmp } from '../../scope/repositories';
 import mergeFiles from './merge-files';
 
 export type MergeResults = {
-  addFiles: string[],
+  addFiles: Array<{
+    filePath: string,
+    fsFile: SourceFile
+  }>,
   modifiedFiles: Array<{
     filePath: string,
     fsFile: SourceFile,
@@ -18,8 +21,14 @@ export type MergeResults = {
     output: ?string,
     conflict: ?string
   }>,
-  unModifiedFiles: string[],
-  overrideFiles: string[],
+  unModifiedFiles: Array<{
+    filePath: string,
+    fsFile: SourceFile
+  }>,
+  overrideFiles: Array<{
+    filePath: string,
+    fsFile: SourceFile
+  }>,
   hasConflicts: boolean
 };
 
@@ -32,7 +41,7 @@ export type MergeResults = {
  * in other words, the changes the user did since 0.0.2 should be applied/merged on top of 0.0.1.
  *
  * to do the actual merge we use git, specifically `merge-file` command, so we try to use the same
- * language as git. From the command help:
+ * terminology as git. From the command help:
  * `git merge-file <current-file> <base-file> <other-file>
  * git merge-file incorporates all changes that lead from the <base-file> to <other-file> into
  * <current-file>. The result ordinarily goes into <current-file>.`
@@ -73,12 +82,16 @@ export default (async function mergeVersions({
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
   const getFileResult = (fsFile: SourceFile, baseFile?: SourceFile, currentFile?: SourceFile) => {
     const filePath = fsFile.relative;
-    if (!currentFile || !baseFile) {
+    if (!currentFile) {
       // if !currentFile && !baseFile, the file was created after the last tag
       // if !currentFile && baseFile,  the file was created as part of the last tag
-      // if currentFile && !baseFile,  the file was deleted as part of the last tag
       // either way, no need to do any calculation, the file should be added
-      results.addFiles.push(filePath);
+      results.addFiles.push({ filePath, fsFile });
+      return;
+    }
+    if (!baseFile) {
+      // if currentFile && !baseFile, the file was deleted as part of the last tag
+      results.overrideFiles.push({ filePath, fsFile });
       return;
     }
     const fsFileHash = sha1(fsFile.contents);
@@ -86,13 +99,16 @@ export default (async function mergeVersions({
     const currentFileHash = sha1(currentFile.contents);
     if (fsFileHash === currentFileHash) {
       // no need to check also for fsFileHash === baseFileHash, as long as fs == current, no need to take any action
-      results.unModifiedFiles.push(filePath);
+      results.unModifiedFiles.push({ filePath, fsFile });
       return;
     }
     if (fsFileHash === baseFileHash) {
-      results.overrideFiles.push(fsFile);
+      results.overrideFiles.push({ filePath, fsFile });
     }
     // it was changed in both, there is a chance for conflict
+    fsFile.version = fsVersion;
+    baseFile.version = fsVersion;
+    currentFile.version = currentVersion;
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
   };
 
@@ -123,7 +139,22 @@ async function getConflictResults(consumer: Consumer, modifiedFiles): Promise<Ar
     const fsFilePath = await tmp.save(modifiedFile.fsFile.contents);
     const baseFilePath = await tmp.save(modifiedFile.baseFile.contents);
     const currentFilePath = await tmp.save(modifiedFile.currentFile.contents);
-    return mergeFiles(modifiedFile.filePath, currentFilePath, baseFilePath, fsFilePath);
+    const mergeFilesParams = {
+      filePath: modifiedFile.filePath,
+      currentFile: {
+        label: modifiedFile.currentFile.version,
+        path: currentFilePath
+      },
+      baseFile: {
+        label: modifiedFile.baseFile.version,
+        path: baseFilePath
+      },
+      otherFile: {
+        label: `${modifiedFile.fsFile.version} modified`,
+        path: fsFilePath
+      }
+    };
+    return mergeFiles(mergeFilesParams);
   });
   try {
     const conflictResults = await Promise.all(conflictResultsP);

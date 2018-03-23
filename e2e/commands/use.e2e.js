@@ -177,7 +177,8 @@ describe('bit use command', function () {
       expect(bitMap['bar/foo@0.0.1'].files[0].name).to.equal('foo.js');
     });
   });
-  describe('modified component', () => {
+  describe('modified component with conflicts', () => {
+    let localScope;
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
@@ -186,7 +187,234 @@ describe('bit use command', function () {
       helper.createComponentBarFoo(barFooV2);
       helper.commitComponentBarFoo();
       helper.createComponentBarFoo(barFooV3);
+      localScope = helper.cloneLocalScope();
     });
-    it('should', () => {});
+    describe('using manual strategy', () => {
+      let output;
+      before(() => {
+        output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+      });
+      it('should indicate that the file has conflicts', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('file has conflicts which needs to be resolved manually');
+      });
+      it('should rewrite the file with the conflict with the conflicts segments', () => {
+        const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
+        expect(fileContent).to.have.string('<<<<<<<');
+        expect(fileContent).to.have.string('>>>>>>>');
+        expect(fileContent).to.have.string('=======');
+      });
+      it('should label the conflicts segments according to the versions', () => {
+        const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
+        expect(fileContent).to.have.string('<<<<<<< 0.0.1');
+        expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+      });
+      it('should show the component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
+      });
+    });
+    describe('using theirs strategy', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+      });
+      it('should indicate that the file has updated', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('file has been updated according to the used version');
+      });
+      it('should rewrite the file according to the used version', () => {
+        const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
+        expect(fileContent).to.be.equal(barFooV1);
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+      });
+      it('should not show the component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.not.have.string('modified components');
+      });
+    });
+    describe('using ours strategy', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+      });
+      it('should indicate that the version was switched', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should indicate that the file was not changed', () => {
+        expect(output).to.have.string('file left intact as it was not changed');
+      });
+      it('should leave the file intact', () => {
+        const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
+        expect(fileContent).to.be.equal(barFooV3);
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+      });
+      it('should show the component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
+      });
+    });
+    describe('when new files are added', () => {
+      let scopeWithAddedFile;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('bar', 'foo2.js');
+        helper.addComponentWithOptions('bar/foo2.js', { i: 'bar/foo' });
+        scopeWithAddedFile = helper.cloneLocalScope();
+      });
+      describe('using manual strategy', () => {
+        let output;
+        before(() => {
+          output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+        });
+        it('should indicate that a new file was added', () => {
+          expect(output).to.have.string('file has been added to the used version');
+          expect(output).to.have.string('bar/foo2.js');
+        });
+        it('should track the file in bitmap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('bar/foo@0.0.1');
+          const files = bitMap['bar/foo@0.0.1'].files;
+          expect(files).to.be.lengthOf(2);
+          expect(files[0].relativePath).to.equal('bar/foo.js');
+          expect(files[1].relativePath).to.equal('bar/foo2.js');
+        });
+        it('should not delete the file', () => {
+          expect(path.join(helper.localScopePath, 'bar/foo2.js')).to.be.a.file();
+        });
+      });
+      describe('using theirs strategy', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(scopeWithAddedFile);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+        });
+        it('should not indicate that a new file was added', () => {
+          expect(output).to.not.have.string('file has been added to the used version');
+          expect(output).to.not.have.string('bar/foo2.js');
+        });
+        it('should not track the file in bitmap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('bar/foo@0.0.1');
+          const files = bitMap['bar/foo@0.0.1'].files;
+          expect(files).to.be.lengthOf(1);
+          expect(files[0].relativePath).to.equal('bar/foo.js');
+        });
+        it('should not delete the file', () => {
+          expect(path.join(helper.localScopePath, 'bar/foo2.js')).to.be.a.file();
+        });
+        it('should not show the component as modified', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.not.have.string('modified components');
+        });
+      });
+      describe('using ours strategy', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(scopeWithAddedFile);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+        });
+        it('should not indicate that the new file was not changed', () => {
+          expect(output).to.have.string('file left intact as it was not changed');
+          expect(output).to.have.string('bar/foo2.js');
+        });
+        it('should keep tracking the file in bitmap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('bar/foo@0.0.1');
+          const files = bitMap['bar/foo@0.0.1'].files;
+          expect(files).to.be.lengthOf(2);
+          expect(files[0].relativePath).to.equal('bar/foo.js');
+          expect(files[1].relativePath).to.equal('bar/foo2.js');
+        });
+        it('should not delete the file', () => {
+          expect(path.join(helper.localScopePath, 'bar/foo2.js')).to.be.a.file();
+        });
+      });
+    });
+  });
+  describe('modified component without conflict', () => {
+    describe('when the modified file is the same as the used version', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo(barFooV1);
+        helper.addComponentBarFoo();
+        helper.commitComponentBarFoo();
+        helper.createComponentBarFoo(barFooV2);
+        helper.commitComponentBarFoo();
+        helper.createComponentBarFoo(barFooV1);
+        output = helper.useVersion('0.0.1', 'bar/foo');
+      });
+      it('should indicate that the version is switched', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+      });
+      it('should not show the component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.not.have.string('modified components');
+      });
+    });
+    describe('when the base file is the same as the used version', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo(barFooV1);
+        helper.addComponentBarFoo();
+        helper.commitComponentBarFoo();
+        helper.commitComponent('bar/foo --force');
+        helper.createComponentBarFoo(barFooV2);
+        output = helper.useVersion('0.0.1', 'bar/foo');
+      });
+      it('should indicate that the version is switched', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should indicate that the file has been merged successfully', () => {
+        expect(output).to.have.string('bar/foo.js');
+        expect(output).to.have.string('file has successfully merged the modification with the used version');
+      });
+      it('should update bitmap with the used version', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+      });
+      it('should show the component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
+      });
+    });
   });
 });

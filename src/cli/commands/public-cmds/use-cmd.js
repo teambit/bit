@@ -22,7 +22,7 @@ export default class Use extends Command {
       'theirs',
       'in case of a conflict, use theirs (override the current modification and use the specified version)'
     ],
-    ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later']
+    ['M', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later']
   ];
   loader = true;
 
@@ -52,7 +52,15 @@ export default class Use extends Command {
 
   report({ components, version }: { components: BitId[], version: string }): string {
     const title = `the following components were switched to version ${chalk.bold(version)}\n`;
-    const componentsStr = components.map(c => c.toStringWithoutVersion()).join('\n');
+    const componentsStr = components
+      .map((component) => {
+        const name = component.id.toStringWithoutVersion();
+        const files = Object.keys(component.filesStatus)
+          .map(file => `\t${chalk.bold(file)} => ${component.filesStatus[file]}`)
+          .join('\n');
+        return `${name}\n${chalk.cyan(files)}`;
+      })
+      .join('\n\n');
     return chalk.underline(title) + chalk.green(componentsStr);
   }
 }

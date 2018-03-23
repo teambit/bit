@@ -1,6 +1,5 @@
 // @flow
 import execa from 'execa';
-import type { PathOsBased } from '../../utils/path';
 
 /**
  * use git `merge-file` command. From the command help:
@@ -11,15 +10,22 @@ import type { PathOsBased } from '../../utils/path';
  * Here, we are not going to write the result into current-file. Instead, we'll use the "-p" flag,
  * to just return the results.
  */
-export default (async function mergeFiles(
-  filePath: string,
-  currentFile: PathOsBased,
-  baseFile: PathOsBased,
-  otherFile: PathOsBased
-) {
+export default (async function mergeFiles({ filePath, currentFile, baseFile, otherFile }: Object) {
   const mergeResult = { filePath, output: null, conflict: null };
   try {
-    const result = await execa('git', ['merge-file', currentFile, baseFile, otherFile, '-p']);
+    const result = await execa('git', [
+      'merge-file',
+      '-L',
+      currentFile.label,
+      '-L',
+      baseFile.label,
+      '-L',
+      otherFile.label,
+      currentFile.path,
+      baseFile.path,
+      otherFile.path,
+      '-p'
+    ]);
     mergeResult.output = result.stdout;
     return mergeResult;
   } catch (err) {

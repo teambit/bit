@@ -207,6 +207,13 @@ export default class BitMap {
     return false;
   }
 
+  /**
+   * add files from filesB that are not in filesA
+   */
+  mergeFilesArray(filesA: ComponentMapFile[], filesB: ComponentMapFile[]): ComponentMapFile[] {
+    return R.unionWith(R.eqBy(R.prop('relativePath')), filesA, filesB);
+  }
+
   addComponent({
     componentId,
     files,
