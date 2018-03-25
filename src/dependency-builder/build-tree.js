@@ -96,7 +96,7 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
   if (packageJsonInfo) {
     // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
     const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1, packageFullPath.length);
-    
+
     const packageName = resolvePackageNameByPath(packageRelativePath);
     const packageVersion = R.path(['dependencies', packageName], packageJsonInfo) ||
                            R.path(['devDependencies', packageName], packageJsonInfo) ||
@@ -397,7 +397,7 @@ export async function getDependencyTree(baseDir: string, consumerPath: string, f
       groups.forEach((fileDep) => {
         if (fileDep.packages && fileDep.packages.includes(pkg)) {
           fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
-          lset(tree[fileDep['originFile']],`packages.${pkg}`, foundPackages[pkg]);
+          lset(tree[fileDep['originFile']], ['packages',pkg], foundPackages[pkg]);
         }
       });
     });

@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support link-files with "export { default as ... }"; syntax
+- fix merge of madge dependencies with package.json depdencies with dot in them 
 
 ## [0.10.13] - 2018-03-21
 
