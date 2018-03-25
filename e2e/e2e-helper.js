@@ -57,6 +57,16 @@ export default class Helper {
     return cmdOutput.toString();
   }
 
+  runWithTryCatch(cmd: string, cwd: string = this.localScopePath) {
+    let output;
+    try {
+      output = this.runCmd(cmd, cwd);
+    } catch (err) {
+      output = err.toString() + err.stdout.toString();
+    }
+    return output;
+  }
+
   setHubDomain(domain: string = 'hub.bitsrc.io') {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
@@ -558,6 +568,10 @@ export default class Helper {
 
   getRequireBitPath(box: string, name: string) {
     return `@bit/${this.remoteScope}.${box}.${name}`;
+  }
+
+  useVersion(version: string, ids: string) {
+    return this.runCmd(`bit use ${version} ${ids}`);
   }
 
   getBitVersion() {

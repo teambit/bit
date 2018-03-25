@@ -52,8 +52,6 @@ describe('bit status command', function () {
     });
     it('should display that component as a new component', () => {
       expect(output.includes('new components')).to.be.true;
-
-      expect(output.includes('new components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
     it('should not display that component as modified', () => {

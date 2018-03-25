@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- introduce a new command `bit use` for switching between versions
+- support `export { default as }` syntax when extracting relevant dependencies from link files
+
 ## [0.12.10] - 2018-03-21
 
 ### New

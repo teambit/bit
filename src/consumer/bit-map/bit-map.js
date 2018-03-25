@@ -42,6 +42,14 @@ export default class BitMap {
     this.paths = {};
   }
 
+  setComponent(id: string, componentMap: ComponentMap) {
+    const bitId = BitId.parse(id);
+    if (!bitId.hasVersion() && bitId.scope) {
+      throw new Error(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
+    }
+    this.components[id] = componentMap;
+  }
+
   static ensure(dirPath: string): Promise<BitMap> {
     return Promise.resolve(this.load(dirPath));
   }
@@ -249,7 +257,7 @@ export default class BitMap {
       }
     } else {
       // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      this.components[componentIdStr] = new ComponentMap({ files, origin });
+      this.setComponent(componentIdStr, new ComponentMap({ files, origin }));
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
         this.components[componentIdStr]
@@ -340,7 +348,7 @@ export default class BitMap {
     }
     const olderComponentId = olderComponentsIds[0];
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
-    this.components[newIdString] = this.components[olderComponentId];
+    this.setComponent(newIdString, this.components[olderComponentId]);
 
     // update the dependencies array if needed
     Object.keys(this.components).forEach((componentId) => {
