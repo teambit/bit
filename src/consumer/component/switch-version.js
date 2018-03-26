@@ -165,6 +165,7 @@ async function applyVersion(
     componentsWithDependencies,
     installNpmPackages: !!id.scope && !skipNpmInstall, // if there is no scope, the component wasn't exported yet, don't install npm packages.
     force: true,
+    writeBitJson: !!componentFromFS.bitJson, // write bit.json only if it was there before
     verbose,
     writeDists: !ignoreDist
   });

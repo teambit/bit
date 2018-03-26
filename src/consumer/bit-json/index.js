@@ -1,4 +1,4 @@
 /** @flow */
-import BitJson from './bit-json';
+import ComponentBitJson from './bit-json';
 
-export default BitJson;
+export default ComponentBitJson;

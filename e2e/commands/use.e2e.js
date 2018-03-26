@@ -199,6 +199,9 @@ describe('bit use command', function () {
           const statusOutput = helper.runCmd('bit status');
           expect(statusOutput).to.not.have.string('modified components');
         });
+        it('should not write bit.json file', () => {
+          expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).not.to.be.a.path();
+        });
       });
       describe('switching to a previous version of the main component when modified', () => {
         let localScopeAfterModified;
@@ -291,15 +294,14 @@ describe('bit use command', function () {
           expect(path.join(helper.localScopePath, 'components/bar/foo', 'package-lock.json')).to.not.be.a.path();
         });
       });
-      describe('switching a version using --verbose flag', () => {
-        let output;
+      describe('switching a version when import included bit.json file', () => {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--verbose');
+          helper.importComponent('bar/foo --conf');
+          helper.useVersion('0.0.1', 'bar/foo');
         });
-        it('should show verbose npm output', () => {
-          expect(output).to.have.string('npm WARN');
-          expect(output).to.have.string('successfully ran npm install at');
+        it('should rewrite the bit.json file', () => {
+          expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
         });
       });
     });
