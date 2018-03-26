@@ -155,6 +155,7 @@ async function applyVersion(
   const componentsWithDependencies = await consumer.scope.getManyWithAllVersions([id]);
   await consumer.writeToComponentsDir({
     componentsWithDependencies,
+    installNpmPackages: !!id.scope, // if there is no scope, the component wasn't exported yet, don't install npm packages.
     force: true
   });
   componentsWithDependencies[0].component.files.forEach((file) => {

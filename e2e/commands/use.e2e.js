@@ -98,148 +98,182 @@ describe('bit use command', function () {
       helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
       helper.createComponentBarFoo(fixtures.barFooFixtureV2);
       helper.commitAllComponents();
-
-      helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('bar/foo');
-
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       localScope = helper.cloneLocalScope();
     });
-    it('as an intermediate step, make sure all components have v2', () => {
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
-    });
-    describe('switching to a previous version of the main component', () => {
-      let output;
-      let bitMap;
+    describe('as authored', () => {
       before(() => {
-        output = helper.useVersion('0.0.1', 'bar/foo');
-        bitMap = helper.readBitMap();
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFooAuthor);
       });
-      it('should display a successful message', () => {
-        expect(output).to.have.string('the following components were switched to version');
-        expect(output).to.have.string('0.0.1');
-        expect(output).to.have.string('bar/foo');
-      });
-      it('should write the files of that version for the main component and its dependencies', () => {
+      it('as an intermediate step, make sure all components have v2', () => {
         const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
       });
-      it('should update bitmap of the main component with the used version', () => {
-        expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
-        expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@0.0.2`);
-      });
-      it('should add the dependencies to bitmap with their old versions in addition to the current versions', () => {
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`);
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.2`);
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-      });
-      it('should not show any component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
-        expect(statusOutput).to.not.have.string('modified components');
+      describe('switching to a previous version of the main component', () => {
+        let output;
+        let bitMap;
+        before(() => {
+          output = helper.useVersion('0.0.1', 'bar/foo');
+          bitMap = helper.readBitMap();
+        });
+        it('should display a successful message', () => {
+          expect(output).to.have.string('the following components were switched to version');
+          expect(output).to.have.string('0.0.1');
+          expect(output).to.have.string('bar/foo');
+        });
+        it('should write the files of that version for the main component only and not its dependencies', () => {
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo');
+        });
+        it('should update bitmap of the main component with the used version', () => {
+          expect(bitMap).to.have.property('bar/foo@0.0.1');
+          expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+        });
+        it('should not change the dependencies in bitmap file', () => {
+          expect(bitMap).to.not.have.property('utils/is-string@0.0.1');
+          expect(bitMap).to.have.property('utils/is-string@0.0.2');
+          expect(bitMap).to.not.have.property('utils/is-type@0.0.1');
+          expect(bitMap).to.have.property('utils/is-type@0.0.2');
+        });
+        it('should show the main component as modified because its dependencies are now having different version', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.have.string('modified components');
+        });
+        it('should not write package.json file', () => {
+          expect(path.join(helper.localScopePath, 'package.json')).to.not.be.a.path();
+        });
+        it('should not create node_modules directory', () => {
+          expect(path.join(helper.localScopePath, 'node_modules')).to.not.be.a.path();
+        });
+        it('should not write package-lock.json file', () => {
+          expect(path.join(helper.localScopePath, 'package-lock.json')).to.not.be.a.path();
+        });
       });
     });
-    describe('switching to a previous version of the main component when modified', () => {
-      let output;
-      let bitMap;
-      let localScopeAfterModified;
+    describe('as imported', () => {
+      let localScopeAfterImport;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.createFile('components/bar/foo/bar', 'foo.js', barFooV3);
-        localScopeAfterModified = helper.cloneLocalScope();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+        localScopeAfterImport = helper.cloneLocalScope();
       });
-      describe('when not using --merge flag', () => {
-        before(() => {
-          try {
-            helper.useVersion('0.0.1', 'bar/foo');
-          } catch (err) {
-            output = err.toString();
-          }
-        });
-        it('should throw an error indicating that there are conflicts', () => {
-          expect(output).to.have.string('merging the changes will result in a conflict state');
-        });
-        it('should be able to run the app with the modified version because nothing has changed', () => {
-          const result = helper.runWithTryCatch('node app.js');
-          expect(result.trim()).to.equal('got foo v3');
-        });
+      it('as an intermediate step, make sure all components have v2', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string v2 and got foo v2');
       });
-      describe('when using --manual flag', () => {
+      describe('switching to a previous version of the main component', () => {
+        let output;
+        let bitMap;
         before(() => {
-          helper.getClonedLocalScope(localScopeAfterModified);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+          output = helper.useVersion('0.0.1', 'bar/foo');
+          bitMap = helper.readBitMap();
         });
-        it('should indicate that there are conflicts', () => {
-          expect(output).to.have.string(FileStatus.manual);
+        it('should display a successful message', () => {
+          expect(output).to.have.string('the following components were switched to version');
+          expect(output).to.have.string('0.0.1');
+          expect(output).to.have.string('bar/foo');
         });
-        it('should not be able to run the app because of the conflicts', () => {
-          const result = helper.runWithTryCatch('node app.js');
-          expect(result).to.have.string('SyntaxError: Unexpected token <<');
-        });
-      });
-      describe('when using --ours flag', () => {
-        before(() => {
-          helper.getClonedLocalScope(localScopeAfterModified);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
-        });
-        it('should indicate that the file was not changed', () => {
-          expect(output).to.have.string(FileStatus.unchanged);
-        });
-        it('should be able to run the app and show the modified version', () => {
-          const result = helper.runWithTryCatch('node app.js');
-          expect(result.trim()).to.equal('got foo v3');
-        });
-      });
-      describe('when using --theirs flag', () => {
-        before(() => {
-          helper.getClonedLocalScope(localScopeAfterModified);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
-        });
-        it('should indicate that the file was updated', () => {
-          expect(output).to.have.string(FileStatus.updated);
-        });
-        it('should be able to run the app and show the previous version', () => {
-          const result = helper.runWithTryCatch('node app.js');
+        it('should write the files of that version for the main component and its dependencies', () => {
+          const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
+        it('should update bitmap of the main component with the used version', () => {
+          expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+          expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@0.0.2`);
+        });
+        it('should add the dependencies to bitmap with their old versions in addition to the current versions', () => {
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.2`);
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
+        });
+        it('should not show any component as modified', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.not.have.string('modified components');
+        });
       });
-      it('should display a successful message', () => {
-        expect(output).to.have.string('the following components were switched to version');
-        expect(output).to.have.string('0.0.1');
-        expect(output).to.have.string('bar/foo');
+      describe('switching to a previous version of the main component when modified', () => {
+        let localScopeAfterModified;
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterImport);
+          helper.createFile('components/bar/foo/bar', 'foo.js', barFooV3);
+          localScopeAfterModified = helper.cloneLocalScope();
+        });
+        describe('when not using --merge flag', () => {
+          let output;
+          before(() => {
+            try {
+              helper.useVersion('0.0.1', 'bar/foo');
+            } catch (err) {
+              output = err.toString();
+            }
+          });
+          it('should throw an error indicating that there are conflicts', () => {
+            expect(output).to.have.string('merging the changes will result in a conflict state');
+          });
+          it('should be able to run the app with the modified version because nothing has changed', () => {
+            const result = helper.runWithTryCatch('node app.js');
+            expect(result.trim()).to.equal('got foo v3');
+          });
+        });
+        describe('when using --manual flag', () => {
+          let output;
+          before(() => {
+            helper.getClonedLocalScope(localScopeAfterModified);
+            output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+          });
+          it('should indicate that there are conflicts', () => {
+            expect(output).to.have.string(FileStatus.manual);
+          });
+          it('should not be able to run the app because of the conflicts', () => {
+            const result = helper.runWithTryCatch('node app.js');
+            expect(result).to.have.string('SyntaxError: Unexpected token <<');
+          });
+        });
+        describe('when using --ours flag', () => {
+          let output;
+          before(() => {
+            helper.getClonedLocalScope(localScopeAfterModified);
+            output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+          });
+          it('should indicate that the file was not changed', () => {
+            expect(output).to.have.string(FileStatus.unchanged);
+          });
+          it('should be able to run the app and show the modified version', () => {
+            const result = helper.runWithTryCatch('node app.js');
+            expect(result.trim()).to.equal('got foo v3');
+          });
+        });
+        describe('when using --theirs flag', () => {
+          let output;
+          before(() => {
+            helper.getClonedLocalScope(localScopeAfterModified);
+            output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+          });
+          it('should indicate that the file was updated', () => {
+            expect(output).to.have.string(FileStatus.updated);
+          });
+          it('should be able to run the app and show the previous version', () => {
+            const result = helper.runWithTryCatch('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
+        });
       });
-      it('should write the files of that version for the main component and its dependencies', () => {
-        const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      describe.skip('importing individually a nested component', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterImport);
+          helper.importComponent('utils/is-string');
+        });
+        // currently it behaves the same as 'bit import' of an older version.
+        // it leaves the current version is components dir and write the old version in .dependencies
+        // this way if there is another component that depends on the current version of the nested,
+        // it won't be broken.
+        it('should rewrite the component in components dir or leave it and write the old version in .dependencies?', () => {});
       });
-      it('should update bitmap of the main component with the used version', () => {
-        expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
-        expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@0.0.2`);
-      });
-      it('should add the dependencies to bitmap with their old versions in addition to the current versions', () => {
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`);
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.2`);
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
-        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
-      });
-      it('should not show any component as modified', () => {
-        const statusOutput = helper.runCmd('bit status');
-        expect(statusOutput).to.not.have.string('modified components');
-      });
-    });
-    describe.skip('importing individually a nested component', () => {
-      before(() => {
-        helper.getClonedLocalScope(localScope);
-        helper.importComponent('utils/is-string');
-      });
-      // currently it behaves the same as 'bit import' of an older version.
-      // it leaves the current version is components dir and write the old version in .dependencies
-      // this way if there is another component that depends on the current version of the nested,
-      // it won't be broken.
-      it('should rewrite the component in components dir or leave it and write the old version in .dependencies?', () => {});
     });
   });
   describe('as AUTHORED when the recent version has new files', () => {
