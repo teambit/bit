@@ -3,6 +3,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { FileStatus } from '../../src/consumer/component/switch-version';
 
 chai.use(require('chai-fs'));
 
@@ -141,6 +142,94 @@ describe('bit use command', function () {
         expect(statusOutput).to.not.have.string('modified components');
       });
     });
+    describe('switching to a previous version of the main component when modified', () => {
+      let output;
+      let bitMap;
+      let localScopeAfterModified;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('components/bar/foo/bar', 'foo.js', barFooV3);
+        localScopeAfterModified = helper.cloneLocalScope();
+      });
+      describe('when not using --merge flag', () => {
+        before(() => {
+          try {
+            helper.useVersion('0.0.1', 'bar/foo');
+          } catch (err) {
+            output = err.toString();
+          }
+        });
+        it('should throw an error indicating that there are conflicts', () => {
+          expect(output).to.have.string('merging the changes will result in a conflict state');
+        });
+        it('should be able to run the app with the modified version because nothing has changed', () => {
+          const result = helper.runWithTryCatch('node app.js');
+          expect(result.trim()).to.equal('got foo v3');
+        });
+      });
+      describe('when using --manual flag', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterModified);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+        });
+        it('should indicate that there are conflicts', () => {
+          expect(output).to.have.string(FileStatus.manual);
+        });
+        it('should not be able to run the app because of the conflicts', () => {
+          const result = helper.runWithTryCatch('node app.js');
+          expect(result).to.have.string('SyntaxError: Unexpected token <<');
+        });
+      });
+      describe('when using --ours flag', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterModified);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+        });
+        it('should indicate that the file was not changed', () => {
+          expect(output).to.have.string(FileStatus.unchanged);
+        });
+        it('should be able to run the app and show the modified version', () => {
+          const result = helper.runWithTryCatch('node app.js');
+          expect(result.trim()).to.equal('got foo v3');
+        });
+      });
+      describe('when using --theirs flag', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterModified);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+        });
+        it('should indicate that the file was updated', () => {
+          expect(output).to.have.string(FileStatus.updated);
+        });
+        it('should be able to run the app and show the previous version', () => {
+          const result = helper.runWithTryCatch('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('the following components were switched to version');
+        expect(output).to.have.string('0.0.1');
+        expect(output).to.have.string('bar/foo');
+      });
+      it('should write the files of that version for the main component and its dependencies', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('should update bitmap of the main component with the used version', () => {
+        expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
+        expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@0.0.2`);
+      });
+      it('should add the dependencies to bitmap with their old versions in addition to the current versions', () => {
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.1`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-string@0.0.2`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+        expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.2`);
+      });
+      it('should not show any component as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.not.have.string('modified components');
+      });
+    });
     describe.skip('importing individually a nested component', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
@@ -198,7 +287,7 @@ describe('bit use command', function () {
         expect(output).to.have.string('the following components were switched to version');
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string('file has conflicts which needs to be resolved manually');
+        expect(output).to.have.string(FileStatus.manual);
       });
       it('should rewrite the file with the conflict with the conflicts segments', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -232,7 +321,7 @@ describe('bit use command', function () {
         expect(output).to.have.string('the following components were switched to version');
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string('file has been updated according to the used version');
+        expect(output).to.have.string(FileStatus.updated);
       });
       it('should rewrite the file according to the used version', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -261,7 +350,7 @@ describe('bit use command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should indicate that the file was not changed', () => {
-        expect(output).to.have.string('file left intact as it was not changed');
+        expect(output).to.have.string(FileStatus.unchanged);
       });
       it('should leave the file intact', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -292,7 +381,7 @@ describe('bit use command', function () {
           output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that a new file was added', () => {
-          expect(output).to.have.string('file has been added to the used version');
+          expect(output).to.have.string(FileStatus.added);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
@@ -314,7 +403,7 @@ describe('bit use command', function () {
           output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not indicate that a new file was added', () => {
-          expect(output).to.not.have.string('file has been added to the used version');
+          expect(output).to.not.have.string(FileStatus.added);
           expect(output).to.not.have.string('bar/foo2.js');
         });
         it('should not track the file in bitmap', () => {
@@ -339,7 +428,7 @@ describe('bit use command', function () {
           output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
         });
         it('should not indicate that the new file was not changed', () => {
-          expect(output).to.have.string('file left intact as it was not changed');
+          expect(output).to.have.string(FileStatus.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should keep tracking the file in bitmap', () => {
@@ -403,7 +492,7 @@ describe('bit use command', function () {
       });
       it('should indicate that the file has been merged successfully', () => {
         expect(output).to.have.string('bar/foo.js');
-        expect(output).to.have.string('file has successfully merged the modification with the used version');
+        expect(output).to.have.string(FileStatus.merged);
       });
       it('should update bitmap with the used version', () => {
         const bitMap = helper.readBitMap();

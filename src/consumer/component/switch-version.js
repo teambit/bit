@@ -22,7 +22,7 @@ export const FileStatus = {
   updated: 'file has been updated according to the used version',
   added: 'file has been added to the used version',
   overridden: 'the used version has been overridden by the current modification',
-  unchanged: 'file left intact as it was not changed'
+  unchanged: 'file left intact'
 };
 
 export default (async function switchVersion(
