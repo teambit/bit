@@ -7,6 +7,16 @@ import type { MergeResults } from '../merge-versions/merge-versions';
 import { resolveConflictPrompt } from '../../prompts';
 import ComponentMap from '../bit-map/component-map';
 
+export type UseProps = {
+  version: string,
+  ids: BitId[],
+  promptMergeOptions: boolean,
+  mergeStrategy: ?MergeStrategy,
+  verbose: boolean,
+  skipNpmInstall: boolean,
+  ignoreDist: boolean
+};
+
 type ComponentFromFSAndModel = {
   componentFromFS: Component,
   componentFromModel: Component,
@@ -27,13 +37,8 @@ export const FileStatus = {
 export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: string]: $Values<typeof FileStatus> } };
 export type SwitchVersionResults = { components: ApplyVersionResult[], version: string };
 
-export default (async function switchVersion(
-  consumer: Consumer,
-  version: string,
-  ids: BitId[],
-  promptMergeOptions?: boolean,
-  mergeStrategy?: MergeStrategy
-): Promise<SwitchVersionResults> {
+export default (async function switchVersion(consumer: Consumer, useProps: UseProps): Promise<SwitchVersionResults> {
+  const { version, ids, promptMergeOptions } = useProps;
   const { components } = await consumer.loadComponents(ids);
   const allComponentsP = components.map((component: Component) => {
     return getComponentInstances(consumer, component, version);
@@ -43,15 +48,15 @@ export default (async function switchVersion(
     component => component.mergeResults && component.mergeResults.hasConflicts
   );
   if (componentWithConflict) {
-    if (!promptMergeOptions && !mergeStrategy) {
+    if (!promptMergeOptions && !useProps.mergeStrategy) {
       throw new Error(
         `component ${componentWithConflict.id.toStringWithoutVersion()} is modified, merging the changes will result in a conflict state, to merge the component use --merge flag`
       );
     }
-    if (!mergeStrategy) mergeStrategy = await getMergeStrategy();
+    if (!useProps.mergeStrategy) useProps.mergeStrategy = await getMergeStrategy();
   }
   const componentsResultsP = allComponents.map(({ id, componentFromFS, mergeResults }) => {
-    return applyVersion(consumer, id, componentFromFS, mergeResults, mergeStrategy);
+    return applyVersion(consumer, id, componentFromFS, mergeResults, useProps);
   });
   const componentsResults = await Promise.all(componentsResultsP);
   if (consumer.bitMap.hasChanged) await consumer.bitMap.write();
@@ -142,8 +147,9 @@ async function applyVersion(
   id: BitId,
   componentFromFS: Component,
   mergeResults: MergeResults,
-  mergeStrategy?: MergeStrategy
+  useProps: UseProps
 ): Promise<ApplyVersionResult> {
+  const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = useProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     // $FlowFixMe componentFromFS.files can't be empty
@@ -157,8 +163,10 @@ async function applyVersion(
   const componentsWithDependencies = await consumer.scope.getManyWithAllVersions([id]);
   await consumer.writeToComponentsDir({
     componentsWithDependencies,
-    installNpmPackages: !!id.scope, // if there is no scope, the component wasn't exported yet, don't install npm packages.
-    force: true
+    installNpmPackages: !!id.scope && !skipNpmInstall, // if there is no scope, the component wasn't exported yet, don't install npm packages.
+    force: true,
+    verbose,
+    writeDists: !ignoreDist
   });
   componentsWithDependencies[0].component.files.forEach((file) => {
     filesStatus[file.relative] = FileStatus.updated;
@@ -175,7 +183,7 @@ async function applyVersion(
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
-async function applyModifiedVersion(mergeResults: MergeResults, mergeStrategy?: MergeStrategy): Promise<Object> {
+async function applyModifiedVersion(mergeResults: MergeResults, mergeStrategy: ?MergeStrategy): Promise<Object> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {

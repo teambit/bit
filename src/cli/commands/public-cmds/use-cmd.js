@@ -3,11 +3,13 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { use } from '../../../api/consumer';
 import type {
+  UseProps,
   MergeStrategy,
   SwitchVersionResults,
   ApplyVersionResult
 } from '../../../consumer/component/switch-version';
 import { MergeOptions } from '../../../consumer/component/switch-version';
+import { BitId } from '../../../bit-id';
 
 export default class Use extends Command {
   name = 'use <version> <ids...>';
@@ -25,32 +27,54 @@ export default class Use extends Command {
       'theirs',
       'in case of a conflict, use theirs (override the current modification and use the specified version)'
     ],
-    ['M', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later']
+    ['M', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['v', 'verbose', 'showing verbose output for inspection'],
+    ['', 'skip-npm-install', 'do not install packages of the imported components'],
+    ['', 'ignore-dist', 'write dist files (when exist) to the configured directory']
   ];
   loader = true;
 
   action(
     [version, ids]: [string, string[]],
     {
-      merge,
-      ours,
-      theirs,
-      manual
+      merge = false,
+      ours = false,
+      theirs = false,
+      manual = false,
+      verbose = false,
+      skipNpmInstall = false,
+      ignoreDist = false
     }: {
-      merge: ?boolean,
-      ours: ?boolean,
-      theirs: ?boolean,
-      manual: ?boolean
+      merge?: boolean,
+      ours?: boolean,
+      theirs?: boolean,
+      manual?: boolean,
+      verbose?: boolean,
+      skipNpmInstall?: boolean,
+      ignoreDist?: boolean
     }
   ): Promise<SwitchVersionResults> {
-    let mergeStrategy: ?MergeStrategy;
-    if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
-      throw new Error('please choose only one options from: ours, theirs or manual');
-    }
-    if (ours) mergeStrategy = MergeOptions.ours;
-    if (theirs) mergeStrategy = MergeOptions.theirs;
-    if (manual) mergeStrategy = MergeOptions.manual;
-    return use(version, ids, merge, mergeStrategy);
+    const getMergeStrategy = (): ?MergeStrategy => {
+      if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
+        throw new Error('please choose only one of the following: ours, theirs or manual');
+      }
+      if (ours) return MergeOptions.ours;
+      if (theirs) return MergeOptions.theirs;
+      if (manual) return MergeOptions.manual;
+      return null;
+    };
+
+    const bitIds = ids.map(id => BitId.parse(id));
+    const useProps: UseProps = {
+      version,
+      ids: bitIds,
+      promptMergeOptions: merge,
+      mergeStrategy: getMergeStrategy(),
+      verbose,
+      skipNpmInstall,
+      ignoreDist
+    };
+    return use(useProps);
   }
 
   report({ components, version }: SwitchVersionResults): string {
