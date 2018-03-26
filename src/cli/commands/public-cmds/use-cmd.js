@@ -2,8 +2,11 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { use } from '../../../api/consumer';
-import { BitId } from '../../../bit-id';
-import type { MergeStrategy } from '../../../consumer/component/switch-version';
+import type {
+  MergeStrategy,
+  SwitchVersionResults,
+  ApplyVersionResult
+} from '../../../consumer/component/switch-version';
 import { MergeOptions } from '../../../consumer/component/switch-version';
 
 export default class Use extends Command {
@@ -39,7 +42,7 @@ export default class Use extends Command {
       theirs: ?boolean,
       manual: ?boolean
     }
-  ): Promise<*> {
+  ): Promise<SwitchVersionResults> {
     let mergeStrategy: ?MergeStrategy;
     if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
       throw new Error('please choose only one options from: ours, theirs or manual');
@@ -50,10 +53,10 @@ export default class Use extends Command {
     return use(version, ids, merge, mergeStrategy);
   }
 
-  report({ components, version }: { components: BitId[], version: string }): string {
+  report({ components, version }: SwitchVersionResults): string {
     const title = `the following components were switched to version ${chalk.bold(version)}\n`;
     const componentsStr = components
-      .map((component) => {
+      .map((component: ApplyVersionResult) => {
         const name = component.id.toStringWithoutVersion();
         const files = Object.keys(component.filesStatus)
           .map(file => `\t${chalk.bold(file)} => ${component.filesStatus[file]}`)

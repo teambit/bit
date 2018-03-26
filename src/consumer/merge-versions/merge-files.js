@@ -1,5 +1,23 @@
 // @flow
 import execa from 'execa';
+import type { PathLinux, PathOsBased } from '../../utils/path';
+
+export type MergeFileResult = { filePath: string, output: ?string, conflict: ?string };
+export type MergeFileParams = {
+  filePath: PathLinux,
+  currentFile: {
+    label: string,
+    path: PathOsBased
+  },
+  baseFile: {
+    label: string,
+    path: PathOsBased
+  },
+  otherFile: {
+    label: string,
+    path: PathOsBased
+  }
+};
 
 /**
  * use git `merge-file` command. From the command help:
@@ -10,7 +28,12 @@ import execa from 'execa';
  * Here, we are not going to write the result into current-file. Instead, we'll use the "-p" flag,
  * to just return the results.
  */
-export default (async function mergeFiles({ filePath, currentFile, baseFile, otherFile }: Object) {
+export default (async function mergeFiles({
+  filePath,
+  currentFile,
+  baseFile,
+  otherFile
+}: MergeFileParams): Promise<MergeFileResult> {
   const mergeResult = { filePath, output: null, conflict: null };
   try {
     const result = await execa('git', [

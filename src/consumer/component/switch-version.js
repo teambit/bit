@@ -24,6 +24,8 @@ export const FileStatus = {
   overridden: 'the used version has been overridden by the current modification',
   unchanged: 'file left intact'
 };
+export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: string]: $Values<typeof FileStatus> } };
+export type SwitchVersionResults = { components: ApplyVersionResult[], version: string };
 
 export default (async function switchVersion(
   consumer: Consumer,
@@ -31,7 +33,7 @@ export default (async function switchVersion(
   ids: BitId[],
   promptMergeOptions?: boolean,
   mergeStrategy?: MergeStrategy
-) {
+): Promise<SwitchVersionResults> {
   const { components } = await consumer.loadComponents(ids);
   const allComponentsP = components.map((component: Component) => {
     return getComponentInstances(consumer, component, version);
@@ -141,7 +143,7 @@ async function applyVersion(
   componentFromFS: Component,
   mergeResults: MergeResults,
   mergeStrategy?: MergeStrategy
-): Promise<{ id: BitId[], filesStatus: { [string]: string } }> {
+): Promise<ApplyVersionResult> {
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     // $FlowFixMe componentFromFS.files can't be empty

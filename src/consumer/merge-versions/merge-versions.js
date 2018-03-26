@@ -7,6 +7,7 @@ import { sha1 } from '../../utils';
 import { SourceFile } from '../component/sources';
 import { Tmp } from '../../scope/repositories';
 import mergeFiles from './merge-files';
+import type { MergeFileResult, MergeFileParams } from './merge-files';
 
 export type MergeResults = {
   addFiles: Array<{
@@ -133,13 +134,16 @@ export default (async function mergeVersions({
   return results;
 });
 
-async function getConflictResults(consumer: Consumer, modifiedFiles): Promise<Array<any>> {
+async function getConflictResults(
+  consumer: Consumer,
+  modifiedFiles: $PropertyType<MergeResults, 'modifiedFiles'>
+): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
     const fsFilePath = await tmp.save(modifiedFile.fsFile.contents);
     const baseFilePath = await tmp.save(modifiedFile.baseFile.contents);
     const currentFilePath = await tmp.save(modifiedFile.currentFile.contents);
-    const mergeFilesParams = {
+    const mergeFilesParams: MergeFileParams = {
       filePath: modifiedFile.filePath,
       currentFile: {
         label: modifiedFile.currentFile.version,
