@@ -177,6 +177,10 @@ describe('bit use command', function () {
           expect(output).to.have.string('0.0.1');
           expect(output).to.have.string('bar/foo');
         });
+        it('should not show verbose npm output', () => {
+          expect(output).to.have.string('npm');
+          expect(output).to.not.have.string('npm WARN');
+        });
         it('should write the files of that version for the main component and its dependencies', () => {
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
@@ -273,6 +277,30 @@ describe('bit use command', function () {
         // this way if there is another component that depends on the current version of the nested,
         // it won't be broken.
         it('should rewrite the component in components dir or leave it and write the old version in .dependencies?', () => {});
+      });
+      describe('switching a version using --skip-npm-install flag', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterImport);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--skip-npm-install');
+        });
+        it('should not show npm messages', () => {
+          expect(output).to.not.have.string('npm');
+        });
+        it('should not write package-lock.json file', () => {
+          expect(path.join(helper.localScopePath, 'components/bar/foo', 'package-lock.json')).to.not.be.a.path();
+        });
+      });
+      describe('switching a version using --verbose flag', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterImport);
+          output = helper.useVersion('0.0.1', 'bar/foo', '--verbose');
+        });
+        it('should show verbose npm output', () => {
+          expect(output).to.have.string('npm WARN');
+          expect(output).to.have.string('successfully ran npm install at');
+        });
       });
     });
   });
