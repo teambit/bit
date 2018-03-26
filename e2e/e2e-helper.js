@@ -570,8 +570,8 @@ export default class Helper {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
-  useVersion(version: string, ids: string) {
-    return this.runCmd(`bit use ${version} ${ids}`);
+  useVersion(version: string, ids: string, flags?: string) {
+    return this.runCmd(`bit use ${version} ${ids} ${flags || ''}`);
   }
 
   getBitVersion() {

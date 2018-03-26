@@ -38,3 +38,4 @@ describe('foo', () => {
   });
 });`;
 export const appPrintBarFoo = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); console.log(barFoo());";

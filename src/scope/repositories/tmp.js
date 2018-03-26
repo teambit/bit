@@ -4,6 +4,7 @@ import { v4 } from 'uuid';
 import * as path from 'path';
 import Repository from '../repository';
 import { BIT_TMP_DIRNAME } from '../../constants';
+import type { PathOsBased } from '../../utils/path';
 
 export default class Tmp extends Repository {
   getPath(): string {
@@ -14,7 +15,7 @@ export default class Tmp extends Repository {
     return path.join(this.getPath(), p);
   }
 
-  save(data: string, ext: string = '.js'): Promise<string> {
+  save(data: string, ext: string = '.js'): Promise<PathOsBased> {
     return new Promise((resolve, reject) => {
       const fileName = v4();
       const filePath = this.composePath(`${fileName}${ext}`);
@@ -25,7 +26,7 @@ export default class Tmp extends Repository {
     });
   }
 
-  saveSync(data: string, ext: string = '.js'): string {
+  saveSync(data: string, ext: string = '.js'): PathOsBased {
     const fileName = v4();
     const filePath = this.composePath(`${fileName}${ext}`);
     fs.outputFileSync(filePath, data);
@@ -50,15 +51,10 @@ export default class Tmp extends Repository {
   }
 
   clear(): Promise<any> {
-    return new Promise((resolve, reject) => {
-      fs.rmdir(this.getPath(), (err) => {
-        if (err) return reject(err);
-        return resolve();
-      });
-    });
+    return fs.emptyDir(this.getPath());
   }
 
   clearSync(): any {
-    return fs.rmdirSync(this.getPath());
+    return fs.emptyDirSync(this.getPath());
   }
 }
