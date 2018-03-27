@@ -7,7 +7,6 @@ import Component from './consumer-component';
 import mergeVersions from '../merge-versions/merge-versions';
 import type { MergeResults } from '../merge-versions/merge-versions';
 import { resolveConflictPrompt } from '../../prompts';
-import ComponentMap from '../bit-map/component-map';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathLinux } from '../../utils/path';
