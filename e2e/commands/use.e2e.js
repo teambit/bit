@@ -304,6 +304,16 @@ describe('bit use command', function () {
           expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
         });
       });
+      describe('switching a version when import did not write package.json file', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScopeAfterImport);
+          helper.importComponent('bar/foo --ignore-package-json');
+          helper.useVersion('0.0.1', 'bar/foo');
+        });
+        it('should not write package.json file', () => {
+          expect(path.join(helper.localScopePath, 'components/bar/foo', 'package.json')).to.not.be.a.path();
+        });
+      });
     });
   });
   describe('as AUTHORED when the recent version has new files', () => {
