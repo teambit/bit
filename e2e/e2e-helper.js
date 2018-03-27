@@ -339,7 +339,7 @@ export default class Helper {
     return this.runCmd(`bit export ${scope}`);
   }
 
-  importComponent(id) {
+  importComponent(id: string) {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 

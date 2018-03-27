@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username } from '../bitsrc-tester';
+import { FileStatus } from '../../src/consumer/component/switch-version';
 
 chai.use(require('chai-fs'));
 
@@ -16,6 +17,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
   describe('when originallySharedDir is the same as dist.entry (src)', () => {
     let originalScope;
     let scopeBeforeExport;
+    let scopeAfterImport;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const sourceDir = path.join(helper.getFixturesDir(), 'components');
@@ -41,6 +43,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.addRemoteScope();
       helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.importComponent('string/pad-left -p src/pad-left');
+      scopeAfterImport = helper.cloneLocalScope();
     });
     it('should be able to run the tests', () => {
       const output = helper.testComponent('string/pad-left');
@@ -135,6 +138,41 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             expect(id).not.to.have.string('is-string');
           });
         });
+      });
+    });
+    describe('merge conflict', () => {
+      let output;
+      let localConsumerFiles;
+      before(() => {
+        helper.getClonedLocalScope(originalScope);
+        helper.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
+        helper.tagAllWithoutMessage('--force'); // 0.0.2
+        helper.exportAllComponents();
+
+        helper.getClonedLocalScope(scopeAfterImport);
+        helper.createFile('src/pad-left/pad-left', 'pad-left.js', 'modified-pad-left-imported');
+        helper.tagAllWithoutMessage('--force');
+        try {
+          helper.exportAllComponents();
+        } catch (err) {
+          expect(err.toString()).to.have.string('conflict');
+        }
+
+        helper.runCmd('bit untag string/pad-left 0.0.2');
+        helper.importComponent('string/pad-left --objects');
+        output = helper.useVersion('0.0.2', 'string/pad-left', '--manual');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('bit-use should not add any file', () => {
+        expect(output).to.not.have.string(FileStatus.added);
+      });
+      it('bit-use should update the same files and not create duplications', () => {
+        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/index.js'));
+        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left.js'));
+        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left.spec.js'));
+        expect(localConsumerFiles).to.not.include(path.normalize('src/index.js'));
+        expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left.js'));
+        expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left.spec.js'));
       });
     });
   });
