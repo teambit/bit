@@ -17,9 +17,19 @@ export async function commitAction(args: {
   releaseType: string,
   force: ?boolean,
   verbose?: boolean,
-  ignoreMissingDependencies?: boolean
+  ignoreMissingDependencies?: boolean,
+  ignoreNewestVersion: boolean
 }) {
-  const { id, message, exactVersion, releaseType, force, verbose, ignoreMissingDependencies } = args;
+  const {
+    id,
+    message,
+    exactVersion,
+    releaseType,
+    force,
+    verbose,
+    ignoreMissingDependencies,
+    ignoreNewestVersion
+  } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
   const consumer: Consumer = await loadConsumer();
@@ -36,7 +46,8 @@ export async function commitAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies
+    ignoreMissingDependencies,
+    ignoreNewestVersion
   );
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
@@ -65,6 +76,7 @@ export async function commitAllAction(args: {
   force: ?boolean,
   verbose?: boolean,
   ignoreMissingDependencies?: boolean,
+  ignoreNewestVersion: boolean,
   scope?: boolean,
   includeImported?: boolean
 }) {
@@ -75,6 +87,7 @@ export async function commitAllAction(args: {
     force,
     verbose,
     ignoreMissingDependencies,
+    ignoreNewestVersion,
     scope,
     includeImported
   } = args;
@@ -97,7 +110,8 @@ export async function commitAllAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies
+    ignoreMissingDependencies,
+    ignoreNewestVersion
   );
   commitResults.warnings = warnings;
 
