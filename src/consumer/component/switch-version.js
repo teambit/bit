@@ -9,6 +9,8 @@ import type { MergeResults } from '../merge-versions/merge-versions';
 import { resolveConflictPrompt } from '../../prompts';
 import ComponentMap from '../bit-map/component-map';
 import { COMPONENT_ORIGINS } from '../../constants';
+import { pathNormalizeToLinux } from '../../utils/path';
+import type { PathLinux } from '../../utils/path';
 
 export type UseProps = {
   version: string,
@@ -37,7 +39,7 @@ export const FileStatus = {
   overridden: 'the used version has been overridden by the current modification',
   unchanged: 'file left intact'
 };
-export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: string]: $Values<typeof FileStatus> } };
+export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: PathLinux]: $Values<typeof FileStatus> } };
 export type SwitchVersionResults = { components: ApplyVersionResult[], version: string };
 
 export default (async function switchVersion(consumer: Consumer, useProps: UseProps): Promise<SwitchVersionResults> {
@@ -157,7 +159,7 @@ async function applyVersion(
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     // $FlowFixMe componentFromFS.files can't be empty
     componentFromFS.files.forEach((file) => {
-      filesStatus[file.relative] = FileStatus.unchanged;
+      filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
     consumer.bitMap.hasChanged = true;
@@ -187,7 +189,7 @@ async function applyVersion(
     writePackageJson
   });
   componentsWithDependencies[0].component.files.forEach((file) => {
-    filesStatus[file.relative] = FileStatus.updated;
+    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
 
   let modifiedStatus = {};
