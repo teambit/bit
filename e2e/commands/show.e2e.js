@@ -496,7 +496,7 @@ function add(a, b) {
       });
       describe('when the dependency was updated locally but not exported yet', () => {
         before(() => {
-          helper.commitComponent('utils/is-type', 'msg', '-f');
+          helper.commitComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
         });
         it('should indicate that the current version is larger than the remote version', () => {
           const output = helper.showComponent('utils/is-string --outdated --json');
