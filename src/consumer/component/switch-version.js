@@ -1,4 +1,6 @@
 // @flow
+import path from 'path';
+import fs from 'fs-extra';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import Component from './consumer-component';
@@ -6,6 +8,7 @@ import mergeVersions from '../merge-versions/merge-versions';
 import type { MergeResults } from '../merge-versions/merge-versions';
 import { resolveConflictPrompt } from '../../prompts';
 import ComponentMap from '../bit-map/component-map';
+import { COMPONENT_ORIGINS } from '../../constants';
 
 export type UseProps = {
   version: string,
@@ -161,13 +164,27 @@ async function applyVersion(
     return { id, filesStatus };
   }
   const componentsWithDependencies = await consumer.scope.getManyWithAllVersions([id]);
+  const componentMap = componentFromFS.componentMap;
+  if (!componentMap) throw new Error('applyVersion: componentMap was not found');
+  const shouldWritePackageJson = async (): Promise<boolean> => {
+    const rootDir = componentMap.rootDir;
+    if (!rootDir) return false;
+    const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
+    return fs.exists(packageJsonPath);
+  };
+  const shouldInstallNpmPackages = (): boolean => {
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return false;
+    return !skipNpmInstall;
+  };
+  const writePackageJson = await shouldWritePackageJson();
   await consumer.writeToComponentsDir({
     componentsWithDependencies,
-    installNpmPackages: !!id.scope && !skipNpmInstall, // if there is no scope, the component wasn't exported yet, don't install npm packages.
+    installNpmPackages: shouldInstallNpmPackages(),
     force: true,
     writeBitJson: !!componentFromFS.bitJson, // write bit.json only if it was there before
     verbose,
-    writeDists: !ignoreDist
+    writeDists: !ignoreDist,
+    writePackageJson
   });
   componentsWithDependencies[0].component.files.forEach((file) => {
     filesStatus[file.relative] = FileStatus.updated;
@@ -177,8 +194,7 @@ async function applyVersion(
   if (mergeResults) {
     modifiedStatus = await applyModifiedVersion(mergeResults, mergeStrategy);
     if (mergeResults.addFiles.length && mergeStrategy !== MergeOptions.theirs) {
-      // $FlowFixMe componentMap does exist here
-      addFilesToBitMap(consumer, componentFromFS.componentMap, id);
+      addFilesToBitMap(consumer, componentMap, id);
     }
   }
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
@@ -207,9 +223,7 @@ async function applyModifiedVersion(mergeResults: MergeResults, mergeStrategy: ?
     await file.fsFile.write();
     filesStatus[file.filePath] = FileStatus.overridden;
   });
-  await Promise.all(modifiedP);
-  await Promise.all(addFilesP);
-  await Promise.all(overrideFilesP);
+  await Promise.all([Promise.all(modifiedP), Promise.all(addFilesP), Promise.all(overrideFilesP)]);
 
   return filesStatus;
 }
