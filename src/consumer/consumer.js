@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
+import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies, NewerVersionFound } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
@@ -674,18 +674,34 @@ export default class Consumer {
     releaseType: string,
     force: ?boolean,
     verbose: ?boolean,
-    ignoreMissingDependencies: ?boolean
+    ignoreMissingDependencies: ?boolean,
+    ignoreNewestVersion: boolean
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
-    // Run over the components to check if there is missing dependencies
-    // If there is at least one we won't commit anything
+    // go through the components list to check if there are missing dependencies
+    // if there is at least one we won't commit anything
     if (!ignoreMissingDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.missingDependencies);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
+    // check for each one of the components whether it is using an old version
+    if (!ignoreNewestVersion) {
+      const throwForNewestVersions = components.map(async (component) => {
+        if (component.componentFromModel) {
+          // otherwise it's a new component, so this check is irrelevant
+          const modelComponent = await this.scope.getModelComponentIfExist(component.id);
+          if (!modelComponent) throw new Error('');
+          const latest = modelComponent.latest();
+          if (latest !== component.version) {
+            throw new NewerVersionFound(component.id.toStringWithoutVersion(), component.version, latest);
+          }
+        }
+      });
+      await Promise.all(throwForNewestVersions);
     }
     const { taggedComponents, autoTaggedComponents } = await this.scope.putMany({
       consumerComponents: components,
