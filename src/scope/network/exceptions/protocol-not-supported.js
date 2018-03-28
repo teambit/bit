@@ -1,1 +1,3 @@
-export default class ProtocolNotSupported extends Error {}
+import AbstractError from '../../../error/abstract-error';
+
+export default class ProtocolNotSupported extends AbstractError {}

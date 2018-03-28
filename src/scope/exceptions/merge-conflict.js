@@ -1,5 +1,7 @@
-// @flow
-export default class MergeConflict extends Error {
+/** @flow */
+import AbstractError from '../../error/abstract-error';
+
+export default class MergeConflict extends AbstractError {
   id: string;
   code: number;
 
@@ -7,5 +9,10 @@ export default class MergeConflict extends Error {
     super();
     this.code = 131;
     this.id = id;
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.id = this.toHash(clone.id);
+    return clone;
   }
 }

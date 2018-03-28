@@ -1,1 +1,4 @@
-export default class SSHConnectionError extends Error {}
+/** @flow */
+import AbstractError from '../../../error/abstract-error';
+
+export default class SSHConnectionError extends AbstractError {}

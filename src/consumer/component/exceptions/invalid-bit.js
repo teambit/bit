@@ -1,1 +1,3 @@
-export default class InvalidBit extends Error {}
+import AbstractError from '../../../error/abstract-error';
+
+export default class InvalidBit extends AbstractError {}

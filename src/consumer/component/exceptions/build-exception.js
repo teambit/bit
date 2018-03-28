@@ -1,5 +1,7 @@
 /** @flow */
-export default class BuildException extends Error {
+import AbstractError from '../../../error/abstract-error';
+
+export default class BuildException extends AbstractError {
   id: string;
   message: string;
   stack: string;
@@ -8,5 +10,10 @@ export default class BuildException extends Error {
     this.id = id;
     this.message = message || '';
     this.stack = stack || '';
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.id = this.toHash(clone.id);
+    return clone;
   }
 }
