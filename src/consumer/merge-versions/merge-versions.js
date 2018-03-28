@@ -8,6 +8,8 @@ import { SourceFile } from '../component/sources';
 import { Tmp } from '../../scope/repositories';
 import mergeFiles from './merge-files';
 import type { MergeFileResult, MergeFileParams } from './merge-files';
+import type { PathOsBased } from '../../utils/path';
+import type { SourceFileModel } from '../../scope/models/version';
 
 export type MergeResults = {
   addFiles: Array<{
@@ -65,23 +67,25 @@ export default (async function mergeVersions({
   fsVersion: string,
   currentVersion: string
 }): Promise<MergeResults> {
-  const baseComponent: Component = await modelComponent.toConsumerComponent(
-    fsVersion,
-    consumer.scope.name,
-    consumer.scope.objects
-  );
-  const currentComponent: Component = await modelComponent.toConsumerComponent(
-    currentVersion,
-    consumer.scope.name,
-    consumer.scope.objects
-  );
-
-  const fsFiles = componentFromFS.files;
+  const baseComponent: Component = await modelComponent.loadVersion(fsVersion, consumer.scope.objects);
+  const currentComponent: Component = await modelComponent.loadVersion(currentVersion, consumer.scope.objects);
+  // baseFiles and currentFiles come from the model, therefore their paths include the
+  // sharedOriginallyDir. fsFiles come from the Fs, therefore their paths don't include the
+  // sharedOriginallyDir.
+  // option 1) strip sharedOriginallyDir from baseFiles and currentFiles. the problem is that the
+  // sharedDir can be different if the dependencies were changes for example, as a result, it won't
+  // be possible to compare between the files as the paths are different.
+  // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
   const baseFiles = baseComponent.files;
   const currentFiles = currentComponent.files;
-
+  const fsFiles = componentFromFS.files.map((file) => {
+    const fsFile = file.clone();
+    const newRelative = componentFromFS.addSharedDir(file.relative);
+    fsFile.updatePaths({ newBase: file.base, newRelative });
+    return fsFile;
+  });
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
-  const getFileResult = (fsFile: SourceFile, baseFile?: SourceFile, currentFile?: SourceFile) => {
+  const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
     const filePath = fsFile.relative;
     if (!currentFile) {
       // if !currentFile && !baseFile, the file was created after the last tag
@@ -96,8 +100,8 @@ export default (async function mergeVersions({
       return;
     }
     const fsFileHash = sha1(fsFile.contents);
-    const baseFileHash = sha1(baseFile.contents);
-    const currentFileHash = sha1(currentFile.contents);
+    const baseFileHash = baseFile.file.hash;
+    const currentFileHash = currentFile.file.hash;
     if (fsFileHash === currentFileHash) {
       // no need to check also for fsFileHash === baseFileHash, as long as fs == current, no need to take any action
       results.unModifiedFiles.push({ filePath, fsFile });
@@ -105,18 +109,21 @@ export default (async function mergeVersions({
     }
     if (fsFileHash === baseFileHash) {
       results.overrideFiles.push({ filePath, fsFile });
+      return;
     }
     // it was changed in both, there is a chance for conflict
     fsFile.version = fsVersion;
+    // $FlowFixMe it's a hack to pass the data, version is not a valid attribute.
     baseFile.version = fsVersion;
+    // $FlowFixMe it's a hack to pass the data, version is not a valid attribute.
     currentFile.version = currentVersion;
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
   };
 
   fsFiles.forEach((fsFile) => {
     const relativePath = fsFile.relative;
-    const baseFile = baseFiles.find(file => file.relative === relativePath);
-    const currentFile = currentFiles.find(file => file.relative === relativePath);
+    const baseFile = baseFiles.find(file => file.relativePath === relativePath);
+    const currentFile = currentFiles.find(file => file.relativePath === relativePath);
     getFileResult(fsFile, baseFile, currentFile);
   });
 
@@ -140,9 +147,18 @@ async function getConflictResults(
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
-    const fsFilePath = await tmp.save(modifiedFile.fsFile.contents);
-    const baseFilePath = await tmp.save(modifiedFile.baseFile.contents);
-    const currentFilePath = await tmp.save(modifiedFile.currentFile.contents);
+    const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
+    const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
+      const content = await file.file.load(consumer.scope.objects);
+      return tmp.save(content);
+    };
+    const baseFilePathP = writeFile(modifiedFile.baseFile);
+    const currentFilePathP = writeFile(modifiedFile.currentFile);
+    const [fsFilePath, baseFilePath, currentFilePath] = await Promise.all([
+      fsFilePathP,
+      baseFilePathP,
+      currentFilePathP
+    ]);
     const mergeFilesParams: MergeFileParams = {
       filePath: modifiedFile.filePath,
       currentFile: {

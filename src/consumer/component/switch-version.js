@@ -7,10 +7,10 @@ import Component from './consumer-component';
 import mergeVersions from '../merge-versions/merge-versions';
 import type { MergeResults } from '../merge-versions/merge-versions';
 import { resolveConflictPrompt } from '../../prompts';
-import ComponentMap from '../bit-map/component-map';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathLinux } from '../../utils/path';
+import { SourceFile } from './sources';
 
 export type UseProps = {
   version: string,
@@ -118,30 +118,15 @@ async function getMergeStrategy(): Promise<MergeStrategy> {
 }
 
 /**
- * in a case where a component @0.0.2 is switched to @0.0.1
- * previousComponentMap => componentMap of 0.0.2
- * newComponentMap      => componentMap of 0.0.1
- * newId                => 0.0.1
- */
-function addFilesToBitMap(consumer: Consumer, previousComponentMap: ComponentMap, newId: BitId): void {
-  const newComponentMap = consumer.bitMap.getComponent(newId);
-  const files = consumer.bitMap.mergeFilesArray(newComponentMap.files, previousComponentMap.files);
-  newComponentMap.files = files;
-  consumer.bitMap.hasChanged = true;
-}
-
-/**
- * 1) write the component as the specified version.
- * an exception is when the files are modified with conflicts and the strategy is "our". (see #3.ours)
+ * 1) when the files are modified with conflicts and the strategy is "our", leave the FS as is
+ * and update only bitmap id version. (not the componentMap object).
  *
- * 2) if modified with no conflict.
- * write from mergeResults: addFiles, overrideFiles and modifiedFiles.output.
- * also, add newly tracked files to bitmap.
+ * 2) when the files are modified with conflicts and the strategy is "theirs", write the component
+ * according to id.version.
  *
- * 3) if modified with conflict.
- * Theirs => don't do anything. the component is already written as the specified version.
- * Ours => leave the FS as is and update only bitmap id version. (not the componentMap object).
- * Manual => write from mergeResults: addFiles, overrideFiles and modifiedFiles.conflict. also, add newly tracked files to bitmap.
+ * 3) when files are modified with no conflict or files are modified with conflicts and the
+ * strategy is manual, load the component according to id.version and update component.files.
+ * applyModifiedVersion() docs explains what files are updated/added.
  *
  * Side note:
  * Deleted file => if files are in used version but not in the modified one, no need to delete it. (similar to git).
@@ -168,8 +153,8 @@ async function applyVersion(
   const componentsWithDependencies = await consumer.scope.getManyWithAllVersions([id]);
   const componentMap = componentFromFS.componentMap;
   if (!componentMap) throw new Error('applyVersion: componentMap was not found');
+  const rootDir = componentMap.rootDir;
   const shouldWritePackageJson = async (): Promise<boolean> => {
-    const rootDir = componentMap.rootDir;
     if (!rootDir) return false;
     const packageJsonPath = path.join(consumer.getPath(), rootDir, 'package.json');
     return fs.exists(packageJsonPath);
@@ -179,6 +164,18 @@ async function applyVersion(
     return !skipNpmInstall;
   };
   const writePackageJson = await shouldWritePackageJson();
+
+  const files = componentsWithDependencies[0].component.files;
+  files.forEach((file) => {
+    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
+  });
+
+  let modifiedStatus = {};
+  if (mergeResults) {
+    // update files according to the merge results
+    modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
+  }
+
   await consumer.writeToComponentsDir({
     componentsWithDependencies,
     installNpmPackages: shouldInstallNpmPackages(),
@@ -188,41 +185,43 @@ async function applyVersion(
     writeDists: !ignoreDist,
     writePackageJson
   });
-  componentsWithDependencies[0].component.files.forEach((file) => {
-    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
-  });
 
-  let modifiedStatus = {};
-  if (mergeResults) {
-    modifiedStatus = await applyModifiedVersion(mergeResults, mergeStrategy);
-    if (mergeResults.addFiles.length && mergeStrategy !== MergeOptions.theirs) {
-      addFilesToBitMap(consumer, componentMap, id);
-    }
-  }
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
-async function applyModifiedVersion(mergeResults: MergeResults, mergeStrategy: ?MergeStrategy): Promise<Object> {
+/**
+ * relevant only when
+ * 1) there is no conflict => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.output.
+ * 2) there is conflict and mergeStrategy is manual => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.conflict.
+ */
+async function applyModifiedVersion(
+  componentFiles: SourceFile[],
+  mergeResults: MergeResults,
+  mergeStrategy: ?MergeStrategy
+): Promise<Object> {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
+    if (!foundFile) throw new Error(`file ${file.filePath} not found`);
     if (file.conflict) {
-      file.fsFile.contents = new Buffer(file.conflict);
+      foundFile.contents = new Buffer(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
     } else if (file.output) {
-      file.fsFile.contents = new Buffer(file.output);
+      foundFile.contents = new Buffer(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
       throw new Error('file does not have output nor conflict');
     }
-    await file.fsFile.write();
   });
   const addFilesP = mergeResults.addFiles.map(async (file) => {
-    await file.fsFile.write();
+    componentFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
   const overrideFilesP = mergeResults.overrideFiles.map(async (file) => {
-    await file.fsFile.write();
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
+    if (!foundFile) throw new Error(`file ${file.filePath} not found`);
+    foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
   await Promise.all([Promise.all(modifiedP), Promise.all(addFilesP), Promise.all(overrideFilesP)]);

@@ -452,6 +452,11 @@ export default class Component {
     this._wasOriginallySharedDirStripped = true;
   }
 
+  addSharedDir(pathStr: string): PathLinux {
+    const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
+    return pathNormalizeToLinux(withSharedDir);
+  }
+
   /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
