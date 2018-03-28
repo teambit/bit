@@ -18,6 +18,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     let originalScope;
     let scopeBeforeExport;
     let scopeAfterImport;
+    let remoteScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const sourceDir = path.join(helper.getFixturesDir(), 'components');
@@ -38,6 +39,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.exportAllComponents();
 
       originalScope = helper.cloneLocalScope();
+      remoteScope = helper.cloneRemoteScope();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -145,6 +147,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       let localConsumerFiles;
       before(() => {
         helper.getClonedLocalScope(originalScope);
+        helper.getClonedRemoteScope(remoteScope);
         helper.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
         helper.tagAllWithoutMessage('--force'); // 0.0.2
         helper.exportAllComponents();
