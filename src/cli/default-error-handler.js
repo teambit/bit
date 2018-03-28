@@ -9,7 +9,8 @@ import {
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
-  MissingDependencies
+  MissingDependencies,
+  NewerVersionFound
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -221,6 +222,12 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
   ],
   [NothingToCompareTo, err => 'no previous versions to compare'],
+  [
+    NewerVersionFound,
+    err => `unable to tag ${err.componentId}
+current version ${err.currentVersion} is older than the latest ${err.newestVersion}.
+to ignore this error, please use --ignore-newest-version flag`
+  ],
   [PromptCanceled, err => chalk.yellow('operation was aborted')],
   [
     AuthenticationFailed,

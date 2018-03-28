@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { FileStatus } from '../../src/consumer/component/switch-version';
+import { NewerVersionFound } from '../../src/consumer/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -77,6 +78,20 @@ describe('bit use command', function () {
           it('should not show the component as modified', () => {
             const statusOutput = helper.runCmd('bit status');
             expect(statusOutput).to.not.have.string('modified components');
+          });
+          describe('trying to tag when using an old version', () => {
+            before(() => {
+              helper.createComponentBarFoo('modified barFoo');
+            });
+            it('should throw an error NewerVersionFound', () => {
+              const commitFunc = () => helper.commitComponent('bar/foo');
+              const error = new NewerVersionFound('bar/foo', '0.0.5', '0.0.10');
+              helper.expectToThrow(commitFunc, error);
+            });
+            it('should allow tagging when --ignore-newest-version flag is used', () => {
+              const commitOutput = helper.commitComponent('bar/foo', 'msg', '--ignore-newest-version');
+              expect(commitOutput).to.have.string('1 components tagged');
+            });
           });
         });
       });

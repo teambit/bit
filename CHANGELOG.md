@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- block tagging when a component has a newer version locally, unless `--ignore-newest-version` flag is used
 - support merging modified component to an older version of the component
 - introduce a new command `bit use` for switching between versions
 - support `export { default as }` syntax when extracting relevant dependencies from link files
