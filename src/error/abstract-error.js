@@ -1,7 +1,7 @@
 /** @flow */
 
 import copy from 'utils-copy-error';
-import hash from 'string-hash';
+import hash from 'object-hash';
 
 export default class AbstractError extends Error {
   constructor() {

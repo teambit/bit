@@ -1,15 +1,22 @@
 /** @flow */
 import serializeError from 'serialize-error';
 import requestify from 'requestify';
-import hash from 'string-hash';
+import hashObj from 'object-hash';
 import uniqid from 'uniqid';
 import yn from 'yn';
+import R from 'ramda';
+import omitBy from 'lodash.omitby';
+import isNil from 'lodash.isnil';
 import logger from '../logger/logger';
 import { setSync, getSync } from '../api/consumer/lib/global-config';
 import {
   CFG_ANALYTICS_USERID_KEY,
-  CFG_ANALYTICS_ANONYMOUS_REPORTS_KEY,
-  CFG_ANALYTICS_ERROR_REPORTS_KEY
+  CFG_ANALYTICS_REPORTING_KEY,
+  CFG_ANALYTICS_ERROR_REPORTS_KEY,
+  CFG_ANALYTICS_ANONYMOUS_KEY,
+  CFG_USER_EMAIL_KEY,
+  CFG_USER_NAME_KEY,
+  ANALYTICS_URL
 } from '../constants';
 
 const LEVEL = {
@@ -46,6 +53,7 @@ class Analytics {
   static errorName: ?string;
   static analytics_usage: boolean;
   static error_usage: boolean;
+  static anonymous: boolean;
 
   static getID(): string {
     const id = getSync(CFG_ANALYTICS_USERID_KEY);
@@ -55,24 +63,35 @@ class Analytics {
     return newId;
   }
   static init(command: string, flags: Object, args: string[], version) {
+    const filteredFlags = omitBy(flags, isNil);
+    this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
-    this.flags = flags;
+    this.flags =
+      this.anonymous && !R.isEmpty(filteredFlags)
+        ? Object.keys(filteredFlags).forEach((key) => {
+          flags[key] = hashObj(flags[key]);
+        })
+        : filteredFlags;
     this.release = version;
-    this.args = args.filter(x => x).map((arg) => {
-      return arg instanceof Array ? arg.map(hash) : hash(arg);
-    });
+    this.args = this.anonymous
+      ? args.filter(x => x).map((arg) => {
+        return arg instanceof Array ? arg.map(hashObj) : hashObj(arg);
+      })
+      : args;
     this.nodeVersion = process.version;
     this.os = process.platform;
     this.level = LEVEL.INFO;
-    this.username = this.getID();
-    this.analytics_usage = yn(getSync(CFG_ANALYTICS_ANONYMOUS_REPORTS_KEY));
-    this.error_usage = yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY));
+    this.username = !this.anonymous
+      ? getSync(CFG_USER_NAME_KEY) || getSync(CFG_USER_EMAIL_KEY) || this.getID()
+      : this.getID();
+    this.analytics_usage = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
+    this.error_usage = this.analytics_usage ? true : yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
   }
 
   static async sendData() {
     if (this.analytics_usage || this.error_usage) {
       return requestify
-        .post('https://analytics.bitsrc.io/', Analytics.toObejct(), { timeout: 2000 })
+        .post(ANALYTICS_URL, Analytics.toObejct(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
     }
     return Promise.resolve();
@@ -94,6 +113,12 @@ class Analytics {
     } else {
       this.extra[key] = value || 1;
     }
+  }
+  static hashData(data: any) {
+    if (this.anonymous) {
+      return hashObj(data);
+    }
+    return data;
   }
   static addBreadCrumb(category: string, message: string, data?: Object) {
     this.breadcrumbs.push(new Breadcrumb(category, message, data));
