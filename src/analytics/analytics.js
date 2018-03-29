@@ -50,7 +50,6 @@ class Analytics {
   static level: string;
   static error: Error | string | Object;
   static breadcrumbs: Array<Breadcrumb> = [];
-  static errorName: ?string;
   static analytics_usage: boolean;
   static error_usage: boolean;
   static anonymous: boolean;
@@ -77,7 +76,7 @@ class Analytics {
       ? args.filter(x => x).map((arg) => {
         return arg instanceof Array ? arg.map(hashObj) : hashObj(arg);
       })
-      : args;
+      : args.filter(x => x);
     this.nodeVersion = process.version;
     this.os = process.platform;
     this.level = LEVEL.INFO;
@@ -97,10 +96,9 @@ class Analytics {
     return Promise.resolve();
   }
 
-  static setError(level: string = LEVEL.ERROR, err: Error, errorName: ?string): void {
+  static setError(level: string = LEVEL.ERROR, err: Error): void {
     this.level = level;
     this.error = serializeError(err);
-    this.errorName = errorName;
     this.success = false;
   }
 
@@ -127,7 +125,6 @@ class Analytics {
     return {
       username: this.username,
       command: this.command,
-      errorName: this.errorName,
       flags: this.flags,
       args: this.args,
       release: this.release,
