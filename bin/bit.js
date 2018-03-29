@@ -3,15 +3,20 @@
 // set max listeners to a more appripriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;
 require('regenerator-runtime/runtime');
+
 /* eslint-disable no-var */
 const semver = require('semver');
 const mkdirp = require('mkdirp');
 const constants = require('../dist/constants');
 const roadRunner = require('roadrunner');
 const bitUpdates = require('./bit-updates');
+const { getSync, setSync } = require('../dist/api/consumer/lib/global-config');
+const { analyticsPrompt, errorReportingPrompt } = require('../dist/prompts');
+const yn = require('yn');
 
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
+const uniqid = require('uniqid');
 
 function ensureDirectories() {
   mkdirp.sync(constants.MODULES_CACHE_DIR);
@@ -54,7 +59,9 @@ function initCache() {
 }
 
 function checkForUpdates(cb) {
-  return bitUpdates.checkUpdate(cb);
+  return () => {
+    return bitUpdates.checkUpdate(cb);
+  };
 }
 
 function updateOrLaunch(updateCommand) {
@@ -64,8 +71,22 @@ function updateOrLaunch(updateCommand) {
 function loadCli() {
   return require('../dist/app.js');
 }
-
+function promptAnalyticsIfNeeded(cb) {
+  if (!getSync(constants.CFG_ANALYTICS_ANONYMOUS_REPORTS_KEY) && !getSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY)) {
+    const uniqId = uniqid();
+    setSync(constants.CFG_ANALYTICS_USERID_KEY, uniqId);
+    return analyticsPrompt().then(({ analyticsResponse }) => {
+      setSync(constants.CFG_ANALYTICS_ANONYMOUS_REPORTS_KEY, yn(analyticsResponse));
+      if (yn(analyticsResponse)) return cb();
+      return errorReportingPrompt().then(({ errResponse }) => {
+        setSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
+        return cb();
+      });
+    });
+  }
+  return cb();
+}
 verifyCompatibility();
 ensureDirectories();
 initCache();
-checkForUpdates(updateOrLaunch);
+promptAnalyticsIfNeeded(checkForUpdates(updateOrLaunch));
