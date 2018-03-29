@@ -73,21 +73,24 @@ function loadCli() {
   return require('../dist/app.js');
 }
 function promptAnalyticsIfNeeded(cb) {
-  const analytics = getSync(constants.CFG_ANALYTICS_REPORTING_KEY);
-  const error_reporting = getSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY);
-  const analyticsAnswer = !R.isNil(analytics) ? yn(analytics, { default: false }) : undefined;
-  const errorsAnswer = !R.isNil(error_reporting) ? yn(error_reporting, { default: false }) : undefined;
-  if (R.isNil(analyticsAnswer) && R.isNil(errorsAnswer)) {
-    const uniqId = uniqid();
-    setSync(constants.CFG_ANALYTICS_USERID_KEY, uniqId);
-    return analyticsPrompt().then(({ analyticsResponse }) => {
-      setSync(constants.CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
-      if (yn(analyticsResponse)) return cb();
-      return errorReportingPrompt().then(({ errResponse }) => {
-        setSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
-        return cb();
+  const cmd = process.argv.slice(2);
+  if (cmd.length && cmd[0] !== 'config') {
+    const analytics = getSync(constants.CFG_ANALYTICS_REPORTING_KEY);
+    const error_reporting = getSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY);
+    const analyticsAnswer = !R.isNil(analytics) ? yn(analytics, { default: false }) : undefined;
+    const errorsAnswer = !R.isNil(error_reporting) ? yn(error_reporting, { default: false }) : undefined;
+    if (R.isNil(analyticsAnswer) && R.isNil(errorsAnswer)) {
+      const uniqId = uniqid();
+      setSync(constants.CFG_ANALYTICS_USERID_KEY, uniqId);
+      return analyticsPrompt().then(({ analyticsResponse }) => {
+        setSync(constants.CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
+        if (yn(analyticsResponse)) return cb();
+        return errorReportingPrompt().then(({ errResponse }) => {
+          setSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
+          return cb();
+        });
       });
-    });
+    }
   }
   return cb();
 }
