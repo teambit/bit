@@ -2,6 +2,7 @@
 import gitconfig from 'gitconfig';
 import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
+import R from 'ramda';
 
 export function set(key: string, val: string): Promise<Config> {
   return GlobalConfig.load().then((config) => {
@@ -34,7 +35,7 @@ export function delSync(key: string): Config {
 export async function get(key: string): Promise<?string> {
   const config = await GlobalConfig.load();
   const val = config.get(key);
-  if (val) return val;
+  if (!R.isNil(val)) return val;
   try {
     const gitVal = await gitconfig.get(key);
     return gitVal;
@@ -47,7 +48,7 @@ export async function get(key: string): Promise<?string> {
 export function getSync(key: string): ?string {
   const config = GlobalConfig.loadSync();
   const val = config.get(key);
-  if (val) return val;
+  if (!R.isNil(val)) return val;
   try {
     const gitVal = gitconfig.get.sync(key);
     return gitVal;
