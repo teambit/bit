@@ -11,7 +11,7 @@ export default class InvalidBitJson extends AbstractError {
 
   makeAnonymous() {
     const clone = this.clone();
-    clone.path = this.toHash(path);
+    clone.path = this.toHash(this.path);
     return clone;
   }
 }
