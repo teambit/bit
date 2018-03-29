@@ -221,6 +221,8 @@ jobs:
           command: cd bit && npm link
       - run: bit config set user.name tester
       - run: bit config set user.email ci@bitsrc.io
+      - run: bit config set analytics_reporting false
+      - run: bit config set error_reporting false
       - run:
           name: Run e2e tests
           command: cd bit && circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
