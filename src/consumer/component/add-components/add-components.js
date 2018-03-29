@@ -8,6 +8,7 @@ import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
 import ignore from 'ignore';
 import arrayDiff from 'array-difference';
+import { Analytics } from '../../../analytics/analytics';
 import {
   glob,
   isDir,
@@ -487,6 +488,7 @@ export default class AddComponents {
       }
     }
     if (this.writeToBitMap) await this.bitMap.write();
+    Analytics.setExtraData('num_components', addedComponents.length);
     return { addedComponents, warnings: this.warnings };
   }
 }

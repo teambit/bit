@@ -5,6 +5,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import type { LinksResult } from '../../links/node-modules-linker';
+import { Analytics } from '../../analytics/analytics';
 
 /**
  * does the following (the order is important):
@@ -30,5 +31,6 @@ export async function installIds(consumer: Consumer, ids: BitId[], verbose: bool
   const { components } = await consumer.loadComponents(ids);
   const dirs: string[] = components.map(component => component.componentMap.rootDir).filter(dir => dir);
   if (dirs.length) await installPackages(consumer, dirs, verbose);
+  Analytics.setExtraData('num_components', components.length);
   return linkComponentsToNodeModules(components, consumer);
 }

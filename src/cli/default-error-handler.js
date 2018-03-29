@@ -56,6 +56,7 @@ import {
   MissingComponentIdForImportedComponent,
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
+import { Analytics, LEVEL } from '../analytics/analytics';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -229,6 +230,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 ];
 
 function formatUnhandled(err: Error): string {
+  Analytics.setError(LEVEL.FATAL, err, err.constructor.name);
   return chalk.red(err.message || err);
 }
 
@@ -238,6 +240,9 @@ export default (err: Error): ?string => {
   });
 
   if (!error) return formatUnhandled(err);
+  /* this is an error that bit knows how to handle dont send to sentry */
+
+  Analytics.setError(LEVEL.INFO, err.makeAnonymous(), err.constructor.name);
   const [, func] = error;
   logger.error(`User gets the following error: ${func(err)}`);
   return chalk.red(func(err));

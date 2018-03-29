@@ -9,6 +9,7 @@ import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { missingDependenciesLabels } from '../../templates/missing-dependencies-template';
 import { formatNew } from '../../templates/status-templates';
+import { Analytics } from '../../../analytics/analytics';
 
 export default class Status extends Command {
   name = 'status';
@@ -45,7 +46,10 @@ export default class Status extends Command {
       }
 
       const missingStr = Object.keys(missingDependenciesLabels)
-        .map(key => formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]))
+        .map((key) => {
+          if (missingComponent.missingDependencies[key]) Analytics.incExtraDataKey(key);
+          return formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]);
+        })
         .join('');
 
       return `       ${missingStr}\n`;
