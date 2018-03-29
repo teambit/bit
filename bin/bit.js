@@ -11,7 +11,6 @@ const constants = require('../dist/constants');
 const roadRunner = require('roadrunner');
 const bitUpdates = require('./bit-updates');
 const { getSync, setSync } = require('../dist/api/consumer/lib/global-config');
-const { analyticsPrompt, errorReportingPrompt } = require('../dist/prompts');
 const yn = require('yn');
 const R = require('ramda');
 
@@ -73,6 +72,7 @@ function loadCli() {
   return require('../dist/app.js');
 }
 function promptAnalyticsIfNeeded(cb) {
+  const { analyticsPrompt, errorReportingPrompt } = require('../dist/prompts');
   const cmd = process.argv.slice(2);
   if (cmd.length && cmd[0] !== 'config') {
     const analytics = getSync(constants.CFG_ANALYTICS_REPORTING_KEY);
