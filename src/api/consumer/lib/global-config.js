@@ -1,8 +1,8 @@
 /** @flow */
 import gitconfig from 'gitconfig';
+import R from 'ramda';
 import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
-import R from 'ramda';
 
 export function set(key: string, val: string): Promise<Config> {
   return GlobalConfig.load().then((config) => {
