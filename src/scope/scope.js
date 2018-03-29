@@ -6,7 +6,6 @@ import R, { merge, splitWhen } from 'ramda';
 import chalk from 'chalk';
 import Toposort from 'toposort-class';
 import pMapSeries from 'p-map-series';
-import hash from 'string-hash';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import { flattenDependencyIds } from './flatten-dependencies';
@@ -511,7 +510,7 @@ export default class Scope {
     );
     Analytics.addBreadCrumb(
       'writeComponentToModel',
-      `writeComponentToModel, writing into the model, Main id: ${hash(
+      `writeComponentToModel, writing into the model, Main id: ${Analytics.hashData(
         objects.component.id().toString()
       )}. It might have dependencies which are going to be written too`
     );
@@ -530,7 +529,7 @@ export default class Scope {
     );
     Analytics.addBreadCrumb(
       'writeManyComponentsToModel',
-      `writeComponentToModel, writing into the model, ids: ${hash(
+      `writeComponentToModel, writing into the model, ids: ${Analytics.hashData(
         manyObjects.map(objects => objects.component.id()).join(', ')
       )}. They might have dependencies which are going to be written too`
     );
@@ -575,9 +574,9 @@ export default class Scope {
           logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
           Analytics.addBreadCrumb(
             '_convertNonScopeToCorrectScope',
-            `switching ${hash(componentsObjects.component.id().toString())} version hash from ${hash(
-              hashBefore
-            )} to ${hash(hashAfter)}`
+            `switching ${Analytics.hashData(
+              componentsObjects.component.id().toString()
+            )} version hash from ${Analytics.hashData(hashBefore)} to ${Analytics.hashData(hashAfter)}`
           );
           const versions = componentsObjects.component.versions;
           Object.keys(versions).forEach((version) => {
@@ -630,7 +629,7 @@ export default class Scope {
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false, context: Object = {}) {
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes, ids: ${hash(ids.join(', '))}`);
+    Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes, ids: ${Analytics.hashData(ids)}`);
     enrichContextFromGlobal(context);
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
@@ -674,7 +673,7 @@ export default class Scope {
     );
     Analytics.addBreadCrumb(
       'getExternalMany',
-      `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${hash(
+      `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${Analytics.hashData(
         ids.join(', ')
       )}`
     );
@@ -785,7 +784,7 @@ export default class Scope {
     persist: boolean = true
   ): Promise<VersionDependencies[]> {
     logger.debug(`scope.importMany: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('importMany', `scope.importMany: ${ids.map(id => hash(id.toString())).join(', ')}`);
+    Analytics.addBreadCrumb('importMany', `scope.importMany: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
 
@@ -814,7 +813,7 @@ export default class Scope {
     logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb(
       'importManyOnes',
-      `scope.importManyOnes. Ids: ${ids.map(id => hash(id.toString())).join(', ')}`
+      `scope.importManyOnes. Ids: ${ids.map(id => Analytics.hashData(id.toString())).join(', ')}`
     );
 
     const idsWithoutNils = removeNils(ids);
@@ -878,7 +877,7 @@ export default class Scope {
    */
   getMany(ids: BitId[], cache?: boolean = true): Promise<ComponentWithDependencies[]> {
     logger.debug(`scope.getMany, Ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('getMany', `scope.getMany, Ids: ${ids.map(id => hash(id.toString())).join(', ')}`);
+    Analytics.addBreadCrumb('getMany', `scope.getMany, Ids: ${Analytics.hashData(ids)}`);
 
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
@@ -894,10 +893,7 @@ export default class Scope {
   // ask for the older versions.
   async getManyWithAllVersions(ids: BitId[], cache?: boolean = true): Promise<ComponentWithDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb(
-      'getManyWithAllVersions',
-      `scope.getManyWithAllVersions, Ids: ${ids.map(id => hash(id.toString())).join(', ')}`
-    );
+    Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, false, cache);
@@ -933,7 +929,7 @@ export default class Scope {
     logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
-      `scope.removeMany ${ids.map(id => hash(id.toString())).join(', ')} with force flag: ${force.toString()}`
+      `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
     const removeComponents = new RemoveModelComponents(this, bitIds, force, removeSameOrigin);
     return removeComponents.remove();
@@ -1132,7 +1128,7 @@ export default class Scope {
 
   async exportMany(ids: string[], remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
     logger.debug(`exportMany, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${hash(ids.join(', '))}`);
+    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.join(', '))}`);
 
     const remotes = await this.remotes();
     if (eject && !remotes.isHub(remoteName)) {
@@ -1192,11 +1188,14 @@ export default class Scope {
    */
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
-    Analytics.addBreadCrumb('loadEnvironment', `scope.loadEnvironment, id: ${hash(bitId.toString())}`);
+    Analytics.addBreadCrumb('loadEnvironment', `scope.loadEnvironment, id: ${Analytics.hashData(bitId.toString())}`);
     if (!bitId) throw new ResolutionException();
     const notFound = () => {
       logger.debug(`Unable to find an env component ${bitId.toString()}`);
-      Analytics.addBreadCrumb('loadEnvironment', `Unable to find an env component ${hash(bitId.toString())}`);
+      Analytics.addBreadCrumb(
+        'loadEnvironment',
+        `Unable to find an env component ${Analytics.hashData(bitId.toString())}`
+      );
 
       return false;
     };
@@ -1215,7 +1214,7 @@ export default class Scope {
 
     try {
       logger.debug(`Requiring an environment file at ${envPath}`);
-      Analytics.addBreadCrumb('loadEnvironment', `Requiring an environment file at ${hash(envPath)}`);
+      Analytics.addBreadCrumb('loadEnvironment', `Requiring an environment file at ${Analytics.hashData(envPath)}`);
       return require(envPath);
     } catch (e) {
       throw new ResolutionException(e);
@@ -1233,10 +1232,7 @@ export default class Scope {
     dontPrintEnvMsg?: boolean
   }): Promise<ComponentWithDependencies[]> {
     logger.debug(`scope.installEnvironment, ids: ${ids.map(id => id.componentId).join(', ')}`);
-    Analytics.addBreadCrumb(
-      'installEnvironment',
-      `scope.installEnvironment, ids: ${ids.map(id => hash(id.componentId.toString())).join(', ')}`
-    );
+    Analytics.addBreadCrumb('installEnvironment', `scope.installEnvironment, ids: ${Analytics.hashData(ids)}`);
     const componentsDir = this.getComponentsPath();
     const isolateOpts = {
       writeBitDependencies: false,

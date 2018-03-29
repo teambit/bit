@@ -13,6 +13,7 @@ const bitUpdates = require('./bit-updates');
 const { getSync, setSync } = require('../dist/api/consumer/lib/global-config');
 const { analyticsPrompt, errorReportingPrompt } = require('../dist/prompts');
 const yn = require('yn');
+const R = require('ramda');
 
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
@@ -72,11 +73,15 @@ function loadCli() {
   return require('../dist/app.js');
 }
 function promptAnalyticsIfNeeded(cb) {
-  if (!getSync(constants.CFG_ANALYTICS_ANONYMOUS_REPORTS_KEY) && !getSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY)) {
+  const analytics = getSync(constants.CFG_ANALYTICS_REPORTING_KEY);
+  const error_reporting = getSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY);
+  const analyticsAnswer = !R.isNil(analytics) ? yn(analytics, { default: false }) : undefined;
+  const errorsAnswer = !R.isNil(error_reporting) ? yn(error_reporting, { default: false }) : undefined;
+  if (R.isNil(analyticsAnswer) && R.isNil(errorsAnswer)) {
     const uniqId = uniqid();
     setSync(constants.CFG_ANALYTICS_USERID_KEY, uniqId);
     return analyticsPrompt().then(({ analyticsResponse }) => {
-      setSync(constants.CFG_ANALYTICS_ANONYMOUS_REPORTS_KEY, yn(analyticsResponse));
+      setSync(constants.CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
       if (yn(analyticsResponse)) return cb();
       return errorReportingPrompt().then(({ errResponse }) => {
         setSync(constants.CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));

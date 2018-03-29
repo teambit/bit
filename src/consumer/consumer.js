@@ -6,7 +6,6 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
-import hash from 'string-hash';
 import partition from 'lodash.partition';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
 import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
@@ -230,7 +229,7 @@ export default class Consumer {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb(
       'load components',
-      `loading consumer-components from the file-system, ids: ${ids.map(id => hash(id.toString())).join(', ')}`
+      `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
     );
     const alreadyLoadedComponents = [];
     const idsToProcess = [];
@@ -240,7 +239,7 @@ export default class Consumer {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
         Analytics.addBreadCrumb(
           'load components',
-          `the component ${hash(id.toString())} has been already loaded, use the cached component`
+          `the component ${Analytics.hashData(id.toString())} has been already loaded, use the cached component`
         );
         alreadyLoadedComponents.push(this._componentsCache[id.toString()]);
       } else {
@@ -282,7 +281,10 @@ export default class Consumer {
         if (throwOnFailure) throw err;
 
         logger.error(`failed loading ${id} from the file-system`);
-        Analytics.addBreadCrumb('load components', `failed loading ${hash(id.toString())} from the file-system`);
+        Analytics.addBreadCrumb(
+          'load components',
+          `failed loading ${Analytics.hashData(id.toString())} from the file-system`
+        );
         if (err instanceof MissingFilesFromComponent || err instanceof ComponentNotFoundInPath) {
           deletedComponents.push(id);
           return null;
@@ -313,7 +315,7 @@ export default class Consumer {
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debug(`Finished loading the component, ${component.id.toString()}`);
-        Analytics.addBreadCrumb(`Finished loading the component, ${hash(component.id.toString())}`);
+        Analytics.addBreadCrumb(`Finished loading the component, ${Analytics.hashData(component.id.toString())}`);
         allComponents.push(component);
       }
     }
@@ -433,7 +435,9 @@ export default class Consumer {
           );
           Analytics.addBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${hash(dependencyId)}. It'll be installed later using npm-client`
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
+              dependencyId
+            )}. It'll be installed later using npm-client`
           );
           return Promise.resolve(null);
         }
@@ -444,7 +448,7 @@ export default class Consumer {
           );
           Analytics.addBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${hash(
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
               dependencyId
             )} as it already exists in bit map and file system`
           );
@@ -455,7 +459,7 @@ export default class Consumer {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
           Analytics.addBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${hash(dependencyId)} as it already exists in cache`
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in cache`
           );
           dep.writtenPath = dependenciesIdsCache[dependencyId];
           this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
@@ -705,10 +709,7 @@ export default class Consumer {
     ignoreMissingDependencies: ?boolean
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb(
-      'tag',
-      `committing the following components: ${ids.map(id => hash(id.toString())).join(', ')}`
-    );
+    Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
     // Run over the components to check if there is missing dependencies
@@ -774,7 +775,7 @@ export default class Consumer {
   composeComponentPath(bitId: BitId): PathOsBased {
     const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
-    Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${hash(addToPath.join('/'))}`);
+    Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
   }
 
@@ -916,7 +917,10 @@ export default class Consumer {
    */
   async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
     logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
-    Analytics.addBreadCrumb('remove', `consumer.remove: ${hash(ids.join(', '))}. force: ${hash(force.toString())}`);
+    Analytics.addBreadCrumb(
+      'remove',
+      `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
+    );
     // added this to remove support for remove version
     const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
       id.version = LATEST_BIT_VERSION;
@@ -1062,7 +1066,7 @@ export default class Consumer {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
     Analytics.addBreadCrumb(
       'addRemoteAndLocalVersionsToDependencies',
-      `addRemoteAndLocalVersionsToDependencies for ${hash(component.id.toString())}`
+      `addRemoteAndLocalVersionsToDependencies for ${Analytics.hashData(component.id.toString())}`
     );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);

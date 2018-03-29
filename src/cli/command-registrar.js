@@ -9,6 +9,7 @@ import defaultHandleError from './default-error-handler';
 import { empty, camelCase, first, isNumeric, buildCommandMessage, packCommand } from '../utils';
 import loader from './loader';
 import logger from '../logger/logger';
+import { Analytics } from '../analytics/analytics';
 
 function logAndExit(msg: string, commandName) {
   process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(0, commandName));
@@ -54,6 +55,7 @@ function execAction(command, concrete, args) {
   const flags = getOpts(concrete, command.opts);
   const relevantArgs = args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
+  Analytics.init(concrete._name, flags, relevantArgs, concrete.parent._version);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
     args: relevantArgs,
     flags,
@@ -62,7 +64,6 @@ function execAction(command, concrete, args) {
   if (command.loader) {
     loader.on();
   }
-
   const migrateWrapper = (run: boolean) => {
     if (run) {
       logger.info('Checking if a migration is needed');
