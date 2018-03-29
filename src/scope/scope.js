@@ -871,6 +871,10 @@ export default class Scope {
     return versionDependencies.toConsumer(this.objects);
   }
 
+  async getModelComponentIfExist(id: BitId): Promise<?ComponentModel> {
+    return this.sources.get(id);
+  }
+
   /**
    * get multiple components from a scope, if not found in the local scope, fetch from a remote
    * scope. Then, write them to the local scope.

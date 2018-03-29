@@ -13,7 +13,7 @@ import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
 import type { RelativePath } from './dependencies/dependency';
 import type { PathLinux } from '../../utils/path';
-import BitJson from '../bit-json';
+import ComponentBitJson from '../bit-json';
 import Dependencies from './dependencies/dependencies';
 
 /**
@@ -123,9 +123,9 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${
-              componentId
-            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
+            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+              componentFromModel.id
+            }`
           );
         }
         const originallySource: PathLinux = entryComponentMap.originallySharedDir
@@ -544,7 +544,7 @@ function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId):
   return id.id.toString();
 }
 
-function getIdFromBitJson(bitJson?: BitJson, componentId: BitId): ?string {
+function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?string {
   const getVersion = (): ?string => {
     if (!bitJson) return null;
     if (!bitJson.dependencies && !bitJson.devDependencies) return null;

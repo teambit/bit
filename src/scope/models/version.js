@@ -19,14 +19,14 @@ type CiProps = {
   endTime: string
 };
 
-type SourceFile = {
+export type SourceFileModel = {
   name: string,
   relativePath: PathLinux,
   test: boolean,
   file: Ref
 };
 
-type DistFile = SourceFile;
+type DistFileModel = SourceFileModel;
 
 export type Log = {
   message: string,
@@ -36,8 +36,8 @@ export type Log = {
 };
 
 export type VersionProps = {
-  files?: ?Array<SourceFile>,
-  dists?: ?Array<DistFile>,
+  files?: ?Array<SourceFileModel>,
+  dists?: ?Array<DistFileModel>,
   compiler?: ?BitId,
   tester?: ?BitId,
   log: Log,
@@ -56,8 +56,8 @@ export type VersionProps = {
 
 export default class Version extends BitObject {
   mainFile: PathLinux;
-  files: Array<SourceFile>;
-  dists: ?Array<DistFile>;
+  files: Array<SourceFileModel>;
+  dists: ?Array<DistFileModel>;
   compiler: ?BitId;
   tester: ?BitId;
   log: Log;
@@ -326,11 +326,11 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent,
-    files: ?Array<SourceFile>,
+    files: ?Array<SourceFileModel>,
     flattenedDependencies: BitId[],
     flattenedDevDependencies: BitId[],
     message: string,
-    dists: ?Array<DistFile>,
+    dists: ?Array<DistFileModel>,
     specsResults: ?Results,
     username: ?string,
     email: ?string

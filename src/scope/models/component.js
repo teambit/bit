@@ -245,7 +245,7 @@ export default class Component extends BitObject {
     return new ComponentVersion(this, versionNum);
   }
 
-  toConsumerComponent(versionStr: string, scopeName: string, repository: Repository) {
+  toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
     return componentVersion.getVersion(repository).then((version: Version) => {
       const filesP = version.files

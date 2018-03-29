@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
-import BitJson from '../bit-json';
+import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
@@ -54,7 +54,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compilerId?: ?BitId,
   testerId?: ?BitId,
-  bitJson?: BitJson,
+  bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
@@ -81,7 +81,7 @@ export default class Component {
   mainFile: PathOsBased;
   compilerId: ?BitId;
   testerId: ?BitId;
-  bitJson: ?BitJson;
+  bitJson: ?ComponentBitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   flattenedDevDependencies: BitIds;
@@ -238,7 +238,7 @@ export default class Component {
   }
 
   writeBitJson(bitDir: string, force?: boolean = true): Promise<Component> {
-    return new BitJson({
+    return new ComponentBitJson({
       version: this.version,
       scope: this.scope,
       lang: this.lang,
@@ -450,6 +450,11 @@ export default class Component {
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this._wasOriginallySharedDirStripped = true;
+  }
+
+  addSharedDir(pathStr: string): PathLinux {
+    const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
+    return pathNormalizeToLinux(withSharedDir);
   }
 
   /**
@@ -954,7 +959,6 @@ export default class Component {
     let packageDependencies;
     let devPackageDependencies;
     let peerPackageDependencies;
-    let bitJson = consumerBitJson;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
@@ -986,20 +990,22 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
+    let componentBitJson: ComponentBitJson | typeof undefined;
+    let componentBitJsonFileExist = false;
     if (bitDir !== consumerPath) {
-      bitJson = BitJson.loadSync(bitDir, consumerBitJson);
-      if (bitJson) {
-        packageDependencies = bitJson.packageDependencies;
-        devPackageDependencies = bitJson.devPackageDependencies;
-        peerPackageDependencies = bitJson.peerPackageDependencies;
+      componentBitJson = ComponentBitJson.loadSync(bitDir, consumerBitJson);
+      packageDependencies = componentBitJson.packageDependencies;
+      devPackageDependencies = componentBitJson.devPackageDependencies;
+      peerPackageDependencies = componentBitJson.peerPackageDependencies;
+      // by default, imported components are not written with bit.json file.
+      // use the component from the model to get their bit.json values
+      componentBitJsonFileExist = fs.existsSync(path.join(bitDir, BIT_JSON));
+      if (!componentBitJsonFileExist && componentFromModel) {
+        componentBitJson.mergeWithComponentData(componentFromModel);
       }
     }
-
-    // by default, imported components are not written with bit.json file.
-    // use the component from the model to get their bit.json values
-    if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
-      bitJson.mergeWithComponentData(componentFromModel);
-    }
+    // for authored componentBitJson is normally undefined
+    const bitJson = componentBitJson || consumerBitJson;
 
     // Remove dists if compiler has been deleted
     if (dists && !bitJson.compilerId) {
@@ -1015,7 +1021,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compilerId: BitId.parse(bitJson.compilerId),
       testerId: BitId.parse(bitJson.testerId),
-      bitJson,
+      bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       dists,

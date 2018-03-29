@@ -5,7 +5,9 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
+import { expect } from 'chai';
 import { VERSION_DELIMITER, BIT_VERSION } from '../src/constants';
+import defaultErrorHandler from '../src/cli/default-error-handler';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -65,6 +67,22 @@ export default class Helper {
       output = err.toString() + err.stdout.toString();
     }
     return output;
+  }
+
+  removeChalkCharacters(str?: ?string): ?string {
+    if (!str) return str;
+    return str.replace(/\u001b\[.*?m/g, '');
+  }
+
+  expectToThrow(cmdFunc: Function, error: Error) {
+    let output;
+    try {
+      cmdFunc();
+    } catch (err) {
+      output = err.toString();
+    }
+    const errorString = defaultErrorHandler(error);
+    expect(this.removeChalkCharacters(output)).to.have.string(this.removeChalkCharacters(errorString));
   }
 
   setHubDomain(domain: string = 'hub.bitsrc.io') {
@@ -339,7 +357,7 @@ export default class Helper {
     return this.runCmd(`bit export ${scope}`);
   }
 
-  importComponent(id) {
+  importComponent(id: string) {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
@@ -570,8 +588,8 @@ export default class Helper {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
-  useVersion(version: string, ids: string) {
-    return this.runCmd(`bit use ${version} ${ids}`);
+  useVersion(version: string, ids: string, flags?: string) {
+    return this.runCmd(`bit use ${version} ${ids} ${flags || ''}`);
   }
 
   getBitVersion() {
