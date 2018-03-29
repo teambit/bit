@@ -42,7 +42,7 @@ class Analytics {
   static command: string;
   static release: string;
   static args: string[];
-  static flags: Object;
+  static flags: Object = {};
   static success: boolean = true;
   static nodeVersion: string;
   static os: string;
@@ -68,7 +68,7 @@ class Analytics {
     this.flags =
       this.anonymous && !R.isEmpty(filteredFlags)
         ? Object.keys(filteredFlags).forEach((key) => {
-          flags[key] = hashObj(flags[key]);
+          this.flags[key] = hashObj(flags[key]);
         })
         : filteredFlags;
     this.release = version;
