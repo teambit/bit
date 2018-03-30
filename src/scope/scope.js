@@ -811,10 +811,7 @@ export default class Scope {
 
   async importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
     logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb(
-      'importManyOnes',
-      `scope.importManyOnes. Ids: ${ids.map(id => Analytics.hashData(id.toString())).join(', ')}`
-    );
+    Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
 
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
