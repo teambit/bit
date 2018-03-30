@@ -7,6 +7,7 @@ import Repository from './objects/repository';
 import VersionDependencies from './version-dependencies';
 import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
+import ConsumerComponent from '../consumer/component';
 
 export default class ComponentVersion {
   component: Component;
@@ -74,7 +75,7 @@ export default class ComponentVersion {
     return new VersionDependencies(this, dependencies, devDependencies, source);
   }
 
-  toConsumer(repo: Repository) {
+  toConsumer(repo: Repository): Promise<ConsumerComponent> {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 

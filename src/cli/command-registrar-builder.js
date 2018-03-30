@@ -43,6 +43,7 @@ import Delete from './commands/private-cmds/_delete-cmd';
 import Latest from './commands/private-cmds/_latest-cmd';
 import Use from './commands/public-cmds/use-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
+import Merge from './commands/public-cmds/merge-cmd';
 
 export default function registerCommands(extensionsCommands): CommandRegistrar {
   return new CommandRegistrar(
@@ -91,6 +92,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new DeprecatePrivate(),
       new Latest(),
       new Use(),
+      new Merge(),
       new Migrate()
     ],
     extensionsCommands

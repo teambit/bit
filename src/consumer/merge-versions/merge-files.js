@@ -10,7 +10,6 @@ export type MergeFileParams = {
     path: PathOsBased
   },
   baseFile: {
-    label: string,
     path: PathOsBased
   },
   otherFile: {
@@ -41,7 +40,7 @@ export default (async function mergeFiles({
       '-L',
       currentFile.label,
       '-L',
-      baseFile.label,
+      'Base File',
       '-L',
       otherFile.label,
       currentFile.path,

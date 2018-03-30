@@ -3,7 +3,9 @@ import vinylFile from 'vinyl-file';
 import AbstractVinyl from './abstract-vinyl';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
 import logger from '../../../logger/logger';
+import type { SourceFileModel } from '../../../scope/models/version';
 import type { PathOsBased } from '../../../utils/path';
+import { Repository } from '../../../scope/objects';
 
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?
@@ -29,7 +31,7 @@ export default class SourceFile extends AbstractVinyl {
     }
   }
 
-  static loadFromParsedString(parsedString: Object) {
+  static loadFromParsedString(parsedString: Object): ?SourceFile {
     if (!parsedString) return;
     const opts = super.loadFromParsedString(parsedString);
     return new SourceFile(opts);
@@ -40,7 +42,13 @@ export default class SourceFile extends AbstractVinyl {
     return arr.map(this.loadFromParsedString);
   }
 
-  clone() {
+  static async loadFromSourceFileModel(file: SourceFileModel, repository: Repository): Promise<SourceFile> {
+    // $FlowFixMe
+    const content = await file.file.load(repository);
+    return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
+  }
+
+  clone(): SourceFile {
     return new SourceFile(this);
   }
 }

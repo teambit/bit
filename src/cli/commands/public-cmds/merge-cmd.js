@@ -1,7 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { use } from '../../../api/consumer';
+import { merge } from '../../../api/consumer';
 import type {
   UseProps,
   MergeStrategy,
@@ -11,23 +11,14 @@ import type {
 import { MergeOptions } from '../../../consumer/component/switch-version';
 import { BitId } from '../../../bit-id';
 
-export default class Use extends Command {
-  name = 'use <version> <ids...>';
-  description = 'switch between versions';
-  alias = 'U';
+export default class Merge extends Command {
+  name = 'merge <version> <ids...>';
+  description = 'merge versions';
+  alias = '';
   opts = [
-    [
-      'm',
-      'merge',
-      'when a component is modified and the merge process found conflicts, display options to resolve them'
-    ],
-    ['o', 'ours', 'in case of a conflict, use ours (override the used version with the current modification)'],
-    [
-      't',
-      'theirs',
-      'in case of a conflict, use theirs (override the current modification and use the specified version)'
-    ],
-    ['M', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['o', 'ours', 'in case of a conflict, use ours (current version)'],
+    ['t', 'theirs', 'in case of a conflict, use theirs (specified version)'],
+    ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
@@ -37,7 +28,6 @@ export default class Use extends Command {
   action(
     [version, ids]: [string, string[]],
     {
-      merge = false,
       ours = false,
       theirs = false,
       manual = false,
@@ -45,7 +35,6 @@ export default class Use extends Command {
       skipNpmInstall = false,
       ignoreDist = false
     }: {
-      merge?: boolean,
       ours?: boolean,
       theirs?: boolean,
       manual?: boolean,
@@ -65,20 +54,21 @@ export default class Use extends Command {
     };
 
     const bitIds = ids.map(id => BitId.parse(id));
+    const mergeStrategy = getMergeStrategy();
     const useProps: UseProps = {
       version,
       ids: bitIds,
-      promptMergeOptions: merge,
-      mergeStrategy: getMergeStrategy(),
+      promptMergeOptions: !mergeStrategy, // is user didn't specify merge strategy, prompt with options
+      mergeStrategy,
       verbose,
       skipNpmInstall,
       ignoreDist
     };
-    return use(useProps);
+    return merge(useProps);
   }
 
   report({ components, version }: SwitchVersionResults): string {
-    const title = `the following components were switched to version ${chalk.bold(version)}\n`;
+    const title = `the following components were merged from version ${chalk.bold(version)}\n`;
     const componentsStr = components
       .map((component: ApplyVersionResult) => {
         const name = component.id.toStringWithoutVersion();

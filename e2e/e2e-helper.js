@@ -483,6 +483,10 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
+  readFile(filePath: string): string {
+    return fs.readFileSync(path.join(this.localScopePath, filePath)).toString();
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
@@ -590,6 +594,10 @@ export default class Helper {
 
   useVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit use ${version} ${ids} ${flags || ''}`);
+  }
+
+  mergeVersion(version: string, ids: string, flags?: string) {
+    return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
 
   getBitVersion() {

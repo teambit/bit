@@ -1,5 +1,5 @@
 // @flow
-import switchVersion from '../../../consumer/component/switch-version';
+import { switchVersion } from '../../../consumer/component/switch-version';
 import type { UseProps, SwitchVersionResults } from '../../../consumer/component/switch-version';
 import { loadConsumer, Consumer } from '../../../consumer';
 
