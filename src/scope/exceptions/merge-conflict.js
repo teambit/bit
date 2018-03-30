@@ -1,11 +1,11 @@
 // @flow
 export default class MergeConflict extends Error {
   id: string;
-  code: number;
+  versions: string[];
 
-  constructor(id: string) {
+  constructor(id: string, versions: string[]) {
     super();
-    this.code = 131;
     this.id = id;
+    this.versions = versions;
   }
 }

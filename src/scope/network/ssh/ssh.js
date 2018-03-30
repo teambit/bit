@@ -12,7 +12,6 @@ import {
   PermissionDenied,
   SSHInvalidResponse
 } from '../exceptions';
-import MergeConflict from '../../exceptions/merge-conflict';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
 import ComponentNotFound from '../../../scope/exceptions/component-not-found';
@@ -23,6 +22,7 @@ import logger from '../../../logger/logger';
 import type { Network } from '../network';
 import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import { RemovedObjects } from '../../removed-components';
+import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
@@ -151,7 +151,10 @@ export default class SSH implements Network {
       case 130:
         return new PermissionDenied(`${this.host}:${this.path}`);
       case 131:
-        return new MergeConflict((parsedError && parsedError.id) || err);
+        return new MergeConflictOnRemote(
+          (parsedError && parsedError.id) || err,
+          parsedError ? parsedError.versions : []
+        );
     }
   }
 
