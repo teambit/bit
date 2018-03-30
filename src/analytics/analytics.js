@@ -16,6 +16,8 @@ import {
   CFG_ANALYTICS_ANONYMOUS_KEY,
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
+  DEFAULT_BIT_ENV,
+  CFG_ANALYTICS_ENVIRONMENT_KEY,
   ANALYTICS_URL
 } from '../constants';
 
@@ -53,6 +55,7 @@ class Analytics {
   static analytics_usage: boolean;
   static error_usage: boolean;
   static anonymous: boolean;
+  static environment: string;
 
   static getID(): string {
     const id = getSync(CFG_ANALYTICS_USERID_KEY);
@@ -68,7 +71,11 @@ class Analytics {
     this.flags =
       this.anonymous && !R.isEmpty(filteredFlags)
         ? Object.keys(filteredFlags).forEach((key) => {
-          this.flags[key] = hashObj(flags[key]);
+          if (typeof flags[key] === 'boolean') {
+            this.flags[key] = flags[key];
+          } else {
+            this.flags[key] = hashObj(flags[key]);
+          }
         })
         : filteredFlags;
     this.release = version;
@@ -85,6 +92,7 @@ class Analytics {
       : this.getID();
     this.analytics_usage = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
     this.error_usage = this.analytics_usage ? true : yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
+    this.environment = getSync(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
   }
 
   static async sendData() {
@@ -136,7 +144,8 @@ class Analytics {
       success: this.success,
       breadcrumbs: this.breadcrumbs,
       analytics_usage: this.analytics_usage,
-      error_usage: this.analytics_usage
+      error_usage: this.analytics_usage,
+      environment: this.environment
     };
   }
 }
