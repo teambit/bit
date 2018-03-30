@@ -2,17 +2,25 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { merge } from '../../../api/consumer';
-import type {
-  MergeStrategy,
-  ApplyVersionResults,
-  ApplyVersionResult
-} from '../../../consumer/versions-ops/merge-version';
-import { MergeOptions } from '../../../consumer/versions-ops/merge-version';
+import type { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
+import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
 import { BitId } from '../../../bit-id';
+
+export const applyVersionReport = (components: ApplyVersionResult[]): string => {
+  return components
+    .map((component: ApplyVersionResult) => {
+      const name = component.id.toStringWithoutVersion();
+      const files = Object.keys(component.filesStatus)
+        .map(file => `\t${chalk.bold(file)} => ${component.filesStatus[file]}`)
+        .join('\n');
+      return `${name}\n${chalk.cyan(files)}`;
+    })
+    .join('\n\n');
+};
 
 export default class Merge extends Command {
   name = 'merge <version> <ids...>';
-  description = 'merge versions';
+  description = 'merge specified version into current version';
   alias = '';
   opts = [
     ['o', 'ours', 'in case of a conflict, use ours (current version)'],
@@ -33,32 +41,14 @@ export default class Merge extends Command {
       manual?: boolean
     }
   ): Promise<ApplyVersionResults> {
-    const getMergeStrategy = (): ?MergeStrategy => {
-      if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
-        throw new Error('please choose only one of the following: ours, theirs or manual');
-      }
-      if (ours) return MergeOptions.ours;
-      if (theirs) return MergeOptions.theirs;
-      if (manual) return MergeOptions.manual;
-      return null;
-    };
-
     const bitIds = ids.map(id => BitId.parse(id));
-    const mergeStrategy = getMergeStrategy();
+    const mergeStrategy = getMergeStrategy(ours, theirs, manual);
     return merge(version, bitIds, mergeStrategy);
   }
 
   report({ components, version }: ApplyVersionResults): string {
     const title = `the following components were merged from version ${chalk.bold(version)}\n`;
-    const componentsStr = components
-      .map((component: ApplyVersionResult) => {
-        const name = component.id.toStringWithoutVersion();
-        const files = Object.keys(component.filesStatus)
-          .map(file => `\t${chalk.bold(file)} => ${component.filesStatus[file]}`)
-          .join('\n');
-        return `${name}\n${chalk.cyan(files)}`;
-      })
-      .join('\n\n');
+    const componentsStr = applyVersionReport(components);
     return chalk.underline(title) + chalk.green(componentsStr);
   }
 }

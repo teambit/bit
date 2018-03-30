@@ -28,7 +28,7 @@ export type ApplyVersionResults = { components: ApplyVersionResult[], version: s
 type ComponentStatus = {
   componentFromFS: Component,
   id: BitId,
-  mergeResults: ?MergeResultsTwoWay
+  mergeResults: MergeResultsTwoWay
 };
 
 export async function mergeVersion(
@@ -38,23 +38,21 @@ export async function mergeVersion(
   mergeStrategy: MergeStrategy
 ): Promise<ApplyVersionResults> {
   const { components } = await consumer.loadComponents(ids);
-  const allComponentsP = components.map((component: Component) => {
+  const componentsStatusP = components.map((component: Component) => {
     return getComponentStatus(consumer, component, version);
   });
-  const allComponents = await Promise.all(allComponentsP);
-  const componentWithConflict = allComponents.find(
-    component => component.mergeResults && component.mergeResults.hasConflicts
-  );
+  const componentsStatus = await Promise.all(componentsStatusP);
+  const componentWithConflict = componentsStatus.find(component => component.mergeResults.hasConflicts);
   if (componentWithConflict && !mergeStrategy) {
-    mergeStrategy = await getMergeStrategy();
+    mergeStrategy = await getMergeStrategyInteractive();
   }
-  const componentsResultsP = allComponents.map(({ id, componentFromFS, mergeResults }) => {
+  const mergedComponentsP = componentsStatus.map(({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, mergeStrategy);
   });
-  const componentsResults = await Promise.all(componentsResultsP);
+  const mergedComponents = await Promise.all(mergedComponentsP);
   await consumer.bitMap.write();
 
-  return { components: componentsResults, version };
+  return { components: mergedComponents, version };
 }
 
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
@@ -71,7 +69,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
     throw new Error(`component ${component.id.toStringWithoutVersion()} is already at ${version} version`);
   }
   const otherComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
-  const mergeResults: ?MergeResultsTwoWay = await twoWayMergeVersions({
+  const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({
     consumer,
     otherComponent,
     otherVersion: version,
@@ -113,7 +111,7 @@ async function applyVersion(
     return { id, filesStatus };
   }
   const component = componentFromFS.componentFromModel;
-  if (!component) throw new Error('failing finding the component in the model');
+  if (!component) throw new Error('failed finding the component in the model');
   const componentMap = componentFromFS.componentMap;
   if (!componentMap) throw new Error('applyVersion: componentMap was not found');
   const files = componentFromFS.cloneFilesWithSharedDir();
@@ -191,7 +189,7 @@ async function applyModifiedVersion(
   return filesStatus;
 }
 
-export async function getMergeStrategy(): Promise<MergeStrategy> {
+export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
   try {
     const result = await resolveConflictPrompt();
     return mergeOptionsCli[result.mergeStrategy];
@@ -199,4 +197,14 @@ export async function getMergeStrategy(): Promise<MergeStrategy> {
     // probably user clicked ^C
     throw new Error('the action has been canceled');
   }
+}
+
+export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean): ?MergeStrategy {
+  if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
+    throw new Error('please choose only one of the following: ours, theirs or manual');
+  }
+  if (ours) return MergeOptions.ours;
+  if (theirs) return MergeOptions.theirs;
+  if (manual) return MergeOptions.manual;
+  return null;
 }

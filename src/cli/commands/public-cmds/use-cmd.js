@@ -3,13 +3,10 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { BitId } from '../../../bit-id';
 import { use } from '../../../api/consumer';
+import { applyVersionReport } from './merge-cmd';
+import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
 import type { UseProps } from '../../../consumer/versions-ops/checkout-version';
-import type {
-  MergeStrategy,
-  ApplyVersionResults,
-  ApplyVersionResult
-} from '../../../consumer/versions-ops/merge-version';
-import { MergeOptions } from '../../../consumer/versions-ops/merge-version';
+import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
 export default class Use extends Command {
   name = 'use <version> <ids...>';
@@ -54,22 +51,12 @@ export default class Use extends Command {
       ignoreDist?: boolean
     }
   ): Promise<ApplyVersionResults> {
-    const getMergeStrategy = (): ?MergeStrategy => {
-      if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
-        throw new Error('please choose only one of the following: ours, theirs or manual');
-      }
-      if (ours) return MergeOptions.ours;
-      if (theirs) return MergeOptions.theirs;
-      if (manual) return MergeOptions.manual;
-      return null;
-    };
-
     const bitIds = ids.map(id => BitId.parse(id));
     const useProps: UseProps = {
       version,
       ids: bitIds,
       promptMergeOptions: merge,
-      mergeStrategy: getMergeStrategy(),
+      mergeStrategy: getMergeStrategy(ours, theirs, manual),
       verbose,
       skipNpmInstall,
       ignoreDist
@@ -79,15 +66,7 @@ export default class Use extends Command {
 
   report({ components, version }: ApplyVersionResults): string {
     const title = `the following components were switched to version ${chalk.bold(version)}\n`;
-    const componentsStr = components
-      .map((component: ApplyVersionResult) => {
-        const name = component.id.toStringWithoutVersion();
-        const files = Object.keys(component.filesStatus)
-          .map(file => `\t${chalk.bold(file)} => ${component.filesStatus[file]}`)
-          .join('\n');
-        return `${name}\n${chalk.cyan(files)}`;
-      })
-      .join('\n\n');
+    const componentsStr = applyVersionReport(components);
     return chalk.underline(title) + chalk.green(componentsStr);
   }
 }

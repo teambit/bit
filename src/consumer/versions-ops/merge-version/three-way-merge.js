@@ -78,12 +78,7 @@ export default (async function threeWayMergeVersions({
   // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
   const baseFiles = baseComponent.files;
   const currentFiles = currentComponent.files;
-  const fsFiles = otherComponent.files.map((file) => {
-    const fsFile = file.clone();
-    const newRelative = otherComponent.addSharedDir(file.relative);
-    fsFile.updatePaths({ newBase: file.base, newRelative });
-    return fsFile;
-  });
+  const fsFiles = otherComponent.cloneFilesWithSharedDir();
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
   const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
     const filePath = fsFile.relative;
@@ -129,7 +124,7 @@ export default (async function threeWayMergeVersions({
 
   if (R.isEmpty(results.modifiedFiles)) return results;
 
-  const conflictResults = await getConflictResults(consumer, results.modifiedFiles);
+  const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult) => {
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
     if (!modifiedFile) throw new Error(`unable to find ${conflictResult.filePath} in modified files array`);
@@ -141,7 +136,7 @@ export default (async function threeWayMergeVersions({
   return results;
 });
 
-async function getConflictResults(
+async function getMergeResults(
   consumer: Consumer,
   modifiedFiles: $PropertyType<MergeResultsThreeWay, 'modifiedFiles'>
 ): Promise<MergeFileResult[]> {

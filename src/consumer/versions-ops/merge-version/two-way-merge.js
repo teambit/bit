@@ -79,7 +79,7 @@ export default (async function twoWayMergeVersions({
 
   if (R.isEmpty(results.modifiedFiles)) return results;
 
-  const conflictResults = await getConflictResults(consumer, results.modifiedFiles);
+  const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult) => {
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
     if (!modifiedFile) throw new Error(`unable to find ${conflictResult.filePath} in modified files array`);
@@ -91,7 +91,7 @@ export default (async function twoWayMergeVersions({
   return results;
 });
 
-async function getConflictResults(
+async function getMergeResults(
   consumer: Consumer,
   modifiedFiles: $PropertyType<MergeResultsTwoWay, 'modifiedFiles'>
 ): Promise<MergeFileResult[]> {

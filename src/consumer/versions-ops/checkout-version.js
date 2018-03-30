@@ -8,7 +8,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import Version from '../../scope/models/version';
 import { SourceFile } from '../component/sources';
-import { getMergeStrategy, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
+import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
 import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 
@@ -32,7 +32,7 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
   const { version, ids, promptMergeOptions } = useProps;
   const { components } = await consumer.loadComponents(ids);
   const allComponentsP = components.map((component: Component) => {
-    return getComponentInstances(consumer, component, version);
+    return getComponentStatus(consumer, component, version);
   });
   const allComponents = await Promise.all(allComponentsP);
   const componentWithConflict = allComponents.find(
@@ -44,7 +44,7 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
         `component ${componentWithConflict.id.toStringWithoutVersion()} is modified, merging the changes will result in a conflict state, to merge the component use --merge flag`
       );
     }
-    if (!useProps.mergeStrategy) useProps.mergeStrategy = await getMergeStrategy();
+    if (!useProps.mergeStrategy) useProps.mergeStrategy = await getMergeStrategyInteractive();
   }
   const componentsResultsP = allComponents.map(({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, useProps);
@@ -55,11 +55,7 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
   return { components: componentsResults, version };
 });
 
-async function getComponentInstances(
-  consumer: Consumer,
-  component: Component,
-  version: string
-): Promise<ComponentStatus> {
+async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
   const componentModel = await consumer.scope.sources.get(component.id);
   if (!componentModel) {
     throw new Error(`component ${component.id.toString()} doesn't have any version yet`);
