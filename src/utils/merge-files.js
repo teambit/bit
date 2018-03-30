@@ -1,6 +1,6 @@
 // @flow
 import execa from 'execa';
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { PathLinux, PathOsBased } from '../utils/path';
 
 export type MergeFileResult = { filePath: string, output: ?string, conflict: ?string };
 export type MergeFileParams = {
@@ -10,7 +10,6 @@ export type MergeFileParams = {
     path: PathOsBased
   },
   baseFile: {
-    label: string,
     path: PathOsBased
   },
   otherFile: {
@@ -41,7 +40,7 @@ export default (async function mergeFiles({
       '-L',
       currentFile.label,
       '-L',
-      baseFile.label,
+      'Base File',
       '-L',
       otherFile.label,
       currentFile.path,

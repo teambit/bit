@@ -1074,7 +1074,7 @@ export default class Scope {
     });
   }
 
-  loadAllVersions(id: BitId): Promise<ConsumerComponent> {
+  loadAllVersions(id: BitId): Promise<ConsumerComponent[]> {
     return this.sources.get(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
@@ -1111,6 +1111,11 @@ export default class Scope {
       if (foundComponent.length) return first(foundComponent);
     }
     throw new ComponentNotFound(id.toString());
+  }
+
+  async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
+    const componentModel = await this.getComponentModel(id);
+    return componentModel.toConsumerComponent(id.version, this.name, this.objects);
   }
 
   /**

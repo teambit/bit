@@ -35,6 +35,7 @@ import {
   CorruptedComponent,
   VersionAlreadyExists,
   MergeConflict,
+  MergeConflictOnRemote,
   CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
@@ -119,9 +120,25 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     MergeConflict,
     err =>
-      `error: merge conflict occurred when exporting the component ${
-        err.id
-      }.\nto resolve it, please import the latest version of the remote component, and apply your changes before exporting the component.`
+      `error: merge conflict occurred when importing the component ${err.id}. conflict version(s): ${err.versions.join(
+        ', '
+      )}
+to resolve it, for each one of the conflict versions do the following:
+1) bit untag ${err.id} {conflict-version}
+2) bit import ${err.id} --objects
+3) bit use {conflict-version} ${err.id}`
+  ],
+  [
+    MergeConflictOnRemote,
+    err =>
+      `error: merge conflict occurred when exporting the component ${err.id}. conflict version(s): ${err.versions.join(
+        ', '
+      )}
+to resolve it, for each one of the conflict versions do the following:
+1) bit untag ${err.id} {conflict-version}
+2) bit import ${err.id} --objects
+3) bit use {conflict-version} ${err.id}
+once your changes are merged with the remote version, tag the component and export.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],

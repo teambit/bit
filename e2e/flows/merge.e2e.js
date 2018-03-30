@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { MergeConflict, MergeConflictOnRemote } from '../../src/scope/exceptions';
 
 const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
 const isStringFixture =
@@ -11,8 +12,7 @@ describe('merge functionality', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('re-exporting an existing version', () => {
-    let output;
+  describe('re-exporting/importing an existing version', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
@@ -29,18 +29,16 @@ describe('merge functionality', function () {
 
       helper.getClonedLocalScope(scopeWithV1);
       helper.commitComponent('bar/foo', 'msg', '-f');
-      try {
-        output = helper.exportAllComponents(); // v2 is exported again
-      } catch (e) {
-        output = e.message;
-      }
     });
-    it('should throw merge-conflict error', () => {
-      expect(output).to.have.string(
-        `error: merge conflict occurred when exporting the component ${
-          helper.remoteScope
-        }/bar/foo.\nto resolve it, please import the latest version of the remote component, and apply your changes before exporting the component.\n`
-      );
+    it('should throw MergeConflictOnRemote error when exporting the component', () => {
+      const exportFunc = () => helper.exportAllComponents(); // v2 is exported again
+      const error = new MergeConflictOnRemote(`${helper.remoteScope}/bar/foo`, ['0.0.2']);
+      helper.expectToThrow(exportFunc, error);
+    });
+    it('should throw MergeConflict error when importing the component', () => {
+      const importFunc = () => helper.importComponent('bar/foo');
+      const error = new MergeConflict(`${helper.remoteScope}/bar/foo`, ['0.0.2']);
+      helper.expectToThrow(importFunc, error);
     });
   });
 

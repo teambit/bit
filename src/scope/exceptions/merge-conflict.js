@@ -3,12 +3,12 @@ import AbstractError from '../../error/abstract-error';
 
 export default class MergeConflict extends AbstractError {
   id: string;
-  code: number;
+  versions: string[];
 
-  constructor(id: string) {
+  constructor(id: string, versions: string[]) {
     super();
-    this.code = 131;
     this.id = id;
+    this.versions = versions;
   }
   makeAnonymous() {
     const clone = this.clone();

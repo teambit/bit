@@ -91,11 +91,19 @@ export default class Component extends BitObject {
     return !!this.versions[version];
   }
 
-  compatibleWith(component: Component) {
-    const differnece = diff(Object.keys(this.versions), Object.keys(component.versions));
+  compatibleWith(component: Component): boolean {
+    const difference = diff(Object.keys(this.versions), Object.keys(component.versions));
 
-    const comparableObject = filterObject(this.versions, (val, key) => !differnece.includes(key));
+    const comparableObject = filterObject(this.versions, (val, key) => !difference.includes(key));
     return equals(component.versions, comparableObject);
+  }
+
+  diffWith(component: Component): string[] {
+    const difference = diff(Object.keys(this.versions), Object.keys(component.versions));
+    const comparableObject = filterObject(this.versions, (val, key) => !difference.includes(key));
+    return Object.keys(component.versions).filter(
+      version => component.versions[version].hash !== comparableObject[version].hash
+    );
   }
 
   latest(): string {
@@ -131,7 +139,7 @@ export default class Component extends BitObject {
     });
   }
 
-  collectVersions(repo: Repository): Promise<ConsumerComponent> {
+  collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
         return this.toConsumerComponent(versionNum, this.scope, repo);

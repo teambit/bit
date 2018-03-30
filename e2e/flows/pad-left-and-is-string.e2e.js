@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username } from '../bitsrc-tester';
-import { FileStatus } from '../../src/consumer/component/switch-version';
+import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
 
 chai.use(require('chai-fs'));
 
@@ -142,7 +142,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
       });
     });
-    describe('merge conflict', () => {
+    describe('merge conflict scenario', () => {
       let output;
       let localConsumerFiles;
       before(() => {
@@ -161,7 +161,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(err.toString()).to.have.string('conflict');
         }
 
-        helper.runCmd('bit untag string/pad-left 0.0.2');
+        helper.runCmd('bit untag string/pad-left 0.0.2'); // current state: 0.0.1 + modification
         helper.importComponent('string/pad-left --objects');
         output = helper.useVersion('0.0.2', 'string/pad-left', '--manual');
         localConsumerFiles = helper.getConsumerFiles();
@@ -176,6 +176,76 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         expect(localConsumerFiles).to.not.include(path.normalize('src/index.js'));
         expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left.js'));
         expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left.spec.js'));
+      });
+    });
+    describe('merge command', () => {
+      let mergeCommandScope;
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        helper.getClonedRemoteScope(remoteScope);
+        helper.testComponent('string/pad-left');
+        helper.createFile('src/pad-left/pad-left', 'pad-left.js', 'modified-pad-left-imported');
+        helper.tagAllWithoutMessage('--force');
+        mergeCommandScope = helper.cloneLocalScope();
+      });
+      describe('using --manual strategy', () => {
+        let output;
+        let localConsumerFiles;
+        before(() => {
+          output = helper.mergeVersion('0.0.1', 'string/pad-left', '--manual');
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should leave the file in a conflict state and', () => {
+          expect(output).to.have.string(FileStatus.manual);
+        });
+        it('tests should failed', () => {
+          const tests = helper.runWithTryCatch('bit test string/pad-left');
+          expect(tests).to.have.string('failed');
+        });
+        it('bit-merge should update the same files and not create duplications', () => {
+          expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/index.js'));
+          expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/pad-left.js'));
+          expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/pad-left.spec.js'));
+          expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/pad-left.js'));
+          expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/pad-left.spec.js'));
+        });
+      });
+      describe('using --ours strategy', () => {
+        let output;
+        before(() => {
+          helper.getClonedLocalScope(mergeCommandScope);
+          output = helper.mergeVersion('0.0.1', 'string/pad-left', '--ours');
+        });
+        it('should leave the file intact', () => {
+          expect(output).to.have.string(FileStatus.unchanged);
+          expect(output).to.not.have.string(FileStatus.manual);
+        });
+      });
+      describe('using --theirs strategy', () => {
+        let output;
+        let localConsumerFiles;
+        before(() => {
+          helper.getClonedLocalScope(mergeCommandScope);
+          output = helper.mergeVersion('0.0.1', 'string/pad-left', '--theirs');
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should update the file', () => {
+          expect(output).to.have.string(FileStatus.updated);
+        });
+        it.skip('tests should pass', () => {
+          // @todo: we currently have a bug there, when it load string/pad-left with the version of 0.0.1
+          // the dependency-resolver shows an error:
+          // the auto-generated file is-string/is-string.js should be connected to 7g7ousor-remote/string/is-string@0.0.1, however, it's not part of the model dependencies of 7g7ousor-remote/string/pad-left@0.0.2
+          const tests = helper.runWithTryCatch('bit test string/pad-left');
+          expect(tests).to.have.string('tests passed');
+        });
+        it('bit-merge should update the same files and not create duplications', () => {
+          expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/index.js'));
+          expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/pad-left.js'));
+          expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/pad-left.spec.js'));
+          expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/pad-left.js'));
+          expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/pad-left.spec.js'));
+        });
       });
     });
   });
