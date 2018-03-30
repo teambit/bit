@@ -1,17 +1,17 @@
 // @flow
 import R from 'ramda';
-import Component from '../component';
-import { Component as ModelComponent } from '../../scope/models';
-import { Consumer } from '..';
-import { sha1 } from '../../utils';
-import { SourceFile } from '../component/sources';
-import { Tmp } from '../../scope/repositories';
-import mergeFiles from './merge-files';
-import type { MergeFileResult, MergeFileParams } from './merge-files';
-import type { PathOsBased } from '../../utils/path';
-import type { SourceFileModel } from '../../scope/models/version';
+import Component from '../../component';
+import { Version } from '../../../scope/models';
+import { Consumer } from '../..';
+import { sha1 } from '../../../utils';
+import { SourceFile } from '../../component/sources';
+import { Tmp } from '../../../scope/repositories';
+import mergeFiles from '../../../utils/merge-files';
+import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
+import type { PathOsBased } from '../../../utils/path';
+import type { SourceFileModel } from '../../../scope/models/version';
 
-export type MergeResults = {
+export type MergeResultsThreeWay = {
   addFiles: Array<{
     filePath: string,
     fsFile: SourceFile
@@ -19,8 +19,8 @@ export type MergeResults = {
   modifiedFiles: Array<{
     filePath: string,
     fsFile: SourceFile,
-    baseFile: SourceFile,
-    currentFile: SourceFile,
+    baseFile: SourceFileModel,
+    currentFile: SourceFileModel,
     output: ?string,
     conflict: ?string
   }>,
@@ -54,21 +54,21 @@ export type MergeResults = {
  * base-file    => bar/foo@0.0.2
  * other-file   => bar/foo@0.0.2 + modification
  */
-export default (async function mergeVersions({
+export default (async function threeWayMergeVersions({
   consumer,
-  componentFromFS,
-  modelComponent,
-  fsVersion,
-  currentVersion
+  otherComponent,
+  otherVersion,
+  currentComponent,
+  currentVersion,
+  baseComponent
 }: {
   consumer: Consumer,
-  componentFromFS: Component,
-  modelComponent: ModelComponent,
-  fsVersion: string,
-  currentVersion: string
-}): Promise<MergeResults> {
-  const baseComponent: Component = await modelComponent.loadVersion(fsVersion, consumer.scope.objects);
-  const currentComponent: Component = await modelComponent.loadVersion(currentVersion, consumer.scope.objects);
+  otherComponent: Component,
+  otherVersion: string,
+  currentComponent: Version,
+  currentVersion: string,
+  baseComponent: Version
+}): Promise<MergeResultsThreeWay> {
   // baseFiles and currentFiles come from the model, therefore their paths include the
   // sharedOriginallyDir. fsFiles come from the Fs, therefore their paths don't include the
   // sharedOriginallyDir.
@@ -78,12 +78,7 @@ export default (async function mergeVersions({
   // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
   const baseFiles = baseComponent.files;
   const currentFiles = currentComponent.files;
-  const fsFiles = componentFromFS.files.map((file) => {
-    const fsFile = file.clone();
-    const newRelative = componentFromFS.addSharedDir(file.relative);
-    fsFile.updatePaths({ newBase: file.base, newRelative });
-    return fsFile;
-  });
+  const fsFiles = otherComponent.cloneFilesWithSharedDir();
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
   const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
     const filePath = fsFile.relative;
@@ -112,9 +107,9 @@ export default (async function mergeVersions({
       return;
     }
     // it was changed in both, there is a chance for conflict
-    fsFile.version = fsVersion;
+    fsFile.version = otherVersion;
     // $FlowFixMe it's a hack to pass the data, version is not a valid attribute.
-    baseFile.version = fsVersion;
+    baseFile.version = otherVersion;
     // $FlowFixMe it's a hack to pass the data, version is not a valid attribute.
     currentFile.version = currentVersion;
     results.modifiedFiles.push({ filePath, fsFile, baseFile, currentFile, output: null, conflict: null });
@@ -129,7 +124,7 @@ export default (async function mergeVersions({
 
   if (R.isEmpty(results.modifiedFiles)) return results;
 
-  const conflictResults = await getConflictResults(consumer, results.modifiedFiles);
+  const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult) => {
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
     if (!modifiedFile) throw new Error(`unable to find ${conflictResult.filePath} in modified files array`);
@@ -141,9 +136,9 @@ export default (async function mergeVersions({
   return results;
 });
 
-async function getConflictResults(
+async function getMergeResults(
   consumer: Consumer,
-  modifiedFiles: $PropertyType<MergeResults, 'modifiedFiles'>
+  modifiedFiles: $PropertyType<MergeResultsThreeWay, 'modifiedFiles'>
 ): Promise<MergeFileResult[]> {
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
@@ -162,11 +157,11 @@ async function getConflictResults(
     const mergeFilesParams: MergeFileParams = {
       filePath: modifiedFile.filePath,
       currentFile: {
+        // $FlowFixMe
         label: modifiedFile.currentFile.version,
         path: currentFilePath
       },
       baseFile: {
-        label: modifiedFile.baseFile.version,
         path: baseFilePath
       },
       otherFile: {

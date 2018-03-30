@@ -1,9 +1,10 @@
 // @flow
-import switchVersion from '../../../consumer/component/switch-version';
-import type { UseProps, SwitchVersionResults } from '../../../consumer/component/switch-version';
+import type { UseProps } from '../../../consumer/versions-ops/checkout-version';
+import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { loadConsumer, Consumer } from '../../../consumer';
+import checkoutVersion from '../../../consumer/versions-ops/checkout-version';
 
-export default (async function use(useProps: UseProps): Promise<SwitchVersionResults> {
+export default (async function use(useProps: UseProps): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
-  return switchVersion(consumer, useProps);
+  return checkoutVersion(consumer, useProps);
 });

@@ -62,7 +62,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
-  files?: ?(SourceFile[]) | [],
+  files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
   specsResults?: ?SpecsResults,
@@ -90,7 +90,7 @@ export default class Component {
   devPackageDependencies: Object;
   peerPackageDependencies: Object;
   _docs: ?(Doclet[]);
-  _files: ?(SourceFile[]) | [];
+  _files: SourceFile[];
   dists: Dists;
   specsResults: ?(SpecsResults[]);
   license: ?License;
@@ -108,11 +108,11 @@ export default class Component {
   _driver: Driver;
   _isModified: boolean;
 
-  set files(val: ?(SourceFile[])) {
+  set files(val: SourceFile[]) {
     this._files = val;
   }
 
-  get files(): ?(SourceFile[]) {
+  get files(): SourceFile[] {
     if (!this._files) return null;
     if (this._files instanceof Array) return this._files;
 
@@ -387,7 +387,7 @@ export default class Component {
     } else {
       await mkdirp(bitDir);
     }
-    if (this.files) await this.files.forEach(file => file.write(undefined, force));
+    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, force)));
     await this.dists.writeDists(this, consumer, false);
     if (writeBitJson) await this.writeBitJson(bitDir, force);
     // make sure the project's package.json is not overridden by Bit
@@ -457,6 +457,15 @@ export default class Component {
     return pathNormalizeToLinux(withSharedDir);
   }
 
+  cloneFilesWithSharedDir(): SourceFile[] {
+    return this.files.map((file) => {
+      const newFile = file.clone();
+      const newRelative = this.addSharedDir(file.relative);
+      newFile.updatePaths({ newBase: file.base, newRelative });
+      return newFile;
+    });
+  }
+
   /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
@@ -471,6 +480,7 @@ export default class Component {
     parent,
     consumer,
     writeBitDependencies = false,
+    deleteBitDirContent,
     componentMap,
     excludeRegistryPrefix = false
   }: {
@@ -482,6 +492,7 @@ export default class Component {
     parent?: BitId,
     consumer?: Consumer,
     writeBitDependencies?: boolean,
+    deleteBitDirContent?: boolean,
     componentMap: ComponentMap,
     excludeRegistryPrefix?: boolean
   }): Promise<Component> {
@@ -523,7 +534,9 @@ export default class Component {
     // Otherwise, when the author adds new files outside of the previous originallySharedDir and this user imports them
     // the environment will contain both copies, the old one with the old originallySharedDir and the new one.
     // If a user made changes to the imported component, it will show a warning and stop the process.
-    const deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
+    if (typeof deleteBitDirContent === 'undefined') {
+      deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
+    }
     // when there is componentMap, this component (with this version or other version) is already part of the project.
     // There are several options as to what was the origin before and what is the origin now and according to this,
     // we update/remove/don't-touch the record in bit.map.
@@ -562,7 +575,6 @@ export default class Component {
       deleteBitDirContent,
       excludeRegistryPrefix
     });
-    // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
     const rootDir = componentMap.rootDir;
     if (bitMap.isExistWithSameVersion(this.id)) {
       if (componentMap.originallySharedDir === this.originallySharedDir) return this;

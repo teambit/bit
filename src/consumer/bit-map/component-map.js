@@ -235,8 +235,8 @@ export default class ComponentMap {
     if (!isValidPath(this.mainFile)) {
       throw new Error(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
-    // if it's an environment component (such as compiler) the rootDir is an empty string
-    if (this.rootDir === undefined && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
+    // if it's an environment component (such as compiler) the rootDir is empty
+    if (!this.rootDir && this.origin === COMPONENT_ORIGINS.NESTED) {
       throw new Error(`${errorMessage} rootDir attribute is missing`);
     }
     // $FlowFixMe

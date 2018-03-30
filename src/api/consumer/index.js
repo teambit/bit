@@ -24,6 +24,7 @@ import unTagAction from './lib/untag';
 import move from './lib/move';
 import link from './lib/link';
 import use from './lib/use';
+import merge from './lib/merge';
 import migrate from './lib/migrate';
 
 export {
@@ -57,5 +58,6 @@ export {
   move,
   link,
   use,
+  merge,
   migrate
 };

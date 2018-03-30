@@ -18,11 +18,12 @@ export default class AbstractVinyl extends Vinyl {
     this.path = path.join(this.base, relative);
   }
 
-  write(writePath?: string, force?: boolean = true): Promise<any> {
+  async write(writePath?: string, force?: boolean = true): Promise<?string> {
     const filePath = writePath || this.path;
-    logger.debug(`writing a file to the file-system at ${filePath}`);
-    if (!force && fs.existsSync(filePath)) return Promise.resolve();
-    return fs.outputFile(filePath, this.contents).then(() => filePath);
+    logger.debug(`writing a file to the file-system at ${filePath}, force: ${force.toString()}`);
+    if (!force && fs.existsSync(filePath)) return null;
+    await fs.outputFile(filePath, this.contents);
+    return filePath;
   }
 
   toReadableString() {

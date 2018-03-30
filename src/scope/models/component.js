@@ -131,7 +131,7 @@ export default class Component extends BitObject {
     });
   }
 
-  collectVersions(repo: Repository): Promise<ConsumerComponent> {
+  collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
         return this.toConsumerComponent(versionNum, this.scope, repo);
