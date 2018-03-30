@@ -3,7 +3,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import { FileStatus } from '../../src/consumer/component/switch-version';
+import { FileStatus } from '../../src/consumer/versions-ops/merge-version/merge-version';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));

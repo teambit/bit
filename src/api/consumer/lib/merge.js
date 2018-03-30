@@ -1,9 +1,14 @@
 // @flow
-import { switchVersionForMerge } from '../../../consumer/component/switch-version';
-import type { UseProps, SwitchVersionResults } from '../../../consumer/component/switch-version';
 import { loadConsumer, Consumer } from '../../../consumer';
+import type { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version/merge-version';
+import { BitId } from '../../../bit-id';
+import { mergeVersion } from '../../../consumer/versions-ops/merge-version/merge-version';
 
-export default (async function merge(useProps: UseProps): Promise<SwitchVersionResults> {
+export default (async function merge(
+  version: string,
+  bitIds: BitId[],
+  mergeStrategy: MergeStrategy
+): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
-  return switchVersionForMerge(consumer, useProps);
+  return mergeVersion(consumer, version, bitIds, mergeStrategy);
 });

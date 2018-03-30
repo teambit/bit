@@ -1,6 +1,6 @@
 // @flow
 import execa from 'execa';
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { PathLinux, PathOsBased } from '../utils/path';
 
 export type MergeFileResult = { filePath: string, output: ?string, conflict: ?string };
 export type MergeFileParams = {

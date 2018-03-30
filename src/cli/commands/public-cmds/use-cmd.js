@@ -2,14 +2,14 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { use } from '../../../api/consumer';
+import type { UseProps } from '../../../consumer/versions-ops/checkout-version';
 import type {
-  UseProps,
   MergeStrategy,
-  SwitchVersionResults,
+  ApplyVersionResults,
   ApplyVersionResult
-} from '../../../consumer/component/switch-version';
-import { MergeOptions } from '../../../consumer/component/switch-version';
+} from '../../../consumer/versions-ops/merge-version/merge-version';
 import { BitId } from '../../../bit-id';
+import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 
 export default class Use extends Command {
   name = 'use <version> <ids...>';
@@ -53,7 +53,7 @@ export default class Use extends Command {
       skipNpmInstall?: boolean,
       ignoreDist?: boolean
     }
-  ): Promise<SwitchVersionResults> {
+  ): Promise<ApplyVersionResults> {
     const getMergeStrategy = (): ?MergeStrategy => {
       if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
         throw new Error('please choose only one of the following: ours, theirs or manual');
@@ -77,7 +77,7 @@ export default class Use extends Command {
     return use(useProps);
   }
 
-  report({ components, version }: SwitchVersionResults): string {
+  report({ components, version }: ApplyVersionResults): string {
     const title = `the following components were switched to version ${chalk.bold(version)}\n`;
     const componentsStr = components
       .map((component: ApplyVersionResult) => {
