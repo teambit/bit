@@ -4,6 +4,7 @@ import ScopeAlreadyExists from './scope-already-exists';
 import SourceNotFound from './source-not-found';
 import BitNotInScope from './bit-not-in-scope';
 import MergeConflict from './merge-conflict';
+import MergeConflictOnRemote from './merge-conflict-on-remote';
 import ComponentNotFound from './component-not-found';
 import VersionNotFound from './version-not-found';
 import VersionAlreadyExists from './version-already-exists';
@@ -19,6 +20,7 @@ export {
   SourceNotFound,
   HashNotFound,
   MergeConflict,
+  MergeConflictOnRemote,
   VersionNotFound,
   VersionAlreadyExists,
   ScopeAlreadyExists,
