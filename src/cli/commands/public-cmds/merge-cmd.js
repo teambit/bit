@@ -6,8 +6,8 @@ import type {
   MergeStrategy,
   ApplyVersionResults,
   ApplyVersionResult
-} from '../../../consumer/versions-ops/merge-version/merge-version';
-import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
+} from '../../../consumer/versions-ops/merge-version';
+import { MergeOptions } from '../../../consumer/versions-ops/merge-version';
 import { BitId } from '../../../bit-id';
 
 export default class Merge extends Command {

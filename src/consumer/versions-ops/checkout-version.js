@@ -4,14 +4,13 @@ import fs from 'fs-extra';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import Component from '../component';
-import threeWayMergeVersions from './merge-version/three-way-merge';
-import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import Version from '../../scope/models/version';
-import { getMergeStrategy, FileStatus, MergeOptions } from './merge-version/merge-version';
-import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version/merge-version';
 import { SourceFile } from '../component/sources';
+import { getMergeStrategy, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
+import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
+import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 
 export type UseProps = {
   version: string,
@@ -78,7 +77,7 @@ async function getComponentInstances(
   let mergeResults: ?MergeResultsThreeWay;
   if (isModified) {
     const currentComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
-    mergeResults = await threeWayMergeVersions({
+    mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
       otherVersion: currentlyUsedVersion,
@@ -119,7 +118,6 @@ async function applyVersion(
   const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = useProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
-    // $FlowFixMe componentFromFS.files can't be empty
     componentFromFS.files.forEach((file) => {
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });

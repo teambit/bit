@@ -49,7 +49,7 @@ export async function mergeVersion(
     mergeStrategy = await getMergeStrategy();
   }
   const componentsResultsP = allComponents.map(({ id, componentFromFS, mergeResults }) => {
-    return applyVersionForMerge(consumer, id, componentFromFS, mergeResults, mergeStrategy);
+    return applyVersion(consumer, id, componentFromFS, mergeResults, mergeStrategy);
   });
   const componentsResults = await Promise.all(componentsResultsP);
   await consumer.bitMap.write();
@@ -98,7 +98,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
  * base-file: empty.
  * other-file: the specified version.
  */
-async function applyVersionForMerge(
+async function applyVersion(
   consumer: Consumer,
   id: BitId,
   componentFromFS: Component,
@@ -124,7 +124,7 @@ async function applyVersionForMerge(
   });
 
   // update files according to the merge results
-  const modifiedStatus = await applyModifiedVersionForMerge(consumer, files, mergeResults, mergeStrategy);
+  const modifiedStatus = await applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
 
   if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
     component.originallySharedDir = componentMap.originallySharedDir || null;
@@ -152,7 +152,7 @@ async function applyVersionForMerge(
  * 1) there is no conflict => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.output.
  * 2) there is conflict and mergeStrategy is manual => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.conflict.
  */
-async function applyModifiedVersionForMerge(
+async function applyModifiedVersion(
   consumer: Consumer,
   componentFiles: SourceFile[],
   mergeResults: MergeResultsTwoWay,

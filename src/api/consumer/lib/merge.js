@@ -1,8 +1,8 @@
 // @flow
 import { loadConsumer, Consumer } from '../../../consumer';
-import type { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version/merge-version';
+import type { MergeStrategy, ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 import { BitId } from '../../../bit-id';
-import { mergeVersion } from '../../../consumer/versions-ops/merge-version/merge-version';
+import { mergeVersion } from '../../../consumer/versions-ops/merge-version';
 
 export default (async function merge(
   version: string,

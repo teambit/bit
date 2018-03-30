@@ -1,15 +1,15 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
+import { BitId } from '../../../bit-id';
 import { use } from '../../../api/consumer';
 import type { UseProps } from '../../../consumer/versions-ops/checkout-version';
 import type {
   MergeStrategy,
   ApplyVersionResults,
   ApplyVersionResult
-} from '../../../consumer/versions-ops/merge-version/merge-version';
-import { BitId } from '../../../bit-id';
-import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
+} from '../../../consumer/versions-ops/merge-version';
+import { MergeOptions } from '../../../consumer/versions-ops/merge-version';
 
 export default class Use extends Command {
   name = 'use <version> <ids...>';

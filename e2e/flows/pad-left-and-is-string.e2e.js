@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username } from '../bitsrc-tester';
-import { FileStatus } from '../../src/consumer/component/switch-version';
+import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
 
 chai.use(require('chai-fs'));
 
