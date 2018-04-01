@@ -20,7 +20,7 @@ describe('bit remove command', function () {
       helper.corruptBitJson();
       const removeCmd = () => helper.removeComponent('bar/foo2');
       expect(removeCmd).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
       );
     });
   });

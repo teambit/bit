@@ -28,7 +28,7 @@ describe('bit tag command', function () {
       const commit = () => helper.commitComponent('bar/foo2');
       helper.corruptBitJson();
       expect(commit).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
+        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
       );
     });
   });

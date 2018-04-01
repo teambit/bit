@@ -154,7 +154,7 @@ export default class ComponentBitJson extends AbstractBitJson {
         try {
           thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
         } catch (e) {
-          throw new InvalidBitJson(bitJsonPath);
+          throw new InvalidBitJson(err.message);
         }
       }
     }
