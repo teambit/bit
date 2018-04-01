@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support merging modified component to an older version of the component
 - introduce a new command `bit use` for switching between versions
 - support `export { default as }` syntax when extracting relevant dependencies from link files
+- add anonymous analytics usage with prompt] 
 
 ## [0.12.10] - 2018-03-21
 
