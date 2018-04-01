@@ -55,7 +55,7 @@ function execAction(command, concrete, args) {
   const flags = getOpts(concrete, command.opts);
   const relevantArgs = args.slice(0, args.length - 1);
   const packageManagerArgs = concrete.parent.packageManagerArgs;
-  Analytics.init(concrete._name, flags, relevantArgs, concrete.parent._version);
+  Analytics.init(concrete.name(), flags, relevantArgs, concrete.parent._version);
   logger.info(`[*] started a new command: "${command.name}" with the following data:`, {
     args: relevantArgs,
     flags,

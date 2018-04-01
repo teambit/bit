@@ -120,9 +120,7 @@ export async function commitAllAction(args: {
   HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, commitResults);
   Analytics.setExtraData(
     'num_components',
-    commitResults.taggedComponents.length +
-      commitResults.autoTaggedComponents.length +
-      commitResults.newComponents.length
+    R.concat(commitResults.taggedComponents, commitResults.autoTaggedComponents, commitResults.newComponents).length
   );
   return commitResults;
 }

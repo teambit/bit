@@ -5,6 +5,7 @@ import hashObj from 'object-hash';
 import uniqid from 'uniqid';
 import yn from 'yn';
 import R from 'ramda';
+import os from 'os';
 import omitBy from 'lodash.omitby';
 import isNil from 'lodash.isnil';
 import logger from '../logger/logger';
@@ -30,6 +31,7 @@ const LEVEL = {
 };
 
 class Breadcrumb {
+  category: string;
   message: string;
   data: Object;
 
@@ -49,7 +51,7 @@ class Analytics {
   static nodeVersion: string;
   static os: string;
   static extra: ?Object = {};
-  static level: string;
+  static level: LEVEL;
   static error: Error | string | Object;
   static breadcrumbs: Array<Breadcrumb> = [];
   static analytics_usage: boolean;
@@ -59,13 +61,13 @@ class Analytics {
 
   static getID(): string {
     const id = getSync(CFG_ANALYTICS_USERID_KEY);
-    const newId = uniqid();
     if (id) return id;
+    const newId = uniqid();
     setSync(CFG_ANALYTICS_USERID_KEY, newId);
     return newId;
   }
 
-  static _hashArgs(flags: Object) {
+  static _hashFlags(flags: Object) {
     const hashedFlags = {};
     const filteredFlags = omitBy(flags, isNil);
     if (this.anonymous && !R.isEmpty(filteredFlags)) {
@@ -83,14 +85,14 @@ class Analytics {
   static init(command: string, flags: Object, args: string[], version) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
-    this.flags = this._hashArgs(flags);
+    this.flags = this._hashFlags(flags);
     this.release = version;
     this.args = this.anonymous ? hashObj(args) : args;
     this.nodeVersion = process.version;
     this.os = process.platform;
     this.level = LEVEL.INFO;
     this.username = !this.anonymous
-      ? getSync(CFG_USER_NAME_KEY) || getSync(CFG_USER_EMAIL_KEY) || this.getID()
+      ? getSync(CFG_USER_EMAIL_KEY) || getSync(CFG_USER_NAME_KEY) || os.hostname() || this.getID()
       : this.getID();
     this.analytics_usage = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
     this.error_usage = this.analytics_usage ? true : yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
@@ -98,7 +100,12 @@ class Analytics {
   }
 
   static async sendData() {
-    if (this.analytics_usage || this.error_usage) {
+    if (this.analytics_usage) {
+      return requestify
+        .post(ANALYTICS_URL, Analytics.toObejct(), { timeout: 1000 })
+        .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
+    }
+    if (this.error_usage && !this.success) {
       return requestify
         .post(ANALYTICS_URL, Analytics.toObejct(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));

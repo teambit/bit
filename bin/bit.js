@@ -7,16 +7,16 @@ require('regenerator-runtime/runtime');
 /* eslint-disable no-var */
 const semver = require('semver');
 const mkdirp = require('mkdirp');
+const yn = require('yn');
+const R = require('ramda');
+const uniqid = require('uniqid');
 const constants = require('../dist/constants');
 const roadRunner = require('roadrunner');
 const bitUpdates = require('./bit-updates');
 const { getSync, setSync } = require('../dist/api/consumer/lib/global-config');
-const yn = require('yn');
-const R = require('ramda');
 
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
-const uniqid = require('uniqid');
 
 function ensureDirectories() {
   mkdirp.sync(constants.MODULES_CACHE_DIR);
@@ -59,9 +59,7 @@ function initCache() {
 }
 
 function checkForUpdates(cb) {
-  return () => {
-    return bitUpdates.checkUpdate(cb);
-  };
+  return () => bitUpdates.checkUpdate(cb);
 }
 
 function updateOrLaunch(updateCommand) {
@@ -72,6 +70,8 @@ function loadCli() {
   return require('../dist/app.js');
 }
 function promptAnalyticsIfNeeded(cb) {
+  // do not prompt analytics approval for bit config command (so you can configure it in CI envs)
+  // this require is needed here beacuse bit caches are not created yet and will cause exception
   const { analyticsPrompt, errorReportingPrompt } = require('../dist/prompts');
   const cmd = process.argv.slice(2);
   if (cmd.length && cmd[0] !== 'config') {
@@ -81,7 +81,7 @@ function promptAnalyticsIfNeeded(cb) {
     const errorsAnswer = !R.isNil(error_reporting) ? yn(error_reporting, { default: false }) : undefined;
     if (R.isNil(analyticsAnswer) && R.isNil(errorsAnswer)) {
       const uniqId = uniqid();
-      setSync(constants.CFG_ANALYTICS_USERID_KEY, uniqId);
+      if (!getSync(constants.CFG_ANALYTICS_USERID_KEY)) setSync(constants.CFG_ANALYTICS_USERID_KEY, uniqId);
       return analyticsPrompt().then(({ analyticsResponse }) => {
         setSync(constants.CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
         if (yn(analyticsResponse)) return cb();

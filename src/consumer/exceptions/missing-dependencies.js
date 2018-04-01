@@ -11,7 +11,7 @@ export default class MissingDependencies extends AbstractError {
 
   makeAnonymous() {
     const clone = this.clone();
-    clone.components = this.toHash(JSON.stringify(clone.components));
+    clone.components = this.toHash(clone.components);
     return clone;
   }
 }

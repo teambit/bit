@@ -36,6 +36,8 @@ export default (async function status(): Promise<StatusResult> {
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
+  Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
+  Analytics.setExtraData('deleted', deletedComponents.length);
 
   return {
     newComponents: ComponentsList.sortComponentsByName(newComponents),
