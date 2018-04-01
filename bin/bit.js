@@ -10,8 +10,8 @@ const mkdirp = require('mkdirp');
 const yn = require('yn');
 const R = require('ramda');
 const uniqid = require('uniqid');
-const constants = require('../dist/constants');
 const roadRunner = require('roadrunner');
+const constants = require('../dist/constants');
 const bitUpdates = require('./bit-updates');
 const { getSync, setSync } = require('../dist/api/consumer/lib/global-config');
 
