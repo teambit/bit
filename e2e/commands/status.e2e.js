@@ -392,16 +392,20 @@ describe('bit status command', function () {
     });
   });
   describe('with corrupted bit.json', () => {
+    let output;
     before(() => {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
     });
     it('Should not show status if bit.json is corrupted', () => {
       helper.corruptBitJson();
-      const statusCmd = () => helper.runCmd('bit status');
-      expect(statusCmd).to.throw(
-        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.runCmd('bit status');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('when component files were deleted', () => {

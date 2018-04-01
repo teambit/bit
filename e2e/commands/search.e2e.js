@@ -41,6 +41,7 @@ describe('bit search', function () {
     });
   });
   describe.skip('with local scope and corrupted bit.json', () => {
+    let output;
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
@@ -49,10 +50,13 @@ describe('bit search', function () {
     });
     it('Should not search component if bit.json is corrupted', () => {
       helper.corruptBitJson();
-      const searchCmd = () => helper.searchComponent('bar/foo');
-      expect(searchCmd).to.throw(
-        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.searchComponent('bar/foo');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
 });

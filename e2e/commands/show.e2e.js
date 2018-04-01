@@ -331,6 +331,7 @@ function add(a, b) {
     });
   });
   describe('local component', () => {
+    let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
@@ -342,10 +343,13 @@ function add(a, b) {
 
     it('Should not show component if bit.json is corrupted', () => {
       helper.corruptBitJson();
-      const showCmd = () => helper.runCmd('bit show comp/comp -j');
-      expect(showCmd).to.throw(
-        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.runCmd('bit show comp/comp -j');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('local component without compiler', () => {

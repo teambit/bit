@@ -148,6 +148,7 @@ describe('bit add command', function () {
     });
   });
   describe('add one component', () => {
+    let output;
     beforeEach(() => {
       helper.reInitLocalScope();
     });
@@ -218,10 +219,13 @@ describe('bit add command', function () {
     it('Should not add component if bit.json is corrupted', () => {
       helper.createFile('bar', 'foo2.js');
       helper.corruptBitJson();
-      const addCmd = () => helper.addComponent(path.normalize('bar/foo2.js'));
-      expect(addCmd).to.throw(
-        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.addComponent(path.normalize('bar/foo2.js'));
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
     it('Should throw error when adding more than one component with same ID ', () => {
       helper.createFile('bar', 'file.js');

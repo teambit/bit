@@ -94,11 +94,15 @@ describe('bit untrack command', function () {
       expect(bitMap).to.have.property('bar/foo2@0.0.1');
     });
     it('Should not show component if bit.json is corrupted', () => {
+      let output;
       helper.corruptBitJson();
-      const untrackCmd = () => helper.untrackComponent();
-      expect(untrackCmd).to.throw(
-        'error: invalid bit.json: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.untrackComponent();
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
 });
