@@ -64,26 +64,28 @@ class Analytics {
     setSync(CFG_ANALYTICS_USERID_KEY, newId);
     return newId;
   }
-  static init(command: string, flags: Object, args: string[], version) {
+
+  static _hashArgs(flags: Object) {
+    const hashedFlags = {};
     const filteredFlags = omitBy(flags, isNil);
+    if (this.anonymous && !R.isEmpty(filteredFlags)) {
+      Object.keys(filteredFlags).forEach((key) => {
+        if (typeof flags[key] === 'boolean') {
+          hashedFlags[key] = flags[key];
+        } else {
+          hashedFlags[key] = hashObj(flags[key]);
+        }
+      });
+      return hashedFlags;
+    }
+    return filteredFlags;
+  }
+  static init(command: string, flags: Object, args: string[], version) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
-    this.flags =
-      this.anonymous && !R.isEmpty(filteredFlags)
-        ? Object.keys(filteredFlags).forEach((key) => {
-          if (typeof flags[key] === 'boolean') {
-            this.flags[key] = flags[key];
-          } else {
-            this.flags[key] = hashObj(flags[key]);
-          }
-        })
-        : filteredFlags;
+    this.flags = this._hashArgs(flags);
     this.release = version;
-    this.args = this.anonymous
-      ? args.filter(x => x).map((arg) => {
-        return arg instanceof Array ? arg.map(hashObj) : hashObj(arg);
-      })
-      : args.filter(x => x);
+    this.args = this.anonymous ? hashObj(args) : args;
     this.nodeVersion = process.version;
     this.os = process.platform;
     this.level = LEVEL.INFO;

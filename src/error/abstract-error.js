@@ -2,6 +2,9 @@
 
 import copy from 'utils-copy-error';
 import hash from 'object-hash';
+import yn from 'yn';
+import { getSync } from '../api/consumer/lib/global-config';
+import { CFG_ANALYTICS_ANONYMOUS_KEY } from '../constants';
 
 export default class AbstractError extends Error {
   constructor() {
@@ -18,6 +21,9 @@ export default class AbstractError extends Error {
   }
 
   toHash(str: string) {
-    return hash(str);
+    if (yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true })) {
+      return hash(str);
+    }
+    return str;
   }
 }
