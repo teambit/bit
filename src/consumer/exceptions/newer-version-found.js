@@ -1,5 +1,7 @@
-// @flow
-export default class NewerVersionFound extends Error {
+/** @flow */
+import AbstractError from '../../error/abstract-error';
+
+export default class NewerVersionFound extends AbstractError {
   componentId: string;
   currentVersion: string;
   newestVersion: string;
@@ -10,5 +12,13 @@ export default class NewerVersionFound extends Error {
     this.componentId = componentId;
     this.currentVersion = currentVersion;
     this.newestVersion = newestVersion;
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.name = 'NewerVersionFound';
+    clone.componentId = this.toHash(clone.componentId);
+    clone.currentVersion = this.toHash(clone.currentVersion);
+    clone.newestVersion = this.toHash(clone.newestVersion);
+    return clone;
   }
 }
