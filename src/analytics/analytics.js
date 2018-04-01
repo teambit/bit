@@ -19,8 +19,11 @@ import {
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
   CFG_ANALYTICS_ENVIRONMENT_KEY,
-  ANALYTICS_URL
+  DEFAULT_ANALYTICS_DOMAIN,
+  CFG_ANALYTICS_DOMAIN_KEY
 } from '../constants';
+
+const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_DOMAIN;
 
 const LEVEL = {
   DEBUG: 'debug',
@@ -101,13 +104,16 @@ class Analytics {
 
   static async sendData() {
     if (this.analytics_usage) {
+      console.log('sdfds');
       return requestify
-        .post(ANALYTICS_URL, Analytics.toObejct(), { timeout: 1000 })
+        .post(ANALYTICS_DOMAIN, Analytics.toObejct(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
     }
     if (this.error_usage && !this.success) {
+      console.log('sdfds');
+
       return requestify
-        .post(ANALYTICS_URL, Analytics.toObejct(), { timeout: 1000 })
+        .post(ANALYTICS_DOMAIN, Analytics.toObejct(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
     }
     return Promise.resolve();

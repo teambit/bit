@@ -137,7 +137,7 @@ export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
 export const DEFAULT_BIT_ENV = 'production';
 
-export const ANALYTICS_URL = 'https://analytics.bitsrc.io/';
+export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics-stg.bitsrc.io/';
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
@@ -159,6 +159,8 @@ export const CFG_USER_NAME_KEY = 'user.name';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
+
+export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
 export const CFG_ANALYTICS_ANONYMOUS_KEY = 'anonymous_reporting';
 
