@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import path from 'path';
 
 describe('bit search', function () {
   this.timeout(0);

@@ -154,13 +154,13 @@ describe('bit add command', function () {
     });
     it('Should print tracking component: id', () => {
       helper.createFile('bar', 'foo2.js');
-      const output = helper.addComponent(path.normalize('bar/foo2.js'));
+      output = helper.addComponent(path.normalize('bar/foo2.js'));
       expect(output).to.contain('tracking component bar/foo2');
     });
     it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
       helper.createFile('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
-      const output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
+      output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
       expect(output).to.have.string('warning: files bar/foo2.js already used by component: bar/foo2');
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('bar/new');
