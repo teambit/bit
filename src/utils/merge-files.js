@@ -51,7 +51,7 @@ export default (async function mergeFiles({
     mergeResult.output = result.stdout;
     return mergeResult;
   } catch (err) {
-    if (err.code === 1 && err.stdout) {
+    if (err.code && Number.isInteger(err.code) && err.stdout) {
       mergeResult.conflict = err.stdout;
       return mergeResult;
     }
