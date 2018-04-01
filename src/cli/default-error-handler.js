@@ -120,25 +120,23 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     MergeConflict,
     err =>
-      `error: merge conflict occurred when importing the component ${err.id}. conflict version(s): ${err.versions.join(
+      `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
         ', '
       )}
-to resolve it, for each one of the conflict versions do the following:
-1) bit untag ${err.id} {conflict-version}
-2) bit import ${err.id} --objects
-3) bit use {conflict-version} ${err.id}`
+to resolve it and merge your local and remote changes, please do the following:
+1) bit untag ${err.id} ${err.versions.join(' ')}
+2) bit import
+3) bit checkout ${err.versions.join(' ')} ${err.id}`
   ],
   [
     MergeConflictOnRemote,
     err =>
-      `error: merge conflict occurred when exporting the component ${err.id}. conflict version(s): ${err.versions.join(
-        ', '
-      )}
-to resolve it, for each one of the conflict versions do the following:
-1) bit untag ${err.id} {conflict-version}
-2) bit import ${err.id} --objects
-3) bit use {conflict-version} ${err.id}
-once your changes are merged with the remote version, tag the component and export.`
+      `error: merge conflict occurred when exporting the component ${err.id} to the remote scope.
+to resolve this conflict and merge your remote and local changes, please do the following:
+1) bit untag ${err.id} ${err.versions.join(' ')}
+2) bit import
+3) bit checkout {conflict-version} ${err.id}
+once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
