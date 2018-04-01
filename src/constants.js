@@ -137,7 +137,7 @@ export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
 export const DEFAULT_BIT_ENV = 'production';
 
-export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics-stg.bitsrc.io/';
+export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
