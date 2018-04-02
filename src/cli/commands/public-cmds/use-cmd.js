@@ -65,8 +65,14 @@ export default class Use extends Command {
   }
 
   report({ components, version }: ApplyVersionResults): string {
-    const title = `the following components were switched to version ${chalk.bold(version)}\n`;
+    if (components.length === 1) {
+      const componentName = components[0].id.toStringWithoutVersion();
+      const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(version)}\n`;
+      return `${title} ${applyVersionReport(components, false)}`;
+    }
+
+    const title = `successfully switched the selected component(s) to version ${chalk.bold(version)}\n\n`;
     const componentsStr = applyVersionReport(components);
-    return chalk.underline(title) + chalk.green(componentsStr);
+    return `${title} ${componentsStr}`;
   }
 }

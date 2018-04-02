@@ -3,15 +3,22 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { merge } from '../../../api/consumer';
 import type { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
-import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
+import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
 import { BitId } from '../../../bit-id';
 
-export const applyVersionReport = (components: ApplyVersionResult[]): string => {
+export const applyVersionReport = (components: ApplyVersionResult[], addName: boolean = true): string => {
+  const tab = addName ? '\t' : '';
   return components
     .map((component: ApplyVersionResult) => {
-      const name = component.id.toStringWithoutVersion();
+      const name = addName ? component.id.toStringWithoutVersion() : '';
       const files = Object.keys(component.filesStatus)
-        .map(file => `\t${chalk.bold(file)} => ${component.filesStatus[file]}`)
+        .map((file) => {
+          const note =
+            component.filesStatus[file] === FileStatus.manual
+              ? chalk.white('automatic merge failed. please fix conflicts manually and then tag the results.')
+              : '';
+          return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
+        })
         .join('\n');
       return `${name}\n${chalk.cyan(files)}`;
     })
@@ -47,7 +54,7 @@ export default class Merge extends Command {
   }
 
   report({ components, version }: ApplyVersionResults): string {
-    const title = `the following components were merged from version ${chalk.bold(version)}\n`;
+    const title = `successfully merged components from version ${chalk.bold(version)}\n`;
     const componentsStr = applyVersionReport(components);
     return chalk.underline(title) + chalk.green(componentsStr);
   }

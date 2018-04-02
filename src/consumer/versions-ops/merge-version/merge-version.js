@@ -1,4 +1,5 @@
 // @flow
+import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
 import Component from '../../component';
 import { Version } from '../../../scope/models';
@@ -16,12 +17,12 @@ export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
 export type MergeStrategy = $Keys<typeof MergeOptions>;
 export const FileStatus = {
-  merged: 'file has successfully merged',
-  manual: 'file has conflicts which needs to be resolved manually',
-  updated: 'file has been updated',
-  added: 'file has been added',
-  overridden: 'file has been overridden',
-  unchanged: 'file left intact'
+  merged: chalk.green('auto-merged'),
+  manual: chalk.red('CONFLICT'),
+  updated: chalk.green('updated'),
+  added: chalk.green('added'),
+  overridden: chalk.yellow('overridden'),
+  unchanged: chalk.green('unchanged')
 };
 export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: PathLinux]: $Values<typeof FileStatus> } };
 export type ApplyVersionResults = { components: ApplyVersionResult[], version: string };
