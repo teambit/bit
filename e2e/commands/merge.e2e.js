@@ -56,7 +56,7 @@ describe('bit merge command', function () {
         });
         it('should show an error saying the component already uses that version', () => {
           const output = helper.runWithTryCatch('bit merge 0.0.5 bar/foo');
-          expect(output).to.have.string('component bar/foo is already at 0.0.5 version');
+          expect(output).to.have.string('component bar/foo is already at version 0.0.5');
         });
       });
     });

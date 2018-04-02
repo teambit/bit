@@ -12,9 +12,9 @@ chai.use(require('chai-fs'));
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
-const successOutput = 'the following components were switched to version';
+const successOutput = 'successfully switched';
 
-describe('bit use command', function () {
+describe.only('bit use command', function () {
   this.timeout(0);
   const helper = new Helper();
   before(() => {
@@ -55,7 +55,7 @@ describe('bit use command', function () {
         });
         it('should show an error saying the component already uses that version', () => {
           const output = helper.runWithTryCatch('bit use 0.0.5 bar/foo');
-          expect(output).to.have.string('component bar/foo is already at 0.0.5 version');
+          expect(output).to.have.string('component bar/foo is already at version 0.0.5');
         });
         describe('and tagged again', () => {
           let output;
@@ -238,7 +238,7 @@ describe('bit use command', function () {
             }
           });
           it('should throw an error indicating that there are conflicts', () => {
-            expect(output).to.have.string('merging the changes will result in a conflict state');
+            expect(output).to.have.string('automatic merge has failed');
           });
           it('should be able to run the app with the modified version because nothing has changed', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -582,7 +582,7 @@ describe('bit use command', function () {
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
       });
-      it('should indicate that the file has been merged successfully', () => {
+      it.only('should indicate that the file has been merged successfully', () => {
         expect(output).to.have.string('bar/foo.js');
         expect(output).to.have.string(FileStatus.merged);
       });
