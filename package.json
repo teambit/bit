@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.11-dev.1",
+  "version": "0.12.11-dev.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -89,6 +89,7 @@
     "ramda": "^0.24.1",
     "raven": "^2.4.2",
     "regenerator-runtime": "^0.11.0",
+    "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
     "semver": "^5.4.1",
     "serialize-error": "^2.1.0",
