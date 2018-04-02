@@ -296,6 +296,10 @@ export default class Helper {
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
   }
+  listLocalScopeParsed(options: string = '') {
+    const output = this.runCmd(`bit list --json ${options}`);
+    return JSON.parse(output);
+  }
 
   getNewBareScope(scopeNameSuffix?: string = '-remote2') {
     const scopeName = generateRandomStr() + scopeNameSuffix;

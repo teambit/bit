@@ -1,5 +1,5 @@
 /** @flow */
-import { loadConsumer } from '../../../consumer';
+import { loadConsumer, Consumer } from '../../../consumer';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
@@ -20,8 +20,14 @@ export default function list({
     loader.start(BEFORE_REMOTE_LIST);
     return remote.list();
   };
-  const scopeList = (scope: Scope) => {
-    return cache ? scope.list(showRemoteVersion) : scope.listStage();
+  const scopeList = async (scope: Scope, consumer: Consumer) => {
+    const components = cache ? await scope.list(showRemoteVersion) : await scope.listStage();
+    if (consumer) {
+      components.forEach((component) => {
+        component.currentlyUsedVersion = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
+      });
+    }
+    return components;
   };
 
   return loadConsumer()
@@ -32,7 +38,7 @@ export default function list({
         return scope.remotes().then(remotes => remotes.resolve(scopeName, scope.name).then(remoteList));
       }
 
-      return scopeList(scope);
+      return scopeList(scope, consumer);
     })
     .catch((err) => {
       if (!(err instanceof ConsumerNotFound)) throw err;
