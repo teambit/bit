@@ -14,6 +14,8 @@ import logger from '../../logger/logger';
 export default class Repository {
   objects: BitObject[] = [];
   _cache: { [string]: BitObject } = {};
+  _cacheListComponentsWithSymlinks: Component[] | Symlink[];
+  _cacheListComponentsWithoutSymlinks: Component[];
   scope: Scope;
   types: { [string]: Function };
 
@@ -93,14 +95,22 @@ export default class Repository {
     );
   }
 
-  // @TODO - cache the results
-  listComponents(includeSymlinks: boolean = true): Promise<Component[] | Symlink[]> {
+  async listComponents(includeSymlinks: boolean = true): Promise<Component[] | Symlink[]> {
     const filterComponents = refs =>
       refs.filter(
         ref => (includeSymlinks ? ref instanceof Component || ref instanceof Symlink : ref instanceof Component)
       );
 
-    return this.list().then(filterComponents);
+    if (includeSymlinks) {
+      if (!this._cacheListComponentsWithSymlinks) {
+        this._cacheListComponentsWithSymlinks = await this.list().then(filterComponents);
+      }
+      return this._cacheListComponentsWithSymlinks;
+    }
+    if (!this._cacheListComponentsWithoutSymlinks) {
+      this._cacheListComponentsWithoutSymlinks = await this.list().then(filterComponents);
+    }
+    return this._cacheListComponentsWithoutSymlinks;
   }
 
   remove(ref: Ref): Promise<boolean> {

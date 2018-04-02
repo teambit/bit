@@ -30,7 +30,8 @@ export default class Status extends Command {
     componentsWithMissingDeps,
     importPendingComponents,
     autoTagPendingComponents,
-    deletedComponents
+    deletedComponents,
+    outdatedComponents
   }: StatusResult): string {
     function formatMissing(missingComponent: Component) {
       function formatMissingStr(key, array, label) {
