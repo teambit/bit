@@ -8,6 +8,7 @@ specs/jsdoc/fixtures
 e2e/fixtures
 
 # temporarily, until we fix the errors in these paths
+src/analytics/analytics.js
 e2e/commands/extentsion.e2e.js
 e2e/commands/init.e2e.js
 specs/scope/migrations/objectsFixtures/simple-component.js

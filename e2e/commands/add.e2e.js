@@ -148,18 +148,19 @@ describe('bit add command', function () {
     });
   });
   describe('add one component', () => {
+    let output;
     beforeEach(() => {
       helper.reInitLocalScope();
     });
     it('Should print tracking component: id', () => {
       helper.createFile('bar', 'foo2.js');
-      const output = helper.addComponent(path.normalize('bar/foo2.js'));
+      output = helper.addComponent(path.normalize('bar/foo2.js'));
       expect(output).to.contain('tracking component bar/foo2');
     });
     it('Should print warning when trying to add file that is already tracked with different id and not add it as a new one', () => {
       helper.createFile('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'));
-      const output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
+      output = helper.addComponent(`${path.normalize('bar/foo2.js')} -i bar/new`);
       expect(output).to.have.string('warning: files bar/foo2.js already used by component: bar/foo2');
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('bar/new');
@@ -185,9 +186,9 @@ describe('bit add command', function () {
       const specNormalizedPath = path.normalize('bar/foo2.spec.js');
       const addCmd = () => helper.addComponent(` -t ${specNormalizedPath}`);
       expect(addCmd).to.throw(
-        `Command failed: ${helper.bitBin} add  -t ${
-          specNormalizedPath
-        }\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
+        `Command failed: ${
+          helper.bitBin
+        } add  -t ${specNormalizedPath}\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
       );
     });
 
@@ -218,10 +219,13 @@ describe('bit add command', function () {
     it('Should not add component if bit.json is corrupted', () => {
       helper.createFile('bar', 'foo2.js');
       helper.corruptBitJson();
-      const addCmd = () => helper.addComponent(path.normalize('bar/foo2.js'));
-      expect(addCmd).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.addComponent(path.normalize('bar/foo2.js'));
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
     it('Should throw error when adding more than one component with same ID ', () => {
       helper.createFile('bar', 'file.js');
@@ -337,9 +341,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        `Command failed: ${helper.bitBin} add ${
-          normalizedPath
-        } -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
+        `Command failed: ${
+          helper.bitBin
+        } add ${normalizedPath} -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it('Should prevent adding a file with invalid keys in ID', () => {
@@ -353,9 +357,9 @@ describe('bit add command', function () {
         errMsg = err.message;
       }
       expect(errMsg).to.have.string(
-        `Command failed: ${helper.bitBin} add ${
-          normalizedPath
-        } -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
+        `Command failed: ${
+          helper.bitBin
+        } add ${normalizedPath} -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
       );
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
@@ -841,9 +845,9 @@ describe('bit add command', function () {
       it('should throw an error', () => {
         const barFoo2Path = path.join('bar', 'foo2.js');
         expect(output).to.have.string(
-          `Command failed: ${helper.bitBin} add ${
-            barFoo2Path
-          } -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
+          `Command failed: ${
+            helper.bitBin
+          } add ${barFoo2Path} -i bar/foo\nunable to add file bar/foo2.js because it's located outside the component root dir components/bar/foo\n`
         );
       });
     });

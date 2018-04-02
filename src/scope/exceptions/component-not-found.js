@@ -1,5 +1,7 @@
 /** @flow */
-export default class ComponentNotFound extends Error {
+import AbstractError from '../../error/abstract-error';
+
+export default class ComponentNotFound extends AbstractError {
   id: string;
   code: number;
 
@@ -7,5 +9,10 @@ export default class ComponentNotFound extends Error {
     super();
     this.code = 127;
     this.id = id;
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.id = this.toHash(clone.id);
+    return clone;
   }
 }

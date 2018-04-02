@@ -1,1 +1,3 @@
-export default class InvalidRemote extends Error {}
+import AbstractError from '../../error/abstract-error';
+
+export default class InvalidRemote extends AbstractError {}

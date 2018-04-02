@@ -200,7 +200,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
           const file = JSON.parse(data.toString('utf8'));
           return resolve(this.fromPlainObject(file));
         } catch (e) {
-          return reject(new InvalidBitJson(e));
+          return reject(new InvalidBitJson(composePath(dirPath)));
         }
       });
     });

@@ -21,15 +21,20 @@ describe('bit tag command', function () {
     logSpy = sinon.spy(console, 'log');
   });
   describe('tag component with corrupted bitjson', () => {
-    it('Should not commit component if bit.json is corrupted', () => {
+    let output;
+    it.only('Should not commit component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
-      const commit = () => helper.commitComponent('bar/foo2');
+
       helper.corruptBitJson();
-      expect(commit).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.commitComponent('bar/foo2');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('tag component with invalid mainFile in bitmap', () => {

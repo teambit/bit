@@ -1,5 +1,7 @@
 /** @flow */
-export default class DependencyNotFound extends Error {
+import AbstractError from '../../error/abstract-error';
+
+export default class DependencyNotFound extends AbstractError {
   id: string;
   code: number;
   bitJsonPath: string;
@@ -8,5 +10,10 @@ export default class DependencyNotFound extends Error {
     super();
     this.code = 127;
     this.id = id;
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.id = this.toHash(clone.id);
+    return clone;
   }
 }

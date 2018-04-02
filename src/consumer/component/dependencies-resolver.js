@@ -123,9 +123,9 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
           throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${
-              componentId
-            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
+            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+              componentFromModel.id
+            }`
           );
         }
         const originallySource: PathLinux = entryComponentMap.originallySharedDir

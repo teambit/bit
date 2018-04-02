@@ -1,8 +1,9 @@
 /** @flow */
 import R from 'ramda';
 import toArray from 'lodash.toarray';
+import AbstractError from '../../../../error/abstract-error';
 
-export default class DuplicateIds extends Error {
+export default class DuplicateIds extends AbstractError {
   componentObject: Object;
   constructor(componentObject: Object) {
     super();
@@ -13,5 +14,10 @@ export default class DuplicateIds extends Error {
       componentIds[key] = flattendFiles;
     });
     this.componentObject = componentIds;
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.componentObject = this.toHash(JSON.stringify(clone.componentObject));
+    return clone;
   }
 }

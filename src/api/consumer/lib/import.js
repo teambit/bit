@@ -11,6 +11,7 @@ import { flattenDependencies } from '../../../scope/flatten-dependencies';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import type { ImportOptions } from '../../../consumer/component/import-components';
+import { Analytics } from '../../../analytics/analytics';
 
 const key = R.compose(R.head, R.keys);
 
@@ -35,11 +36,13 @@ export default (async function importAction(
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {
         consumer.bitJson.compilerId = id;
+        Analytics.setExtraData('build_env', id);
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
         consumer.bitJson.testerId = id;
+        Analytics.setExtraData('test_env', id);
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
@@ -90,6 +93,7 @@ export default (async function importAction(
     consumer,
     installNpmPackages: importOptions.installNpmPackages
   });
+  Analytics.setExtraData('num_components', bitIds.length);
   return { dependencies, envDependencies, warnings };
 });
 

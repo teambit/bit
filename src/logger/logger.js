@@ -1,8 +1,9 @@
 /** @flow */
 import winston from 'winston';
 import path from 'path';
-import { GLOBAL_LOGS } from '../constants';
 import { setTimeout } from 'timers';
+import { GLOBAL_LOGS } from '../constants';
+import { Analytics } from '../analytics/analytics';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
 // in case the extension developer use api.logger more than once
@@ -60,7 +61,8 @@ export const createExtensionLogger = (extensionName: string) => {
 
 // @credit Kegsay from https://github.com/winstonjs/winston/issues/228
 // it solves an issue when exiting the code explicitly and the log file is not written
-logger.exitAfterFlush = (code: number = 0, commandName: string) => {
+logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
+  await Analytics.sendData();
   let level;
   let msg;
   if (code === 0) {

@@ -23,6 +23,7 @@ import type { Network } from '../network';
 import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
 import { RemovedObjects } from '../../removed-components';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
+import { Analytics } from '../../../analytics/analytics';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
@@ -286,6 +287,7 @@ export default class SSH implements Network {
     // if ssh-agent socket exists, use it.
     if (this.hasAgentSocket() && !skipAgent) {
       logger.debug('SSH: connecting using ssh agent socket');
+      Analytics.setExtraData('authentication_method', 'ssh-agent');
       return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
     }
     logger.debug('SSH: there is no ssh agent socket (or its been disabled)');
@@ -294,12 +296,14 @@ export default class SSH implements Network {
     // otherwise just search for merge
     const keyBuffer = keyGetter(key);
     if (keyBuffer) {
+      Analytics.setExtraData('authentication_method', 'ssh-key');
       return Promise.resolve(merge(base, { privateKey: keyBuffer }));
     }
     logger.debug('SSH: reading ssh key file failed');
     logger.debug('SSH: prompt for username and password');
 
     return promptUserpass().then(({ username, password }) => {
+      Analytics.setExtraData('authentication_method', 'user_password');
       this._sshUsername = username;
       return merge(base, { username, password });
     });

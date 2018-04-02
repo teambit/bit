@@ -8,6 +8,7 @@ import { BitId } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
+import { Analytics } from '../../../analytics/analytics';
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<string[]> {
   const componentsList = new ComponentsList(consumer);
@@ -92,5 +93,6 @@ export default (async function exportAction(ids?: string[], remote: string, save
   await consumer.bitMap.write();
   await linkComponents(componentsIds, consumer);
   if (ejectErr) return Promise.reject(ejectErr);
+  Analytics.setExtraData('num_components', componentsIds.length);
   return componentsIds;
 });

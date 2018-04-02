@@ -1,5 +1,7 @@
 /** @flow */
-export default class PluginNotFoundException extends Error {
+import AbstractError from '../../../error/abstract-error';
+
+export default class PluginNotFoundException extends AbstractError {
   plugin: string;
 
   constructor(plugin: string) {

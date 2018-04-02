@@ -1,5 +1,7 @@
 /** @flow */
-export default class CorruptedComponent extends Error {
+import AbstractError from '../../error/abstract-error';
+
+export default class CorruptedComponent extends AbstractError {
   id: string;
   version: string;
 
@@ -7,5 +9,10 @@ export default class CorruptedComponent extends Error {
     super();
     this.id = id;
     this.version = version;
+  }
+  makeAnonymous() {
+    const clone = this.clone();
+    clone.version = this.toHash(clone.version);
+    return clone;
   }
 }

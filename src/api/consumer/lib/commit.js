@@ -7,6 +7,7 @@ import { BitId } from '../../../bit-id';
 import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 import InvalidVersion from './exceptions/invalid-version';
+import { Analytics } from '../../../analytics/analytics';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -117,6 +118,10 @@ export async function commitAllAction(args: {
 
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, commitResults);
+  Analytics.setExtraData(
+    'num_components',
+    R.concat(commitResults.taggedComponents, commitResults.autoTaggedComponents, commitResults.newComponents).length
+  );
   return commitResults;
 }
 
