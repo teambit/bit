@@ -7,11 +7,11 @@ export default {
   properties: {
     analyticsResponse: {
       required: true,
-      default: 'Yes',
-      description: `To help us prioritize new features and bug fixes, Bit can collect anonymous statistics about its usage. Staying opted-in is completely voluntary and helps us improve Bit and build a better product for you.
-Read the analytics documentation - https://docs.bitsrc.io/docs/conf-analytics.html
-Is it ok to help Bit with anonymous usage analytics? [yes/no]`,
-      message: 'please use yes or no.',
+      default: 'yes',
+      description: `help us prioritize new features and bug fixes by enabling us to collect anonymous statistics about your usage. sharing anonymous usage information is completely voluntary and helps us improve Bit and build a better product.
+for more information see analytics documentation - https://docs.bitsrc.io/docs/conf-analytics.html
+would you like to help Bit with anonymous usage analytics? [yes(y)/no(n)]`,
+      message: 'please choose yes or no.',
       type: 'string',
       conform(value: string) {
         return (

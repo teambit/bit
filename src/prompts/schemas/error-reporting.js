@@ -7,9 +7,9 @@ export default {
   properties: {
     errResponse: {
       required: true,
-      default: 'Yes',
-      description: 'Is it ok to send only error information to Bit’s error reporting platform? [Yes/no]',
-      message: 'please use yes or no.',
+      default: 'yes',
+      description: 'would you like to share error information to Bit’s error reporting platform? [yes/no]',
+      message: 'please choose yes or no.',
       type: 'string',
       conform(value: string) {
         return (

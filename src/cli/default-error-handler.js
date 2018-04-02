@@ -244,7 +244,7 @@ once your changes are merged with the new remote version, please tag and export 
 current version ${err.currentVersion} is older than the latest ${err.newestVersion}.
 to ignore this error, please use --ignore-newest-version flag`
   ],
-  [PromptCanceled, err => chalk.yellow('operation was aborted')],
+  [PromptCanceled, err => chalk.yellow('operation aborted')],
   [
     AuthenticationFailed,
     err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
