@@ -41,7 +41,7 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
   if (componentWithConflict) {
     if (!promptMergeOptions && !useProps.mergeStrategy) {
       throw new Error(
-        `component ${componentWithConflict.id.toStringWithoutVersion()} is modified, merging the changes will result in a conflict state, to merge the component use --merge flag`
+        `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--manual" to manually merge changes or use "--theirs / --ours" to choose one of the conflicted versions`
       );
     }
     if (!useProps.mergeStrategy) useProps.mergeStrategy = await getMergeStrategyInteractive();

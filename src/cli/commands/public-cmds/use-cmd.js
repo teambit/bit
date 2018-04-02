@@ -14,8 +14,8 @@ export default class Use extends Command {
   alias = 'U';
   opts = [
     [
-      'm',
-      'merge',
+      'i',
+      'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them'
     ],
     ['o', 'ours', 'in case of a conflict, use ours (override the used version with the current modification)'],
@@ -24,7 +24,7 @@ export default class Use extends Command {
       'theirs',
       'in case of a conflict, use theirs (override the current modification and use the specified version)'
     ],
-    ['M', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
@@ -34,7 +34,7 @@ export default class Use extends Command {
   action(
     [version, ids]: [string, string[]],
     {
-      merge = false,
+      interactiveMerge = false,
       ours = false,
       theirs = false,
       manual = false,
@@ -42,7 +42,7 @@ export default class Use extends Command {
       skipNpmInstall = false,
       ignoreDist = false
     }: {
-      merge?: boolean,
+      interactiveMerge?: boolean,
       ours?: boolean,
       theirs?: boolean,
       manual?: boolean,
@@ -55,7 +55,7 @@ export default class Use extends Command {
     const useProps: UseProps = {
       version,
       ids: bitIds,
-      promptMergeOptions: merge,
+      promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
       verbose,
       skipNpmInstall,
