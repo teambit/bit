@@ -55,7 +55,7 @@ describe('bit use command', function () {
         });
         it('should show an error saying the component already uses that version', () => {
           const output = helper.runWithTryCatch('bit use 0.0.5 bar/foo');
-          expect(output).to.have.string('component bar/foo is already at 0.0.5 version');
+          expect(output).to.have.string('component bar/foo is already at version 0.0.5');
         });
         describe('and tagged again', () => {
           let output;
@@ -238,7 +238,7 @@ describe('bit use command', function () {
             }
           });
           it('should throw an error indicating that there are conflicts', () => {
-            expect(output).to.have.string('merge has failed for component');
+            expect(output).to.have.string('automatic merge has failed');
           });
           it('should be able to run the app with the modified version because nothing has changed', () => {
             const result = helper.runWithTryCatch('node app.js');

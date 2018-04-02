@@ -67,7 +67,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
   const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
   const currentlyUsedVersion = BitId.parse(existingBitMapId).version;
   if (currentlyUsedVersion === version) {
-    throw new Error(`component ${component.id.toStringWithoutVersion()} is already at ${version} version`);
+    throw new Error(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
   const otherComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
   const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({
