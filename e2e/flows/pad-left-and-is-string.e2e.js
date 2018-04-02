@@ -163,7 +163,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
         helper.runCmd('bit untag string/pad-left 0.0.2'); // current state: 0.0.1 + modification
         helper.importComponent('string/pad-left --objects');
-        output = helper.useVersion('0.0.2', 'string/pad-left', '--manual');
+        output = helper.checkoutVersion('0.0.2', 'string/pad-left', '--manual');
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('bit-use should not add any file', () => {
