@@ -3,9 +3,9 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import { ComponentNotFound } from '../../src/scope/exceptions';
+import { FileStatusWithoutChalk } from './merge.e2e';
 
 chai.use(require('chai-fs'));
 
@@ -14,7 +14,7 @@ const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const successOutput = 'successfully switched';
 
-describe.only('bit use command', function () {
+describe('bit use command', function () {
   this.timeout(0);
   const helper = new Helper();
   before(() => {
@@ -252,7 +252,7 @@ describe.only('bit use command', function () {
             output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
           });
           it('should indicate that there are conflicts', () => {
-            expect(output).to.have.string(FileStatus.manual);
+            expect(output).to.have.string(FileStatusWithoutChalk.manual);
           });
           it('should not be able to run the app because of the conflicts', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -266,7 +266,7 @@ describe.only('bit use command', function () {
             output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
           });
           it('should indicate that the file was not changed', () => {
-            expect(output).to.have.string(FileStatus.unchanged);
+            expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           });
           it('should be able to run the app and show the modified version', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -280,7 +280,7 @@ describe.only('bit use command', function () {
             output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
           });
           it('should indicate that the file was updated', () => {
-            expect(output).to.have.string(FileStatus.updated);
+            expect(output).to.have.string(FileStatusWithoutChalk.updated);
           });
           it('should be able to run the app and show the previous version', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -379,7 +379,7 @@ describe.only('bit use command', function () {
         expect(output).to.have.string(successOutput);
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string(FileStatus.manual);
+        expect(output).to.have.string(FileStatusWithoutChalk.manual);
       });
       it('should rewrite the file with the conflict with the conflicts segments', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -413,7 +413,7 @@ describe.only('bit use command', function () {
         expect(output).to.have.string(successOutput);
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string(FileStatus.updated);
+        expect(output).to.have.string(FileStatusWithoutChalk.updated);
       });
       it('should rewrite the file according to the used version', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -442,7 +442,7 @@ describe.only('bit use command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should indicate that the file was not changed', () => {
-        expect(output).to.have.string(FileStatus.unchanged);
+        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
       });
       it('should leave the file intact', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -473,7 +473,7 @@ describe.only('bit use command', function () {
           output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that a new file was added', () => {
-          expect(output).to.have.string(FileStatus.added);
+          expect(output).to.have.string(FileStatusWithoutChalk.added);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
@@ -495,7 +495,7 @@ describe.only('bit use command', function () {
           output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not indicate that a new file was added', () => {
-          expect(output).to.not.have.string(FileStatus.added);
+          expect(output).to.not.have.string(FileStatusWithoutChalk.added);
           expect(output).to.not.have.string('bar/foo2.js');
         });
         it('should not track the file in bitmap', () => {
@@ -520,7 +520,7 @@ describe.only('bit use command', function () {
           output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
         });
         it('should indicate that the new file was not changed', () => {
-          expect(output).to.have.string(FileStatus.unchanged);
+          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should keep tracking the file in bitmap', () => {
@@ -582,9 +582,9 @@ describe.only('bit use command', function () {
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
       });
-      it.only('should indicate that the file has been merged successfully', () => {
+      it('should indicate that the file has been merged successfully', () => {
         expect(output).to.have.string('bar/foo.js');
-        expect(output).to.have.string(FileStatus.merged);
+        expect(output).to.have.string(FileStatusWithoutChalk.merged);
       });
       it('should update bitmap with the used version', () => {
         const bitMap = helper.readBitMap();

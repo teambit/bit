@@ -69,7 +69,7 @@ export default class Helper {
     return output;
   }
 
-  removeChalkCharacters(str?: ?string): ?string {
+  static removeChalkCharacters(str?: ?string): ?string {
     if (!str) return str;
     return str.replace(/\u001b\[.*?m/g, '');
   }
@@ -82,7 +82,7 @@ export default class Helper {
       output = err.toString();
     }
     const errorString = defaultErrorHandler(error);
-    expect(this.removeChalkCharacters(output)).to.have.string(this.removeChalkCharacters(errorString));
+    expect(Helper.removeChalkCharacters(output)).to.have.string(Helper.removeChalkCharacters(errorString));
   }
 
   setHubDomain(domain: string = 'hub.bitsrc.io') {

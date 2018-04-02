@@ -1,3 +1,4 @@
+import R from 'ramda';
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
@@ -12,7 +13,11 @@ const barFooV1 = "module.exports = function foo() { return 'got foo'; };";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const barFooV4 = "module.exports = function foo() { return 'got foo v4'; };";
-const successOutput = 'the following components were merged from version';
+const successOutput = 'successfully merged components';
+// eslint-disable-next-line import/prefer-default-export
+export const FileStatusWithoutChalk = R.fromPairs(
+  Object.keys(FileStatus).map(status => [status, Helper.removeChalkCharacters(FileStatus[status])])
+);
 
 describe('bit merge command', function () {
   this.timeout(0);
@@ -207,7 +212,7 @@ describe('bit merge command', function () {
             output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
           });
           it('should indicate that there are conflicts', () => {
-            expect(output).to.have.string(FileStatus.manual);
+            expect(output).to.have.string(FileStatusWithoutChalk.manual);
           });
           it('should not be able to run the app because of the conflicts', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -221,7 +226,7 @@ describe('bit merge command', function () {
             output = helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
           });
           it('should indicate that the file was not changed', () => {
-            expect(output).to.have.string(FileStatus.unchanged);
+            expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           });
           it('should be able to run the app and show the modified version', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -235,7 +240,7 @@ describe('bit merge command', function () {
             output = helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
           });
           it('should indicate that the file was updated', () => {
-            expect(output).to.have.string(FileStatus.updated);
+            expect(output).to.have.string(FileStatusWithoutChalk.updated);
           });
           it('should be able to run the app and show the previous version of the main component and current version of dependencies', () => {
             const result = helper.runWithTryCatch('node app.js');
@@ -285,7 +290,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(successOutput);
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string(FileStatus.manual);
+        expect(output).to.have.string(FileStatusWithoutChalk.manual);
       });
       it('should rewrite the file with the conflict with the conflicts segments', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -319,7 +324,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(successOutput);
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string(FileStatus.updated);
+        expect(output).to.have.string(FileStatusWithoutChalk.updated);
       });
       it('should rewrite the file according to the merged version', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -348,7 +353,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should indicate that the file was not changed', () => {
-        expect(output).to.have.string(FileStatus.unchanged);
+        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
       });
       it('should leave the file intact', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -379,7 +384,7 @@ describe('bit merge command', function () {
           output = helper.mergeVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that the new file was not changed', () => {
-          expect(output).to.have.string(FileStatus.unchanged);
+          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
@@ -401,7 +406,7 @@ describe('bit merge command', function () {
           output = helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should indicate that the new file was not changed', () => {
-          expect(output).to.have.string(FileStatus.unchanged);
+          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should keep track the file in bitmap', () => {
@@ -428,7 +433,7 @@ describe('bit merge command', function () {
           output = helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
         });
         it('should indicate that the new file was not changed', () => {
-          expect(output).to.have.string(FileStatus.unchanged);
+          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should keep tracking the file in bitmap', () => {
@@ -462,7 +467,7 @@ describe('bit merge command', function () {
           output = helper.mergeVersion('0.0.3', 'bar/foo', '--manual');
         });
         it('should indicate that the file was added', () => {
-          expect(output).to.have.string(FileStatus.added);
+          expect(output).to.have.string(FileStatusWithoutChalk.added);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
@@ -484,7 +489,7 @@ describe('bit merge command', function () {
           output = helper.mergeVersion('0.0.3', 'bar/foo', '--theirs');
         });
         it('should indicate that the file was added', () => {
-          expect(output).to.have.string(FileStatus.added);
+          expect(output).to.have.string(FileStatusWithoutChalk.added);
           expect(output).to.have.string('bar/foo2.js');
         });
         it('should track the file in bitmap', () => {
@@ -510,7 +515,7 @@ describe('bit merge command', function () {
           output = helper.mergeVersion('0.0.3', 'bar/foo', '--ours');
         });
         it('should not add the deleted file', () => {
-          expect(output).to.not.have.string(FileStatus.added);
+          expect(output).to.not.have.string(FileStatusWithoutChalk.added);
           expect(output).to.not.have.string('bar/foo2.js');
         });
         it('should not track the deleted file in bitmap', () => {
@@ -549,7 +554,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(successOutput);
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string(FileStatus.manual);
+        expect(output).to.have.string(FileStatusWithoutChalk.manual);
       });
       it('should rewrite the file with the conflict with the conflicts segments', () => {
         expect(fileContent).to.have.string('<<<<<<<');
@@ -585,7 +590,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string(successOutput);
         expect(output).to.have.string('0.0.1');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string(FileStatus.updated);
+        expect(output).to.have.string(FileStatusWithoutChalk.updated);
       });
       it('should rewrite the file according to the merged version', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
@@ -608,7 +613,7 @@ describe('bit merge command', function () {
         expect(output).to.have.string('bar/foo');
       });
       it('should indicate that the file was not changed', () => {
-        expect(output).to.have.string(FileStatus.unchanged);
+        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
       });
       it('should leave the file intact', () => {
         const fileContent = fs.readFileSync(path.join(helper.localScopePath, 'bar/foo.js')).toString();
