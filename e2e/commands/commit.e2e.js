@@ -22,7 +22,7 @@ describe('bit tag command', function () {
   });
   describe('tag component with corrupted bitjson', () => {
     let output;
-    it.only('Should not commit component if bit.json is corrupted', () => {
+    it('Should not commit component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
