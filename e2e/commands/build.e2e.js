@@ -58,6 +58,22 @@ describe('bit build', function () {
             expect(buildOutput).to.have.string('successfully installed the');
             expect(buildOutput).to.have.string('compiler');
           });
+          describe('changing dist target', () => {
+            let rebuildOutput;
+            before(() => {
+              helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+              rebuildOutput = helper.build();
+            });
+            it('should rebuild the component and save it on the specified target', () => {
+              expect(rebuildOutput).to.have.string(path.normalize('dist/components/bar/foo/foo.js'));
+            });
+            it('should build only src files not dist files (in other words, should always ignore dist directory, regardless the dist.target value)', () => {
+              expect(rebuildOutput).to.not.have.string(path.normalize('dist/components/bar/foo/dist/foo.js'));
+            });
+            it('should not save the dists on the dist directory of the component', () => {
+              expect(rebuildOutput).to.not.have.string(path.normalize('components/bar/foo/dist'));
+            });
+          });
         });
         describe('build with --verbose flag', () => {
           let buildOutput;

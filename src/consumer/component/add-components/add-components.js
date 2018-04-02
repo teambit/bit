@@ -407,13 +407,11 @@ export default class AddComponents {
 
   getIgnoreList(): string[] {
     let ignoreList = retrieveIgnoreList(this.consumer.getPath());
-    if (!this.consumer.bitJson.distTarget) {
-      const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
-      const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
-        pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
-      );
-      ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    }
+    const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
+    const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
+      pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
+    );
+    ignoreList = ignoreList.concat(distDirsOfImportedComponents);
     return ignoreList;
   }
 
