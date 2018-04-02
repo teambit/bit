@@ -38,7 +38,7 @@ export type MergeResultsThreeWay = {
 /**
  * it's easier to understand with an example.
  * a component bar/foo has two versions: 0.0.1, 0.0.2. Also, the component was modified locally.
- * the user is running 'bit use 0.0.1 bar/foo' to switch the version of bar/foo to 0.0.1.
+ * the user is running 'bit checkout 0.0.1 bar/foo' to switch the version of bar/foo to 0.0.1.
  *
  * the goal is to rewrite bar/foo to the filesystem as 0.0.1 and keeping the local changes.
  * in other words, the changes the user did since 0.0.2 should be applied/merged on top of 0.0.1.

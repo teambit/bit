@@ -214,7 +214,7 @@ export default class Scope {
     );
   }
 
-  async list(showRemoteVersion?: boolean = false) {
+  async list(showRemoteVersion?: boolean = false): Promise<ConsumerComponent[]> {
     const components = await this.objects.listComponents();
     const consumerComponents = await this.toConsumerComponents(components);
     if (showRemoteVersion) {
@@ -230,7 +230,7 @@ export default class Scope {
     return ComponentsList.sortComponentsByName(consumerComponents);
   }
 
-  async listStage() {
+  async listStage(): Promise<ConsumerComponent[]> {
     const components = await this.objects.listComponents(false);
     const scopeComponents = await this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
     return ComponentsList.sortComponentsByName(scopeComponents);

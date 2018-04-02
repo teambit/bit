@@ -14,7 +14,7 @@ const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const successOutput = 'successfully switched';
 
-describe('bit use command', function () {
+describe('bit checkout command', function () {
   this.timeout(0);
   const helper = new Helper();
   before(() => {
@@ -25,7 +25,7 @@ describe('bit use command', function () {
   });
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
-      const useFunc = () => helper.runCmd('bit use 1.0.0 utils/non-exist');
+      const useFunc = () => helper.runCmd('bit checkout 1.0.0 utils/non-exist');
       const error = new ComponentNotFound('utils/non-exist');
       helper.expectToThrow(useFunc, error);
     });
@@ -36,7 +36,7 @@ describe('bit use command', function () {
       helper.addComponentBarFoo();
     });
     it('before tagging it should show an error saying the component was not tagged yet', () => {
-      const output = helper.runWithTryCatch('bit use 1.0.0 bar/foo');
+      const output = helper.runWithTryCatch('bit checkout 1.0.0 bar/foo');
       expect(output).to.have.string("component bar/foo doesn't have any version yet");
     });
     describe('after the component was tagged', () => {
@@ -45,7 +45,7 @@ describe('bit use command', function () {
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
-          const output = helper.runWithTryCatch('bit use 1.0.0 bar/foo');
+          const output = helper.runWithTryCatch('bit checkout 1.0.0 bar/foo');
           expect(output).to.have.string("component bar/foo doesn't have version 1.0.0");
         });
       });
@@ -54,14 +54,14 @@ describe('bit use command', function () {
           helper.createComponentBarFoo(barFooV2);
         });
         it('should show an error saying the component already uses that version', () => {
-          const output = helper.runWithTryCatch('bit use 0.0.5 bar/foo');
+          const output = helper.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           expect(output).to.have.string('component bar/foo is already at version 0.0.5');
         });
         describe('and tagged again', () => {
           let output;
           before(() => {
             helper.tagAllWithoutMessage('', '0.0.10');
-            output = helper.runWithTryCatch('bit use 0.0.5 bar/foo');
+            output = helper.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {
             expect(output).to.have.string(successOutput);
@@ -81,6 +81,11 @@ describe('bit use command', function () {
           it('should not show the component as modified', () => {
             const statusOutput = helper.runCmd('bit status');
             expect(statusOutput).to.not.have.string('modified components');
+          });
+          it('bit list should show the currently used version and latest local version', () => {
+            const listOutput = helper.listLocalScopeParsed('--outdated');
+            expect(listOutput[0].currentVersion).to.equal('0.0.5');
+            expect(listOutput[0].localVersion).to.equal('0.0.10');
           });
           describe('trying to tag when using an old version', () => {
             before(() => {
@@ -130,7 +135,7 @@ describe('bit use command', function () {
         let output;
         let bitMap;
         before(() => {
-          output = helper.useVersion('0.0.1', 'bar/foo');
+          output = helper.checkoutVersion('0.0.1', 'bar/foo');
           bitMap = helper.readBitMap();
         });
         it('should display a successful message', () => {
@@ -187,7 +192,7 @@ describe('bit use command', function () {
         let output;
         let bitMap;
         before(() => {
-          output = helper.useVersion('0.0.1', 'bar/foo');
+          output = helper.checkoutVersion('0.0.1', 'bar/foo');
           bitMap = helper.readBitMap();
         });
         it('should display a successful message', () => {
@@ -232,7 +237,7 @@ describe('bit use command', function () {
           let output;
           before(() => {
             try {
-              helper.useVersion('0.0.1', 'bar/foo');
+              helper.checkoutVersion('0.0.1', 'bar/foo');
             } catch (err) {
               output = err.toString();
             }
@@ -249,7 +254,7 @@ describe('bit use command', function () {
           let output;
           before(() => {
             helper.getClonedLocalScope(localScopeAfterModified);
-            output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+            output = helper.checkoutVersion('0.0.1', 'bar/foo', '--manual');
           });
           it('should indicate that there are conflicts', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.manual);
@@ -263,7 +268,7 @@ describe('bit use command', function () {
           let output;
           before(() => {
             helper.getClonedLocalScope(localScopeAfterModified);
-            output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+            output = helper.checkoutVersion('0.0.1', 'bar/foo', '--ours');
           });
           it('should indicate that the file was not changed', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
@@ -277,7 +282,7 @@ describe('bit use command', function () {
           let output;
           before(() => {
             helper.getClonedLocalScope(localScopeAfterModified);
-            output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+            output = helper.checkoutVersion('0.0.1', 'bar/foo', '--theirs');
           });
           it('should indicate that the file was updated', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.updated);
@@ -303,7 +308,7 @@ describe('bit use command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--skip-npm-install');
+          output = helper.checkoutVersion('0.0.1', 'bar/foo', '--skip-npm-install');
         });
         it('should not show npm messages', () => {
           expect(output).to.not.have.string('npm');
@@ -316,7 +321,7 @@ describe('bit use command', function () {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
           helper.importComponent('bar/foo --conf');
-          helper.useVersion('0.0.1', 'bar/foo');
+          helper.checkoutVersion('0.0.1', 'bar/foo');
         });
         it('should rewrite the bit.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
@@ -326,7 +331,7 @@ describe('bit use command', function () {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
           helper.importComponent('bar/foo --ignore-package-json');
-          helper.useVersion('0.0.1', 'bar/foo');
+          helper.checkoutVersion('0.0.1', 'bar/foo');
         });
         it('should not write package.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo', 'package.json')).to.not.be.a.path();
@@ -344,7 +349,7 @@ describe('bit use command', function () {
       helper.addComponentWithOptions('bar', { i: 'bar/foo' });
       helper.tagAllWithoutMessage();
 
-      helper.useVersion('0.0.1', 'bar/foo');
+      helper.checkoutVersion('0.0.1', 'bar/foo');
     });
     it('should not delete the new files', () => {
       // because the author may still need them
@@ -373,7 +378,7 @@ describe('bit use command', function () {
     describe('using manual strategy', () => {
       let output;
       before(() => {
-        output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+        output = helper.checkoutVersion('0.0.1', 'bar/foo', '--manual');
       });
       it('should indicate that the file has conflicts', () => {
         expect(output).to.have.string(successOutput);
@@ -407,7 +412,7 @@ describe('bit use command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+        output = helper.checkoutVersion('0.0.1', 'bar/foo', '--theirs');
       });
       it('should indicate that the file has updated', () => {
         expect(output).to.have.string(successOutput);
@@ -434,7 +439,7 @@ describe('bit use command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+        output = helper.checkoutVersion('0.0.1', 'bar/foo', '--ours');
       });
       it('should indicate that the version was switched', () => {
         expect(output).to.have.string(successOutput);
@@ -470,7 +475,7 @@ describe('bit use command', function () {
       describe('using manual strategy', () => {
         let output;
         before(() => {
-          output = helper.useVersion('0.0.1', 'bar/foo', '--manual');
+          output = helper.checkoutVersion('0.0.1', 'bar/foo', '--manual');
         });
         it('should indicate that a new file was added', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.added);
@@ -492,7 +497,7 @@ describe('bit use command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(scopeWithAddedFile);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--theirs');
+          output = helper.checkoutVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not indicate that a new file was added', () => {
           expect(output).to.not.have.string(FileStatusWithoutChalk.added);
@@ -517,7 +522,7 @@ describe('bit use command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(scopeWithAddedFile);
-          output = helper.useVersion('0.0.1', 'bar/foo', '--ours');
+          output = helper.checkoutVersion('0.0.1', 'bar/foo', '--ours');
         });
         it('should indicate that the new file was not changed', () => {
           expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
@@ -548,7 +553,7 @@ describe('bit use command', function () {
         helper.createComponentBarFoo(barFooV2);
         helper.commitComponentBarFoo();
         helper.createComponentBarFoo(barFooV1);
-        output = helper.useVersion('0.0.1', 'bar/foo');
+        output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
       it('should indicate that the version is switched', () => {
         expect(output).to.have.string(successOutput);
@@ -575,7 +580,7 @@ describe('bit use command', function () {
         helper.commitComponentBarFoo();
         helper.commitComponent('bar/foo --force');
         helper.createComponentBarFoo(barFooV2);
-        output = helper.useVersion('0.0.1', 'bar/foo');
+        output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
       it('should indicate that the version is switched', () => {
         expect(output).to.have.string(successOutput);

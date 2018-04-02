@@ -2,14 +2,14 @@
 import chalk from 'chalk';
 import Command from '../../command';
 import { BitId } from '../../../bit-id';
-import { use } from '../../../api/consumer';
+import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
 import type { UseProps } from '../../../consumer/versions-ops/checkout-version';
 import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
-export default class Use extends Command {
-  name = 'use <version> <ids...>';
+export default class Checkout extends Command {
+  name = 'checkout <version> <ids...>';
   description = 'switch between versions';
   alias = 'U';
   opts = [
@@ -61,7 +61,7 @@ export default class Use extends Command {
       skipNpmInstall,
       ignoreDist
     };
-    return use(useProps);
+    return checkout(useProps);
   }
 
   report({ components, version }: ApplyVersionResults): string {

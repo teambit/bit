@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- rename the command `bit use` to `bit checkout`
+
 ## [0.12.11-dev.1] - 2018-04-02
 
 - introduce a new command `bit merge` for merging a different version into the current version

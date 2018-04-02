@@ -296,6 +296,10 @@ export default class Helper {
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
   }
+  listLocalScopeParsed(options: string = '') {
+    const output = this.runCmd(`bit list --json ${options}`);
+    return JSON.parse(output);
+  }
 
   getNewBareScope(scopeNameSuffix?: string = '-remote2') {
     const scopeName = generateRandomStr() + scopeNameSuffix;
@@ -592,8 +596,8 @@ export default class Helper {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
-  useVersion(version: string, ids: string, flags?: string) {
-    return this.runCmd(`bit use ${version} ${ids} ${flags || ''}`);
+  checkoutVersion(version: string, ids: string, flags?: string) {
+    return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`);
   }
 
   mergeVersion(version: string, ids: string, flags?: string) {
