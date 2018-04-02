@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+## [0.12.11-dev.1] - 2018-04-02
+
 - introduce a new command `bit merge` for merging a different version into the current version
 - block tagging when a component has a newer version locally, unless `--ignore-newest-version` flag is used
 - support merging modified component to an older version of the component
 - introduce a new command `bit use` for switching between versions
 - support `export { default as }` syntax when extracting relevant dependencies from link files
-- add anonymous analytics usage with prompt] 
+- add anonymous analytics usage with prompt
 
 ## [0.12.10] - 2018-03-21
 
