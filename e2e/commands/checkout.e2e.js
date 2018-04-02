@@ -82,6 +82,11 @@ describe('bit checkout command', function () {
             const statusOutput = helper.runCmd('bit status');
             expect(statusOutput).to.not.have.string('modified components');
           });
+          it('bit list should show the currently used version and latest local version', () => {
+            const listOutput = helper.listLocalScopeParsed('--outdated');
+            expect(listOutput[0].currentVersion).to.equal('0.0.5');
+            expect(listOutput[0].localVersion).to.equal('0.0.10');
+          });
           describe('trying to tag when using an old version', () => {
             before(() => {
               helper.createComponentBarFoo('modified barFoo');
