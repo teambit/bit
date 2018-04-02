@@ -2,6 +2,7 @@
 import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
+import Component from '../consumer/component/consumer-component';
 
 export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
 
@@ -13,6 +14,13 @@ export const formatPlainComponentItem = ({ scope, box, name, version, deprecated
     `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${
       deprecated ? c.yellow('[Deprecated]') : ''
     }`
+  );
+
+export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string =>
+  c.cyan(
+    `- ${component.id.toStringWithoutVersion()}. versions: ${
+      versions.length ? versions.join(', ') : 'no new versions were imported'
+    }.  ${component.deprecated ? c.yellow('[Deprecated]') : ''}`
   );
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);

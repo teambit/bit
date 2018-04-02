@@ -4,10 +4,10 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
-import { formatPlainComponentItem } from '../../chalk-box';
+import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
-import type { ImportOptions } from '../../../consumer/component/import-components';
+import type { ImportOptions, ImportedVersions } from '../../../consumer/component/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 
 export default class Import extends Command {
@@ -116,11 +116,13 @@ export default class Import extends Command {
   report({
     dependencies,
     envDependencies,
+    importedVersions,
     warnings,
     displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
+    importedVersions: ImportedVersions,
     warnings?: {
       notInPackageJson: [],
       notInNodeModules: [],
@@ -138,18 +140,15 @@ export default class Import extends Command {
         dependencies.map(R.prop('devDependencies'))
       );
 
-      let componentDependenciesOutput = '';
-      if (components.length === 1) {
-        componentDependenciesOutput = immutableUnshift(
-          components.map(formatPlainComponentItem),
-          chalk.green('successfully imported one component')
-        ).join('\n');
-      } else {
-        componentDependenciesOutput = immutableUnshift(
-          components.map(formatPlainComponentItem),
-          chalk.green(`successfully imported ${components.length} components`)
-        ).join('\n');
-      }
+      const title =
+        components.length === 1
+          ? 'successfully imported one component'
+          : `successfully imported ${components.length} components`;
+      const componentDependencies = components.map((component) => {
+        const versions = importedVersions[component.id.toStringWithoutVersion()];
+        return formatPlainComponentItemWithVersions(component, versions);
+      });
+      const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 
       const peerDependenciesOutput =
         peerDependencies && !R.isEmpty(peerDependencies) && displayDependencies

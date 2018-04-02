@@ -26,7 +26,12 @@ export type ImportOptions = {
   saveDependenciesAsComponents?: boolean // default: false
 };
 
-export type ImportResult = Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }>;
+export type ImportedVersions = { [id: string]: string[] };
+export type ImportResult = Promise<{
+  dependencies: ComponentWithDependencies[],
+  envDependencies?: Component[],
+  importedVersions: ImportedVersions
+}>;
 
 export default class ImportComponents {
   consumer: Consumer;
@@ -55,10 +60,12 @@ export default class ImportComponents {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw));
+    const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._warnForModifiedOrNewComponents(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
     await this._writeToFileSystem(componentsWithDependencies);
-    return { dependencies: componentsWithDependencies };
+    const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsWithDependencies);
+    return { dependencies: componentsWithDependencies, importedVersions };
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
@@ -74,7 +81,9 @@ export default class ImportComponents {
         return Promise.reject(new NothingToImport());
       }
     }
-    await this._warnForModifiedOrNewComponents(dependenciesFromBitJson.concat(componentsFromBitMap));
+    const allDependenciesIds = dependenciesFromBitJson.concat(componentsFromBitMap);
+    await this._warnForModifiedOrNewComponents(allDependenciesIds);
+    const beforeImportVersions = await this._getCurrentVersions(allDependenciesIds);
 
     let componentsAndDependenciesBitJson = [];
     let componentsAndDependenciesBitMap = [];
@@ -95,6 +104,7 @@ export default class ImportComponents {
       await this._writeToFileSystem(componentsAndDependenciesBitMap, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
+    const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
       const envComponents = await this.consumer.scope.installEnvironment({
         ids: [
@@ -105,10 +115,40 @@ export default class ImportComponents {
       });
       return {
         dependencies: componentsAndDependencies,
-        envDependencies: envComponents
+        envDependencies: envComponents,
+        importedVersions
       };
     }
-    return { dependencies: componentsAndDependencies };
+
+    return { dependencies: componentsAndDependencies, importedVersions };
+  }
+
+  async _getCurrentVersions(ids: BitId[]): ImportedVersions {
+    const versionsP = ids.map(async (id) => {
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+      const idStr = id.toStringWithoutVersion();
+      if (!modelComponent) return [idStr, []];
+      return [idStr, modelComponent.listVersions()];
+    });
+    const versions = await Promise.all(versionsP);
+    return R.fromPairs(versions);
+  }
+
+  /**
+   * diff between the versions array before import and after import
+   */
+  async _getVersionsDiff(currentVersions: ImportedVersions, components: ComponentWithDependencies[]): ImportedVersions {
+    const versionsP = components.map(async (component) => {
+      const id = component.component.id;
+      const idStr = id.toStringWithoutVersion();
+      const beforeImportVersions = currentVersions[idStr];
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+      if (!modelComponent) throw new Error(`imported component ${idStr} was not found in the model`);
+      const afterImportVersions = modelComponent.listVersions();
+      return [idStr, R.difference(afterImportVersions, beforeImportVersions)];
+    });
+    const versions = await Promise.all(versionsP);
+    return R.fromPairs(versions);
   }
 
   async _warnForModifiedOrNewComponents(ids: BitId[]) {

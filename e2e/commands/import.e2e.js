@@ -322,8 +322,9 @@ describe('bit import', function () {
       output = helper.importComponent('imprel/imprel');
     });
     it('should import component with deprecated msg', () => {
-      expect(output.includes('successfully imported one component')).to.be.true;
-      expect(output.includes('imprel/imprel@0.0.1  [Deprecated]')).to.be.true;
+      expect(output).to.have.string('successfully imported one component');
+      expect(output).to.have.string('imprel/imprel');
+      expect(output).to.have.string('Deprecated');
     });
   });
 
