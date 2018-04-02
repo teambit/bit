@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username } from '../bitsrc-tester';
-import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
+import { FileStatusWithoutChalk } from '../commands/merge.e2e';
 
 chai.use(require('chai-fs'));
 
@@ -167,7 +167,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('bit-use should not add any file', () => {
-        expect(output).to.not.have.string(FileStatus.added);
+        expect(output).to.not.have.string(FileStatusWithoutChalk.added);
       });
       it('bit-use should update the same files and not create duplications', () => {
         expect(localConsumerFiles).to.include(path.normalize('src/pad-left/index.js'));
@@ -196,7 +196,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should leave the file in a conflict state and', () => {
-          expect(output).to.have.string(FileStatus.manual);
+          expect(output).to.have.string(FileStatusWithoutChalk.manual);
         });
         it('tests should failed', () => {
           const tests = helper.runWithTryCatch('bit test string/pad-left');
@@ -217,8 +217,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           output = helper.mergeVersion('0.0.1', 'string/pad-left', '--ours');
         });
         it('should leave the file intact', () => {
-          expect(output).to.have.string(FileStatus.unchanged);
-          expect(output).to.not.have.string(FileStatus.manual);
+          expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
+          expect(output).to.not.have.string(FileStatusWithoutChalk.manual);
         });
       });
       describe('using --theirs strategy', () => {
@@ -230,7 +230,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should update the file', () => {
-          expect(output).to.have.string(FileStatus.updated);
+          expect(output).to.have.string(FileStatusWithoutChalk.updated);
         });
         it.skip('tests should pass', () => {
           // @todo: we currently have a bug there, when it load string/pad-left with the version of 0.0.1
