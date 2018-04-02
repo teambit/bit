@@ -104,14 +104,11 @@ class Analytics {
 
   static async sendData() {
     if (this.analytics_usage) {
-      console.log('sdfds');
       return requestify
         .post(ANALYTICS_DOMAIN, Analytics.toObejct(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
     }
     if (this.error_usage && !this.success) {
-      console.log('sdfds');
-
       return requestify
         .post(ANALYTICS_DOMAIN, Analytics.toObejct(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
