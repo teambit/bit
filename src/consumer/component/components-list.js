@@ -56,7 +56,7 @@ export default class ComponentsList {
           logger.warn(
             `the model representation of ${bitId.toStringWithoutVersion()} is missing ${
               bitId.version
-            } version, if this component is nested, this is a normal behaviour, otherwise, the component is corrupted`
+            } version, if this component is nested, this is a normal behavior, otherwise, the component is corrupted`
           );
           // throw new CorruptedComponent(bitId.toStringWithoutVersion(), bitId.version);
         }
@@ -68,6 +68,16 @@ export default class ComponentsList {
     return this._fromObjects;
   }
 
+  async _getAuthoredAndImportedFromFS(): Promise<Component[]> {
+    let [authored, imported] = await Promise.all([
+      this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
+      this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
+    ]);
+    authored = authored || [];
+    imported = imported || [];
+    return authored.concat(imported);
+  }
+
   /**
    * Components that are in the model (either, committed from a local scope or imported), and were
    * changed in the file system
@@ -76,21 +86,27 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
-    const getAuthoredAndImportedFromFS = async (): Promise<Component[]> => {
-      let [authored, imported] = await Promise.all([
-        this.getFromFileSystem(COMPONENT_ORIGINS.AUTHORED),
-        this.getFromFileSystem(COMPONENT_ORIGINS.IMPORTED)
-      ]);
-      authored = authored || [];
-      imported = imported || [];
-      return authored.concat(imported);
-    };
-    const fileSystemComponents = await getAuthoredAndImportedFromFS();
+    const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
     const modifiedComponents = await filterAsync(fileSystemComponents, (component) => {
       return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
     });
     if (load) return modifiedComponents;
     return modifiedComponents.map(component => component.id);
+  }
+
+  async listOutdatedComponents(): Promise<Component[]> {
+    const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
+    const componentsFromModel = await this.scope.objects.listComponents(false);
+    return fileSystemComponents.filter((component) => {
+      const modelComponent = componentsFromModel.find(c => c.id() === component.id.toStringWithoutVersion());
+      if (!modelComponent) return false;
+      const latestVersion = modelComponent.latest();
+      if (component.id.hasVersion() && semver.gt(latestVersion, component.id.version)) {
+        component.latestVersion = latestVersion;
+        return true;
+      }
+      return false;
+    });
   }
 
   async newAndModifiedComponents(): Promise<Component[]> {

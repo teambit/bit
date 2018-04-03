@@ -30,7 +30,8 @@ export default class Status extends Command {
     componentsWithMissingDeps,
     importPendingComponents,
     autoTagPendingComponents,
-    deletedComponents
+    deletedComponents,
+    outdatedComponents
   }: StatusResult): string {
     function formatMissing(missingComponent: Component) {
       function formatMissingStr(key, array, label) {
@@ -83,6 +84,17 @@ export default class Status extends Command {
     });
     const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
 
+    const outdatedTitle = chalk.underline.white('pending updates');
+    const outdatedDesc =
+      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit log [component_id]" to list all available versions)\n';
+    const outdatedComps = outdatedComponents.map((component) => {
+      return `\t> ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
+        component.latestVersion
+      }`;
+    });
+
+    const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
+
     const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
       ? chalk.underline.white('new components') + newComponentDescription
@@ -118,6 +130,7 @@ export default class Status extends Command {
     return (
       importPendingWarning +
         [
+          outdatedStr,
           newComponentsOutput,
           modifiedComponentOutput,
           stagedComponentsOutput,
