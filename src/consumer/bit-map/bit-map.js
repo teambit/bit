@@ -271,7 +271,8 @@ export default class BitMap {
       );
     }
     if (rootDir) {
-      this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootDir);
+      const rootRelative = path.isAbsolute(rootDir) ? this._makePathRelativeToProjectRoot(rootDir) : rootDir;
+      this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
