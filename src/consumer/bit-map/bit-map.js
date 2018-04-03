@@ -271,6 +271,10 @@ export default class BitMap {
       );
     }
     if (rootDir) {
+      // when rootDir is from the cli, it is changed to be absolute first (see consumer.writeToComponentsDir)
+      // and on the next line it is changed to be relative to the project-root.
+      // otherwise, rootDir may be originated from previous componentMap.rootDir value, as such,
+      // when running the command from an inner directory we must not run _makePathRelativeToProjectRoot.
       const rootRelative = path.isAbsolute(rootDir) ? this._makePathRelativeToProjectRoot(rootDir) : rootDir;
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
     }
