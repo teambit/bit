@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- improve external test and build errors to show the stack
 - improve output of import command to show the imported versions
 - rename the command `bit use` to `bit checkout`
 
