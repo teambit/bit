@@ -73,7 +73,9 @@ export default class Status extends Command {
     }
 
     const importPendingWarning = importPendingComponents.length
-      ? chalk.yellow('some of your components are not imported yet, please use "bit import"\n\n')
+      ? chalk.yellow(
+        'your workspace has outdated objects, please use "bit import" to pull the latest object from the remote scope\n\n'
+      )
       : '';
 
     const splitByMissing = R.groupBy((component) => {
@@ -100,9 +102,11 @@ export default class Status extends Command {
         : ''
     ).join('\n');
 
+    const deletedDesc =
+      '\nthese components were deleted from your project.\nuse "bit remove [component_id]" to remove these component from your workspace\n';
     const deletedComponentOutput = immutableUnshift(
       deletedComponents.map(c => format(c)),
-      deletedComponents.length ? chalk.underline.white('deleted components') : ''
+      deletedComponents.length ? chalk.underline.white('deleted components') + deletedDesc : ''
     ).join('\n');
 
     const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';

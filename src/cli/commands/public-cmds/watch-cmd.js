@@ -2,7 +2,7 @@
 import Command from '../../command';
 import watchAll from '../../../api/consumer';
 
-export default class Create extends Command {
+export default class Watch extends Command {
   name = 'watch';
   description = 'watch components and perform `build` on changes';
   alias = 'w';

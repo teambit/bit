@@ -81,7 +81,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new CatScope(),
       new ScopeConfig(),
       new Link(),
-      new Watch(),
+      // new Watch(),
       new Add(),
       new Untrack(),
       new Untag(),
