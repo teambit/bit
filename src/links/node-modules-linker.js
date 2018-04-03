@@ -36,10 +36,16 @@ function createSymlinkOrCopy(componentId, srcPath, destPath) {
   }
 }
 
-function writeDependencyLink(parentRootDir: string, bitId: BitId, rootDir: string, bindingPrefix: string) {
+function writeDependencyLink(
+  consumer: Consumer,
+  parentRootDir: string,
+  bitId: BitId,
+  rootDir: string,
+  bindingPrefix: string
+) {
   const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
   const destPath = path.join(parentRootDir, relativeDestPath);
-  createSymlinkOrCopy(bitId, rootDir, destPath);
+  createSymlinkOrCopy(bitId, consumer.toAbsolutePath(rootDir), consumer.toAbsolutePath(destPath));
 
   return { from: parentRootDir, to: rootDir };
 }
@@ -72,16 +78,17 @@ function writeDependenciesLinks(component: Component, componentMap, consumer: Co
     if (!dependencyComponentMap) return writtenLinks;
     writtenLinks.push(
       writeDependencyLink(
-        path.join(consumer.getPath(), componentMap.rootDir),
+        consumer,
+        componentMap.rootDir,
         dependency.id,
-        path.join(consumer.getPath(), dependencyComponentMap.rootDir),
+        dependencyComponentMap.rootDir,
         component.bindingPrefix
       )
     );
     if (!consumer.shouldDistsBeInsideTheComponent()) {
       const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
-      writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
+      writtenLinks.push(writeDependencyLink(consumer, from, dependency.id, to, component.bindingPrefix));
       symlinkPackages(from, to, consumer);
     }
     return writtenLinks;
@@ -104,7 +111,7 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   fs.outputFileSync(dest, fileContent);
 }
 
-function writeMissingLinks(component, componentMap, bitMap) {
+function writeMissingLinks(consumer: Consumer, component, componentMap, bitMap) {
   const missingLinks = component.missingDependencies.missingLinks;
   const result = Object.keys(component.missingDependencies.missingLinks).map((key) => {
     return missingLinks[key].map((dependencyIdStr) => {
@@ -113,6 +120,7 @@ function writeMissingLinks(component, componentMap, bitMap) {
 
       const dependencyComponentMap = bitMap.getComponent(dependencyId);
       return writeDependencyLink(
+        consumer,
         componentMap.rootDir,
         BitId.parse(dependencyId),
         dependencyComponentMap.rootDir,
@@ -130,9 +138,9 @@ export default function linkComponents(components: Component[], consumer: Consum
     const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
     if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
-      const linkPath = path.join(consumer.getPath(), relativeLinkPath);
+      const linkPath = consumer.toAbsolutePath(relativeLinkPath);
       // when a user moves the component directory, use component.writtenPath to find the correct target
-      const srcTarget = component.writtenPath || path.join(consumer.getPath(), componentMap.rootDir);
+      const srcTarget = component.writtenPath || consumer.toAbsolutePath(componentMap.rootDir);
       if (
         !component.dists.isEmpty() &&
         component.dists.writeDistsFiles &&
@@ -151,7 +159,7 @@ export default function linkComponents(components: Component[], consumer: Consum
         : [];
       const boundMissingDependencies =
         component.missingDependencies && component.missingDependencies.missingLinks
-          ? writeMissingLinks(component, componentMap, consumer.bitMap)
+          ? writeMissingLinks(consumer, component, componentMap, consumer.bitMap)
           : [];
 
       return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };

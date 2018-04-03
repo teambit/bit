@@ -212,6 +212,10 @@ export default class Consumer {
     return this.projectPath;
   }
 
+  toAbsolutePath(pathStr: string): PathOsBased {
+    return path.join(this.projectPath, pathStr);
+  }
+
   getPathRelativeToConsumer(pathToCheck: string): PathOsBased {
     const absolutePath = path.resolve(pathToCheck);
     return path.relative(this.getPath(), absolutePath);
