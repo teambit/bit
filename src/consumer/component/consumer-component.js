@@ -14,7 +14,6 @@ import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
-import BuildException from './exceptions/build-exception';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
@@ -43,6 +42,8 @@ import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
+import ExternalTestError from './exceptions/external-test-error';
+import ExternalBuildError from './exceptions/external-build-error';
 
 export type ComponentProps = {
   name: string,
@@ -330,8 +331,7 @@ export default class Component {
           return compiler.compile(files, rootDistFolder, context);
         })
         .catch((e) => {
-          if (verbose) throw new BuildException(this.id.toString(), e.stack || e);
-          throw new BuildException(this.id.toString(), e.message || e);
+          throw new ExternalBuildError(e, this.id.toString());
         });
     };
 
@@ -639,7 +639,13 @@ export default class Component {
           testFile
         });
       });
-      const specsResults: RawTestsResults[] = await Promise.all(specsResultsP);
+      let specsResults: RawTestsResults[];
+      try {
+        specsResults = await Promise.all(specsResultsP);
+      } catch (err) {
+        throw new ExternalTestError(err, this.id.toString());
+      }
+
       this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
 
       if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {

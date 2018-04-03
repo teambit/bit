@@ -34,6 +34,19 @@ describe('bit build', function () {
         expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js.map'));
         expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js'));
       });
+      describe('when an exception is thrown during the build', () => {
+        before(() => {
+          helper.createComponentBarFoo('non-valid-js-code!');
+        });
+        after(() => {
+          helper.createComponentBarFoo();
+        });
+        it('should catch them and throw ExternalBuildError with the stack data', () => {
+          const buildOutput = helper.runWithTryCatch('bit build');
+          expect(buildOutput).to.have.string('bit failed to build');
+          expect(buildOutput).to.have.string('SyntaxError'); // error from the stack
+        });
+      });
       describe('as imported', () => {
         let localScope;
         before(() => {
