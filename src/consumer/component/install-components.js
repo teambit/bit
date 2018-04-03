@@ -1,4 +1,5 @@
 // @flow
+import path from 'path';
 import { linkAllToNodeModules, linkComponentsToNodeModules } from '../../links';
 import { installPackages } from '../../npm-client/install-packages';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -18,7 +19,9 @@ export async function install(consumer: Consumer, verbose: boolean): Promise<Lin
   const dirs = Object.keys(candidateComponents)
     .map(id => candidateComponents[id].rootDir)
     .filter(dir => dir);
-  await installPackages(consumer, dirs, verbose, true);
+  const consumerPath = consumer.getPath();
+  const dirsAbsolute = dirs.map(dir => path.join(consumerPath, dir));
+  await installPackages(consumer, dirsAbsolute, verbose, true);
   return linkAllToNodeModules(consumer);
 }
 
