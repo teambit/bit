@@ -248,5 +248,19 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
       });
     });
+    describe('checkout command inside an inner directory', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        helper.getClonedRemoteScope(remoteScope);
+        helper.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
+        helper.tagAllWithoutMessage('--force'); // 0.0.2
+        helper.checkoutVersion('0.0.1', 'string/pad-left', undefined, path.join(helper.localScopePath, 'src'));
+      });
+      it('should not change the rootDir in bitMap file', () => {
+        const bitMap = helper.readBitMap();
+        const padLeft = bitMap[`${helper.remoteScope}/string/pad-left@0.0.1`];
+        expect(padLeft.rootDir).to.equal('src/pad-left');
+      });
+    });
   });
 });
