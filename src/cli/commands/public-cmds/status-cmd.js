@@ -83,7 +83,8 @@ export default class Status extends Command {
     const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
 
     const outdatedTitle = chalk.underline.white('pending updates');
-    const outdatedDesc = '(use "bit checkout [version] [component_id]" to merge and update your components)\n';
+    const outdatedDesc =
+      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit log [component_id]" to list all available versions)\n';
     const outdatedComps = outdatedComponents.map((component) => {
       return `\t> ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
         component.latestVersion
