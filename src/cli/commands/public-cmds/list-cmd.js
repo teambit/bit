@@ -4,7 +4,6 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { listScope } from '../../../api/consumer';
 import Component from '../../../consumer/component';
-import { paintHeader } from '../../chalk-box';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
 
@@ -14,6 +13,7 @@ export default class List extends Command {
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'components ids to list'],
+    ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
     ['b', 'bare', 'show bare output (more details, less pretty)'],
     ['o', 'outdated', 'show latest versions from remotes'],
     ['j', 'json', 'show the output in JSON format']
@@ -25,12 +25,13 @@ export default class List extends Command {
     [scopeName]: string[],
     {
       ids,
+      scope,
       bare,
       json,
       outdated
-    }: { ids?: boolean, cache?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
+    }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
   ): Promise<any> {
-    return listScope({ scopeName, cache: true, showRemoteVersion: outdated }).then(components => ({
+    return listScope({ scopeName, cache: true, showAll: scope, showRemoteVersion: outdated }).then(components => ({
       components,
       scope: scopeName,
       ids,

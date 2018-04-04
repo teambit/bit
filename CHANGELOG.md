@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- change `bit list` to show only the authored and imported components, unless `--scope` flag is used
 - fix bit-install to work from an inner directory
 - improve external test and build errors to show the stack
 - improve output of import command to show the imported versions
