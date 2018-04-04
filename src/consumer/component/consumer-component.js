@@ -238,7 +238,7 @@ export default class Component {
     return homepage;
   }
 
-  writeBitJson(bitDir: string, force?: boolean = true): Promise<Component> {
+  writeBitJson(bitDir: string, override?: boolean = true): Promise<Component> {
     return new ComponentBitJson({
       version: this.version,
       scope: this.scope,
@@ -251,7 +251,7 @@ export default class Component {
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies
-    }).write({ bitDir, override: force });
+    }).write({ bitDir, override });
   }
 
   getPackageNameAndPath(): Promise<any> {
@@ -263,11 +263,11 @@ export default class Component {
   async writePackageJson(
     consumer: Consumer,
     bitDir: string,
-    force?: boolean = true,
+    override?: boolean = true,
     writeBitDependencies?: boolean = false,
     excludeRegistryPrefix?: boolean = false
   ): Promise<boolean> {
-    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+    return packageJson.write(consumer, this, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
   }
 
   flattenedDependencies(): BitIds {
@@ -368,7 +368,7 @@ export default class Component {
     writeBitJson,
     writePackageJson,
     consumer,
-    force = true,
+    override = true,
     writeBitDependencies = false,
     deleteBitDirContent = false,
     excludeRegistryPrefix = false
@@ -377,7 +377,7 @@ export default class Component {
     writeBitJson: boolean,
     writePackageJson: boolean,
     consumer?: Consumer,
-    force?: boolean,
+    override?: boolean,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
     excludeRegistryPrefix?: boolean
@@ -387,16 +387,16 @@ export default class Component {
     } else {
       await mkdirp(bitDir);
     }
-    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, force)));
+    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson) await this.writeBitJson(bitDir, force);
+    if (writeBitJson) await this.writeBitJson(bitDir, override);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
     if (writePackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
-      await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+      await this.writePackageJson(consumer, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
     }
-    if (this.license && this.license.src) await this.license.write(bitDir, force);
+    if (this.license && this.license.src) await this.license.write(bitDir, override);
     logger.debug('component has been written successfully');
     return this;
   }
@@ -475,7 +475,7 @@ export default class Component {
     bitDir,
     writeBitJson = true,
     writePackageJson = true,
-    force = true,
+    override = true,
     origin,
     parent,
     consumer,
@@ -487,7 +487,7 @@ export default class Component {
     bitDir?: string,
     writeBitJson?: boolean,
     writePackageJson?: boolean,
-    force?: boolean,
+    override?: boolean,
     origin?: string,
     parent?: BitId,
     consumer?: Consumer,
@@ -516,7 +516,7 @@ export default class Component {
         writeBitJson,
         writePackageJson,
         consumer,
-        force,
+        override,
         writeBitDependencies,
         excludeRegistryPrefix
       });
@@ -570,7 +570,7 @@ export default class Component {
       writeBitJson,
       writePackageJson: actualWithPackageJson,
       consumer,
-      force,
+      override,
       writeBitDependencies,
       deleteBitDirContent,
       excludeRegistryPrefix

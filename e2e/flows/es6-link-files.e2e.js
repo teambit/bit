@@ -71,7 +71,7 @@ describe('es6 components with link files', function () {
       before(() => {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
-        helper.runCmd('bit import --write --force');
+        helper.runCmd('bit import --write --override');
       });
       it('should not override the original link file', () => {
         const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));
@@ -125,7 +125,7 @@ describe('es6 components with link files', function () {
       before(() => {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
-        helper.runCmd('bit import --write --force');
+        helper.runCmd('bit import --write --override');
       });
       it('should not override the original link file', () => {
         const currentUtilIndex = fs.readFileSync(path.join(helper.localScopePath, 'utils', 'index.js'));

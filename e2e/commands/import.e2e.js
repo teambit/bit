@@ -183,7 +183,7 @@ describe('bit import', function () {
         before(() => {
           helper.mimicGitCloneLocalProject(false);
           helper.addRemoteScope();
-          helper.runCmd('bit import --write --force');
+          helper.runCmd('bit import --write --override');
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should write the internal files according to their original paths', () => {
@@ -228,7 +228,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --force --write');
+              helper.runCmd('bit import --override --write');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -282,7 +282,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --write --ignore-dist --force');
+              helper.runCmd('bit import --write --ignore-dist --override');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -739,7 +739,7 @@ describe('bit import', function () {
       });
       describe('and running bit import with "--write" flag', () => {
         before(() => {
-          helper.runCmd('bit import --write --force');
+          helper.runCmd('bit import --write --override');
         });
         it('should write the components files back', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1660,7 +1660,7 @@ console.log(barFoo.default());`;
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
     });
-    describe('without --force flag', () => {
+    describe('without --override flag', () => {
       let output;
       before(() => {
         try {
@@ -1677,10 +1677,10 @@ console.log(barFoo.default());`;
         expect(result.trim()).to.equal('got foo v2');
       });
     });
-    describe('with --force flag', () => {
+    describe('with --override flag', () => {
       let output;
       before(() => {
-        output = helper.importComponent('bar/foo --force');
+        output = helper.importComponent('bar/foo --override');
       });
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
@@ -1756,7 +1756,7 @@ console.log(barFoo.default());`;
       before(() => {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
-        helper.runCmd('bit import --write --force');
+        helper.runCmd('bit import --write --override');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";

@@ -364,7 +364,7 @@ export default class Consumer {
     silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
-    force = true, // override files
+    override = true, // override files
     writePackageJson = true,
     writeBitJson = true,
     writeBitDependencies = false,
@@ -380,7 +380,7 @@ export default class Consumer {
     silentPackageManagerResult: boolean,
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
-    force?: boolean,
+    override?: boolean,
     writePackageJson?: boolean,
     writeBitJson?: boolean,
     writeBitDependencies?: boolean,
@@ -417,7 +417,7 @@ export default class Consumer {
       componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return componentWithDeps.component.write({
         bitDir,
-        force,
+        override,
         writeBitJson,
         writePackageJson,
         origin,
@@ -479,7 +479,7 @@ export default class Consumer {
         const componentMap = this.bitMap.getComponent(dep.id.toString(), false);
         return dep.write({
           bitDir: depBitPath,
-          force,
+          override,
           writePackageJson,
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
