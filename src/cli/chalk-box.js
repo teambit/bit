@@ -12,7 +12,7 @@ export const formatBit = ({ scope, box, name, version }: any): string =>
 export const formatPlainComponentItem = ({ scope, box, name, version, deprecated }: any): string =>
   c.cyan(
     `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${
-      deprecated ? c.yellow('[Deprecated]') : ''
+      deprecated ? c.yellow('[deprecated]') : ''
     }`
   );
 
@@ -20,7 +20,7 @@ export const formatPlainComponentItemWithVersions = (component: Component, versi
   const status = versions.length ? 'updated' : 'up to date';
   return `- ${c.green(status)} ${c.cyan(component.id.toStringWithoutVersion())} ${
     versions.length ? `new versions: ${versions.join(', ')}` : ''
-  }`;
+  } ${component.deprecated ? c.yellow('deprecated') : ''}`;
 };
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);

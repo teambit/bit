@@ -934,10 +934,11 @@ export default class Consumer {
    * splits array of ids into local and remote and removes according to flags
    * @param {string[]} ids - list of remote component ids to delete
    * @param {boolean} force - delete component that are used by other components.
+   * @param {boolean} remote - delete component from a remote scope
    * @param {boolean} track - keep tracking local staged components in bitmap.
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
-  async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
+  async remove(ids: string[], force: boolean, remote: boolean, track: boolean, deleteFiles: boolean) {
     logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'remove',
@@ -949,8 +950,14 @@ export default class Consumer {
       return id;
     });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
-    const localResult = await this.removeLocal(localIds, force, track, deleteFiles);
-    const remoteResult = !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
+    if (remote && localIds.length) {
+      throw new Error(
+        `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
+      );
+    }
+    const remoteResult = remote && !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
+    const localResult = !remote ? await this.removeLocal(bitIds, force, track, deleteFiles) : new RemovedLocalObjects();
+
     return { localResult, remoteResult };
   }
 
@@ -1040,7 +1047,12 @@ export default class Consumer {
    * @param {boolean} force - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
-  async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
+  async removeLocal(
+    bitIds: BitIds,
+    force: boolean,
+    track: boolean,
+    deleteFiles: boolean
+  ): Promise<RemovedLocalObjects> {
     // local remove in case user wants to delete tagged components
     const modifiedComponents = [];
     const regularComponents = [];
