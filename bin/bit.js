@@ -7,6 +7,7 @@ require('regenerator-runtime/runtime');
 /* eslint-disable no-var */
 const semver = require('semver');
 const mkdirp = require('mkdirp');
+const chalk = require('chalk');
 const roadRunner = require('roadrunner');
 const constants = require('../dist/constants');
 const bitUpdates = require('./bit-updates');
@@ -69,7 +70,9 @@ function loadCli() {
 function promptAnalyticsIfNeeded(cb) {
   // this require is needed here because bit caches are not created yet and will cause exception
   const { Analytics } = require('../dist/analytics/analytics');
-  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2)).then(() => cb());
+  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2))
+    .then(() => cb())
+    .catch(() => console.log(chalk.yellow('\noperation aborted')));
 }
 verifyCompatibility();
 ensureDirectories();

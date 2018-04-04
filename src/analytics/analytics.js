@@ -6,7 +6,6 @@ import uniqid from 'uniqid';
 import yn from 'yn';
 import R from 'ramda';
 import os from 'os';
-import chalk from 'chalk';
 import omitBy from 'lodash.omitby';
 import isNil from 'lodash.isnil';
 import logger from '../logger/logger';
@@ -86,14 +85,12 @@ class Analytics {
     if (shouldPromptForAnalytics()) {
       const uniqId = uniqid();
       if (!getSync(CFG_ANALYTICS_USERID_KEY)) setSync(CFG_ANALYTICS_USERID_KEY, uniqId);
-      return analyticsPrompt()
-        .then(({ analyticsResponse }) => {
-          setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
-          if (!yn(analyticsResponse)) {
-            errorReportingPrompt().then(({ errResponse }) => setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse)));
-          }
-        })
-        .catch(() => chalk.yellow('operation aborted'));
+      return analyticsPrompt().then(({ analyticsResponse }) => {
+        setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
+        if (!yn(analyticsResponse)) {
+          errorReportingPrompt().then(({ errResponse }) => setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse)));
+        }
+      });
     }
     return Promise.resolve();
   }
