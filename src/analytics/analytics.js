@@ -6,6 +6,7 @@ import uniqid from 'uniqid';
 import yn from 'yn';
 import R from 'ramda';
 import os from 'os';
+import chalk from 'chalk';
 import omitBy from 'lodash.omitby';
 import isNil from 'lodash.isnil';
 import logger from '../logger/logger';
@@ -22,6 +23,7 @@ import {
   DEFAULT_ANALYTICS_DOMAIN,
   CFG_ANALYTICS_DOMAIN_KEY
 } from '../constants';
+import { analyticsPrompt, errorReportingPrompt } from '../prompts';
 
 const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_DOMAIN;
 
@@ -70,6 +72,31 @@ class Analytics {
     return newId;
   }
 
+  static promptAnalyticsIfNeeded(cmd: string): Promise<void> {
+    function shouldPromptForAnalytics() {
+      // do not prompt analytics approval for bit config command (so you can configure it in CI envs)
+      if (cmd.length && cmd[0] !== 'config') {
+        const analyticsReporting = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
+        const errorReporting = yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
+        return !analyticsReporting && !errorReporting;
+      }
+      return false;
+    }
+
+    if (shouldPromptForAnalytics()) {
+      const uniqId = uniqid();
+      if (!getSync(CFG_ANALYTICS_USERID_KEY)) setSync(CFG_ANALYTICS_USERID_KEY, uniqId);
+      return analyticsPrompt()
+        .then(({ analyticsResponse }) => {
+          setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
+          if (!yn(analyticsResponse)) {
+            errorReportingPrompt().then(({ errResponse }) => setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse)));
+          }
+        })
+        .catch(() => chalk.yellow('operation aborted'));
+    }
+    return Promise.resolve();
+  }
   static _hashFlags(flags: Object) {
     const hashedFlags = {};
     const filteredFlags = omitBy(flags, isNil);
@@ -105,7 +132,7 @@ class Analytics {
   static async sendData() {
     if (this.analytics_usage) {
       return requestify
-        .post(ANALYTICS_DOMAIN, Analytics.toObejct(), { timeout: 1000 })
+        .post(ANALYTICS_DOMAIN, Analytics.toObject(), { timeout: 1000 })
         .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
     }
     if (this.error_usage && !this.success) {
@@ -141,7 +168,7 @@ class Analytics {
   static addBreadCrumb(category: string, message: string, data?: Object) {
     this.breadcrumbs.push(new Breadcrumb(category, message, data));
   }
-  static toObejct() {
+  static toObject() {
     return {
       username: this.username,
       command: this.command,
