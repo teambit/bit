@@ -12,6 +12,7 @@ export default class Remove extends Command {
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],
+    ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
     ['d', 'delete-files [boolean]', 'delete local component files'],
     ['s', 'silent [boolean]', 'skip confirmation']
@@ -19,27 +20,26 @@ export default class Remove extends Command {
   loader = true;
   migration = true;
 
-  action(
+  async action(
     [ids]: [string],
     {
       force = false,
+      remote = false,
       track = false,
       deleteFiles = false,
       silent = false
-    }: { force: boolean, track: boolean, deleteFiles: boolean, silent: boolean }
+    }: { force: boolean, remote: boolean, track: boolean, deleteFiles: boolean, silent: boolean }
   ): Promise<any> {
     if (!silent) {
-      return removePrompt().then(({ shoudRemove }) => {
-        if (yn(shoudRemove)) {
-          return remove({ ids, force, track, deleteFiles });
-        }
-        return { localResult: new RemovedLocalObjects(), remoteResult: [] };
-      });
+      const removePromptResult = await removePrompt();
+      if (!yn(removePromptResult.shouldRemove)) {
+        return Promise.reject('the operation has been canceled');
+      }
     }
-    return remove({ ids, force, track, deleteFiles });
+    return remove({ ids, remote, force, track, deleteFiles });
   }
   report({
-    localResult = new RemovedLocalObjects(),
+    localResult,
     remoteResult = []
   }: {
     localResult: RemovedLocalObjects,
