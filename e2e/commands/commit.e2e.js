@@ -82,7 +82,11 @@ describe('bit tag command', function () {
         helper.addComponent('components/default.js');
         output = helper.commitComponent('components/default');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/default', localVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({
+          id: 'components/default',
+          localVersion: '0.0.1',
+          currentVersion: '0.0.1'
+        });
       });
       it('Should increment the patch version when no version type specified', () => {
         output = helper.commitComponent('components/default', 'message', '-f');
@@ -118,8 +122,16 @@ describe('bit tag command', function () {
         helper.commitAllComponents();
         helper.commitComponent('components/dependency', 'message', '-f --major');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/dependency', localVersion: '1.0.0' });
-        expect(listOutput).to.deep.include({ id: 'components/dependent', localVersion: '0.0.2' });
+        expect(listOutput).to.deep.include({
+          id: 'components/dependency',
+          localVersion: '1.0.0',
+          currentVersion: '1.0.0'
+        });
+        expect(listOutput).to.deep.include({
+          id: 'components/dependent',
+          localVersion: '0.0.2',
+          currentVersion: '0.0.2'
+        });
       });
       it('Should throw error when the version already exists', () => {
         helper.commitComponent('components/exact 5.5.5', 'message', '-f');
@@ -162,8 +174,8 @@ describe('bit tag command', function () {
       it('Should set the version to default version in tag new component', () => {
         helper.commitAllComponents();
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1' });
-        expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1', currentVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1', currentVersion: '0.0.1' });
       });
       it('Should increment the patch version when no version type specified', () => {
         helper.createFile('components', 'a.js', 'v0.0.2');
