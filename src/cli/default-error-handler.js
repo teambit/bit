@@ -3,7 +3,6 @@
 // if you handle the error, then return true
 import chalk from 'chalk';
 import { InvalidBitId, InvalidIdChunk } from '../bit-id/exceptions';
-import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
 import {
   ConsumerAlreadyExists,
   NothingToImport,
@@ -14,7 +13,6 @@ import {
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
-import BuildException from '../consumer/component/exceptions/build-exception';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -59,6 +57,8 @@ import {
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
+import ExternalTestError from '../consumer/component/exceptions/external-test-error';
+import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -143,10 +143,6 @@ once your changes are merged with the new remote version, please tag and export 
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
   [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
-  [
-    BuildException,
-    err => `error: bit failed to build ${err.id} with the following exception:\n ${err.message} \n ${err.stack || ''}`
-  ],
   [
     MissingDependencies,
     (err) => {
@@ -245,6 +241,20 @@ current version ${err.currentVersion} is older than the latest ${err.newestVersi
 to ignore this error, please use --ignore-newest-version flag`
   ],
   [PromptCanceled, err => chalk.yellow('operation aborted')],
+  [
+    ExternalTestError,
+    err =>
+      `error: bit failed to test ${err.id} with the following exception:\nMessage: ${
+        err.originalError.message
+      }.\nStack: ${err.originalError.stack}`
+  ],
+  [
+    ExternalBuildError,
+    err =>
+      `error: bit failed to build ${err.id} with the following exception:\nMessage: ${
+        err.originalError.message
+      }.\nStack: ${err.originalError.stack}`
+  ],
   [
     AuthenticationFailed,
     err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
