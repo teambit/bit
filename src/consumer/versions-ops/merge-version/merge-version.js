@@ -146,11 +146,6 @@ async function applyVersion(
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
-/**
- * relevant when
- * 1) there is no conflict => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.output.
- * 2) there is conflict and mergeStrategy is manual => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.conflict.
- */
 async function applyModifiedVersion(
   consumer: Consumer,
   componentFiles: SourceFile[],

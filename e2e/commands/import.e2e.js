@@ -1335,9 +1335,11 @@ console.log(barFoo.default());`;
       helper.addRemoteScope();
       helper.importComponent('utils/is-type@0.0.1');
     });
-    it('should not show the component as modified or staged', () => {
+    it('should show the component as pending updates', () => {
       const statusOutput = helper.runCmd('bit status');
-      expect(statusOutput.includes('nothing to tag or export')).to.be.true;
+      expect(statusOutput).to.have.string('pending updates');
+      expect(statusOutput).to.have.string('current: 0.0.1');
+      expect(statusOutput).to.have.string('latest: 0.0.2');
     });
     describe('then importing v2', () => {
       before(() => {

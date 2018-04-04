@@ -596,8 +596,8 @@ export default class Helper {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
-  checkoutVersion(version: string, ids: string, flags?: string) {
-    return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`);
+  checkoutVersion(version: string, ids: string, flags?: string, cwd?: string) {
+    return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`, cwd);
   }
 
   mergeVersion(version: string, ids: string, flags?: string) {

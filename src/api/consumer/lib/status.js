@@ -12,7 +12,8 @@ export type StatusResult = {
   componentsWithMissingDeps: Component[],
   importPendingComponents: Component[],
   autoTagPendingComponents: string[],
-  deletedComponents: string[]
+  deletedComponents: string[],
+  outdatedComponents: Component[]
 };
 
 export default (async function status(): Promise<StatusResult> {
@@ -26,6 +27,7 @@ export default (async function status(): Promise<StatusResult> {
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const deletedComponents = await componentsList.listDeletedComponents();
   const deletedComponentsStr = deletedComponents.map(component => component.toString());
+  const outdatedComponents = await componentsList.listOutdatedComponents();
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't commit anything
@@ -46,6 +48,7 @@ export default (async function status(): Promise<StatusResult> {
     componentsWithMissingDeps, // no need to sort, we don't print it as is
     importPendingComponents, // no need to sort, we use only its length
     autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsStr),
-    deletedComponents: ComponentsList.sortComponentsByName(deletedComponentsStr)
+    deletedComponents: ComponentsList.sortComponentsByName(deletedComponentsStr),
+    outdatedComponents
   };
 });
