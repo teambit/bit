@@ -1,7 +1,9 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
+
+chai.use(require('chai-fs'));
 
 describe('run bit install', function () {
   this.timeout(0);
@@ -57,6 +59,18 @@ console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
         expect(output).to.have.string('found 2 components');
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
+      });
+      describe('running bit install from an inner directory', () => {
+        before(() => {
+          output = helper.runCmd('bit install', path.join(helper.localScopePath, 'components'));
+        });
+        it('should not create another directory inside that inner directory', () => {
+          expect(path.join(helper.localScopePath, 'components', 'components')).to.not.be.a.path();
+        });
+        it('should install npm packages with absolute paths', () => {
+          expect(output).to.not.have.a.string('successfully ran npm install at components/bar/foo');
+          expect(output).to.have.a.string(path.join(helper.localScopePath, 'components/bar/foo'));
+        });
       });
     });
     describe('deleting node_modules of one component and running bit install [id]', () => {
