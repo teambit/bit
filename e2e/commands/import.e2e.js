@@ -779,7 +779,7 @@ describe('bit import', function () {
           helper.importAllComponents();
         });
         it('local scope should contain all the components', () => {
-          const output = helper.listLocalScope();
+          const output = helper.listLocalScope('--scope');
           expect(output).to.have.string('found 3 components in local scope');
         });
         it('should not override the current files', () => {
