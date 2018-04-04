@@ -183,7 +183,7 @@ describe('bit import', function () {
         before(() => {
           helper.mimicGitCloneLocalProject(false);
           helper.addRemoteScope();
-          helper.runCmd('bit import --write --force');
+          helper.runCmd('bit import --write --override');
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should write the internal files according to their original paths', () => {
@@ -228,7 +228,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --force --write');
+              helper.runCmd('bit import --override --write');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -282,7 +282,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --write --ignore-dist --force');
+              helper.runCmd('bit import --write --ignore-dist --override');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -753,7 +753,7 @@ describe('bit import', function () {
       });
       describe('and running bit import with "--write" flag', () => {
         before(() => {
-          helper.runCmd('bit import --write --force');
+          helper.runCmd('bit import --write --override');
         });
         it('should write the components files back', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1674,7 +1674,7 @@ console.log(barFoo.default());`;
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
     });
-    describe('without --force flag', () => {
+    describe('without --override flag', () => {
       let output;
       before(() => {
         try {
@@ -1691,10 +1691,10 @@ console.log(barFoo.default());`;
         expect(result.trim()).to.equal('got foo v2');
       });
     });
-    describe('with --force flag', () => {
+    describe('with --override flag', () => {
       let output;
       before(() => {
-        output = helper.importComponent('bar/foo --force');
+        output = helper.importComponent('bar/foo --override');
       });
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
@@ -1770,7 +1770,7 @@ console.log(barFoo.default());`;
       before(() => {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
-        helper.runCmd('bit import --write --force');
+        helper.runCmd('bit import --write --override');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1869,21 +1869,21 @@ console.log(barFoo.default());`;
       expect(modulePath).to.be.a.directory('should contain component dep as npm package dep').and.not.empty;
     });
     it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
-      helper.importComponent('comp/with-deps -f');
+      helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson(helper.localScopePath);
       expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
       expect(pkgJson.workspaces).to.be.ofSize(2);
       expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
     it('Should not delete custom fields in package.json', () => {
-      helper.importComponent('comp/with-deps -f');
+      helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson();
       expect(pkgJson).to.have.property('customField');
       expect(pkgJson.customField).to.equal('bit is awsome');
     });
     it('Should not delete delete workspaces that already existed in package.json', () => {
       helper.addKeyValueToPackageJson({ workspaces: ['comp'] });
-      helper.importComponent('comp/with-deps -f');
+      helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson();
       expect(pkgJson.workspaces).to.include(
         'components/.dependencies/*/*/*/*',

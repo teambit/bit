@@ -67,7 +67,7 @@ describe('bit import command with no ids', function () {
       helper.createFile('bar', 'foo.js', barFooFixtureV2);
       helper.createFile(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
     });
-    describe('without --force flag', () => {
+    describe('without --override flag', () => {
       let output;
       before(() => {
         try {
@@ -82,10 +82,10 @@ describe('bit import command with no ids', function () {
         expect(output).to.have.string('bar/foo2');
       });
     });
-    describe('with --force flag', () => {
+    describe('with --override flag', () => {
       let output;
       before(() => {
-        output = helper.runCmd('bit import --force');
+        output = helper.runCmd('bit import --override');
       });
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');

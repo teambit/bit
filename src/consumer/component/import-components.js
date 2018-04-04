@@ -19,7 +19,7 @@ export type ImportOptions = {
   writePackageJson: boolean, // default: true
   writeBitJson: boolean, // default: false
   writeDists: boolean, // default: true
-  force: boolean, // default: false
+  override: boolean, // default: false
   installNpmPackages: boolean, // default: true
   objectsOnly: boolean, // default: false
   writeToFs: boolean, // default: false. relevant only for import-all, where "objectsOnly" flag is default to true.
@@ -155,7 +155,7 @@ export default class ImportComponents {
     // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.force || this.options.objectsOnly) return Promise.resolve();
+    if (this.options.override || this.options.objectsOnly) return Promise.resolve();
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
@@ -163,7 +163,7 @@ export default class ImportComponents {
     if (modifiedComponents.length) {
       return Promise.reject(
         chalk.yellow(
-          `unable to import the following components due to local changes, use --force flag to override your local changes\n${modifiedComponents.join(
+          `unable to import the following components due to local changes, use --override flag to override your local changes\n${modifiedComponents.join(
             '\n'
           )} `
         )
@@ -172,7 +172,7 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, force: boolean = true) {
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, override: boolean = true) {
     if (this.options.objectsOnly) return;
     await this.consumer.writeToComponentsDir({
       componentsWithDependencies,
@@ -183,7 +183,7 @@ export default class ImportComponents {
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
-      force
+      override
     });
   }
 }

@@ -374,7 +374,7 @@ describe('bit status command', function () {
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
       helper.mimicGitCloneLocalProject(false);
       helper.addRemoteScope();
-      helper.runCmd('bit import --write --force');
+      helper.runCmd('bit import --write --override');
       output = helper.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
