@@ -107,9 +107,8 @@ describe('support vue files', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope(helper.remoteScopePath);
         const output = helper.importComponent('vue/ui-autocomplete');
-        expect(output).to.have.string(
-          `successfully imported one component\n- ${helper.remoteScope}/vue/ui-autocomplete`
-        );
+        expect(output).to.have.string('successfully imported one component');
+        expect(output).to.have.string(`${helper.remoteScope}/vue/ui-autocomplete`);
         expect(output).to.have.string('0.0.1');
       });
     });
