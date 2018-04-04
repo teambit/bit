@@ -950,7 +950,7 @@ export default class Consumer {
       );
     }
     const remoteResult = remote && !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
-    const localResult = !remote ? await this.removeLocal(bitIds, force, track, deleteFiles) : [];
+    const localResult = !remote ? await this.removeLocal(bitIds, force, track, deleteFiles) : new RemovedLocalObjects();
 
     return { localResult, remoteResult };
   }
@@ -1041,7 +1041,12 @@ export default class Consumer {
    * @param {boolean} force - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
-  async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
+  async removeLocal(
+    bitIds: BitIds,
+    force: boolean,
+    track: boolean,
+    deleteFiles: boolean
+  ): Promise<RemovedLocalObjects> {
     // local remove in case user wants to delete tagged components
     const modifiedComponents = [];
     const regularComponents = [];

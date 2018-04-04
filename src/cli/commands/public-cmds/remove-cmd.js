@@ -31,15 +31,15 @@ export default class Remove extends Command {
     }: { force: boolean, remote: boolean, track: boolean, deleteFiles: boolean, silent: boolean }
   ): Promise<any> {
     if (!silent) {
-      const shouldRemove = await removePrompt();
-      if (!yn(shouldRemove)) {
-        return { localResult: new RemovedLocalObjects(), remoteResult: [] };
+      const removePromptResult = await removePrompt();
+      if (!yn(removePromptResult.shouldRemove)) {
+        return Promise.reject('the operation has been canceled');
       }
     }
     return remove({ ids, remote, force, track, deleteFiles });
   }
   report({
-    localResult = new RemovedLocalObjects(),
+    localResult,
     remoteResult = []
   }: {
     localResult: RemovedLocalObjects,
