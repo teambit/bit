@@ -721,6 +721,20 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
+    describe('bit list', () => {
+      it('should show only the components and not the dependencies when --scope is not used', () => {
+        const listScope = helper.listLocalScope();
+        expect(listScope).to.have.string('bar/foo');
+        expect(listScope).to.not.have.string('utils/is-string');
+        expect(listScope).to.not.have.string('utils/is-type');
+      });
+      it('should show the components and the dependencies when --scope is used', () => {
+        const listScope = helper.listLocalScope('--scope');
+        expect(listScope).to.have.string('bar/foo');
+        expect(listScope).to.have.string('utils/is-string');
+        expect(listScope).to.have.string('utils/is-type');
+      });
+    });
     describe('when cloning the project to somewhere else without component files. (component files are not under git)', () => {
       before(() => {
         helper.mimicGitCloneLocalProject(false);
@@ -765,7 +779,7 @@ describe('bit import', function () {
           helper.importAllComponents();
         });
         it('local scope should contain all the components', () => {
-          const output = helper.listLocalScope();
+          const output = helper.listLocalScope('--scope');
           expect(output).to.have.string('found 3 components in local scope');
         });
         it('should not override the current files', () => {
