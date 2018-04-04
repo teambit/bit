@@ -1,16 +1,15 @@
 /** @flow */
 import Command from '../../command';
+import { login } from '../../../api/consumer';
 
 export default class Login extends Command {
   name = 'login';
-  description = 'login to bit';
+  description = 'login to bitsrc';
   alias = '';
   opts = [];
 
-  action([name, password]: [string, string]): Promise<any> {
-    const m = this.alias;
-    console.log('logging in to bit.');
-    return new Promise(resolve => resolve(m));
+  action(): Promise<any> {
+    return login();
   }
 
   report(data: { string: any }): string {
