@@ -1,6 +1,6 @@
 /** @flow */
 import serializeError from 'serialize-error';
-import requestify from 'requestify';
+import path from 'path';
 import hashObj from 'object-hash';
 import uniqid from 'uniqid';
 import yn from 'yn';
@@ -8,8 +8,9 @@ import R from 'ramda';
 import os from 'os';
 import omitBy from 'lodash.omitby';
 import isNil from 'lodash.isnil';
-import logger from '../logger/logger';
+import { fork } from 'child_process';
 import { setSync, getSync } from '../api/consumer/lib/global-config';
+import { analyticsPrompt, errorReportingPrompt } from '../prompts';
 import {
   CFG_ANALYTICS_USERID_KEY,
   CFG_ANALYTICS_REPORTING_KEY,
@@ -18,14 +19,10 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_USER_NAME_KEY,
   DEFAULT_BIT_ENV,
-  CFG_ANALYTICS_ENVIRONMENT_KEY,
-  DEFAULT_ANALYTICS_DOMAIN,
-  CFG_ANALYTICS_DOMAIN_KEY
+  CFG_ANALYTICS_ENVIRONMENT_KEY
 } from '../constants';
-import { analyticsPrompt, errorReportingPrompt } from '../prompts';
 
-const ANALYTICS_DOMAIN = getSync(CFG_ANALYTICS_DOMAIN_KEY) || DEFAULT_ANALYTICS_DOMAIN;
-
+const forked = fork(path.join(__dirname, 'analytics_sender.js'));
 const LEVEL = {
   DEBUG: 'debug',
   INFO: 'info',
@@ -131,14 +128,10 @@ class Analytics {
 
   static async sendData() {
     if (this.analytics_usage) {
-      return requestify
-        .post(ANALYTICS_DOMAIN, Analytics.toObject(), { timeout: 1000 })
-        .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
+      forked.send(this.toObject());
     }
     if (this.error_usage && !this.success) {
-      return requestify
-        .post(ANALYTICS_DOMAIN, Analytics.toObejct(), { timeout: 1000 })
-        .fail(err => logger.error(`failed sending anonymous usage: ${err.body}`));
+      forked.send(this.toObject());
     }
     return Promise.resolve();
   }
