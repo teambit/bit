@@ -75,9 +75,9 @@ class Analytics {
     function shouldPromptForAnalytics() {
       // do not prompt analytics approval for bit config command (so you can configure it in CI envs)
       if (cmd.length && cmd[0] !== 'config') {
-        const analyticsReporting = yn(getSync(CFG_ANALYTICS_REPORTING_KEY), { default: false });
-        const errorReporting = yn(getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY), { default: false });
-        return !analyticsReporting && !errorReporting;
+        const analyticsReporting = getSync(CFG_ANALYTICS_REPORTING_KEY);
+        const errorReporting = getSync(CFG_ANALYTICS_ERROR_REPORTS_KEY);
+        return R.isNil(analyticsReporting) && R.isNil(errorReporting);
       }
       return false;
     }
@@ -88,8 +88,11 @@ class Analytics {
       return analyticsPrompt().then(({ analyticsResponse }) => {
         setSync(CFG_ANALYTICS_REPORTING_KEY, yn(analyticsResponse));
         if (!yn(analyticsResponse)) {
-          errorReportingPrompt().then(({ errResponse }) => setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse)));
+          return errorReportingPrompt().then(({ errResponse }) => {
+            return setSync(CFG_ANALYTICS_ERROR_REPORTS_KEY, yn(errResponse));
+          });
         }
+        return Promise.resolve();
       });
     }
     return Promise.resolve();
