@@ -12,6 +12,7 @@ import logger from '../logger/logger';
 import { pathRelativeLinux } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getLinkContent, getIndexFileName } from './link-generator';
+import type { PathOsBased } from '../utils/path';
 
 export type LinksResult = {
   id: BitId,
@@ -37,15 +38,14 @@ function createSymlinkOrCopy(componentId, srcPath, destPath) {
 }
 
 function writeDependencyLink(
-  consumer: Consumer,
-  parentRootDir: string,
+  parentRootDir: PathOsBased, // absolute path
   bitId: BitId,
-  rootDir: string,
+  rootDir: PathOsBased, // absolute path
   bindingPrefix: string
 ) {
   const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
   const destPath = path.join(parentRootDir, relativeDestPath);
-  createSymlinkOrCopy(bitId, consumer.toAbsolutePath(rootDir), consumer.toAbsolutePath(destPath));
+  createSymlinkOrCopy(bitId, rootDir, destPath);
 
   return { from: parentRootDir, to: rootDir };
 }
@@ -78,17 +78,16 @@ function writeDependenciesLinks(component: Component, componentMap, consumer: Co
     if (!dependencyComponentMap) return writtenLinks;
     writtenLinks.push(
       writeDependencyLink(
-        consumer,
-        componentMap.rootDir,
+        consumer.toAbsolutePath(componentMap.rootDir),
         dependency.id,
-        dependencyComponentMap.rootDir,
+        consumer.toAbsolutePath(dependencyComponentMap.rootDir),
         component.bindingPrefix
       )
     );
     if (!consumer.shouldDistsBeInsideTheComponent()) {
       const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
-      writtenLinks.push(writeDependencyLink(consumer, from, dependency.id, to, component.bindingPrefix));
+      writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
       symlinkPackages(from, to, consumer);
     }
     return writtenLinks;
@@ -120,10 +119,9 @@ function writeMissingLinks(consumer: Consumer, component, componentMap, bitMap) 
 
       const dependencyComponentMap = bitMap.getComponent(dependencyId);
       return writeDependencyLink(
-        consumer,
-        componentMap.rootDir,
+        consumer.toAbsolutePath(componentMap.rootDir),
         BitId.parse(dependencyId),
-        dependencyComponentMap.rootDir,
+        consumer.toAbsolutePath(dependencyComponentMap.rootDir),
         component.bindingPrefix
       );
     });
