@@ -16,12 +16,12 @@ export const formatPlainComponentItem = ({ scope, box, name, version, deprecated
     }`
   );
 
-export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string =>
-  c.cyan(
-    `- ${component.id.toStringWithoutVersion()}. versions: ${
-      versions.length ? versions.join(', ') : 'no new versions were imported'
-    }.  ${component.deprecated ? c.yellow('[Deprecated]') : ''}`
-  );
+export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string => {
+  const status = versions.length ? 'updated' : 'up to date';
+  return `- ${c.green(status)} ${c.cyan(component.id.toStringWithoutVersion())} ${
+    versions.length ? `new versions: ${versions.join(', ')}` : ''
+  }`;
+};
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 
@@ -37,11 +37,11 @@ export const paintHeader = (value: string): string => {
 
 const paintAuthor = (email: ?string, username: ?string): string => {
   if (email && username) {
-    return c.white(`Author: ${username} <${email}>\n`);
+    return c.white(`author: ${username} <${email}>\n`);
   } else if (email && !username) {
-    return c.white(`Author: <${email}>\n`);
+    return c.white(`author: <${email}>\n`);
   } else if (!email && username) {
-    return c.white(`Author: ${username}\n`);
+    return c.white(`author: ${username}\n`);
   }
 
   return '';
@@ -63,8 +63,8 @@ export const paintLog = ({
   return (
     c.yellow(`tag ${tag}\n`) +
     paintAuthor(email, username) +
-    c.white(`Date: ${date}\n`) +
-    c.white(`\n      ${message}\n`)
+    c.white(`date: ${date}\n`) +
+    (message ? c.white(`\n      ${message}\n`) : '')
   );
 };
 

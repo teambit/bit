@@ -244,16 +244,16 @@ to ignore this error, please use --ignore-newest-version flag`
   [
     ExternalTestError,
     err =>
-      `error: bit failed to test ${err.id} with the following exception:\nMessage: ${
-        err.originalError.message
-      }.\nStack: ${err.originalError.stack}`
+      `error: bit failed to test ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
   ],
   [
     ExternalBuildError,
     err =>
-      `error: bit failed to build ${err.id} with the following exception:\nMessage: ${
-        err.originalError.message
-      }.\nStack: ${err.originalError.stack}`
+      `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
   ],
   [
     AuthenticationFailed,
