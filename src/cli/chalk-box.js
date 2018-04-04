@@ -16,12 +16,12 @@ export const formatPlainComponentItem = ({ scope, box, name, version, deprecated
     }`
   );
 
-export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string =>
-  c.cyan(
-    `- ${component.id.toStringWithoutVersion()}. versions: ${
-      versions.length ? versions.join(', ') : 'no new versions were imported'
-    }.  ${component.deprecated ? c.yellow('[Deprecated]') : ''}`
-  );
+export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string => {
+  const status = versions.length ? 'updated' : 'up to date';
+  return `- ${c.green(status)} ${c.cyan(component.id.toStringWithoutVersion())} ${
+    versions.length ? `new versions: ${versions.join(', ')}` : ''
+  }`;
+};
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 
