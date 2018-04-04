@@ -37,11 +37,11 @@ export const paintHeader = (value: string): string => {
 
 const paintAuthor = (email: ?string, username: ?string): string => {
   if (email && username) {
-    return c.white(`Author: ${username} <${email}>\n`);
+    return c.white(`author: ${username} <${email}>\n`);
   } else if (email && !username) {
-    return c.white(`Author: <${email}>\n`);
+    return c.white(`author: <${email}>\n`);
   } else if (!email && username) {
-    return c.white(`Author: ${username}\n`);
+    return c.white(`author: ${username}\n`);
   }
 
   return '';
@@ -63,8 +63,8 @@ export const paintLog = ({
   return (
     c.yellow(`tag ${tag}\n`) +
     paintAuthor(email, username) +
-    c.white(`Date: ${date}\n`) +
-    c.white(`\n      ${message}\n`)
+    c.white(`date: ${date}\n`) +
+    (message ? c.white(`\n      ${message}\n`) : '')
   );
 };
 
