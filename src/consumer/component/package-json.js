@@ -135,7 +135,7 @@ async function write(
   consumer: Consumer,
   component: Component,
   bitDir: string,
-  force?: boolean = true,
+  override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
 ): Promise<boolean> {
@@ -178,10 +178,10 @@ async function write(
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
     const distPackageJson = getPackageJsonInstance(distRootDir);
-    await distPackageJson.write({ override: force });
+    await distPackageJson.write({ override });
   }
 
-  return packageJson.write({ override: force });
+  return packageJson.write({ override });
 }
 
 async function updateAttribute(consumer: Consumer, componentDir, attributeName, attributeValue): Promise<*> {

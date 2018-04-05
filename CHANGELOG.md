@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased
 
+- rename `--force` flag of `bit import` to `--override`
+- change `bit list` to show only the authored and imported components, unless `--scope` flag is used
 - `bit remove` removes components from a remote scope only when `--remote` flag is used
 - fix bit-install to work from an inner directory
 - improve external test and build errors to show the stack
