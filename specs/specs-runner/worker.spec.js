@@ -4,7 +4,7 @@ import path from 'path';
 
 describe('worker', () => {
   it('should throw an error for a mismatch tester interface', (done) => {
-    const child = fork(path.join(__dirname, '..', '..', 'src', 'specs-runner', 'worker.js'), {
+    const child = fork(path.join(__dirname, '..', '..', 'dist', 'specs-runner', 'worker.js'), {
       silent: false,
       env: {
         __impl__: '',
