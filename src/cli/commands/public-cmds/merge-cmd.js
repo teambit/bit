@@ -27,11 +27,11 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName: bo
 
 export default class Merge extends Command {
   name = 'merge <version> <ids...>';
-  description = 'merge specified version into current version';
+  description = 'merge changes of different component versions';
   alias = '';
   opts = [
-    ['o', 'ours', 'in case of a conflict, use ours (current version)'],
-    ['t', 'theirs', 'in case of a conflict, use theirs (specified version)'],
+    ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
+    ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later']
   ];
   loader = true;

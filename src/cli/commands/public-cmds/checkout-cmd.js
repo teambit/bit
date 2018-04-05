@@ -10,7 +10,7 @@ import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-v
 
 export default class Checkout extends Command {
   name = 'checkout <version> <ids...>';
-  description = 'switch between versions';
+  description = 'switch between component versions';
   alias = 'U';
   opts = [
     [
@@ -18,12 +18,8 @@ export default class Checkout extends Command {
       'interactive-merge',
       'when a component is modified and the merge process found conflicts, display options to resolve them'
     ],
-    ['o', 'ours', 'in case of a conflict, use ours (override the used version with the current modification)'],
-    [
-      't',
-      'theirs',
-      'in case of a conflict, use theirs (override the current modification and use the specified version)'
-    ],
+    ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
+    ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
