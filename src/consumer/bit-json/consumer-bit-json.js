@@ -3,6 +3,7 @@ import fs from 'fs';
 import R from 'ramda';
 import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
+import type { Extensions, Compilers } from './abstract-bit-json';
 import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
 import {
   BIT_JSON,
@@ -28,7 +29,7 @@ const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 type consumerBitJsonProps = {
   impl?: string,
   spec?: string,
-  compiler?: string,
+  compiler?: string | Compilers,
   tester?: string,
   dependencies?: { [string]: string },
   saveDependenciesAsComponents?: boolean,
@@ -38,7 +39,7 @@ type consumerBitJsonProps = {
   componentsDefaultDirectory?: string,
   dependenciesDirectory?: string,
   bindingPrefix?: string,
-  extensions?: Object,
+  extensions?: Extensions,
   packageManager?: 'npm' | 'yarn',
   packageManagerArgs?: string[],
   packageManagerProcessOptions?: Object,

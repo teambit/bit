@@ -2,6 +2,9 @@
 import R from 'ramda';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
+import type { ExtensionOptions } from '../../extensions/extension';
+import CompilerExtension from '../../extensions/compiler-extension';
+import type { CompilerExtensionOptions } from '../../extensions/compiler-extension';
 import {
   DEFAULT_COMPILER_ID,
   DEFAULT_TESTER_ID,
@@ -14,16 +17,29 @@ import {
   DEFAULT_EXTENSIONS
 } from '../../constants';
 
+export type RegularExtensionObject = {
+  rawConfig: Object,
+  options: ExtensionOptions
+};
+
+export type CompilerExtensionObject = {
+  rawConfig: Object,
+  options: CompilerExtensionOptions
+};
+
+export type Extensions = { [extensionName: string]: RegularExtensionObject };
+export type Compilers = { [compilerName: string]: CompilerExtensionObject };
+
 export type AbstractBitJsonProps = {
   impl?: string,
   spec?: string,
-  compiler?: string,
+  compiler?: string | Compilers,
   tester?: string,
   dependencies?: Object,
   devDependencies?: Object,
   lang?: string,
   bindingPrefix?: string,
-  extensions?: Object
+  extensions?: Extensions
 };
 
 export default class AbstractBitJson {
@@ -31,13 +47,13 @@ export default class AbstractBitJson {
   impl: string;
   /** @deprecated * */
   spec: string;
-  compiler: string;
+  _compiler: Compilers;
   tester: string;
   dependencies: { [string]: string };
   devDependencies: { [string]: string };
   lang: string;
   bindingPrefix: string;
-  extensions: Object;
+  extensions: Extensions;
 
   constructor({
     impl,
@@ -52,7 +68,7 @@ export default class AbstractBitJson {
   }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
-    this.compiler = compiler || DEFAULT_COMPILER_ID;
+    this._compiler = compiler || {};
     this.tester = tester || DEFAULT_TESTER_ID;
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
     this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
@@ -61,12 +77,12 @@ export default class AbstractBitJson {
     this.extensions = extensions || DEFAULT_EXTENSIONS;
   }
 
-  get compilerId(): string {
-    return this.compiler;
+  get compiler(): Compilers {
+    return transformCompilerToObject(this._compiler);
   }
 
-  set compilerId(compilerId: string) {
-    this.compiler = compilerId;
+  set compiler(compiler: string | Compilers) {
+    this._compiler = transformCompilerToObject(compiler);
   }
 
   get testerId(): string {
@@ -107,7 +123,25 @@ export default class AbstractBitJson {
   }
 
   hasCompiler(): boolean {
-    return !!this.compiler && this.compiler !== NO_PLUGIN_TYPE;
+    return !!this.compiler && this.compiler !== NO_PLUGIN_TYPE && !R.isEmpty(this.compiler);
+  }
+
+  loadCompiler(consumerPath: string, scopePath: string): ?CompilerExtension {
+    if (!this.hasCompiler()) {
+      return null;
+    }
+    // TODO: Gilad - support more than one key of compiler
+    const compilerName = Object.keys(this.compiler)[0];
+    const compilerObject = this.compiler[compilerName];
+    const compilerProps = {
+      name: compilerName,
+      consumerPath,
+      scopePath,
+      rawConfig: compilerObject.rawConfig,
+      options: compilerObject.options
+    };
+    const compiler = CompilerExtension.load(compilerProps);
+    return compiler;
   }
 
   hasTester(): boolean {
@@ -132,8 +166,8 @@ export default class AbstractBitJson {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
         env: {
-          compiler: this.compilerId,
-          tester: this.testerId
+          compiler: this.compiler,
+          tester: this.tester
         },
         dependencies: this.dependencies,
         extensions: this.extensions
@@ -147,3 +181,15 @@ export default class AbstractBitJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 }
+
+const transformCompilerToObject = (compiler): Compilers => {
+  if (typeof compiler === 'string') {
+    return {
+      [compiler]: {
+        rawConfig: {},
+        options: {}
+      }
+    };
+  }
+  return compiler;
+};

@@ -8,22 +8,14 @@ import { BitId } from '../bit-id';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
-// export type BaseExtensionProps = {
-//   name: string,
-//   rawConfig: Object,
-//   options: Object,
-//   dynamicConfig?: Object,
-//   script: Function,
-//   disabled: boolean,
-//   filePath: string,
-//   loaded: boolean,
-//   api: Object
-// };
+export type BaseExtensionOptions = {
+  file?: string
+};
 
 type BaseArgs = {
   name: string,
   rawConfig: Object,
-  options: Object
+  options: BaseExtensionOptions
 };
 
 export type BaseLoadArgsProps = BaseArgs & {
@@ -32,20 +24,12 @@ export type BaseLoadArgsProps = BaseArgs & {
 };
 
 type StaticProps = BaseArgs & {
-  dynamicConfig?: Object,
+  dynamicConfig: Object,
   filePath: string,
   script: Function,
   disabled: boolean,
   loaded: boolean
 };
-// type StaticProps = {
-//     dynamicConfig?: Object,
-//     filePath: string,
-//     script: Function,
-//     disabled: boolean,
-//     loaded: boolean,
-//     ...BaseLoadArgsProps
-//   }
 
 type InstanceSpecificProps = {
   api: Object
@@ -105,6 +89,51 @@ export default class BaseExtension {
     this.api = R.merge(this.api, api);
   }
 
+  toString(): string {
+    return JSON.stringify(this, null, 2);
+  }
+
+  toBitJsonObject() {
+    return {
+      [this.name]: {
+        rawConfig: this.rawConfig,
+        options: this.options
+      }
+    };
+  }
+
+  toModelObject() {
+    return {
+      name: this.name,
+      config: this.dynamicConfig
+    };
+  }
+
+  /**
+   * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
+   * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
+   */
+  async reload(): Promise<void> {
+    const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options);
+    if (baseProps.loaded) {
+      this.loaded = baseProps.loaded;
+      this.script = baseProps.script;
+      this.dynamicConfig = baseProps.dynamicConfig;
+    }
+  }
+
+  setExtensionPathInScope(scopePath: string): void {
+    const componentPath = _getExtensionPath(this.name, scopePath, this.options.core);
+    this.filePath = componentPath;
+  }
+
+  static transformStringToModelObject(name: string) {
+    return {
+      name,
+      config: {}
+    };
+  }
+
   /**
    * Load extension by name
    * The extension will be from scope by default or from file
@@ -136,11 +165,50 @@ export default class BaseExtension {
       extensionProps.api = concreteBaseAPI;
       return extensionProps;
     }
+    let staticExtensionProps: StaticProps = {
+      name,
+      rawConfig,
+      dynamicConfig: rawConfig,
+      options,
+      disabled: false,
+      loaded: false,
+      filePath: ''
+    };
     // Require extension from scope
-    const componentPath = _getExtensionPath(name, scopePath, options.core);
-    const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options);
+    if (scopePath) {
+      const componentPath = _getExtensionPath(name, scopePath, options.core);
+      staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options);
+    }
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, ...staticExtensionProps };
-    extensionProps.api = concreteBaseAPI;
+    return extensionProps;
+  }
+
+  static loadFromModelObject(modelObject) {
+    let staticExtensionProps: StaticProps;
+    if (typeof modelObject === 'string') {
+      staticExtensionProps = {
+        name: modelObject,
+        rawConfig: {},
+        dynamicConfig: {},
+        options: {},
+        disabled: false,
+        loaded: false,
+        filePath: ''
+      };
+    } else {
+      staticExtensionProps = {
+        name: modelObject.name,
+        rawConfig: modelObject.config,
+        dynamicConfig: modelObject.config,
+        options: {},
+        disabled: false,
+        loaded: false,
+        filePath: ''
+      };
+    }
+
+    const concreteBaseAPI = _getConcreteBaseAPI({ name: modelObject.name });
+    const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, ...staticExtensionProps };
     return extensionProps;
   }
 
@@ -151,7 +219,15 @@ export default class BaseExtension {
     options: Object = {}
   ): Promise<StaticProps> {
     logger.info(`loading extension ${name} from ${filePath}`);
-    const extensionProps: StaticProps = { name, rawConfig, options, disabled: false, loaded: false, filePath: '' };
+    const extensionProps: StaticProps = {
+      name,
+      rawConfig,
+      dynamicConfig: rawConfig,
+      options,
+      disabled: false,
+      loaded: false,
+      filePath: ''
+    };
     // Skip disabled extensions
     if (options.disabled) {
       extensionProps.disabled = true;

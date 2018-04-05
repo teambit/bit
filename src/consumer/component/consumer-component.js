@@ -23,6 +23,7 @@ import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
+import CompilerExtension from '../../extensions/compiler-extension';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -52,7 +53,7 @@ export type ComponentProps = {
   lang?: string,
   bindingPrefix?: string,
   mainFile: PathOsBased,
-  compilerId?: ?BitId,
+  compiler?: CompilerExtension,
   testerId?: ?BitId,
   bitJson?: BitJson,
   dependencies?: Dependency[],
@@ -79,7 +80,7 @@ export default class Component {
   lang: string;
   bindingPrefix: string;
   mainFile: PathOsBased;
-  compilerId: ?BitId;
+  compiler: ?CompilerExtension;
   testerId: ?BitId;
   bitJson: ?BitJson;
   dependencies: Dependencies;
@@ -157,7 +158,7 @@ export default class Component {
     lang,
     bindingPrefix,
     mainFile,
-    compilerId,
+    compiler,
     testerId,
     bitJson,
     dependencies,
@@ -182,7 +183,7 @@ export default class Component {
     this.lang = lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.mainFile = path.normalize(mainFile);
-    this.compilerId = compilerId;
+    this.compiler = compiler;
     this.testerId = testerId;
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
@@ -243,7 +244,7 @@ export default class Component {
       scope: this.scope,
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
-      compiler: this.compilerId ? this.compilerId.toString() : NO_PLUGIN_TYPE,
+      compiler: this.compiler ? this.compiler.toString() : {},
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies.asWritableObject(),
       devDependencies: this.devDependencies.asWritableObject(),
@@ -290,7 +291,6 @@ export default class Component {
   }
 
   async buildIfNeeded({
-    condition,
     compiler,
     consumer,
     componentMap,
@@ -299,8 +299,7 @@ export default class Component {
     directory,
     keep
   }: {
-    condition?: ?boolean,
-    compiler: any,
+    compiler: CompilerExtension,
     consumer?: Consumer,
     componentMap?: ComponentMap,
     scope: Scope,
@@ -308,7 +307,7 @@ export default class Component {
     directory: ?string,
     keep: ?boolean
   }): Promise<?{ code: string, mappings?: string }> {
-    if (!condition) {
+    if (!compiler) {
       return Promise.resolve({ code: '' });
     }
     const files = this.files.map(file => file.clone());
@@ -327,7 +326,11 @@ export default class Component {
 
           // Change the cwd to make sure we found the needed files
           process.chdir(componentRoot);
-          return compiler.compile(files, rootDistFolder, context);
+          if (compiler.play) {
+            // TODO: Gilad - change params
+            return compiler.play(files, rootDistFolder, context);
+          }
+          return compiler.oldAction(files, rootDistFolder, context);
         })
         .catch((e) => {
           if (verbose) throw new BuildException(this.id.toString(), e.stack || e);
@@ -335,9 +338,9 @@ export default class Component {
         });
     };
 
-    if (!compiler.compile) {
+    if (!compiler.play && !compiler.oldAction) {
       return Promise.reject(
-        `"${this.compilerId.toString()}" does not have a valid compiler interface, it has to expose a compile method`
+        `"${compiler.name}" does not have a valid compiler interface, it has to expose a compile method`
       );
     }
 
@@ -705,15 +708,15 @@ export default class Component {
     verbose?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
-    logger.debug(`consumer-component.build ${this.id}`);
+    logger.debug(`consumer-component.build ${this.id.toString()}`);
     // @TODO - write SourceMap Type
-    if (!this.compilerId) {
+    if (!this.compiler) {
       if (!consumer || consumer.shouldDistsBeInsideTheComponent()) {
-        logger.debug('compilerId was not found, nothing to build');
-        return Promise.resolve(null);
+        logger.debug('compiler was not found, nothing to build');
+        return null;
       }
       logger.debug(
-        'compilerId was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
+        'compiler was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
       );
       this.copyFilesIntoDists();
       return this.dists;
@@ -740,21 +743,13 @@ export default class Component {
 
       return this.dists;
     }
-    logger.debug('compilerId found, start building');
-
-    let compiler = scope.loadEnvironment(this.compilerId);
-    if (!compiler) {
-      loader.start(BEFORE_IMPORT_ENVIRONMENT);
-      await scope.installEnvironment({
-        ids: [{ componentId: this.compilerId, type: 'compiler' }],
-        verbose,
-        type: 'compiler'
-      });
-      compiler = scope.loadEnvironment(this.compilerId);
+    logger.debug('compiler found, start building');
+    if (!this.compiler.loaded) {
+      this.compiler.install(scope, { verbose });
     }
+
     const builtFiles = await this.buildIfNeeded({
-      condition: !!this.compilerId,
-      compiler,
+      compiler: this.compiler,
       consumer,
       componentMap,
       scope,
@@ -796,7 +791,7 @@ export default class Component {
       scope: this.scope,
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
-      compilerId: this.compilerId ? this.compilerId.toString() : null,
+      compiler: this.compiler ? this.compiler.toModelObject() : null,
       testerId: this.testerId ? this.testerId.toString() : null,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
@@ -880,7 +875,7 @@ export default class Component {
       scope,
       lang,
       bindingPrefix,
-      compilerId,
+      compiler,
       testerId,
       dependencies,
       devDependencies,
@@ -902,7 +897,7 @@ export default class Component {
       scope,
       lang,
       bindingPrefix,
-      compilerId: compilerId ? BitId.parse(compilerId) : null,
+      compiler: compiler ? CompilerExtension.loadFromModelObject(compiler) : null,
       testerId: testerId ? BitId.parse(testerId) : null,
       dependencies,
       devDependencies,
@@ -954,7 +949,7 @@ export default class Component {
     let packageDependencies;
     let devPackageDependencies;
     let peerPackageDependencies;
-    let bitJson = consumerBitJson;
+    let bitJson: BitJson | ConsumerBitJson = consumerBitJson;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
@@ -1002,9 +997,11 @@ export default class Component {
     }
 
     // Remove dists if compiler has been deleted
-    if (dists && !bitJson.compilerId) {
+    if (dists && !bitJson.hasCompiler()) {
       dists = undefined;
     }
+
+    const compiler = await bitJson.loadCompiler(consumerPath, consumer.scope.getPath());
 
     return new Component({
       name: id.name,
@@ -1013,7 +1010,7 @@ export default class Component {
       version: id.version,
       lang: bitJson.lang,
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
-      compilerId: BitId.parse(bitJson.compilerId),
+      compiler,
       testerId: BitId.parse(bitJson.testerId),
       bitJson,
       mainFile: componentMap.mainFile,

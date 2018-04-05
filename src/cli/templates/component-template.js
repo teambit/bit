@@ -60,7 +60,7 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
     name,
     box,
     lang,
-    compilerId,
+    compiler,
     testerId,
     dependencies,
     devDependencies,
@@ -76,7 +76,8 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
 
   const ver = version ? `@${version}` : '';
   obj.id = isFromFs ? `${box}/${name}${ver} [file system]` : `${box}/${name}${ver}`;
-  obj.compiler = compilerId ? compilerId.toString() : null;
+  // TODO: Gilad - print compiler config in different table
+  obj.compiler = compiler ? compiler.name : null;
   obj.language = lang || null;
   obj.tester = testerId ? testerId.toString() : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;

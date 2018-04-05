@@ -1108,8 +1108,8 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
-    logger.debug(`scope.loadEnvironment, id: ${bitId}`);
+  isEnvironmentInstalled(bitId: BitId) {
+    logger.debug(`scope.isEnvironmentInstalled, id: ${bitId}`);
     if (!bitId) throw new ResolutionException();
     const notFound = () => {
       logger.debug(`Unable to find an env component ${bitId.toString()}`);
@@ -1124,16 +1124,8 @@ export default class Scope {
     }
     if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) return notFound();
 
-    if (opts && opts.pathOnly) {
-      return envPath;
-    }
-
-    try {
-      logger.debug(`Requiring an environment file at ${envPath}`);
-      return require(envPath);
-    } catch (e) {
-      throw new ResolutionException(e);
-    }
+    logger.debug(`found an environment file at ${envPath}`);
+    return true;
   }
 
   // TODO: Change name since it also used to install extension
@@ -1162,7 +1154,7 @@ export default class Scope {
     const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
     const nonExistingEnvsIds = uniqIds.filter((id) => {
-      return !this.loadEnvironment(id.componentId, { pathOnly: true });
+      return !this.isEnvironmentInstalled(id.componentId);
     });
     if (!nonExistingEnvsIds.length) {
       logger.debug('scope.installEnvironment, all environment were successfully loaded, nothing to install');

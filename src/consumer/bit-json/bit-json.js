@@ -5,8 +5,10 @@ import fs from 'fs';
 import { BIT_JSON } from '../../constants';
 import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
+import type { Extensions, Compilers } from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
 import type { PathOsBased } from '../../utils/path';
+import Component from '../component';
 
 export function composePath(bitPath: PathOsBased): PathOsBased {
   return path.join(bitPath, BIT_JSON);
@@ -20,7 +22,7 @@ export type BitJsonProps = {
   impl?: string,
   spec?: string,
   lang?: string,
-  compiler?: string,
+  compiler?: string | Compilers,
   tester?: string,
   dependencies?: Object,
   devDependencies?: Object,
@@ -92,7 +94,7 @@ export default class BitJson extends AbstractBitJson {
   validate(bitJsonPath: string) {
     if (
       typeof this.getImplBasename() !== 'string' ||
-      typeof this.compilerId !== 'string' ||
+      typeof this.compiler !== 'object' ||
       typeof this.testerId !== 'string' ||
       (this.lang && typeof this.testerId !== 'string') ||
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
@@ -118,8 +120,8 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
-  mergeWithComponentData(component) {
-    this.compiler = component.compilerId ? component.compilerId.toString() : null;
+  mergeWithComponentData(component: Component) {
+    this.compiler = component.compiler ? component.compiler.toBitJsonObject() : null;
     this.tester = component.testerId ? component.testerId.toString() : null;
     this.bindingPrefix = component.bindingPrefix;
     this.lang = component.lang;

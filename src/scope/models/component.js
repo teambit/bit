@@ -285,7 +285,7 @@ export default class Component extends BitObject {
           lang: this.lang,
           bindingPrefix: this.bindingPrefix,
           mainFile: version.mainFile || null,
-          compilerId: version.compiler,
+          compiler: version.compiler,
           testerId: version.tester,
           dependencies: version.dependencies.getClone(),
           devDependencies: version.devDependencies.getClone(),

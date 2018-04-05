@@ -50,6 +50,7 @@ import { Dependencies } from './component/dependencies';
 import type { PathChangeResult } from './bit-map/bit-map';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
+import CompilerExtension from '../extensions/compiler-extension';
 import type { PathOsBased } from '../utils/path';
 
 type ConsumerProps = {
@@ -112,8 +113,9 @@ export default class Consumer {
     return BitId.parse(this.bitJson.testerId);
   }
 
-  get compilerId(): ?BitId {
-    return BitId.parse(this.bitJson.compilerId);
+  get compiler(): ?CompilerExtension {
+    const compiler = this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
+    return compiler;
   }
 
   get driver(): Driver {

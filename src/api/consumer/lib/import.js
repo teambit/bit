@@ -34,7 +34,7 @@ export default (async function importAction(
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {
-        consumer.bitJson.compilerId = id;
+        consumer.bitJson.compiler = id;
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 

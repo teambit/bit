@@ -12,6 +12,7 @@ import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constant
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
+import CompilerExtension from '../../extensions/compiler-extension';
 
 type CiProps = {
   error: Object,
@@ -38,7 +39,7 @@ export type Log = {
 export type VersionProps = {
   files?: ?Array<SourceFile>,
   dists?: ?Array<DistFile>,
-  compiler?: ?BitId,
+  compiler?: ?CompilerExtension,
   tester?: ?BitId,
   log: Log,
   ci?: CiProps,
@@ -58,7 +59,7 @@ export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFile>;
   dists: ?Array<DistFile>;
-  compiler: ?BitId;
+  compiler: ?CompilerExtension;
   tester: ?BitId;
   log: Log;
   ci: CiProps | {};
@@ -213,7 +214,7 @@ export default class Version extends BitObject {
             };
           })
           : null,
-        compiler: this.compiler ? this.compiler.toString() : null,
+        compiler: this.compiler ? this.compiler.toModelObject() : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         tester: this.tester ? this.tester.toString() : null,
         log: {
@@ -275,7 +276,6 @@ export default class Version extends BitObject {
         relativePaths: dependency.relativePaths
       }));
     };
-
     return new Version({
       mainFile,
       files: files
@@ -288,7 +288,7 @@ export default class Version extends BitObject {
           return { file: Ref.from(dist.file), relativePath: dist.relativePath, name: dist.name, test: dist.test };
         })
         : null,
-      compiler: compiler ? BitId.parse(compiler) : null,
+      compiler: compiler ? CompilerExtension.loadFromModelObject(compiler) : null,
       bindingPrefix: bindingPrefix || null,
       tester: tester ? BitId.parse(tester) : null,
       log: {
@@ -347,7 +347,7 @@ export default class Version extends BitObject {
           return { file: dist.file.hash(), relativePath: dist.relativePath, name: dist.name, test: dist.test };
         })
         : null,
-      compiler: component.compilerId,
+      compiler: component.compiler,
       bindingPrefix: component.bindingPrefix,
       tester: component.testerId,
       log: {
@@ -386,6 +386,7 @@ export default class Version extends BitObject {
   }
 
   validate(): void {
+    // TODO: Gilad - add validation for envs
     const message = 'unable to save Version object';
     if (!this.mainFile) throw new Error(`${message}, the mainFile is missing`);
     if (!isValidPath(this.mainFile)) throw new Error(`${message}, the mainFile ${this.mainFile} is invalid`);

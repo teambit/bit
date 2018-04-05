@@ -2,7 +2,7 @@
 
 import R from 'ramda';
 import BaseExtension from './base-extension';
-import type { BaseExtensionProps, BaseLoadArgsProps } from './base-extension';
+import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions } from './base-extension';
 import logger from '../logger/logger';
 import ExtensionCommand from './extension-command';
 import IsolatedEnvironment from '../environment';
@@ -32,6 +32,11 @@ type ExtensionProps = BaseExtensionProps & {
   newHooks?: string[],
   registeredHooksActions?: RegisteredHooksActions,
   commands?: Array<Commands>
+};
+
+export type ExtensionOptions = BaseExtensionOptions & {
+  core?: boolean,
+  disabled?: boolean
 };
 
 export type LoadArgsProps = BaseLoadArgsProps;
