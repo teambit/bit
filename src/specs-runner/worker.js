@@ -1,8 +1,7 @@
 // TODO - move to language specific driver.
+const GeneralError = require('../error/general-error');
 
 const serializeError = require('serialize-error');
-
-import GeneralError from '../error/general-error';
 
 try {
   const mainFilePath = process.env.__mainFile__;
