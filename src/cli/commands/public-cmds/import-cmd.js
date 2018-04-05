@@ -9,6 +9,7 @@ import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
 import type { ImportOptions, ImportedVersions } from '../../../consumer/component/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
+import GeneralError from '../../../error/general-error';
 
 export default class Import extends Command {
   name = 'import [ids...]';
@@ -81,13 +82,13 @@ export default class Import extends Command {
     packageManagerArgs: string[]
   ): Promise<any> {
     if (tester && compiler) {
-      throw new Error('you cant use tester and compiler flags combined');
+      throw new GeneralError('you cant use tester and compiler flags combined');
     }
     if (objects && write) {
-      throw new Error('you cant use --objects and --write flags combined');
+      throw new GeneralError('you cant use --objects and --write flags combined');
     }
     if (ids.length && write) {
-      throw new Error('you cant use --write flag when importing specific ids');
+      throw new GeneralError('you cant use --write flag when importing specific ids');
     }
     const environmentOptions: EnvironmentOptions = {
       tester,

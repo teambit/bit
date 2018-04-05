@@ -3,6 +3,7 @@ import { BitId } from '../../bit-id';
 import ComponentModel from '../models/component';
 import logger from '../../logger/logger';
 import { Scope } from '..';
+import GeneralError from '../../error/general-error';
 
 export type untagResult = { id: BitId, versions: string[], component: ComponentModel };
 
@@ -34,7 +35,7 @@ export async function removeLocalVersion(
       idWithVersion.version = versionToRemove;
       const dependents = dependencyGraph.getDependentsPerId(idWithVersion);
       if (dependents.length) {
-        throw new Error(
+        throw new GeneralError(
           `unable to untag ${id}, the version ${versionToRemove} has the following dependent(s) ${dependents.join(
             ', '
           )}`
@@ -84,7 +85,7 @@ export async function removeLocalVersionsForAllComponents(
       const dependents = dependencyGraph.getDependentsPerId(bitId);
       const dependentsNotCandidates = dependents.filter(dependent => !candidateComponentsIdsStr.includes(dependent));
       if (dependentsNotCandidates.length) {
-        throw new Error( // $FlowFixMe
+        throw new GeneralError( // $FlowFixMe
           `unable to untag ${bitId}, the version ${version} has the following dependent(s) ${dependents.join(', ')}`
         );
       }

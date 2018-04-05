@@ -59,6 +59,7 @@ import {
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import GeneralError from '../error/general-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -78,6 +79,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
+  [GeneralError, msg => msg],
+
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
   // [

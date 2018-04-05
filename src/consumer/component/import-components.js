@@ -10,6 +10,7 @@ import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
 import { filterAsync } from '../../utils';
+import GeneralError from '../../error/general-error';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -143,7 +144,7 @@ export default class ImportComponents {
       const idStr = id.toStringWithoutVersion();
       const beforeImportVersions = currentVersions[idStr];
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
-      if (!modelComponent) throw new Error(`imported component ${idStr} was not found in the model`);
+      if (!modelComponent) throw new GeneralError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
       return [idStr, R.difference(afterImportVersions, beforeImportVersions)];
     });

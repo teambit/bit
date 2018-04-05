@@ -12,6 +12,7 @@ import twoWayMergeVersions from './two-way-merge';
 import type { MergeResultsTwoWay } from './two-way-merge';
 import type { PathLinux } from '../../../utils/path';
 import { COMPONENT_ORIGINS } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -59,15 +60,15 @@ export async function mergeVersion(
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
   const componentModel = await consumer.scope.sources.get(component.id);
   if (!componentModel) {
-    throw new Error(`component ${component.id.toString()} doesn't have any version yet`);
+    throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
   }
   if (!componentModel.hasVersion(version)) {
-    throw new Error(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
+    throw new GeneralError(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
   const currentlyUsedVersion = BitId.parse(existingBitMapId).version;
   if (currentlyUsedVersion === version) {
-    throw new Error(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
+    throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
   const otherComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
   const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({
@@ -112,9 +113,9 @@ async function applyVersion(
     return { id, filesStatus };
   }
   const component = componentFromFS.componentFromModel;
-  if (!component) throw new Error('failed finding the component in the model');
+  if (!component) throw new GeneralError('failed finding the component in the model');
   const componentMap = componentFromFS.componentMap;
-  if (!componentMap) throw new Error('applyVersion: componentMap was not found');
+  if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
   const files = componentFromFS.cloneFilesWithSharedDir();
   component.files = files;
 
@@ -155,7 +156,7 @@ async function applyModifiedVersion(
   const filesStatus = {};
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
     const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new Error(`file ${file.filePath} not found`);
+    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
       const otherFile: SourceFileModel = file.otherFile;
@@ -170,7 +171,7 @@ async function applyModifiedVersion(
       foundFile.contents = new Buffer(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
-      throw new Error('file does not have output nor conflict');
+      throw new GeneralError('file does not have output nor conflict');
     }
   });
   const addFilesP = mergeResults.addFiles.map(async (file) => {
@@ -191,13 +192,13 @@ export async function getMergeStrategyInteractive(): Promise<MergeStrategy> {
     return mergeOptionsCli[result.mergeStrategy];
   } catch (err) {
     // probably user clicked ^C
-    throw new Error('the action has been canceled');
+    throw new GeneralError('the action has been canceled');
   }
 }
 
 export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean): ?MergeStrategy {
   if ((ours && theirs) || (ours && manual) || (theirs && manual)) {
-    throw new Error('please choose only one of the following: ours, theirs or manual');
+    throw new GeneralError('please choose only one of the following: ours, theirs or manual');
   }
   if (ours) return MergeOptions.ours;
   if (theirs) return MergeOptions.theirs;

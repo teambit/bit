@@ -44,6 +44,7 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestError from './exceptions/external-test-error';
 import ExternalBuildError from './exceptions/external-build-error';
+import GeneralError from '../../error/general-error';
 
 export type ComponentProps = {
   name: string,
@@ -206,7 +207,7 @@ export default class Component {
   validateComponent() {
     const nonEmptyFields = ['name', 'box', 'mainFile'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new Error(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+      if (!this[field]) { throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`); }
     });
   }
 
@@ -499,7 +500,7 @@ export default class Component {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
     const bitMap: ?BitMap = consumer ? consumer.bitMap : undefined;
-    if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+    if (!this.files) throw new GeneralError(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
     // Update files base dir according to bitDir
@@ -787,7 +788,7 @@ export default class Component {
     // return buildFilesP.then((buildedFiles) => {
     builtFiles.forEach((file) => {
       if (file && (!file.contents || !isString(file.contents.toString()))) {
-        throw new Error('builder interface has to return object with a code attribute that contains string');
+        throw new GeneralError('builder interface has to return object with a code attribute that contains string');
       }
     });
     this.setDists(builtFiles.map(file => new Dist(file)));
@@ -806,7 +807,7 @@ export default class Component {
       return isolatedEnvironment.path;
     } catch (err) {
       await isolatedEnvironment.destroy();
-      throw new Error(err);
+      throw new GeneralError(err);
     }
   }
 

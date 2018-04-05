@@ -2,6 +2,8 @@
 
 const serializeError = require('serialize-error');
 
+import GeneralError from '../error/general-error';
+
 try {
   const mainFilePath = process.env.__mainFile__;
   const testFilePath = process.env.__testFilePath__;
@@ -44,7 +46,7 @@ try {
   tester
     .run(testFilePath)
     .then((results) => {
-      if (!results) throw new Error(`tester did not return any result for the file ${testFilePath}`);
+      if (!results) throw new GeneralError(`tester did not return any result for the file ${testFilePath}`);
       mockery.disable();
       results.specPath = testFilePath;
       return process.send({ type: 'results', payload: results });

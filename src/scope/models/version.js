@@ -12,6 +12,7 @@ import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constant
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
+import GeneralError from '../../error/general-error';
 
 type CiProps = {
   error: Object,
@@ -116,7 +117,7 @@ export default class Version extends BitObject {
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new Error(`failed creating a version object, the field "${field}" can't be empty`);
+      if (!this[field]) throw new GeneralError(`failed creating a version object, the field "${field}" can't be empty`);
     });
   }
 
@@ -387,34 +388,34 @@ export default class Version extends BitObject {
 
   validate(): void {
     const message = 'unable to save Version object';
-    if (!this.mainFile) throw new Error(`${message}, the mainFile is missing`);
-    if (!isValidPath(this.mainFile)) throw new Error(`${message}, the mainFile ${this.mainFile} is invalid`);
-    if (!this.files || !this.files.length) throw new Error(`${message}, the files are missing`);
+    if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
+    if (!isValidPath(this.mainFile)) throw new GeneralError(`${message}, the mainFile ${this.mainFile} is invalid`);
+    if (!this.files || !this.files.length) throw new GeneralError(`${message}, the files are missing`);
     let foundMainFile = false;
     this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {
-        throw new Error(`${message}, the file ${file.relativePath} is invalid`);
+        throw new GeneralError(`${message}, the file ${file.relativePath} is invalid`);
       }
-      if (!file.name) throw new Error(`${message}, the file ${file.relativePath} is missing the name attribute`);
+      if (!file.name) throw new GeneralError(`${message}, the file ${file.relativePath} is missing the name attribute`);
       if (file.relativePath === this.mainFile) foundMainFile = true;
     });
-    if (!foundMainFile) throw new Error(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
+    if (!foundMainFile) { throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`); }
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {
-          throw new Error(`${message}, the dist-file ${file.relativePath} is invalid`);
+          throw new GeneralError(`${message}, the dist-file ${file.relativePath} is invalid`);
         }
-        if (!file.name) throw new Error(`${message}, the dist-file ${file.relativePath} is missing the name attribute`);
+        if (!file.name) { throw new GeneralError(`${message}, the dist-file ${file.relativePath} is missing the name attribute`); }
       });
     }
     this.dependencies.validate();
     this.devDependencies.validate();
     if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
-      throw new Error(`${message}, it has dependencies but its flattenedDependencies is empty`);
+      throw new GeneralError(`${message}, it has dependencies but its flattenedDependencies is empty`);
     }
     if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
-      throw new Error(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
+      throw new GeneralError(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
     }
-    if (!this.log) throw new Error(`${message},the log object is missing`);
+    if (!this.log) throw new GeneralError(`${message},the log object is missing`);
   }
 }

@@ -38,6 +38,7 @@ import {
 import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
+import GeneralError from '../../../error/general-error';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
@@ -236,7 +237,7 @@ export default class AddComponents {
     const existingComponentId = this.bitMap.getExistingComponentId(currentId);
     const componentExists = !!existingComponentId;
     if (componentExists && this.bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
-      throw new Error(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
+      throw new GeneralError(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
     If you're trying to add a new component, please choose a new namespace or name.
     If you're trying to update a dependency component, please re-import it individually`);
     }
