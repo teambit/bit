@@ -19,7 +19,7 @@ export const FileStatusWithoutChalk = R.fromPairs(
   Object.keys(FileStatus).map(status => [status, Helper.removeChalkCharacters(FileStatus[status])])
 );
 
-describe.only('bit merge command', function () {
+describe('bit merge command', function () {
   this.timeout(0);
   const helper = new Helper();
   before(() => {
