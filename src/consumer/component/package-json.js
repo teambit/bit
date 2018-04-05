@@ -21,6 +21,7 @@ import Consumer from '../consumer';
 import { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import logger from '../../logger/logger';
+import GeneralError from '../../error/general-error';
 
 /**
  * Add components as dependencies to root package.json
@@ -176,7 +177,7 @@ async function write(
 
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
-    if (!distRootDir) throw new Error('component.dists.distsRootDir is not defined yet');
+    if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
     const distPackageJson = getPackageJsonInstance(distRootDir);
     await distPackageJson.write({ override });
   }

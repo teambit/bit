@@ -2,6 +2,7 @@
 import Command from '../../command';
 import { unTagAction } from '../../../api/consumer';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
+import GeneralError from '../../../error/general-error';
 
 const chalk = require('chalk');
 
@@ -18,7 +19,7 @@ export default class Untag extends Command {
 
   action([id, version]: string[], { all, force }: { all: ?boolean, force: ?boolean }): Promise<untagResult[]> {
     if (!id && !all) {
-      throw new Error('please specify a component ID or use --all flag');
+      throw new GeneralError('please specify a component ID or use --all flag');
     }
 
     if (all) {

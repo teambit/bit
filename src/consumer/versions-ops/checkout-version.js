@@ -11,6 +11,7 @@ import { SourceFile } from '../component/sources';
 import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
 import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
+import GeneralError from '../../error/general-error';
 
 export type UseProps = {
   version: string,
@@ -40,7 +41,7 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
   );
   if (componentWithConflict) {
     if (!promptMergeOptions && !useProps.mergeStrategy) {
-      throw new Error(
+      throw new GeneralError(
         `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--manual" to manually merge changes or use "--theirs / --ours" to choose one of the conflicted versions`
       );
     }
@@ -58,15 +59,15 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
   const componentModel = await consumer.scope.sources.get(component.id);
   if (!componentModel) {
-    throw new Error(`component ${component.id.toString()} doesn't have any version yet`);
+    throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
   }
   if (!componentModel.hasVersion(version)) {
-    throw new Error(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
+    throw new GeneralError(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
   const currentlyUsedVersion = BitId.parse(existingBitMapId).version;
   if (currentlyUsedVersion === version) {
-    throw new Error(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
+    throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
   const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
   const isModified = await consumer.isComponentModified(baseComponent, component);
@@ -124,7 +125,7 @@ async function applyVersion(
   const componentsWithDependencies = await consumer.scope.getMany([id]);
   const componentWithDependencies = componentsWithDependencies[0];
   const componentMap = componentFromFS.componentMap;
-  if (!componentMap) throw new Error('applyVersion: componentMap was not found');
+  if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
@@ -180,7 +181,7 @@ async function applyModifiedVersion(
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
     const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new Error(`file ${file.filePath} not found`);
+    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
     if (file.conflict) {
       foundFile.contents = new Buffer(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
@@ -188,7 +189,7 @@ async function applyModifiedVersion(
       foundFile.contents = new Buffer(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
-      throw new Error('file does not have output nor conflict');
+      throw new GeneralError('file does not have output nor conflict');
     }
   });
   const addFilesP = mergeResults.addFiles.map(async (file) => {
@@ -197,7 +198,7 @@ async function applyModifiedVersion(
   });
   const overrideFilesP = mergeResults.overrideFiles.map(async (file) => {
     const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new Error(`file ${file.filePath} not found`);
+    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });

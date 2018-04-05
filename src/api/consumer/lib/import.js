@@ -12,6 +12,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import type { ImportOptions } from '../../../consumer/component/import-components';
 import { Analytics } from '../../../analytics/analytics';
+import GeneralError from '../../../error/general-error';
 
 const key = R.compose(R.head, R.keys);
 
@@ -28,10 +29,10 @@ export default (async function importAction(
 ) {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
-    if (!importOptions.ids.length) throw new Error('you must specify component id for importing an environment');
+    if (!importOptions.ids.length) throw new GeneralError('you must specify component id for importing an environment');
     const idToImport = importOptions.ids[0];
     const envDependencies = await consumer.importEnvironment(idToImport, importOptions.verbose, true);
-    if (!envDependencies.length) throw new Error(`the environment component ${idToImport} is installed already`);
+    if (!envDependencies.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {

@@ -21,6 +21,7 @@ import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased } from '../utils/path';
+import GeneralError from '../error/general-error';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -143,7 +144,7 @@ function getLinkContent(
   }
 
   if (!template) {
-    throw new Error(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+    throw new GeneralError(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
   }
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
@@ -279,7 +280,7 @@ async function writeDependencyLinks(
           parentComponent.id
         }.
 The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
-        throw new Error(errorMessage);
+        throw new GeneralError(errorMessage);
       }
 
       const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {

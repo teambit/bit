@@ -25,6 +25,7 @@ import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import { BitIds } from '../../bit-id';
+import GeneralError from '../../error/general-error';
 
 type State = {
   versions?: {
@@ -248,7 +249,9 @@ export default class Component extends BitObject {
     const versionNum = VersionParser.parse(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
-      throw new Error(`the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`);
+      throw new GeneralError(
+        `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
+      );
     }
     return new ComponentVersion(this, versionNum);
   }
@@ -395,7 +398,7 @@ export default class Component extends BitObject {
 
   validate(): void {
     const message = 'unable to save Component object';
-    if (!this.name) throw new Error(`${message} the name is missing`);
-    if (!this.box) throw new Error(`${message} the box is missing`);
+    if (!this.name) throw new GeneralError(`${message} the name is missing`);
+    if (!this.box) throw new GeneralError(`${message} the box is missing`);
   }
 }

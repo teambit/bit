@@ -10,6 +10,7 @@ import mergeFiles from '../../../utils/merge-files';
 import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
 import type { PathOsBased } from '../../../utils/path';
 import type { SourceFileModel } from '../../../scope/models/version';
+import GeneralError from '../../../error/general-error';
 
 export type MergeResultsTwoWay = {
   addFiles: Array<{
@@ -82,7 +83,7 @@ export default (async function twoWayMergeVersions({
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
   conflictResults.forEach((conflictResult) => {
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
-    if (!modifiedFile) throw new Error(`unable to find ${conflictResult.filePath} in modified files array`);
+    if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
     if (conflictResult.conflict) results.hasConflicts = true;

@@ -3,6 +3,7 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import { removeLocalVersion, removeLocalVersionsForAllComponents } from '../../../scope/component-ops/untag-component';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
+import GeneralError from '../../../error/general-error';
 
 /**
  * in case the untagged version is the current version in bitmap, update to the latest version
@@ -13,7 +14,7 @@ async function updateBitMap(consumer: Consumer, untagResults: untagResult[]): Pr
     const { id, versions, component } = result;
     const idStr = id.toString();
     const currentId = consumer.bitMap.getExistingComponentId(idStr);
-    if (!currentId) throw new Error(`id ${idStr} is missing from bitmap`);
+    if (!currentId) throw new GeneralError(`id ${idStr} is missing from bitmap`);
     const currentBitId = BitId.parse(currentId);
     if (currentBitId.hasVersion() && versions.includes(currentBitId.version)) {
       const newId = currentBitId.clone();

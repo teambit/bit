@@ -13,6 +13,7 @@ import { pathRelativeLinux } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getLinkContent, getIndexFileName } from './link-generator';
 import type { PathOsBased } from '../utils/path';
+import GeneralError from '../error/general-error';
 
 export type LinksResult = {
   id: BitId,
@@ -31,7 +32,7 @@ function createSymlinkOrCopy(componentId, srcPath, destPath) {
     logger.debug(`generating a symlink on ${destPath} pointing to ${srcPath}`);
     symlinkOrCopy.sync(srcPath, destPath);
   } catch (err) {
-    throw new Error(`failed to link a component ${componentId.toString()}.
+    throw new GeneralError(`failed to link a component ${componentId.toString()}.
          Symlink (or maybe copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
          Original error: ${err}`);
   }
