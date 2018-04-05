@@ -252,7 +252,7 @@ describe('bit merge command', function () {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
           helper.importComponent('bar/foo --conf');
-          helper.mergeVersion('0.0.1', 'bar/foo');
+          helper.mergeVersion('0.0.1', 'bar/foo', '--ours');
         });
         it('should not delete the bit.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
