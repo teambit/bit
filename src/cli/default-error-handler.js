@@ -79,7 +79,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
-  [GeneralError, msg => msg],
+  [GeneralError, err => `${err.msg}`],
 
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
