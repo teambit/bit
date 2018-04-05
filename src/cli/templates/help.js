@@ -17,6 +17,8 @@ const baseTemplate = (extensionsTemplate) => {
     ${chalk.cyan('add')}        add any subset of files to be tracked as a component(s).
     ${chalk.cyan('status')}     show the working area component(s) status.
     ${chalk.cyan('tag')}        record component changes and lock versions.
+    ${chalk.cyan('checkout')}   switch between component versions.
+    ${chalk.cyan('merge')}      merge changes of different component versions.
     ${chalk.cyan('untag')}      revert versions tagged for component(s).
     ${chalk.cyan('move')}       move a component to a different filesystem path.
     ${chalk.cyan('untrack')}    untrack a new component(s).
@@ -33,7 +35,7 @@ const baseTemplate = (extensionsTemplate) => {
     ${chalk.cyan('list')}       list components on a local or a remote scope.
 
   ${chalk.underline('examine component history and state')}
-    ${chalk.cyan('log')}        show components(s) tag history.
+    ${chalk.cyan('log')}        show components(s) version history.
     ${chalk.cyan('show')}       show component overview.
 
   ${chalk.underline('component environment operations')}
