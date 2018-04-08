@@ -23,7 +23,7 @@ export default class CompilerExtension extends EnvExtension {
     return extension;
   }
 
-  static loadFromModelObject(modelObject): EnvExtensionProps {
+  static loadFromModelObject(modelObject): CompilerExtension {
     let actualObject;
     if (typeof modelObject === 'string') {
       actualObject = BaseExtension.transformStringToModelObject(modelObject);
