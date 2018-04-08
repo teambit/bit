@@ -126,7 +126,7 @@ export default class AbstractBitJson {
     return !!this.compiler && this.compiler !== NO_PLUGIN_TYPE && !R.isEmpty(this.compiler);
   }
 
-  loadCompiler(consumerPath: string, scopePath: string): ?CompilerExtension {
+  async loadCompiler(consumerPath: string, scopePath: string): Promise<?CompilerExtension> {
     if (!this.hasCompiler()) {
       return null;
     }
@@ -140,7 +140,7 @@ export default class AbstractBitJson {
       rawConfig: compilerObject.rawConfig,
       options: compilerObject.options
     };
-    const compiler = CompilerExtension.load(compilerProps);
+    const compiler = await CompilerExtension.load(compilerProps);
     return compiler;
   }
 

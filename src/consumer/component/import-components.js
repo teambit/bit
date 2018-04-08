@@ -109,7 +109,7 @@ export default class ImportComponents {
     const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
       const compiler = this.consumer.compiler;
-      compiler.install();
+      await compiler.install();
       const envComponents = await this.consumer.scope.installEnvironment({
         ids: [{ componentId: this.consumer.testerId, type: 'tester' }],
         verbose: this.options.verbose

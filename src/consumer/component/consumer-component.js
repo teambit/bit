@@ -771,7 +771,7 @@ export default class Component {
     }
     logger.debug('compiler found, start building');
     if (!this.compiler.loaded) {
-      this.compiler.install(scope, { verbose });
+      await this.compiler.install(scope, { verbose });
     }
 
     const builtFiles = await this.buildIfNeeded({

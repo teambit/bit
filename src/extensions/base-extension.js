@@ -247,8 +247,8 @@ export default class BaseExtension {
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
         const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
-        logger.error(msg);
-        console.error(msg); // eslint-disable-line no-console
+        logger.warn(msg);
+        // console.error(msg); // eslint-disable-line no-console
       }
       logger.error(`loading extension ${extensionProps.name} failed`);
       logger.error(err);

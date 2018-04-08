@@ -3,6 +3,7 @@
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions } from './base-extension';
+import BitId from '../bit-id/bit-id';
 
 type EnvType = 'Compiler' | 'Tester';
 
@@ -24,9 +25,10 @@ export default class EnvExtension extends BaseExtension {
     this.envType = extensionProps.envType;
   }
 
-  install(scope: Scope, opts: { verbose: boolean }) {
-    const installOpts = { ids: [this.name], type: this.envType.toLower(), ...opts };
-    const installResult = scope.installEnvironment(installOpts);
+  async install(scope: Scope, opts: { verbose: boolean }) {
+    const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
+    const installResult = await scope.installEnvironment(installOpts);
+    this.setExtensionPathInScope(scope.getPath());
     this.reload();
     return installResult;
   }
