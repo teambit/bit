@@ -1,4 +1,5 @@
 // TODO - move to language specific driver.
+const GeneralError = require('../error/general-error');
 
 const serializeError = require('serialize-error');
 
@@ -44,7 +45,7 @@ try {
   tester
     .run(testFilePath)
     .then((results) => {
-      if (!results) throw new Error(`tester did not return any result for the file ${testFilePath}`);
+      if (!results) throw new GeneralError(`tester did not return any result for the file ${testFilePath}`);
       mockery.disable();
       results.specPath = testFilePath;
       return process.send({ type: 'results', payload: results });

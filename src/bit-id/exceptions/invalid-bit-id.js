@@ -1,1 +1,4 @@
-export default class InvalidBitId extends Error {}
+/** @flow */
+import AbstractError from '../../error/abstract-error';
+
+export default class InvalidBitId extends AbstractError {}

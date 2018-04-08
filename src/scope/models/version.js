@@ -13,6 +13,7 @@ import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
 import CompilerExtension from '../../extensions/compiler-extension';
+import GeneralError from '../../error/general-error';
 
 type CiProps = {
   error: Object,
@@ -20,14 +21,14 @@ type CiProps = {
   endTime: string
 };
 
-type SourceFile = {
+export type SourceFileModel = {
   name: string,
   relativePath: PathLinux,
   test: boolean,
   file: Ref
 };
 
-type DistFile = SourceFile;
+type DistFileModel = SourceFileModel;
 
 export type Log = {
   message: string,
@@ -37,8 +38,8 @@ export type Log = {
 };
 
 export type VersionProps = {
-  files?: ?Array<SourceFile>,
-  dists?: ?Array<DistFile>,
+  files?: ?Array<SourceFileModel>,
+  dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtension,
   tester?: ?BitId,
   log: Log,
@@ -57,8 +58,8 @@ export type VersionProps = {
 
 export default class Version extends BitObject {
   mainFile: PathLinux;
-  files: Array<SourceFile>;
-  dists: ?Array<DistFile>;
+  files: Array<SourceFileModel>;
+  dists: ?Array<DistFileModel>;
   compiler: ?CompilerExtension;
   tester: ?BitId;
   log: Log;
@@ -117,7 +118,7 @@ export default class Version extends BitObject {
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new Error(`failed creating a version object, the field "${field}" can't be empty`);
+      if (!this[field]) throw new GeneralError(`failed creating a version object, the field "${field}" can't be empty`);
     });
   }
 
@@ -326,11 +327,11 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent,
-    files: ?Array<SourceFile>,
+    files: ?Array<SourceFileModel>,
     flattenedDependencies: BitId[],
     flattenedDevDependencies: BitId[],
     message: string,
-    dists: ?Array<DistFile>,
+    dists: ?Array<DistFileModel>,
     specsResults: ?Results,
     username: ?string,
     email: ?string
@@ -388,34 +389,34 @@ export default class Version extends BitObject {
   validate(): void {
     // TODO: Gilad - add validation for envs
     const message = 'unable to save Version object';
-    if (!this.mainFile) throw new Error(`${message}, the mainFile is missing`);
-    if (!isValidPath(this.mainFile)) throw new Error(`${message}, the mainFile ${this.mainFile} is invalid`);
-    if (!this.files || !this.files.length) throw new Error(`${message}, the files are missing`);
+    if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
+    if (!isValidPath(this.mainFile)) throw new GeneralError(`${message}, the mainFile ${this.mainFile} is invalid`);
+    if (!this.files || !this.files.length) throw new GeneralError(`${message}, the files are missing`);
     let foundMainFile = false;
     this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {
-        throw new Error(`${message}, the file ${file.relativePath} is invalid`);
+        throw new GeneralError(`${message}, the file ${file.relativePath} is invalid`);
       }
-      if (!file.name) throw new Error(`${message}, the file ${file.relativePath} is missing the name attribute`);
+      if (!file.name) throw new GeneralError(`${message}, the file ${file.relativePath} is missing the name attribute`);
       if (file.relativePath === this.mainFile) foundMainFile = true;
     });
-    if (!foundMainFile) throw new Error(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
+    if (!foundMainFile) { throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`); }
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {
-          throw new Error(`${message}, the dist-file ${file.relativePath} is invalid`);
+          throw new GeneralError(`${message}, the dist-file ${file.relativePath} is invalid`);
         }
-        if (!file.name) throw new Error(`${message}, the dist-file ${file.relativePath} is missing the name attribute`);
+        if (!file.name) { throw new GeneralError(`${message}, the dist-file ${file.relativePath} is missing the name attribute`); }
       });
     }
     this.dependencies.validate();
     this.devDependencies.validate();
     if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
-      throw new Error(`${message}, it has dependencies but its flattenedDependencies is empty`);
+      throw new GeneralError(`${message}, it has dependencies but its flattenedDependencies is empty`);
     }
     if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
-      throw new Error(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
+      throw new GeneralError(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
     }
-    if (!this.log) throw new Error(`${message},the log object is missing`);
+    if (!this.log) throw new GeneralError(`${message},the log object is missing`);
   }
 }

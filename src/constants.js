@@ -135,6 +135,10 @@ export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
+export const DEFAULT_BIT_ENV = 'production';
+
+export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';
+
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
 export const SEARCH_DOMAIN = 'api.bitsrc.io';
@@ -155,6 +159,18 @@ export const CFG_USER_NAME_KEY = 'user.name';
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
+
+export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
+
+export const CFG_ANALYTICS_ANONYMOUS_KEY = 'anonymous_reporting';
+
+export const CFG_ANALYTICS_REPORTING_KEY = 'analytics_reporting';
+
+export const CFG_ANALYTICS_ERROR_REPORTS_KEY = 'error_reporting';
+
+export const CFG_ANALYTICS_ENVIRONMENT_KEY = 'bit_environment';
+
+export const CFG_ANALYTICS_USERID_KEY = 'analytics_id';
 
 export const CFG_REGISTRY_DOMAIN_PREFIX = 'registry_domain_prefix';
 

@@ -4,6 +4,7 @@ import Repository from './repository';
 import { deflate, inflate, sha1 } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
+import GeneralError from '../../error/general-error';
 // import logger from '../../logger/logger';
 
 function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
@@ -17,17 +18,17 @@ function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
 
 export default class BitObject {
   id(): string {
-    throw new Error('id() was not implemented...');
+    throw new GeneralError('id() was not implemented...');
   }
 
   // eslint-disable-next-line no-unused-vars
   toBuffer(pretty?: boolean): Buffer {
-    throw new Error('toBuffer() was not implemented...');
+    throw new GeneralError('toBuffer() was not implemented...');
   }
 
   // eslint-disable-next-line no-unused-vars
   static parse(data: *) {
-    throw new Error('parse() was not implemented...');
+    throw new GeneralError('parse() was not implemented...');
   }
 
   refs(): Ref[] {
@@ -116,7 +117,7 @@ export default class BitObject {
   }
 
   validate(): void {
-    throw new Error('validate() was not implemented...');
+    throw new GeneralError('validate() was not implemented...');
   }
 
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {

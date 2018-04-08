@@ -3,11 +3,13 @@
 // set max listeners to a more appripriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;
 require('regenerator-runtime/runtime');
+
 /* eslint-disable no-var */
 const semver = require('semver');
 const mkdirp = require('mkdirp');
-const constants = require('../dist/constants');
+const chalk = require('chalk');
 const roadRunner = require('roadrunner');
+const constants = require('../dist/constants');
 const bitUpdates = require('./bit-updates');
 
 const nodeVersion = process.versions.node.split('-')[0];
@@ -54,7 +56,7 @@ function initCache() {
 }
 
 function checkForUpdates(cb) {
-  return bitUpdates.checkUpdate(cb);
+  return () => bitUpdates.checkUpdate(cb);
 }
 
 function updateOrLaunch(updateCommand) {
@@ -65,7 +67,14 @@ function loadCli() {
   return require('../dist/app.js');
 }
 
+function promptAnalyticsIfNeeded(cb) {
+  // this require is needed here because bit caches are not created yet and will cause exception
+  const { Analytics } = require('../dist/analytics/analytics');
+  return Analytics.promptAnalyticsIfNeeded(process.argv.slice(2))
+    .then(() => cb())
+    .catch(() => console.log(chalk.yellow('\noperation aborted')));
+}
 verifyCompatibility();
 ensureDirectories();
 initCache();
-checkForUpdates(updateOrLaunch);
+promptAnalyticsIfNeeded(checkForUpdates(updateOrLaunch));

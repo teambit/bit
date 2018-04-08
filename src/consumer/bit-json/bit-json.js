@@ -32,10 +32,7 @@ export type BitJsonProps = {
   extensions?: Object
 };
 
-/**
- * Component's bit.json
- */
-export default class BitJson extends AbstractBitJson {
+export default class ComponentBitJson extends AbstractBitJson {
   packageDependencies: { [string]: string };
   devPackageDependencies: ?Object;
   peerPackageDependencies: ?Object;
@@ -104,10 +101,10 @@ export default class BitJson extends AbstractBitJson {
     }
   }
 
-  static fromPlainObject(object: Object): BitJson {
+  static fromPlainObject(object: Object): ComponentBitJson {
     const { sources = {}, env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
 
-    return new BitJson({
+    return new ComponentBitJson({
       impl: R.prop('impl', sources),
       spec: R.prop('spec', sources),
       compiler: R.prop('compiler', env),
@@ -130,17 +127,17 @@ export default class BitJson extends AbstractBitJson {
   /**
    * Use the consumerBitJson as a base. Override values if exist in componentBitJson
    */
-  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): BitJson {
+  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): ComponentBitJson {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
-    return BitJson.fromPlainObject(R.merge(plainProtoBJ, json));
+    return ComponentBitJson.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 
   static create(json = {}, protoBJ: ConsumerBitJson) {
-    return this.mergeWithProto(json, protoBJ);
+    return ComponentBitJson.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<BitJson> {
+  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<ComponentBitJson> {
     return new Promise((resolve, reject) => {
       try {
         const result = this.loadSync(dirPath, protoBJ);
@@ -151,7 +148,7 @@ export default class BitJson extends AbstractBitJson {
     });
   }
 
-  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson) {
+  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitJson {
     let thisBJ = {};
     if (dirPath) {
       const bitJsonPath = composePath(dirPath);
@@ -164,6 +161,6 @@ export default class BitJson extends AbstractBitJson {
       }
     }
 
-    return this.mergeWithProto(thisBJ, protoBJ);
+    return ComponentBitJson.mergeWithProto(thisBJ, protoBJ);
   }
 }

@@ -13,8 +13,9 @@ import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
 import type { RelativePath } from './dependencies/dependency';
 import type { PathLinux } from '../../utils/path';
-import BitJson from '../bit-json';
+import ComponentBitJson from '../bit-json';
 import Dependencies from './dependencies/dependencies';
+import GeneralError from '../../error/general-error';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -114,7 +115,7 @@ function findComponentsOfDepsFiles(
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
         if (!componentFromModel) {
-          throw new Error(`Failed to resolve ${componentId} dependencies because the component is not in the model.
+          throw new GeneralError(`Failed to resolve ${componentId} dependencies because the component is not in the model.
 Try to run "bit import ${componentId} --objects" to get the component saved in the model`);
         }
         const componentBitId = BitId.parse(componentId);
@@ -122,10 +123,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           .getAllDependencies()
           .find(dep => dep.id.toStringWithoutVersion() === componentBitId.toStringWithoutVersion());
         if (!dependency) {
-          throw new Error(
-            `the auto-generated file ${depFile} should be connected to ${
-              componentId
-            }, however, it's not part of the model dependencies of ${componentFromModel.id}`
+          throw new GeneralError(
+            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+              componentFromModel.id
+            }`
           );
         }
         const originallySource: PathLinux = entryComponentMap.originallySharedDir
@@ -135,7 +136,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
           r => r.sourceRelativePath === originallySource
         );
         if (!relativePath) {
-          throw new Error(
+          throw new GeneralError(
             `unable to find ${originallySource} path in the dependencies relativePaths of ${componentFromModel.id}`
           );
         }
@@ -544,7 +545,7 @@ function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId):
   return id.id.toString();
 }
 
-function getIdFromBitJson(bitJson?: BitJson, componentId: BitId): ?string {
+function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?string {
   const getVersion = (): ?string => {
     if (!bitJson) return null;
     if (!bitJson.dependencies && !bitJson.devDependencies) return null;

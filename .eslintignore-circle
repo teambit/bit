@@ -8,6 +8,7 @@ specs/jsdoc/fixtures
 e2e/fixtures
 
 # temporarily, until we fix the errors in these paths
+src/analytics/analytics.js
 e2e/commands/extentsion.e2e.js
 e2e/commands/init.e2e.js
 specs/scope/migrations/objectsFixtures/simple-component.js
@@ -34,7 +35,6 @@ src/git-hooks/exceptions/index.js
 src/git-hooks/git-hook.js
 src/jsdoc/formater.js
 src/prompts/exceptions/index.js
-src/prompts/schemas/remote-remove.js
 src/remotes/remote-resolver/remote-resolver.js
 src/scope/component-objects.js
 src/scope/dependency-maps/sources-map.js

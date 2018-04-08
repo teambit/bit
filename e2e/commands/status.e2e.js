@@ -374,7 +374,7 @@ describe('bit status command', function () {
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
       helper.mimicGitCloneLocalProject(false);
       helper.addRemoteScope();
-      helper.runCmd('bit import --write --force');
+      helper.runCmd('bit import --write --override');
       output = helper.runCmd('bit status');
     });
     it('should display that component as a modified component', () => {
@@ -392,16 +392,20 @@ describe('bit status command', function () {
     });
   });
   describe('with corrupted bit.json', () => {
+    let output;
     before(() => {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
     });
     it('Should not show status if bit.json is corrupted', () => {
       helper.corruptBitJson();
-      const statusCmd = () => helper.runCmd('bit status');
-      expect(statusCmd).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.runCmd('bit status');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('when component files were deleted', () => {

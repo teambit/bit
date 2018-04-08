@@ -1,1 +1,4 @@
-export default class BitNotInScope extends Error {}
+/** @flow */
+import AbstractError from '../../error/abstract-error';
+
+export default class BitNotInScope extends AbstractError {}

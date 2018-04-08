@@ -13,15 +13,19 @@ describe('bit remove command', function () {
     helper.destroyEnv();
   });
   describe('with local scope and corrupted bit.json', () => {
+    let output;
     before(() => {
       helper.initNewLocalScope();
     });
     it('Should not remove component if bit.json is corrupted', () => {
       helper.corruptBitJson();
-      const removeCmd = () => helper.removeComponent('bar/foo2');
-      expect(removeCmd).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.removeComponent('bar/foo2');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('with committed components and -t=false ', () => {
@@ -99,9 +103,35 @@ describe('bit remove command', function () {
       helper.commitComponentBarFoo();
       helper.exportAllComponents();
     });
-    it('should remove remote component', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/bar/foo -s`);
-      expect(output).to.contain.string(`removed components: ${helper.remoteScope}/bar/foo`);
+    describe('without --remote flag', () => {
+      let output;
+      before(() => {
+        output = helper.removeComponent(`${helper.remoteScope}/bar/foo -s`);
+      });
+      it('should show a successful message', () => {
+        expect(output).to.contain.string(`removed components: ${helper.remoteScope}/bar/foo`);
+      });
+      it('should remove the component from the local scope', () => {
+        const lsScope = helper.listLocalScope();
+        expect(lsScope).to.have.string('found 0 components');
+      });
+      it('should not remove the component from the remote scope', () => {
+        const lsScope = helper.listRemoteScope();
+        expect(lsScope).to.not.have.string('found 0 components');
+      });
+    });
+    describe('with --remote flag', () => {
+      let output;
+      before(() => {
+        output = helper.removeComponent(`${helper.remoteScope}/bar/foo --remote -s`);
+      });
+      it('should show a successful message', () => {
+        expect(output).to.contain.string(`removed components: ${helper.remoteScope}/bar/foo`);
+      });
+      it('should not remove the component from the remote scope', () => {
+        const lsScope = helper.listRemoteScope();
+        expect(lsScope).to.have.string('found 0 components');
+      });
     });
   });
   describe('with remote scope with dependencies', () => {
@@ -129,7 +159,7 @@ describe('bit remove command', function () {
       expect(output).to.contain.string(`removed components: ${helper.remoteScope}/${componentName}`);
     });
   });
-  describe('with imported components , no dependecies', () => {
+  describe('with imported components, no dependencies', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component

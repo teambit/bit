@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-
+import path from 'path';
 import Helper from '../e2e-helper';
 
 describe('bit deprecate command', function () {
@@ -9,15 +9,19 @@ describe('bit deprecate command', function () {
     helper.destroyEnv();
   });
   describe('with local scope and corrupted bit.json', () => {
+    let output;
     before(() => {
       helper.initNewLocalScope();
     });
     it('Should not deprecate component if bit.json is corrupted', () => {
       helper.corruptBitJson();
-      const deprecateCmd = () => helper.deprecateComponent('bar/foo2');
-      expect(deprecateCmd).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.deprecateComponent('bar/foo2');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('with local scope and commited components', () => {

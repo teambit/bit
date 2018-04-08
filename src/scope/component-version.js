@@ -7,6 +7,8 @@ import Repository from './objects/repository';
 import VersionDependencies from './version-dependencies';
 import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
+import ConsumerComponent from '../consumer/component';
+import GeneralError from '../error/general-error';
 
 export default class ComponentVersion {
   component: Component;
@@ -52,7 +54,7 @@ export default class ComponentVersion {
       );
       if (this.component.scope === scope.name) {
         // it should have been fetched locally, since it wasn't found, this is an error
-        throw new Error(
+        throw new GeneralError(
           `Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`
         );
       }
@@ -74,13 +76,13 @@ export default class ComponentVersion {
     return new VersionDependencies(this, dependencies, devDependencies, source);
   }
 
-  toConsumer(repo: Repository) {
+  toConsumer(repo: Repository): Promise<ConsumerComponent> {
     return this.component.toConsumerComponent(this.version, this.component.scope, repo);
   }
 
   async toObjects(repo: Repository): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
-    if (!version) throw new Error(`failed loading version ${this.version} of ${this.component.id()}`);
+    if (!version) throw new GeneralError(`failed loading version ${this.version} of ${this.component.id()}`);
     const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
       this.component.asRaw(repo),
       version.collectRaw(repo),

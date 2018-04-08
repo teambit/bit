@@ -2,6 +2,7 @@
 import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
+import Component from '../consumer/component/consumer-component';
 
 export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
 
@@ -11,9 +12,16 @@ export const formatBit = ({ scope, box, name, version }: any): string =>
 export const formatPlainComponentItem = ({ scope, box, name, version, deprecated }: any): string =>
   c.cyan(
     `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${
-      deprecated ? c.yellow('[Deprecated]') : ''
+      deprecated ? c.yellow('[deprecated]') : ''
     }`
   );
+
+export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string => {
+  const status = versions.length ? 'updated' : 'up to date';
+  return `- ${c.green(status)} ${c.cyan(component.id.toStringWithoutVersion())} ${
+    versions.length ? `new versions: ${versions.join(', ')}` : ''
+  } ${component.deprecated ? c.yellow('deprecated') : ''}`;
+};
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);
 
@@ -29,11 +37,11 @@ export const paintHeader = (value: string): string => {
 
 const paintAuthor = (email: ?string, username: ?string): string => {
   if (email && username) {
-    return c.white(`Author: ${username} <${email}>\n`);
+    return c.white(`author: ${username} <${email}>\n`);
   } else if (email && !username) {
-    return c.white(`Author: <${email}>\n`);
+    return c.white(`author: <${email}>\n`);
   } else if (!email && username) {
-    return c.white(`Author: ${username}\n`);
+    return c.white(`author: ${username}\n`);
   }
 
   return '';
@@ -55,8 +63,8 @@ export const paintLog = ({
   return (
     c.yellow(`tag ${tag}\n`) +
     paintAuthor(email, username) +
-    c.white(`Date: ${date}\n`) +
-    c.white(`\n      ${message}\n`)
+    c.white(`date: ${date}\n`) +
+    (message ? c.white(`\n      ${message}\n`) : '')
   );
 };
 

@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import symlinkOrCopy from 'symlink-or-copy';
 import logger from '../../logger/logger';
 import type { PathOsBased } from '../path';
+import GeneralError from '../../error/general-error';
 
 /**
  * @param srcPath the path where the symlink is pointing to
@@ -17,7 +18,7 @@ export default function createSymlinkOrCopy(srcPath: PathOsBased, destPath: Path
     logger.debug(`generating a symlink on ${destPath} pointing to ${srcPath}`);
     symlinkOrCopy.sync(srcPath, destPath);
   } catch (err) {
-    throw new Error(`failed to link a component ${componentId}.
+    throw new GeneralError(`failed to link a component ${componentId}.
          Symlink (or maybe copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
          Original error: ${err}`);
   }

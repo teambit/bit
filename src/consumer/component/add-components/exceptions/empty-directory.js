@@ -1,2 +1,4 @@
-// @flow
-export default class EmptyDirectory extends Error {}
+/** @flow */
+import AbstractError from '../../../../error/abstract-error';
+
+export default class EmptyDirectory extends AbstractError {}

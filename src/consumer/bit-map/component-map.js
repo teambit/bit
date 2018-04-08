@@ -9,6 +9,7 @@ import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import AddComponents from '../component/add-components';
 import { NoFiles, EmptyDirectory } from '../component/add-components/exceptions';
+import GeneralError from '../../error/general-error';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -73,7 +74,9 @@ export default class ComponentMap {
     if (newPath.startsWith('..')) {
       // this is forbidden for security reasons. Allowing files to be written outside the components directory may
       // result in overriding OS files.
-      throw new Error(`unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`);
+      throw new GeneralError(
+        `unable to add file ${filePath} because it's located outside the component root dir ${rootDir}`
+      );
     }
     return newPath;
   }
@@ -231,39 +234,39 @@ export default class ComponentMap {
 
   validate(): void {
     const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
-    if (!this.mainFile) throw new Error(`${errorMessage} mainFile attribute is missing`);
+    if (!this.mainFile) throw new GeneralError(`${errorMessage} mainFile attribute is missing`);
     if (!isValidPath(this.mainFile)) {
-      throw new Error(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
+      throw new GeneralError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
-    // if it's an environment component (such as compiler) the rootDir is an empty string
-    if (this.rootDir === undefined && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      throw new Error(`${errorMessage} rootDir attribute is missing`);
+    // if it's an environment component (such as compiler) the rootDir is empty
+    if (!this.rootDir && this.origin === COMPONENT_ORIGINS.NESTED) {
+      throw new GeneralError(`${errorMessage} rootDir attribute is missing`);
     }
     // $FlowFixMe
     if (this.rootDir && !isValidPath(this.rootDir)) {
-      throw new Error(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
+      throw new GeneralError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
     if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new Error(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
+      throw new GeneralError(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
     }
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      throw new Error(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
+      throw new GeneralError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    if (!this.files || !this.files.length) throw new Error(`${errorMessage} files list is missing`);
+    if (!this.files || !this.files.length) throw new GeneralError(`${errorMessage} files list is missing`);
     this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {
-        throw new Error(`${errorMessage} file path ${file.relativePath} is invalid`);
+        throw new GeneralError(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
     });
     const foundMainFile = this.files.find(file => file.relativePath === this.mainFile);
     if (!foundMainFile || R.isEmpty(foundMainFile)) {
-      throw new Error(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+      throw new GeneralError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
     }
     if (this.trackDir) {
       const trackDir = this.trackDir;
       this.files.forEach((file) => {
         if (!file.relativePath.startsWith(trackDir)) {
-          throw new Error(`${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`);
+          throw new GeneralError(`${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`);
         }
       });
     }

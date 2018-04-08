@@ -12,7 +12,7 @@ import {
   COMPONENT_ORIGINS,
   LATEST_BIT_VERSION
 } from '../../constants';
-import { MergeConflict, ComponentNotFound } from '../exceptions';
+import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
@@ -175,18 +175,12 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
-    const addSharedDir = (pathStr) => {
-      const withSharedDir = consumerComponent.originallySharedDir
-        ? path.join(consumerComponent.originallySharedDir, pathStr)
-        : pathStr;
-      return pathNormalizeToLinux(withSharedDir);
-    };
     const files =
       consumerComponent.files && consumerComponent.files.length
         ? consumerComponent.files.map((file) => {
           return {
             name: file.basename,
-            relativePath: addSharedDir(file.relative),
+            relativePath: consumerComponent.addSharedDir(file.relative),
             file: Source.from(file.contents),
             test: file.test
           };
@@ -196,10 +190,10 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    consumerComponent.mainFile = addSharedDir(consumerComponent.mainFile);
+    consumerComponent.mainFile = consumerComponent.addSharedDir(consumerComponent.mainFile);
     consumerComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
-        relativePath.sourceRelativePath = addSharedDir(relativePath.sourceRelativePath);
+        relativePath.sourceRelativePath = consumerComponent.addSharedDir(relativePath.sourceRelativePath);
       });
     });
     const version = Version.fromComponent({
@@ -327,25 +321,28 @@ export default class SourceRepository {
   /**
    * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
    *
-   * When this function get called originally from import command, the 'force' parameter is true. Otherwise, if it was
+   * When this function gets called originally from import command, the 'local' parameter is true. Otherwise, if it was
    * originated from export command, it'll be false.
-   * If the 'force' is true and the existing component wasn't changed locally, it doesn't check for
+   * If the 'local' is true and the existing component wasn't changed locally, it doesn't check for
    * discrepancies, but simply override the existing component.
    * When using import command, it makes sense to override a component in case of discrepancies because the source of
-   * true should be the remote scope from where the import fetches the component.
+   * truth should be the remote scope from where the import fetches the component.
    */
-  merge({ component, objects }: ComponentTree, inScope: boolean = false, force: boolean = true): Promise<Component> {
+  merge({ component, objects }: ComponentTree, inScope: boolean = false, local: boolean = true): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
     return this.findComponent(component).then((existingComponent: ?Component) => {
       if (
         !existingComponent ||
-        (force && !existingComponent.isLocallyChanged()) ||
+        (local && !existingComponent.isLocallyChanged()) ||
         component.compatibleWith(existingComponent)
       ) {
         return this.put({ component, objects });
       }
 
-      throw new MergeConflict(component.id());
+      const conflictVersions = component.diffWith(existingComponent);
+      throw local
+        ? new MergeConflict(component.id(), conflictVersions)
+        : new MergeConflictOnRemote(component.id(), conflictVersions);
     });
   }
 }

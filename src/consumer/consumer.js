@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
+import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies, NewerVersionFound } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
@@ -52,6 +52,8 @@ import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
 import CompilerExtension from '../extensions/compiler-extension';
 import type { PathOsBased } from '../utils/path';
+import { Analytics } from '../analytics/analytics';
+import GeneralError from '../error/general-error';
 
 type ConsumerProps = {
   projectPath: string,
@@ -156,7 +158,9 @@ export default class Consumer {
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
-      throw new Error(`Failed loading the driver for ${this.bitJson.lang}. Got an error from the driver: ${err}`);
+      throw new GeneralError(
+        `Failed loading the driver for ${this.bitJson.lang}. Got an error from the driver: ${err}`
+      );
     }
   }
 
@@ -169,6 +173,8 @@ export default class Consumer {
    */
   async migrate(verbose): Object {
     logger.debug('running migration process for consumer');
+    Analytics.addBreadCrumb('migrate', 'running migration process for consumer');
+
     // Check version of stores (bitmap / bitjson) to check if we need to run migrate
     // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
@@ -211,6 +217,10 @@ export default class Consumer {
     return this.projectPath;
   }
 
+  toAbsolutePath(pathStr: string): PathOsBased {
+    return path.join(this.projectPath, pathStr);
+  }
+
   getPathRelativeToConsumer(pathToCheck: string): PathOsBased {
     const absolutePath = path.resolve(pathToCheck);
     return path.relative(this.getPath(), absolutePath);
@@ -226,12 +236,20 @@ export default class Consumer {
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], deletedComponents: BitId[] }> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
+    Analytics.addBreadCrumb(
+      'load components',
+      `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
+    );
     const alreadyLoadedComponents = [];
     const idsToProcess = [];
     const deletedComponents = [];
     ids.forEach((id) => {
       if (this._componentsCache[id.toString()]) {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
+        Analytics.addBreadCrumb(
+          'load components',
+          `the component ${Analytics.hashData(id.toString())} has been already loaded, use the cached component`
+        );
         alreadyLoadedComponents.push(this._componentsCache[id.toString()]);
       } else {
         idsToProcess.push(id);
@@ -272,6 +290,10 @@ export default class Consumer {
         if (throwOnFailure) throw err;
 
         logger.error(`failed loading ${id} from the file-system`);
+        Analytics.addBreadCrumb(
+          'load components',
+          `failed loading ${Analytics.hashData(id.toString())} from the file-system`
+        );
         if (err instanceof MissingFilesFromComponent || err instanceof ComponentNotFoundInPath) {
           deletedComponents.push(id);
           return null;
@@ -302,6 +324,7 @@ export default class Consumer {
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debug(`Finished loading the component, ${component.id.toString()}`);
+        Analytics.addBreadCrumb(`Finished loading the component, ${Analytics.hashData(component.id.toString())}`);
         allComponents.push(component);
       }
     }
@@ -346,7 +369,7 @@ export default class Consumer {
     silentPackageManagerResult,
     componentsWithDependencies,
     writeToPath,
-    force = true, // override files
+    override = true, // override files
     writePackageJson = true,
     writeBitJson = true,
     writeBitDependencies = false,
@@ -362,7 +385,7 @@ export default class Consumer {
     silentPackageManagerResult: boolean,
     componentsWithDependencies: ComponentWithDependencies[],
     writeToPath?: string,
-    force?: boolean,
+    override?: boolean,
     writePackageJson?: boolean,
     writeBitJson?: boolean,
     writeBitDependencies?: boolean,
@@ -378,7 +401,9 @@ export default class Consumer {
     const dependenciesIdsCache = [];
     const remotes: Remotes = await this.scope.remotes();
     const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      const bitDir = writeToPath || this.composeComponentPath(componentWithDeps.component.id);
+      const bitDir = writeToPath
+        ? path.resolve(writeToPath)
+        : this.composeComponentPath(componentWithDeps.component.id);
       // if it doesn't go to the hub, it can't import dependencies as packages
       componentWithDeps.component.dependenciesSavedAsComponents =
         saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
@@ -397,7 +422,7 @@ export default class Consumer {
       componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
       return componentWithDeps.component.write({
         bitDir,
-        force,
+        override,
         writeBitJson,
         writePackageJson,
         origin,
@@ -419,6 +444,12 @@ export default class Consumer {
           logger.debug(
             `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
           );
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
+              dependencyId
+            )}. It'll be installed later using npm-client`
+          );
           return Promise.resolve(null);
         }
         if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
@@ -426,11 +457,21 @@ export default class Consumer {
           logger.debug(
             `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
           );
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
+              dependencyId
+            )} as it already exists in bit map and file system`
+          );
           this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (dependenciesIdsCache[dependencyId]) {
           logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in cache`
+          );
           dep.writtenPath = dependenciesIdsCache[dependencyId];
           this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
@@ -443,7 +484,7 @@ export default class Consumer {
         const componentMap = this.bitMap.getComponent(dep.id.toString(), false);
         return dep.write({
           bitDir: depBitPath,
-          force,
+          override,
           writePackageJson,
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
@@ -500,10 +541,10 @@ export default class Consumer {
 
   moveExistingComponent(component: Component, oldPath: string, newPath: string) {
     if (fs.existsSync(newPath)) {
-      throw new Error(
-        `could not move the component ${component.id} from ${oldPath} to ${
-          newPath
-        } as the destination path already exists`
+      throw new GeneralError(
+        `could not move the component ${
+          component.id
+        } from ${oldPath} to ${newPath} as the destination path already exists`
       );
     }
     const componentMap = this.bitMap.getComponent(component.id);
@@ -648,7 +689,7 @@ export default class Consumer {
       status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
       if (!status.staged && !componentFromFileSystem.id.hasVersion()) {
-        throw new Error(
+        throw new GeneralError(
           `component ${id} has an invalid state.
            1) it has a model instance so it's not new.
            2) it's not in staged state.
@@ -658,7 +699,7 @@ export default class Consumer {
         );
       }
       const versionRef = componentFromModel.versions[versionFromFs];
-      if (!versionRef) throw new Error(`version ${versionFromFs} was not found in ${id}`);
+      if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${id}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;
@@ -676,18 +717,35 @@ export default class Consumer {
     releaseType: string,
     force: ?boolean,
     verbose: ?boolean,
-    ignoreMissingDependencies: ?boolean
+    ignoreMissingDependencies: ?boolean,
+    ignoreNewestVersion: boolean
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
+    Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
     const componentsIds = ids.map(componentId => BitId.parse(componentId));
     const { components } = await this.loadComponents(componentsIds);
-    // Run over the components to check if there is missing dependencies
-    // If there is at least one we won't commit anything
+    // go through the components list to check if there are missing dependencies
+    // if there is at least one we won't commit anything
     if (!ignoreMissingDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.missingDependencies);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
+    // check for each one of the components whether it is using an old version
+    if (!ignoreNewestVersion) {
+      const throwForNewestVersions = components.map(async (component) => {
+        if (component.componentFromModel) {
+          // otherwise it's a new component, so this check is irrelevant
+          const modelComponent = await this.scope.getModelComponentIfExist(component.id);
+          if (!modelComponent) throw new GeneralError('');
+          const latest = modelComponent.latest();
+          if (latest !== component.version) {
+            throw new NewerVersionFound(component.id.toStringWithoutVersion(), component.version, latest);
+          }
+        }
+      });
+      await Promise.all(throwForNewestVersions);
     }
     const { taggedComponents, autoTaggedComponents } = await this.scope.putMany({
       consumerComponents: components,
@@ -712,7 +770,9 @@ export default class Consumer {
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
-    if (!id.scope) throw new Error(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    if (!id.scope) {
+      throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    }
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
@@ -728,7 +788,7 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_SEPARATOR);
-    if (pathSplit.length < 3) throw new Error(`component has an invalid require statement: ${requirePath}`);
+    if (pathSplit.length < 3) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
 
     const name = pathSplit[pathSplit.length - 1];
     const box = pathSplit[pathSplit.length - 2];
@@ -744,6 +804,7 @@ export default class Consumer {
   composeComponentPath(bitId: BitId): PathOsBased {
     const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
+    Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
   }
 
@@ -756,9 +817,9 @@ export default class Consumer {
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) {
-      throw new Error(`unable to move because both paths from (${from}) and to (${to}) already exist`);
+      throw new GeneralError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
     }
-    if (!fromExists && !toExists) throw new Error(`both paths from (${from}) and to (${to}) do not exist`);
+    if (!fromExists && !toExists) throw new GeneralError(`both paths from (${from}) and to (${to}) do not exist`);
 
     const fromRelative = this.getPathRelativeToConsumer(from);
     const toRelative = this.getPathRelativeToConsumer(to);
@@ -880,19 +941,30 @@ export default class Consumer {
    * splits array of ids into local and remote and removes according to flags
    * @param {string[]} ids - list of remote component ids to delete
    * @param {boolean} force - delete component that are used by other components.
+   * @param {boolean} remote - delete component from a remote scope
    * @param {boolean} track - keep tracking local staged components in bitmap.
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
-  async remove(ids: string[], force: boolean, track: boolean, deleteFiles: boolean) {
+  async remove(ids: string[], force: boolean, remote: boolean, track: boolean, deleteFiles: boolean) {
     logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
+    Analytics.addBreadCrumb(
+      'remove',
+      `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
+    );
     // added this to remove support for remove version
     const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
       id.version = LATEST_BIT_VERSION;
       return id;
     });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
-    const localResult = await this.removeLocal(localIds, force, track, deleteFiles);
-    const remoteResult = !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
+    if (remote && localIds.length) {
+      throw new GeneralError(
+        `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
+      );
+    }
+    const remoteResult = remote && !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
+    const localResult = !remote ? await this.removeLocal(bitIds, force, track, deleteFiles) : new RemovedLocalObjects();
+
     return { localResult, remoteResult };
   }
 
@@ -982,7 +1054,12 @@ export default class Consumer {
    * @param {boolean} force - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
-  async removeLocal(bitIds: BitIds, force: boolean, track: boolean, deleteFiles: boolean) {
+  async removeLocal(
+    bitIds: BitIds,
+    force: boolean,
+    track: boolean,
+    deleteFiles: boolean
+  ): Promise<RemovedLocalObjects> {
     // local remove in case user wants to delete tagged components
     const modifiedComponents = [];
     const regularComponents = [];
@@ -1028,6 +1105,10 @@ export default class Consumer {
 
   async addRemoteAndLocalVersionsToDependencies(component: Component, loadedFromFileSystem: boolean) {
     logger.debug(`addRemoteAndLocalVersionsToDependencies for ${component.id.toString()}`);
+    Analytics.addBreadCrumb(
+      'addRemoteAndLocalVersionsToDependencies',
+      `addRemoteAndLocalVersionsToDependencies for ${Analytics.hashData(component.id.toString())}`
+    );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {

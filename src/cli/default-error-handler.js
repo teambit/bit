@@ -3,17 +3,16 @@
 // if you handle the error, then return true
 import chalk from 'chalk';
 import { InvalidBitId, InvalidIdChunk } from '../bit-id/exceptions';
-import BitAlreadyExistExternaly from '../consumer/component/exceptions/bit-already-exist-externaly';
 import {
   ConsumerAlreadyExists,
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
-  MissingDependencies
+  MissingDependencies,
+  NewerVersionFound
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
-import BuildException from '../consumer/component/exceptions/build-exception';
 import MissingFilesFromComponent from '../consumer/component/exceptions/missing-files-from-component';
 import PluginNotFound from '../consumer/component/exceptions/plugin-not-found';
 import PermissionDenied from '../scope/network/exceptions/permission-denied';
@@ -34,6 +33,7 @@ import {
   CorruptedComponent,
   VersionAlreadyExists,
   MergeConflict,
+  MergeConflictOnRemote,
   CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
@@ -56,6 +56,10 @@ import {
   MissingComponentIdForImportedComponent,
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
+import { Analytics, LEVEL } from '../analytics/analytics';
+import ExternalTestError from '../consumer/component/exceptions/external-test-error';
+import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import GeneralError from '../error/general-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -75,6 +79,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
+  [GeneralError, err => `${err.msg}`],
+
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
   // [
@@ -117,19 +123,29 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
     MergeConflict,
     err =>
-      `error: merge conflict occurred when exporting the component ${
-        err.id
-      }.\nto resolve it, please import the latest version of the remote component, and apply your changes before exporting the component.`
+      `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
+        ', '
+      )}
+to resolve it and merge your local and remote changes, please do the following:
+1) bit untag ${err.id} ${err.versions.join(' ')}
+2) bit import
+3) bit checkout ${err.versions.join(' ')} ${err.id}`
+  ],
+  [
+    MergeConflictOnRemote,
+    err =>
+      `error: merge conflict occurred when exporting the component ${err.id} to the remote scope.
+to resolve this conflict and merge your remote and local changes, please do the following:
+1) bit untag ${err.id} ${err.versions.join(' ')}
+2) bit import
+3) bit checkout {conflict-version} ${err.id}
+once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
   [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
-  [
-    BuildException,
-    err => `error: bit failed to build ${err.id} with the following exception:\n ${err.message} \n ${err.stack || ''}`
-  ],
   [
     MissingDependencies,
     (err) => {
@@ -221,7 +237,27 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
   ],
   [NothingToCompareTo, err => 'no previous versions to compare'],
-  [PromptCanceled, err => chalk.yellow('operation was aborted')],
+  [
+    NewerVersionFound,
+    err => `unable to tag ${err.componentId}
+current version ${err.currentVersion} is older than the latest ${err.newestVersion}.
+to ignore this error, please use --ignore-newest-version flag`
+  ],
+  [PromptCanceled, err => chalk.yellow('operation aborted')],
+  [
+    ExternalTestError,
+    err =>
+      `error: bit failed to test ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
+  [
+    ExternalBuildError,
+    err =>
+      `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
   [
     AuthenticationFailed,
     err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
@@ -229,6 +265,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 ];
 
 function formatUnhandled(err: Error): string {
+  Analytics.setError(LEVEL.FATAL, err);
   return chalk.red(err.message || err);
 }
 
@@ -238,6 +275,9 @@ export default (err: Error): ?string => {
   });
 
   if (!error) return formatUnhandled(err);
+  /* this is an error that bit knows how to handle dont send to sentry */
+
+  Analytics.setError(LEVEL.INFO, err.makeAnonymous());
   const [, func] = error;
   logger.error(`User gets the following error: ${func(err)}`);
   return chalk.red(func(err));

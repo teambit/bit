@@ -9,6 +9,7 @@ import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { missingDependenciesLabels } from '../../templates/missing-dependencies-template';
 import { formatNew } from '../../templates/status-templates';
+import { Analytics } from '../../../analytics/analytics';
 
 export default class Status extends Command {
   name = 'status';
@@ -29,7 +30,8 @@ export default class Status extends Command {
     componentsWithMissingDeps,
     importPendingComponents,
     autoTagPendingComponents,
-    deletedComponents
+    deletedComponents,
+    outdatedComponents
   }: StatusResult): string {
     function formatMissing(missingComponent: Component) {
       function formatMissingStr(key, array, label) {
@@ -45,7 +47,10 @@ export default class Status extends Command {
       }
 
       const missingStr = Object.keys(missingDependenciesLabels)
-        .map(key => formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]))
+        .map((key) => {
+          if (missingComponent.missingDependencies[key]) Analytics.incExtraDataKey(key);
+          return formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]);
+        })
         .join('');
 
       return `       ${missingStr}\n`;
@@ -69,13 +74,28 @@ export default class Status extends Command {
     }
 
     const importPendingWarning = importPendingComponents.length
-      ? chalk.yellow('some of your components are not imported yet, please use "bit import"\n\n')
+      ? chalk.yellow(
+        'your workspace has outdated objects, please use "bit import" to pull the latest object from the remote scope\n\n'
+      )
       : '';
 
     const splitByMissing = R.groupBy((component) => {
       return component.includes('missing dependencies') ? 'missing' : 'nonMissing';
     });
     const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
+
+    const outdatedTitle = chalk.underline.white('pending updates');
+    const outdatedDesc =
+      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit log [component_id]" to list all available versions)\n';
+    const outdatedComps = outdatedComponents
+      .map((component) => {
+        return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
+          component.latestVersion
+        }\n`;
+      })
+      .join('');
+
+    const outdatedStr = outdatedComponents.length ? [outdatedTitle, outdatedDesc, outdatedComps].join('\n') : '';
 
     const newComponentDescription = '\n(use "bit tag --all [version]" to lock a version with all your changes)\n';
     const newComponentsTitle = newComponents.length
@@ -96,9 +116,11 @@ export default class Status extends Command {
         : ''
     ).join('\n');
 
+    const deletedDesc =
+      '\nthese components were deleted from your project.\nuse "bit remove [component_id]" to remove these component from your workspace\n';
     const deletedComponentOutput = immutableUnshift(
       deletedComponents.map(c => format(c)),
-      deletedComponents.length ? chalk.underline.white('deleted components') : ''
+      deletedComponents.length ? chalk.underline.white('deleted components') + deletedDesc : ''
     ).join('\n');
 
     const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
@@ -110,6 +132,7 @@ export default class Status extends Command {
     return (
       importPendingWarning +
         [
+          outdatedStr,
           newComponentsOutput,
           modifiedComponentOutput,
           stagedComponentsOutput,

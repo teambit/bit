@@ -7,6 +7,7 @@ import { BitId } from '../../../bit-id';
 import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 import InvalidVersion from './exceptions/invalid-version';
+import { Analytics } from '../../../analytics/analytics';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -17,9 +18,19 @@ export async function commitAction(args: {
   releaseType: string,
   force: ?boolean,
   verbose?: boolean,
-  ignoreMissingDependencies?: boolean
+  ignoreMissingDependencies?: boolean,
+  ignoreNewestVersion: boolean
 }) {
-  const { id, message, exactVersion, releaseType, force, verbose, ignoreMissingDependencies } = args;
+  const {
+    id,
+    message,
+    exactVersion,
+    releaseType,
+    force,
+    verbose,
+    ignoreMissingDependencies,
+    ignoreNewestVersion
+  } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
   const consumer: Consumer = await loadConsumer();
@@ -36,7 +47,8 @@ export async function commitAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies
+    ignoreMissingDependencies,
+    ignoreNewestVersion
   );
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
@@ -65,6 +77,7 @@ export async function commitAllAction(args: {
   force: ?boolean,
   verbose?: boolean,
   ignoreMissingDependencies?: boolean,
+  ignoreNewestVersion: boolean,
   scope?: boolean,
   includeImported?: boolean
 }) {
@@ -75,6 +88,7 @@ export async function commitAllAction(args: {
     force,
     verbose,
     ignoreMissingDependencies,
+    ignoreNewestVersion,
     scope,
     includeImported
   } = args;
@@ -97,12 +111,17 @@ export async function commitAllAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies
+    ignoreMissingDependencies,
+    ignoreNewestVersion
   );
   commitResults.warnings = warnings;
 
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, commitResults);
+  Analytics.setExtraData(
+    'num_components',
+    R.concat(commitResults.taggedComponents, commitResults.autoTaggedComponents, commitResults.newComponents).length
+  );
   return commitResults;
 }
 

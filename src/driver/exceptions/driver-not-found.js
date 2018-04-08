@@ -1,5 +1,7 @@
-// @flow
-export default class DriverNotFoundError extends Error {
+/** @flow */
+import AbstractError from '../../error/abstract-error';
+
+export default class DriverNotFoundError extends AbstractError {
   driver: string;
   lang: string;
   name: string;

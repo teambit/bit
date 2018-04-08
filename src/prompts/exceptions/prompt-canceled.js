@@ -1,3 +1,4 @@
 /** @flow */
+import AbstractError from '../../error/abstract-error';
 
-export default class PromptCanceled extends Error {}
+export default class PromptCanceled extends AbstractError {}

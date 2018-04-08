@@ -5,7 +5,9 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
+import { expect } from 'chai';
 import { VERSION_DELIMITER, BIT_VERSION } from '../src/constants';
+import defaultErrorHandler from '../src/cli/default-error-handler';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -65,6 +67,22 @@ export default class Helper {
       output = err.toString() + err.stdout.toString();
     }
     return output;
+  }
+
+  static removeChalkCharacters(str?: ?string): ?string {
+    if (!str) return str;
+    return str.replace(/\u001b\[.*?m/g, '');
+  }
+
+  expectToThrow(cmdFunc: Function, error: Error) {
+    let output;
+    try {
+      cmdFunc();
+    } catch (err) {
+      output = err.toString();
+    }
+    const errorString = defaultErrorHandler(error);
+    expect(Helper.removeChalkCharacters(output)).to.have.string(Helper.removeChalkCharacters(errorString));
   }
 
   setHubDomain(domain: string = 'hub.bitsrc.io') {
@@ -278,6 +296,10 @@ export default class Helper {
   listLocalScope(options: string = '') {
     return this.runCmd(`bit list ${options}`);
   }
+  listLocalScopeParsed(options: string = '') {
+    const output = this.runCmd(`bit list --json ${options}`);
+    return JSON.parse(output);
+  }
 
   getNewBareScope(scopeNameSuffix?: string = '-remote2') {
     const scopeName = generateRandomStr() + scopeNameSuffix;
@@ -339,7 +361,7 @@ export default class Helper {
     return this.runCmd(`bit export ${scope}`);
   }
 
-  importComponent(id) {
+  importComponent(id: string) {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
@@ -465,6 +487,10 @@ export default class Helper {
     fs.outputFileSync(filePath, fixture);
   }
 
+  readFile(filePath: string): string {
+    return fs.readFileSync(path.join(this.localScopePath, filePath)).toString();
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
@@ -570,8 +596,12 @@ export default class Helper {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
 
-  useVersion(version: string, ids: string) {
-    return this.runCmd(`bit use ${version} ${ids}`);
+  checkoutVersion(version: string, ids: string, flags?: string, cwd?: string) {
+    return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`, cwd);
+  }
+
+  mergeVersion(version: string, ids: string, flags?: string) {
+    return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
 
   getBitVersion() {

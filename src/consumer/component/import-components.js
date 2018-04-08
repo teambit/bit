@@ -11,6 +11,7 @@ import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
 import { filterAsync } from '../../utils';
 import CompilerExtension from '../../extensions/compiler-extension';
+import GeneralError from '../../error/general-error';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -20,14 +21,19 @@ export type ImportOptions = {
   writePackageJson: boolean, // default: true
   writeBitJson: boolean, // default: false
   writeDists: boolean, // default: true
-  force: boolean, // default: false
+  override: boolean, // default: false
   installNpmPackages: boolean, // default: true
   objectsOnly: boolean, // default: false
   writeToFs: boolean, // default: false. relevant only for import-all, where "objectsOnly" flag is default to true.
   saveDependenciesAsComponents?: boolean // default: false
 };
 
-export type ImportResult = Promise<{ dependencies: ComponentWithDependencies[], envDependencies?: Component[] }>;
+export type ImportedVersions = { [id: string]: string[] };
+export type ImportResult = Promise<{
+  dependencies: ComponentWithDependencies[],
+  envDependencies?: Component[],
+  importedVersions: ImportedVersions
+}>;
 
 export default class ImportComponents {
   consumer: Consumer;
@@ -56,10 +62,12 @@ export default class ImportComponents {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw));
+    const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._warnForModifiedOrNewComponents(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
     await this._writeToFileSystem(componentsWithDependencies);
-    return { dependencies: componentsWithDependencies };
+    const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsWithDependencies);
+    return { dependencies: componentsWithDependencies, importedVersions };
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
@@ -75,7 +83,9 @@ export default class ImportComponents {
         return Promise.reject(new NothingToImport());
       }
     }
-    await this._warnForModifiedOrNewComponents(dependenciesFromBitJson.concat(componentsFromBitMap));
+    const allDependenciesIds = dependenciesFromBitJson.concat(componentsFromBitMap);
+    await this._warnForModifiedOrNewComponents(allDependenciesIds);
+    const beforeImportVersions = await this._getCurrentVersions(allDependenciesIds);
 
     let componentsAndDependenciesBitJson = [];
     let componentsAndDependenciesBitMap = [];
@@ -96,6 +106,7 @@ export default class ImportComponents {
       await this._writeToFileSystem(componentsAndDependenciesBitMap, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
+    const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
       const compiler = this.consumer.compiler;
       compiler.install();
@@ -105,17 +116,47 @@ export default class ImportComponents {
       });
       return {
         dependencies: componentsAndDependencies,
-        envDependencies: envComponents
+        envDependencies: envComponents,
+        importedVersions
       };
     }
-    return { dependencies: componentsAndDependencies };
+
+    return { dependencies: componentsAndDependencies, importedVersions };
+  }
+
+  async _getCurrentVersions(ids: BitId[]): ImportedVersions {
+    const versionsP = ids.map(async (id) => {
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+      const idStr = id.toStringWithoutVersion();
+      if (!modelComponent) return [idStr, []];
+      return [idStr, modelComponent.listVersions()];
+    });
+    const versions = await Promise.all(versionsP);
+    return R.fromPairs(versions);
+  }
+
+  /**
+   * diff between the versions array before import and after import
+   */
+  async _getVersionsDiff(currentVersions: ImportedVersions, components: ComponentWithDependencies[]): ImportedVersions {
+    const versionsP = components.map(async (component) => {
+      const id = component.component.id;
+      const idStr = id.toStringWithoutVersion();
+      const beforeImportVersions = currentVersions[idStr];
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
+      if (!modelComponent) throw new GeneralError(`imported component ${idStr} was not found in the model`);
+      const afterImportVersions = modelComponent.listVersions();
+      return [idStr, R.difference(afterImportVersions, beforeImportVersions)];
+    });
+    const versions = await Promise.all(versionsP);
+    return R.fromPairs(versions);
   }
 
   async _warnForModifiedOrNewComponents(ids: BitId[]) {
     // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.force || this.options.objectsOnly) return Promise.resolve();
+    if (this.options.override || this.options.objectsOnly) return Promise.resolve();
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
@@ -123,7 +164,7 @@ export default class ImportComponents {
     if (modifiedComponents.length) {
       return Promise.reject(
         chalk.yellow(
-          `unable to import the following components due to local changes, use --force flag to override your local changes\n${modifiedComponents.join(
+          `unable to import the following components due to local changes, use --override flag to override your local changes\n${modifiedComponents.join(
             '\n'
           )} `
         )
@@ -132,7 +173,7 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, force: boolean = true) {
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, override: boolean = true) {
     if (this.options.objectsOnly) return;
     await this.consumer.writeToComponentsDir({
       componentsWithDependencies,
@@ -143,7 +184,7 @@ export default class ImportComponents {
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
-      force
+      override
     });
   }
 }

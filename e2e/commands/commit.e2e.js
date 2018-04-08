@@ -21,15 +21,20 @@ describe('bit tag command', function () {
     logSpy = sinon.spy(console, 'log');
   });
   describe('tag component with corrupted bitjson', () => {
+    let output;
     it('Should not commit component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js');
-      const commit = () => helper.commitComponent('bar/foo2');
+
       helper.corruptBitJson();
-      expect(commit).to.throw(
-        'error: invalid bit.json: SyntaxError: Unexpected token o in JSON at position 1 is not a valid JSON file.'
-      );
+      try {
+        helper.commitComponent('bar/foo2');
+      } catch (err) {
+        output = err.toString();
+      }
+      expect(output).to.include('error: invalid bit.json: ');
+      expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
   describe('tag component with invalid mainFile in bitmap', () => {
@@ -77,7 +82,11 @@ describe('bit tag command', function () {
         helper.addComponent('components/default.js');
         output = helper.commitComponent('components/default');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/default', localVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({
+          id: 'components/default',
+          localVersion: '0.0.1',
+          currentVersion: '0.0.1'
+        });
       });
       it('Should increment the patch version when no version type specified', () => {
         output = helper.commitComponent('components/default', 'message', '-f');
@@ -113,8 +122,16 @@ describe('bit tag command', function () {
         helper.commitAllComponents();
         helper.commitComponent('components/dependency', 'message', '-f --major');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/dependency', localVersion: '1.0.0' });
-        expect(listOutput).to.deep.include({ id: 'components/dependent', localVersion: '0.0.2' });
+        expect(listOutput).to.deep.include({
+          id: 'components/dependency',
+          localVersion: '1.0.0',
+          currentVersion: '1.0.0'
+        });
+        expect(listOutput).to.deep.include({
+          id: 'components/dependent',
+          localVersion: '0.0.2',
+          currentVersion: '0.0.2'
+        });
       });
       it('Should throw error when the version already exists', () => {
         helper.commitComponent('components/exact 5.5.5', 'message', '-f');
@@ -157,8 +174,8 @@ describe('bit tag command', function () {
       it('Should set the version to default version in tag new component', () => {
         helper.commitAllComponents();
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1' });
-        expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1', currentVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1', currentVersion: '0.0.1' });
       });
       it('Should increment the patch version when no version type specified', () => {
         helper.createFile('components', 'a.js', 'v0.0.2');

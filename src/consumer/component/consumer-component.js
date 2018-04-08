@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
-import BitJson from '../bit-json';
+import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
 import Consumer from '../consumer';
@@ -14,7 +14,6 @@ import docsParser, { Doclet } from '../../jsdoc/parser';
 import specsRunner from '../../specs-runner';
 import SpecsResults from '../specs-results';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
-import BuildException from './exceptions/build-exception';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
@@ -44,6 +43,9 @@ import Dists from './sources/dists';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
+import ExternalTestError from './exceptions/external-test-error';
+import ExternalBuildError from './exceptions/external-build-error';
+import GeneralError from '../../error/general-error';
 
 export type ComponentProps = {
   name: string,
@@ -55,7 +57,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   testerId?: ?BitId,
-  bitJson?: BitJson,
+  bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
@@ -63,7 +65,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
-  files?: ?(SourceFile[]) | [],
+  files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
   specsResults?: ?SpecsResults,
@@ -82,7 +84,7 @@ export default class Component {
   mainFile: PathOsBased;
   compiler: ?CompilerExtension;
   testerId: ?BitId;
-  bitJson: ?BitJson;
+  bitJson: ?ComponentBitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   flattenedDevDependencies: BitIds;
@@ -91,7 +93,7 @@ export default class Component {
   devPackageDependencies: Object;
   peerPackageDependencies: Object;
   _docs: ?(Doclet[]);
-  _files: ?(SourceFile[]) | [];
+  _files: SourceFile[];
   dists: Dists;
   specsResults: ?(SpecsResults[]);
   license: ?License;
@@ -109,11 +111,11 @@ export default class Component {
   _driver: Driver;
   _isModified: boolean;
 
-  set files(val: ?(SourceFile[])) {
+  set files(val: SourceFile[]) {
     this._files = val;
   }
 
-  get files(): ?(SourceFile[]) {
+  get files(): SourceFile[] {
     if (!this._files) return null;
     if (this._files instanceof Array) return this._files;
 
@@ -206,7 +208,9 @@ export default class Component {
   validateComponent() {
     const nonEmptyFields = ['name', 'box', 'mainFile'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new Error(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+      if (!this[field]) {
+        throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+      }
     });
   }
 
@@ -238,8 +242,8 @@ export default class Component {
     return homepage;
   }
 
-  writeBitJson(bitDir: string, force?: boolean = true): Promise<Component> {
-    return new BitJson({
+  writeBitJson(bitDir: string, override?: boolean = true): Promise<Component> {
+    return new ComponentBitJson({
       version: this.version,
       scope: this.scope,
       lang: this.lang,
@@ -251,7 +255,7 @@ export default class Component {
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies
-    }).write({ bitDir, override: force });
+    }).write({ bitDir, override });
   }
 
   getPackageNameAndPath(): Promise<any> {
@@ -263,11 +267,11 @@ export default class Component {
   async writePackageJson(
     consumer: Consumer,
     bitDir: string,
-    force?: boolean = true,
+    override?: boolean = true,
     writeBitDependencies?: boolean = false,
     excludeRegistryPrefix?: boolean = false
   ): Promise<boolean> {
-    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+    return packageJson.write(consumer, this, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
   }
 
   flattenedDependencies(): BitIds {
@@ -333,8 +337,7 @@ export default class Component {
           return compiler.oldAction(files, rootDistFolder, context);
         })
         .catch((e) => {
-          if (verbose) throw new BuildException(this.id.toString(), e.stack || e);
-          throw new BuildException(this.id.toString(), e.message || e);
+          throw new ExternalBuildError(e, this.id.toString());
         });
     };
 
@@ -371,7 +374,7 @@ export default class Component {
     writeBitJson,
     writePackageJson,
     consumer,
-    force = true,
+    override = true,
     writeBitDependencies = false,
     deleteBitDirContent = false,
     excludeRegistryPrefix = false
@@ -380,7 +383,7 @@ export default class Component {
     writeBitJson: boolean,
     writePackageJson: boolean,
     consumer?: Consumer,
-    force?: boolean,
+    override?: boolean,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
     excludeRegistryPrefix?: boolean
@@ -390,16 +393,16 @@ export default class Component {
     } else {
       await mkdirp(bitDir);
     }
-    if (this.files) await this.files.forEach(file => file.write(undefined, force));
+    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson) await this.writeBitJson(bitDir, force);
+    if (writeBitJson) await this.writeBitJson(bitDir, override);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
     if (writePackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
-      await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+      await this.writePackageJson(consumer, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
     }
-    if (this.license && this.license.src) await this.license.write(bitDir, force);
+    if (this.license && this.license.src) await this.license.write(bitDir, override);
     logger.debug('component has been written successfully');
     return this;
   }
@@ -455,6 +458,20 @@ export default class Component {
     this._wasOriginallySharedDirStripped = true;
   }
 
+  addSharedDir(pathStr: string): PathLinux {
+    const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
+    return pathNormalizeToLinux(withSharedDir);
+  }
+
+  cloneFilesWithSharedDir(): SourceFile[] {
+    return this.files.map((file) => {
+      const newFile = file.clone();
+      const newRelative = this.addSharedDir(file.relative);
+      newFile.updatePaths({ newBase: file.base, newRelative });
+      return newFile;
+    });
+  }
+
   /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
@@ -464,29 +481,31 @@ export default class Component {
     bitDir,
     writeBitJson = true,
     writePackageJson = true,
-    force = true,
+    override = true,
     origin,
     parent,
     consumer,
     writeBitDependencies = false,
+    deleteBitDirContent,
     componentMap,
     excludeRegistryPrefix = false
   }: {
     bitDir?: string,
     writeBitJson?: boolean,
     writePackageJson?: boolean,
-    force?: boolean,
+    override?: boolean,
     origin?: string,
     parent?: BitId,
     consumer?: Consumer,
     writeBitDependencies?: boolean,
+    deleteBitDirContent?: boolean,
     componentMap: ComponentMap,
     excludeRegistryPrefix?: boolean
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
     const bitMap: ?BitMap = consumer ? consumer.bitMap : undefined;
-    if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+    if (!this.files) throw new GeneralError(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
     // Update files base dir according to bitDir
@@ -503,7 +522,7 @@ export default class Component {
         writeBitJson,
         writePackageJson,
         consumer,
-        force,
+        override,
         writeBitDependencies,
         excludeRegistryPrefix
       });
@@ -521,7 +540,9 @@ export default class Component {
     // Otherwise, when the author adds new files outside of the previous originallySharedDir and this user imports them
     // the environment will contain both copies, the old one with the old originallySharedDir and the new one.
     // If a user made changes to the imported component, it will show a warning and stop the process.
-    const deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
+    if (typeof deleteBitDirContent === 'undefined') {
+      deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
+    }
     // when there is componentMap, this component (with this version or other version) is already part of the project.
     // There are several options as to what was the origin before and what is the origin now and according to this,
     // we update/remove/don't-touch the record in bit.map.
@@ -555,12 +576,11 @@ export default class Component {
       writeBitJson,
       writePackageJson: actualWithPackageJson,
       consumer,
-      force,
+      override,
       writeBitDependencies,
       deleteBitDirContent,
       excludeRegistryPrefix
     });
-    // if (bitMap.isExistWithSameVersion(this.id)) return this; // no need to update bit.map
     const rootDir = componentMap.rootDir;
     if (bitMap.isExistWithSameVersion(this.id)) {
       if (componentMap.originallySharedDir === this.originallySharedDir) return this;
@@ -625,7 +645,13 @@ export default class Component {
           testFile
         });
       });
-      const specsResults: RawTestsResults[] = await Promise.all(specsResultsP);
+      let specsResults: RawTestsResults[];
+      try {
+        specsResults = await Promise.all(specsResultsP);
+      } catch (err) {
+        throw new ExternalTestError(err, this.id.toString());
+      }
+
       this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));
 
       if (rejectOnFailure && !this.specsResults.every(element => element.pass)) {
@@ -759,7 +785,7 @@ export default class Component {
     // return buildFilesP.then((buildedFiles) => {
     builtFiles.forEach((file) => {
       if (file && (!file.contents || !isString(file.contents.toString()))) {
-        throw new Error('builder interface has to return object with a code attribute that contains string');
+        throw new GeneralError('builder interface has to return object with a code attribute that contains string');
       }
     });
     this.setDists(builtFiles.map(file => new Dist(file)));
@@ -778,7 +804,7 @@ export default class Component {
       return isolatedEnvironment.path;
     } catch (err) {
       await isolatedEnvironment.destroy();
-      throw new Error(err);
+      throw new GeneralError(err);
     }
   }
 
@@ -949,7 +975,6 @@ export default class Component {
     let packageDependencies;
     let devPackageDependencies;
     let peerPackageDependencies;
-    let bitJson: BitJson | ConsumerBitJson = consumerBitJson;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
@@ -981,20 +1006,22 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
+    let componentBitJson: ComponentBitJson | typeof undefined;
+    let componentBitJsonFileExist = false;
     if (bitDir !== consumerPath) {
-      bitJson = BitJson.loadSync(bitDir, consumerBitJson);
-      if (bitJson) {
-        packageDependencies = bitJson.packageDependencies;
-        devPackageDependencies = bitJson.devPackageDependencies;
-        peerPackageDependencies = bitJson.peerPackageDependencies;
+      componentBitJson = ComponentBitJson.loadSync(bitDir, consumerBitJson);
+      packageDependencies = componentBitJson.packageDependencies;
+      devPackageDependencies = componentBitJson.devPackageDependencies;
+      peerPackageDependencies = componentBitJson.peerPackageDependencies;
+      // by default, imported components are not written with bit.json file.
+      // use the component from the model to get their bit.json values
+      componentBitJsonFileExist = fs.existsSync(path.join(bitDir, BIT_JSON));
+      if (!componentBitJsonFileExist && componentFromModel) {
+        componentBitJson.mergeWithComponentData(componentFromModel);
       }
     }
-
-    // by default, imported components are not written with bit.json file.
-    // use the component from the model to get their bit.json values
-    if (!fs.existsSync(path.join(bitDir, BIT_JSON)) && componentFromModel) {
-      bitJson.mergeWithComponentData(componentFromModel);
-    }
+    // for authored componentBitJson is normally undefined
+    const bitJson = componentBitJson || consumerBitJson;
 
     // Remove dists if compiler has been deleted
     if (dists && !bitJson.hasCompiler()) {
@@ -1012,7 +1039,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       testerId: BitId.parse(bitJson.testerId),
-      bitJson,
+      bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       dists,

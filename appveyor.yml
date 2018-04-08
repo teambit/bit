@@ -47,8 +47,8 @@ install:
   - ps: $pubSshContent = $env:testerBitsrcSSHPublicKey.Replace(' ', "`n")
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa.pub $pubSshContent
   # prod registry
-  - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n" 
-  - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n" 
+  - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n"
+  - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n"
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
   - ps: Install-Product node 6
@@ -58,6 +58,8 @@ install:
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bitsrc.io"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
+  - "bit config set analytics_reporting false"
+  - "bit config set error_reporting false"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 
 build_script:

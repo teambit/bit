@@ -8,6 +8,7 @@ import groupby from 'lodash.groupby';
 import unionBy from 'lodash.unionby';
 import ignore from 'ignore';
 import arrayDiff from 'array-difference';
+import { Analytics } from '../../../analytics/analytics';
 import {
   glob,
   isDir,
@@ -37,6 +38,7 @@ import {
 import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
+import GeneralError from '../../../error/general-error';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
@@ -235,7 +237,7 @@ export default class AddComponents {
     const existingComponentId = this.bitMap.getExistingComponentId(currentId);
     const componentExists = !!existingComponentId;
     if (componentExists && this.bitMap.getComponent(existingComponentId).origin === COMPONENT_ORIGINS.NESTED) {
-      throw new Error(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
+      throw new GeneralError(`One of your dependencies (${existingComponentId}) has already the same namespace and name.
     If you're trying to add a new component, please choose a new namespace or name.
     If you're trying to update a dependency component, please re-import it individually`);
     }
@@ -406,13 +408,11 @@ export default class AddComponents {
 
   getIgnoreList(): string[] {
     let ignoreList = retrieveIgnoreList(this.consumer.getPath());
-    if (!this.consumer.bitJson.distTarget) {
-      const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
-      const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
-        pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
-      );
-      ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    }
+    const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
+    const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
+      pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
+    );
+    ignoreList = ignoreList.concat(distDirsOfImportedComponents);
     return ignoreList;
   }
 
@@ -487,6 +487,7 @@ export default class AddComponents {
       }
     }
     if (this.writeToBitMap) await this.bitMap.write();
+    Analytics.setExtraData('num_components', addedComponents.length);
     return { addedComponents, warnings: this.warnings };
   }
 }
