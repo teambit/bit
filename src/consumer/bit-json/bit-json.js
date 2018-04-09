@@ -118,7 +118,6 @@ export default class ComponentBitJson extends AbstractBitJson {
   }
 
   mergeWithComponentData(component: Component) {
-    this.compiler = component.compiler ? component.compiler.toBitJsonObject() : null;
     this.tester = component.testerId ? component.testerId.toString() : null;
     this.bindingPrefix = component.bindingPrefix;
     this.lang = component.lang;

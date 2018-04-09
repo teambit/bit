@@ -36,6 +36,12 @@ type InstanceSpecificProps = {
 };
 
 export type BaseExtensionProps = InstanceSpecificProps & StaticProps;
+
+export type BaseExtensionModel = {
+  name: string,
+  config: Object
+};
+
 // export type BaseExtensionProps = {
 //   ...InstanceSpecificProps,
 //   ...StaticProps

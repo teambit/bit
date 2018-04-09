@@ -24,7 +24,8 @@ export type RegularExtensionObject = {
 
 export type CompilerExtensionObject = {
   rawConfig: Object,
-  options: CompilerExtensionOptions
+  options: CompilerExtensionOptions,
+  files: string[]
 };
 
 export type Extensions = { [extensionName: string]: RegularExtensionObject };
@@ -138,6 +139,7 @@ export default class AbstractBitJson {
       consumerPath,
       scopePath,
       rawConfig: compilerObject.rawConfig,
+      files: compilerObject.files,
       options: compilerObject.options
     };
     const compiler = await CompilerExtension.load(compilerProps);

@@ -2,9 +2,11 @@
 
 import EnvExtension from './env-extension';
 import BaseExtension from './base-extension';
-import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions } from './env-extension';
+import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension';
+import { Repository } from '../scope/objects';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
+export type CompilerExtensionModel = EnvExtensionModel;
 
 export default class CompilerExtension extends EnvExtension {
   constructor(extensionProps: EnvExtensionProps) {
@@ -13,6 +15,16 @@ export default class CompilerExtension extends EnvExtension {
     this.envType = extensionProps.envType;
   }
 
+  toModelObject(): CompilerExtensionModel {
+    const envModelObject: EnvExtensionModel = super.toModelObject();
+    const modelObject = { ...envModelObject };
+    return modelObject;
+  }
+
+  /**
+   * Loading from props (usually from bit.json)
+   * @param {*} props
+   */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     props.envType = 'Compiler';
     const envExtensionProps: EnvExtensionProps = await super.load(props);
@@ -23,7 +35,10 @@ export default class CompilerExtension extends EnvExtension {
     return extension;
   }
 
-  static loadFromModelObject(modelObject): CompilerExtension {
+  static async loadFromModelObject(
+    modelObject: CompilerExtensionModel,
+    repository: Repository
+  ): Promise<CompilerExtension> {
     let actualObject;
     if (typeof modelObject === 'string') {
       actualObject = BaseExtension.transformStringToModelObject(modelObject);
@@ -31,7 +46,7 @@ export default class CompilerExtension extends EnvExtension {
       actualObject = { ...modelObject };
     }
     actualObject.envType = 'Compiler';
-    const envExtensionProps: EnvExtensionProps = super.loadFromModelObject(actualObject);
+    const envExtensionProps: EnvExtensionProps = await super.loadFromModelObject(actualObject, repository);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
     return extension;
   }

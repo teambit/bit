@@ -1,14 +1,19 @@
 /** @flow */
 
+import R from 'ramda';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
-import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions } from './base-extension';
+import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
+import ExtensionFile from './extension-file';
+import type { ExtensionFileModel } from './extension-file';
+import Repository from '../scope/repository';
 
 type EnvType = 'Compiler' | 'Tester';
 
 type EnvExtensionExtraProps = {
-  envType: EnvType
+  envType: EnvType,
+  files?: ExtensionFile[]
 };
 
 export type EnvExtensionOptions = BaseExtensionOptions;
@@ -17,21 +22,12 @@ export type EnvLoadArgsProps = BaseLoadArgsProps & EnvExtensionExtraProps;
 
 export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps;
 
+export type EnvExtensionModel = BaseExtensionModel & {
+  files: ExtensionFileModel[]
+};
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
-
-  constructor(extensionProps: EnvExtensionProps) {
-    super(extensionProps);
-    this.envType = extensionProps.envType;
-  }
-
-  async install(scope: Scope, opts: { verbose: boolean }) {
-    const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
-    const installResult = await scope.installEnvironment(installOpts);
-    this.setExtensionPathInScope(scope.getPath());
-    this.reload();
-    return installResult;
-  }
+  files: ExtensionFile[];
 
   /**
    * Return the play action
@@ -55,15 +51,46 @@ export default class EnvExtension extends BaseExtension {
     return undefined;
   }
 
+  constructor(extensionProps: EnvExtensionProps) {
+    super(extensionProps);
+    this.envType = extensionProps.envType;
+    this.files = extensionProps.files;
+  }
+
+  async install(scope: Scope, opts: { verbose: boolean }) {
+    const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
+    const installResult = await scope.installEnvironment(installOpts);
+    this.setExtensionPathInScope(scope.getPath());
+    this.reload();
+    return installResult;
+  }
+
+  toModelObject(): EnvExtensionModel {
+    const baseObject: BaseExtensionModel = super.toModelObject();
+    const files = this.files.map(file => file.toModelObject());
+    const modelObject = { files, ...baseObject };
+    return modelObject;
+  }
+
+  /**
+   * Loading from props (usually from bit.json)
+   * @param {*} props
+   */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
-    const envExtensionProps: EnvExtensionProps = { envType: props.envType, ...baseExtensionProps };
+    const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath);
+    const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
     return envExtensionProps;
   }
 
-  static loadFromModelObject(modelObject): EnvExtensionProps {
+  static async loadFromModelObject(modelObject: EnvExtensionModel, repository: Repository): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
-    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, ...baseExtensionProps };
+    let files = [];
+    if (modelObject.files && !R.isEmpty(modelObject.files)) {
+      const loadFilesP = modelObject.files.map(file => ExtensionFile.loadFromExtensionFileModel(file, repository));
+      files = await Promise.all(loadFilesP);
+    }
+    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, files, ...baseExtensionProps };
     return envExtensionProps;
   }
 }

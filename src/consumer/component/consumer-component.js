@@ -944,7 +944,7 @@ export default class Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 
-    // added if statment to support new and old version of remote ls
+    // added if statement to support new and old version of remote ls
     // old version of bit returns from server array of dists  and new version return object
     if (object.dists && Array.isArray(object.dists)) {
       object.dists = Dist.loadFromParsedStringArray(object.dists);
@@ -1028,7 +1028,11 @@ export default class Component {
       dists = undefined;
     }
 
-    const compiler = await bitJson.loadCompiler(consumerPath, consumer.scope.getPath());
+    let compiler;
+    if (bitJson.hasCompiler()) {
+      compiler = await bitJson.loadCompiler(consumerPath, consumer.scope.getPath());
+    } else {
+    }
 
     return new Component({
       name: id.name,

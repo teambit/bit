@@ -413,7 +413,6 @@ export default class Scope {
         : null;
 
       const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
-
       const component = await this.sources.addSource({
         source: consumerComponent,
         flattenedDependencies,
@@ -424,9 +423,13 @@ export default class Scope {
         dists,
         specsResults: testResult ? testResult.specs : undefined
       });
+
       const deps = await component.toVersionDependencies(LATEST, this, this.name);
       consumerComponent.version = deps.component.version;
-      await deps.toConsumer(this.objects);
+
+      // TODO: Gilad - comment this, not sure it's necessary
+      // await deps.toConsumer(this.objects);
+
       // await index(consumerComponent, this.getPath());
       return consumerComponent;
     });

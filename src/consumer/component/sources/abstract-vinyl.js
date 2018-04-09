@@ -5,6 +5,12 @@ import Vinyl from 'vinyl';
 import logger from '../../../logger/logger';
 import type { PathOsBased } from '../../../utils/path';
 
+type AbstractVinylProps = {
+  cwd: PathOsBased,
+  path: PathOsBased,
+  base: PathOsBased,
+  contents: Buffer
+};
 export default class AbstractVinyl extends Vinyl {
   base: PathOsBased;
   path: PathOsBased;
@@ -33,7 +39,7 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedString(parsedString: Object) {
+  static loadFromParsedString(parsedString: Object): ?AbstractVinylProps {
     if (!parsedString) return undefined;
     const contents = Buffer.isBuffer(parsedString._contents)
       ? parsedString._contents
@@ -46,7 +52,7 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedStringArray(arr: Object[]) {
+  static loadFromParsedStringArray(arr: Object[]): ?(AbstractVinylProps[]) {
     if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
   }

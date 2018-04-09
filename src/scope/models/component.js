@@ -26,6 +26,7 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import { BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
+import CompilerExtension from '../../extensions/compiler-extension';
 
 type State = {
   versions?: {
@@ -256,64 +257,48 @@ export default class Component extends BitObject {
     return new ComponentVersion(this, versionNum);
   }
 
-  toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
+  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
-    return componentVersion.getVersion(repository).then((version: Version) => {
-      const filesP = version.files
-        ? Promise.all(
-          version.files.map(file =>
-            file.file
-              .load(repository)
-              .then(
-                content =>
-                  new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test })
-              )
-          )
-        )
-        : null;
-      const distsP = version.dists
-        ? Promise.all(
-          version.dists.map(dist =>
-            dist.file.load(repository).then((content) => {
-              return new Dist({ base: '.', path: dist.relativePath, contents: content.contents, test: dist.test });
-            })
-          )
-        )
-        : null;
-      const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
-      const log = version.log || null;
-      return Promise.all([filesP, distsP, scopeMetaP]).then(([files, dists, scopeMeta]) => {
-        // when generating a new ConsumerComponent out of Version, it is critical to make sure that
-        // all objects are cloned and not copied by reference. Otherwise, every time the
-        // ConsumerComponent instance is changed, the Version will be changed as well, and since
-        // the Version instance is saved in the Repository._cache, the next time a Version instance
-        // is retrieved, it'll be different than the first time.
-        return new ConsumerComponent({
-          name: this.name,
-          box: this.box,
-          version: componentVersion.version,
-          scope: this.scope,
-          lang: this.lang,
-          bindingPrefix: this.bindingPrefix,
-          mainFile: version.mainFile || null,
-          compiler: version.compiler,
-          testerId: version.tester,
-          dependencies: version.dependencies.getClone(),
-          devDependencies: version.devDependencies.getClone(),
-          flattenedDependencies: BitIds.clone(version.flattenedDependencies),
-          flattenedDevDependencies: BitIds.clone(version.flattenedDevDependencies),
-          packageDependencies: clone(version.packageDependencies),
-          devPackageDependencies: clone(version.devPackageDependencies),
-          peerPackageDependencies: clone(version.peerPackageDependencies),
-          files,
-          dists,
-          docs: version.docs,
-          license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
-          specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
-          log,
-          deprecated: this.deprecated
-        });
-      });
+    const version: Version = await componentVersion.getVersion(repository);
+    const loadFileInstance = className => async (file) => {
+      const content = file.file.load(repository);
+      return new className({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
+    };
+    const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
+    const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
+    const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
+    const log = version.log || null;
+    const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
+    const [files, dists, scopeMeta, compiler] = await Promise.all([filesP, distsP, scopeMetaP, compilerP]);
+    // when generating a new ConsumerComponent out of Version, it is critical to make sure that
+    // all objects are cloned and not copied by reference. Otherwise, every time the
+    // ConsumerComponent instance is changed, the Version will be changed as well, and since
+    // the Version instance is saved in the Repository._cache, the next time a Version instance
+    // is retrieved, it'll be different than the first time.
+    return new ConsumerComponent({
+      name: this.name,
+      box: this.box,
+      version: componentVersion.version,
+      scope: this.scope,
+      lang: this.lang,
+      bindingPrefix: this.bindingPrefix,
+      mainFile: version.mainFile || null,
+      compiler,
+      testerId: version.tester,
+      dependencies: version.dependencies.getClone(),
+      devDependencies: version.devDependencies.getClone(),
+      flattenedDependencies: BitIds.clone(version.flattenedDependencies),
+      flattenedDevDependencies: BitIds.clone(version.flattenedDevDependencies),
+      packageDependencies: clone(version.packageDependencies),
+      devPackageDependencies: clone(version.devPackageDependencies),
+      peerPackageDependencies: clone(version.peerPackageDependencies),
+      files,
+      dists,
+      docs: version.docs,
+      license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+      specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
+      log,
+      deprecated: this.deprecated
     });
   }
 
