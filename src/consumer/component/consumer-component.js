@@ -1001,6 +1001,7 @@ export default class Component {
       }
       return sourceFiles;
     };
+
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
@@ -1028,11 +1029,14 @@ export default class Component {
       dists = undefined;
     }
 
-    let compiler;
-    if (bitJson.hasCompiler()) {
-      compiler = await bitJson.loadCompiler(consumerPath, consumer.scope.getPath());
-    } else {
-    }
+    const compiler = await CompilerExtension.loadFromCorrectSource(
+      consumerPath,
+      consumer.scope.getPath(),
+      componentMap.origin,
+      componentFromModel,
+      consumerBitJson,
+      componentBitJson
+    );
 
     return new Component({
       name: id.name,
