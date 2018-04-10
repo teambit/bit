@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.11-dev.4] - 2018-04-10
+
+- hanging process in case of running non exist command
+
 ## [0.12.11-dev.3] - 2018-04-05
 
 - rename `--force` flag of `bit import` to `--override`

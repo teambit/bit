@@ -127,7 +127,7 @@ class Analytics {
 
   static async sendData() {
     if (this.analytics_usage || (this.error_usage && !this.success)) {
-      const forked = fork(path.join(__dirname, 'analytics_sender.js'));
+      const forked = fork(path.join(__dirname, 'analytics-sender.js'), { silent: true });
       forked.send(this.toObject());
     }
 
