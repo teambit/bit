@@ -129,7 +129,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 to resolve it and merge your local and remote changes, please do the following:
 1) bit untag ${err.id} ${err.versions.join(' ')}
 2) bit import
-3) bit checkout ${err.versions.join(' ')} ${err.id}`
+3) bit checkout ${err.versions.join(' ')} ${err.id}
+once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`
   ],
   [
     MergeConflictOnRemote,
@@ -138,7 +139,7 @@ to resolve it and merge your local and remote changes, please do the following:
 to resolve this conflict and merge your remote and local changes, please do the following:
 1) bit untag ${err.id} ${err.versions.join(' ')}
 2) bit import
-3) bit checkout {conflict-version} ${err.id}
+3) bit checkout ${err.versions.join(' ')} ${err.id}
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
