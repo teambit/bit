@@ -1,6 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { objectToTupleArray } from '../../../utils';
+import chalk from 'chalk';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
 
@@ -36,7 +37,7 @@ class ConfigSet extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'added configuration successfully';
+    return chalk.green('added configuration successfully');
   }
 }
 
@@ -85,6 +86,6 @@ class ConfigDel extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'deleted successfully';
+    return chalk.green('deleted successfully');
   }
 }
