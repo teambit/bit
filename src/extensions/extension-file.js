@@ -55,7 +55,9 @@ export default class ExtensionFile extends AbstractVinyl {
   static loadFromParsedString(parsedString: Object): ?ExtensionFile {
     if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
-    return new ExtensionFile(opts);
+    const extensionFile = new ExtensionFile(opts);
+    extensionFile.file = Source.from(extensionFile.contents);
+    return extensionFile;
   }
 
   static loadFromParsedStringArray(arr: Object[]): ?Array<?ExtensionFile> {
@@ -67,6 +69,7 @@ export default class ExtensionFile extends AbstractVinyl {
     // $FlowFixMe
     const content = await file.file.load(repository);
     const extensionFile = new ExtensionFile({ base: '.', path: file.name, contents: content.contents });
+    extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
     return extensionFile;
   }

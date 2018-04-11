@@ -261,7 +261,7 @@ export default class Component extends BitObject {
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
     const loadFileInstance = className => async (file) => {
-      const content = file.file.load(repository);
+      const content = await file.file.load(repository);
       return new className({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
