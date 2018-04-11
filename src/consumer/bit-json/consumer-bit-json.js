@@ -9,6 +9,7 @@ import {
   BIT_JSON,
   DEFAULT_COMPONENTES_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
+  DEFAULT_EJECTED_ENVS_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
@@ -38,6 +39,7 @@ type consumerBitJsonProps = {
   distEntry?: ?string,
   componentsDefaultDirectory?: string,
   dependenciesDirectory?: string,
+  ejectedEnvsDirectory?: string,
   bindingPrefix?: string,
   extensions?: Extensions,
   packageManager?: 'npm' | 'yarn',
@@ -54,6 +56,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   distEntry: ?string;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
+  ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'npm' | 'yarn'; // package manager client to use
   packageManagerArgs: ?(string[]); // package manager client to use
@@ -73,6 +76,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     distEntry,
     componentsDefaultDirectory = DEFAULT_COMPONENTES_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
+    ejectedEnvsDirectory = DEFAULT_EJECTED_ENVS_DIR_PATH,
     bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
@@ -86,6 +90,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory;
     this.dependenciesDirectory = dependenciesDirectory;
+    this.ejectedEnvsDirectory = ejectedEnvsDirectory;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents;
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
@@ -99,6 +104,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     let consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
+      ejectedEnvsDirectory: this.ejectedEnvsDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
@@ -115,6 +121,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
+      if (key === 'ejectedEnvsDirectory') return val !== DEFAULT_EJECTED_ENVS_DIR_PATH;
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
@@ -159,6 +166,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       lang,
       componentsDefaultDirectory,
       dependenciesDirectory,
+      ejectedEnvsDirectory,
       dist,
       bindingPrefix,
       extensions,
@@ -182,6 +190,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
+      ejectedEnvsDirectory,
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,

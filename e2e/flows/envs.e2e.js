@@ -18,7 +18,7 @@ chai.use(require('chai-fs'));
 // eject to custom folder
 // add dynamic deps from the compiler to component dev deps
 // dynamic config should be written as raw config when ejecting
-//
+// change the default dir for envs (in consumer bit.json)
 
 describe.skip('envs', function () {
   this.timeout(0);

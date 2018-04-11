@@ -1,6 +1,8 @@
 /** @flow */
 
+import path from 'path';
 import R from 'ramda';
+import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
@@ -8,6 +10,7 @@ import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import Repository from '../scope/repository';
+import { pathJoinLinux } from '../utils';
 
 type EnvType = 'Compiler' | 'Tester';
 
@@ -72,10 +75,12 @@ export default class EnvExtension extends BaseExtension {
     return modelObject;
   }
 
-  toBitJsonObject(): Compilers {
+  // TODO: Gilad - change the return type
+  toBitJsonObject(ejectedCompilerDirectory: string): Compilers {
     const files = {};
     this.files.forEach((file) => {
-      files[file.name] = file.relative;
+      const relativePath = pathJoinLinux(ejectedCompilerDirectory, file.name);
+      files[file.name] = `./${relativePath}`;
     });
     const envVal = {
       rawConfig: this.dynamicConfig,
@@ -85,6 +90,30 @@ export default class EnvExtension extends BaseExtension {
     return {
       [this.name]: envVal
     };
+  }
+
+  /**
+   * Write the env files to the file system according to the template dir
+   * used for ejecting env for imported component
+   * @param {*} param0
+   */
+  async writeFilesToFs({
+    bitDir,
+    ejectedEnvsDirectory,
+    envType
+  }: {
+    bitDir: string,
+    ejectedEnvsDirectory: string,
+    envType: EnvType
+  }): Promise<string> {
+    const resolvedEjectedEnvsDirectory = format(ejectedEnvsDirectory, { envType });
+    const newBase = path.join(bitDir, resolvedEjectedEnvsDirectory);
+    const writeP = this.files.map((file) => {
+      file.updatePaths({ newBase, newRelative: file.name });
+      return file.write();
+    });
+    await Promise.all(writeP);
+    return resolvedEjectedEnvsDirectory;
   }
 
   /**

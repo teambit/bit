@@ -242,13 +242,20 @@ export default class Component {
     return homepage;
   }
 
-  writeBitJson(bitDir: string, override?: boolean = true): Promise<Component> {
+  async writeConfig(bitDir: string, ejectedEnvsDirectory: string, override?: boolean = true): Promise<void> {
+    const ejectedCompilerDirectory = this.compiler
+      ? await this.compiler.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
+      : '';
+    return this.writeBitJson(bitDir, ejectedCompilerDirectory, override);
+  }
+
+  writeBitJson(bitDir: string, ejectedCompilerDirectory: string, override?: boolean = true): Promise<ComponentBitJson> {
     return new ComponentBitJson({
       version: this.version,
       scope: this.scope,
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
-      compiler: this.compiler ? this.compiler.toBitJsonObject() : {},
+      compiler: this.compiler ? this.compiler.toBitJsonObject(ejectedCompilerDirectory) : {},
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies.asWritableObject(),
       devDependencies: this.devDependencies.asWritableObject(),
@@ -395,7 +402,7 @@ export default class Component {
     }
     if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson) await this.writeBitJson(bitDir, override);
+    if (writeBitJson) await this.writeConfig(bitDir, consumer.dirStructure.ejectedEnvsDirStructure, override);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)

@@ -27,6 +27,21 @@ export default class CompilerExtension extends EnvExtension {
   }
 
   /**
+   * Write the env files to the file system according to the template dir
+   * used for ejecting env for imported component
+   * @param {*} param0
+   */
+  async writeFilesToFs({
+    bitDir,
+    ejectedEnvsDirectory
+  }: {
+    bitDir: string,
+    ejectedEnvsDirectory: string
+  }): Promise<string> {
+    return super.writeFilesToFs({ bitDir, ejectedEnvsDirectory, envType: this.envType });
+  }
+
+  /**
    * Loading from props (usually from bit.json)
    * @param {*} props
    */

@@ -1,14 +1,20 @@
 // @flow
 import R from 'ramda';
-import { DEFAULT_COMPONENTES_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
+import {
+  DEFAULT_COMPONENTES_DIR_PATH,
+  DEFAULT_DEPENDENCIES_DIR_PATH,
+  DEFAULT_EJECTED_ENVS_DIR_PATH
+} from '../../constants';
 import GeneralError from '../../error/general-error';
 
 export default class BitStructure {
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
-  constructor(componentsDefaultDirectory, dependenciesDirectory) {
+  ejectedEnvsDirectory: string;
+  constructor(componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory) {
     this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
+    this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
   }
 
   _getComponentStructurePart(componentStructure: string, componentPart: string): string {
@@ -29,6 +35,10 @@ export default class BitStructure {
 
   get dependenciesDirStructure(): string {
     return this.dependenciesDirectory;
+  }
+
+  get ejectedEnvsDirStructure(): string {
+    return this.ejectedEnvsDirectory;
   }
 
   get componentsDirStructure(): Object {

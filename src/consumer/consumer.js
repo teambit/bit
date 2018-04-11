@@ -131,7 +131,8 @@ export default class Consumer {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
         this.bitJson.componentsDefaultDirectory,
-        this.bitJson.dependenciesDirectory
+        this.bitJson.dependenciesDirectory,
+        this.bitJson.ejectedEnvsDirectory
       );
     }
     return this._dirStructure;

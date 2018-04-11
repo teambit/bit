@@ -107,6 +107,10 @@ export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
 
 export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
 
+export const DEFAULT_EJECTED_DIR_ENVS = '@bit-envs';
+
+export const DEFAULT_EJECTED_ENVS_DIR_PATH = `${DEFAULT_EJECTED_DIR_ENVS}/{envType}`;
+
 export const DEFAULT_SEPARATOR = '/';
 
 export const LATEST_BIT_VERSION = 'latest';
