@@ -1,4 +1,6 @@
 /** @flow */
+
+import rightpad from 'pad-right';
 import Command from '../../command';
 import { objectToTupleArray } from '../../../utils';
 import chalk from 'chalk';
@@ -20,7 +22,8 @@ export default class Config extends Command {
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
       .map((tuple) => {
-        return tuple.join('     ');
+        tuple[0] = rightpad(tuple[0], 30, ' ');
+        return tuple.join('');
       })
       .join('\n');
   }
