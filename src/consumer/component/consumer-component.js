@@ -248,7 +248,7 @@ export default class Component {
       scope: this.scope,
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
-      compiler: this.compiler ? this.compiler.toString() : {},
+      compiler: this.compiler ? this.compiler.toBitJsonObject() : {},
       tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
       dependencies: this.dependencies.asWritableObject(),
       devDependencies: this.devDependencies.asWritableObject(),

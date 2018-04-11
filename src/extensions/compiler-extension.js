@@ -8,6 +8,7 @@ import ConsumerComponent from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
+import { Compilers } from '../consumer/bit-json/abstract-bit-json';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
 export type CompilerExtensionModel = EnvExtensionModel;

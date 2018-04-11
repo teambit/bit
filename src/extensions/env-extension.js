@@ -72,6 +72,21 @@ export default class EnvExtension extends BaseExtension {
     return modelObject;
   }
 
+  toBitJsonObject(): Compilers {
+    const files = {};
+    this.files.forEach((file) => {
+      files[file.name] = file.relative;
+    });
+    const envVal = {
+      rawConfig: this.dynamicConfig,
+      options: this.options,
+      files
+    };
+    return {
+      [this.name]: envVal
+    };
+  }
+
   /**
    * Loading from props (usually from bit.json)
    * @param {*} props
