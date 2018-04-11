@@ -8,12 +8,17 @@ import { BitId } from '../../bit-id';
 
 export default (components: ConsumerComponent[], json: boolean, showRemoteVersion?: boolean = false) => {
   const header = [
-    { value: 'Id', width: 70, headerColor: 'cyan', headerAlign: 'left' },
-    { value: showRemoteVersion ? 'Local Version' : 'Version', width: 9, headerColor: 'cyan', headerAlign: 'left' },
-    { value: 'Current Version', width: 9, headerColor: 'cyan', headerAlign: 'left' }
+    { value: 'component ID', width: 70, headerColor: 'cyan', headerAlign: 'left' },
+    {
+      value: showRemoteVersion ? 'local version' : 'local version',
+      width: 9,
+      headerColor: 'cyan',
+      headerAlign: 'left'
+    },
+    { value: 'used version', width: 9, headerColor: 'cyan', headerAlign: 'left' }
   ];
   if (showRemoteVersion) {
-    header.push({ value: 'Remote Version', width: 9, headerColor: 'cyan', headerAlign: 'left' });
+    header.push({ value: 'remote version', width: 9, headerColor: 'cyan', headerAlign: 'left' });
   }
   const opts = {
     align: 'left'

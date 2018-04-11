@@ -22,7 +22,6 @@ import {
   CFG_ANALYTICS_ENVIRONMENT_KEY
 } from '../constants';
 
-const forked = fork(path.join(__dirname, 'analytics_sender.js'));
 const LEVEL = {
   DEBUG: 'debug',
   INFO: 'info',
@@ -127,12 +126,11 @@ class Analytics {
   }
 
   static async sendData() {
-    if (this.analytics_usage) {
+    if (this.analytics_usage || (this.error_usage && !this.success)) {
+      const forked = fork(path.join(__dirname, 'analytics-sender.js'), { silent: true });
       forked.send(this.toObject());
     }
-    if (this.error_usage && !this.success) {
-      forked.send(this.toObject());
-    }
+
     return Promise.resolve();
   }
 

@@ -7,24 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.12.11-dev.3] - 2018-04-05
+## [0.12.11] - 2018-04-10
 
+### New
+- introduce a new command `bit merge` for merging a different version into the current version
+- introduce a new command `bit use` for switching between versions
+- add anonymous analytics usage with prompt
+- support merging modified component to an older version of the component
+### Changes
+- rename the command `bit use` to `bit checkout`
+- block tagging when a component has a newer version locally, unless `--ignore-newest-version` flag is used
 - rename `--force` flag of `bit import` to `--override`
 - change `bit list` to show only the authored and imported components, unless `--scope` flag is used
 - `bit remove` removes components from a remote scope only when `--remote` flag is used
+- improve the output of import command to show the imported versions
+### Bug Fixes
 - fix bit-install to work from an inner directory
 - improve external test and build errors to show the stack
-- improve output of import command to show the imported versions
-- rename the command `bit use` to `bit checkout`
-
-## [0.12.11-dev.1] - 2018-04-02
-
-- introduce a new command `bit merge` for merging a different version into the current version
-- block tagging when a component has a newer version locally, unless `--ignore-newest-version` flag is used
-- support merging modified component to an older version of the component
-- introduce a new command `bit use` for switching between versions
 - support `export { default as }` syntax when extracting relevant dependencies from link files
-- add anonymous analytics usage with prompt
 
 ## [0.12.10] - 2018-03-21
 

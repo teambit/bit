@@ -1,6 +1,9 @@
 /** @flow */
+
+import rightpad from 'pad-right';
 import Command from '../../command';
 import { objectToTupleArray } from '../../../utils';
+import chalk from 'chalk';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
 
@@ -19,7 +22,8 @@ export default class Config extends Command {
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
       .map((tuple) => {
-        return tuple.join('     ');
+        tuple[0] = rightpad(tuple[0], 30, ' ');
+        return tuple.join('');
       })
       .join('\n');
   }
@@ -36,7 +40,7 @@ class ConfigSet extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'added configuration successfully';
+    return chalk.green('added configuration successfully');
   }
 }
 
@@ -85,6 +89,6 @@ class ConfigDel extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'deleted successfully';
+    return chalk.green('deleted successfully');
   }
 }
