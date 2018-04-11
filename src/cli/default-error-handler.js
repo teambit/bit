@@ -59,6 +59,7 @@ import {
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import GeneralError from '../error/general-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
@@ -88,6 +89,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [
     ProtocolNotSupported,
     () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
