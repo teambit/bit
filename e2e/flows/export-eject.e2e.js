@@ -30,8 +30,7 @@ describe('export --eject functionality using bitsrc.io', function () {
       helper.tagAllWithoutMessage();
       helper.exportAllComponents(`${username}.${scopeName} --eject`);
     });
-    // Skip until we fix the remove for author
-    it.skip('should delete the original component files from the file-system', () => {
+    it('should delete the original component files from the file-system', () => {
       expect(path.join(helper.localScopePath, 'bar', 'foo.js')).not.to.be.a.path();
     });
     it('should have the component files as a package (in node_modules)', () => {
@@ -39,8 +38,7 @@ describe('export --eject functionality using bitsrc.io', function () {
         path.join(helper.localScopePath, 'node_modules', '@bit', `${username}.${scopeName}.bar.foo`, 'foo.js')
       ).to.be.a.path();
     });
-    // Skip until we fix the remove for author
-    it.skip('should delete the component from bit.map', () => {
+    it('should delete the component from bit.map', () => {
       const bitMap = helper.readBitMap();
       Object.keys(bitMap).forEach((id) => {
         expect(id).not.to.have.string('foo');
