@@ -7,7 +7,7 @@ import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
-import type { ImportOptions, ImportedVersions } from '../../../consumer/component/import-components';
+import type { ImportOptions, ImportDetails } from '../../../consumer/component/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
 
@@ -117,13 +117,13 @@ export default class Import extends Command {
   report({
     dependencies,
     envDependencies,
-    importedVersions,
+    importDetails,
     warnings,
     displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
-    importedVersions: ImportedVersions,
+    importDetails: ImportDetails[],
     warnings?: {
       notInPackageJson: [],
       notInNodeModules: [],
@@ -146,8 +146,8 @@ export default class Import extends Command {
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
       const componentDependencies = components.map((component) => {
-        const versions = importedVersions[component.id.toStringWithoutVersion()];
-        return formatPlainComponentItemWithVersions(component, versions);
+        const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        return formatPlainComponentItemWithVersions(component, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 

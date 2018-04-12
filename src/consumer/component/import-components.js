@@ -27,11 +27,13 @@ export type ImportOptions = {
   saveDependenciesAsComponents?: boolean // default: false
 };
 
-export type ImportedVersions = { [id: string]: string[] };
+type ImportedVersions = { [id: string]: string[] };
+export type ImportStatus = 'added' | 'updated' | 'up to date';
+export type ImportDetails = { id: string, versions: string[], status: ImportStatus };
 export type ImportResult = Promise<{
   dependencies: ComponentWithDependencies[],
   envDependencies?: Component[],
-  importedVersions: ImportedVersions
+  importDetails: ImportDetails[]
 }>;
 
 export default class ImportComponents {
@@ -65,8 +67,8 @@ export default class ImportComponents {
     await this._warnForModifiedOrNewComponents(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
     await this._writeToFileSystem(componentsWithDependencies);
-    const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsWithDependencies);
-    return { dependencies: componentsWithDependencies, importedVersions };
+    const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
+    return { dependencies: componentsWithDependencies, importDetails };
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
@@ -105,7 +107,7 @@ export default class ImportComponents {
       await this._writeToFileSystem(componentsAndDependenciesBitMap, false);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
-    const importedVersions = await this._getVersionsDiff(beforeImportVersions, componentsAndDependencies);
+    const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
       const envComponents = await this.consumer.scope.installEnvironment({
         ids: [
@@ -117,11 +119,11 @@ export default class ImportComponents {
       return {
         dependencies: componentsAndDependencies,
         envDependencies: envComponents,
-        importedVersions
+        importDetails
       };
     }
 
-    return { dependencies: componentsAndDependencies, importedVersions };
+    return { dependencies: componentsAndDependencies, importDetails };
   }
 
   async _getCurrentVersions(ids: BitId[]): ImportedVersions {
@@ -136,20 +138,28 @@ export default class ImportComponents {
   }
 
   /**
-   * diff between the versions array before import and after import
+   * get import details, includes the diff between the versions array before import and after import
    */
-  async _getVersionsDiff(currentVersions: ImportedVersions, components: ComponentWithDependencies[]): ImportedVersions {
-    const versionsP = components.map(async (component) => {
+  async _getImportDetails(
+    currentVersions: ImportedVersions,
+    components: ComponentWithDependencies[]
+  ): Promise<ImportDetails[]> {
+    const detailsP = components.map(async (component) => {
       const id = component.component.id;
       const idStr = id.toStringWithoutVersion();
       const beforeImportVersions = currentVersions[idStr];
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new GeneralError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
-      return [idStr, R.difference(afterImportVersions, beforeImportVersions)];
+      const versionDifference = R.difference(afterImportVersions, beforeImportVersions);
+      const getStatus = (): ImportStatus => {
+        if (!versionDifference.length) return 'up to date';
+        if (!beforeImportVersions.length) return 'added';
+        return 'updated';
+      };
+      return { id: idStr, versions: versionDifference, status: getStatus() };
     });
-    const versions = await Promise.all(versionsP);
-    return R.fromPairs(versions);
+    return Promise.all(detailsP);
   }
 
   async _warnForModifiedOrNewComponents(ids: BitId[]) {
