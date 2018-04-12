@@ -147,6 +147,7 @@ export default class Import extends Command {
           : `successfully imported ${components.length} components`;
       const componentDependencies = components.map((component) => {
         const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
         return formatPlainComponentItemWithVersions(component, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
