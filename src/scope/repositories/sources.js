@@ -12,7 +12,7 @@ import {
   COMPONENT_ORIGINS,
   LATEST_BIT_VERSION
 } from '../../constants';
-import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
+import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
@@ -340,9 +340,7 @@ export default class SourceRepository {
       }
 
       const conflictVersions = component.diffWith(existingComponent);
-      throw local
-        ? new MergeConflict(component.id(), conflictVersions)
-        : new MergeConflictOnRemote(component.id(), conflictVersions);
+      throw new MergeConflict(component.id(), conflictVersions);
     });
   }
 }

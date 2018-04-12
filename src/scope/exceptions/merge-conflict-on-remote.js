@@ -2,20 +2,17 @@
 import AbstractError from '../../error/abstract-error';
 
 export default class MergeConflictOnRemote extends AbstractError {
-  id: string;
   code: number;
-  versions: string[];
+  idsAndVersions: Array<{ id: string, versions: string[] }>;
 
-  constructor(id: string, versions: string[]) {
+  constructor(idsAndVersions: Array<{ id: string, versions: string[] }>) {
     super();
     this.code = 131;
-    this.id = id;
-    this.versions = versions;
+    this.idsAndVersions = idsAndVersions;
   }
   makeAnonymous() {
     const clone = this.clone();
-    clone.id = this.toHash(clone.id);
-    clone.versions = clone.versions.map(this.toHash);
+    clone.idsAndVersions = clone.idsAndVersions.map(this.toHash);
     return clone;
   }
 }

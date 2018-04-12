@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve merge-conflict error on export to show all components with conflicts
+
 ## [0.12.11] - 2018-04-10
 
 ### New
