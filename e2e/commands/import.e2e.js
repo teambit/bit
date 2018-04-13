@@ -23,6 +23,7 @@ describe('bit import', function () {
   });
 
   describe('stand alone component (without dependencies)', () => {
+    let importOutput;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
@@ -33,9 +34,16 @@ describe('bit import', function () {
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const output = helper.importComponent('global/simple');
-      expect(output.includes('successfully imported one component')).to.be.true;
-      expect(output.includes('global/simple')).to.be.true;
+      importOutput = helper.importComponent('global/simple');
+    });
+    it('should display a successful message', () => {
+      expect(importOutput).to.have.string('successfully imported one component');
+      expect(importOutput).to.have.string('global/simple');
+      expect(importOutput).to.have.string('0.0.1');
+    });
+    it('should indicate that the imported component is new', () => {
+      expect(importOutput).to.have.string('added');
+      expect(importOutput).to.not.have.string('updated');
     });
     it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
