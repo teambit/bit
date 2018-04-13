@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import { ComponentNotFound } from '../../src/scope/exceptions';
@@ -121,6 +123,32 @@ describe('bit diff command', function () {
         expect(output).to.have.string('utils/is-string');
         expect(output).to.have.string(noDiffMessage);
       });
+    });
+  });
+  describe('when a file is deleted and another is added', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo(barFooV1);
+      helper.addComponentBarFoo();
+      helper.tagAllWithoutMessage();
+      helper.createFile('bar', 'foo2.js', barFooV2);
+      fs.removeSync(path.join(helper.localScopePath, 'bar/foo.js'));
+      helper.addComponentWithOptions('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
+      helper.runCmd('bit status'); // to clean bitmap file
+      output = helper.diff('bar/foo');
+    });
+    it('should indicate the deleted files as deleted', () => {
+      expect(output).to.have.string('--- bar/foo.js (original)');
+      expect(output).to.have.string('+++ bar/foo.js (modified)');
+      // notice the leading minus sign
+      expect(output).to.have.string(`-${barFooV1}`);
+    });
+    it('should indicate the added files as added', () => {
+      expect(output).to.have.string('--- bar/foo2.js (original)');
+      expect(output).to.have.string('+++ bar/foo2.js (modified)');
+      // notice the leading plus sign
+      expect(output).to.have.string(`+${barFooV2}`);
     });
   });
 });
