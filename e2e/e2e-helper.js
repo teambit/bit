@@ -604,6 +604,10 @@ export default class Helper {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
 
+  diff(id?: string = '') {
+    return this.runCmd(`bit diff ${id}`);
+  }
+
   getBitVersion() {
     return BIT_VERSION;
   }
