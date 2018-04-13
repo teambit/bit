@@ -62,16 +62,12 @@ async function getFilesDiff(tmp: Tmp, fsFiles: SourceFile[], modelFiles: SourceF
   const modelFilePaths = modelFiles.map(f => f.relative);
   const allPaths = R.uniq(fsFilePaths.concat(modelFilePaths));
   const filesDiffP = allPaths.map(async (relativePath) => {
-    const getModelFilePath = async () => {
-      const modelFile = modelFiles.find(f => f.relative === relativePath);
-      const modelFileContent = modelFile ? modelFile.contents : '';
-      return tmp.save(modelFileContent);
+    const getFilePath = async (files) => {
+      const file = files.find(f => f.relative === relativePath);
+      const fileContent = file ? file.contents : '';
+      return tmp.save(fileContent);
     };
-    const getFsFilePath = async () => {
-      const fsFile = fsFiles.find(f => f.relative === relativePath);
-      return fsFile ? fsFile.path : tmp.save('');
-    };
-    const [modelFilePath, fsFilePath] = await Promise.all([getModelFilePath(), getFsFilePath()]);
+    const [modelFilePath, fsFilePath] = await Promise.all([getFilePath(modelFiles), getFilePath(fsFiles)]);
     const diffOutput = await getOneFileDiff(modelFilePath, fsFilePath, relativePath);
     return { filePath: relativePath, diffOutput };
   });
