@@ -65,6 +65,11 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const relativeSyntax = '../is-string/is-string';
         const absoluteSyntax = helper.getRequireBitPath('string', 'is-string');
         fs.outputFileSync(padLeftFile, padLeftContent.replace(relativeSyntax, absoluteSyntax));
+
+        // an intermediate step, make sure, bit-diff is not throwing an error
+        const diffOutput = helper.diff();
+        expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
+
         helper.tagAllWithoutMessage();
         helper.exportAllComponents();
       });

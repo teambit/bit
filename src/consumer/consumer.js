@@ -768,7 +768,9 @@ export default class Consumer {
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
-    if (!id.scope) { throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`); }
+    if (!id.scope) {
+      throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    }
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
@@ -941,7 +943,19 @@ export default class Consumer {
    * @param {boolean} track - keep tracking local staged components in bitmap.
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
-  async remove(ids: string[], force: boolean, remote: boolean, track: boolean, deleteFiles: boolean) {
+  async remove({
+    ids,
+    force,
+    remote,
+    track,
+    deleteFiles
+  }: {
+    ids: string[],
+    force: boolean,
+    remote: boolean,
+    track: boolean,
+    deleteFiles: boolean
+  }) {
     logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'remove',
@@ -1124,7 +1138,7 @@ export default class Consumer {
 
   async eject(componentsIds: BitId[]) {
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
-    await this.remove(componentIdsWithoutScope, true, false, true);
+    await this.remove({ ids: componentIdsWithoutScope, force: true, remote: false, track: false, deleteFiles: true });
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     await packageJson.removeComponentsFromNodeModules(this, componentsIds);
     await installPackages(this, [], true, true);

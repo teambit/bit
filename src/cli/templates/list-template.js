@@ -10,7 +10,7 @@ export default (components: ConsumerComponent[], json: boolean, showRemoteVersio
   const header = [
     { value: 'component ID', width: 70, headerColor: 'cyan', headerAlign: 'left' },
     {
-      value: showRemoteVersion ? 'local version' : 'latest version',
+      value: showRemoteVersion ? 'local version' : 'local version',
       width: 9,
       headerColor: 'cyan',
       headerAlign: 'left'

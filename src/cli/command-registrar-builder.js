@@ -44,6 +44,7 @@ import Latest from './commands/private-cmds/_latest-cmd';
 import Checkout from './commands/public-cmds/checkout-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
 import Merge from './commands/public-cmds/merge-cmd';
+import Diff from './commands/public-cmds/diff-cmd';
 
 export default function registerCommands(extensionsCommands): CommandRegistrar {
   return new CommandRegistrar(
@@ -93,6 +94,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Latest(),
       new Checkout(),
       new Merge(),
+      new Diff(),
       new Migrate()
     ],
     extensionsCommands
