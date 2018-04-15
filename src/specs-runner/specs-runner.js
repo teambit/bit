@@ -46,7 +46,7 @@ function run({
       __mainFile__: mainFile,
       __testFilePath__: testFile.path,
       __tester__: testerFilePath,
-      __testerId__: testerId.toString()
+      __testerId__: testerId
     };
 
     // Merge process.env from the main process

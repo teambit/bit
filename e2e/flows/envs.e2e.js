@@ -19,6 +19,9 @@ chai.use(require('chai-fs'));
 // add dynamic deps from the compiler to component dev deps
 // dynamic config should be written as raw config when ejecting
 // change the default dir for envs (in consumer bit.json)
+// imported - should not show the component as modified if a file added to @bit-envs
+// author - should show the component as modified if an env file has been changed
+// imported - should show the component as modified if an env file has been changed
 
 describe.skip('envs', function () {
   this.timeout(0);

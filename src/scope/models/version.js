@@ -13,6 +13,7 @@ import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
 import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
+import type { TesterExtensionModel } from '../../extensions/tester-extension';
 import GeneralError from '../../error/general-error';
 import ExtensionFile from '../../extensions/extension-file';
 
@@ -42,7 +43,7 @@ export type VersionProps = {
   files?: ?Array<SourceFileModel>,
   dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtensionModel,
-  tester?: ?BitId,
+  tester?: ?TesterExtensionModel,
   log: Log,
   ci?: CiProps,
   specsResults?: ?Results,
@@ -65,7 +66,7 @@ export default class Version extends BitObject {
   files: Array<SourceFileModel>;
   dists: ?Array<DistFileModel>;
   compiler: ?CompilerExtensionModel;
-  tester: ?BitId;
+  tester: ?TesterExtensionModel;
   log: Log;
   ci: CiProps | {};
   specsResults: ?Results;
@@ -197,8 +198,9 @@ export default class Version extends BitObject {
     const files = extractRefsFromFiles(this.files);
     const dists = extractRefsFromFiles(this.dists);
     const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
+    const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
     // TODO: Gilad - support testers
-    return [...dists, ...files, ...compilerFiles].filter(ref => ref);
+    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
   }
 
   toObject() {
@@ -233,7 +235,7 @@ export default class Version extends BitObject {
         dists: this.dists ? this.dists.map(_convertFileToObject) : null,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
-        tester: this.tester ? this.tester.toString() : null,
+        tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
           date: this.log.date,
@@ -320,7 +322,7 @@ export default class Version extends BitObject {
       dists: dists ? dists.map(parseFile) : null,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
-      tester: tester ? BitId.parse(tester) : null,
+      tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
         date: log.date,
@@ -341,7 +343,7 @@ export default class Version extends BitObject {
   }
 
   static from(versionProps: VersionProps): Version {
-    const actualVersionProps = { ...versionProps, compiler };
+    const actualVersionProps = { ...versionProps, compiler, tester };
     return new Version(actualVersionProps);
   }
 
@@ -383,9 +385,9 @@ export default class Version extends BitObject {
       mainFile: component.mainFile,
       files: files ? files.map(parseFile) : null,
       dists: dists ? dists.map(parseFile) : null,
-      compiler: component.compiler.toModelObject(),
+      compiler: component.compiler ? component.compiler.toModelObject() : undefined,
       bindingPrefix: component.bindingPrefix,
-      tester: component.testerId,
+      tester: component.tester ? component.tester.toModelObject() : undefined,
       log: {
         message,
         username,
@@ -426,7 +428,25 @@ export default class Version extends BitObject {
    * in the wrong format
    */
   validate(): void {
-    // TODO: Gilad - add validation for envs
+    const _validateEnv = (env) => {
+      // Compiler is in the new form of extension
+      if (env && typeof env !== 'string') {
+        if (!env.name) {
+          throw new GeneralError(`${message}, the compiler is missing the name attribute`);
+        }
+      }
+      if (env && env.files) {
+        const compilerName = env.name || '';
+        env.files.forEach((file) => {
+          if (!file.name) {
+            throw new GeneralError(
+              `${message}, the compiler ${compilerName} has a file which missing the name attribute`
+            );
+          }
+        });
+      }
+    };
+
     const message = 'unable to save Version object';
     if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
     if (!isValidPath(this.mainFile)) throw new GeneralError(`${message}, the mainFile ${this.mainFile} is invalid`);
@@ -442,22 +462,8 @@ export default class Version extends BitObject {
     if (!foundMainFile) {
       throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
     }
-    // Compiler is in the new form of extension
-    if (this.compiler && typeof this.compiler !== 'string') {
-      if (!this.compiler.name) {
-        throw new GeneralError(`${message}, the compiler is missing the name attribute`);
-      }
-    }
-    if (this.compiler && this.compiler.files) {
-      const compilerName = this.compiler.name || '';
-      this.compiler.files.forEach((file) => {
-        if (!file.name) {
-          throw new GeneralError(
-            `${message}, the compiler ${compilerName} has a file which missing the name attribute`
-          );
-        }
-      });
-    }
+    _validateEnv(this.compiler);
+    _validateEnv(this.tester);
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {

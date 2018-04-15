@@ -61,7 +61,7 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
     box,
     lang,
     compiler,
-    testerId,
+    tester,
     dependencies,
     devDependencies,
     packageDependencies,
@@ -79,7 +79,7 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
   // TODO: Gilad - print compiler config in different table
   obj.compiler = compiler ? compiler.name : null;
   obj.language = lang || null;
-  obj.tester = testerId ? testerId.toString() : null;
+  obj.tester = tester ? tester.name : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies.toStringOfIds().concat(parsePackages(packageDependencies));
   obj.devDependencies = devDependencies.toStringOfIds().concat(parsePackages(devPackageDependencies));

@@ -9,18 +9,18 @@ import { COMPONENT_ORIGINS } from '../constants';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
 
-export type CompilerExtensionOptions = EnvExtensionOptions;
-export type CompilerExtensionModel = EnvExtensionModel;
-export const CompilerEnvType = 'Compiler';
+export type TesterExtensionOptions = EnvExtensionOptions;
+export type TesterExtensionModel = EnvExtensionModel;
+export const TesterEnvType = 'Tester';
 
-export default class CompilerExtension extends EnvExtension {
+export default class TesterExtension extends EnvExtension {
   constructor(extensionProps: EnvExtensionProps) {
-    extensionProps.envType = CompilerEnvType;
+    extensionProps.envType = TesterEnvType;
     super(extensionProps);
     this.envType = extensionProps.envType;
   }
 
-  toModelObject(): CompilerExtensionModel {
+  toModelObject(): TesterExtensionModel {
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;
@@ -46,9 +46,9 @@ export default class CompilerExtension extends EnvExtension {
    * @param {*} props
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    props.envType = CompilerEnvType;
+    props.envType = TesterEnvType;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
-    const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
+    const extension: TesterExtension = new TesterExtension(envExtensionProps);
     if (extension.loaded) {
       await extension.init();
     }
@@ -56,26 +56,26 @@ export default class CompilerExtension extends EnvExtension {
   }
 
   static async loadFromModelObject(
-    modelObject: CompilerExtensionModel,
+    modelObject: TesterExtensionModel,
     repository: Repository
-  ): Promise<CompilerExtension> {
+  ): Promise<TesterExtension> {
     let actualObject;
     if (typeof modelObject === 'string') {
       actualObject = BaseExtension.transformStringToModelObject(modelObject);
     } else {
       actualObject = { ...modelObject };
     }
-    actualObject.envType = 'Compiler';
+    actualObject.envType = TesterEnvType;
     const envExtensionProps: EnvExtensionProps = await super.loadFromModelObject(actualObject, repository);
-    const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
+    const extension: TesterExtension = new TesterExtension(envExtensionProps);
     return extension;
   }
 
   /**
-   * Load the compiler from the correct place
-   * If a component has a bit.json with compiler defined take it
+   * Load the tester from the correct place
+   * If a component has a bit.json with tester defined take it
    * Else if a component is not authored take if from the models
-   * Else, for authored component check if the compiler has been changed
+   * Else, for authored component check if the tester has been changed
    *
    */
   static async loadFromCorrectSource({
@@ -92,19 +92,19 @@ export default class CompilerExtension extends EnvExtension {
     componentFromModel: ConsumerComponent,
     consumerBitJson: ConsumerBitJson,
     componentBitJson: ?ComponentBitJson
-  }): Promise<?CompilerExtension> {
-    if (componentBitJson && componentBitJson.hasCompiler()) {
-      return componentBitJson.loadCompiler(consumerPath, scopePath);
+  }): Promise<?TesterExtension> {
+    if (componentBitJson && componentBitJson.hasTester()) {
+      return componentBitJson.loadTester(consumerPath, scopePath);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
-      return componentFromModel.compiler;
+      return componentFromModel.Tester;
     }
     // TODO: Gilad - think about this case - if someone else imported the component
-    // and changed the compiler
-    // and the original project import the new version with the new compiler
+    // and changed the tester
+    // and the original project import the new version with the new tester
     // we want to load if from the models and not from the bit.json
-    if (consumerBitJson.hasCompiler()) {
-      return consumerBitJson.loadCompiler(consumerPath, scopePath);
+    if (consumerBitJson.hasTester()) {
+      return consumerBitJson.loadTester(consumerPath, scopePath);
     }
     return undefined;
   }

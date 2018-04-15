@@ -23,18 +23,16 @@ import ComponentMap from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension from '../../extensions/compiler-extension';
+import TesterExtension from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
-import { Component as ModelComponent } from '../../scope/models';
 import {
   DEFAULT_BOX_NAME,
-  NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME,
-  BIT_JSON
+  DEFAULT_DIST_DIRNAME
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -57,7 +55,7 @@ export type ComponentProps = {
   bindingPrefix?: string,
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
-  testerId?: ?BitId,
+  tester: TesterExtension,
   bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
@@ -84,7 +82,7 @@ export default class Component {
   bindingPrefix: string;
   mainFile: PathOsBased;
   compiler: ?CompilerExtension;
-  testerId: ?BitId;
+  tester: ?TesterExtension;
   bitJson: ?ComponentBitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
@@ -162,7 +160,7 @@ export default class Component {
     bindingPrefix,
     mainFile,
     compiler,
-    testerId,
+    tester,
     bitJson,
     dependencies,
     devDependencies,
@@ -187,7 +185,7 @@ export default class Component {
     this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.mainFile = path.normalize(mainFile);
     this.compiler = compiler;
-    this.testerId = testerId;
+    this.tester = tester;
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
@@ -244,20 +242,32 @@ export default class Component {
   }
 
   async writeConfig(bitDir: string, ejectedEnvsDirectory: string, override?: boolean = true): Promise<void> {
-    const ejectedCompilerDirectory = this.compiler
+    const ejectedCompilerDirectoryP = this.compiler
       ? await this.compiler.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
       : '';
-    return this.writeBitJson(bitDir, ejectedCompilerDirectory, override);
+    const ejectedTesterDirectoryP = this.tester
+      ? await this.tester.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
+      : '';
+    const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
+      ejectedCompilerDirectoryP,
+      ejectedTesterDirectoryP
+    ]);
+    return this.writeBitJson(bitDir, ejectedCompilerDirectory, ejectedTesterDirectory, override);
   }
 
-  writeBitJson(bitDir: string, ejectedCompilerDirectory: string, override?: boolean = true): Promise<ComponentBitJson> {
+  writeBitJson(
+    bitDir: string,
+    ejectedCompilerDirectory: string,
+    ejectedTesterDirectory: string,
+    override?: boolean = true
+  ): Promise<ComponentBitJson> {
     return new ComponentBitJson({
       version: this.version,
       scope: this.scope,
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       compiler: this.compiler ? this.compiler.toBitJsonObject(ejectedCompilerDirectory) : {},
-      tester: this.testerId ? this.testerId.toString() : NO_PLUGIN_TYPE,
+      tester: this.tester ? this.tester.toBitJsonObject(ejectedTesterDirectory) : {},
       dependencies: this.dependencies.asWritableObject(),
       devDependencies: this.devDependencies.asWritableObject(),
       packageDependencies: this.packageDependencies,
@@ -338,9 +348,9 @@ export default class Component {
 
           // Change the cwd to make sure we found the needed files
           process.chdir(componentRoot);
-          if (compiler.play) {
+          if (compiler.action) {
             // TODO: Gilad - change params
-            return compiler.play(files, rootDistFolder, context);
+            return compiler.action(files, rootDistFolder, context);
           }
           return compiler.oldAction(files, rootDistFolder, context);
         })
@@ -349,7 +359,7 @@ export default class Component {
         });
     };
 
-    if (!compiler.play && !compiler.oldAction) {
+    if (!compiler.action && !compiler.oldAction) {
       return Promise.reject(
         `"${compiler.name}" does not have a valid compiler interface, it has to expose a compile method`
       );
@@ -620,18 +630,15 @@ export default class Component {
     keep?: boolean
   }): Promise<?SpecsResults> {
     const testFiles = this.files.filter(file => file.test);
-    if (!this.testerId || !testFiles || R.isEmpty(testFiles)) return null;
+    if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
 
-    let testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
-    if (!testerFilePath) {
-      loader.start(BEFORE_IMPORT_ENVIRONMENT);
-      await scope.installEnvironment({
-        ids: [{ componentId: this.testerId, type: 'tester' }],
-        verbose
-      });
-      testerFilePath = scope.loadEnvironment(this.testerId, { pathOnly: true });
+    logger.debug('tester found, start running tests');
+    if (!this.tester.loaded) {
+      await this.tester.install(scope, { verbose });
+      logger.debug('Environment components are installed.');
     }
-    logger.debug('Environment components are installed.');
+
+    const testerFilePath = this.tester.filePath;
 
     const run = async (
       mainFile: PathOsBased,
@@ -648,7 +655,7 @@ export default class Component {
         return specsRunner.run({
           scope,
           testerFilePath: actualTesterFilePath,
-          testerId: this.testerId,
+          testerId: this.tester.name,
           mainFile,
           testFile
         });
@@ -826,7 +833,7 @@ export default class Component {
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       compiler: this.compiler ? this.compiler.toModelObject() : null,
-      testerId: this.testerId ? this.testerId.toString() : null,
+      tester: this.tester ? this.tester.toModelObject() : null,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
       packageDependencies: this.packageDependencies,
@@ -910,7 +917,7 @@ export default class Component {
       lang,
       bindingPrefix,
       compiler,
-      testerId,
+      tester,
       dependencies,
       devDependencies,
       packageDependencies,
@@ -932,7 +939,7 @@ export default class Component {
       lang,
       bindingPrefix,
       compiler: compiler ? CompilerExtension.loadFromModelObject(compiler) : null,
-      testerId: testerId ? BitId.parse(testerId) : null,
+      tester: tester ? TesterExtension.loadFromModelObject(tester) : null,
       dependencies,
       devDependencies,
       packageDependencies,
@@ -1041,14 +1048,19 @@ export default class Component {
       dists = undefined;
     }
 
-    const compiler = await CompilerExtension.loadFromCorrectSource(
+    const propsToLoadEnvs = {
       consumerPath,
-      consumer.scope.getPath(),
-      componentMap.origin,
+      scopePath: consumer.scope.getPath(),
+      componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitJson,
-      rawComponentBitJson
-    );
+      componentBitJson: rawComponentBitJson
+    };
+
+    const compilerP = CompilerExtension.loadFromCorrectSource(propsToLoadEnvs);
+    const testerP = TesterExtension.loadFromCorrectSource(propsToLoadEnvs);
+
+    const [compiler, tester] = await Promise.all([compilerP, testerP]);
 
     return new Component({
       name: id.name,
@@ -1058,7 +1070,7 @@ export default class Component {
       lang: bitJson.lang,
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
-      testerId: BitId.parse(bitJson.testerId),
+      tester,
       bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),

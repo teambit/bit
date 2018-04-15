@@ -3,7 +3,7 @@ import R from 'ramda';
 import fs from 'fs-extra';
 import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
-import type { Compilers } from './abstract-bit-json';
+import type { Compilers, Testers } from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
 import type { PathOsBased } from '../../utils/path';
 import Component from '../component';
@@ -13,7 +13,7 @@ export type BitJsonProps = {
   spec?: string,
   lang?: string,
   compiler?: string | Compilers,
-  tester?: string,
+  tester?: string | Testers,
   dependencies?: Object,
   devDependencies?: Object,
   packageDependencies?: Object,
@@ -67,8 +67,7 @@ export default class ComponentBitJson extends AbstractBitJson {
     if (
       typeof this.getImplBasename() !== 'string' ||
       typeof this.compiler !== 'object' ||
-      typeof this.testerId !== 'string' ||
-      (this.lang && typeof this.testerId !== 'string') ||
+      typeof this.tester !== 'object' ||
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
@@ -93,7 +92,6 @@ export default class ComponentBitJson extends AbstractBitJson {
   }
 
   mergeWithComponentData(component: Component) {
-    this.tester = component.testerId ? component.testerId.toString() : null;
     this.bindingPrefix = component.bindingPrefix;
     this.lang = component.lang;
   }

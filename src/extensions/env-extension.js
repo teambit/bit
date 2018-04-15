@@ -6,12 +6,18 @@ import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
+import { CompilerEnvType } from './compiler-extension';
+import { TesterEnvType } from './tester-extension';
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import Repository from '../scope/repository';
 import { pathJoinLinux } from '../utils';
 
+// Couldn't find a good way to do this with consts
+// see https://github.com/facebook/flow/issues/627
+// I would expect something like:
+// type EnvType = CompilerEnvType | TesterEnvType would work
 type EnvType = 'Compiler' | 'Tester';
 
 type EnvExtensionExtraProps = {
@@ -33,11 +39,11 @@ export default class EnvExtension extends BaseExtension {
   files: ExtensionFile[];
 
   /**
-   * Return the play action
+   * Return the action
    */
-  get play(): ?Function {
-    if (this.script && this.script.play && typeof this.script.play === 'function') {
-      return this.script.play;
+  get action(): ?Function {
+    if (this.script && this.script.action && typeof this.script.action === 'function') {
+      return this.script.action;
     }
   }
 

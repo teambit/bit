@@ -10,7 +10,6 @@ import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
 import { filterAsync } from '../../utils';
-import CompilerExtension from '../../extensions/compiler-extension';
 import GeneralError from '../../error/general-error';
 
 export type ImportOptions = {
@@ -81,7 +80,7 @@ export default class ImportComponents {
     if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!this.options.withEnvironments) {
         return Promise.reject(new NothingToImport());
-      } else if (R.isNil(this.consumer.testerId) && R.isNil(this.consumer.compiler)) {
+      } else if (R.isNil(this.consumer.tester) && R.isNil(this.consumer.compiler)) {
         return Promise.reject(new NothingToImport());
       }
     }
@@ -111,14 +110,18 @@ export default class ImportComponents {
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
       const compiler = this.consumer.compiler;
-      await compiler.install();
-      const envComponents = await this.consumer.scope.installEnvironment({
-        ids: [{ componentId: this.consumer.testerId, type: 'tester' }],
-        verbose: this.options.verbose
-      });
+      const tester = this.consumer.tester;
+      const envsPromises = [];
+      if (compiler) {
+        envsPromises.push(compiler.install());
+      }
+      if (tester) {
+        envsPromises.push(tester.install());
+      }
+      const envComponents = await Promise.all(envsPromises);
       return {
         dependencies: componentsAndDependencies,
-        envDependencies: envComponents,
+        envComponents,
         importDetails
       };
     }

@@ -490,7 +490,7 @@ export default class Scope {
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
     const test = async (component: Component) => {
-      if (!component.testerId) {
+      if (!component.tester) {
         return { component, missingTester: true };
       }
       const specs = await component.runSpecs({

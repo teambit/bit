@@ -51,6 +51,7 @@ import type { PathChangeResult } from './bit-map/bit-map';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
 import CompilerExtension from '../extensions/compiler-extension';
+import TesterExtension from '../extensions/tester-extension';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
@@ -110,14 +111,14 @@ export default class Consumer {
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
   }
-
-  get testerId(): ?BitId {
-    return BitId.parse(this.bitJson.testerId);
-  }
-
   get compiler(): ?CompilerExtension {
     const compiler = this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
     return compiler;
+  }
+
+  get tester(): ?TesterExtension {
+    const tester = this.bitJson.loadTester(this.projectPath, this.scope.getPath());
+    return tester;
   }
 
   get driver(): Driver {

@@ -186,7 +186,8 @@ export default class SourceRepository {
           };
         })
         : null;
-    const compilerFiles = consumerComponent.compiler.files;
+    const compilerFiles = R.path(['compiler', 'files'], consumerComponent);
+    const testerFiles = R.path(['tester', 'files'], consumerComponent);
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
@@ -209,7 +210,7 @@ export default class SourceRepository {
       email
     });
 
-    return { version, files, compilerFiles };
+    return { version, files, compilerFiles, testerFiles };
   }
 
   async addSource({
@@ -235,7 +236,7 @@ export default class SourceRepository {
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, files, compilerFiles } = await this.consumerComponentToVersion({
+    const { version, files, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
       message,
       flattenedDependencies,
@@ -249,6 +250,7 @@ export default class SourceRepository {
     if (files) files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
     if (compilerFiles) compilerFiles.forEach(file => objectRepo.add(file.file));
+    if (testerFiles) testerFiles.forEach(file => objectRepo.add(file.file));
 
     return component;
   }

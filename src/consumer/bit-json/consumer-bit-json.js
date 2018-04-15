@@ -2,7 +2,7 @@
 import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractBitJson from './abstract-bit-json';
-import type { Extensions, Compilers } from './abstract-bit-json';
+import type { Extensions, Compilers, Testers } from './abstract-bit-json';
 import { BitJsonNotFound, InvalidBitJson } from './exceptions';
 import {
   DEFAULT_COMPONENTES_DIR_PATH,
@@ -20,7 +20,7 @@ type consumerBitJsonProps = {
   impl?: string,
   spec?: string,
   compiler?: string | Compilers,
-  tester?: string,
+  tester?: string | Testers,
   dependencies?: { [string]: string },
   saveDependenciesAsComponents?: boolean,
   lang?: string,

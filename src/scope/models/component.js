@@ -27,6 +27,7 @@ import logger from '../../logger/logger';
 import { BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import CompilerExtension from '../../extensions/compiler-extension';
+import TesterExtension from '../../extensions/tester-extension';
 
 type State = {
   versions?: {
@@ -270,7 +271,14 @@ export default class Component extends BitObject {
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
     const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
-    const [files, dists, scopeMeta, compiler] = await Promise.all([filesP, distsP, scopeMetaP, compilerP]);
+    const testerP = TesterExtension.loadFromModelObject(version.tester, repository);
+    const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
+      filesP,
+      distsP,
+      scopeMetaP,
+      compilerP,
+      testerP
+    ]);
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
@@ -285,7 +293,7 @@ export default class Component extends BitObject {
       bindingPrefix: this.bindingPrefix,
       mainFile: version.mainFile || null,
       compiler,
-      testerId: version.tester,
+      tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: BitIds.clone(version.flattenedDependencies),

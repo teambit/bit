@@ -42,7 +42,7 @@ export default (async function importAction(
       }
 
       if (environmentOptions.tester) {
-        consumer.bitJson.testerId = id;
+        consumer.bitJson.tester = id;
         Analytics.setExtraData('test_env', id);
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
