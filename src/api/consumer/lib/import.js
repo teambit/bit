@@ -76,7 +76,7 @@ export default (async function importAction(
   if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
     return importEnvironment(consumer);
   }
-  const { dependencies, envDependencies, importedVersions } = await consumer.importComponents(importOptions);
+  const { dependencies, envDependencies, importDetails } = await consumer.importComponents(importOptions);
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
     const componentMap = consumer.bitMap.getComponent(bitId);
@@ -95,7 +95,7 @@ export default (async function importAction(
     installNpmPackages: importOptions.installNpmPackages
   });
   Analytics.setExtraData('num_components', bitIds.length);
-  return { dependencies, envDependencies, importedVersions, warnings };
+  return { dependencies, envDependencies, importDetails, warnings };
 });
 
 // TODO: refactor to better use of semver
