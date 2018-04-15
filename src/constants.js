@@ -43,19 +43,6 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
-export const IGNORE_LIST = [
-  '**/.bit.map.json',
-  '**/.bitmap',
-  '**/.gitignore',
-  '**/bit.json',
-  '**/bitBindings.js',
-  '**/node_modules/**',
-  '**/package.json',
-  '**/package-lock.json',
-  '**/yarn.lock',
-  '**/LICENSE'
-];
-
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED',
   AUTHORED: 'AUTHORED',
@@ -152,6 +139,20 @@ export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 // Setting this to 99999 to prevent this issue:
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
+
+export const IGNORE_LIST = [
+  '**/.bit.map.json',
+  '**/.bitmap',
+  '**/.gitignore',
+  '**/bit.json',
+  '**/bitBindings.js',
+  '**/node_modules/**',
+  `**/${DEFAULT_EJECTED_DIR_ENVS}/**`,
+  '**/package.json',
+  '**/package-lock.json',
+  '**/yarn.lock',
+  '**/LICENSE'
+];
 
 /**
  * bit global config keys
