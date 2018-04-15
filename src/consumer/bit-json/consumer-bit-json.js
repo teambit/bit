@@ -1,27 +1,16 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
 import R from 'ramda';
-import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
 import type { Extensions, Compilers } from './abstract-bit-json';
-import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
+import { BitJsonNotFound, InvalidBitJson } from './exceptions';
 import {
-  BIT_JSON,
   DEFAULT_COMPONENTES_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_EJECTED_ENVS_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
-import type { PathOsBased } from '../../utils/path';
-
-function composePath(bitPath: PathOsBased): PathOsBased {
-  return path.join(bitPath, BIT_JSON);
-}
-
-function hasExisting(bitPath: string): boolean {
-  return fs.existsSync(composePath(bitPath));
-}
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -131,31 +120,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      if (!override && hasExisting(bitDir)) {
-        throw new BitJsonAlreadyExists();
-      }
-
-      const respond = (err, res) => {
-        if (err) return reject(err);
-        return resolve(res);
-      };
-
-      fs.writeFile(composePath(bitDir), this.toJson(), respond);
-    });
-  }
-
   static create(): ConsumerBitJson {
     return new ConsumerBitJson({});
   }
 
-  static ensure(dirPath): Promise<ConsumerBitJson> {
-    return new Promise((resolve) => {
-      return this.load(dirPath)
-        .then(resolve)
-        .catch(() => resolve(this.create()));
-    });
+  static async ensure(dirPath): Promise<ConsumerBitJson> {
+    try {
+      const consumerBitJson = await this.load(dirPath);
+      return consumerBitJson;
+    } catch (err) {
+      return this.create();
+    }
   }
 
   static fromPlainObject(object: Object) {
@@ -201,18 +176,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
     });
   }
 
-  static load(dirPath: string): Promise<ConsumerBitJson> {
-    return new Promise((resolve, reject) => {
-      if (!hasExisting(dirPath)) return reject(new BitJsonNotFound());
-      return fs.readFile(composePath(dirPath), (err, data) => {
-        if (err) return reject(err);
-        try {
-          const file = JSON.parse(data.toString('utf8'));
-          return resolve(this.fromPlainObject(file));
-        } catch (e) {
-          return reject(new InvalidBitJson(composePath(dirPath)));
-        }
-      });
-    });
+  static async load(dirPath: string): Promise<ConsumerBitJson> {
+    const isExisting = await AbstractBitJson.hasExisting(dirPath);
+    if (!isExisting) throw new BitJsonNotFound();
+    const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    try {
+      const file = await fs.readJson(bitJsonPath);
+      const consumerBitJson = this.fromPlainObject(file);
+      consumerBitJson.path = bitJsonPath;
+      return consumerBitJson;
+    } catch (e) {
+      throw new InvalidBitJson(bitJsonPath);
+    }
   }
 }

@@ -46,6 +46,7 @@ import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestError from './exceptions/external-test-error';
 import ExternalBuildError from './exceptions/external-build-error';
 import GeneralError from '../../error/general-error';
+import AbstractBitJson from '../bit-json/abstract-bit-json';
 
 export type ComponentProps = {
   name: string,
@@ -1016,6 +1017,7 @@ export default class Component {
     // (like dependencies)
     let componentBitJson: ComponentBitJson | typeof undefined;
     let componentBitJsonFileExist = false;
+    let rawComponentBitJson;
     if (bitDir !== consumerPath) {
       componentBitJson = ComponentBitJson.loadSync(bitDir, consumerBitJson);
       packageDependencies = componentBitJson.packageDependencies;
@@ -1023,7 +1025,10 @@ export default class Component {
       peerPackageDependencies = componentBitJson.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitJsonFileExist = fs.existsSync(path.join(bitDir, BIT_JSON));
+      componentBitJsonFileExist = await AbstractBitJson.hasExisting(bitDir);
+      if (componentBitJsonFileExist) {
+        rawComponentBitJson = componentBitJson;
+      }
       if (!componentBitJsonFileExist && componentFromModel) {
         componentBitJson.mergeWithComponentData(componentFromModel);
       }
@@ -1042,7 +1047,7 @@ export default class Component {
       componentMap.origin,
       componentFromModel,
       consumerBitJson,
-      componentBitJson
+      rawComponentBitJson
     );
 
     return new Component({

@@ -1,12 +1,16 @@
 /** @flow */
+import path from 'path';
 import R from 'ramda';
+import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
 import CompilerExtension from '../../extensions/compiler-extension';
 import type { CompilerExtensionOptions } from '../../extensions/compiler-extension';
+import type { PathOsBased } from '../../utils/path';
+import { BitJsonAlreadyExists } from './exceptions';
 import {
-  DEFAULT_COMPILER_ID,
+  BIT_JSON,
   DEFAULT_TESTER_ID,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
@@ -48,6 +52,7 @@ export default class AbstractBitJson {
   impl: string;
   /** @deprecated * */
   spec: string;
+  path: string;
   _compiler: Compilers;
   tester: string;
   dependencies: { [string]: string };
@@ -140,6 +145,7 @@ export default class AbstractBitJson {
       scopePath,
       rawConfig: compilerObject.rawConfig,
       files: compilerObject.files,
+      bitJsonPath: this.path,
       options: compilerObject.options
     };
     const compiler = await CompilerExtension.load(compilerProps);
@@ -178,9 +184,26 @@ export default class AbstractBitJson {
     );
   }
 
+  async write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
+    const isExisting = await AbstractBitJson.hasExisting(bitDir);
+    if (!override && isExisting) {
+      throw new BitJsonAlreadyExists();
+    }
+
+    return fs.writeFile(AbstractBitJson.composePath(bitDir), this.toJson());
+  }
+
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
+  }
+
+  static composePath(bitPath: PathOsBased): PathOsBased {
+    return path.join(bitPath, BIT_JSON);
+  }
+
+  static async hasExisting(bitPath: string): Promise<boolean> {
+    return fs.exists(this.composePath(bitPath));
   }
 }
 

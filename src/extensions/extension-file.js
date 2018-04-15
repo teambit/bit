@@ -40,13 +40,14 @@ export default class ExtensionFile extends AbstractVinyl {
     }
   }
 
-  static async loadFromBitJsonObject(bitJsonObj, consumerPath): Promise<ExtensionFile[]> {
+  static async loadFromBitJsonObject(bitJsonObj, consumerPath, bitJsonPath): Promise<ExtensionFile[]> {
     if (!bitJsonObj || R.isEmpty(bitJsonObj)) return [];
     const loadP = [];
+    const bitJsonDirPath = path.dirname(bitJsonPath);
     const loadFile = (value, key) => {
       // TODO: Gilad - support component bit json
-      const fullPath = path.resolve(consumerPath, value);
-      loadP.push(this.load(key, fullPath, consumerPath, consumerPath));
+      const fullPath = path.resolve(bitJsonDirPath, value);
+      loadP.push(this.load(key, fullPath, bitJsonDirPath, consumerPath));
     };
     R.forEachObjIndexed(loadFile, bitJsonObj);
     return Promise.all(loadP);

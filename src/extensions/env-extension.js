@@ -122,7 +122,7 @@ export default class EnvExtension extends BaseExtension {
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
-    const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath);
+    const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
     return envExtensionProps;
   }
