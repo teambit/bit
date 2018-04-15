@@ -7,7 +7,9 @@ import GenralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export function set(key: string, val: string): Promise<Config> {
-  if (!key && !val) { throw new GenralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`); }
+  if (!key && !val) {
+    throw new GenralError(`missing a configuration key and value. https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`);
+  }
   return GlobalConfig.load().then((config) => {
     config.set(key, val);
     return config.write().then(() => config);
