@@ -7,6 +7,7 @@ const replaceBuffer = require('replace-buffer');
   const api = {};
   const isWindows = typeof process !== 'undefined' && process.platform === 'win32';
   const linebreak = isWindows ? '\r\n' : '\n';
+  const newLines = ['\r\n', '\r', '\n'];
   const newline = /\r\n|\r|\n/g;
 
   function before(text) {
@@ -19,7 +20,12 @@ const replaceBuffer = require('replace-buffer');
 
   function converts(to) {
     function convert(text) {
-      return Buffer.isBuffer(text) ? replaceBuffer(text, newline, to) : text.replace(new RegExp(newline, 'g'), to);
+      let str = text;
+      if (Buffer.isBuffer(text)) {
+        newLines.forEach(newLine => (str = replaceBuffer(str, newLine, to)));
+        return str;
+      }
+      return newLines.forEach(newLine => (str = str.replace(newLine, to)));
     }
     convert.toString = function () {
       return to;

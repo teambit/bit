@@ -2,8 +2,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
-import eol from 'eol';
 import logger from '../../../logger/logger';
+import { eol } from '../../../utils';
 import type { PathOsBased } from '../../../utils/path';
 
 export default class AbstractVinyl extends Vinyl {
