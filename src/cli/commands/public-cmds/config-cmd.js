@@ -1,9 +1,9 @@
 /** @flow */
 
 import rightpad from 'pad-right';
+import chalk from 'chalk';
 import Command from '../../command';
 import { objectToTupleArray } from '../../../utils';
-import chalk from 'chalk';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
 

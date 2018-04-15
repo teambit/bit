@@ -3,8 +3,10 @@ import gitconfig from 'gitconfig';
 import R from 'ramda';
 import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
+import GenralError from '../../../error/general-error';
 
 export function set(key: string, val: string): Promise<Config> {
+  if (!key && !val) throw new GenralError('cannot set config without key and value');
   return GlobalConfig.load().then((config) => {
     config.set(key, val);
     return config.write().then(() => config);
