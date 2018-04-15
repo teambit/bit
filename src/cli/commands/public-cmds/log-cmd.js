@@ -3,10 +3,11 @@ import R from 'ramda';
 import Command from '../../command';
 import { getComponentLogs } from '../../../api/consumer';
 import { paintLog } from '../../chalk-box';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Show extends Command {
   name = 'log <id>';
-  description = 'show components(s) commit history.\n  https://docs.bitsrc.io/docs/cli-log.html';
+  description = `show components(s) commit history.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-log.html`;
   alias = '';
   opts = [];
   migration = true;

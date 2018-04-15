@@ -6,10 +6,11 @@ import { listScope } from '../../../api/consumer';
 import Component from '../../../consumer/component';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class List extends Command {
   name = 'list [scope]';
-  description = 'list components on a local or a remote scope.\n  https://docs.bitsrc.io/docs/cli-link.html';
+  description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-link.html`;
   alias = 'ls';
   opts = [
     ['ids', 'ids', 'components ids to list'],

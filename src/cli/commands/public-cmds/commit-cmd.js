@@ -4,13 +4,13 @@ import { commitAction, commitAllAction } from '../../../api/consumer';
 import Component from '../../../consumer/component';
 import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/component';
-import { DEFAULT_BIT_RELEASE_TYPE } from '../../../constants';
+import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
 
 const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'tag [id] [version]';
-  description = 'record component changes and lock versions.\n  https://docs.bitsrc.io/docs/versioning-tracked-components.html';
+  description = `record component changes and lock versions.\n  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html`;
   alias = 't';
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],

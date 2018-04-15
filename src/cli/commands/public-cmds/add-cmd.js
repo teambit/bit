@@ -7,10 +7,11 @@ import { add } from '../../../api/consumer';
 import type { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 import type { PathOsBased } from '../../../utils/path';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Add extends Command {
   name = 'add [path...]';
-  description = 'add any subset of files to be tracked as a component(s)\n  https://docs.bitsrc.io/docs/isolating-and-tracking-components.html';
+  description = `add any subset of files to be tracked as a component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html`;
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'component id, if not specified the name will be '],
