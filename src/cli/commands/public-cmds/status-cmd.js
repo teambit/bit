@@ -8,12 +8,12 @@ import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
 import { missingDependenciesLabels } from '../../templates/missing-dependencies-template';
-import { formatNew } from '../../templates/status-templates';
 import { Analytics } from '../../../analytics/analytics';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Status extends Command {
   name = 'status';
-  description = 'show the working area component(s) status.\n  https://docs.bitsrc.io/docs/cli-status.html';
+  description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
   alias = 's';
   opts = [];
   loader = true;

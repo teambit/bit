@@ -5,10 +5,11 @@ import { getConsumerComponent, getScopeComponent } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Show extends Command {
   name = 'show <id>';
-  description = 'show component overview.\n https://docs.bitsrc.io/docs/cli-show.html';
+  description = `show component overview.\n https://${BASE_DOCS_DOMAIN}/docs/cli-show.html`;
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],

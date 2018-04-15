@@ -4,10 +4,11 @@ import * as pathlib from 'path';
 import Command from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Init extends Command {
   name = 'init [path]';
-  description = 'initialize an empty bit scope\n  https://docs.bitsrc.io/docs/cli-status.html';
+  description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
