@@ -68,6 +68,7 @@ export default class BaseExtension {
     this.dynamicConfig = extensionProps.dynamicConfig || extensionProps.rawConfig;
     this.script = extensionProps.script;
     this.disabled = extensionProps.disabled;
+    this.filePath = extensionProps.filePath;
     this.loaded = extensionProps.loaded;
     this.api = extensionProps.api;
   }
@@ -286,7 +287,8 @@ const _getRegularExtensionPath = (name: string, scopePath: string): string => {
   const internalComponentsPath = Scope.getComponentsRelativePath();
   const internalComponentPath = Scope.getComponentRelativePath(bitId);
   const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
-  return componentPath;
+  const resolved = require.resolve(componentPath);
+  return resolved;
 };
 
 const baseApi = {
