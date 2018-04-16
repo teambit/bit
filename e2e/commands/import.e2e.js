@@ -1667,6 +1667,7 @@ console.log(barFoo.default());`;
   });
 
   describe('import a component when the local version is modified', () => {
+    let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
@@ -1681,6 +1682,7 @@ console.log(barFoo.default());`;
 
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      localScope = helper.cloneLocalScope();
     });
     describe('without --override flag', () => {
       let output;
@@ -1710,6 +1712,16 @@ console.log(barFoo.default());`;
       it('should override the local changes', () => {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got foo');
+      });
+    });
+    describe('re-import a component after tagging the component', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.tagAllWithoutMessage();
+      });
+      it('should import successfully', () => {
+        const output = helper.importComponent('bar/foo');
+        expect(output).to.have.string('successfully imported');
       });
     });
   });
