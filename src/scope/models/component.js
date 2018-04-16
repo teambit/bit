@@ -35,11 +35,13 @@ type State = {
   }
 };
 
+type Versions = { [string]: Ref };
+
 export type ComponentProps = {
   scope?: string,
   box?: string,
   name: string,
-  versions?: { [string]: Ref },
+  versions?: Versions,
   lang?: string,
   deprecated?: boolean,
   bindingPrefix?: string,
@@ -54,7 +56,7 @@ export default class Component extends BitObject {
   scope: ?string;
   name: string;
   box: string;
-  versions: { [string]: Ref };
+  versions: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -92,18 +94,31 @@ export default class Component extends BitObject {
     return !!this.versions[version];
   }
 
-  compatibleWith(component: Component): boolean {
-    const difference = diff(Object.keys(this.versions), Object.keys(component.versions));
+  /**
+   * returns only the versions that exist in both components (regardless whether the hash are the same)
+   * e.g. this.component = [0.0.1, 0.0.2, 0.0.3], other component = [0.0.3, 0.0.4]. it returns only [0.0.3].
+   */
+  _getComparableVersionsObjects(
+    component: Component
+  ): { thisComponentVersions: Versions, otherComponentVersions: Versions } {
+    const otherComponentVersions = filterObject(component.versions, (val, key) =>
+      Object.keys(this.versions).includes(key)
+    );
+    const thisComponentVersions = filterObject(this.versions, (val, key) =>
+      Object.keys(otherComponentVersions).includes(key)
+    );
+    return { thisComponentVersions, otherComponentVersions };
+  }
 
-    const comparableObject = filterObject(this.versions, (val, key) => !difference.includes(key));
-    return equals(component.versions, comparableObject);
+  compatibleWith(component: Component): boolean {
+    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component);
+    return equals(thisComponentVersions, otherComponentVersions);
   }
 
   diffWith(component: Component): string[] {
-    const difference = diff(Object.keys(this.versions), Object.keys(component.versions));
-    const comparableObject = filterObject(this.versions, (val, key) => !difference.includes(key));
-    return Object.keys(component.versions).filter(
-      version => component.versions[version].hash !== comparableObject[version].hash
+    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component);
+    return Object.keys(thisComponentVersions).filter(
+      version => thisComponentVersions[version].hash !== otherComponentVersions[version].hash
     );
   }
 
@@ -176,7 +191,7 @@ export default class Component extends BitObject {
   }
 
   toObject() {
-    function versions(vers: { [string]: Ref }) {
+    function versions(vers: Versions) {
       const obj = {};
       forEach(vers, (ref, version) => {
         obj[version] = ref.toString();
