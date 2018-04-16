@@ -343,14 +343,27 @@ export default class Component {
       return Promise.resolve()
         .then(() => {
           const context: Object = {
-            componentObject: this.toObject()
+            componentObject: this.toObject(),
+            rootDistFolder
           };
 
           // Change the cwd to make sure we found the needed files
           process.chdir(componentRoot);
           if (compiler.action) {
-            // TODO: Gilad - change params
-            return compiler.action(files, rootDistFolder, context);
+            const actionParams = {
+              files,
+              rawConfig: compiler.rawConfig,
+              dynamicConfig: compiler.dynamicConfig,
+              configFiles: compiler.files,
+              api: compiler.api,
+              context
+            };
+            const result = compiler.action(actionParams);
+            // TODO: Gilad - handle return of main dist file
+            if (!result || !result.files) {
+              throw new Error('compiler return invalid response');
+            }
+            return result.files;
           }
           return compiler.oldAction(files, rootDistFolder, context);
         })
@@ -358,7 +371,6 @@ export default class Component {
           throw new ExternalBuildError(e, this.id.toString());
         });
     };
-
     if (!compiler.action && !compiler.oldAction) {
       return Promise.reject(
         `"${compiler.name}" does not have a valid compiler interface, it has to expose a compile method`

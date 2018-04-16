@@ -67,6 +67,11 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async install(scope: Scope, opts: { verbose: boolean }) {
+    // Skip the installation in case of using specific file
+    // options.file usually used for develop your extension
+    if (this.options.file) {
+      return;
+    }
     const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
     const installResult = await scope.installEnvironment(installOpts);
     this.setExtensionPathInScope(scope.getPath());
