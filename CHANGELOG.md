@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - import after tag was showing an error "Cannot read property 'hash' of undefined"
 - introduce a new command `bit diff` to show the files diff for modified components
 - fix eol issue between os
 
