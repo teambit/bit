@@ -1,4 +1,5 @@
 // @flow
+import path from 'path';
 import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
 import Component from '../../component';
@@ -10,7 +11,7 @@ import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';
 import type { MergeResultsTwoWay } from './two-way-merge';
-import type { PathLinux } from '../../../utils/path';
+import type { PathLinux, PathOsBased } from '../../../utils/path';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
@@ -155,8 +156,9 @@ async function applyModifiedVersion(
 ): Promise<Object> {
   const filesStatus = {};
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
       const otherFile: SourceFileModel = file.otherFile;
