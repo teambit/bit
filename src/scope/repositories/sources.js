@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
