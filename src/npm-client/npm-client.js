@@ -5,8 +5,9 @@ import chalk from 'chalk';
 import fs from 'fs-extra';
 import path from 'path';
 import logger from '../logger/logger';
-import { DEFAULT_PACKAGE_MANAGER } from '../constants';
+import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
+import GeneralError from '../error/general-error';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -139,9 +140,15 @@ const _installInOneDirectory = ({
       return { stdout, stderr };
     })
     .catch((err) => {
-      let stderr = `failed running ${packageManager} install at ${cwd} ${argsString} \n`;
+      let stderr = `failed running ${packageManager} install at ${cwd} ${argsString}  \n`;
       stderr += verbose ? err.stderr : stripNonNpmErrors(err.stderr, packageManager);
-      return Promise.reject(`${stderr}`);
+      return Promise.reject(
+        new GeneralError(
+          `${stderr}\n\n${chalk.yellow(
+            `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/install-components.html`
+          )}`
+        )
+      );
     });
 };
 
