@@ -13,7 +13,7 @@ export default function loginToBitSrc() {
   return new Promise((resolve, reject) => {
     const client_id = uniqid();
     const requestHandler = (request, response) => {
-      if (req.method === 'POST') {
+      if (request.method === 'POST') {
         response.end();
         const parsed = url.parse(request.url, true);
         const params = parsed.query;
