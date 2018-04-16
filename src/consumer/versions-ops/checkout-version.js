@@ -6,6 +6,7 @@ import { Consumer } from '..';
 import Component from '../component';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
+import type { PathOsBased } from '../../utils/path';
 import Version from '../../scope/models/version';
 import { SourceFile } from '../component/sources';
 import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
@@ -180,8 +181,9 @@ async function applyModifiedVersion(
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
       foundFile.contents = new Buffer(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
@@ -197,8 +199,9 @@ async function applyModifiedVersion(
     filesStatus[file.filePath] = FileStatus.added;
   });
   const overrideFilesP = mergeResults.overrideFiles.map(async (file) => {
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
