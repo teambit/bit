@@ -4,19 +4,33 @@ import opn from 'opn';
 import os from 'os';
 import chalk from 'chalk';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
-import { CFG_BITSRC_TOKEN_KEY, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '../../constants';
+import {
+  CFG_BITSRC_TOKEN_KEY,
+  CFG_USER_EMAIL_KEY,
+  CFG_USER_NAME_KEY,
+  DEFAULT_HUB_LOGIN,
+  CFG_HUB_LOGIN_KEY
+} from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 
+const ERROR_RESPONSE = 500;
+const port = 8085;
+
 export default function loginToBitSrc() {
-  const port = 8085;
   return new Promise((resolve, reject) => {
     let rawBody = '';
-    const client_id = uniqid();
+    const clientId = uniqid();
+
     const requestHandler = (request, response) => {
-      if (request.method !== 'POST') {
+      const closeConnection = () => {
+        response.end();
         server.close();
+      };
+
+      if (request.method !== 'POST') {
         logger.error('recieved non post request, closing connection');
+        closeConnection();
         reject(new LoginFailed());
       }
       request.on('data', (data) => {
@@ -25,23 +39,23 @@ export default function loginToBitSrc() {
       request.on('end', function () {
         try {
           const body = JSON.parse(rawBody);
-          if (client_id !== body.client_id) {
-            response.end();
-            server.close();
+          if (clientId !== body.client_id) {
+            logger.error(`clientId missmatch expecting: ${clientId} got ${body.client_id}`);
+            response.statusCode = ERROR_RESPONSE;
+            closeConnection();
             return reject(new LoginFailed());
           }
           setSync(CFG_BITSRC_TOKEN_KEY, body.token.token);
           if (!getSync(CFG_USER_EMAIL_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.email);
           if (!getSync(CFG_USER_NAME_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.username);
         } catch (err) {
-          logger.err(`login failed: ${err}`);
-          request.end();
-          server.close();
+          logger.err(`err on login: ${err}`);
+          response.statusCode = ERROR_RESPONSE;
+          closeConnection();
           return reject(new LoginFailed());
         }
-        response.end();
-        server.close();
-        return resolve(chalk.green('login successful!!!!'));
+        closeConnection();
+        return resolve(getSync(CFG_USER_NAME_KEY));
       });
     };
 
@@ -53,11 +67,12 @@ export default function loginToBitSrc() {
       }
 
       const encoded = encodeURI(
-        `https://bitsrc.io/login?redirect_uri=https://localhost:${port}&client_id=${client_id}&response_type=token&deviceName=${os.hostname()}&os=${
+        `${getSync(CFG_HUB_LOGIN_KEY) ||
+          DEFAULT_HUB_LOGIN}?redirect_uri=http://localhost:${port}&client_id=${clientId}&response_type=token&deviceName=${os.hostname()}&os=${
           process.platform
         }`
       );
-      console.log(`Your browser has been opened to visit: ${encoded}`);
+      console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`));
       opn(encoded);
     });
   });
