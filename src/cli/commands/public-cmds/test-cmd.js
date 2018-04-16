@@ -2,10 +2,11 @@
 import Command from '../../command';
 import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Test extends Command {
   name = 'test [id]';
-  description = 'test any set of components with configured tester (as defined in bit.json)\n  https://docs.bitsrc.io/docs/testing-components.html';
+  description = `test any set of components with configured tester (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html`;
   alias = 't';
   opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
   loader = true;

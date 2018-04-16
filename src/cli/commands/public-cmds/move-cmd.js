@@ -3,10 +3,11 @@ import chalk from 'chalk';
 import Command from '../../command';
 import { move } from '../../../api/consumer';
 import type { PathChangeResult } from '../../../consumer/bit-map/bit-map';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Move extends Command {
   name = 'move <from> <to>';
-  description = 'move files or directories of component(s)\n  https://docs.bitsrc.io/docs/cli-move.html';
+  description = `move files or directories of component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-move.html`;
   alias = 'mv';
   opts = [];
   loader = true;

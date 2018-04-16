@@ -89,6 +89,7 @@
     "ramda": "^0.24.1",
     "raven": "^2.4.2",
     "regenerator-runtime": "^0.11.0",
+    "replace-buffer": "^1.2.1",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
     "semver": "^5.4.1",

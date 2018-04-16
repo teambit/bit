@@ -126,6 +126,8 @@ export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
+export const BASE_DOCS_DOMAIN = 'docs.bitsrc.io';
+
 export const DEFAULT_BIT_ENV = 'production';
 
 export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';

@@ -5,10 +5,11 @@ import { remove } from '../../../api/consumer';
 import { RemovedObjects, RemovedLocalObjects } from '../../../scope/removed-components';
 import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
-  description = 'remove a component (local/remote)\n  https://docs.bitsrc.io/docs/removing-components.html';
+  description = `remove a component (local/remote)\n  https://${BASE_DOCS_DOMAIN}/docs/removing-components.html`;
   alias = 'rm';
   opts = [
     ['f', 'force [boolean]', 'force remove (default = false)'],

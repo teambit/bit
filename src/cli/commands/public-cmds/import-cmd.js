@@ -10,10 +10,11 @@ import { ComponentWithDependencies } from '../../../scope';
 import type { ImportOptions, ImportDetails } from '../../../consumer/component/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = 'import components into your current workspace.\n  https://docs.bitsrc.io/docs/importing-components.html';
+  description = `import components into your current workspace.\n  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html`;
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],

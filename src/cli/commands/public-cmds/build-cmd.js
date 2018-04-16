@@ -2,12 +2,13 @@
 import Command from '../../command';
 import { build, buildAll } from '../../../api/consumer';
 import { empty } from '../../../utils';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const chalk = require('chalk');
 
 export default class Build extends Command {
   name = 'build [id]';
-  description = 'build any set of components with a configured compiler (as defined in bit.json)\n  https://docs.bitsrc.io/docs/building-components.html';
+  description = `build any set of components with a configured compiler (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/building-components.html`;
   alias = '';
   opts = [['v', 'verbose [boolean]', 'showing npm verbose output for inspection']];
   loader = true;

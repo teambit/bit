@@ -5,10 +5,11 @@ import Command from '../../command';
 import { remoteList, remoteAdd, remoteRm } from '../../../api/consumer';
 import { forEach, empty } from '../../../utils';
 import RemoteUndefined from '../exceptions/remote-undefined';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Remote extends Command {
   name = 'remote';
-  description = 'manage set of tracked bit scope(s)\n  https://docs.bitsrc.io/docs/cli-remote.html';
+  description = `manage set of tracked bit scope(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-remote.html`;
   alias = '';
   opts = [['g', 'global', 'see globally configured remotes']];
   migration = true;

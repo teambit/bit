@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - introduce a new command `bit diff` to show the files diff for modified components
+- fix eol issue between os
 
 ## [0.12.11] - 2018-04-10
 
