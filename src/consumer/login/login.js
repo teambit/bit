@@ -1,32 +1,41 @@
 import http from 'http';
 import uniqid from 'uniqid';
 import opn from 'opn';
-import url from 'url';
 import os from 'os';
 import chalk from 'chalk';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
 import { CFG_BITSRC_TOKEN_KEY, CFG_USER_EMAIL_KEY, CFG_USER_NAME_KEY } from '../../constants';
 import { LoginFailed } from '../exceptions';
+import logger from '../../logger/logger';
 
 export default function loginToBitSrc() {
   const port = 8085;
   return new Promise((resolve, reject) => {
+    let rawBody = '';
     const client_id = uniqid();
     const requestHandler = (request, response) => {
       if (request.method === 'POST') {
-        response.end();
-        const parsed = url.parse(request.url, true);
-        const params = parsed.query;
-        if (client_id !== params.client_id) {
-          server.close();
-          reject(new LoginFailed());
-        }
+        request.on('data', (data) => {
+          rawBody += data;
+        });
+        request.on('end', function () {
+          try {
+            const body = JSON.parse(rawBody);
+            response.end();
+            if (client_id !== body.client_id) {
+              server.close();
+              reject(new LoginFailed());
+            }
 
-        setSync(CFG_BITSRC_TOKEN_KEY, params.token.token);
-        if (!getSync(CFG_USER_EMAIL_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, params.email);
-        if (!getSync(CFG_USER_NAME_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, params.username);
-        server.close();
-        return resolve(chalk.green('login successful!!!!'));
+            setSync(CFG_BITSRC_TOKEN_KEY, body.token.token);
+            if (!getSync(CFG_USER_EMAIL_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.email);
+            if (!getSync(CFG_USER_NAME_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.username);
+            server.close();
+            resolve(chalk.green('login successful!!!!'));
+          } catch (err) {
+            logger.err(`login failed: ${err}`);
+          }
+        });
       }
       return reject(new LoginFailed());
     };
