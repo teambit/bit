@@ -43,6 +43,7 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestError from './exceptions/external-test-error';
 import ExternalBuildError from './exceptions/external-build-error';
+import InvalidCompilerInterface from './exceptions/invalid-compiler-interface';
 import GeneralError from '../../error/general-error';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 
@@ -372,9 +373,7 @@ export default class Component {
         });
     };
     if (!compiler.action && !compiler.oldAction) {
-      return Promise.reject(
-        `"${compiler.name}" does not have a valid compiler interface, it has to expose a compile method`
-      );
+      return Promise.reject(new InvalidCompilerInterface(compiler.name));
     }
 
     if (consumer) return runBuild(consumer.getPath());

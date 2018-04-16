@@ -75,7 +75,7 @@ export default class EnvExtension extends BaseExtension {
     const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
     const installResult = await scope.installEnvironment(installOpts);
     this.setExtensionPathInScope(scope.getPath());
-    this.reload();
+    await this.reload();
     return installResult;
   }
 

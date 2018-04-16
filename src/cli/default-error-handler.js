@@ -59,6 +59,7 @@ import {
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import GeneralError from '../error/general-error';
 
@@ -260,6 +261,10 @@ to ignore this error, please use --ignore-newest-version flag`
       `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
         err.originalError.stack
       }`
+  ],
+  [
+    InvalidCompilerInterface,
+    err => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`
   ],
   [
     AuthenticationFailed,

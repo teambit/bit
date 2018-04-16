@@ -287,8 +287,15 @@ const _getRegularExtensionPath = (name: string, scopePath: string): string => {
   const internalComponentsPath = Scope.getComponentsRelativePath();
   const internalComponentPath = Scope.getComponentRelativePath(bitId);
   const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
-  const resolved = require.resolve(componentPath);
-  return resolved;
+  try {
+    // This might throw an error in case of imported component when the env
+    // isn't installed yet
+    // It will be handled in higher functions
+    const resolved = require.resolve(componentPath);
+    return resolved;
+  } catch (e) {
+    return componentPath;
+  }
 };
 
 const baseApi = {
