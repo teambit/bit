@@ -14,30 +14,35 @@ export default function loginToBitSrc() {
     let rawBody = '';
     const client_id = uniqid();
     const requestHandler = (request, response) => {
-      if (request.method === 'POST') {
-        request.on('data', (data) => {
-          rawBody += data;
-        });
-        request.on('end', function () {
-          try {
-            const body = JSON.parse(rawBody);
-            response.end();
-            if (client_id !== body.client_id) {
-              server.close();
-              reject(new LoginFailed());
-            }
-
-            setSync(CFG_BITSRC_TOKEN_KEY, body.token.token);
-            if (!getSync(CFG_USER_EMAIL_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.email);
-            if (!getSync(CFG_USER_NAME_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.username);
-            server.close();
-            resolve(chalk.green('login successful!!!!'));
-          } catch (err) {
-            logger.err(`login failed: ${err}`);
-          }
-        });
+      if (request.method !== 'POST') {
+        server.close();
+        logger.error('recieved non post request, closing connection');
+        reject(new LoginFailed());
       }
-      return reject(new LoginFailed());
+      request.on('data', (data) => {
+        rawBody += data;
+      });
+      request.on('end', function () {
+        try {
+          const body = JSON.parse(rawBody);
+          if (client_id !== body.client_id) {
+            response.end();
+            server.close();
+            return reject(new LoginFailed());
+          }
+          setSync(CFG_BITSRC_TOKEN_KEY, body.token.token);
+          if (!getSync(CFG_USER_EMAIL_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.email);
+          if (!getSync(CFG_USER_NAME_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.username);
+        } catch (err) {
+          logger.err(`login failed: ${err}`);
+          request.end();
+          server.close();
+          return reject(new LoginFailed());
+        }
+        response.end();
+        server.close();
+        return resolve(chalk.green('login successful!!!!'));
+      });
     };
 
     const server = http.createServer(requestHandler);
