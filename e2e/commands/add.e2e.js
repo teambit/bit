@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
+import { ExcludedMainFile } from '../../src/consumer/component/add-components/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -626,16 +627,12 @@ describe('bit add command', function () {
       expect(errMsg).to.have.string('Please wrap excluded files with quotes');
     });
     // TODO: we need to implement the feature preventing -e without wrapping in quotes.
-    it('Should throw error when  main file is excluded', () => {
-      let errMsg = '';
+    it('should throw an error when main file is excluded', () => {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
-      try {
-        helper.runCmd('bit add bar/*.js -e bar/foo2.js -m bar/foo2.js');
-      } catch (err) {
-        errMsg = err.message;
-      }
-      expect(errMsg).to.have.string('error: main file bar/foo2.js was excluded from file list');
+      const addCmd = () => helper.runCmd('bit add bar/*.js -e bar/foo2.js -m bar/foo2.js');
+      const error = new ExcludedMainFile(path.join('bar', 'foo2.js'));
+      helper.expectToThrow(addCmd, error);
     });
     it('Should modify bitmap when adding component again when specifing id', () => {
       helper.createFile('bar', 'foo2.js');
@@ -706,11 +703,12 @@ describe('bit add command', function () {
       const addCmd = () => helper.addComponentWithOptions(normalizedPath, { e: 'bar/foo1.js' });
       expect(addCmd).to.throw(`warning: no files to add, the following files were ignored: ${normalizedPath}`);
     });
-    it('should throw error when main file is excluded', () => {
+    it('should throw an error when main file is excluded', () => {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       const addCmd = () => helper.addComponentWithOptions('bar', { i: 'bar/foo', e: 'bar/foo1.js', m: 'bar/foo1.js' });
-      expect(addCmd).to.throw('error: main file bar/foo1.js was excluded from file list');
+      const error = new ExcludedMainFile(path.join('bar', 'foo1.js'));
+      helper.expectToThrow(addCmd, error);
     });
     it('should add main file to component if exists and not in file list', () => {
       const expectedArray = [

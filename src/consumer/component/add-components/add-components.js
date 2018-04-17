@@ -254,7 +254,7 @@ export default class AddComponents {
       files.forEach((file) => {
         const fileInfo = calculateFileInfo(file.relativePath);
         const generatedFile = format(mainFile, fileInfo);
-        const foundFile = R.find(R.propEq('relativePath', generatedFile))(files);
+        const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(generatedFile)))(files);
         if (foundFile) {
           mainFile = foundFile.relativePath;
         }
@@ -279,7 +279,7 @@ export default class AddComponents {
     if (fs.existsSync(mainPath)) {
       const shouldIgnore = this.gitIgnore.ignores(mainFileRelativeToConsumer);
       if (shouldIgnore) throw new ExcludedMainFile(mainFileRelativeToConsumer);
-      const foundFile = R.find(R.propEq('relativePath', mainFileRelativeToConsumer))(files);
+      const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(mainFileRelativeToConsumer)))(files);
       if (!foundFile) {
         files.push({
           relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
