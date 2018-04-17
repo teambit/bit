@@ -13,6 +13,7 @@ const successDiffMessage = 'showing diff for';
 describe('bit diff command', function () {
   this.timeout(0);
   const helper = new Helper();
+  const barFooFile = path.join('bar', 'foo.js');
   before(() => {
     helper.reInitLocalScope();
   });
@@ -61,10 +62,10 @@ describe('bit diff command', function () {
           expect(diffOutput).to.have.string(successDiffMessage);
         });
         it('should indicate the original files with ---', () => {
-          expect(diffOutput).to.have.string('--- bar/foo.js (original)');
+          expect(diffOutput).to.have.string(`--- ${barFooFile} (original)`);
         });
         it('should indicate the modified files with +++', () => {
-          expect(diffOutput).to.have.string('+++ bar/foo.js (modified)');
+          expect(diffOutput).to.have.string(`+++ ${barFooFile} (modified)`);
         });
         it('should show the deleted part with leading - (minus sign)', () => {
           expect(diffOutput).to.have.string("-module.exports = function foo() { return 'got foo'; };");
@@ -139,14 +140,15 @@ describe('bit diff command', function () {
       output = helper.diff('bar/foo');
     });
     it('should indicate the deleted files as deleted', () => {
-      expect(output).to.have.string('--- bar/foo.js (original)');
-      expect(output).to.have.string('+++ bar/foo.js (modified)');
+      expect(output).to.have.string(`--- ${barFooFile} (original)`);
+      expect(output).to.have.string(`+++ ${barFooFile} (modified)`);
       // notice the leading minus sign
       expect(output).to.have.string(`-${barFooV1}`);
     });
     it('should indicate the added files as added', () => {
-      expect(output).to.have.string('--- bar/foo2.js (original)');
-      expect(output).to.have.string('+++ bar/foo2.js (modified)');
+      const barFoo2File = path.join('bar', 'foo2.js');
+      expect(output).to.have.string(`--- ${barFoo2File} (original)`);
+      expect(output).to.have.string(`+++ ${barFoo2File} (modified)`);
       // notice the leading plus sign
       expect(output).to.have.string(`+${barFooV2}`);
     });
