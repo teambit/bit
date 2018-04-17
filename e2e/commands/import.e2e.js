@@ -1714,6 +1714,20 @@ console.log(barFoo.default());`;
         expect(result.trim()).to.equal('got foo');
       });
     });
+    describe('with --merge=manual', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.importComponent('bar/foo --merge=manual');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+      it('should not override the local changes', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got foo v2');
+      });
+    });
     describe('re-import a component after tagging the component', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);

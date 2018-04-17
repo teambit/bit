@@ -11,10 +11,15 @@ import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
 import { filterAsync } from '../../utils';
 import GeneralError from '../../error/general-error';
+import type { MergeStrategy } from '../versions-ops/merge-version/merge-version';
+import { applyModifiedVersion } from '../versions-ops/checkout-version';
+import { threeWayMerge } from '../versions-ops/merge-version';
+import Version from '../../version';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
   verbose: boolean, // default: false
+  mergeStrategy?: MergeStrategy,
   withEnvironments: boolean, // default: false
   writeToPath?: string,
   writePackageJson: boolean, // default: true
@@ -166,7 +171,7 @@ export default class ImportComponents {
     // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.override || this.options.objectsOnly) return Promise.resolve();
+    if (this.options.override || this.options.objectsOnly || this.options.mergeStrategy) return Promise.resolve();
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
@@ -183,8 +188,45 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies, override: boolean = true) {
+  async updateFilesAccordingToMergeStrategy(componentsWithDependencies: ComponentWithDependencies[]) {
+    if (!this.options.mergeStrategy) return null;
+    const updateAllP = componentsWithDependencies.map(async (componentWithDependencies: ComponentWithDependencies) => {
+      const component = componentWithDependencies.component;
+      const componentStatus = await this.consumer.getComponentStatusById(component.id);
+      if (componentStatus.modified) {
+        const componentModel = await this.consumer.scope.sources.get(component.id);
+        if (!componentModel) {
+          throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
+        }
+        const existingBitMapId = this.consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
+        const existingBitMapBitId = BitId.parse(existingBitMapId);
+        const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
+        const currentlyUsedVersion = existingBitMapBitId.version;
+        const baseComponent: Version = await componentModel.loadVersion(
+          currentlyUsedVersion,
+          this.consumer.scope.objects
+        );
+        const currentComponent: Version = await componentModel.loadVersion(
+          component.id.version,
+          this.consumer.scope.objects
+        );
+        const mergeResults = await threeWayMerge({
+          consumer: this.consumer,
+          otherComponent: fsComponent,
+          otherVersion: currentlyUsedVersion,
+          currentComponent,
+          currentVersion: component.id.version,
+          baseComponent
+        });
+        await applyModifiedVersion(component.files, mergeResults, this.options.mergeStrategy);
+      }
+    });
+    return Promise.all(updateAllP);
+  }
+
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[], override: boolean = true) {
     if (this.options.objectsOnly) return;
+    await this.updateFilesAccordingToMergeStrategy(componentsWithDependencies);
     await this.consumer.writeToComponentsDir({
       componentsWithDependencies,
       writeToPath: this.options.writeToPath,
