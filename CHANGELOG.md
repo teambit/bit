@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix resolve-node-package process for Windows
+
 ## [0.10.14] - 2018-04-10
 
 - support link-files with "export { default as ... }"; syntax
-- fix merge of madge dependencies with package.json dependencies with dot in them 
+- fix merge of madge dependencies with package.json dependencies with dot in them
 
 ## [0.10.13] - 2018-03-21
 

@@ -98,11 +98,12 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
     const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1, packageFullPath.length);
 
     const packageName = resolvePackageNameByPath(packageRelativePath);
-    const packageVersion = R.path(['dependencies', packageName], packageJsonInfo) ||
-                           R.path(['devDependencies', packageName], packageJsonInfo) ||
-                           R.path(['peerDependencies', packageName], packageJsonInfo);
+    const packageNameNormalized = packageName.replace('\\', '/');
+    const packageVersion = R.path(['dependencies', packageNameNormalized], packageJsonInfo) ||
+                           R.path(['devDependencies', packageNameNormalized], packageJsonInfo) ||
+                           R.path(['peerDependencies', packageNameNormalized], packageJsonInfo);
     if (packageVersion) {
-      result[packageName] = packageVersion;
+      result[packageNameNormalized] = packageVersion;
       return result;
     }
   }
