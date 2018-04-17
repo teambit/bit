@@ -6,15 +6,17 @@ import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
 export default (async function remove({
   ids,
   force,
+  remote,
   track,
   deleteFiles
 }: {
   ids: string[],
   force: boolean,
+  remote: boolean,
   track: boolean,
   deleteFiles: boolean
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer = await loadConsumer();
-  return consumer.remove(ids, force, track, deleteFiles);
+  return consumer.remove({ ids, force, remote, track, deleteFiles });
 });

@@ -1,12 +1,16 @@
 /** @flow */
+
+import rightpad from 'pad-right';
+import chalk from 'chalk';
 import Command from '../../command';
 import { objectToTupleArray } from '../../../utils';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
 
 export default class Config extends Command {
   name = 'config';
-  description = 'global config management.\n  https://docs.bitsrc.io/docs/conf-config.html';
+  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`;
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];
@@ -19,7 +23,8 @@ export default class Config extends Command {
   report(conf: { [string]: string }): string {
     return objectToTupleArray(conf)
       .map((tuple) => {
-        return tuple.join('     ');
+        tuple[0] = rightpad(tuple[0], 30, ' ');
+        return tuple.join('');
       })
       .join('\n');
   }
@@ -36,7 +41,7 @@ class ConfigSet extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'added configuration successfully';
+    return chalk.green('added configuration successfully');
   }
 }
 
@@ -85,6 +90,6 @@ class ConfigDel extends Command {
   }
 
   report(conf: { [string]: string }): string {
-    return 'deleted successfully';
+    return chalk.green('deleted successfully');
   }
 }

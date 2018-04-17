@@ -60,7 +60,7 @@ export default class Environment {
     const concreteOpts = {
       componentsWithDependencies,
       writeToPath,
-      force: opts.override,
+      override: opts.override,
       writePackageJson: !opts.noPackageJson,
       writeBitJson: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,

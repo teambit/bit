@@ -1,6 +1,7 @@
 // @flow
 import R from 'ramda';
 import { DEFAULT_COMPONENTES_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../../constants';
+import GeneralError from '../../error/general-error';
 
 export default class BitStructure {
   componentsDefaultDirectory: string;
@@ -21,10 +22,8 @@ export default class BitStructure {
       case 'version':
         return 'version';
       default:
-        throw new Error(`the ${componentPart} part of the component structure
-           ${
-  componentStructure
-} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
+        throw new GeneralError(`the ${componentPart} part of the component structure
+           ${componentStructure} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
     }
   }
 
@@ -45,7 +44,7 @@ export default class BitStructure {
       } else {
         // todo: create a new exception class
         if (!R.isEmpty(dynamicParts)) {
-          throw new Error(`${dirStructure} is invalid, a static directory can not be after the dynamic part`);
+          throw new GeneralError(`${dirStructure} is invalid, a static directory can not be after the dynamic part`);
         }
         staticParts.push(dir);
       }

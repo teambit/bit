@@ -3,21 +3,22 @@ import R from 'ramda';
 import Component from '../../component';
 import { Version } from '../../../scope/models';
 import { Consumer } from '../..';
-import { sha1 } from '../../../utils';
+import { sha1, pathNormalizeToLinux } from '../../../utils';
 import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
 import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import type { PathOsBased } from '../../../utils/path';
+import type { PathOsBased, PathLinux } from '../../../utils/path';
 import type { SourceFileModel } from '../../../scope/models/version';
+import GeneralError from '../../../error/general-error';
 
 export type MergeResultsThreeWay = {
   addFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     fsFile: SourceFile
   }>,
   modifiedFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     fsFile: SourceFile,
     baseFile: SourceFileModel,
     currentFile: SourceFileModel,
@@ -25,11 +26,11 @@ export type MergeResultsThreeWay = {
     conflict: ?string
   }>,
   unModifiedFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     fsFile: SourceFile
   }>,
   overrideFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     fsFile: SourceFile
   }>,
   hasConflicts: boolean
@@ -76,12 +77,12 @@ export default (async function threeWayMergeVersions({
   // sharedDir can be different if the dependencies were changes for example, as a result, it won't
   // be possible to compare between the files as the paths are different.
   // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
-  const baseFiles = baseComponent.files;
-  const currentFiles = currentComponent.files;
-  const fsFiles = otherComponent.cloneFilesWithSharedDir();
+  const baseFiles: SourceFileModel[] = baseComponent.files;
+  const currentFiles: SourceFileModel[] = currentComponent.files;
+  const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
   const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
-    const filePath = fsFile.relative;
+    const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
     if (!currentFile) {
       // if !currentFile && !baseFile, the file was created after the last tag
       // if !currentFile && baseFile,  the file was created as part of the last tag
@@ -116,7 +117,7 @@ export default (async function threeWayMergeVersions({
   };
 
   fsFiles.forEach((fsFile) => {
-    const relativePath = fsFile.relative;
+    const relativePath = pathNormalizeToLinux(fsFile.relative);
     const baseFile = baseFiles.find(file => file.relativePath === relativePath);
     const currentFile = currentFiles.find(file => file.relativePath === relativePath);
     getFileResult(fsFile, baseFile, currentFile);
@@ -125,9 +126,9 @@ export default (async function threeWayMergeVersions({
   if (R.isEmpty(results.modifiedFiles)) return results;
 
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
-  conflictResults.forEach((conflictResult) => {
+  conflictResults.forEach((conflictResult: MergeFileResult) => {
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
-    if (!modifiedFile) throw new Error(`unable to find ${conflictResult.filePath} in modified files array`);
+    if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
     if (conflictResult.conflict) results.hasConflicts = true;

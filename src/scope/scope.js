@@ -60,6 +60,7 @@ import { ComponentSpecsFailed } from '../consumer/exceptions';
 import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';
 import { Analytics } from '../analytics/analytics';
+import GeneralError from '../error/general-error';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -1047,7 +1048,7 @@ export default class Scope {
     Analytics.addBreadCrumb('loadComponent', `scope.loadComponent, id: ${id.toString()}`);
 
     if (localOnly && !id.isLocal(this.name)) {
-      throw new Error('cannot load bit from remote scope, please import first');
+      throw new GeneralError('cannot load bit from remote scope, please import first');
     }
     return this.loadRemoteComponent(id);
   }
@@ -1362,7 +1363,7 @@ export default class Scope {
     keep?: boolean
   }): Promise<?SpecsResults> {
     if (!bitId.isLocal(this.name)) {
-      throw new Error('cannot run specs on remote component');
+      throw new GeneralError('cannot run specs on remote component');
     }
 
     const component = await this.loadComponent(bitId);
@@ -1393,7 +1394,7 @@ export default class Scope {
     keep: ?boolean
   }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
-      throw new Error('cannot run build on remote component');
+      throw new GeneralError('cannot run build on remote component');
     }
     const component: Component = await this.loadComponent(bitId);
     return component.build({ scope: this, save, consumer, verbose, directory, keep });

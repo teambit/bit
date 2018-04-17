@@ -7,6 +7,7 @@ import { InvalidBitId, InvalidIdChunk } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
 import type { PathOsBased } from '../utils/path';
+import GeneralError from '../error/general-error';
 
 export type BitIdProps = {
   scope?: string,
@@ -165,7 +166,7 @@ export default class BitId {
     }
 
     if (!cleanName) {
-      throw new Error('scope name created by directory name have to contains at least one character or number');
+      throw new GeneralError('scope name created by directory name have to contains at least one character or number');
     }
     return cleanName;
   }

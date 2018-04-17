@@ -252,7 +252,7 @@ describe('bit merge command', function () {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
           helper.importComponent('bar/foo --conf');
-          helper.mergeVersion('0.0.1', 'bar/foo');
+          helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not delete the bit.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.path();
@@ -262,7 +262,7 @@ describe('bit merge command', function () {
         before(() => {
           helper.getClonedLocalScope(localScopeAfterImport);
           helper.importComponent('bar/foo --ignore-package-json');
-          helper.mergeVersion('0.0.1', 'bar/foo');
+          helper.mergeVersion('0.0.1', 'bar/foo', '--theirs');
         });
         it('should not write package.json file', () => {
           expect(path.join(helper.localScopePath, 'components/bar/foo', 'package.json')).to.not.be.a.path();

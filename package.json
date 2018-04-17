@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.11-dev.2",
+  "version": "0.12.11",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "scripts": {
@@ -39,7 +39,7 @@
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "0.10.14-dev.2",
+    "bit-javascript": "0.10.14",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
@@ -90,6 +90,7 @@
     "ramda": "^0.24.1",
     "raven": "^2.4.2",
     "regenerator-runtime": "^0.11.0",
+    "replace-buffer": "^1.2.1",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
     "semver": "^5.4.1",

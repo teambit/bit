@@ -3,10 +3,12 @@ import chalk from 'chalk';
 import R from 'ramda';
 import Command from '../../command';
 import { untrack } from '../../../api/consumer';
+import GeneralError from '../../../error/general-error';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Untrack extends Command {
   name = 'untrack [ids...]';
-  description = 'untrack a new component(s)\n  https://docs.bitsrc.io/docs/cli-untrack.html';
+  description = `untrack a new component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-untrack.html`;
   alias = 'u';
   opts = [['a', 'all', 'revert add for all tracked components']];
   loader = true;
@@ -14,7 +16,7 @@ export default class Untrack extends Command {
 
   action([components]: [string[]], { all }: { all: ?boolean }): Promise<*> {
     if ((!R.isEmpty(components) && all) || (R.isEmpty(components) && !all)) {
-      throw new Error(
+      throw new GeneralError(
         'you can use either a specific component [id] to untrack a particular component or --all flag to untrack them all'
       );
     }

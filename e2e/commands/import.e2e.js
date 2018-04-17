@@ -23,6 +23,7 @@ describe('bit import', function () {
   });
 
   describe('stand alone component (without dependencies)', () => {
+    let importOutput;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
@@ -33,9 +34,16 @@ describe('bit import', function () {
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const output = helper.importComponent('global/simple');
-      expect(output.includes('successfully imported one component')).to.be.true;
-      expect(output.includes('global/simple')).to.be.true;
+      importOutput = helper.importComponent('global/simple');
+    });
+    it('should display a successful message', () => {
+      expect(importOutput).to.have.string('successfully imported one component');
+      expect(importOutput).to.have.string('global/simple');
+      expect(importOutput).to.have.string('0.0.1');
+    });
+    it('should indicate that the imported component is new', () => {
+      expect(importOutput).to.have.string('added');
+      expect(importOutput).to.not.have.string('updated');
     });
     it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
@@ -183,7 +191,7 @@ describe('bit import', function () {
         before(() => {
           helper.mimicGitCloneLocalProject(false);
           helper.addRemoteScope();
-          helper.runCmd('bit import --write --force');
+          helper.runCmd('bit import --write --override');
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should write the internal files according to their original paths', () => {
@@ -228,7 +236,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --force --write');
+              helper.runCmd('bit import --override --write');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -282,7 +290,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --write --ignore-dist --force');
+              helper.runCmd('bit import --write --ignore-dist --override');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -324,7 +332,7 @@ describe('bit import', function () {
     it('should import component with deprecated msg', () => {
       expect(output).to.have.string('successfully imported one component');
       expect(output).to.have.string('imprel/imprel');
-      expect(output).to.have.string('Deprecated');
+      // expect(output).to.have.string('Deprecated');
     });
   });
 
@@ -721,6 +729,20 @@ describe('bit import', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
+    describe('bit list', () => {
+      it('should show only the components and not the dependencies when --scope is not used', () => {
+        const listScope = helper.listLocalScope();
+        expect(listScope).to.have.string('bar/foo');
+        expect(listScope).to.not.have.string('utils/is-string');
+        expect(listScope).to.not.have.string('utils/is-type');
+      });
+      it('should show the components and the dependencies when --scope is used', () => {
+        const listScope = helper.listLocalScope('--scope');
+        expect(listScope).to.have.string('bar/foo');
+        expect(listScope).to.have.string('utils/is-string');
+        expect(listScope).to.have.string('utils/is-type');
+      });
+    });
     describe('when cloning the project to somewhere else without component files. (component files are not under git)', () => {
       before(() => {
         helper.mimicGitCloneLocalProject(false);
@@ -739,7 +761,7 @@ describe('bit import', function () {
       });
       describe('and running bit import with "--write" flag', () => {
         before(() => {
-          helper.runCmd('bit import --write --force');
+          helper.runCmd('bit import --write --override');
         });
         it('should write the components files back', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -765,7 +787,7 @@ describe('bit import', function () {
           helper.importAllComponents();
         });
         it('local scope should contain all the components', () => {
-          const output = helper.listLocalScope();
+          const output = helper.listLocalScope('--scope');
           expect(output).to.have.string('found 3 components in local scope');
         });
         it('should not override the current files', () => {
@@ -1645,6 +1667,7 @@ console.log(barFoo.default());`;
   });
 
   describe('import a component when the local version is modified', () => {
+    let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
@@ -1659,8 +1682,9 @@ console.log(barFoo.default());`;
 
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      localScope = helper.cloneLocalScope();
     });
-    describe('without --force flag', () => {
+    describe('without --override flag', () => {
       let output;
       before(() => {
         try {
@@ -1677,10 +1701,10 @@ console.log(barFoo.default());`;
         expect(result.trim()).to.equal('got foo v2');
       });
     });
-    describe('with --force flag', () => {
+    describe('with --override flag', () => {
       let output;
       before(() => {
-        output = helper.importComponent('bar/foo --force');
+        output = helper.importComponent('bar/foo --override');
       });
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
@@ -1688,6 +1712,16 @@ console.log(barFoo.default());`;
       it('should override the local changes', () => {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got foo');
+      });
+    });
+    describe('re-import a component after tagging the component', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.tagAllWithoutMessage();
+      });
+      it('should import successfully', () => {
+        const output = helper.importComponent('bar/foo');
+        expect(output).to.have.string('successfully imported');
       });
     });
   });
@@ -1756,7 +1790,7 @@ console.log(barFoo.default());`;
       before(() => {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
-        helper.runCmd('bit import --write --force');
+        helper.runCmd('bit import --write --override');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1855,21 +1889,21 @@ console.log(barFoo.default());`;
       expect(modulePath).to.be.a.directory('should contain component dep as npm package dep').and.not.empty;
     });
     it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
-      helper.importComponent('comp/with-deps -f');
+      helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson(helper.localScopePath);
       expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
       expect(pkgJson.workspaces).to.be.ofSize(2);
       expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
     it('Should not delete custom fields in package.json', () => {
-      helper.importComponent('comp/with-deps -f');
+      helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson();
       expect(pkgJson).to.have.property('customField');
       expect(pkgJson.customField).to.equal('bit is awsome');
     });
     it('Should not delete delete workspaces that already existed in package.json', () => {
       helper.addKeyValueToPackageJson({ workspaces: ['comp'] });
-      helper.importComponent('comp/with-deps -f');
+      helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson();
       expect(pkgJson.workspaces).to.include(
         'components/.dependencies/*/*/*/*',

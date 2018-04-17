@@ -20,6 +20,7 @@ import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
+import GeneralError from '../../error/general-error';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -45,7 +46,7 @@ export default class BitMap {
   setComponent(id: string, componentMap: ComponentMap) {
     const bitId = BitId.parse(id);
     if (!bitId.hasVersion() && bitId.scope) {
-      throw new Error(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
+      throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
     this.components[id] = componentMap;
   }
@@ -157,7 +158,7 @@ export default class BitMap {
     } else if (this.components[parentWithoutScope]) {
       parentId = parentWithoutScope;
     } else {
-      throw new Error(`Unable to add indirect dependency ${dependency}, as its parent ${parent} does not exist`);
+      throw new GeneralError(`Unable to add indirect dependency ${dependency}, as its parent ${parent} does not exist`);
     }
     if (!this.components[parentId].dependencies) {
       this.components[parentId].dependencies = [dependency];
@@ -239,7 +240,9 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
-      if (!parent) throw new Error(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
+      if (!parent) {
+        throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
+      }
       this.addDependencyToParent(parent, componentIdStr);
     }
     if (this.components[componentIdStr]) {
@@ -354,7 +357,7 @@ export default class BitMap {
       return;
     }
     if (olderComponentsIds.length > 1) {
-      throw new Error(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
+      throw new GeneralError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
       are authored or imported. This scenario is not supported`);
     }
     const olderComponentId = olderComponentsIds[0];
@@ -463,7 +466,7 @@ export default class BitMap {
       const errorMsg = isPathDir
         ? `directory ${from} is not a tracked component`
         : `the file ${existingPath} is untracked`;
-      throw new Error(errorMsg);
+      throw new GeneralError(errorMsg);
     }
 
     return allChanges;

@@ -4,11 +4,11 @@ import fs from 'fs-extra';
 import roadRunner from 'roadrunner';
 import Command from '../../command';
 
-const { MODULES_CACHE_DIR, MODULES_CACHE_FILENAME, BIT_VERSION } = require('../../../constants');
+const { BASE_DOCS_DOMAIN, MODULES_CACHE_DIR, MODULES_CACHE_FILENAME, BIT_VERSION } = require('../../../constants');
 
 export default class ClearCache extends Command {
   name = 'clear-cache';
-  description = "clears bit's cache from current working machine\n  https://docs.bitsrc.io/docs/cli-clear-cache.html";
+  description = `clears bit's cache from current working machine\n  https://${BASE_DOCS_DOMAIN}/docs/cli-clear-cache.html`;
   alias = 'cc';
   opts = [];
   loader = false;

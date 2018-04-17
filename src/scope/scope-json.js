@@ -4,6 +4,7 @@ import { writeFile, cleanObject, readFile, existsSync } from '../utils';
 import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
 import BitId from '../bit-id/bit-id';
+import GeneralError from '../error/general-error';
 
 export function getPath(scopePath: string): string {
   return pathlib.join(scopePath, SCOPE_JSON);
@@ -60,18 +61,18 @@ export class ScopeJson {
   }
 
   set(key: string, val: string) {
-    if (!this.hasOwnProperty(key)) throw new Error(`unknown key ${key}`);
+    if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
     this[key] = val;
     return this;
   }
 
   get(key: string): string {
-    if (!this.hasOwnProperty(key)) throw new Error(`unknown key ${key}`);
+    if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
     return this[key];
   }
 
   del(key: string): string {
-    if (!this.hasOwnProperty(key)) throw new Error(`unknown key ${key}`);
+    if (!this.hasOwnProperty(key)) throw new GeneralError(`unknown key ${key}`);
     return this[key];
   }
 

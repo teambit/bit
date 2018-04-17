@@ -12,6 +12,7 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import type { ImportOptions } from '../../../consumer/component/import-components';
 import { Analytics } from '../../../analytics/analytics';
+import GeneralError from '../../../error/general-error';
 
 const key = R.compose(R.head, R.keys);
 
@@ -28,10 +29,10 @@ export default (async function importAction(
 ) {
   async function importEnvironment(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
-    if (!importOptions.ids.length) throw new Error('you must specify component id for importing an environment');
+    if (!importOptions.ids.length) throw new GeneralError('you must specify component id for importing an environment');
     const idToImport = importOptions.ids[0];
     const envDependencies = await consumer.importEnvironment(idToImport, importOptions.verbose, true);
-    if (!envDependencies.length) throw new Error(`the environment component ${idToImport} is installed already`);
+    if (!envDependencies.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {
@@ -75,7 +76,7 @@ export default (async function importAction(
   if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
     return importEnvironment(consumer);
   }
-  const { dependencies, envDependencies, importedVersions } = await consumer.importComponents(importOptions);
+  const { dependencies, envDependencies, importDetails } = await consumer.importComponents(importOptions);
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
     const componentMap = consumer.bitMap.getComponent(bitId);
@@ -94,7 +95,7 @@ export default (async function importAction(
     installNpmPackages: importOptions.installNpmPackages
   });
   Analytics.setExtraData('num_components', bitIds.length);
-  return { dependencies, envDependencies, importedVersions, warnings };
+  return { dependencies, envDependencies, importDetails, warnings };
 });
 
 // TODO: refactor to better use of semver

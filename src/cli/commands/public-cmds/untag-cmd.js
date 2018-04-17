@@ -2,12 +2,14 @@
 import Command from '../../command';
 import { unTagAction } from '../../../api/consumer';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
+import GeneralError from '../../../error/general-error';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const chalk = require('chalk');
 
 export default class Untag extends Command {
   name = 'untag [id] [version]';
-  description = 'revert version(s) tagged for component(s)\n  https://docs.bitsrc.io/docs/cli-untag.html';
+  description = `revert version(s) tagged for component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-untag.html`;
   alias = '';
   opts = [
     ['a', 'all', 'revert tag for all tagged components'],
@@ -18,7 +20,7 @@ export default class Untag extends Command {
 
   action([id, version]: string[], { all, force }: { all: ?boolean, force: ?boolean }): Promise<untagResult[]> {
     if (!id && !all) {
-      throw new Error('please specify a component ID or use --all flag');
+      throw new GeneralError('please specify a component ID or use --all flag');
     }
 
     if (all) {

@@ -25,6 +25,7 @@ import move from './lib/move';
 import link from './lib/link';
 import checkout from './lib/checkout';
 import merge from './lib/merge';
+import diff from './lib//diff';
 import migrate from './lib/migrate';
 import login from './lib/login';
 
@@ -60,6 +61,7 @@ export {
   link,
   checkout,
   merge,
+  diff,
   migrate,
   login
 };

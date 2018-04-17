@@ -44,6 +44,7 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestError from './exceptions/external-test-error';
 import ExternalBuildError from './exceptions/external-build-error';
+import GeneralError from '../../error/general-error';
 
 export type ComponentProps = {
   name: string,
@@ -206,7 +207,9 @@ export default class Component {
   validateComponent() {
     const nonEmptyFields = ['name', 'box', 'mainFile'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new Error(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+      if (!this[field]) {
+        throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+      }
     });
   }
 
@@ -238,7 +241,7 @@ export default class Component {
     return homepage;
   }
 
-  writeBitJson(bitDir: string, force?: boolean = true): Promise<Component> {
+  writeBitJson(bitDir: string, override?: boolean = true): Promise<Component> {
     return new ComponentBitJson({
       version: this.version,
       scope: this.scope,
@@ -251,7 +254,7 @@ export default class Component {
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies
-    }).write({ bitDir, override: force });
+    }).write({ bitDir, override });
   }
 
   getPackageNameAndPath(): Promise<any> {
@@ -263,11 +266,11 @@ export default class Component {
   async writePackageJson(
     consumer: Consumer,
     bitDir: string,
-    force?: boolean = true,
+    override?: boolean = true,
     writeBitDependencies?: boolean = false,
     excludeRegistryPrefix?: boolean = false
   ): Promise<boolean> {
-    return packageJson.write(consumer, this, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+    return packageJson.write(consumer, this, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
   }
 
   flattenedDependencies(): BitIds {
@@ -368,7 +371,7 @@ export default class Component {
     writeBitJson,
     writePackageJson,
     consumer,
-    force = true,
+    override = true,
     writeBitDependencies = false,
     deleteBitDirContent = false,
     excludeRegistryPrefix = false
@@ -377,7 +380,7 @@ export default class Component {
     writeBitJson: boolean,
     writePackageJson: boolean,
     consumer?: Consumer,
-    force?: boolean,
+    override?: boolean,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
     excludeRegistryPrefix?: boolean
@@ -387,16 +390,16 @@ export default class Component {
     } else {
       await mkdirp(bitDir);
     }
-    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, force)));
+    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson) await this.writeBitJson(bitDir, force);
+    if (writeBitJson) await this.writeBitJson(bitDir, override);
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
     if (writePackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
-      await this.writePackageJson(consumer, bitDir, force, writeBitDependencies, excludeRegistryPrefix);
+      await this.writePackageJson(consumer, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
     }
-    if (this.license && this.license.src) await this.license.write(bitDir, force);
+    if (this.license && this.license.src) await this.license.write(bitDir, override);
     logger.debug('component has been written successfully');
     return this;
   }
@@ -475,7 +478,7 @@ export default class Component {
     bitDir,
     writeBitJson = true,
     writePackageJson = true,
-    force = true,
+    override = true,
     origin,
     parent,
     consumer,
@@ -487,7 +490,7 @@ export default class Component {
     bitDir?: string,
     writeBitJson?: boolean,
     writePackageJson?: boolean,
-    force?: boolean,
+    override?: boolean,
     origin?: string,
     parent?: BitId,
     consumer?: Consumer,
@@ -499,7 +502,7 @@ export default class Component {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
     const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
     const bitMap: ?BitMap = consumer ? consumer.bitMap : undefined;
-    if (!this.files) throw new Error(`Component ${this.id.toString()} is invalid as it has no files`);
+    if (!this.files) throw new GeneralError(`Component ${this.id.toString()} is invalid as it has no files`);
     // Take the bitdir from the files (it will be the same for all the files of course)
     const calculatedBitDir = bitDir || this.files[0].base;
     // Update files base dir according to bitDir
@@ -516,7 +519,7 @@ export default class Component {
         writeBitJson,
         writePackageJson,
         consumer,
-        force,
+        override,
         writeBitDependencies,
         excludeRegistryPrefix
       });
@@ -570,7 +573,7 @@ export default class Component {
       writeBitJson,
       writePackageJson: actualWithPackageJson,
       consumer,
-      force,
+      override,
       writeBitDependencies,
       deleteBitDirContent,
       excludeRegistryPrefix
@@ -787,7 +790,7 @@ export default class Component {
     // return buildFilesP.then((buildedFiles) => {
     builtFiles.forEach((file) => {
       if (file && (!file.contents || !isString(file.contents.toString()))) {
-        throw new Error('builder interface has to return object with a code attribute that contains string');
+        throw new GeneralError('builder interface has to return object with a code attribute that contains string');
       }
     });
     this.setDists(builtFiles.map(file => new Dist(file)));
@@ -806,7 +809,7 @@ export default class Component {
       return isolatedEnvironment.path;
     } catch (err) {
       await isolatedEnvironment.destroy();
-      throw new Error(err);
+      throw new GeneralError(err);
     }
   }
 

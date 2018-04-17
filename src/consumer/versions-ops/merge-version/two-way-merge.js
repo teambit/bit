@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import path from 'path';
 import Component from '../../component';
 import { Version } from '../../../scope/models';
 import { Consumer } from '../..';
@@ -8,23 +9,24 @@ import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
 import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
-import type { PathOsBased } from '../../../utils/path';
+import type { PathOsBased, PathLinux } from '../../../utils/path';
 import type { SourceFileModel } from '../../../scope/models/version';
+import GeneralError from '../../../error/general-error';
 
 export type MergeResultsTwoWay = {
   addFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     otherFile: SourceFileModel
   }>,
   modifiedFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     otherFile: SourceFileModel,
     currentFile: SourceFile,
     output: ?string,
     conflict: ?string
   }>,
   unModifiedFiles: Array<{
-    filePath: string,
+    filePath: PathLinux,
     currentFile: SourceFile
   }>,
   hasConflicts: boolean
@@ -71,8 +73,8 @@ export default (async function twoWayMergeVersions({
     results.modifiedFiles.push({ filePath, currentFile, otherFile, output: null, conflict: null });
   };
 
-  otherFiles.forEach((otherFile) => {
-    const relativePath = otherFile.relativePath;
+  otherFiles.forEach((otherFile: SourceFileModel) => {
+    const relativePath: PathOsBased = path.normalize(otherFile.relativePath);
     const currentFile = currentFiles.find(file => file.relative === relativePath);
     getFileResult(otherFile, currentFile);
   });
@@ -80,9 +82,9 @@ export default (async function twoWayMergeVersions({
   if (R.isEmpty(results.modifiedFiles)) return results;
 
   const conflictResults = await getMergeResults(consumer, results.modifiedFiles);
-  conflictResults.forEach((conflictResult) => {
+  conflictResults.forEach((conflictResult: MergeFileResult) => {
     const modifiedFile = results.modifiedFiles.find(file => file.filePath === conflictResult.filePath);
-    if (!modifiedFile) throw new Error(`unable to find ${conflictResult.filePath} in modified files array`);
+    if (!modifiedFile) throw new GeneralError(`unable to find ${conflictResult.filePath} in modified files array`);
     modifiedFile.output = conflictResult.output;
     modifiedFile.conflict = conflictResult.conflict;
     if (conflictResult.conflict) results.hasConflicts = true;
@@ -102,7 +104,7 @@ async function getMergeResults(
       const content = await file.file.load(consumer.scope.objects);
       return tmp.save(content);
     };
-    const baseFilePathP = tmp.save('');
+    const baseFilePathP: Promise<PathOsBased> = tmp.save('');
     const otherFilePathP = writeFile(modifiedFile.otherFile);
     const [otherFilePath, baseFilePath, currentFilePath] = await Promise.all([
       otherFilePathP,

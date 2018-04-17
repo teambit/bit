@@ -1,8 +1,9 @@
 // @flow
 import execa from 'execa';
 import type { PathLinux, PathOsBased } from '../utils/path';
+import GeneralError from '../error/general-error';
 
-export type MergeFileResult = { filePath: string, output: ?string, conflict: ?string };
+export type MergeFileResult = { filePath: PathLinux, output: ?string, conflict: ?string };
 export type MergeFileParams = {
   filePath: PathLinux,
   currentFile: {
@@ -56,7 +57,7 @@ export default (async function mergeFiles({
       return mergeResult;
     }
     if (err.code === 'ENOENT') {
-      throw new Error('unable to run git merge-file command, please make sure you have git installed');
+      throw new GeneralError('unable to run git merge-file command, please make sure you have git installed');
     }
     throw err;
   }

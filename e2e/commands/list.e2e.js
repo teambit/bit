@@ -70,7 +70,7 @@ describe('bit list command', function () {
     });
     it('should display the last found version', () => {
       const output = JSON.parse(helper.listLocalScope('-j'));
-      expect(output).to.deep.includes({ id: 'bar/foo', localVersion: '0.0.1' });
+      expect(output).to.deep.includes({ id: 'bar/foo', localVersion: '0.0.1', currentVersion: '0.0.2' });
     });
   });
   describe('with --outdated flag', () => {

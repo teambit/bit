@@ -25,6 +25,7 @@ import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import { BitIds } from '../../bit-id';
+import GeneralError from '../../error/general-error';
 
 type State = {
   versions?: {
@@ -34,11 +35,13 @@ type State = {
   }
 };
 
+type Versions = { [string]: Ref };
+
 export type ComponentProps = {
   scope?: string,
   box?: string,
   name: string,
-  versions?: { [string]: Ref },
+  versions?: Versions,
   lang?: string,
   deprecated?: boolean,
   bindingPrefix?: string,
@@ -53,7 +56,7 @@ export default class Component extends BitObject {
   scope: ?string;
   name: string;
   box: string;
-  versions: { [string]: Ref };
+  versions: Versions;
   lang: string;
   deprecated: boolean;
   bindingPrefix: string;
@@ -91,18 +94,31 @@ export default class Component extends BitObject {
     return !!this.versions[version];
   }
 
-  compatibleWith(component: Component): boolean {
-    const difference = diff(Object.keys(this.versions), Object.keys(component.versions));
+  /**
+   * returns only the versions that exist in both components (regardless whether the hash are the same)
+   * e.g. this.component = [0.0.1, 0.0.2, 0.0.3], other component = [0.0.3, 0.0.4]. it returns only [0.0.3].
+   */
+  _getComparableVersionsObjects(
+    component: Component
+  ): { thisComponentVersions: Versions, otherComponentVersions: Versions } {
+    const otherComponentVersions = filterObject(component.versions, (val, key) =>
+      Object.keys(this.versions).includes(key)
+    );
+    const thisComponentVersions = filterObject(this.versions, (val, key) =>
+      Object.keys(otherComponentVersions).includes(key)
+    );
+    return { thisComponentVersions, otherComponentVersions };
+  }
 
-    const comparableObject = filterObject(this.versions, (val, key) => !difference.includes(key));
-    return equals(component.versions, comparableObject);
+  compatibleWith(component: Component): boolean {
+    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component);
+    return equals(thisComponentVersions, otherComponentVersions);
   }
 
   diffWith(component: Component): string[] {
-    const difference = diff(Object.keys(this.versions), Object.keys(component.versions));
-    const comparableObject = filterObject(this.versions, (val, key) => !difference.includes(key));
-    return Object.keys(component.versions).filter(
-      version => component.versions[version].hash !== comparableObject[version].hash
+    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component);
+    return Object.keys(thisComponentVersions).filter(
+      version => thisComponentVersions[version].hash !== otherComponentVersions[version].hash
     );
   }
 
@@ -175,7 +191,7 @@ export default class Component extends BitObject {
   }
 
   toObject() {
-    function versions(vers: { [string]: Ref }) {
+    function versions(vers: Versions) {
       const obj = {};
       forEach(vers, (ref, version) => {
         obj[version] = ref.toString();
@@ -248,69 +264,64 @@ export default class Component extends BitObject {
     const versionNum = VersionParser.parse(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
-      throw new Error(`the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`);
+      throw new GeneralError(
+        `the version ${versionNum} does not exist in ${this.listVersions().join('\n')}, versions array`
+      );
     }
     return new ComponentVersion(this, versionNum);
   }
 
-  toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
+  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
-    return componentVersion.getVersion(repository).then((version: Version) => {
-      const filesP = version.files
-        ? Promise.all(
-          version.files.map(file =>
-            file.file
-              .load(repository)
-              .then(
-                content =>
-                  new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test })
-              )
-          )
-        )
-        : null;
-      const distsP = version.dists
-        ? Promise.all(
-          version.dists.map(dist =>
-            dist.file.load(repository).then((content) => {
-              return new Dist({ base: '.', path: dist.relativePath, contents: content.contents, test: dist.test });
-            })
-          )
-        )
-        : null;
-      const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
-      const log = version.log || null;
-      return Promise.all([filesP, distsP, scopeMetaP]).then(([files, dists, scopeMeta]) => {
-        // when generating a new ConsumerComponent out of Version, it is critical to make sure that
-        // all objects are cloned and not copied by reference. Otherwise, every time the
-        // ConsumerComponent instance is changed, the Version will be changed as well, and since
-        // the Version instance is saved in the Repository._cache, the next time a Version instance
-        // is retrieved, it'll be different than the first time.
-        return new ConsumerComponent({
-          name: this.name,
-          box: this.box,
-          version: componentVersion.version,
-          scope: this.scope,
-          lang: this.lang,
-          bindingPrefix: this.bindingPrefix,
-          mainFile: version.mainFile || null,
-          compilerId: version.compiler,
-          testerId: version.tester,
-          dependencies: version.dependencies.getClone(),
-          devDependencies: version.devDependencies.getClone(),
-          flattenedDependencies: BitIds.clone(version.flattenedDependencies),
-          flattenedDevDependencies: BitIds.clone(version.flattenedDevDependencies),
-          packageDependencies: clone(version.packageDependencies),
-          devPackageDependencies: clone(version.devPackageDependencies),
-          peerPackageDependencies: clone(version.peerPackageDependencies),
-          files,
-          dists,
-          docs: version.docs,
-          license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
-          specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
-          log,
-          deprecated: this.deprecated
-        });
-      });
+    const version: Version = await componentVersion.getVersion(repository);
+    const filesP = Promise.all(
+      version.files.map(async (file) => {
+        const content = await file.file.load(repository);
+        if (!content) throw new GeneralError(`failed loading a file ${file.relativePath} from the model`);
+        return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
+      })
+    );
+    const distsP = version.dists
+      ? Promise.all(
+        version.dists.map(async (dist) => {
+          const content = await dist.file.load(repository);
+          if (!content) throw new GeneralError(`failed loading a dist file ${dist.relativePath} from the model`);
+          return new Dist({ base: '.', path: dist.relativePath, contents: content.contents, test: dist.test });
+        })
+      )
+      : null;
+    const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
+    const log = version.log || null;
+    const [files, dists, scopeMeta] = await Promise.all([filesP, distsP, scopeMetaP]);
+    // when generating a new ConsumerComponent out of Version, it is critical to make sure that
+    // all objects are cloned and not copied by reference. Otherwise, every time the
+    // ConsumerComponent instance is changed, the Version will be changed as well, and since
+    // the Version instance is saved in the Repository._cache, the next time a Version instance
+    // is retrieved, it'll be different than the first time.
+    return new ConsumerComponent({
+      name: this.name,
+      box: this.box,
+      version: componentVersion.version,
+      scope: this.scope,
+      lang: this.lang,
+      bindingPrefix: this.bindingPrefix,
+      mainFile: version.mainFile || null,
+      compilerId: version.compiler,
+      testerId: version.tester,
+      dependencies: version.dependencies.getClone(),
+      devDependencies: version.devDependencies.getClone(),
+      flattenedDependencies: BitIds.clone(version.flattenedDependencies),
+      flattenedDevDependencies: BitIds.clone(version.flattenedDevDependencies),
+      packageDependencies: clone(version.packageDependencies),
+      devPackageDependencies: clone(version.devPackageDependencies),
+      peerPackageDependencies: clone(version.peerPackageDependencies),
+      files,
+      dists,
+      docs: version.docs,
+      license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
+      specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
+      log,
+      deprecated: this.deprecated
     });
   }
 
@@ -395,7 +406,7 @@ export default class Component extends BitObject {
 
   validate(): void {
     const message = 'unable to save Component object';
-    if (!this.name) throw new Error(`${message} the name is missing`);
-    if (!this.box) throw new Error(`${message} the box is missing`);
+    if (!this.name) throw new GeneralError(`${message} the name is missing`);
+    if (!this.box) throw new GeneralError(`${message} the box is missing`);
   }
 }

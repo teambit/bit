@@ -7,12 +7,14 @@ import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
-import type { ImportOptions, ImportedVersions } from '../../../consumer/component/import-components';
+import type { ImportOptions, ImportDetails } from '../../../consumer/component/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
+import GeneralError from '../../../error/general-error';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = 'import components into your current workspace.\n  https://docs.bitsrc.io/docs/importing-components.html';
+  description = `import components into your current workspace.\n  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html`;
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
@@ -27,7 +29,7 @@ export default class Import extends Command {
     ],
     ['', 'write', 'in case of import-all (when no id is specified), write the components to the file system'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
-    ['f', 'force', 'ignore local changes'],
+    ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'ignore-dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
@@ -56,7 +58,7 @@ export default class Import extends Command {
       write = false,
       displayDependencies = false,
       environment = false,
-      force = false,
+      override = false,
       verbose = false,
       ignoreDist = false,
       conf = false,
@@ -71,7 +73,7 @@ export default class Import extends Command {
       write?: boolean,
       displayDependencies?: boolean,
       environment?: boolean,
-      force?: boolean,
+      override?: boolean,
       verbose?: boolean,
       ignoreDist?: boolean,
       conf?: boolean,
@@ -81,13 +83,13 @@ export default class Import extends Command {
     packageManagerArgs: string[]
   ): Promise<any> {
     if (tester && compiler) {
-      throw new Error('you cant use tester and compiler flags combined');
+      throw new GeneralError('you cant use tester and compiler flags combined');
     }
     if (objects && write) {
-      throw new Error('you cant use --objects and --write flags combined');
+      throw new GeneralError('you cant use --objects and --write flags combined');
     }
     if (ids.length && write) {
-      throw new Error('you cant use --write flag when importing specific ids');
+      throw new GeneralError('you cant use --write flag when importing specific ids');
     }
     const environmentOptions: EnvironmentOptions = {
       tester,
@@ -102,7 +104,7 @@ export default class Import extends Command {
       objectsOnly: objects,
       writeToFs: write,
       withEnvironments: environment,
-      force,
+      override,
       writeDists: !ignoreDist,
       writeBitJson: conf,
       installNpmPackages: !skipNpmInstall,
@@ -116,13 +118,13 @@ export default class Import extends Command {
   report({
     dependencies,
     envDependencies,
-    importedVersions,
+    importDetails,
     warnings,
     displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
-    importedVersions: ImportedVersions,
+    importDetails: ImportDetails[],
     warnings?: {
       notInPackageJson: [],
       notInNodeModules: [],
@@ -145,8 +147,9 @@ export default class Import extends Command {
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
       const componentDependencies = components.map((component) => {
-        const versions = importedVersions[component.id.toStringWithoutVersion()];
-        return formatPlainComponentItemWithVersions(component, versions);
+        const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
+        return formatPlainComponentItemWithVersions(component, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 

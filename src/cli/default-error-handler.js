@@ -60,6 +60,7 @@ import {
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import GeneralError from '../error/general-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -79,6 +80,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )
   ],
   [ConsumerAlreadyExists, () => 'workspace already exists'],
+  [GeneralError, err => `${err.msg}`],
+
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
   [LoginFailed, () => 'There was a problem with web authentication'],
@@ -129,7 +132,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 to resolve it and merge your local and remote changes, please do the following:
 1) bit untag ${err.id} ${err.versions.join(' ')}
 2) bit import
-3) bit checkout ${err.versions.join(' ')} ${err.id}`
+3) bit checkout ${err.versions.join(' ')} ${err.id}
+once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`
   ],
   [
     MergeConflictOnRemote,
@@ -138,7 +142,7 @@ to resolve it and merge your local and remote changes, please do the following:
 to resolve this conflict and merge your remote and local changes, please do the following:
 1) bit untag ${err.id} ${err.versions.join(' ')}
 2) bit import
-3) bit checkout {conflict-version} ${err.id}
+3) bit checkout [version] ${err.id}
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
@@ -247,16 +251,16 @@ to ignore this error, please use --ignore-newest-version flag`
   [
     ExternalTestError,
     err =>
-      `error: bit failed to test ${err.id} with the following exception:\nMessage: ${
-        err.originalError.message
-      }.\nStack: ${err.originalError.stack}`
+      `error: bit failed to test ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
   ],
   [
     ExternalBuildError,
     err =>
-      `error: bit failed to build ${err.id} with the following exception:\nMessage: ${
-        err.originalError.message
-      }.\nStack: ${err.originalError.stack}`
+      `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
   ],
   [
     AuthenticationFailed,

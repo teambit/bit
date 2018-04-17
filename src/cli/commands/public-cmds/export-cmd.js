@@ -3,12 +3,13 @@ import R from 'ramda';
 import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'export <remote> [id...]';
-  description = 'export components to a remote scope.\n  https://docs.bitsrc.io/docs/organizing-components-in-scopes.html';
+  description = `export components to a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html`;
   alias = 'e';
   opts = [
     ['f', 'forget', 'do not save to bit.json after export'],
