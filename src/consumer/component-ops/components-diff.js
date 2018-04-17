@@ -51,10 +51,15 @@ async function getOneFileDiff(
   const diffStartsString = '--- '; // the part before this string is not needed for our purpose
   const diffStart = fileDiff.indexOf(diffStartsString);
   if (!diffStart || diffStart < 1) return ''; // invalid diff
+
+  // e.g. Linux: --- a/private/var/folders/z ... .js
+  // Windows: --- "a/C:\\Users\\David\\AppData\\Local\\Temp\\bit ... .js
+  const regExpA = /--- ["]?a.*\n/; // exact "---", follow by a or "a (for Windows) then \n
+  const regExpB = /\+\+\+ ["]?b.*\n/; // exact "+++", follow by b or "b (for Windows) then \n
   return fileDiff
     .substr(diffStart)
-    .replace(new RegExp(`a${modelFilePath}`, 'g'), `${fileName} (original)`)
-    .replace(new RegExp(`b${fsFilePath}`, 'g'), `${fileName} (modified)`);
+    .replace(regExpA, `--- ${fileName} (original)\n`)
+    .replace(regExpB, `+++ ${fileName} (modified)\n`);
 }
 
 async function getFilesDiff(tmp: Tmp, fsFiles: SourceFile[], modelFiles: SourceFile[]): Promise<FileDiff[]> {
