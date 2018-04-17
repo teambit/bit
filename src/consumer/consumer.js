@@ -755,15 +755,29 @@ export default class Consumer {
       verbose
     });
 
-    // update bitmap
-    taggedComponents.forEach(component => this.bitMap.updateComponentId(component.id));
-    autoTaggedComponents.forEach((component) => {
+    // update bitmap with the new version
+    const taggedComponentIds = taggedComponents.map((component) => {
+      this.bitMap.updateComponentId(component.id);
+      return component.id;
+    });
+    const autoTaggedComponentIds = autoTaggedComponents.map((component) => {
       const id = component.toBitId();
       id.version = component.latest();
       this.bitMap.updateComponentId(id);
+      return id;
     });
-    await this.bitMap.write();
 
+    // update package.json with the new version
+    const allComponentIds = taggedComponentIds.concat(autoTaggedComponentIds);
+    const updatePackageJsonP = allComponentIds.map((componentId: BitId) => {
+      const componentMap = this.bitMap.getComponent(componentId, true);
+      if (componentMap.rootDir) {
+        return packageJson.updateAttribute(this, componentMap.rootDir, 'version', componentId.version);
+      }
+      return null;
+    });
+
+    await Promise.all([this.bitMap.write(), Promise.all(updatePackageJsonP)]);
     return { taggedComponents, autoTaggedComponents };
   }
 
