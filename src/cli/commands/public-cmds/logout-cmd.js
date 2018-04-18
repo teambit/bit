@@ -1,5 +1,8 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
+import { CFG_BITSRC_TOKEN_KEY, CFG_BITSRC_USERNAME_KEY } from '../../../constants';
+import * as scopeConfig from '../../../api/consumer/lib/global-config';
 
 export default class Logout extends Command {
   name = 'logout';
@@ -8,12 +11,12 @@ export default class Logout extends Command {
   opts = [];
 
   action(): Promise<any> {
-    const m = this.alias;
-    console.log('logged out from bit...');
-    return new Promise(resolve => resolve(m));
+    scopeConfig.delSync(CFG_BITSRC_TOKEN_KEY);
+    scopeConfig.delSync(CFG_BITSRC_USERNAME_KEY);
+    return Promise.resolve();
   }
 
-  report(data: { string: any }): string {
-    return '';
+  report(): string {
+    return chalk.green('logged out successfully.');
   }
 }

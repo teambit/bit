@@ -137,6 +137,8 @@ export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
 export const BASE_DOCS_DOMAIN = 'docs.bitsrc.io';
 
+export const DEFAULT_HUB_LOGIN = 'https://bitsrc.io/login';
+
 export const DEFAULT_BIT_ENV = 'production';
 
 export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';
@@ -158,11 +160,15 @@ export const CFG_USER_EMAIL_KEY = 'user.email';
 
 export const CFG_BITSRC_TOKEN_KEY = 'bitsrc.token';
 
+export const CFG_BITSRC_USERNAME_KEY = 'bitsrc.username';
+
 export const CFG_USER_NAME_KEY = 'user.name';
 
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
+
+export const CFG_HUB_LOGIN_KEY = 'hub_domain_login';
 
 export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
