@@ -158,6 +158,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
 - support saving dists files on a pre-configured directory relative to consumer root
 - support `bit show --compare` with json format
+- add new login feature to bitsrc
+
 ### Changes
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
 - rename `bit bind` command to `bit link`

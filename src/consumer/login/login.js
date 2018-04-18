@@ -22,7 +22,7 @@ export default function loginToBitSrc() {
     let rawBody = '';
     const clientId = uniqid();
 
-    if (getSync(CFG_BITSRC_TOKEN_KEY)) return resolve({ isAlreadyLoggedIn: true });
+    if (getSync(CFG_BITSRC_TOKEN_KEY)) { return resolve({ isAlreadyLoggedIn: true, username: getSync(CFG_BITSRC_USERNAME_KEY) }); }
 
     const requestHandler = (request, response) => {
       const closeConnection = () => {

@@ -13,7 +13,7 @@ export default class Login extends Command {
     return login();
   }
   report({ isAlreadyLoggedIn = false, username }: { isAlreadyLoggedIn: boolean, username: string }): string {
-    if (isAlreadyLoggedIn) return chalk.yellow('Already logged in');
+    if (isAlreadyLoggedIn) return chalk.yellow(`already logged in as ${username}`);
     return chalk.green(`success! logged in as ${username}`);
   }
 }
