@@ -137,7 +137,7 @@ export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
 
 export const BASE_DOCS_DOMAIN = 'docs.bitsrc.io';
 
-export const DEFAULT_HUB_LOGIN = 'https://bitsrc.io/login';
+export const DEFAULT_HUB_LOGIN = 'https://bitsrc.io/bit-login';
 
 export const DEFAULT_BIT_ENV = 'production';
 

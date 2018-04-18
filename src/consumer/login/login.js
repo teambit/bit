@@ -35,7 +35,9 @@ export default function loginToBitSrc() {
         closeConnection();
         reject(new LoginFailed());
       }
-      request.on('data', (data) => rawBody += data);
+      request.on('data', (data) => {
+        rawBody += data;
+      });
       request.on('end', function () {
         try {
           const body = JSON.parse(rawBody);
@@ -76,5 +78,6 @@ export default function loginToBitSrc() {
       console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`));
       opn(encoded);
     });
+    return '';
   });
 }
