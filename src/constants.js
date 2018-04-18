@@ -49,6 +49,12 @@ export const COMPONENT_ORIGINS = {
   NESTED: 'NESTED' // which is a nested dependency
 };
 
+export const TESTS_FORK_LEVEL = {
+  NONE: 'NONE',
+  ONE: 'ONE',
+  COMPONENT: 'COMPONENT'
+};
+
 export const DEFAULT_IMPL_NAME = 'impl.js';
 
 export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript

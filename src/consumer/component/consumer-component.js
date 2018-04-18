@@ -46,6 +46,8 @@ import ExternalBuildError from './exceptions/external-build-error';
 import InvalidCompilerInterface from './exceptions/invalid-compiler-interface';
 import GeneralError from '../../error/general-error';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
+import { Analytics } from '../../analytics/analytics';
+import ConsumerComponent from '.';
 
 export type ComponentProps = {
   name: string,
@@ -644,36 +646,75 @@ export default class Component {
     if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
 
     logger.debug('tester found, start running tests');
-    if (!this.tester.loaded) {
-      await this.tester.install(scope, { verbose });
-      logger.debug('Environment components are installed.');
+    Analytics.addBreadCrumb('runSpecs', 'tester found, start running tests');
+    const tester = this.tester;
+    if (!tester.loaded) {
+      Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
+      await tester.install(scope, { verbose });
+      logger.debug('Environment components are installed');
     }
 
-    const testerFilePath = this.tester.filePath;
+    const testerFilePath = tester.filePath;
 
-    const run = async (
-      mainFile: PathOsBased,
-      distTestFiles: Dist[],
-      actualTesterFilePath: PathOsBased,
-      cwd?: PathOsBased
-    ) => {
+    const run = async (component: ConsumerComponent, cwd?: PathOsBased) => {
       // Change the cwd to make sure we found the needed files
       if (cwd) {
+        logger.debug(`changing process cwd to ${cwd}`);
+        Analytics.addBreadCrumb('runSpecs.run', 'changing process cwd');
         process.chdir(cwd);
       }
       loader.start(BEFORE_RUNNING_SPECS);
-      const specsResultsP = distTestFiles.map(async (testFile) => {
-        return specsRunner.run({
-          scope,
-          testerFilePath: actualTesterFilePath,
-          testerId: this.tester.name,
-          mainFile,
-          testFile
-        });
-      });
+      const testFilesList = !component.dists.isEmpty()
+        ? component.dists.get().filter(dist => dist.test)
+        : component.files.filter(file => file.test);
+
       let specsResults: RawTestsResults[];
       try {
-        specsResults = await Promise.all(specsResultsP);
+        if (tester.action) {
+          logger.debug('running tests using new format');
+          Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
+          const context: Object = {
+            componentObject: this.toObject(),
+            rootDistFolder
+          };
+          const actionParams = {
+            testFiles: testFilesList,
+            rawConfig: tester.rawConfig,
+            dynamicConfig: tester.dynamicConfig,
+            configFiles: tester.files,
+            api: tester.api,
+            context
+          };
+
+          specsResults = await tester.action();
+        } else {
+          logger.debug('running tests using old format');
+          Analytics.addBreadCrumb('runSpecs.run', 'running tests using old format');
+          const oneFileSpecResult = async (testFile) => {
+            const testFilePath = testFile.path;
+            try {
+              const results = await tester.oldAction(testFilePath);
+              results.specPath = testFile.relative;
+              return results;
+            } catch (err) {
+              const failures = [
+                {
+                  title: err.message,
+                  err
+                }
+              ];
+              const results = {
+                specPath: testFile.relative,
+                pass: false,
+                tests: [],
+                failures
+              };
+              return results;
+            }
+          };
+          const specsResultsP = testFilesList.map(oneFileSpecResult);
+          specsResults = await Promise.all(specsResultsP);
+        }
       } catch (err) {
         throw new ExternalTestError(err, this.id.toString());
       }
@@ -705,10 +746,7 @@ export default class Component {
       logger.debug('Building the component before running the tests');
       await this.build({ scope, verbose, consumer });
       await this.dists.writeDists(this, consumer);
-      const testDists = !this.dists.isEmpty()
-        ? this.dists.get().filter(dist => dist.test)
-        : this.files.filter(file => file.test);
-      return run(this.mainFile, testDists, testerFilePath, consumer.getPath());
+      return run(this, consumer.getPath());
     }
 
     const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
@@ -735,10 +773,8 @@ export default class Component {
         const specDistWrite = component.dists.get().map(file => file.write());
         await Promise.all(specDistWrite);
       }
-      const testFilesList = !component.dists.isEmpty()
-        ? component.dists.get().filter(dist => dist.test)
-        : component.files.filter(file => file.test);
-      const results = await run(component.mainFile, testFilesList, localTesterPath);
+
+      const results = await run(component);
       if (!keep) await isolatedEnvironment.destroy();
       return results;
     } catch (e) {

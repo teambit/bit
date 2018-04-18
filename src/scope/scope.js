@@ -485,13 +485,13 @@ export default class Scope {
     consumer: Consumer,
     verbose: boolean,
     rejectOnFailure?: boolean
-  }): Promise<Array<{ component: Component, specs: Object }>> {
+  }): Promise<Array<{ component: Component, specs: SpecsResults }>> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
     const test = async (component: Component) => {
       if (!component.tester) {
-        return { component, missingTester: true };
+        return { componentId: component.id.toStringWithoutScope(), missingTester: true };
       }
       const specs = await component.runSpecs({
         scope: this,
@@ -499,7 +499,7 @@ export default class Scope {
         consumer,
         verbose
       });
-      return { component, specs };
+      return { componentId: component.id.toStringWithoutScope(), specs };
     };
     return pMapSeries(components, test);
   }

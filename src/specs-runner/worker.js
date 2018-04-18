@@ -1,59 +1,21 @@
+// @flow
 // TODO - move to language specific driver.
-const GeneralError = require('../error/general-error');
+import { testInProcess } from '../api/consumer/lib/test';
 
-const serializeError = require('serialize-error');
+const testOneComponent = verbose => async (id: string) => {
+  const res = await testInProcess(id, verbose);
+  return res[0];
+};
 
-try {
-  const mainFilePath = process.env.__mainFile__;
-  const testFilePath = process.env.__testFilePath__;
-  const testerFilePath = process.env.__tester__;
+const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
+const verbose: boolean = process.env.__verbose__ === true;
 
-  const mockery = require('mockery');
-  mockery.enable({
-    warnOnReplace: false,
-    warnOnUnregistered: false,
-    useCleanCache: true
-  }); // enable mocks on process
+const testAllP = ids.map(testOneComponent(verbose));
+Promise.all(testAllP).then((results) => {
+  const serializedResults = serializeResults(results);
+  process.send(serializedResults);
+});
 
-  const tester = require(testerFilePath);
-
-  // define the __impl__ global
-  global.__impl__ = mainFilePath;
-
-  // register globals
-  if (tester.globals) {
-    Object.keys(tester.globals).forEach((g) => {
-      global[g] = tester.globals[g];
-    });
-  }
-
-  // register modules
-  if (tester.modules) {
-    Object.keys(tester.modules).forEach((m) => {
-      mockery.registerMock(m, tester.modules[m]);
-    });
-  }
-
-  if (!tester.run) {
-    process.send({
-      type: 'error',
-      payload: `"${process.env.__testerId__}" doesn't have a valid tester interface`
-    });
-    process.exit(1);
-  }
-
-  tester
-    .run(testFilePath)
-    .then((results) => {
-      if (!results) throw new GeneralError(`tester did not return any result for the file ${testFilePath}`);
-      mockery.disable();
-      results.specPath = testFilePath;
-      return process.send({ type: 'results', payload: results });
-    })
-    .catch((err) => {
-      mockery.disable();
-      return process.send({ type: 'error', payload: serializeError(err) });
-    });
-} catch (e) {
-  process.send({ type: 'error', payload: serializeError(e) });
+function serializeResults(results) {
+  return results;
 }

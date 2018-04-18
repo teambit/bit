@@ -92,8 +92,8 @@ export default class BaseExtension {
     return true;
   }
 
-  extendAPI(api: Object): void {
-    this.api = R.merge(this.api, api);
+  extendAPI(baseApi: Object, api: Object): void {
+    this.api = R.merge(baseApi, api);
   }
 
   toString(): string {

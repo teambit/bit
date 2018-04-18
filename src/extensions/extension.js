@@ -54,53 +54,51 @@ export default class Extension extends BaseExtension {
   registeredHooksActions: RegisteredHooksActions;
   newHooks: string[];
   commands: Array<Commands>;
-  api = Object.assign(
-    {
-      /**
-       * API to resiter new command to bit
-       */
-      registerCommand: (newCommand: NewCommand): void => {
-        // TODO: validate new command format
-        logger.info(`registering new command ${newCommand.name}`);
-        this.commands.push(new ExtensionCommand(newCommand));
-      },
-      /**
-       * API to register action to an existing hook (hook name might be a hook defined by another extension)
-       */
-      registerActionToHook: (hookName: string, hookAction: HookAction) => {
-        logger.info(`registering ${hookAction.name} to hook ${hookName}`);
-        this.registeredHooksActions[hookName] = hookAction;
-      },
-      /**
-       * API to register a new hook name, usuful for communicate between different extensions
-       */
-      registerNewHook: (hookName: string) => {
-        logger.info(`registering new global hook ${hookName}`);
-        this.newHooks.push(hookName);
-        // Register the new hook in the global hooks manager
-        HooksManagerInstance.registerNewHook(hookName, { extension: this.name });
-      },
-      /**
-       * API to trigger a hook registered by this extension.
-       * trigger hook are available only for hooks registered by you.
-       */
-      triggerHook: (hookName: string, args: ?Object) => {
-        if (!R.contains(hookName, this.newHooks)) {
-          logger.debug(`trying to trigger the hook ${hookName} which not registered by this extension`);
-          return;
-        }
-        HooksManagerInstance.triggerHook(hookName, args);
-      },
-      getLoader: () => loader,
-      HOOKS_NAMES: _getHooksNames(),
-      createIsolatedEnv: _createIsolatedEnv
+  api = {
+    /**
+     * API to resiter new command to bit
+     */
+    registerCommand: (newCommand: NewCommand): void => {
+      // TODO: validate new command format
+      logger.info(`registering new command ${newCommand.name}`);
+      this.commands.push(new ExtensionCommand(newCommand));
     },
-    super.api
-  );
+    /**
+     * API to register action to an existing hook (hook name might be a hook defined by another extension)
+     */
+    registerActionToHook: (hookName: string, hookAction: HookAction) => {
+      logger.info(`registering ${hookAction.name} to hook ${hookName}`);
+      this.registeredHooksActions[hookName] = hookAction;
+    },
+    /**
+     * API to register a new hook name, usuful for communicate between different extensions
+     */
+    registerNewHook: (hookName: string) => {
+      logger.info(`registering new global hook ${hookName}`);
+      this.newHooks.push(hookName);
+      // Register the new hook in the global hooks manager
+      HooksManagerInstance.registerNewHook(hookName, { extension: this.name });
+    },
+    /**
+     * API to trigger a hook registered by this extension.
+     * trigger hook are available only for hooks registered by you.
+     */
+    triggerHook: (hookName: string, args: ?Object) => {
+      if (!R.contains(hookName, this.newHooks)) {
+        logger.debug(`trying to trigger the hook ${hookName} which not registered by this extension`);
+        return;
+      }
+      HooksManagerInstance.triggerHook(hookName, args);
+    },
+    getLoader: () => loader,
+    HOOKS_NAMES: _getHooksNames(),
+    createIsolatedEnv: _createIsolatedEnv,
+    ...super.api
+  };
 
   constructor(extensionProps: ExtensionProps) {
     super(extensionProps);
-    this.extendAPI(this.api);
+    this.extendAPI(extensionProps.api, this.api);
     this.commands = extensionProps.commands || [];
     this.registeredHooksActions = extensionProps.registeredHooksActions || {};
     this.newHooks = extensionProps.newHooks || [];

@@ -50,6 +50,7 @@ export type RawTestsResults = {
   tests: TestProps[],
   stats: StatsProps,
   pass: ?boolean,
+  failures: ?(Failure[]),
   specPath: PathOsBased
 };
 
@@ -84,15 +85,22 @@ export default class SpecsResults {
 
   static createFromRaw(rawResults: RawTestsResults): SpecsResults {
     const hasFailures = rawResults.failures && rawResults.failures.length;
-    const pass = rawResults.pass || (rawResults.tests.every(test => test.pass) && !hasFailures);
+    const pass = rawResults.pass || (!hasFailures && rawResults.tests.every(test => test.pass));
     let failures;
 
-    const calcDuration = (endDateString, startDateString) => new Date(endDateString) - new Date(startDateString);
+    const calcDuration = (endDateString, startDateString) => {
+      if (!endDateString || !startDateString) return undefined;
+      return new Date(endDateString) - new Date(startDateString);
+    };
 
+    const start = rawResults.stats ? rawResults.stats.start : undefined;
+    const end = rawResults.stats ? rawResults.stats.end : undefined;
+    const duration =
+      rawResults.stats && rawResults.stats.duration ? parseInt(rawResults.stats.duration) : calcDuration(end, start);
     const stats = {
-      start: rawResults.stats.start,
-      end: rawResults.stats.end,
-      duration: parseInt(rawResults.stats.duration) || calcDuration(rawResults.stats.end, rawResults.stats.start)
+      start,
+      end,
+      duration
     };
 
     const tests = rawResults.tests.map((result) => {
@@ -103,7 +111,7 @@ export default class SpecsResults {
 
     if (hasFailures) {
       failures = rawResults.failures.map((failure) => {
-        failure.duration = parseInt(failure.duration);
+        failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
         // $FlowFixMe
         return failure;
       });

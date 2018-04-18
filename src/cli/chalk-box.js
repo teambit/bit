@@ -81,9 +81,9 @@ const failureTest = (test) => {
     ${c.red(test.err.message)}`;
 };
 
-const paintMissingTester = (component): string => {
-  const componentId = c.bold(`${component.box}/${component.name}`);
-  return c.bold.red(`tester for component: ${componentId} is not defined`);
+const paintMissingTester = (componentId: string): string => {
+  const componentIdBold = c.bold(componentId);
+  return c.bold.red(`tester for component: ${componentIdBold} is not defined`);
 };
 
 const paintTest = (test) => {
@@ -92,17 +92,19 @@ const paintTest = (test) => {
 
 // Failures which are not on tests, for example on before blocks
 const paintGeneralFailure = (failure) => {
-  return `❌   ${c.white(failure.title)} - ${c.cyan(`${failure.duration}ms`)}
+  const duration = failure.duration ? ` - ${c.cyan(`${failure.duration}ms`)}` : '';
+  return `❌   ${c.white(failure.title)} ${duration}
     ${c.red(failure.err.message)}`;
 };
 
 const paintStats = (results) => {
   const statsHeader = results.pass ? c.underline.green('\ntests passed') : c.underline.red('\ntests failed');
+  const fileName = results.specFile ? `\nfile: ${results.specFile}` : '';
   const totalDuration =
     results.stats && results.stats.duration !== undefined
-      ? `file: ${results.specFile}\ntotal duration - ${c.cyan(`${results.stats.duration}ms\n`)}`
+      ? `total duration - ${c.cyan(`${results.stats.duration}ms\n`)}`
       : '';
-  return `${statsHeader}\n${totalDuration}\n`;
+  return `${statsHeader}${fileName}\n${totalDuration}\n`;
 };
 
 export const paintSpecsResults = (results?: SpecsResults[]): string[] => {
@@ -120,8 +122,8 @@ export const paintAllSpecsResults = (results: Array<*>): string => {
   if (results.length === 0) return c.yellow('nothing to test');
   return results
     .map((result) => {
-      if (result.missingTester) return paintMissingTester(result.component);
-      const componentId = c.bold(`${result.component.box}/${result.component.name}`);
+      if (result.missingTester) return paintMissingTester(result.componentId);
+      const componentId = c.bold(result.componentId);
       if (result.specs) return componentId + paintSpecsResults(result.specs);
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
@@ -139,7 +141,7 @@ export const paintSummarySpecsResults = (results: Array<*>): string => {
     return areAllPassed ? c.green('passed') : c.red('failed');
   };
   const summaryRows = results.map((result) => {
-    const componentId = c.bold(`${result.component.box}/${result.component.name}`);
+    const componentId = c.bold(result.componentId);
     if (result.missingTester) return [componentId, c.bold.red('tester is not defined')];
     if (result.specs) return [componentId, specsSummary(result.specs)];
     return [componentId, c.yellow('tests are not defined')];

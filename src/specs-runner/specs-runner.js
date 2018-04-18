@@ -2,11 +2,12 @@
 import path from 'path';
 import R from 'ramda';
 import { fork } from 'child_process';
-import Scope from '../scope/scope';
 import { Results } from '../consumer/specs-results';
-import type { PathOsBased } from '../utils/path';
 import type { RawTestsResults } from '../consumer/specs-results/specs-results';
-import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
+import type { ForkLevel } from '../api/consumer/lib/test';
+import { TESTS_FORK_LEVEL } from '../constants';
+import { Analytics } from '../analytics/analytics';
+import logger from '../logger/logger';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>,
@@ -14,39 +15,56 @@ export type Tester = {
   modules: Object
 };
 
-function run({
-  testerFilePath,
-  testerId,
-  mainFile,
-  testFile
+export default (async function run({
+  ids,
+  forkLevel,
+  verbose
 }: {
-  scope: Scope,
-  testerFilePath: string,
-  testerId: Object,
-  mainFile: PathOsBased,
-  testFile: AbstractVinyl
+  ids: ?(string[]),
+  forkLevel: ForkLevel,
+  verbose: ?boolean
 }): Promise<RawTestsResults> {
-  function getDebugPort(): ?number {
-    const debugPortArgName = '--debug-brk';
-    try {
-      const execArgv = process.execArgv.map(arg => arg.split('='));
-      const execArgvObj = R.fromPairs(execArgv);
-      if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
-    } catch (e) {
-      return null;
-    }
+  if (!ids || R.isEmpty(ids)) {
+    Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
+    logger.debug('specs-runner.run', 'running tests on one child process without ids');
+    return runOnChildProcess({ verbose });
+  }
+  if (forkLevel === TESTS_FORK_LEVEL.ONE) {
+    Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process with ids');
+    logger.debug('specs-runner.run', 'running tests on one child process with ids');
+    return runOnChildProcess({ ids, verbose });
+  }
+  Analytics.addBreadCrumb('specs-runner.run', 'running tests on child process for each component');
+  logger.debug('specs-runner.run', 'running tests on child process for each component');
+  const allRunnersP = ids.map(id => runOnChildProcess({ ids: [id], verbose }));
+  const allRunnersResults = await Promise.all(allRunnersP);
+  const finalResults = allRunnersResults.reduce((acc, curr) => {
+    acc.push(curr[0]);
+    return acc;
+  }, []);
+  return finalResults;
+});
 
+function getDebugPort(): ?number {
+  const debugPortArgName = '--debug-brk';
+  try {
+    const execArgv = process.execArgv.map(arg => arg.split('='));
+    const execArgvObj = R.fromPairs(execArgv);
+    if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
+  } catch (e) {
     return null;
   }
 
+  return null;
+}
+
+function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?boolean }): Promise<RawTestsResults> {
   return new Promise((resolve, reject) => {
     const debugPort = getDebugPort();
     const openPort = debugPort ? debugPort + 1 : null;
     const baseEnv = {
-      __mainFile__: mainFile,
-      __testFilePath__: testFile.path,
-      __tester__: testerFilePath,
-      __testerId__: testerId
+      __ids__: ids ? ids.join() : undefined,
+      __verbose__: verbose
     };
 
     // Merge process.env from the main process
@@ -65,10 +83,11 @@ function run({
       child.kill('SIGKILL');
     });
 
-    child.on('message', ({ type, payload }: { type: string, payload: Object }) => {
-      if (type === 'error') return reject(payload);
-      if (payload.specPath) payload.specPath = testFile.relative;
-      return resolve(payload);
+    child.on('message', (results) => {
+      // if (type === 'error') return reject(payload);
+      // if (payload.specPath) payload.specPath = testFile.relative;
+      const deserializedResults = deserializeResults(results);
+      return resolve(deserializedResults);
     });
 
     child.on('error', (e) => {
@@ -77,6 +96,6 @@ function run({
   });
 }
 
-export default {
-  run
-};
+function deserializeResults(results) {
+  return results;
+}
