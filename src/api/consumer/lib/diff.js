@@ -43,7 +43,7 @@ async function parseValues(
   // last argument is a version, first argument is id
   if (!isOneBeforeLastItemVersion) {
     if (values.length !== 2) {
-      throw GeneralError(
+      throw new GeneralError(
         `bit diff [id] [version] syntax was used, however, ${values.length} arguments were given instead of 2`
       );
     }
@@ -52,7 +52,7 @@ async function parseValues(
   // option #4: bit diff [id] [version] [to_version]
   // last argument and one before the last are versions, first argument is id
   if (values.length !== 3) {
-    throw GeneralError(
+    throw new GeneralError(
       `bit diff [id] [version] [to_version] syntax was used, however, ${
         values.length
       } arguments were given instead of 3`
