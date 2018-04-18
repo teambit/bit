@@ -7,9 +7,9 @@ import { setSync, getSync } from '../../api/consumer/lib/global-config';
 import {
   CFG_BITSRC_TOKEN_KEY,
   CFG_USER_EMAIL_KEY,
-  CFG_USER_NAME_KEY,
   DEFAULT_HUB_LOGIN,
-  CFG_HUB_LOGIN_KEY
+  CFG_HUB_LOGIN_KEY,
+  CFG_BITSRC_USERNAME_KEY
 } from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
@@ -22,6 +22,8 @@ export default function loginToBitSrc() {
     let rawBody = '';
     const clientId = uniqid();
 
+    if (getSync(CFG_BITSRC_TOKEN_KEY)) return resolve({ isAlreadyLoggedIn: true });
+
     const requestHandler = (request, response) => {
       const closeConnection = () => {
         response.end();
@@ -29,33 +31,31 @@ export default function loginToBitSrc() {
       };
 
       if (request.method !== 'POST') {
-        logger.error('recieved non post request, closing connection');
+        logger.error('received non post request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
-      request.on('data', (data) => {
-        rawBody += data;
-      });
+      request.on('data', (data) => rawBody += data);
       request.on('end', function () {
         try {
           const body = JSON.parse(rawBody);
           if (clientId !== body.client_id) {
-            logger.error(`clientId missmatch expecting: ${clientId} got ${body.client_id}`);
+            logger.error(`clientId m expecting: ${clientId} got ${body.client_id}`);
             response.statusCode = ERROR_RESPONSE;
             closeConnection();
             return reject(new LoginFailed());
           }
           setSync(CFG_BITSRC_TOKEN_KEY, body.token.token);
+          setSync(CFG_BITSRC_USERNAME_KEY, body.username);
           if (!getSync(CFG_USER_EMAIL_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.email);
-          if (!getSync(CFG_USER_NAME_KEY)) setSync(CFG_BITSRC_TOKEN_KEY, body.username);
+          closeConnection();
+          return resolve({ username: body.username });
         } catch (err) {
           logger.err(`err on login: ${err}`);
           response.statusCode = ERROR_RESPONSE;
           closeConnection();
           return reject(new LoginFailed());
         }
-        closeConnection();
-        return resolve(getSync(CFG_USER_NAME_KEY));
       });
     };
 
@@ -63,12 +63,13 @@ export default function loginToBitSrc() {
 
     server.listen(port, (err) => {
       if (err) {
-        reject(console.log('something bad happened', err));
+        logger.error('something bad happened', err);
+        reject(new LoginFailed());
       }
 
       const encoded = encodeURI(
         `${getSync(CFG_HUB_LOGIN_KEY) ||
-          DEFAULT_HUB_LOGIN}?redirect_uri=http://localhost:${port}&client_id=${clientId}&response_type=token&deviceName=${os.hostname()}&os=${
+          DEFAULT_HUB_LOGIN}?port=${port}&client_id=${clientId}&response_type=token&deviceName=${os.hostname()}&os=${
           process.platform
         }`
       );

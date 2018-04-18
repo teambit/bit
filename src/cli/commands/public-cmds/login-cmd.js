@@ -1,4 +1,5 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
 import { login } from '../../../api/consumer';
 
@@ -11,8 +12,8 @@ export default class Login extends Command {
   action(): Promise<any> {
     return login();
   }
-
-  report(data: { string: any }): string {
-    return '';
+  report({ isAlreadyLoggedIn = false, username }: { isAlreadyLoggedIn: boolean, username: string }): string {
+    if (isAlreadyLoggedIn) return chalk.yellow('Already logged in');
+    return chalk.green(`success! logged in as ${username}`);
   }
 }

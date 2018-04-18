@@ -20,16 +20,17 @@ import ConsumerComponent from '../../../consumer/component';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import type { Network } from '../network';
-import { DEFAULT_SSH_READY_TIMEOUT, CFG_BITSRC_TOKEN_KEY, CFG_USER_NAME_KEY } from '../../../constants';
+import { DEFAULT_SSH_READY_TIMEOUT, CFG_BITSRC_TOKEN_KEY, CFG_BITSRC_USERNAME_KEY } from '../../../constants';
 import { RemovedObjects } from '../../removed-components';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import { Analytics } from '../../../analytics/analytics';
+import { getSync } from '../../../api/consumer/lib/global-config';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
-import { getSync } from '../../../api/consumer/lib/global-config';
+
 
 let cachedPassphrase = null;
 
@@ -289,7 +290,7 @@ export default class SSH implements Network {
     const token = `${getSync(CFG_BITSRC_TOKEN_KEY)}jjj`;
     if (token && !skipToken) {
       Analytics.setExtraData('authentication_method', 'token');
-      const username = getSync(CFG_USER_NAME_KEY);
+      const username = getSync(CFG_BITSRC_USERNAME_KEY);
       this._sshUsername = username;
       return Promise.resolve(merge(base, { username, password: token }));
     }
@@ -344,7 +345,7 @@ export default class SSH implements Network {
     });
   }
 
-  sshAuthentication(key, passphrase, skipAgent): Promise<SSH> {
+  sshAuthentication(key: ?string, passphrase: ?string, skipAgent: boolean): Promise<SSH> {
     const conn = new SSH2();
     return new Promise((resolve, reject) => {
       this.composeConnectionObject(key, passphrase, skipAgent, true).then((sshConfig) => {
@@ -394,7 +395,7 @@ export default class SSH implements Network {
   }
 
   // @TODO refactor this method
-  connect(key: ?string, passphrase: ?string, skipAgent: boolean = false, skipToken: boolean = false): Promise<SSH> {
+  connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const self = this;
 
     logger.debug('SSH: starting ssh connection process');
