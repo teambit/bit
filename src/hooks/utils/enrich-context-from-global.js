@@ -6,7 +6,8 @@ import {
   CFG_USER_EMAIL_KEY,
   CFG_SSH_KEY_FILE_KEY,
   DEFAULT_SSH_KEY_FILE,
-  CFG_BITSRC_TOKEN_KEY
+  CFG_BITSRC_TOKEN_KEY,
+  CFG_BITSRC_USERNAME_KEY
 } from '../../constants';
 import logger from '../../logger/logger';
 
@@ -20,6 +21,8 @@ export default function enrichContextFromGlobal(context: Object = {}) {
   const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
   const sshKeyFile = globalConfig.getSync(CFG_SSH_KEY_FILE_KEY);
   const token = globalConfig.getSync(CFG_BITSRC_TOKEN_KEY);
+  const bitsrcUsername = globalConfig.getSync(CFG_BITSRC_USERNAME_KEY);
+
   const pubSshKeyFile = sshKeyFile ? `${sshKeyFile}.pub` : undefined;
   const pubSshKey = _getSshPubKey(pubSshKeyFile);
   Object.assign(context, { username, email, pubSshKey, token });

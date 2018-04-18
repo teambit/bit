@@ -7,10 +7,10 @@ export default class Login extends Command {
   name = 'login';
   description = 'login to bitsrc';
   alias = '';
-  opts = [];
-
-  action(): Promise<any> {
-    return login();
+  opts = [['p', 'port <port>', 'port number to listen on when running bit login(default 8085)']];
+  // $FlowFixMe
+  action([nothing]: [string[]], { port }: { port: string }): Promise<any> {
+    return login(port);
   }
   report({ isAlreadyLoggedIn = false, username }: { isAlreadyLoggedIn: boolean, username: string }): string {
     if (isAlreadyLoggedIn) return chalk.yellow(`already logged in as ${username}`);
