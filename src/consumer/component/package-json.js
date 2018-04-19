@@ -38,7 +38,7 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
   const componentsToAdd = R.fromPairs(
     importedComponents.map((componentId) => {
       const componentMap = consumer.bitMap.getComponent(componentId);
-      const locationAsUnixFormat = `./${componentMap.rootDir}`;
+      const locationAsUnixFormat = `file:./${componentMap.rootDir}`;
       return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
   );
@@ -75,7 +75,7 @@ function getPackageDependencyValue(
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
   const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
-  return rootDirRelative.startsWith('.') ? rootDirRelative : `./${rootDirRelative}`;
+  return rootDirRelative.startsWith('.') ? `file:${rootDirRelative}` : `file:./${rootDirRelative}`;
 }
 
 async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId) {
