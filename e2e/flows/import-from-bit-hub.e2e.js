@@ -96,7 +96,9 @@ describe('importing bit components from bitsrc.io', function () {
     });
     it('should save the imported component as a dependency in the package.json of the project', () => {
       const barFooPackageJson = helper.readPackageJson();
-      expect(barFooPackageJson.dependencies).to.deep.include({ [`@bit/${scopeId}.bar.foo`]: './components/bar/foo' });
+      expect(barFooPackageJson.dependencies).to.deep.include({
+        [`@bit/${scopeId}.bar.foo`]: 'file:./components/bar/foo'
+      });
     });
   });
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
@@ -168,7 +170,7 @@ describe('importing bit components from bitsrc.io', function () {
     it('should update the package.json of the dependent with relative-path of the dependency', () => {
       const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
       const packageJsonIsString = helper.readPackageJson(isStringDir);
-      expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('../is-type');
+      expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('file:../is-type');
     });
     describe('changing the directly imported dependency component', () => {
       before(() => {
@@ -208,7 +210,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
       it('should update the package.json of the dependent with relative-path of the dependency', () => {
         const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
         const packageJsonIsString = helper.readPackageJson(isStringDir);
-        expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('../is-type');
+        expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('file:../is-type');
       });
       it('should affect its dependent', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
@@ -235,7 +237,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     it('should update the root package.json and change the dependency from a package to a local path', () => {
       expect(packageJsonBeforeImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('0.0.1');
       expect(packageJsonAfterImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal(
-        './components/utils/is-type'
+        'file:./components/utils/is-type'
       );
     });
   });
