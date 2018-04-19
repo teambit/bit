@@ -178,11 +178,11 @@ describe('bit diff command', function () {
         output = helper.diff('bar/foo 0.0.1');
       });
       it('should show the earlier version with leading - (minus sign)', () => {
-        expect(output).to.have.string('--- bar/foo.js (0.0.1)');
+        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
         expect(output).to.have.string(`-${barFooV1}`);
       });
       it('should show the current version with leading + (plus sign)', () => {
-        expect(output).to.have.string('+++ bar/foo.js (0.0.3)');
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.3)`);
         expect(output).to.have.string(`+${barFooV3}`);
       });
     });
@@ -192,11 +192,11 @@ describe('bit diff command', function () {
         output = helper.diff('bar/foo 0.0.1 0.0.2');
       });
       it('should show the first version with leading - (minus sign)', () => {
-        expect(output).to.have.string('--- bar/foo.js (0.0.1)');
+        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
         expect(output).to.have.string(`-${barFooV1}`);
       });
       it('should show the second version with leading + (plus sign)', () => {
-        expect(output).to.have.string('+++ bar/foo.js (0.0.2)');
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.2)`);
         expect(output).to.have.string(`+${barFooV2}`);
       });
     });
