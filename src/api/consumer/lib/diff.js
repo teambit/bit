@@ -8,8 +8,6 @@ import componentsDiff from '../../../consumer/component-ops/components-diff';
 
 export default (async function diff(values: string[]): Promise<any> {
   const consumer: Consumer = await loadConsumer();
-  // if no id was entered, get all modified components
-
   const { bitIds, version, toVersion } = await parseValues(consumer, values);
   if (!bitIds || !bitIds.length) {
     throw new GeneralError('there are no modified components to show diff for');
