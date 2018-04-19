@@ -34,6 +34,7 @@ import {
   VersionAlreadyExists,
   MergeConflict,
   MergeConflictOnRemote,
+  VersionNotFound,
   CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
@@ -200,6 +201,7 @@ once your changes are merged with the new remote version, please tag and export 
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
     err =>
