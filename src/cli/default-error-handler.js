@@ -217,9 +217,9 @@ once your changes are merged with the new remote version, please tag and export 
   [
     IncorrectIdForImportedComponent,
     err =>
-      `error: unable to add new files from the root directory of the component  "${chalk.bold(
-        err.importedId
-      )}" to "${chalk.bold(err.newId)}"`
+      `error: trying to add a file ${chalk.bold(err.filePath)} to a component-id "${chalk.bold(
+        err.newId
+      )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
   ],
   [
     NoFiles,

@@ -197,7 +197,7 @@ export default class AddComponents {
           if (idOfFileIsDifferent) {
             const existingIdWithoutVersion = BitId.parse(existingIdOfFile).toStringWithoutVersion();
             // $FlowFixMe $this.id is not null at this point
-            throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
+            throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
           }
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
