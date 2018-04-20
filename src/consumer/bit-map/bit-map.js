@@ -240,7 +240,9 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
-      if (!parent) { throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`); }
+      if (!parent) {
+        throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
+      }
       this.addDependencyToParent(parent, componentIdStr);
     }
     if (this.components[componentIdStr]) {
@@ -442,15 +444,6 @@ export default class BitMap {
     }
   }
 
-  modifyComponentsToLinuxPath(components: Object) {
-    Object.keys(components).forEach((key) => {
-      components[key].files.forEach((file) => {
-        file.relativePath = pathNormalizeToLinux(file.relativePath);
-      });
-      components[key].mainFile = pathNormalizeToLinux(components[key].mainFile);
-    });
-  }
-
   updatePathLocation(from: PathOsBased, to: PathOsBased, fromExists: boolean): PathChangeResult[] {
     const existingPath = fromExists ? from : to;
     const isPathDir = isDir(existingPath);
@@ -472,7 +465,6 @@ export default class BitMap {
 
   write(): Promise<any> {
     logger.debug('writing to bit.map');
-    this.modifyComponentsToLinuxPath(this.components);
     const bitMapContent = Object.assign({}, this.components, { version: this.version });
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }

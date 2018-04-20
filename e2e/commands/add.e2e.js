@@ -4,7 +4,10 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
-import { ExcludedMainFile } from '../../src/consumer/component/add-components/exceptions';
+import {
+  ExcludedMainFile,
+  IncorrectIdForImportedComponent
+} from '../../src/consumer/component/add-components/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -82,11 +85,12 @@ describe('bit add command', function () {
           { i: 'test/test' },
           path.join(helper.localScopePath, 'components', 'bar', 'foo')
         );
-      expect(addCmd).to.throw(
-        `error: unable to add new files from the root directory of the component  "${
-          helper.remoteScope
-        }/bar/foo" to "test/test`
+      const error = new IncorrectIdForImportedComponent(
+        `${helper.remoteScope}/bar/foo`,
+        'test/test',
+        'components/bar/foo/foo.js'
       );
+      helper.expectToThrow(addCmd, error);
     });
     it('Should not add files and dists to imported component', () => {
       helper.addComponentWithOptions(
