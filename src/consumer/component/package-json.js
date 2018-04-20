@@ -20,8 +20,10 @@ import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
 import { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
+import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
+import BitMap from '../bit-map';
 
 /**
  * Add components as dependencies to root package.json
@@ -38,7 +40,8 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
   const componentsToAdd = R.fromPairs(
     importedComponents.map((componentId) => {
       const componentMap = consumer.bitMap.getComponent(componentId);
-      const locationAsUnixFormat = `file:./${componentMap.rootDir}`;
+      if (!componentMap.rootDir) throw new GeneralError(`rootDir is missing from an imported component ${componentId}`);
+      const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
       return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
   );
@@ -61,6 +64,11 @@ async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds:
   await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, getRegistryPrefix());
 }
 
+function convertToValidPathForPackageManager(pathStr: PathLinux): string {
+  const prefix = 'file:'; // it works for both, Yarn and NPM
+  return prefix + (pathStr.startsWith('.') ? pathStr : `./${pathStr}`);
+}
+
 /**
  * Only imported components should be saved with relative path in package.json
  * If a component is nested or imported as a package dependency, it should be saved with the version
@@ -74,8 +82,10 @@ function getPackageDependencyValue(
     return dependencyId.version;
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
+  if (!dependencyRootDir) { throw new GeneralError(`rootDir is missing from an imported component ${dependencyId.toString()}`); }
+  if (!parentComponentMap.rootDir) throw new GeneralError('rootDir is missing from an imported component');
   const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
-  return rootDirRelative.startsWith('.') ? `file:${rootDirRelative}` : `file:./${rootDirRelative}`;
+  return convertToValidPathForPackageManager(rootDirRelative);
 }
 
 async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId) {
@@ -106,6 +116,7 @@ async function changeDependenciesToRelativeSyntax(
         const dependencyId = dependency.id.toStringWithoutVersion();
         if (dependenciesIds.includes(dependencyId)) {
           const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
+          // $FlowFixMe dependencyComponent must be found (two line earlier there is a check for that)
           const dependencyComponentMap = dependencyComponent.getComponentMap(consumer.bitMap);
           const dependencyLocation = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
           return [dependencyId, dependencyLocation];
@@ -185,7 +196,12 @@ async function write(
   return packageJson.write({ override });
 }
 
-async function updateAttribute(consumer: Consumer, componentDir, attributeName, attributeValue): Promise<*> {
+async function updateAttribute(
+  consumer: Consumer,
+  componentDir: PathLinux,
+  attributeName: string,
+  attributeValue: string
+): Promise<*> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   try {
     const packageJson = await PackageJson.load(componentDir);
@@ -248,6 +264,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
     .filter(a => a); // remove null
 
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);
+  // $FlowFixMe nulls were removed in the previous filter function
   return Promise.all(pathsToRemove.map(componentPath => fs.remove(path.join(consumer.getPath(), componentPath))));
 }
 

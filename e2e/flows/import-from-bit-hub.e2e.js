@@ -181,17 +181,31 @@ describe('importing bit components from bitsrc.io', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
-      describe('As publisher, change to absolute syntax, another, non-bit user clones the project and install npm', () => {
+      describe('As publisher, change to absolute syntax, another, non-bit user clones the project', () => {
         before(() => {
           const isStringFixtureV2 = `const isType = require('@bit/${scopeId}.utils.is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
           helper.createFile(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
-          helper.mimicGitCloneLocalProject();
-          helper.runCmd('npm install');
         });
-        it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
-          const result = helper.runCmd('node app.js');
-          expect(result.trim()).to.equal('got is-type v2 and got is-string');
+        describe('and run install using NPM', () => {
+          before(() => {
+            helper.mimicGitCloneLocalProject();
+            helper.runCmd('npm install');
+          });
+          it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type v2 and got is-string');
+          });
+        });
+        describe('and run install Yarn', () => {
+          before(() => {
+            helper.mimicGitCloneLocalProject();
+            helper.runCmd('yarn');
+          });
+          it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type v2 and got is-string');
+          });
         });
       });
     });
