@@ -93,6 +93,10 @@ export default class BitId {
     return id.split(VERSION_DELIMITER)[0];
   }
 
+  static getVersionOnlyFromString(id: string): string {
+    return id.split(VERSION_DELIMITER)[1];
+  }
+
   static parse(id: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
     if (!id || id === NO_PLUGIN_TYPE) {
       return null;
