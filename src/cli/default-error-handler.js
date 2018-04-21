@@ -55,6 +55,7 @@ import {
   NoFiles,
   EmptyDirectory,
   MissingComponentIdForImportedComponent,
+  VersionShouldBeRemoved,
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
@@ -185,6 +186,10 @@ once your changes are merged with the new remote version, please tag and export 
       'error: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file'
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
+  [
+    VersionShouldBeRemoved,
+    err => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`
+  ],
   [
     MissingFilesFromComponent,
     (err) => {
