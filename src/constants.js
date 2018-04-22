@@ -158,9 +158,7 @@ export const DEFAULT_SSH_READY_TIMEOUT = 99999;
  */
 export const CFG_USER_EMAIL_KEY = 'user.email';
 
-export const CFG_BITSRC_TOKEN_KEY = 'bitsrc.token';
-
-export const CFG_BITSRC_USERNAME_KEY = 'bitsrc.username';
+export const CFG_USER_TOKEN_KEY = 'user.token';
 
 export const CFG_USER_NAME_KEY = 'user.name';
 

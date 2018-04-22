@@ -1,7 +1,7 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { CFG_BITSRC_TOKEN_KEY, CFG_BITSRC_USERNAME_KEY } from '../../../constants';
+import { CFG_USER_TOKEN_KEY } from '../../../constants';
 import * as scopeConfig from '../../../api/consumer/lib/global-config';
 
 export default class Logout extends Command {
@@ -11,8 +11,7 @@ export default class Logout extends Command {
   opts = [];
 
   action(): Promise<any> {
-    scopeConfig.delSync(CFG_BITSRC_TOKEN_KEY);
-    scopeConfig.delSync(CFG_BITSRC_USERNAME_KEY);
+    scopeConfig.delSync(CFG_USER_TOKEN_KEY);
     return Promise.resolve();
   }
 
