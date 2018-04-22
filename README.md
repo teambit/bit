@@ -13,26 +13,22 @@
 
 ## About
 
-**Bit works with Git and NPM to improve the workflow of sharing code between multiple projects and applications**.
+**Bit works with Git and NPM to easily share and sync code between projects.**
 
-Components of software such as UI components, small modules and more can be used as building blocks for multiple projects and applications.
+While code sharing speeds your development, it can also generate a lot of overhead when you have to split your repositories and work hard to make changes between them.
 
-However, sharing this code between projects often comes with a loft of overhead when forcing you to split your existing repositories and sync changes between them.  
+Bit eliminates this overhead by helping you easily isolate and share components from any repository, organize them for your team and sync changes across your projects.
 
-Bit eliminates this overhead by helping you seamlessly isolate and share components directly from any repository, organize them for your team and keep them synced across your codebase.  
+Any team member can discover, use and develop components from any project so your team can collaborate, suggest updates, merge changes and stay in sync.
 
-Any team member can easily discover, use and develop shared components from any of their projects, improving collaboration and innovation while reducing the overhead of code sharing.  
-
-With Bit, code-sharing becomes as simple as copy-pasting.
-
-*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team, used by our team for over 10 months and now being used by more organizations and communities every day. You are welcome to use it, contribute and suggest feedback.*
+*Bit is a collaborative open source project, actively developed and maintained by a venture-backed tea and used by more organizations and communities every day.*
 
 ## Contents
 
 - [How It Works](#how-it-works)
 - [Getting Started](#getting-started)
-- [Usage](#usage)
 - [Examples](#examples)
+- [Example Workflow](#example-workflow)
 - [Motivation](#motivation)
 - [Contributing](#contributing)
 - [Docs](https://docs.bitsrc.io)
@@ -41,52 +37,119 @@ With Bit, code-sharing becomes as simple as copy-pasting.
 
 ## How It Works
 
-### Seamless code sharing
+### Isolating and sharing components
 
-Instead of splitting your project into more repositories just to publish packages, Bit enables you to isolate and share components of code (subsets of files) directly from your existing repository without splitting it or changing a single line of code.
+Instead of having to split repositories and create new ones just to publish packages, Bit helps you seamlessly isolate components (sets of files) from any existing repository and share them to be used, developed and synced in other projects.
 
-Once shared, your components can be installed with NPM / Yarn or imported into any project with Bit for further development, while keeping changes synced between your projects.
+To share components you don’t need to refactor or configure anything. Instead, Bit automatically [detects]((https://docs.bitsrc.io/docs/isolating-and-tracking-components.html)) the component’s dependency graph (including package / file / component dependencies) and creates an [isolated environment](https://docs.bitsrc.io/docs/ext-concepts.html) for every component. 
 
-This becomes possible thanks to three main features:
+This environment enables you to to use and develop components from other projects.
+For example, components written in typescript can be used and developed in a project written in flow-typed. It also lets Bit test and build your components in isolation,
 
-**Automatic dependency detection and definition** - Components can depend on other components, packages or files in your project. Bit [automatically defines](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) the dependency graph for the components you share, to isolate them from your project.
+### Importing with Bit / Installing with NPM
 
-**Isolated environment** - Bit’s understanding of the component’s dependency graph enables it to  create an [isolated environment](https://docs.bitsrc.io/docs/ext-concepts.html) for the component,  so it can be developed from any other project. For example, components written in typescript can be sourced and developed in a project written in flow-typed.
+You can use Bit to [import](https://docs.bitsrc.io/docs/importing-components.html) components into any project you’re working on. Importing a component means you can use it and also make changes and continue to develop it from your project. Bit will track your components across different projects to sync changes between them.
 
-**Scope** - The [Scope](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html) is a remote source of truth in which your components are stored, organized and synced (while versioned) throughout your projects. When combined with the isolated component envrionemnt, Scopes also enable components to [build](https://docs.bitsrc.io/docs/building-components.html) and [test](https://docs.bitsrc.io/docs/testing-components.html) in isolation.
 
-Scopes also serve as a “playlist” of your team’s components, from which they can be easily discovered and used. You can set up a Scope locally, or use Bit’s [free Hub](https://bitsrc.io). 
- 
-### Installing components with NPM
+Once shared to Bit’s hub, components automatically become available to [install as packages](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html) using NPM and Yarn. This means you can turn any part of any repository into a package without refactoring or splitting the repository.
 
-Once shared to a Scope on the [free hub](https://bitsrc.io), components automatically become available to install as packages using NPM and Yarn. This means you can turn any component from any project into a package in seconds, without creating a new repository and [environment](https://docs.bitsrc.io/docs/building-components.html).
+Combining the two workflows also allows you to easily make changes to components installed as packages right from any project consuming them.
 
-### Simultaneous development from different projects
 
-Bit decouples the representation of the code you share from your project’s file structure.
-As a result, you can make changes to the code you share from any project you’re working on, and sync these changes across other projects using your Scope as a remote source of truth.
+### Updating and merging component changes
 
-This distributed workflow also make it very easy to update packages from any end repository if you choose to install your components using package managers.
+Since Bit tracks components across different projects, you can [update](https://docs.bitsrc.io/docs/updating-sourced-components.html) components with new versions and suggest updates to components shared by your team. When a component is changed in your project, Bit leverages Git’s merge utility to let you [merge](https://docs.bitsrc.io/docs/merge-changes.html) component changes between your projects.
 
-### Discoverability
+This workflow also helps you learn exactly which components are used by who and where, so you can easily make changes to components in multiple projects with universal control over your dependency graph.
 
-The code you share with Bit is organized in your Scopes and can be made available to your team to discover, use and develop. If shared to Bit’s [free hub](https://bitsrc.io), your components will be presented with a visual UI including rendering for React components, isolated test results, auto-parsed docs and examples. Here’s [an example](https://bitsrc.io/bit/movie-app/components/hero).
+### Component discoverability
 
-Since Bit tracks the code you share across your projects, you can easily learn which components are used by who and where, and make vast changes to multiple components together with universal control over your dependency graph.
+While making code sharing easier, Bit helps you organize your components and make them discoverable for your team to find and choose from.
+
+Using a semantic component search engine and features such as  a [live playground](https://blog.bitsrc.io/introducing-the-live-react-component-playground-d8c281352ee7) for component visualization, auto-parsed docs, test results and more, Bit makes it simpler to collaborate and share your favorite components.
+
+Here is [an example](https://bitsrc.io/bit/movie-app) of React UI components organized, rendered, tested and made discoverable via [Bit’s hub](https://bitsrc.io).
 
 
 ### Extending Bit
 
-You can [extend Bit](https://docs.bitsrc.io/docs/ext-developing-extensions.html) to integrate with your favorite dev tools to build, test, bundle, lint, pack, publish and optimize the workflow around the code you share.
+Bit can be extended for a variety of purposes and integrated into your favorite tools. For example, you can create and use Bit extensions to [build](https://docs.bitsrc.io/docs/building-components.html), [test](https://docs.bitsrc.io/docs/testing-components.html), [render](https://docs.bitsrc.io/docs/rendering-components.html), bundle, lint, pack, publish and optimize the workflow around your components.
+
 
 ## Getting Started
 
-* [Quick start guide](https://docs.bitsrc.io/docs/quick-start.html)
-* [Tutorial: Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html) 
+* [Quick start](https://docs.bitsrc.io/docs/quick-start.html)
+* [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html) 
+
+#### Basics
+
+1. [Installation](https://docs.bitsrc.io/docs/installation.html)
+2. [Initializing Bit](https://docs.bitsrc.io/docs/initializing-bit.html)
+3. [Isolating components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html)
+4. [Versioning components](https://docs.bitsrc.io/docs/versioning-tracked-components.html)
+5. [Sharing components](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html)
+6. [Installing components with NPM](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html)
+7. [Modifying components with Bit](https://docs.bitsrc.io/docs/importing-components.html)
+8. [Merging component changes](https://docs.bitsrc.io/docs/merge-versions.html)
+
+#### Advanced:
+
+* [Building components](https://docs.bitsrc.io/docs/building-components.html)
+* [Testing components](https://docs.bitsrc.io/docs/testing-components.html)
+* [Rendering UI components](https://docs.bitsrc.io/docs/rendering-components.html)
+* [Documenting components](https://docs.bitsrc.io/docs/documenting-components.html)
+* [Removing components](https://docs.bitsrc.io/docs/removing-components.html)
+* [Extending Bit](https://docs.bitsrc.io/docs/ext-concepts.html)
+* [Configuring Bit](https://docs.bitsrc.io/docs/conf-bit-json.html)
+* [Troubleshooting](https://docs.bitsrc.io/docs/latest-version.html)
+* [CLI reference](https://docs.bitsrc.io/docs/cli-add.html)
+
+## Examples
+
+### Bit with React / Vue
+
+Tutorial: [Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html).
+
+UI components are often designed with reusability in mind.
+
+As such, Bit can be a powerful tool for sharing these components between app and projects.
+
+For example, here is a [React movie-application project](https://github.com/teambit/movie-app) that contains 8 reusable UI components and 1 global-styles component.
+
+Using Bit, all of these components were isolated and shared from the repository, and organized in [this Scope](https://bitsrc.io/bit/movie-app).
+
+Every component can now be [played with online](https://blog.bitsrc.io/introducing-the-live-react-component-playground-d8c281352ee7), installed using NPM or imported into any project for further development.
+
+Here’s an example [React hero component](https://bitsrc.io/bit/movie-app/components/hero) from this Scope.
+
+[![React Hero component](https://storage.googleapis.com/bit-docs/react-hero-component%20(2).gif)](https://bitsrc.io/bit/movie-app/components/hero).
+
+
+### Node.js modules and common code
+
+Some teams use Bit to sync common code between Node.js repositories and services. We [use Bit to sync](https://blog.bitsrc.io/how-we-successfully-share-and-reuse-code-between-microservices-at-scale-20fcfaebc6d0) over 250 shared components between our Node.js microservices (!). 
+
+Bit is useful for preventing duplicate code while making maintenance easier.
+
+### Shared libraries
+
+You can use Bit to turn any shared-lib into a dynamic collection of individual components.
+
+Here’s an example GitHub [community-made UI library](https://github.com/GSS-FED/vital-ui-kit-react) with React. The library’s authors shared their components with Bit, making them available to discover and use [from this Scope](https://bitsrc.io/gssfed/vital-ui-kit-react). 
+
+Here’s an example of the React Card component in Bit’s live playground.
+
+[![React Card component](https://storage.googleapis.com/bit-docs/react-card-component.gif)](https://bitsrc.io/gssfed/vital-ui-kit-react/packages/card).
+
+
+### More 
+
+Bit can be useful for sharing any common component, functionality and module including **[GraphQL APIs](https://hackernoon.com/make-your-graphql-api-easier-to-adopt-through-components-74b022f195c1)**, **Serverless functions**, **Utility functions** and more.
+
 
 ### Example workflow
 
-Let’s use Bit to isolate and share the UI components `button`, `login` and `logo` in the following project’s directory structure.
+Let’s use Bit to isolate and share the `button`, `login` and `logo` React UI components in the following repository file structure, and make them available to use in other projects.
 
 ```bash
 $ tree
@@ -116,127 +179,77 @@ $ tree
 1. First, let’s [install Bit](https://docs.bitsrc.io/docs/installation.html).
 
 ```bash
+
 $ npm install bit-bin -g
+
 ```
 
-2. Let’s [initialize Bit](https://docs.bitsrc.io/docs/initializing-bit.html) for the project.
+2. Next, let’s [initialize Bit](https://docs.bitsrc.io/docs/initializing-bit.html) for the project.
 
 ```bash
+
 $ cd project-directory
 $ bit init
+
 ```
 
-3. Let’s [add the components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) to be tracked by Bit.
+3. Now, let’s [track the components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) using `bit add` and let Bit detect their file / package depdency graphs.
 
 ```bash
-$ bit add src/components/* # use a glob pattern to track multiple components in the same path or a single path to track a single component.
+
+# Use a glob pattern to track multiple components in the same path, or specific paths to track specific components.
+$ bit add src/components/* 
+
 ```
 
-4. Let’s add [build](https://docs.bitsrc.io/docs/building-components.html) and [test](https://docs.bitsrc.io/docs/testing-components.html) environments from this [pre-made collection](https://bitsrc.io/bit/envs) (you can also [implement your own](https://docs.bitsrc.io/docs/ext-developing-extensions.html)).
-- In case these are React UI components, it will also enable Bit to render your components! Here's [an example](https://bitsrc.io/bit/movie-app/components/hero).
+4. Next, let’s import [build](https://docs.bitsrc.io/docs/building-components.html) and [test](https://docs.bitsrc.io/docs/testing-components.html) environments to let Bit build, render and test the components in isolation. You can use [pre-made environemnts](https://bitsrc.io/bit/envs) or [implement your own](https://docs.bitsrc.io/docs/ext-developing-extensions.html)).
 
 ```bash
+
+# Import an environment to build and render the components
 $ bit import bit.envs/bundlers/webpack-css-modules --compiler
-the following component environments were installed
-- bit.envs/bundlers/webpack-css-modules@0.0.6
 
+# Import an environment to test the components in isolation
 $ bit import bit.envs/testers/karma-mocha --tester
-the following component environments were installed
-- bit.envs/testers/testers/karma-mocha@0.0.8
 
 ```
 
-5. Now let’s [lock a version](https://docs.bitsrc.io/docs/versioning-tracked-components.html) and let Bit isolate the components from the project by defining their file / package dependancy graph.
+5. Now, let’s [tag](https://docs.bitsrc.io/docs/versioning-tracked-components.html) the components and let Bit lock the component’s version and dependency graph.
 
 ```bash
+
 $ bit tag --all 1.0.0
-3 components tagged | 3 added, 0 changed, 0 auto-tagged
-added components:  components/button@1.0.0, components/login@1.0.0, components/logo@1.0.0
+
 ```
 
-6. Now let’s [share](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html) the components to a remote [Scope](https://bitsrc.io).
+6. Next, let’s create a remote Scope on [Bit’s hub](https://bitsrc.io) for your components. From the Scope your components can be discovered, used and synced in your projects.
+Once created, let’s [export](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html) the components to the Scope. This will not remove them from the repo or change its structure at all.
 
 ```bash
+
+# Export the components to your remote Scope
 $ bit export username.scopename  # Share components to this Scope
-exported 3 components to scope username.scopename
+
 ```
 Note that using the `--eject` flag you can also remove an exported component from your source-code and add it as a package dependency in your project’s `package.json` file.
 
-That’s it. You can now [install the components](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html) using your favorite package manager, or use `bit import` to [bring their source code](https://docs.bitsrc.io/docs/importing-components.html) into any repository, make changes and easily [sync them](https://docs.bitsrc.io/docs/updating-sourced-components.html) across different projects.
+That’s it. 
 
-Also see: [GETTING STARTED](https://docs.bitsrc.io/docs/quick-start.html)
-
-## Usage
-
-### Basics
-
-1. [Installation](https://docs.bitsrc.io/docs/installation.html)
-2. [Initializing Bit for your project](https://docs.bitsrc.io/docs/initializing-bit.html)
-3. [Isolating and tracking components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html)
-4. [Versioning and dependency defintion](https://docs.bitsrc.io/docs/versioning-tracked-components.html)
-5. [Sharing components](https://docs.bitsrc.io/docs/organizing-components-in-scopes.html)
-6. [Installing with NPM/Yarn](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html)
-7. [Component source code distribution](https://docs.bitsrc.io/docs/importing-components.html)
-
-### Advanced:
-
-* [Building components](https://docs.bitsrc.io/docs/building-components.html)
-* [Testing components](https://docs.bitsrc.io/docs/testing-components.html)
-* [Rendering components](https://docs.bitsrc.io/docs/rendering-components.html)
-* [Documenting components](https://docs.bitsrc.io/docs/documenting-components.html)
-* [Removing components](https://docs.bitsrc.io/docs/removing-components.html)
-* [Extending Bit](https://docs.bitsrc.io/docs/ext-concepts.html)
-* [Configuring Bit](https://docs.bitsrc.io/docs/conf-bit-json.html)
-* [Troubleshooting](https://docs.bitsrc.io/docs/latest-version.html)
-
-### Usage:
-
-* [CLI reference](https://docs.bitsrc.io/docs/cli-add.html)
-
-## Examples
-
-### Bit with React / Vue
-
-[Tutorial: Bit with React](https://docs.bitsrc.io/tutorial/react-tutorial.html).
-
-Bit can be a great combination with your UI components.
-
-For example, here is a [React movie-application project](https://github.com/teambit/movie-app) that contains 8 reusable UI components.
-
-Using Bit, all of these components were seamlessly isolated and shared from the repository without changing a single line of code, and organized in [this Scope](https://bitsrc.io/bit/movie-app).
-
-Here’s an example [React hero component](https://bitsrc.io/bit/movie-app/components/hero) from the project:
-
-[![React Hero component](https://storage.googleapis.com/bit-docs/bit_03.png)](https://bitsrc.io/bit/movie-app/components/hero)
-
-
-##### Node.js modules
-
-Share and sync Node.js modules between microservices in a multi-repo architecture.
-
-We use Bit for over 250 shared components between our Node.js microservices (!).
-
-##### Shared libraries
-
-Use Bit to turn any shared-lib into a dynamic collection of individual components.
-
-Here’s an [example JS utility library](https://github.com/teambit/bit.utils) seamlessly turned into a [dynamic Scope](https://bitsrc.io/bit/utils) of individual components.
-
-Additional use cases: **[GraphQL APIs](https://hackernoon.com/make-your-graphql-api-easier-to-adopt-through-components-74b022f195c1)**, **Serverless functions**, **Utility functions** and any encapsulated, reusable component and module.
+Your components are now organized in your Scope and can be discovered, [installed](https://docs.bitsrc.io/docs/installing-components-using-package-managers.html) (NPM) and [developed](https://docs.bitsrc.io/docs/importing-components.html) (`bit import`) from any other project. Bit will keep tracking the components across projects, so you can easily [update](https://docs.bitsrc.io/docs/updating-sourced-components.html)  and [merge](https://docs.bitsrc.io/docs/merge-changes.html) changes between them.
 
 
 ## Motivation
 
-Learn more about the journey towards turning components into the lego-like building blocks of different projects and applications, why Bit was created and what the future holds:
+Learn more about the journey towards turning components into the lego-like building blocks of different projects and applications, why Bit was created and what the future holds on [Bit’s blog](https://blog.bitsrc.io/).
 
-* “[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)” (Hackernoon)
-* “[What music can teach us about how we share code](https://medium.freecodecamp.org/what-music-can-teach-us-about-the-way-we-share-code-a69c30ebded8)” (FreeCodeCamp)
-* Read [our blog](https://blog.bitsrc.io/)
+You can also check out Bit on **FreeCodeCamp** and **Hackernoon**.
 
+* “[How we started sharing components as a team](https://hackernoon.com/how-we-started-sharing-components-as-a-team-d863657afaca)” 
+* “[What music can teach us about how we share code](https://medium.freecodecamp.org/what-music-can-teach-us-about-the-way-we-share-code-a69c30ebded8)”
 
 ## Supported Languages
 
-Bit's design is aimed to be language agnostic, but as of today it still requires language-specific drivers for language-sensitive features (binding etc).
+Bit's design is language agnostic. Still, as of today it requires language-specific drivers for language-sensitive features (binding etc). We released Bit’s driver for Javascript, and will be releasing more drivers in the future. You are also welcome to add your own.
 
 * [bit-javascript](https://github.com/teambit/bit-javascript).
 
@@ -255,5 +268,4 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
 
