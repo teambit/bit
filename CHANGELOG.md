@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.12-dev.1] - 2018-04-22
+
+- introduce a new command `bit diff` to show the files diff for modified components
+- fix Yarn install when a relative path is written into package.json
 - fix bit-merge and bit-checkout commands for Windows
 - bug fix - import after tag was showing an error "Cannot read property 'hash' of undefined"
-- introduce a new command `bit diff` to show the files diff for modified components
 - fix eol issue between os
 
 ## [0.12.11] - 2018-04-10

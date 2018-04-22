@@ -24,7 +24,7 @@ import { Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import type { BitIdStr } from '../../../bit-id/bit-id';
-import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME } from '../../../constants';
+import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER } from '../../../constants';
 import logger from '../../../logger/logger';
 import {
   PathsNotExist,
@@ -39,6 +39,7 @@ import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
 import GeneralError from '../../../error/general-error';
+import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
@@ -196,7 +197,7 @@ export default class AddComponents {
           if (idOfFileIsDifferent) {
             const existingIdWithoutVersion = BitId.parse(existingIdOfFile).toStringWithoutVersion();
             // $FlowFixMe $this.id is not null at this point
-            throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id);
+            throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
           }
         } else if (idOfFileIsDifferent) {
           // not imported component file but exists in bitmap
@@ -241,7 +242,17 @@ export default class AddComponents {
     If you're trying to add a new component, please choose a new namespace or name.
     If you're trying to update a dependency component, please re-import it individually`);
     }
-
+    if (currentId.includes(VERSION_DELIMITER)) {
+      if (
+        !existingComponentId || // this id is new, it shouldn't have a version
+        !existingComponentId.includes(VERSION_DELIMITER) || // this component is new, it shouldn't have a version
+        // user shouldn't add files to a an existing component with different version
+        BitId.getVersionOnlyFromString(existingComponentId) !== BitId.getVersionOnlyFromString(this.id)
+      ) {
+        // $FlowFixMe this.id is defined here
+        throw new VersionShouldBeRemoved(this.id);
+      }
+    }
     return existingComponentId ? BitId.parse(existingComponentId) : BitId.parse(currentId);
   }
 

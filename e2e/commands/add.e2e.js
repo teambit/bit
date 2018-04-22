@@ -4,7 +4,11 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
-import { ExcludedMainFile } from '../../src/consumer/component/add-components/exceptions';
+import {
+  ExcludedMainFile,
+  IncorrectIdForImportedComponent,
+  VersionShouldBeRemoved
+} from '../../src/consumer/component/add-components/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -82,11 +86,17 @@ describe('bit add command', function () {
           { i: 'test/test' },
           path.join(helper.localScopePath, 'components', 'bar', 'foo')
         );
-      expect(addCmd).to.throw(
-        `error: unable to add new files from the root directory of the component  "${
-          helper.remoteScope
-        }/bar/foo" to "test/test`
+      const error = new IncorrectIdForImportedComponent(
+        `${helper.remoteScope}/bar/foo`,
+        'test/test',
+        'components/bar/foo/foo.js'
       );
+      helper.expectToThrow(addCmd, error);
+    });
+    it('should throw an error when specifying an incorrect version', () => {
+      const addFunc = () => helper.addComponentWithOptions('components/bar/foo', { i: 'bar/foo@0.0.45' });
+      const error = new VersionShouldBeRemoved('bar/foo@0.0.45');
+      helper.expectToThrow(addFunc, error);
     });
     it('Should not add files and dists to imported component', () => {
       helper.addComponentWithOptions(
@@ -146,6 +156,10 @@ describe('bit add command', function () {
       expect(files).to.be.array();
       expect(files, helper.printBitMapFilesInCaseOfError(files)).to.be.ofSize(3);
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
+    });
+    it('should not throw an error when specifying the correct version', () => {
+      const output = helper.addComponentWithOptions('components/bar/foo', { i: `${helper.remoteScope}/bar/foo@0.0.1` });
+      expect(output).to.have.string('added');
     });
   });
   describe('add one component', () => {
@@ -1032,6 +1046,17 @@ describe('bit add command', function () {
     });
     it('should contain only one file', () => {
       expect(bitMap[`${helper.remoteScope}/bar/foo@0.0.1`].files).to.be.ofSize(1);
+    });
+  });
+  describe('add component when id includes a version', () => {
+    before(() => {
+      helper.initLocalScope();
+      helper.createComponentBarFoo();
+    });
+    it('should throw an VersionShouldBeRemoved exception', () => {
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo@0.0.4' });
+      const error = new VersionShouldBeRemoved('bar/foo@0.0.4');
+      helper.expectToThrow(addFunc, error);
     });
   });
 });

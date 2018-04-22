@@ -38,7 +38,6 @@ src/prompts/exceptions/index.js
 src/remotes/remote-resolver/remote-resolver.js
 src/scope/component-objects.js
 src/scope/dependency-maps/sources-map.js
-src/scope/exceptions/version-not-found.js
 src/scope/models/source.js
 src/scope/repositories/source.js
 src/search/indexer.js
@@ -121,7 +120,6 @@ src/scope/repositories/sources.js
 src/cli/command-registrar.js
 src/links/node-modules-linker.js
 src/scope/migrations/scope-migrator.js
-src/consumer/component/package-json.js
 src/scope/network/ssh/ssh.js
 src/hooks/hooks-manager.js
 src/scope/component-remove.js

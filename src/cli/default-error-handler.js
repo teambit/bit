@@ -35,6 +35,7 @@ import {
   VersionAlreadyExists,
   MergeConflict,
   MergeConflictOnRemote,
+  VersionNotFound,
   CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
@@ -55,6 +56,7 @@ import {
   NoFiles,
   EmptyDirectory,
   MissingComponentIdForImportedComponent,
+  VersionShouldBeRemoved,
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
@@ -188,6 +190,10 @@ once your changes are merged with the new remote version, please tag and export 
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [
+    VersionShouldBeRemoved,
+    err => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`
+  ],
+  [
     MissingFilesFromComponent,
     (err) => {
       return `component ${
@@ -203,6 +209,7 @@ once your changes are merged with the new remote version, please tag and export 
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
     err =>
@@ -213,9 +220,9 @@ once your changes are merged with the new remote version, please tag and export 
   [
     IncorrectIdForImportedComponent,
     err =>
-      `error: unable to add new files from the root directory of the component  "${chalk.bold(
-        err.importedId
-      )}" to "${chalk.bold(err.newId)}"`
+      `error: trying to add a file ${chalk.bold(err.filePath)} to a component-id "${chalk.bold(
+        err.newId
+      )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
   ],
   [
     NoFiles,

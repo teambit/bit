@@ -13,6 +13,8 @@ import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
+import { SourceFile } from '../../consumer/component/sources';
+import Repository from '../objects/repository';
 
 type CiProps = {
   error: Object,
@@ -384,6 +386,10 @@ export default class Version extends BitObject {
 
   setCIProps(ci: CiProps) {
     this.ci = ci;
+  }
+
+  modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    return Promise.all(this.files.map(file => SourceFile.loadFromSourceFileModel(file, repository)));
   }
 
   validate(): void {
