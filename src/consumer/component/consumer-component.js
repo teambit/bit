@@ -207,7 +207,9 @@ export default class Component {
   validateComponent() {
     const nonEmptyFields = ['name', 'box', 'mainFile'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) { throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`); }
+      if (!this[field]) {
+        throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
+      }
     });
   }
 

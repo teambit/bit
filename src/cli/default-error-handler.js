@@ -9,7 +9,8 @@ import {
   ConsumerNotFound,
   ComponentSpecsFailed,
   MissingDependencies,
-  NewerVersionFound
+  NewerVersionFound,
+  LoginFailed
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -85,6 +86,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
+  [LoginFailed, () => 'error: there was a problem with web authentication'],
+
   // [
   //   PluginNotFound,
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`

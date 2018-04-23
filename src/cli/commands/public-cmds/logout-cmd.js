@@ -1,19 +1,21 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
+import { CFG_USER_TOKEN_KEY } from '../../../constants';
+import * as scopeConfig from '../../../api/consumer/lib/global-config';
 
 export default class Logout extends Command {
   name = 'logout';
-  description = 'logout from bit';
+  description = 'log the CLI out of Bit';
   alias = '';
   opts = [];
 
   action(): Promise<any> {
-    const m = this.alias;
-    console.log('logged out from bit...');
-    return new Promise(resolve => resolve(m));
+    scopeConfig.delSync(CFG_USER_TOKEN_KEY);
+    return Promise.resolve();
   }
 
-  report(data: { string: any }): string {
-    return '';
+  report(): string {
+    return chalk.green('logged out successfully.');
   }
 }
