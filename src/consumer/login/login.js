@@ -24,7 +24,7 @@ export default function loginToBitSrc(
     }
     const server = http.createServer((request, response) => {
       let rawBody = '';
-      const closeConnection = (statusCode: number) => {
+      const closeConnection = (statusCode?: number) => {
         if (statusCode) response.statusCode = statusCode;
         response.end();
         server.close();
@@ -72,10 +72,10 @@ export default function loginToBitSrc(
         }`
       );
       if (!noLaunchBrowser) {
-        console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`));
+        console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
         opn(encoded);
       } else {
-        console.log(chalk.yellow(`Go to the following link in your browser::\n${encoded}`));
+        console.log(chalk.yellow(`Go to the following link in your browser::\n${encoded}`)); // eslint-disable-line no-console
       }
     });
 
