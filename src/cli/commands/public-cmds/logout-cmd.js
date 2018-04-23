@@ -6,7 +6,7 @@ import * as scopeConfig from '../../../api/consumer/lib/global-config';
 
 export default class Logout extends Command {
   name = 'logout';
-  description = 'logout from bit';
+  description = 'log the CLI out of Bit';
   alias = '';
   opts = [];
 

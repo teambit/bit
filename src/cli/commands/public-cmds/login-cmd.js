@@ -5,11 +5,11 @@ import { login } from '../../../api/consumer';
 
 export default class Login extends Command {
   name = 'login';
-  description = 'login to bitsrc';
+  description = 'log the CLI into Bit';
   alias = '';
   opts = [
-    ['p', 'port <port>', 'port number to listen on when running bit login(default 8085)'],
-    ['', 'no-launch-browser', "don't launch browser for bit login"]
+    ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
+    ['', 'no-launch-browser', 'do not open a browser for authentication']
   ];
   // $FlowFixMe
   action(

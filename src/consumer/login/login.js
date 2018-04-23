@@ -43,7 +43,7 @@ export default function loginToBitSrc(
       request.on('end', function () {
         try {
           const body = JSON.parse(rawBody);
-          if (clientId !== body.client_id) {
+          if (clientId !== body.clientId) {
             logger.error(`clientId mismatch, expecting: ${clientId} got ${body.client_id}`);
             closeConnection(ERROR_RESPONSE);
             reject(new LoginFailed());
