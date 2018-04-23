@@ -1,7 +1,13 @@
 /** @flow */
 import fs from 'fs-extra';
 import * as globalConfig from '../../api/consumer/lib/global-config';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, CFG_SSH_KEY_FILE_KEY, DEFAULT_SSH_KEY_FILE } from '../../constants';
+import {
+  CFG_USER_NAME_KEY,
+  CFG_USER_EMAIL_KEY,
+  CFG_SSH_KEY_FILE_KEY,
+  DEFAULT_SSH_KEY_FILE,
+  CFG_USER_TOKEN_KEY
+} from '../../constants';
 import logger from '../../logger/logger';
 
 /**
@@ -13,9 +19,10 @@ export default function enrichContextFromGlobal(context: Object = {}) {
   const username = globalConfig.getSync(CFG_USER_NAME_KEY);
   const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
   const sshKeyFile = globalConfig.getSync(CFG_SSH_KEY_FILE_KEY);
+  const token = globalConfig.getSync(CFG_USER_TOKEN_KEY);
   const pubSshKeyFile = sshKeyFile ? `${sshKeyFile}.pub` : undefined;
   const pubSshKey = _getSshPubKey(pubSshKeyFile);
-  Object.assign(context, { username, email, pubSshKey });
+  Object.assign(context, { username, email, pubSshKey, token });
 }
 
 function _getSshPubKey(pubSshKeyFile: string = `${DEFAULT_SSH_KEY_FILE}.pub`) {

@@ -27,6 +27,7 @@ import checkout from './lib/checkout';
 import merge from './lib/merge';
 import diff from './lib//diff';
 import migrate from './lib/migrate';
+import login from './lib/login';
 
 export {
   init,
@@ -61,5 +62,6 @@ export {
   checkout,
   merge,
   diff,
-  migrate
+  migrate,
+  login
 };

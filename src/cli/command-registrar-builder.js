@@ -45,6 +45,8 @@ import Checkout from './commands/public-cmds/checkout-cmd';
 import Migrate from './commands/private-cmds/migrate-cmd';
 import Merge from './commands/public-cmds/merge-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
+import Login from './commands/public-cmds/login-cmd';
+import Logout from './commands/public-cmds/logout-cmd';
 
 export default function registerCommands(extensionsCommands): CommandRegistrar {
   return new CommandRegistrar(
@@ -95,6 +97,8 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Checkout(),
       new Merge(),
       new Diff(),
+      new Login(),
+      new Logout(),
       new Migrate()
     ],
     extensionsCommands
