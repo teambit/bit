@@ -78,7 +78,6 @@ src/cli/commands/private-cmds/ci-update-cmd.js
 src/consumer/specs-results/specs-results.js
 src/driver/driver.js
 src/extensions/core-extensions/ext-docs-parser.js
-src/links/linker.js
 src/logger/logger.js
 src/migration/migration-helper.js
 src/scope/objects/ref.js
@@ -102,7 +101,6 @@ specs/scope/migrations/scope-migrator.spec.js
 src/bit-id/bit-id.js
 src/cli/chalk-box.js
 src/cli/commands/public-cmds/deprecate-cmd.js
-src/links/link-generator.js
 src/scope/migrations/component-version/to-semver-migration.js
 src/scope/models/scopeMeta.js
 src/scope/network/fs/fs.js
