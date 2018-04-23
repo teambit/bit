@@ -67,7 +67,7 @@ export default function loginToBitSrc(
 
       const encoded = encodeURI(
         `${getSync(CFG_HUB_LOGIN_KEY) ||
-          DEFAULT_HUB_LOGIN}?port=${DEFAULT_PORT}&client_id=${clientId}&responseType=token&deviceName=${os.hostname()}&os=${
+          DEFAULT_HUB_LOGIN}?port=${DEFAULT_PORT}&clientId=${clientId}&responseType=token&deviceName=${os.hostname()}&os=${
           process.platform
         }`
       );
