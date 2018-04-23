@@ -20,7 +20,7 @@ describe('bit tag command', function () {
     helper.reInitLocalScope();
     logSpy = sinon.spy(console, 'log');
   });
-  describe('tag component with corrupted bitjson', () => {
+  describe('tag component with corrupted bit.json', () => {
     let output;
     it('Should not commit component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
@@ -362,8 +362,6 @@ describe('bit tag command', function () {
       output = helper.commitComponent('comp/comp');
     });
 
-    it.skip('should index the component', () => {});
-
     it('should successfully tag if there is no special error', () => {
       // Validate output
       expect(output).to.have.string('1 components tagged');
@@ -490,9 +488,13 @@ describe('bit tag command', function () {
       it('should tag the component', () => {
         expect(output).to.have.string('1 components tagged');
       });
-      it('should write the dependency to the component model ', () => {
+      it('should write the dependency to the component model', () => {
         const deps = showOutput.dependencies;
         expect(deps.length).to.equal(1);
+      });
+      it('should increment the package.json version of the tagged component', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
+        expect(packageJson.version).to.equal('0.0.2');
       });
     });
 

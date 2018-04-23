@@ -16,6 +16,8 @@ import type { CompilerExtensionModel } from '../../extensions/compiler-extension
 import type { TesterExtensionModel } from '../../extensions/tester-extension';
 import GeneralError from '../../error/general-error';
 import ExtensionFile from '../../extensions/extension-file';
+import { SourceFile } from '../../consumer/component/sources';
+import Repository from '../objects/repository';
 
 type CiProps = {
   error: Object,
@@ -423,6 +425,9 @@ export default class Version extends BitObject {
     this.ci = ci;
   }
 
+  modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    return Promise.all(this.files.map(file => SourceFile.loadFromSourceFileModel(file, repository)));
+  }
   /**
    * Validate the version model properties, to make sure we are not inserting something
    * in the wrong format
