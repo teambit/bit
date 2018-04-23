@@ -3,7 +3,7 @@ import Command from '../../command';
 import { catObject } from '../../../api/scope';
 
 export default class CatObject extends Command {
-  name = 'cat-object [hash]';
+  name = 'cat-object <hash>';
   description = 'cat a bit object by hash';
   private = true;
   alias = '';

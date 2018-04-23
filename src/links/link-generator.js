@@ -2,6 +2,7 @@
 import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
+import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
 import {
   DEFAULT_INDEX_NAME,
@@ -14,8 +15,8 @@ import logger from '../logger/logger';
 import { ComponentWithDependencies } from '../scope';
 import Component from '../consumer/component';
 import { Dependency } from '../consumer/component/dependencies';
-import { RelativePath } from '../consumer/component/dependencies/dependency';
-import { BitIds } from '../bit-id';
+import type { RelativePath } from '../consumer/component/dependencies/dependency';
+import { BitIds, BitId } from '../bit-id';
 import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
@@ -56,7 +57,7 @@ function getLinkContent(
   filePath: PathOsBased,
   importSpecifiers?: Object,
   createNpmLinkFiles?: boolean,
-  bitPackageName: string
+  bitPackageName?: string
 ): string {
   const fileExt = getExt(filePath);
   /**
@@ -149,6 +150,31 @@ function getLinkContent(
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
 
+function prepareLinkFile(
+  componentId: BitId,
+  mainFile: PathOsBased,
+  linkPath: string,
+  relativePathInDependency: PathOsBased,
+  relativePath: Object,
+  depRootDir: ?PathOsBased,
+  isNpmLink: boolean
+) {
+  // this is used to convert the component name to a valid npm package  name
+  const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
+    DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
+  let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
+  if (relativePathInDependency === mainFile) {
+    actualFilePath = depRootDir ? path.join(depRootDir, mainFile) : mainFile;
+  }
+  const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
+  const importSpecifiers = relativePath.importSpecifiers;
+  const linkContent = getLinkContent(relativeFilePath, importSpecifiers, isNpmLink, packagePath);
+  logger.debug(`writeLinkFile, on ${linkPath}`);
+  const linkPathExt = getExt(linkPath);
+  const isEs6 = importSpecifiers && linkPathExt === 'js';
+  return { linkPath, linkContent, isEs6 };
+}
+
 /**
  * The following scenario will help understanding why links are needed.
  * Component A has a dependency B. (for instance, in a.js there is a require statement to 'b.js').
@@ -163,33 +189,8 @@ async function writeDependencyLinks(
   createNpmLinkFiles: boolean
 ): Promise<any> {
   const consumerPath: PathOsBased = consumer.getPath();
-  const prepareLinkFile = (
-    componentId: string,
-    mainFile: PathOsBased,
-    linkPath: string,
-    relativePathInDependency: PathOsBased,
-    relativePath: Object,
-    depRootDir: ?PathOsBased,
-    isNpmLink: boolean
-  ) => {
-    // this is used to convert the component name to a valid npm package  name
-    const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
-      DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
-    let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
-    if (relativePathInDependency === mainFile) {
-      actualFilePath = depRootDir ? path.join(depRootDir, mainFile) : mainFile;
-    }
-    const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
-    const importSpecifiers = relativePath.importSpecifiers;
-    const linkContent = getLinkContent(relativeFilePath, importSpecifiers, isNpmLink, packagePath);
-    logger.debug(`writeLinkFile, on ${linkPath}`);
-    const linkPathExt = getExt(linkPath);
-    const isEs6 = importSpecifiers && linkPathExt === 'js';
-    return { linkPath, linkContent, isEs6 };
-  };
-
   const componentLink = (
-    depId: string,
+    depId: BitId,
     depComponent: Component,
     relativePath: RelativePath,
     parentComponent: Component,
@@ -206,12 +207,13 @@ async function writeDependencyLinks(
       relativePathInDependency,
       'relative'
     );
-    relativeDistPathInDependency = relativeDistPathInDependency
+    relativeDistPathInDependency = relativeDistPathInDependency // $FlowFixMe relative is defined
       ? relativeDistPathInDependency.relative
       : relativePathInDependency;
 
     const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
     const sourceRelativePath = relativePath.sourceRelativePath;
+    // $FlowFixMe parentDir is not null
     const linkPath = path.join(parentDir, sourceRelativePath);
     let distLinkPath: PathOsBased;
     const linkFiles = [];
@@ -257,7 +259,7 @@ async function writeDependencyLinks(
     dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
     parentComponent: Component,
     parentComponentMap: ComponentMap
-  ) => {
+  ): Array<{ filePath: string, content: string }> => {
     const directDependencies: Dependency[] = parentComponent.getAllDependencies();
     const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
     if (!directDependencies || !directDependencies.length) return [];
@@ -290,46 +292,46 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     });
     const flattenLinks = R.flatten(links);
     const groupLinks = groupBy(flattenLinks, link => link.linkPath);
-    const allLinksP = Object.keys(groupLinks).map((group) => {
+    return Object.keys(groupLinks).map((group) => {
       let content = '';
       if (groupLinks[group][0].isEs6) {
         // check by the first item of the array, it can be any other item as well
         content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
       }
       content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
-      return outputFile({ filePath: group, content });
+      return { filePath: group, content };
     });
-
-    return Promise.all(allLinksP);
   };
 
-  const allLinksP = componentDependencies.map((componentWithDeps: ComponentWithDependencies) => {
+  const allLinks = componentDependencies.map((componentWithDeps: ComponentWithDependencies) => {
     const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id, true);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
         `writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`
       );
-      return Promise.resolve();
+      return null;
     }
     // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
     componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
-    const directLinksP = componentLinks(componentWithDeps.allDependencies, componentWithDeps.component, componentMap);
+    const directLinks = componentLinks(componentWithDeps.allDependencies, componentWithDeps.component, componentMap);
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
-      const indirectLinksP = componentWithDeps.allDependencies.map((dep: Component) => {
+      const indirectLinks = componentWithDeps.allDependencies.map((dep: Component) => {
         const depComponentMap = consumer.bitMap.getComponent(dep.id, true);
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
         // also the indirect ones
         // The dep.dependencies contain only an id and relativePaths and not the full object
         return componentLinks(componentWithDeps.allDependencies, dep, depComponentMap);
       });
-      return Promise.all([directLinksP, ...indirectLinksP]);
+      return [directLinks, ...indirectLinks];
     }
-    return directLinksP;
+    return directLinks;
   });
-  return Promise.all(allLinksP);
+  const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
+  const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
+  return linksWithoutDuplications.map(link => outputFile(link));
 }
 
 /**
