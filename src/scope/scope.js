@@ -412,7 +412,7 @@ export default class Scope {
         })
         : null;
 
-      const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
+      const testResult = testsResults.find(result => result.componentId === consumerComponentId);
       const component = await this.sources.addSource({
         source: consumerComponent,
         flattenedDependencies,

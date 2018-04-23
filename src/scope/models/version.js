@@ -1,5 +1,7 @@
 /** @flow */
 import R from 'ramda';
+import semver from 'semver';
+import packageNameValidate from 'validate-npm-package-name';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
@@ -307,17 +309,6 @@ export default class Version extends BitObject {
       };
     };
 
-    const parseEnv = (env) => {
-      if (typeof env === 'string') {
-        return env;
-      }
-      return {
-        name: env.name,
-        config: env.config,
-        files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
-      };
-    };
-
     return new Version({
       mainFile,
       files: files ? files.map(parseFile) : null,
@@ -345,6 +336,8 @@ export default class Version extends BitObject {
   }
 
   static from(versionProps: VersionProps): Version {
+    const compiler = versionProps.compiler ? parseEnv(versionProps.compiler) : null;
+    const tester = versionProps.tester ? parseEnv(versionProps.tester) : null;
     const actualVersionProps = { ...versionProps, compiler, tester };
     return new Version(actualVersionProps);
   }
@@ -383,6 +376,19 @@ export default class Version extends BitObject {
       };
     };
 
+    const mergeDevPackageDependencies = (
+      devPackageDependencies,
+      compilerDynamicPakageDependencies = {},
+      testerDynamicPakageDependencies = {}
+    ) => {
+      return { ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies, ...devPackageDependencies };
+    };
+
+    const compilerDynamicPakageDependencies = component.compiler
+      ? component.compiler.dynamicPackageDependencies
+      : undefined;
+    const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
+
     return new Version({
       mainFile: component.mainFile,
       files: files ? files.map(parseFile) : null,
@@ -399,7 +405,11 @@ export default class Version extends BitObject {
       specsResults,
       docs: component.docs,
       packageDependencies: component.packageDependencies,
-      devPackageDependencies: component.devPackageDependencies,
+      devPackageDependencies: mergeDevPackageDependencies(
+        component.devPackageDependencies,
+        compilerDynamicPakageDependencies,
+        testerDynamicPakageDependencies
+      ),
       peerPackageDependencies: component.peerPackageDependencies,
       flattenedDependencies,
       flattenedDevDependencies,
@@ -452,6 +462,27 @@ export default class Version extends BitObject {
       }
     };
 
+    /**
+     * Validate that the package name and version are valid
+     * @param {*} packageName
+     * @param {*} packageVersion
+     */
+    const _validatePackageDependency = (packageVersion, packageName) => {
+      const version = semver.valid(packageVersion);
+      const versionRange = semver.validRange(packageVersion);
+      const packageNameValidateResult = packageNameValidate(packageName);
+      if (!packageNameValidateResult.validForNewPackages && !packageNameValidateResult.validForOldPackages) {
+        const errors = packageNameValidateResult.errors || [];
+        throw new GeneralError(`${packageName} is invalid package name, errors:  ${errors.join()}`);
+      }
+      if (!version && !versionRange) {
+        throw new GeneralError(`${packageName} version - ${packageVersion} is not a valid semantic version`);
+      }
+    };
+    const _validatePackageDependencies = (packageDependencies) => {
+      R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
+    };
+
     const message = 'unable to save Version object';
     if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
     if (!isValidPath(this.mainFile)) throw new GeneralError(`${message}, the mainFile ${this.mainFile} is invalid`);
@@ -469,6 +500,9 @@ export default class Version extends BitObject {
     }
     _validateEnv(this.compiler);
     _validateEnv(this.tester);
+    _validatePackageDependencies(this.packageDependencies);
+    _validatePackageDependencies(this.devPackageDependencies);
+    _validatePackageDependencies(this.peerPackageDependencies);
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {
@@ -490,3 +524,14 @@ export default class Version extends BitObject {
     if (!this.log) throw new GeneralError(`${message},the log object is missing`);
   }
 }
+
+const parseEnv = (env) => {
+  if (typeof env === 'string') {
+    return env;
+  }
+  return {
+    name: env.name,
+    config: env.config,
+    files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
+  };
+};

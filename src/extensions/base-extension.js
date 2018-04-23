@@ -248,7 +248,7 @@ export default class BaseExtension {
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
       if (extensionProps.script.getDynamicConfig && typeof extensionProps.script.getDynamicConfig === 'function') {
-        extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig(rawConfig);
+        extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig({ rawConfig });
       }
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {

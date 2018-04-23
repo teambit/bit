@@ -22,6 +22,7 @@ type EnvType = 'Compiler' | 'Tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType,
+  dynamicPackageDependencies?: Object,
   files?: ExtensionFile[]
 };
 
@@ -36,6 +37,7 @@ export type EnvExtensionModel = BaseExtensionModel & {
 };
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
+  dynamicPackageDependencies: Object;
   files: ExtensionFile[];
 
   /**
@@ -63,6 +65,7 @@ export default class EnvExtension extends BaseExtension {
   constructor(extensionProps: EnvExtensionProps) {
     super(extensionProps);
     this.envType = extensionProps.envType;
+    this.dynamicPackageDependencies = extensionProps.dynamicPackageDependencies;
     this.files = extensionProps.files;
   }
 
@@ -127,6 +130,12 @@ export default class EnvExtension extends BaseExtension {
     return resolvedEjectedEnvsDirectory;
   }
 
+  async reload(): Promise<void> {
+    super.reload();
+    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this);
+    this.dynamicPackageDependencies = dynamicPackageDependencies;
+  }
+
   /**
    * Loading from props (usually from bit.json)
    * @param {*} props
@@ -135,7 +144,22 @@ export default class EnvExtension extends BaseExtension {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
+    const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
+    envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
     return envExtensionProps;
+  }
+
+  static async loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): Promise<?Object> {
+    const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
+    if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
+      const dynamicPackageDependencies = await getDynamicPackageDependencies({
+        rawConfig: envExtensionProps.rawConfig,
+        dynamicConfig: envExtensionProps.dynamicConfig,
+        configFiles: envExtensionProps.files
+      });
+      return dynamicPackageDependencies;
+    }
+    return undefined;
   }
 
   static async loadFromModelObject(modelObject: EnvExtensionModel, repository: Repository): Promise<EnvExtensionProps> {
