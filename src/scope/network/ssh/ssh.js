@@ -295,12 +295,12 @@ export default class SSH implements Network {
     logger.debug('SSH: there is no token configured)');
   }
 
-  composeSshAuthObject(key: ?string) {
+  composeSshAuthObject(key: ?string, skipAgent: ?boolean) {
     logger.debug(`SSH: reading ssh key file ${key}`);
     logger.debug('SSH: checking if ssh agent has socket');
     Analytics.addBreadCrumb('ssh', 'reading ssh key file');
     // if ssh-agent socket exists, use it.
-    if (this.hasAgentSocket()) {
+    if (this.hasAgentSocket() && !skipAgent) {
       logger.debug('SSH: connecting using ssh agent socket');
       Analytics.setExtraData('authentication_method', 'ssh-agent');
       return merge(this.comoseBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
@@ -371,10 +371,10 @@ export default class SSH implements Network {
     });
   }
 
-  sshAuthentication(key: ?string, passphrase: ?string): Promise<SSH> {
+  sshAuthentication(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
     const conn = new SSH2();
     return new Promise((resolve, reject) => {
-      const sshConfig = this.composeSshAuthObject(key);
+      const sshConfig = this.composeSshAuthObject(key, skipAgent);
       if (!sshConfig) reject();
       conn
         .on('error', (err) => {
@@ -428,7 +428,7 @@ export default class SSH implements Network {
     Analytics.addBreadCrumb('ssh', 'starting ssh connection process');
     return this.tokenAuthentication().catch(() =>
       this.sshAuthentication(key, passphrase)
-        .catch(() => this.userPassAuthentication())
+        .catch(() => this.sshAuthentication(key, passphrase, true).catch(() => this.userPassAuthentication()))
         .catch((e) => {
           if (e.skip) {
             return this.connect(key, passphrase);
