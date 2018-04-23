@@ -994,8 +994,8 @@ describe('bit add command', function () {
     it('bitmap should include the file and the test file correctly', () => {
       const bitMap = helper.readBitMap();
       const expectedArray = [
-        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' },
-        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' }
+        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' },
+        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' }
       ];
       expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;
