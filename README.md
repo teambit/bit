@@ -44,7 +44,7 @@ Instead of having to split repositories and create new ones just to publish pack
 To share components you don’t need to refactor or configure anything. Instead, Bit automatically [detects]((https://docs.bitsrc.io/docs/isolating-and-tracking-components.html)) the component’s dependency graph (including package / file / component dependencies) and creates an [isolated environment](https://docs.bitsrc.io/docs/ext-concepts.html) for every component. 
 
 This environment enables you to to use and develop components from other projects.
-For example, components written in typescript can be used and developed in a project written in flow-typed. It also lets Bit test and build your components in isolation,
+For example, components written in typescript can be used and developed in a project written in flow-typed. It also lets Bit test and build your components in isolation, so you can know the exact state of every component.
 
 ### Importing with Bit / Installing with NPM
 
