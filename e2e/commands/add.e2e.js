@@ -193,6 +193,19 @@ describe('bit add command', function () {
       expect(files).to.deep.include(expectTestFile);
       expect(files).to.deep.include(expectImplFile);
     });
+    it('should be able to mark a file as test after adding it as non-test', () => {
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo.spec.js');
+      helper.addComponentWithOptions('bar', { m: 'bar/foo.js', i: 'bar/foo' });
+      helper.addComponent(' -t bar/foo.spec.js --id bar/foo');
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      const expectImplFile = { relativePath: 'bar/foo.js', test: false, name: 'foo.js' };
+      const expectTestFile = { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' };
+      expect(files).to.be.ofSize(2);
+      expect(files).to.deep.include(expectTestFile);
+      expect(files).to.deep.include(expectImplFile);
+    });
     it('Should throw message if adding test files without id', () => {
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'foo2.spec.js');
@@ -981,8 +994,8 @@ describe('bit add command', function () {
     it('bitmap should include the file and the test file correctly', () => {
       const bitMap = helper.readBitMap();
       const expectedArray = [
-        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' },
-        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' }
+        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' },
+        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' }
       ];
       expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;

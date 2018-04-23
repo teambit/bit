@@ -201,7 +201,7 @@ export default class ComponentMap {
         componentPaths: [trackDirRelative || '.'],
         id: id.toString(),
         override: false, // this makes sure to not override existing files of componentMap
-        writeToBitMap: false,
+        trackDirFeature: true,
         origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
@@ -230,6 +230,10 @@ export default class ComponentMap {
       return relativePaths.includes(file.relativePath) ? accumulator : accumulator.concat(file);
     }, []);
     this.validate();
+  }
+
+  sort() {
+    this.files = R.sortBy(R.prop('relativePath'), this.files);
   }
 
   validate(): void {

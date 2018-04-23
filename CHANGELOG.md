@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bit-add to enable marking files as tests of existing components
 - bug fix - in some circumstances, same link files were written in parallel, resulting in invalid content
 
 ## [0.12.12-dev.2] - 2018-04-23
