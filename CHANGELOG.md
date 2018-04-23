@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+
+## [0.12.12-dev.2] - 2018-04-23
+
 - introduce a new command `bit login` for authenticating to bitsrc
 
 ## [0.12.12-dev.1] - 2018-04-22
