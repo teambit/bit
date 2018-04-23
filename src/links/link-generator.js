@@ -329,7 +329,8 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     }
     return directLinks;
   });
-  const linksWithoutDuplications = uniqBy(R.flatten(allLinks), 'filePath');
+  const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
+  const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
   return linksWithoutDuplications.map(link => outputFile(link));
 }
 
