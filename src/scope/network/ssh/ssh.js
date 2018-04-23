@@ -290,7 +290,6 @@ export default class SSH implements Network {
     if (token) {
       logger.debug('SSH: connecting using token');
       this._sshUsername = 'token';
-      Analytics.setExtraData('authentication_method', 'token');
       return merge(this.comoseBaseObject(), { username: 'token', password: token });
     }
     logger.debug('SSH: there is no token configured)');
@@ -299,6 +298,7 @@ export default class SSH implements Network {
   composeSshAuthObject(key: ?string) {
     logger.debug(`SSH: reading ssh key file ${key}`);
     logger.debug('SSH: checking if ssh agent has socket');
+    Analytics.addBreadCrumb('ssh', 'reading ssh key file');
     // if ssh-agent socket exists, use it.
     if (this.hasAgentSocket()) {
       logger.debug('SSH: connecting using ssh agent socket');
@@ -306,6 +306,7 @@ export default class SSH implements Network {
       return merge(this.comoseBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
     }
     logger.debug('SSH: there is no ssh agent socket (or its been disabled)');
+    Analytics.addBreadCrumb('ssh', 'there is no ssh agent socket (or its been disabled)');
     logger.debug(`SSH: reading ssh key file ${key}`);
 
     // otherwise just search for merge
@@ -314,6 +315,7 @@ export default class SSH implements Network {
       Analytics.setExtraData('authentication_method', 'ssh-key');
       return merge(this.comoseBaseObject(), { privateKey: keyBuffer });
     }
+    Analytics.addBreadCrumb('ssh', 'reading ssh key file failed');
     logger.debug('SSH: reading ssh key file failed');
   }
 
@@ -377,22 +379,25 @@ export default class SSH implements Network {
       conn
         .on('error', (err) => {
           logger.debug('SSH: connection on error event');
-
+          Analytics.addBreadCrumb('ssh', 'connection on error event');
           if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
             logger.debug('SSH: retry in case ssh-agent failed');
-
+            Analytics.addBreadCrumb('ssh', 'retry in case ssh-agent failed');
             // retry in case ssh-agent failed
             if (err.message === PASSPHRASE_MESSAGE) {
               logger.debug('SSH: Encrypted private key detected, but no passphrase given');
+              Analytics.addBreadCrumb('ssh', 'Encrypted private key detected, but no passphrase given');
               if (cachedPassphrase) {
                 logger.debug('SSH: trying to use cached passphrase');
                 return this.sshAuthentication(key, cachedPassphrase);
               }
               logger.debug('SSH: prompt for passphrase');
+              Analytics.addBreadCrumb('ssh', 'prompt for passphrase');
               return promptPassphrase().then((res) => {
                 cachedPassphrase = res.passphrase;
                 return this.sshAuthentication(key, cachedPassphrase).catch(() => {
                   logger.debug('SSH: connecting using passphrase failed, trying again');
+                  Analytics.addBreadCrumb('ssh', 'connecting using passphrase failed, trying again');
                   cachedPassphrase = undefined;
                   return this.sshAuthentication(key, cachedPassphrase);
                 });
@@ -402,7 +407,7 @@ export default class SSH implements Network {
           }
 
           logger.debug('SSH: auth failed', err);
-
+          Analytics.addBreadCrumb('ssh', 'auth failed');
           if (err.message === AUTH_FAILED_MESSAGE) {
             return reject(new AuthenticationFailed());
           }
@@ -420,7 +425,7 @@ export default class SSH implements Network {
   // @TODO refactor this method
   connect(key: ?string, passphrase: ?string): Promise<SSH> {
     logger.debug('SSH: starting ssh connection process');
-
+    Analytics.addBreadCrumb('ssh', 'starting ssh connection process');
     return this.tokenAuthentication().catch(() =>
       this.sshAuthentication(key, passphrase)
         .catch(() => this.userPassAuthentication())
@@ -430,6 +435,7 @@ export default class SSH implements Network {
           }
 
           logger.debug('SSH: connection failed', e);
+          Analytics.addBreadCrumb('ssh', 'connection failed');
 
           throw e;
         })
