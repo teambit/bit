@@ -9,7 +9,7 @@ export default class Login extends Command {
   alias = '';
   opts = [
     ['p', 'port <port>', 'port number to listen on when running bit login(default 8085)'],
-    ['', 'no-launch-browser', 'do not install packages of the imported components']
+    ['', 'no-launch-browser', "don't launch browser for bit login"]
   ];
   // $FlowFixMe
   action(

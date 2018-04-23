@@ -86,7 +86,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
-  [LoginFailed, () => 'There was a problem with web authentication'],
+  [LoginFailed, () => 'error: there was a problem with web authentication'],
 
   // [
   //   PluginNotFound,

@@ -20,7 +20,6 @@ export default function enrichContextFromGlobal(context: Object = {}) {
   const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
   const sshKeyFile = globalConfig.getSync(CFG_SSH_KEY_FILE_KEY);
   const token = globalConfig.getSync(CFG_USER_TOKEN_KEY);
-
   const pubSshKeyFile = sshKeyFile ? `${sshKeyFile}.pub` : undefined;
   const pubSshKey = _getSshPubKey(pubSshKeyFile);
   Object.assign(context, { username, email, pubSshKey, token });

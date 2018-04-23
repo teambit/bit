@@ -288,10 +288,12 @@ export default class SSH implements Network {
   composeTokenAuthObject() {
     const token = getSync(CFG_USER_TOKEN_KEY);
     if (token) {
+      logger.debug('SSH: connecting using token');
       this._sshUsername = 'token';
       Analytics.setExtraData('authentication_method', 'token');
       return merge(this.comoseBaseObject(), { username: 'token', password: token });
     }
+    logger.debug('SSH: there is no token configured)');
   }
 
   composeSshAuthObject(key: ?string) {
@@ -330,6 +332,7 @@ export default class SSH implements Network {
   tokenAuthentication(): Promise<SSH> {
     const conn = new SSH2();
     return new Promise((resolve, reject) => {
+      Analytics.setExtraData('authentication_method', 'token');
       const sshConfig = this.composeTokenAuthObject();
       if (!sshConfig) reject();
       conn
