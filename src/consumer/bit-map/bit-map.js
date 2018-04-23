@@ -305,7 +305,7 @@ export default class BitMap {
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
-
+    this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
     this._invalidateCache();
     return this.components[componentIdStr];
@@ -313,7 +313,9 @@ export default class BitMap {
 
   addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
     const componentIdStr = componentId.toString();
-    if (!this.components[componentIdStr]) { throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`); }
+    if (!this.components[componentIdStr]) {
+      throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`);
+    }
     const existingRootDir = this.components[componentIdStr].rootDir;
     if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
     if (this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
@@ -326,6 +328,7 @@ export default class BitMap {
       this.components[componentIdStr].files,
       files
     );
+    this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
     this._invalidateCache();
     return this.components[componentIdStr];
