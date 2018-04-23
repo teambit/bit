@@ -6,6 +6,7 @@ export default class Ref {
   hash: string;
 
   constructor(hash: string) {
+    if (!hash) throw new Error('failed creating a Ref object, the hash argument is empty');
     this.hash = hash;
   }
 
