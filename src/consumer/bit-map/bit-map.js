@@ -264,12 +264,12 @@ export default class BitMap {
       if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
         this.components[componentIdStr].files = files;
-      } else if (!this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
-        // do not override existing files, only add new files
+      } else {
+        // override the current componentMap.files with the given files argument
         this.components[componentIdStr].files = R.unionWith(
           R.eqBy(R.prop('relativePath')),
-          this.components[componentIdStr].files,
-          files
+          files,
+          this.components[componentIdStr].files
         );
       }
       if (mainFile) {
@@ -306,6 +306,26 @@ export default class BitMap {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
 
+    this.components[componentIdStr].validate();
+    this._invalidateCache();
+    return this.components[componentIdStr];
+  }
+
+  addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
+    const componentIdStr = componentId.toString();
+    if (!this.components[componentIdStr]) { throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`); }
+    const existingRootDir = this.components[componentIdStr].rootDir;
+    if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
+    if (this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
+      return this.components[componentIdStr];
+    }
+    // do not override existing files, only add new files
+    logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+    this.components[componentIdStr].files = R.unionWith(
+      R.eqBy(R.prop('relativePath')),
+      this.components[componentIdStr].files,
+      files
+    );
     this.components[componentIdStr].validate();
     this._invalidateCache();
     return this.components[componentIdStr];
