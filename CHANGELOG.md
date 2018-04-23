@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - in some circumstances, same link files were written in parallel, resulting in invalid content
+
 ## [0.12.12-dev.1] - 2018-04-22
 
 - introduce a new command `bit diff` to show the files diff for modified components
