@@ -1,11 +1,12 @@
 /** @flow */
+import R from 'ramda';
 import Command from '../../command';
 import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
-const validForkLevels = Object.values(TESTS_FORK_LEVEL);
+const validForkLevels = R.values(TESTS_FORK_LEVEL);
 export default class Test extends Command {
   name = 'test [id]';
   description = `test any set of components with configured tester (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html`;
