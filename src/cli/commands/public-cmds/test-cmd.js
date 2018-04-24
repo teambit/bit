@@ -2,25 +2,35 @@
 import Command from '../../command';
 import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
-import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
+const validForkLevels = Object.values(TESTS_FORK_LEVEL);
 export default class Test extends Command {
   name = 'test [id]';
   description = `test any set of components with configured tester (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html`;
   alias = 't';
-  opts = [['v', 'verbose', 'showing npm verbose output for inspection']];
+  opts = [
+    ['v', 'verbose', 'showing npm verbose output for inspection'],
+    ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running']
+  ];
   loader = true;
   migration = true;
 
   action(
     [id]: [string],
     {
-      verbose
+      verbose,
+      forkLevel
     }: {
-      verbose: ?boolean
+      verbose: ?boolean,
+      forkLevel: ?string
     }
   ): Promise<any> {
-    return test(id, verbose);
+    if (forkLevel && !validForkLevels.includes(forkLevel)) {
+      return Promise.reject(new GeneralError(`fork level must be one of: ${validForkLevels.join()}`));
+    }
+    return test(id, forkLevel, verbose);
   }
 
   report(results: any): string {

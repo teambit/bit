@@ -26,6 +26,7 @@ chai.use(require('chai-fs'));
 // should not show components as modified for component with old model format
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // should move envs files during bit move command
+// different fork levels should work
 
 describe.skip('envs', function () {
   this.timeout(0);
