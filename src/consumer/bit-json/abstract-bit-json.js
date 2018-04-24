@@ -176,9 +176,6 @@ export default class AbstractBitJson {
     scopePath: string,
     loadFunc: Function
   ): Promise<?CompilerExtension | ?TesterExtension> {
-    if (!this.hasCompiler()) {
-      return null;
-    }
     const envs = this.getEnvsByType(envType);
     // TODO: Gilad - support more than one key of compiler
     const envName = Object.keys(envs)[0];
