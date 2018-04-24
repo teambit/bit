@@ -234,6 +234,27 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
       });
     });
   });
+  describe('importing a component with multiple versions and its dependency directly', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.runCmd(`bit import ${scopeId}/utils/is-string`);
+      helper.commitComponent('utils/is-string', 'v2', '-f');
+      helper.exportAllComponents(scopeId);
+
+      helper.reInitLocalScope();
+      helper.runCmd(`bit import ${scopeId}/utils/is-string`); // 0.0.2
+      helper.runCmd(`bit import ${scopeId}/utils/is-type`);
+    });
+    describe('importing the dependent as a different version', () => {
+      let output;
+      before(() => {
+        output = helper.runCmd(`bit import ${scopeId}/utils/is-string@0.0.1`);
+      });
+      it('should import the component successfully with no errors', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+    });
+  });
   describe('installing as a package and then importing it', () => {
     let packageJsonBeforeImport;
     let packageJsonAfterImport;
