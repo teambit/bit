@@ -318,7 +318,7 @@ export default class AddComponents {
       : [];
 
     const resolvedTestFiles = testFiles.map((testFile) => {
-      if (isDir(testFile)) throw new TestIsDirectory(testFile);
+      if (isDir(path.join(this.consumer.getPath(), testFile))) throw new TestIsDirectory(testFile);
       return {
         relativePath: testFile,
         test: true,
