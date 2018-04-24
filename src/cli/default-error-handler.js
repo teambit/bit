@@ -57,6 +57,7 @@ import {
   EmptyDirectory,
   MissingComponentIdForImportedComponent,
   VersionShouldBeRemoved,
+  TestIsDirectory,
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
@@ -192,6 +193,11 @@ once your changes are merged with the new remote version, please tag and export 
   [
     VersionShouldBeRemoved,
     err => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`
+  ],
+  [
+    TestIsDirectory,
+    err =>
+      `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`
   ],
   [
     MissingFilesFromComponent,

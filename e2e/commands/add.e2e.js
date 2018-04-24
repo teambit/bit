@@ -7,6 +7,7 @@ import { AUTO_GENERATED_MSG } from '../../src/constants';
 import {
   ExcludedMainFile,
   IncorrectIdForImportedComponent,
+  TestIsDirectory,
   VersionShouldBeRemoved
 } from '../../src/consumer/component/add-components/exceptions';
 
@@ -1069,6 +1070,18 @@ describe('bit add command', function () {
     it('should throw an VersionShouldBeRemoved exception', () => {
       const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo@0.0.4' });
       const error = new VersionShouldBeRemoved('bar/foo@0.0.4');
+      helper.expectToThrow(addFunc, error);
+    });
+  });
+  describe('add component when the test is a directory', () => {
+    before(() => {
+      helper.initLocalScope();
+      helper.createComponentBarFoo();
+      helper.createFile('specs', 'foo.spec.js');
+    });
+    it('should throw an exception TestIsDirectory', () => {
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'specs' });
+      const error = new TestIsDirectory('specs');
       helper.expectToThrow(addFunc, error);
     });
   });
