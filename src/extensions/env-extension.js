@@ -90,10 +90,14 @@ export default class EnvExtension extends BaseExtension {
   }
 
   // TODO: Gilad - change the return type
-  toBitJsonObject(ejectedCompilerDirectory: string): Compilers {
+  /**
+   * Get a bit.json representation of the env instance
+   * @param {string} ejectedEnvDirectory - The base path of where the env config files are stored
+   */
+  toBitJsonObject(ejectedEnvDirectory: string): Compilers {
     const files = {};
     this.files.forEach((file) => {
-      const relativePath = pathJoinLinux(ejectedCompilerDirectory, file.name);
+      const relativePath = pathJoinLinux(ejectedEnvDirectory, file.name);
       files[file.name] = `./${relativePath}`;
     });
     const envVal = {

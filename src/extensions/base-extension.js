@@ -4,6 +4,7 @@ import path from 'path';
 import R from 'ramda';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
+import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
@@ -214,7 +215,7 @@ export default class BaseExtension {
       };
     }
 
-    const concreteBaseAPI = _getConcreteBaseAPI({ name: modelObject.name });
+    const concreteBaseAPI = _getConcreteBaseAPI({ name: staticExtensionProps.name });
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, ...staticExtensionProps };
     return extensionProps;
   }
@@ -272,7 +273,7 @@ const _getExtensionPath = (name: string, scopePath: ?string, isCore: boolean = f
     return _getCoreExtensionPath(name);
   }
   if (!scopePath) {
-    throw new Error('scope not found');
+    throw new ScopeNotFound();
   }
   return _getRegularExtensionPath(name, scopePath);
 };

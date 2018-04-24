@@ -8,6 +8,7 @@ import ConsumerComponent from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
+import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
 export type CompilerExtensionModel = EnvExtensionModel;
@@ -59,12 +60,8 @@ export default class CompilerExtension extends EnvExtension {
     modelObject: CompilerExtensionModel,
     repository: Repository
   ): Promise<CompilerExtension> {
-    let actualObject;
-    if (typeof modelObject === 'string') {
-      actualObject = BaseExtension.transformStringToModelObject(modelObject);
-    } else {
-      actualObject = { ...modelObject };
-    }
+    const actualObject =
+      typeof modelObject === 'string' ? BaseExtension.transformStringToModelObject(modelObject) : { ...modelObject };
     actualObject.envType = 'Compiler';
     const envExtensionProps: EnvExtensionProps = await super.loadFromModelObject(actualObject, repository);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
@@ -88,7 +85,7 @@ export default class CompilerExtension extends EnvExtension {
   }: {
     consumerPath: string,
     scopePath: string,
-    componentOrigin: string,
+    componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
     consumerBitJson: ConsumerBitJson,
     componentBitJson: ?ComponentBitJson

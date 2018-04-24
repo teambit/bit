@@ -109,11 +109,12 @@ export default class Extension extends BaseExtension {
    * The extension will be from scope by default or from file
    * if there is file(path) in the options
    * The file path is relative to the bit.json of the project or absolute
-   * @param {string} name - name of the extension
-   * @param {Object} rawConfig - raw config for the extension
-   * @param {Object} options - extension options such as - disabled, file, core
-   * @param {string} consumerPath - path to the consumer folder (to load the file relatively)
-   * @param {string} scopePath - scope which stores the extension code
+   * @param {string} props - loading properties with the following fields:
+   * {string} name - name of the extension
+   * {Object} rawConfig - raw config for the extension
+   * {Object} options - extension options such as - disabled, file, core
+   * {string} consumerPath - path to the consumer folder (to load the file relatively)
+   * {string} scopePath - scope which stores the extension code
    */
   static async load(props: LoadArgsProps): Promise<Extension> {
     props.rawConfig = props.rawConfig || {};
