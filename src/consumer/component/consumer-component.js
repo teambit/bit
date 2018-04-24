@@ -409,7 +409,6 @@ export default class Component {
   }
 
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
-    // $FlowFixMe this.files can't be null at this point.
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -565,6 +564,22 @@ export default class Component {
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
+    const rootDir = componentMap.rootDir;
+
+    const componentMapExistWithSameVersion = bitMap.isExistWithSameVersion(this.id);
+    const updateBitMap =
+      !componentMapExistWithSameVersion || componentMap.originallySharedDir !== this.originallySharedDir;
+    // update bitMap before writing the files to the filesystem, because as part of writing the
+    // package-json file, the componentMap is needed to be stored with the updated version
+    if (updateBitMap) {
+      if (componentMapExistWithSameVersion) {
+        // originallySharedDir has been changed. it affects also the relativePath of the files
+        // so it's better to just remove the old record and add a new one
+        bitMap.removeComponent(this.id);
+      }
+      this._addComponentToBitMap(bitMap, rootDir, origin, parent);
+    }
+
     // Don't write the package.json for an authored component, because it's dependencies probably managed
     // By the root package.json
     const actualWithPackageJson = writePackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
@@ -578,14 +593,7 @@ export default class Component {
       deleteBitDirContent,
       excludeRegistryPrefix
     });
-    const rootDir = componentMap.rootDir;
-    if (bitMap.isExistWithSameVersion(this.id)) {
-      if (componentMap.originallySharedDir === this.originallySharedDir) return this;
-      // originallySharedDir has been changed. it affects also the relativePath of the files
-      // so it's better to just remove the old record and add a new one
-      bitMap.removeComponent(this.id);
-    }
-    this._addComponentToBitMap(bitMap, rootDir, origin, parent);
+
     return this;
   }
 

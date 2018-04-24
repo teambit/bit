@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix importing a different version of dependent when dependencies are not saved as components
+
 ## [0.12.12-dev.4] - 2018-04-24
 
 - fix bit-add to enable marking files as tests of existing components
