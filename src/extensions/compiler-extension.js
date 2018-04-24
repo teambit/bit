@@ -59,7 +59,8 @@ export default class CompilerExtension extends EnvExtension {
   static async loadFromModelObject(
     modelObject: CompilerExtensionModel,
     repository: Repository
-  ): Promise<CompilerExtension> {
+  ): Promise<?CompilerExtension> {
+    if (!modelObject) return undefined;
     const actualObject =
       typeof modelObject === 'string' ? BaseExtension.transformStringToModelObject(modelObject) : { ...modelObject };
     actualObject.envType = 'Compiler';
