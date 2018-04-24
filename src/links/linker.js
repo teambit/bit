@@ -12,6 +12,7 @@ import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJson from '../consumer/component/package-json';
 import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
+import ComponentMap from '../consumer/bit-map/component-map';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsMaps = consumer.bitMap.getAllComponents();
@@ -21,10 +22,11 @@ export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksRes
   return linkComponentsToNodeModules(components, consumer);
 }
 
-export async function writeLinksInDist(component: Component, componentMap, consumer: Consumer) {
+export async function writeLinksInDist(component: Component, componentMap: ComponentMap, consumer: Consumer) {
   const componentWithDeps = await component.toComponentWithDependencies(consumer);
   await linkGenerator.writeDependencyLinks([componentWithDeps], consumer, false);
   const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  if (!componentMap.rootDir) throw new GeneralError('writeLinksInDist should get called on imported components only');
   await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
   linkComponentsToNodeModules([component], consumer);
   return linkGenerator.writeEntryPointsForComponent(component, consumer);
@@ -41,8 +43,8 @@ function findDirectDependentComponents(potentialDependencies: Component[], consu
  * an IMPORTED component might be NESTED before.
  * find those components and re-link all their dependents
  */
-async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): void {
-  logger.debug('reLinkDirectlyImportedDependencies: found components to re-link');
+async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {
+  logger.debug(`reLinkDirectlyImportedDependencies: found ${components.length} components to re-link`);
   const componentsWithDependencies = await Promise.all(
     components.map(component => component.toComponentWithDependencies(consumer))
   );

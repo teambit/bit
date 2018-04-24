@@ -91,7 +91,7 @@ export type AddProps = {
   tests?: PathOrDSL[],
   exclude?: PathOrDSL[],
   override: boolean,
-  writeToBitMap?: boolean,
+  trackDirFeature?: boolean,
   origin?: ComponentOrigin
 };
 
@@ -105,6 +105,7 @@ export default class AddComponents {
   tests: PathOrDSL[];
   exclude: PathOrDSL[];
   override: boolean; // (default = false) replace the files array or only add files.
+  trackDirFeature: ?boolean;
   writeToBitMap: boolean; // (default = true)
   warnings: Object;
   ignoreList: string[];
@@ -120,7 +121,8 @@ export default class AddComponents {
     this.tests = addProps.tests || [];
     this.exclude = addProps.exclude || [];
     this.override = addProps.override;
-    this.writeToBitMap = addProps.writeToBitMap !== undefined ? addProps.writeToBitMap : true;
+    this.trackDirFeature = addProps.trackDirFeature;
+    this.writeToBitMap = !addProps.trackDirFeature; // trackDir feature doesn't need to write to bitMap
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {};
   }
@@ -152,14 +154,20 @@ export default class AddComponents {
   }
 
   addToBitMap({ componentId, files, mainFile, trackDir }: AddedComponent): AddResult {
-    const componentMap: ComponentMap = this.bitMap.addComponent({
-      componentId,
-      files,
-      mainFile,
-      trackDir,
-      origin: COMPONENT_ORIGINS.AUTHORED,
-      override: this.override
-    });
+    const getComponentMap = (): ComponentMap => {
+      if (this.trackDirFeature) {
+        return this.bitMap.addFilesToComponent({ componentId, files });
+      }
+      return this.bitMap.addComponent({
+        componentId,
+        files,
+        mainFile,
+        trackDir,
+        origin: COMPONENT_ORIGINS.AUTHORED,
+        override: this.override
+      });
+    };
+    const componentMap = getComponentMap();
     return { id: componentId.toString(), files: componentMap.files };
   }
 

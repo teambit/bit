@@ -20,15 +20,17 @@ import ConsumerComponent from '../../../consumer/component';
 import checkVersionCompatibilityFunction from '../check-version-compatibility';
 import logger from '../../../logger/logger';
 import type { Network } from '../network';
-import { DEFAULT_SSH_READY_TIMEOUT } from '../../../constants';
+import { DEFAULT_SSH_READY_TIMEOUT, CFG_USER_TOKEN_KEY } from '../../../constants';
 import { RemovedObjects } from '../../removed-components';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import { Analytics } from '../../../analytics/analytics';
+import { getSync } from '../../../api/consumer/lib/global-config';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
+
 let cachedPassphrase = null;
 
 function absolutePath(path: string) {
@@ -273,39 +275,55 @@ export default class SSH implements Network {
     return this;
   }
 
-  composeConnectionObject(key: ?string, passphrase: ?string, skipAgent: boolean = false) {
-    const base = {
+  comoseBaseObject(passphrase: ?string) {
+    return {
       username: this.username,
       host: this.host,
       port: this.port,
       passphrase,
       readyTimeout: DEFAULT_SSH_READY_TIMEOUT
     };
+  }
 
+  composeTokenAuthObject() {
+    const token = getSync(CFG_USER_TOKEN_KEY);
+    if (token) {
+      logger.debug('SSH: connecting using token');
+      this._sshUsername = 'token';
+      return merge(this.comoseBaseObject(), { username: 'token', password: token });
+    }
+    logger.debug('SSH: there is no token configured)');
+  }
+
+  composeSshAuthObject(key: ?string, skipAgent: ?boolean) {
+    logger.debug(`SSH: reading ssh key file ${key}`);
     logger.debug('SSH: checking if ssh agent has socket');
-
+    Analytics.addBreadCrumb('ssh', 'reading ssh key file');
     // if ssh-agent socket exists, use it.
     if (this.hasAgentSocket() && !skipAgent) {
       logger.debug('SSH: connecting using ssh agent socket');
       Analytics.setExtraData('authentication_method', 'ssh-agent');
-      return Promise.resolve(merge(base, { agent: process.env.SSH_AUTH_SOCK }));
+      return merge(this.comoseBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
     }
     logger.debug('SSH: there is no ssh agent socket (or its been disabled)');
+    Analytics.addBreadCrumb('ssh', 'there is no ssh agent socket (or its been disabled)');
     logger.debug(`SSH: reading ssh key file ${key}`);
 
     // otherwise just search for merge
     const keyBuffer = keyGetter(key);
     if (keyBuffer) {
       Analytics.setExtraData('authentication_method', 'ssh-key');
-      return Promise.resolve(merge(base, { privateKey: keyBuffer }));
+      return merge(this.comoseBaseObject(), { privateKey: keyBuffer });
     }
+    Analytics.addBreadCrumb('ssh', 'reading ssh key file failed');
     logger.debug('SSH: reading ssh key file failed');
-    logger.debug('SSH: prompt for username and password');
+  }
 
+  composeUserPassObject() {
     return promptUserpass().then(({ username, password }) => {
       Analytics.setExtraData('authentication_method', 'user_password');
       this._sshUsername = username;
-      return merge(base, { username, password });
+      return merge(this.comoseBaseObject(), { username, password });
     });
   }
 
@@ -313,80 +331,114 @@ export default class SSH implements Network {
     return !!process.env.SSH_AUTH_SOCK;
   }
 
-  // @TODO refactor this method
-  connect(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
-    const self = this;
-
-    logger.debug('SSH: starting ssh connection process');
-
-    return this.composeConnectionObject(key, passphrase, skipAgent)
-      .then((sshConfig) => {
-        return new Promise((resolve, reject) => {
-          function prompt() {
-            logger.debug('SSH: prompt for passphrase');
-            return promptPassphrase()
-              .then((res) => {
-                cachedPassphrase = res.passphrase;
-                return self.connect(key, cachedPassphrase).catch(() => {
-                  logger.debug('SSH: connecting using passphrase failed, trying again');
-                  return prompt();
-                });
-              })
-              .catch(err => reject(err));
+  tokenAuthentication(): Promise<SSH> {
+    const conn = new SSH2();
+    return new Promise((resolve, reject) => {
+      Analytics.setExtraData('authentication_method', 'token');
+      const sshConfig = this.composeTokenAuthObject();
+      if (!sshConfig) reject();
+      conn
+        .on('error', (err) => {
+          if (err.message === AUTH_FAILED_MESSAGE) {
+            return reject(new AuthenticationFailed());
           }
+          return reject(err);
+        })
+        .on('ready', () => {
+          this.connection = conn;
+          resolve(this);
+        })
+        .connect(sshConfig);
+    });
+  }
+  userPassAuthentication(): Promise<SSH> {
+    const conn = new SSH2();
+    return new Promise((resolve, reject) => {
+      return this.composeUserPassObject().then((sshConfig) => {
+        conn
+          .on('error', (err) => {
+            if (err.message === AUTH_FAILED_MESSAGE) {
+              return reject(new AuthenticationFailed());
+            }
+            return reject(err);
+          })
+          .on('ready', () => {
+            this.connection = conn;
+            resolve(this);
+          })
+          .connect(sshConfig);
+      });
+    });
+  }
 
-          const conn = new SSH2();
-          try {
-            conn
-              .on('error', (err) => {
-                logger.debug('SSH: connection on error event');
-
-                if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
-                  logger.debug('SSH: retry in case ssh-agent failed');
-
-                  // retry in case ssh-agent failed
-                  reject({
-                    skip: true
-                  });
-                }
-
-                logger.debug('SSH: auth failed', err);
-
-                if (err.message === AUTH_FAILED_MESSAGE) {
-                  return reject(new AuthenticationFailed());
-                }
-
-                return reject(err);
-              })
-              .on('ready', () => {
-                this.connection = conn;
-                resolve(this);
-              })
-              .connect(sshConfig);
-          } catch (e) {
-            if (e.message === PASSPHRASE_MESSAGE) {
+  sshAuthentication(key: ?string, passphrase: ?string, skipAgent: boolean = false): Promise<SSH> {
+    const conn = new SSH2();
+    return new Promise((resolve, reject) => {
+      const sshConfig = this.composeSshAuthObject(key, skipAgent);
+      if (!sshConfig) reject();
+      conn
+        .on('error', (err) => {
+          logger.debug('SSH: connection on error event');
+          Analytics.addBreadCrumb('ssh', 'connection on error event');
+          if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
+            logger.debug('SSH: retry in case ssh-agent failed');
+            Analytics.addBreadCrumb('ssh', 'retry in case ssh-agent failed');
+            // retry in case ssh-agent failed
+            if (err.message === PASSPHRASE_MESSAGE) {
               logger.debug('SSH: Encrypted private key detected, but no passphrase given');
-              conn.end();
+              Analytics.addBreadCrumb('ssh', 'Encrypted private key detected, but no passphrase given');
               if (cachedPassphrase) {
                 logger.debug('SSH: trying to use cached passphrase');
-                return this.connect(key, cachedPassphrase).then(ssh => resolve(ssh));
+                return this.sshAuthentication(key, cachedPassphrase);
               }
-
-              return prompt().then(ssh => resolve(ssh));
+              logger.debug('SSH: prompt for passphrase');
+              Analytics.addBreadCrumb('ssh', 'prompt for passphrase');
+              return promptPassphrase().then((res) => {
+                cachedPassphrase = res.passphrase;
+                return this.sshAuthentication(key, cachedPassphrase).catch(() => {
+                  logger.debug('SSH: connecting using passphrase failed, trying again');
+                  Analytics.addBreadCrumb('ssh', 'connecting using passphrase failed, trying again');
+                  cachedPassphrase = undefined;
+                  return this.sshAuthentication(key, cachedPassphrase);
+                });
+              });
             }
-
-            return reject(e);
+            return reject(err);
           }
-        });
-      })
-      .catch((err) => {
-        if (err.skip) {
-          return this.connect(key, passphrase, true);
-        }
 
-        logger.debug('SSH: connection failed', err);
+          logger.debug('SSH: auth failed', err);
+          Analytics.addBreadCrumb('ssh', 'auth failed');
+          if (err.message === AUTH_FAILED_MESSAGE) {
+            return reject(new AuthenticationFailed());
+          }
 
-        throw err;
-      });
+          return reject(err);
+        })
+        .on('ready', () => {
+          this.connection = conn;
+          resolve(this);
+        })
+        .connect(sshConfig);
+    });
+  }
+
+  // @TODO refactor this method
+  connect(key: ?string, passphrase: ?string): Promise<SSH> {
+    logger.debug('SSH: starting ssh connection process');
+    Analytics.addBreadCrumb('ssh', 'starting ssh connection process');
+    return this.tokenAuthentication().catch(() =>
+      this.sshAuthentication(key, passphrase)
+        .catch(() => this.sshAuthentication(key, passphrase, true).catch(() => this.userPassAuthentication()))
+        .catch((e) => {
+          if (e.skip) {
+            return this.connect(key, passphrase);
+          }
+
+          logger.debug('SSH: connection failed', e);
+          Analytics.addBreadCrumb('ssh', 'connection failed');
+
+          throw e;
+        })
+    );
   }
 }

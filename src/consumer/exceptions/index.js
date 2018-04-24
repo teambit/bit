@@ -5,6 +5,7 @@ import ComponentSpecsFailed from './component-specs-failed';
 import DriverNotFound from './driver-not-found';
 import MissingDependencies from './missing-dependencies';
 import NewerVersionFound from './newer-version-found';
+import LoginFailed from './login-failed';
 
 export {
   ConsumerNotFound,
@@ -13,5 +14,6 @@ export {
   ComponentSpecsFailed,
   DriverNotFound,
   MissingDependencies,
-  NewerVersionFound
+  NewerVersionFound,
+  LoginFailed
 };
