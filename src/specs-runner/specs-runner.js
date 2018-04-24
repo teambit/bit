@@ -63,9 +63,14 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
     const debugPort = getDebugPort();
     const openPort = debugPort ? debugPort + 1 : null;
     const baseEnv = {
-      __ids__: ids ? ids.join() : undefined,
       __verbose__: verbose
     };
+    // Don't use ternary condition since if we put it as undefined
+    // It will pass to the fork as "undefined" (string) instad of not passing it at all
+    // __ids__: ids ? ids.join() : undefined,
+    if (ids) {
+      baseEnv.__ids__ = ids.join();
+    }
 
     // Merge process.env from the main process
     const env = Object.assign({}, process.env, baseEnv);
