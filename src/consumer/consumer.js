@@ -832,6 +832,7 @@ export default class Consumer {
       throw new GeneralError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
     }
     if (!fromExists && !toExists) throw new GeneralError(`both paths from (${from}) and to (${to}) do not exist`);
+    if (to.startsWith(from)) throw new GeneralError(`unable to move '${from}' into itself '${to}'`);
 
     const fromRelative = this.getPathRelativeToConsumer(from);
     const toRelative = this.getPathRelativeToConsumer(to);
