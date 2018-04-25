@@ -33,6 +33,7 @@ import {
   NoFiles,
   DuplicateIds,
   EmptyDirectory,
+  TestIsDirectory,
   ExcludedMainFile
 } from './exceptions';
 import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
@@ -312,14 +313,18 @@ export default class AddComponents {
   }
 
   async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
-    const testFilesArr = !R.isEmpty(this.tests)
+    const testFiles = !R.isEmpty(this.tests)
       ? await this.getFilesAccordingToDsl(files.map(file => file.relativePath), this.tests)
       : [];
-    const resolvedTestFiles = testFilesArr.map(testFile => ({
-      relativePath: testFile,
-      test: true,
-      name: path.basename(testFile)
-    }));
+
+    const resolvedTestFiles = testFiles.map((testFile) => {
+      if (isDir(path.join(this.consumer.getPath(), testFile))) throw new TestIsDirectory(testFile);
+      return {
+        relativePath: testFile,
+        test: true,
+        name: path.basename(testFile)
+      };
+    });
 
     return unionBy(resolvedTestFiles, files, 'relativePath');
   }
