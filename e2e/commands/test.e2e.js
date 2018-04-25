@@ -94,21 +94,11 @@ describe('bit test command', function () {
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should print the exception message when running bit test --verbose', () => {
-      let output;
-      try {
-        helper.testComponent('utils/is-type --verbose');
-      } catch (err) {
-        output = err.message;
-      }
+      const output = helper.testComponent('utils/is-type --verbose');
       expect(output).to.have.string('exception occurred with this spec file');
     });
     it('should print the exception message also when running bit test without --verbose flag', () => {
-      let output;
-      try {
-        helper.testComponent('utils/is-type');
-      } catch (err) {
-        output = err.message;
-      }
+      const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('exception occurred with this spec file');
     });
     describe('tagging the component without --force flag and without --verbose flag', () => {
