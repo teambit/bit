@@ -43,16 +43,16 @@ import ComponentNotFoundInPath from './component/exceptions/component-not-found-
 import { installPackages, installNpmPackagesForComponents } from '../npm-client/install-packages';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/removed-components';
-import { linkComponents, linkComponentsToNodeModules, reLinkDependents } from '../links';
+import { linkComponents } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
-import type { PathChangeResult } from './bit-map/bit-map';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
+import { moveExistingComponent } from './component-ops/move-components';
 
 type ConsumerProps = {
   projectPath: string,
@@ -501,7 +501,7 @@ export default class Consumer {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
         if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
-          this.moveExistingComponent(component, relativeWrittenPath, writeToPath);
+          moveExistingComponent(this.bitMap, component, relativeWrittenPath, writeToPath);
         }
       });
     }
@@ -535,20 +535,6 @@ export default class Consumer {
       createNpmLinkFiles,
       writePackageJson
     );
-  }
-
-  moveExistingComponent(component: Component, oldPath: string, newPath: string) {
-    if (fs.existsSync(newPath)) {
-      throw new GeneralError(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
-      );
-    }
-    const componentMap = this.bitMap.getComponent(component.id);
-    componentMap.updateDirLocation(oldPath, newPath);
-    fs.moveSync(oldPath, newPath);
-    component.writtenPath = newPath;
   }
 
   /**
@@ -823,33 +809,6 @@ export default class Consumer {
   composeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
-  }
-
-  async movePaths({ from, to }: { from: PathOsBased, to: PathOsBased }): Promise<PathChangeResult[]> {
-    const fromExists = fs.existsSync(from);
-    const toExists = fs.existsSync(to);
-    if (fromExists && toExists) {
-      throw new GeneralError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
-    }
-    if (!fromExists && !toExists) throw new GeneralError(`both paths from (${from}) and to (${to}) do not exist`);
-    if (to.startsWith(from)) throw new GeneralError(`unable to move '${from}' into itself '${to}'`);
-
-    const fromRelative = this.getPathRelativeToConsumer(from);
-    const toRelative = this.getPathRelativeToConsumer(to);
-    const changes = this.bitMap.updatePathLocation(fromRelative, toRelative, fromExists);
-    if (fromExists && !toExists) {
-      // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
-      fs.moveSync(from, to);
-    }
-    await this.bitMap.write();
-    if (!R.isEmpty(changes)) {
-      const componentsIds = changes.map(c => BitId.parse(c.id));
-      await packageJson.addComponentsToRoot(this, componentsIds);
-      const { components } = await this.loadComponents(componentsIds);
-      linkComponentsToNodeModules(components, this);
-      await reLinkDependents(this, components);
-    }
-    return changes;
   }
 
   static create(projectPath: string = process.cwd(), noGit: boolean = false): Promise<Consumer> {
