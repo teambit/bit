@@ -110,6 +110,7 @@ export default class ComponentMap {
       if (this.mainFile === currentFile.relativePath) this.mainFile = newLocation;
       changes.push({ from: currentFile.relativePath, to: newLocation });
       currentFile.relativePath = newLocation;
+      currentFile.name = path.basename(newLocation);
     }
     this.validate();
     return changes;
