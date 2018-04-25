@@ -96,7 +96,9 @@ describe('importing bit components from bitsrc.io', function () {
     });
     it('should save the imported component as a dependency in the package.json of the project', () => {
       const barFooPackageJson = helper.readPackageJson();
-      expect(barFooPackageJson.dependencies).to.deep.include({ [`@bit/${scopeId}.bar.foo`]: './components/bar/foo' });
+      expect(barFooPackageJson.dependencies).to.deep.include({
+        [`@bit/${scopeId}.bar.foo`]: 'file:./components/bar/foo'
+      });
     });
   });
   describe('when saveDependenciesAsComponents is set to TRUE in consumer bit.json', () => {
@@ -168,7 +170,7 @@ describe('importing bit components from bitsrc.io', function () {
     it('should update the package.json of the dependent with relative-path of the dependency', () => {
       const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
       const packageJsonIsString = helper.readPackageJson(isStringDir);
-      expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('../is-type');
+      expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('file:../is-type');
     });
     describe('changing the directly imported dependency component', () => {
       before(() => {
@@ -179,17 +181,31 @@ describe('importing bit components from bitsrc.io', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
-      describe('As publisher, change to absolute syntax, another, non-bit user clones the project and install npm', () => {
+      describe('As publisher, change to absolute syntax, another, non-bit user clones the project', () => {
         before(() => {
           const isStringFixtureV2 = `const isType = require('@bit/${scopeId}.utils.is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
           helper.createFile(path.join('components', 'utils', 'is-string'), 'is-string.js', isStringFixtureV2);
-          helper.mimicGitCloneLocalProject();
-          helper.runCmd('npm install');
         });
-        it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
-          const result = helper.runCmd('node app.js');
-          expect(result.trim()).to.equal('got is-type v2 and got is-string');
+        describe('and run install using NPM', () => {
+          before(() => {
+            helper.mimicGitCloneLocalProject();
+            helper.runCmd('npm install');
+          });
+          it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type v2 and got is-string');
+          });
+        });
+        describe('and run install Yarn', () => {
+          before(() => {
+            helper.mimicGitCloneLocalProject();
+            helper.runCmd('yarn');
+          });
+          it("that user should see the updated version of the component, same as the publisher, although it doesn't have bit installed ", () => {
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type v2 and got is-string');
+          });
         });
       });
     });
@@ -208,13 +224,34 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
       it('should update the package.json of the dependent with relative-path of the dependency', () => {
         const isStringDir = path.join(helper.localScopePath, 'components', 'utils', 'is-string');
         const packageJsonIsString = helper.readPackageJson(isStringDir);
-        expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('../is-type');
+        expect(packageJsonIsString.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('file:../is-type');
       });
       it('should affect its dependent', () => {
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
+    });
+  });
+  describe('importing a component with multiple versions and its dependency directly', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.runCmd(`bit import ${scopeId}/utils/is-string`);
+      helper.commitComponent('utils/is-string', 'v2', '-f');
+      helper.exportAllComponents(scopeId);
+
+      helper.reInitLocalScope();
+      helper.runCmd(`bit import ${scopeId}/utils/is-string`); // 0.0.2
+      helper.runCmd(`bit import ${scopeId}/utils/is-type`);
+    });
+    describe('importing the dependent as a different version', () => {
+      let output;
+      before(() => {
+        output = helper.runCmd(`bit import ${scopeId}/utils/is-string@0.0.1`);
+      });
+      it('should import the component successfully with no errors', () => {
+        expect(output).to.have.string('successfully imported');
       });
     });
   });
@@ -235,7 +272,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     it('should update the root package.json and change the dependency from a package to a local path', () => {
       expect(packageJsonBeforeImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal('0.0.1');
       expect(packageJsonAfterImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal(
-        './components/utils/is-type'
+        'file:./components/utils/is-type'
       );
     });
   });

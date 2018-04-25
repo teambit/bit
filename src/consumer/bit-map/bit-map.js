@@ -48,6 +48,19 @@ export default class BitMap {
     if (!bitId.hasVersion() && bitId.scope) {
       throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
+    const idWithoutScopeAndVersion = bitId.toStringWithoutScopeAndVersion();
+    if (componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
+      // make sure there are no duplications (same namespace+name)
+      Object.keys(this.components).forEach((compId) => {
+        if (
+          BitId.parse(compId).toStringWithoutScopeAndVersion() === idWithoutScopeAndVersion &&
+          this.components[compId].origin !== COMPONENT_ORIGINS.NESTED
+        ) {
+          throw new GeneralError(`your id ${id} is duplicated with ${compId}`);
+        }
+      });
+    }
+
     this.components[id] = componentMap;
   }
 
@@ -240,7 +253,9 @@ export default class BitMap {
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (isDependency) {
-      if (!parent) { throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`); }
+      if (!parent) {
+        throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
+      }
       this.addDependencyToParent(parent, componentIdStr);
     }
     if (this.components[componentIdStr]) {
@@ -249,12 +264,12 @@ export default class BitMap {
       if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
       if (override) {
         this.components[componentIdStr].files = files;
-      } else if (!this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
-        // do not override existing files, only add new files
+      } else {
+        // override the current componentMap.files with the given files argument
         this.components[componentIdStr].files = R.unionWith(
           R.eqBy(R.prop('relativePath')),
-          this.components[componentIdStr].files,
-          files
+          files,
+          this.components[componentIdStr].files
         );
       }
       if (mainFile) {
@@ -264,6 +279,10 @@ export default class BitMap {
         );
       }
     } else {
+      if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
+        // if there are older versions, the user is updating an existing component, delete old ones from bit.map
+        this.deleteOlderVersionsOfComponent(componentId);
+      }
       // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
       this.setComponent(componentIdStr, new ComponentMap({ files, origin }));
       this.components[componentIdStr].mainFile = this._getMainFile(
@@ -286,11 +305,30 @@ export default class BitMap {
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
-    if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
-      // if there are older versions, the user is updating an existing component, delete old ones from bit.map
-      this.deleteOlderVersionsOfComponent(componentId);
-    }
+    this.components[componentIdStr].sort();
+    this.components[componentIdStr].validate();
+    this._invalidateCache();
+    return this.components[componentIdStr];
+  }
 
+  addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
+    const componentIdStr = componentId.toString();
+    if (!this.components[componentIdStr]) {
+      throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`);
+    }
+    const existingRootDir = this.components[componentIdStr].rootDir;
+    if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
+    if (this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
+      return this.components[componentIdStr];
+    }
+    // do not override existing files, only add new files
+    logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+    this.components[componentIdStr].files = R.unionWith(
+      R.eqBy(R.prop('relativePath')),
+      this.components[componentIdStr].files,
+      files
+    );
+    this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
     this._invalidateCache();
     return this.components[componentIdStr];
@@ -360,7 +398,9 @@ export default class BitMap {
     }
     const olderComponentId = olderComponentsIds[0];
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
-    this.setComponent(newIdString, this.components[olderComponentId]);
+    const componentMap = this.components[olderComponentId];
+    this._removeFromComponentsArray(olderComponentId);
+    this.setComponent(newIdString, componentMap);
 
     // update the dependencies array if needed
     Object.keys(this.components).forEach((componentId) => {
@@ -370,7 +410,6 @@ export default class BitMap {
         component.dependencies.push(newIdString);
       }
     });
-    this._removeFromComponentsArray(olderComponentId);
   }
 
   /**
@@ -442,15 +481,6 @@ export default class BitMap {
     }
   }
 
-  modifyComponentsToLinuxPath(components: Object) {
-    Object.keys(components).forEach((key) => {
-      components[key].files.forEach((file) => {
-        file.relativePath = pathNormalizeToLinux(file.relativePath);
-      });
-      components[key].mainFile = pathNormalizeToLinux(components[key].mainFile);
-    });
-  }
-
   updatePathLocation(from: PathOsBased, to: PathOsBased, fromExists: boolean): PathChangeResult[] {
     const existingPath = fromExists ? from : to;
     const isPathDir = isDir(existingPath);
@@ -472,7 +502,6 @@ export default class BitMap {
 
   write(): Promise<any> {
     logger.debug('writing to bit.map');
-    this.modifyComponentsToLinuxPath(this.components);
     const bitMapContent = Object.assign({}, this.components, { version: this.version });
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }

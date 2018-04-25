@@ -7,9 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bit-move of a directly imported dependency
+- fix importing a different version of dependent when dependencies are not saved as components
+
+## [0.12.12-dev.4] - 2018-04-24
+
+- fix bit-add to enable marking files as tests of existing components
+- bug fix - in some circumstances, same link files were written in parallel, resulting in invalid content
+
+## [0.12.12-dev.2] - 2018-04-23
+
+- introduce a new command `bit login` for authenticating to bitsrc
+
+## [0.12.12-dev.1] - 2018-04-22
+
+- introduce a new command `bit diff` to show the files diff for modified components
+- fix Yarn install when a relative path is written into package.json
 - fix bit-merge and bit-checkout commands for Windows
 - bug fix - import after tag was showing an error "Cannot read property 'hash' of undefined"
-- introduce a new command `bit diff` to show the files diff for modified components
 - fix eol issue between os
 
 ## [0.12.11] - 2018-04-10
@@ -158,6 +173,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
 - support saving dists files on a pre-configured directory relative to consumer root
 - support `bit show --compare` with json format
+
+
 ### Changes
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
 - rename `bit bind` command to `bit link`

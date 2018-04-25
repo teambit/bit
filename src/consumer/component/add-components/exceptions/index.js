@@ -6,6 +6,8 @@ import MissingComponentIdForImportedComponent from './missing-id-imported-compon
 import NoFiles from './no-files';
 import PathsNotExist from './paths-not-exist';
 import ExcludedMainFile from './excluded-main-file';
+import VersionShouldBeRemoved from './version-should-be-removed';
+import TestIsDirectory from './test-is-directory';
 
 export {
   DuplicateIds,
@@ -14,5 +16,7 @@ export {
   MissingComponentIdForImportedComponent,
   NoFiles,
   PathsNotExist,
-  ExcludedMainFile
+  VersionShouldBeRemoved,
+  ExcludedMainFile,
+  TestIsDirectory
 };

@@ -216,13 +216,13 @@ export default class Component extends BitObject {
 
   async loadVersion(version: string, repository: Repository): Promise<Version> {
     const versionRef: Ref = this.versions[version];
-    if (!versionRef) throw new VersionNotFound();
+    if (!versionRef) throw new VersionNotFound(version);
     return versionRef.load(repository);
   }
 
-  loadVersionSync(version: number, repository: Repository, throws: boolean = true): Version {
+  loadVersionSync(version: string, repository: Repository, throws: boolean = true): Version {
     const versionRef: Ref = this.versions[version];
-    if (!versionRef) throw new VersionNotFound();
+    if (!versionRef) throw new VersionNotFound(version);
     return versionRef.loadSync(repository, throws);
   }
 

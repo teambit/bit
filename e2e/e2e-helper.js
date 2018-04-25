@@ -608,6 +608,10 @@ export default class Helper {
     return this.runCmd(`bit diff ${id}`);
   }
 
+  move(from: string, to: string) {
+    return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
+  }
+
   getBitVersion() {
     return BIT_VERSION;
   }

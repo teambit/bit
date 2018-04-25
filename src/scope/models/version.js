@@ -13,6 +13,8 @@ import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
+import { SourceFile } from '../../consumer/component/sources';
+import Repository from '../objects/repository';
 
 type CiProps = {
   error: Object,
@@ -386,6 +388,10 @@ export default class Version extends BitObject {
     this.ci = ci;
   }
 
+  modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
+    return Promise.all(this.files.map(file => SourceFile.loadFromSourceFileModel(file, repository)));
+  }
+
   validate(): void {
     const message = 'unable to save Version object';
     if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
@@ -399,13 +405,17 @@ export default class Version extends BitObject {
       if (!file.name) throw new GeneralError(`${message}, the file ${file.relativePath} is missing the name attribute`);
       if (file.relativePath === this.mainFile) foundMainFile = true;
     });
-    if (!foundMainFile) { throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`); }
+    if (!foundMainFile) {
+      throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
+    }
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {
           throw new GeneralError(`${message}, the dist-file ${file.relativePath} is invalid`);
         }
-        if (!file.name) { throw new GeneralError(`${message}, the dist-file ${file.relativePath} is missing the name attribute`); }
+        if (!file.name) {
+          throw new GeneralError(`${message}, the dist-file ${file.relativePath} is missing the name attribute`);
+        }
       });
     }
     this.dependencies.validate();

@@ -2,17 +2,19 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
-import { ComponentNotFound } from '../../src/scope/exceptions';
+import { ComponentNotFound, VersionNotFound } from '../../src/scope/exceptions';
 import * as fixtures from '../fixtures/fixtures';
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };\n";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };\n";
+const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };\n";
 const noDiffMessage = 'no diff for';
 const successDiffMessage = 'showing diff for';
 
 describe('bit diff command', function () {
   this.timeout(0);
   const helper = new Helper();
+  const barFooFile = path.join('bar', 'foo.js');
   before(() => {
     helper.reInitLocalScope();
   });
@@ -61,10 +63,10 @@ describe('bit diff command', function () {
           expect(diffOutput).to.have.string(successDiffMessage);
         });
         it('should indicate the original files with ---', () => {
-          expect(diffOutput).to.have.string('--- bar/foo.js (original)');
+          expect(diffOutput).to.have.string(`--- ${barFooFile} (0.0.5 original)`);
         });
         it('should indicate the modified files with +++', () => {
-          expect(diffOutput).to.have.string('+++ bar/foo.js (modified)');
+          expect(diffOutput).to.have.string(`+++ ${barFooFile} (0.0.5 modified)`);
         });
         it('should show the deleted part with leading - (minus sign)', () => {
           expect(diffOutput).to.have.string("-module.exports = function foo() { return 'got foo'; };");
@@ -139,16 +141,80 @@ describe('bit diff command', function () {
       output = helper.diff('bar/foo');
     });
     it('should indicate the deleted files as deleted', () => {
-      expect(output).to.have.string('--- bar/foo.js (original)');
-      expect(output).to.have.string('+++ bar/foo.js (modified)');
+      expect(output).to.have.string(`--- ${barFooFile} (0.0.1 original)`);
+      expect(output).to.have.string(`+++ ${barFooFile} (0.0.1 modified)`);
       // notice the leading minus sign
       expect(output).to.have.string(`-${barFooV1}`);
     });
     it('should indicate the added files as added', () => {
-      expect(output).to.have.string('--- bar/foo2.js (original)');
-      expect(output).to.have.string('+++ bar/foo2.js (modified)');
+      const barFoo2File = path.join('bar', 'foo2.js');
+      expect(output).to.have.string(`--- ${barFoo2File} (0.0.1 original)`);
+      expect(output).to.have.string(`+++ ${barFoo2File} (0.0.1 modified)`);
       // notice the leading plus sign
       expect(output).to.have.string(`+${barFooV2}`);
+    });
+  });
+  describe('component with multiple versions', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo(barFooV1);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo(); // 0.0.1
+      helper.createComponentBarFoo(barFooV2);
+      helper.commitComponentBarFoo(); // 0.0.2
+      helper.createComponentBarFoo(barFooV3);
+      helper.commitComponentBarFoo(); // 0.0.3
+    });
+    describe('diff between a non-exist version and current version', () => {
+      it('should throw an VersionNotFound error', () => {
+        const error = new VersionNotFound('1.0.6');
+        const diffFunc = () => helper.diff('bar/foo 1.0.6');
+        helper.expectToThrow(diffFunc, error);
+      });
+    });
+    describe('diff between an earlier version and current version', () => {
+      let output;
+      before(() => {
+        output = helper.diff('bar/foo 0.0.1');
+      });
+      it('should show the earlier version with leading - (minus sign)', () => {
+        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
+        expect(output).to.have.string(`-${barFooV1}`);
+      });
+      it('should show the current version with leading + (plus sign)', () => {
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.3)`);
+        expect(output).to.have.string(`+${barFooV3}`);
+      });
+    });
+    describe('diff between two different versions', () => {
+      let output;
+      before(() => {
+        output = helper.diff('bar/foo 0.0.1 0.0.2');
+      });
+      it('should show the first version with leading - (minus sign)', () => {
+        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
+        expect(output).to.have.string(`-${barFooV1}`);
+      });
+      it('should show the second version with leading + (plus sign)', () => {
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.2)`);
+        expect(output).to.have.string(`+${barFooV2}`);
+      });
+    });
+    describe('diff between two versions with multiple ids (not supported)', () => {
+      it('should throw an error', () => {
+        const output = helper.runWithTryCatch('bit diff bar/foo bar/foo2 0.0.1 0.0.2');
+        expect(output).to.have.string(
+          'bit diff [id] [version] [to_version] syntax was used, however, 4 arguments were given instead of 3'
+        );
+      });
+    });
+    describe('diff of a certain version with multiple ids (not supported)', () => {
+      it('should throw an error', () => {
+        const output = helper.runWithTryCatch('bit diff bar/foo bar/foo2 0.0.1');
+        expect(output).to.have.string(
+          'bit diff [id] [version] syntax was used, however, 3 arguments were given instead of 2'
+        );
+      });
     });
   });
 });

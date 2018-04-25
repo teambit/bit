@@ -4,7 +4,12 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 import { AUTO_GENERATED_MSG } from '../../src/constants';
-import { ExcludedMainFile } from '../../src/consumer/component/add-components/exceptions';
+import {
+  ExcludedMainFile,
+  IncorrectIdForImportedComponent,
+  TestIsDirectory,
+  VersionShouldBeRemoved
+} from '../../src/consumer/component/add-components/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -82,11 +87,17 @@ describe('bit add command', function () {
           { i: 'test/test' },
           path.join(helper.localScopePath, 'components', 'bar', 'foo')
         );
-      expect(addCmd).to.throw(
-        `error: unable to add new files from the root directory of the component  "${
-          helper.remoteScope
-        }/bar/foo" to "test/test`
+      const error = new IncorrectIdForImportedComponent(
+        `${helper.remoteScope}/bar/foo`,
+        'test/test',
+        'components/bar/foo/foo.js'
       );
+      helper.expectToThrow(addCmd, error);
+    });
+    it('should throw an error when specifying an incorrect version', () => {
+      const addFunc = () => helper.addComponentWithOptions('components/bar/foo', { i: 'bar/foo@0.0.45' });
+      const error = new VersionShouldBeRemoved('bar/foo@0.0.45');
+      helper.expectToThrow(addFunc, error);
     });
     it('Should not add files and dists to imported component', () => {
       helper.addComponentWithOptions(
@@ -147,6 +158,10 @@ describe('bit add command', function () {
       expect(files, helper.printBitMapFilesInCaseOfError(files)).to.be.ofSize(3);
       expect(files).to.deep.include({ relativePath: 'testDir/test.spec.js', test: true, name: 'test.spec.js' });
     });
+    it('should not throw an error when specifying the correct version', () => {
+      const output = helper.addComponentWithOptions('components/bar/foo', { i: `${helper.remoteScope}/bar/foo@0.0.1` });
+      expect(output).to.have.string('added');
+    });
   });
   describe('add one component', () => {
     let output;
@@ -175,6 +190,19 @@ describe('bit add command', function () {
       const files = bitMap['bar/foo2'].files;
       const expectImplFile = { relativePath: 'bar/foo2.js', test: false, name: 'foo2.js' };
       const expectTestFile = { relativePath: 'bar/foo2.spec.js', test: true, name: 'foo2.spec.js' };
+      expect(files).to.be.ofSize(2);
+      expect(files).to.deep.include(expectTestFile);
+      expect(files).to.deep.include(expectImplFile);
+    });
+    it('should be able to mark a file as test after adding it as non-test', () => {
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo.spec.js');
+      helper.addComponentWithOptions('bar', { m: 'bar/foo.js', i: 'bar/foo' });
+      helper.addComponent(' -t bar/foo.spec.js --id bar/foo');
+      const bitMap = helper.readBitMap();
+      const files = bitMap['bar/foo'].files;
+      const expectImplFile = { relativePath: 'bar/foo.js', test: false, name: 'foo.js' };
+      const expectTestFile = { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' };
       expect(files).to.be.ofSize(2);
       expect(files).to.deep.include(expectTestFile);
       expect(files).to.deep.include(expectImplFile);
@@ -967,8 +995,8 @@ describe('bit add command', function () {
     it('bitmap should include the file and the test file correctly', () => {
       const bitMap = helper.readBitMap();
       const expectedArray = [
-        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' },
-        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' }
+        { relativePath: 'bar/foo.js', test: false, name: 'foo.js' },
+        { relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' }
       ];
       expect(bitMap).to.have.property('bar/foo');
       const files = bitMap['bar/foo'].files;
@@ -1032,6 +1060,29 @@ describe('bit add command', function () {
     });
     it('should contain only one file', () => {
       expect(bitMap[`${helper.remoteScope}/bar/foo@0.0.1`].files).to.be.ofSize(1);
+    });
+  });
+  describe('add component when id includes a version', () => {
+    before(() => {
+      helper.initLocalScope();
+      helper.createComponentBarFoo();
+    });
+    it('should throw an VersionShouldBeRemoved exception', () => {
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo@0.0.4' });
+      const error = new VersionShouldBeRemoved('bar/foo@0.0.4');
+      helper.expectToThrow(addFunc, error);
+    });
+  });
+  describe('add component when the test is a directory', () => {
+    before(() => {
+      helper.initLocalScope();
+      helper.createComponentBarFoo();
+      helper.createFile('specs', 'foo.spec.js');
+    });
+    it('should throw an exception TestIsDirectory', () => {
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'specs' });
+      const error = new TestIsDirectory('specs');
+      helper.expectToThrow(addFunc, error);
     });
   });
 });

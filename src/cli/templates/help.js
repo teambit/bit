@@ -19,6 +19,7 @@ const baseTemplate = (extensionsTemplate) => {
     ${chalk.cyan('tag')}        record component changes and lock versions.
     ${chalk.cyan('checkout')}   switch between component versions.
     ${chalk.cyan('merge')}      merge changes of different component versions.
+    ${chalk.cyan('diff')}       show diff between components files.
     ${chalk.cyan('untag')}      revert versions tagged for component(s).
     ${chalk.cyan('move')}       move a component to a different filesystem path.
     ${chalk.cyan('untrack')}    untrack a new component(s).
@@ -46,9 +47,10 @@ const baseTemplate = (extensionsTemplate) => {
     'test'
   )}       test any set of components with configured tester (component tester or as defined in bit.json)
 
-  ${chalk.underline('general purpose commands')}
+  ${chalk.underline('general commands')}
     ${chalk.cyan('config')}     global config management
     ${chalk.cyan('cc')}         clears Bit's cache from current working machine
+    ${chalk.cyan('login')}      login to bitsrc
   ${extensionsTemplate}
   ${chalk.grey("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
 };
