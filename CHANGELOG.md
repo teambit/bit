@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bit-move of a directly imported dependency
 - fix importing a different version of dependent when dependencies are not saved as components
 
 ## [0.12.12-dev.4] - 2018-04-24

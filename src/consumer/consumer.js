@@ -43,7 +43,7 @@ import ComponentNotFoundInPath from './component/exceptions/component-not-found-
 import { installPackages, installNpmPackagesForComponents } from '../npm-client/install-packages';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/removed-components';
-import { linkComponents, linkComponentsToNodeModules } from '../links';
+import { linkComponents, linkComponentsToNodeModules, reLinkDependents } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
@@ -825,7 +825,7 @@ export default class Consumer {
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
-  async movePaths({ from, to }: { from: PathOsBased, to: PathOsBased }): PathChangeResult[] {
+  async movePaths({ from, to }: { from: PathOsBased, to: PathOsBased }): Promise<PathChangeResult[]> {
     const fromExists = fs.existsSync(from);
     const toExists = fs.existsSync(to);
     if (fromExists && toExists) {
@@ -846,6 +846,7 @@ export default class Consumer {
       await packageJson.addComponentsToRoot(this, componentsIds);
       const { components } = await this.loadComponents(componentsIds);
       linkComponentsToNodeModules(components, this);
+      await reLinkDependents(this, components);
     }
     return changes;
   }
