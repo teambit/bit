@@ -143,7 +143,10 @@ describe('bit show command', function () {
 
       // TODO: get the version dynamically
       it('should include the compiler correctly', () => {
-        expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1` });
+        const outputCompiler = output.compiler;
+        expect(outputCompiler.files).to.be.an('array').that.is.empty;
+        expect(outputCompiler.config).to.be.an('object').that.is.empty;
+        expect(outputCompiler.name).have.string(`${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1`);
       });
 
       it('should include the language correctly', () => {
@@ -152,7 +155,7 @@ describe('bit show command', function () {
 
       // TODO: update when we add tester to use case
       it('should include the tester correctly', () => {
-        expect(output).to.include({ testerId: null });
+        expect(output).to.include({ tester: null });
       });
 
       it('should render the main file correctly', () => {
@@ -201,7 +204,10 @@ describe('bit show command', function () {
           helper.writeBitJson(bitJson);
         });
         it('should display the compiler of the component', () => {
-          expect(output).to.include({ compilerId: `${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1` });
+          const outputCompiler = output.compiler;
+          expect(outputCompiler.files).to.be.an('array').that.is.empty;
+          expect(outputCompiler.config).to.be.an('object').that.is.empty;
+          expect(outputCompiler.name).have.string(`${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1`);
         });
       });
     });
@@ -373,8 +379,7 @@ function add(a, b) {
         jsonOutput = JSON.parse(output);
       });
       it('should not show the consumer compiler', () => {
-        expect(jsonOutput.compilerId).to.not.equal('scope/namespace/name@0.0.1');
-        expect(jsonOutput.compilerId).to.be.a('null');
+        expect(jsonOutput.compiler).to.be.a('null');
       });
     });
   });
