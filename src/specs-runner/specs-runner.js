@@ -2,6 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import { fork } from 'child_process';
+import deserializeError from 'deserialize-error';
 import { Results } from '../consumer/specs-results';
 import type { RawTestsResults } from '../consumer/specs-results/specs-results';
 import type { ForkLevel } from '../api/consumer/lib/test';
@@ -102,5 +103,26 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
 }
 
 function deserializeResults(results) {
-  return results;
+  if (!results) return undefined;
+  const deserializeFailure = (failure) => {
+    if (!failure) return undefined;
+    const deserializedFailure = failure;
+    if (failure.err) {
+      try {
+        deserializedFailure.err = deserializeError(failure.err);
+      } catch (e) {
+        logger.debug(`fail parsing error ${deserializedFailure.err}`);
+      }
+    }
+    return deserializedFailure;
+  };
+
+  const deserializeResult = (result) => {
+    if (!result.failures) return result;
+    result.failures = result.failures.map(deserializeFailure);
+    return result;
+  };
+
+  const deserializedResults = results.map(deserializeResult);
+  return deserializedResults;
 }
