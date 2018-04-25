@@ -89,16 +89,20 @@ export default class AbstractBitJson {
     this.extensions = extensions || DEFAULT_EXTENSIONS;
   }
 
-  get compiler(): Compilers {
-    return transformEnvToObject(this._compiler);
+  get compiler(): ?Compilers {
+    const compilerObj = transformEnvToObject(this._compiler);
+    if (R.isEmpty(compilerObj)) return undefined;
+    return compilerObj;
   }
 
   set compiler(compiler: string | Compilers) {
     this._compiler = transformEnvToObject(compiler);
   }
 
-  get tester(): Testers {
-    return transformEnvToObject(this._tester);
+  get tester(): ?Testers {
+    const testerObj = transformEnvToObject(this._tester);
+    if (R.isEmpty(testerObj)) return undefined;
+    return testerObj;
   }
 
   set tester(tester: string | testers) {

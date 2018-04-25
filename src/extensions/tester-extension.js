@@ -59,6 +59,7 @@ export default class TesterExtension extends EnvExtension {
     modelObject: TesterExtensionModel,
     repository: Repository
   ): Promise<TesterExtension> {
+    if (!modelObject) return undefined;
     let actualObject;
     if (typeof modelObject === 'string') {
       actualObject = BaseExtension.transformStringToModelObject(modelObject);
@@ -97,7 +98,10 @@ export default class TesterExtension extends EnvExtension {
       return componentBitJson.loadTester(consumerPath, scopePath);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
-      return componentFromModel.Tester;
+      if (componentFromModel && componentFromModel.Tester) {
+        return componentFromModel.Tester;
+      }
+      return undefined;
     }
     // TODO: Gilad - think about this case - if someone else imported the component
     // and changed the tester

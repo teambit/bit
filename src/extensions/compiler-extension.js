@@ -95,7 +95,10 @@ export default class CompilerExtension extends EnvExtension {
       return componentBitJson.loadCompiler(consumerPath, scopePath);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
-      return componentFromModel.compiler;
+      if (componentFromModel && componentFromModel.compiler) {
+        return componentFromModel.compiler;
+      }
+      return undefined;
     }
     // TODO: Gilad - think about this case - if someone else imported the component
     // and changed the compiler
