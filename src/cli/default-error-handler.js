@@ -155,7 +155,10 @@ once your changes are merged with the new remote version, please tag and export 
   [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
-  [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
+  [
+    ComponentSpecsFailed,
+    err => `${err.specsResultsAndIdPretty}component's tests has failed, please fix them before tagging`
+  ],
   [
     MissingDependencies,
     (err) => {

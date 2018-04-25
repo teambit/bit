@@ -2,6 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
+import c from 'chalk';
 import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
@@ -735,7 +736,9 @@ export default class Component {
         if (verbose) {
           // $FlowFixMe this.specsResults is not null at this point
           const specsResultsPretty = paintSpecsResults(this.specsResults).join('\n');
-          console.log(this.id.toString() + specsResultsPretty); // eslint-disable-line no-console
+          const componentIdPretty = c.bold.white(this.id.toString());
+          const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
+          return Promise.reject(new ComponentSpecsFailed(specsResultsAndIdPretty));
         }
         return Promise.reject(new ComponentSpecsFailed());
       }
