@@ -605,7 +605,8 @@ export default class Helper {
   }
 
   diff(id?: string = '') {
-    return this.runCmd(`bit diff ${id}`);
+    const output = this.runCmd(`bit diff ${id}`);
+    return Helper.removeChalkCharacters(output);
   }
 
   move(from: string, to: string) {

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve bit-diff to show the output with colors
 - fix bit-move of a directly imported dependency
 - fix importing a different version of dependent when dependencies are not saved as components
 
