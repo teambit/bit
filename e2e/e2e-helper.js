@@ -475,10 +475,29 @@ export default class Helper {
     bitJson[key] = value;
     fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
   }
+
+  /**
+   * Add a fake package, don't really install it. if you need the real package
+   * use installNpmPackage below
+   * @param {*} name
+   * @param {*} version
+   */
   addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
     const packageJsonFixture = JSON.stringify({ name, version });
     this.createFile(`node_modules/${name}`, 'index.js');
     this.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
+  }
+
+  /**
+   * install package, if you don't really need the package code and can use mock
+   * just run addNpmPackage which will be faster
+   * @param {*} name
+   * @param {*} version
+   */
+  installNpmPackage(name: string, version: ?string, cwd: string = this.localScopePath) {
+    const versionWithDelimiter = version ? `@${version}` : '';
+    const cmd = `npm i ${name}${versionWithDelimiter}`;
+    return this.runCmd(cmd, cwd);
   }
 
   createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {

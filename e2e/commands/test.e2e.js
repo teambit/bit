@@ -28,7 +28,7 @@ describe('bit test command', function () {
   let clonedScopePath;
   before(() => {
     helper.reInitLocalScope();
-    helper.importTester('bit.envs/testers/mocha@0.0.4');
+    helper.importTester('bit.envs/testers/mocha@0.0.12');
     clonedScopePath = helper.cloneLocalScope();
   });
   after(() => {
@@ -176,7 +176,7 @@ describe('bit test command', function () {
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
 
       helper.reInitRemoteScope();

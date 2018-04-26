@@ -244,7 +244,7 @@ describe('bit tag command', function () {
   });
   describe('tag one component with failing tests', () => {
     before(() => {
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');
       describe('failing test', () => {
@@ -254,7 +254,7 @@ describe('bit tag command', function () {
       });`;
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', failingTest);
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
     });
     it('should throw error if the bit id does not exists', () => {
