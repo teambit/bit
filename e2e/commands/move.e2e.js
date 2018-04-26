@@ -32,6 +32,34 @@ describe('bit move command', function () {
       expect(bitMap['bar/foo'].mainFile).to.equal('utils/foo.js');
     });
   });
+  describe('rename a file', () => {
+    const oldPath = path.join('bar', 'foo.js');
+    const newPath = path.join('bar', 'foo2.js');
+    let bitMap;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.runCmd(`bit move ${oldPath} ${newPath}`);
+      bitMap = helper.readBitMap();
+    });
+    it('should move physically the file', () => {
+      const localConsumerFiles = helper.getConsumerFiles();
+      expect(localConsumerFiles).to.include(newPath);
+      expect(localConsumerFiles).not.to.include(oldPath);
+    });
+    it('should update the name in bit.map', () => {
+      const files = bitMap['bar/foo'].files;
+      expect(files[0].name).to.equal('foo2.js');
+    });
+    it('should update the file path in bit.map', () => {
+      const files = bitMap['bar/foo'].files;
+      expect(files[0].relativePath).to.equal('bar/foo2.js');
+    });
+    it('should update the mainFile of bit.map', () => {
+      expect(bitMap['bar/foo'].mainFile).to.equal('bar/foo2.js');
+    });
+  });
   describe('move a directory', () => {
     before(() => {
       helper.reInitLocalScope();
@@ -136,9 +164,9 @@ describe('bit move command', function () {
       const barFooPath = path.join('bar', 'foo.js');
       const utilsFooPath = path.join('utils', 'foo.js');
       expect(output).to.have.string(
-        `Command failed: ${helper.bitBin} move ${barFooPath} ${utilsFooPath}\nunable to move because both paths from (${
-          barFooPath
-        }) and to (${utilsFooPath}) already exist\n`
+        `Command failed: ${
+          helper.bitBin
+        } move ${barFooPath} ${utilsFooPath}\nunable to move because both paths from (${barFooPath}) and to (${utilsFooPath}) already exist\n`
       );
     });
     it('should not physically move any file', () => {

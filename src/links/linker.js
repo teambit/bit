@@ -39,10 +39,6 @@ function findDirectDependentComponents(potentialDependencies: Component[], consu
   return consumer.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
 }
 
-/**
- * an IMPORTED component might be NESTED before.
- * find those components and re-link all their dependents
- */
 async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {
   logger.debug(`reLinkDirectlyImportedDependencies: found ${components.length} components to re-link`);
   const componentsWithDependencies = await Promise.all(
@@ -50,6 +46,22 @@ async function reLinkDirectlyImportedDependencies(components: Component[], consu
   );
   await linkGenerator.writeDependencyLinks(componentsWithDependencies, consumer, false);
   linkComponentsToNodeModules(components, consumer);
+}
+
+/**
+ * needed for the following cases:
+ * 1) user is importing a component directly which was a dependency before. (before: IMPORTED, now: NESTED).
+ * 2) user used bit-move to move a dependency to another directory.
+ * as a result of the cases above, the link from the dependent to the dependency is broken.
+ * find the dependents components and re-link them
+ */
+export async function reLinkDependents(consumer: Consumer, components: Component[]): Promise<void> {
+  logger.debug('linker: check whether there are direct dependents for re-linking');
+  const directDependentComponents = await findDirectDependentComponents(components, consumer);
+  if (directDependentComponents.length) {
+    await reLinkDirectlyImportedDependencies(directDependentComponents, consumer);
+    await packageJson.changeDependenciesToRelativeSyntax(consumer, directDependentComponents, components);
+  }
 }
 
 /**
@@ -86,11 +98,6 @@ export async function linkComponents(
     );
   }
   linkComponentsToNodeModules(allComponents, consumer);
-  logger.debug('linker: check whether there are direct dependents for re-linking');
-  const directDependentComponents = await findDirectDependentComponents(writtenComponents, consumer);
-  if (directDependentComponents.length) {
-    await reLinkDirectlyImportedDependencies(directDependentComponents, consumer);
-    await packageJson.changeDependenciesToRelativeSyntax(consumer, directDependentComponents, writtenComponents);
-  }
+  await reLinkDependents(consumer, writtenComponents);
   return allComponents;
 }

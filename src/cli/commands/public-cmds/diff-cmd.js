@@ -23,9 +23,10 @@ export default class Diff extends Command {
     return diffResults
       .map((diffResult) => {
         if (diffResult.hasDiff) {
-          const title = chalk.green(`showing diff for ${chalk.bold(diffResult.id.toString())}`);
+          const title = chalk.cyan(`showing diff for ${chalk.bold(diffResult.id.toString())}`);
           // $FlowFixMe
-          const files = diffResult.filesDiff.map(fileDiff => fileDiff.diffOutput).join('\n');
+          const filesWithDiff = diffResult.filesDiff.filter(file => file.diffOutput);
+          const files = filesWithDiff.map(fileDiff => fileDiff.diffOutput).join('\n');
           return `${title}\n${files}`;
         }
         return chalk.red(`no diff for ${chalk.bold(diffResult.id.toString())}`);
