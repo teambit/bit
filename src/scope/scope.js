@@ -1196,7 +1196,7 @@ export default class Scope {
   loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
     logger.debug(`scope.loadEnvironment, id: ${bitId}`);
     Analytics.addBreadCrumb('loadEnvironment', `scope.loadEnvironment, id: ${Analytics.hashData(bitId.toString())}`);
-    if (!bitId) throw new ResolutionException();
+    if (!bitId) throw new Error('scope.loadEnvironment a required argument "bitId" is missing');
     const notFound = () => {
       logger.debug(`Unable to find an env component ${bitId.toString()}`);
       Analytics.addBreadCrumb(
@@ -1224,7 +1224,7 @@ export default class Scope {
       Analytics.addBreadCrumb('loadEnvironment', `Requiring an environment file at ${Analytics.hashData(envPath)}`);
       return require(envPath);
     } catch (e) {
-      throw new ResolutionException(e);
+      throw new ResolutionException(e, envPath);
     }
   }
 
