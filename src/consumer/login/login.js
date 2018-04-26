@@ -10,6 +10,7 @@ import { CFG_USER_TOKEN_KEY, DEFAULT_HUB_LOGIN, CFG_HUB_LOGIN_KEY } from '../../
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
+import { Analytics } from '../../analytics/analytics';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
@@ -32,7 +33,7 @@ export default function loginToBitSrc(
         server.close();
       };
       if (request.method !== 'GET') {
-        logger.error('received non post request, closing connection');
+        logger.error('received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
@@ -40,7 +41,7 @@ export default function loginToBitSrc(
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         const queryData = url.parse(request.url, true).query || {};
         if (clientGeneratedId !== clientId) {
-          logger.error(`clientId mismatch, expecting: ${clientId} got ${queryData.clientId}`);
+          logger.error(`clientId mismatch, expecting: ${clientGeneratedId} got ${clientId}`);
           closeConnection(ERROR_RESPONSE);
           reject(new LoginFailed());
         }
@@ -55,6 +56,7 @@ export default function loginToBitSrc(
       }
     });
 
+    Analytics.addBreadCrumb('login', `initializing login server  on port: ${port || DEFAULT_PORT}`);
     server.listen(port || DEFAULT_PORT, (err) => {
       if (err) {
         logger.error('something bad happened', err);
@@ -62,8 +64,8 @@ export default function loginToBitSrc(
       }
 
       const encoded = encodeURI(
-        `${getSync(CFG_HUB_LOGIN_KEY) ||
-          DEFAULT_HUB_LOGIN}?port=${DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${os.hostname()}&os=${
+        `${getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${port ||
+          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${os.hostname()}&os=${
           process.platform
         }`
       );
