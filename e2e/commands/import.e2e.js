@@ -770,6 +770,17 @@ describe('bit import', function () {
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
       });
+      describe('and running bit import with "--merge=manual" flag', () => {
+        before(() => {
+          helper.runCmd('bit import --merge=manual');
+        });
+        it('should write the components files back', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
     });
     describe('when cloning the project to somewhere else with component files (component files are under git)', () => {
       before(() => {

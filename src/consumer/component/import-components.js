@@ -78,7 +78,7 @@ export default class ImportComponents {
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
-    this.options.objectsOnly = !this.options.writeToFs;
+    this.options.objectsOnly = !(this.options.writeToFs || this.options.mergeStrategy);
 
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
