@@ -175,8 +175,6 @@ once your changes are merged with the new remote version, please tag and export 
       )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
-
-  [ResolutionException, e => e.message],
   [
     DriverNotFound,
     err =>
@@ -272,6 +270,13 @@ to ignore this error, please use --ignore-newest-version flag`
     ExternalBuildError,
     err =>
       `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
+  [
+    ResolutionException,
+    err =>
+      `error: bit failed to require ${err.filePath} due to the following exception:\n${err.originalError.message}.\n${
         err.originalError.stack
       }`
   ],
