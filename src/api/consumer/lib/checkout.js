@@ -4,7 +4,7 @@ import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-v
 import { loadConsumer, Consumer } from '../../../consumer';
 import checkoutVersion from '../../../consumer/versions-ops/checkout-version';
 
-export default (async function checkout(useProps: CheckoutProps): Promise<ApplyVersionResults> {
+export default (async function checkout(checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
-  return checkoutVersion(consumer, useProps);
+  return checkoutVersion(consumer, checkoutProps);
 });
