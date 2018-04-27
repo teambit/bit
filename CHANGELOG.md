@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#927](https://github.com/teambit/bit/issues/927) fix a case of link file (file that only requires other file) is part of the component
 - improve bit-diff to show the output with colors
 - fix bit-move of a directly imported dependency
 - fix importing a different version of dependent when dependencies are not saved as components
