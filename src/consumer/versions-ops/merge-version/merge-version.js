@@ -26,7 +26,8 @@ export const FileStatus = {
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged')
 };
-export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: PathLinux]: $Values<typeof FileStatus> } };
+export type FilesStatus = { [fileName: PathLinux]: $Values<typeof FileStatus> };
+export type ApplyVersionResult = { id: BitId, filesStatus: FilesStatus };
 export type ApplyVersionResults = { components: ApplyVersionResult[], version: string };
 type ComponentStatus = {
   componentFromFS: Component,

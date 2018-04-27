@@ -46,6 +46,7 @@ describe('bit import command with no ids', function () {
   });
 
   describe('with components in both bit.map and bit.json when they are modified locally', () => {
+    let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
@@ -66,6 +67,7 @@ describe('bit import command with no ids', function () {
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.createFile('bar', 'foo.js', barFooFixtureV2);
       helper.createFile(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
+      localScope = helper.cloneLocalScope();
     });
     describe('without --override flag', () => {
       let output;
@@ -91,6 +93,27 @@ describe('bit import command with no ids', function () {
         expect(output).to.have.string('successfully imported');
         expect(output).to.have.string('bar/foo');
         expect(output).to.have.string('bar/foo2');
+      });
+      it('should show them as modified', () => {
+        // because --write flag was not used
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
+      });
+    });
+    describe('with --merge=manual flag', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.runCmd('bit import --merge=manual');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('bar/foo2');
+      });
+      it('should show them as modified', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified components');
       });
     });
   });
