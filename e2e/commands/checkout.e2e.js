@@ -603,4 +603,45 @@ describe('bit checkout command', function () {
       });
     });
   });
+  describe('component with multiple files', () => {
+    let localScope;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.createFile('bar', 'foo2.js');
+      helper.addComponentWithOptions('bar', { m: 'bar/foo.js', i: 'bar/foo' });
+      helper.commitComponentBarFoo();
+      helper.createComponentBarFoo(barFooV2);
+      helper.commitComponentBarFoo();
+      localScope = helper.cloneLocalScope();
+    });
+    describe('bit checkout when the current component is not modified', () => {
+      let output;
+      before(() => {
+        output = helper.checkoutVersion('0.0.1', 'bar/foo');
+      });
+      it('should not show status per file', () => {
+        expect(output).to.not.have.string(FileStatusWithoutChalk.updated);
+        expect(output).to.not.have.string(FileStatusWithoutChalk.unchanged);
+        expect(output).to.not.have.string(FileStatusWithoutChalk.manual);
+        expect(output).to.have.string(successOutput);
+      });
+    });
+    describe('bit checkout when the current component is modified', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createComponentBarFoo(barFooV3);
+        output = helper.checkoutVersion('0.0.1', 'bar/foo', '--manual');
+      });
+      it('should show unchanged to the unchanged file', () => {
+        expect(output).to.have.string(FileStatusWithoutChalk.unchanged);
+        expect(output).to.have.string('bar/foo2.js');
+      });
+      it('should show conflict to the merged file', () => {
+        expect(output).to.have.string(FileStatusWithoutChalk.manual);
+        expect(output).to.have.string('bar/foo.js');
+      });
+    });
+  });
 });
