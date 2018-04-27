@@ -1,7 +1,6 @@
 /** @flow */
 import winston from 'winston';
 import path from 'path';
-import { setTimeout } from 'timers';
 import { GLOBAL_LOGS } from '../constants';
 import { Analytics } from '../analytics/analytics';
 
@@ -92,5 +91,11 @@ logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
     }
   });
 };
+
+if (process.env.BIT_LOG) {
+  const level = process.env.BIT_LOG;
+  logger.add(winston.transports.Console, { level });
+  logger.cli();
+}
 
 export default logger;

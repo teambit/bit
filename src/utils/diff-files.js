@@ -6,10 +6,19 @@ import GeneralError from '../error/general-error';
 /**
  * get diff between files using git diff command
  */
-export default (async function diffFiles(fileA: PathOsBased, fileB: PathOsBased): Promise<string> {
+export default (async function diffFiles(
+  fileA: PathOsBased,
+  fileB: PathOsBased,
+  colors: boolean = true
+): Promise<string> {
   try {
-    // the --no-index parameter ignores the working tree (in case the project is managed by git)
-    const result = await execa('git', ['diff', '--no-index', fileA, fileB]);
+    const params = ['diff'];
+    params.push('--no-index'); // ignores the working tree (in case the project is managed by git)
+    if (colors) params.push('--color');
+    params.push(fileA);
+    params.push(fileB);
+
+    const result = await execa('git', params);
     return result.stdout;
   } catch (err) {
     if (err.code && Number.isInteger(err.code) && err.stdout) {
