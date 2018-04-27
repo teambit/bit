@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support importing component on top of a modified one and merging the changes by adding `--merge` flag to `bit import`
 - fix bit-move of a directly imported dependency
 - fix importing a different version of dependent when dependencies are not saved as components
 
