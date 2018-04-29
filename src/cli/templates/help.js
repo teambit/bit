@@ -50,7 +50,7 @@ const baseTemplate = (extensionsTemplate) => {
   ${chalk.underline('general commands')}
     ${chalk.cyan('config')}     global config management
     ${chalk.cyan('cc')}         clears Bit's cache from current working machine
-    ${chalk.cyan('login')}      login to bitsrc
+    ${chalk.cyan('login')}      login to bitsrc.io
   ${extensionsTemplate}
   ${chalk.grey("please use 'bit <command> --help' for more information and guides on specific commands.")}`;
 };
