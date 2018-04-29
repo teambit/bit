@@ -1233,6 +1233,7 @@ describe('bit import', function () {
       });
       describe('bit build after importing without --ignore-dist flag', () => {
         before(() => {
+          helper.addRemoteEnvironment();
           helper.build('bar/foo');
 
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
