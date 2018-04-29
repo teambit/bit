@@ -15,13 +15,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add -x flag to import (short for --extension)
 
 ### Bug Fixes
-- fix eol issue between os
-- [#927](https://github.com/teambit/bit/issues/927) fix a case of link file (file that only requires other file) is part of the component
+- fix an end of line issue between os
+- [#927](https://github.com/teambit/bit/issues/927) fix a case of link file (file that only requires another file) is part of the component
 - fix bit-move of a directly imported dependency
-- fix importing a different version of dependent when dependencies are not saved as components
+- fix importing a different version of a dependent when dependencies are not saved as components
 - fix Yarn install when a relative path is written into package.json
 - fix bit-merge and bit-checkout commands for Windows
-- bug fix - import after tag was showing an error "Cannot read property 'hash' of undefined"
+- bug fix - import after tag command was showing an error "Cannot read property 'hash' of undefined"
 - fix bit-add to enable marking files as tests of existing components
 - bug fix - in some circumstances, same link files were written in parallel, resulting in invalid content
 
