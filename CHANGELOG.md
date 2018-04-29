@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.15] - 2018-04-19
+
 - fix resolve-node-package process for Windows
 
 ## [0.10.14] - 2018-04-10
