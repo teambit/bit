@@ -770,6 +770,17 @@ describe('bit import', function () {
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
       });
+      describe('and running bit import with "--merge=manual" flag', () => {
+        before(() => {
+          helper.runCmd('bit import --merge=manual');
+        });
+        it('should write the components files back', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
     });
     describe('when cloning the project to somewhere else with component files (component files are under git)', () => {
       before(() => {
@@ -1722,6 +1733,20 @@ console.log(barFoo.default());`;
       it('should override the local changes', () => {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got foo');
+      });
+    });
+    describe('with --merge=manual', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.importComponent('bar/foo --merge=manual');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+      it('should not override the local changes', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got foo v2');
       });
     });
     describe('re-import a component after tagging the component', () => {

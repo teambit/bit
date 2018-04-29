@@ -5,7 +5,7 @@ import { BitId } from '../../../bit-id';
 import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
-import type { UseProps } from '../../../consumer/versions-ops/checkout-version';
+import type { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
 export default class Checkout extends Command {
@@ -48,7 +48,7 @@ export default class Checkout extends Command {
     }
   ): Promise<ApplyVersionResults> {
     const bitIds = ids.map(id => BitId.parse(id));
-    const useProps: UseProps = {
+    const checkoutProps: CheckoutProps = {
       version,
       ids: bitIds,
       promptMergeOptions: interactiveMerge,
@@ -57,7 +57,7 @@ export default class Checkout extends Command {
       skipNpmInstall,
       ignoreDist
     };
-    return checkout(useProps);
+    return checkout(checkoutProps);
   }
 
   report({ components, version }: ApplyVersionResults): string {

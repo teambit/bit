@@ -224,15 +224,24 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
 
   const processLinkFile = (originFile: string, linkFile: Object, isTestFile: boolean = false) => {
     if (!linkFile.dependencies || R.isEmpty(linkFile.dependencies)) return;
+    const nonLinkFiles = [];
     linkFile.dependencies.forEach((dependency) => {
       const component = getComponentIdByDepFile(linkFile.file);
       if (component.componentId) {
         // the linkFile is already a component, no need to treat it differently than other depFile
-        processDepFile(originFile, linkFile.file, dependency.importSpecifiers, undefined, isTestFile);
+        // aggregate all dependencies using the same linkFile and ultimately run processDepFile
+        // with all importSpecifiers of that linkFile.
+        // also, delete the linkFile attribute of importSpecifiers so then once the component is
+        // imported and the link is generated, it won't be treated as a linkFile.
+        dependency.importSpecifiers.map(a => delete a.linkFile);
+        nonLinkFiles.push(dependency.importSpecifiers);
       } else {
         processDepFile(originFile, dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile);
       }
     });
+    if (nonLinkFiles.length) {
+      processDepFile(originFile, linkFile.file, R.flatten(nonLinkFiles), undefined, isTestFile);
+    }
   };
 
   const processDepFiles = (
