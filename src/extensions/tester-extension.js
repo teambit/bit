@@ -98,8 +98,8 @@ export default class TesterExtension extends EnvExtension {
       return componentBitJson.loadTester(consumerPath, scopePath);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
-      if (componentFromModel && componentFromModel.Tester) {
-        return componentFromModel.Tester;
+      if (componentFromModel && componentFromModel.tester) {
+        return componentFromModel.tester;
       }
       return undefined;
     }
