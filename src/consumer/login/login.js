@@ -1,64 +1,62 @@
 /** @flow */
 import http from 'http';
-import uniqid from 'uniqid';
+import uuid from 'uuid';
 import opn from 'opn';
 import os from 'os';
 import chalk from 'chalk';
+import url from 'url';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
 import { CFG_USER_TOKEN_KEY, DEFAULT_HUB_LOGIN, CFG_HUB_LOGIN_KEY } from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
+import { Analytics } from '../../analytics/analytics';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
+const REDIRECT = 302;
+
 export default function loginToBitSrc(
   port: string,
   noLaunchBrowser?: boolean
 ): Promise<{ isAlreadyLoggedIn?: boolean, username?: string }> {
   return new Promise((resolve, reject) => {
-    const clientId = uniqid();
+    const clientGeneratedId = uuid();
     if (getSync(CFG_USER_TOKEN_KEY)) {
       // $FlowFixMe
       return resolve({ isAlreadyLoggedIn: true });
     }
     const server = http.createServer((request, response) => {
-      let rawBody = '';
       const closeConnection = (statusCode?: number) => {
         if (statusCode) response.statusCode = statusCode;
         response.end();
         server.close();
       };
-      if (request.method !== 'POST') {
-        logger.error('received non post request, closing connection');
+      if (request.method !== 'GET') {
+        logger.error('received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
-      request.on('error', (data) => {
-        rawBody += data;
-      });
-      request.on('data', (data) => {
-        rawBody += data;
-      });
-      request.on('end', function () {
-        try {
-          const body = JSON.parse(rawBody);
-          if (clientId !== body.clientId) {
-            logger.error(`clientId mismatch, expecting: ${clientId} got ${body.client_id}`);
-            closeConnection(ERROR_RESPONSE);
-            reject(new LoginFailed());
-          }
-          setSync(CFG_USER_TOKEN_KEY, body.token.token);
-          closeConnection();
-          resolve({ username: body.username });
-        } catch (err) {
-          logger.err(`err on login: ${err}`);
+      try {
+        const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
+        const queryData = url.parse(request.url, true).query || {};
+        if (clientGeneratedId !== clientId) {
+          logger.error(`clientId mismatch, expecting: ${clientGeneratedId} got ${clientId}`);
           closeConnection(ERROR_RESPONSE);
           reject(new LoginFailed());
         }
-      });
+        setSync(CFG_USER_TOKEN_KEY, token);
+        response.writeHead(REDIRECT, { Location: redirectUri });
+        closeConnection();
+        resolve({ username });
+      } catch (err) {
+        logger.err(`err on login: ${err}`);
+        closeConnection(ERROR_RESPONSE);
+        reject(new LoginFailed());
+      }
     });
 
+    Analytics.addBreadCrumb('login', `initializing login server  on port: ${port || DEFAULT_PORT}`);
     server.listen(port || DEFAULT_PORT, (err) => {
       if (err) {
         logger.error('something bad happened', err);
@@ -66,8 +64,8 @@ export default function loginToBitSrc(
       }
 
       const encoded = encodeURI(
-        `${getSync(CFG_HUB_LOGIN_KEY) ||
-          DEFAULT_HUB_LOGIN}?port=${DEFAULT_PORT}&clientId=${clientId}&responseType=token&deviceName=${os.hostname()}&os=${
+        `${getSync(CFG_HUB_LOGIN_KEY) || DEFAULT_HUB_LOGIN}?port=${port ||
+          DEFAULT_PORT}&clientId=${clientGeneratedId}&responseType=token&deviceName=${os.hostname()}&os=${
           process.platform
         }`
       );
