@@ -21,7 +21,7 @@ export default class Import extends Command {
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],
-    ['', 'extension', 'import an extension component'],
+    ['x', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'path <path>', 'import components into a specific directory'],
     [

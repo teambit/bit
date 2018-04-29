@@ -86,7 +86,7 @@ export default class Status extends Command {
 
     const outdatedTitle = chalk.underline.white('pending updates');
     const outdatedDesc =
-      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit log [component_id]" to list all available versions)\n';
+      '(use "bit checkout [version] [component_id]" to merge changes)\n(use "bit diff [component_id] [new_version]" to compare changes)\n(use "bit log [component_id]" to list all available versions)\n';
     const outdatedComps = outdatedComponents
       .map((component) => {
         return `    > ${chalk.cyan(component.id.toStringWithoutVersion())} current: ${component.id.version} latest: ${
@@ -104,9 +104,12 @@ export default class Status extends Command {
 
     const newComponentsOutput = [newComponentsTitle, ...(nonMissing || []), ...(missing || [])].join('\n');
 
+    const modifiedDesc = '(use "bit diff" to compare changes)\n';
     const modifiedComponentOutput = immutableUnshift(
       modifiedComponent.map(c => format(c)),
-      modifiedComponent.length ? chalk.underline.white('modified components') + newComponentDescription : ''
+      modifiedComponent.length
+        ? chalk.underline.white('modified components') + newComponentDescription + modifiedDesc
+        : ''
     ).join('\n');
 
     const autoTagPendingOutput = immutableUnshift(
