@@ -149,13 +149,13 @@ async function applyVersion(
 
   const files = componentWithDependencies.component.files;
   files.forEach((file) => {
-    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
+    filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.updated;
   });
 
+  let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
-    const modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
-    Object.assign(filesStatus, modifiedStatus);
+    modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
 
   await consumer.writeToComponentsDir({
@@ -168,7 +168,7 @@ async function applyVersion(
     writePackageJson
   });
 
-  return { id, filesStatus: mergeResults ? filesStatus : {} };
+  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
 /**
@@ -182,13 +182,7 @@ export async function applyModifiedVersion(
   mergeStrategy: ?MergeStrategy
 ): Promise<Object> {
   const filesStatus = {};
-  if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) {
-    // mergeStrategy must be 'theirs', mark all modified files as 'updated'.
-    mergeResults.modifiedFiles.forEach((file) => {
-      filesStatus[file.filePath] = FileStatus.updated;
-    });
-    return filesStatus;
-  }
+  if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
