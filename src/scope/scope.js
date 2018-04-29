@@ -18,13 +18,7 @@ import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
 import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_VERSION, DEFAULT_BIT_VERSION } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
-import {
-  ScopeNotFound,
-  ComponentNotFound,
-  ResolutionException,
-  DependencyNotFound,
-  CyclicDependencies
-} from './exceptions';
+import { ScopeNotFound, ComponentNotFound, DependencyNotFound, CyclicDependencies } from './exceptions';
 import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
 import { Tmp } from './repositories';
@@ -1202,7 +1196,7 @@ export default class Scope {
       'isEnvironmentInstalled',
       `scope.isEnvironmentInstalled, id: ${Analytics.hashData(bitId.toString())}`
     );
-    if (!bitId) throw new ResolutionException();
+    if (!bitId) throw new Error('scope.isEnvironmentInstalled a required argument "bitId" is missing');
     const notFound = () => {
       logger.debug(`Unable to find an env component ${bitId.toString()}`);
       Analytics.addBreadCrumb(
