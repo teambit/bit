@@ -102,7 +102,6 @@
     "table": "^4.0.3",
     "toposort-class": "^1.0.1",
     "tty-table": "^2.5.5",
-    "uniqid": "^4.1.1",
     "user-home": "^2.0.0",
     "utils-copy-error": "^1.0.1",
     "uuid": "^3.0.1",

@@ -37,7 +37,7 @@ Any team member can discover, use and develop components from any project so you
 
 ## How It Works
 
-### Isolating and sharing components
+### Seamless code sharing
 
 Instead of having to split repositories and create new ones just to publish packages, Bit helps you seamlessly isolate components (sets of files) from any existing repository and share them to be used, developed and synced in other projects.
 
