@@ -73,7 +73,7 @@ export default function loginToBitSrc(
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
         opn(encoded);
       } else {
-        console.log(chalk.yellow(`Go to the following link in your browser::\n${encoded}`)); // eslint-digit sable-line no-console
+        console.log(chalk.yellow(`Go to the following link in your browser::\n${encoded}`)); // eslint-disable-line no-console
       }
     });
 
