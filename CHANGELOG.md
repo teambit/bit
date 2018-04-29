@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.12-dev.5] - 2018-04-29
+
 - support importing component on top of a modified one and merging the changes by adding `--merge` flag to `bit import`
 - [#927](https://github.com/teambit/bit/issues/927) fix a case of link file (file that only requires other file) is part of the component
 - improve bit-diff to show the output with colors
