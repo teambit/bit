@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.12-dev.7] - 2018-04-29
+
+- revert [#948](https://github.com/teambit/bit/pull/948)
+- add -x flag to import (short for --extension)
+- improve status / diff outputs
+
 ## [0.12.12-dev.6] - 2018-04-29
 
 - support importing component on top of a modified one and merging the changes by adding `--merge` flag to `bit import`
