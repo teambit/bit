@@ -253,17 +253,13 @@ describe('bit test command', function () {
 
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', testWithEs6);
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('Should not be able to test without building first', () => {
-      let output;
-      try {
-        helper.testComponent('utils/is-type -v');
-      } catch (err) {
-        output = err.message;
-      }
+      const output = helper.testComponent('utils/is-type -v');
       expect(output).to.have.string('Unexpected token import');
     });
     it('Should be able to test after building', () => {
