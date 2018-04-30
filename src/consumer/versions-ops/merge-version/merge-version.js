@@ -146,7 +146,10 @@ async function applyVersion(
   consumer.bitMap.removeComponent(component.id);
   component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin);
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(filesStatus, component);
+  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(modifiedStatus, component);
+
+  return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
 }
 
 async function applyModifiedVersion(
@@ -207,4 +210,15 @@ export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean
   if (theirs) return MergeOptions.theirs;
   if (manual) return MergeOptions.manual;
   return null;
+}
+
+export function filesStatusWithoutSharedDir(filesStatus: FilesStatus, component: Component): FilesStatus {
+  component.setOriginallySharedDir();
+  if (!component.originallySharedDir) return filesStatus;
+  const sharedDir = component.originallySharedDir;
+  const fileWithoutSharedDir = (file: PathLinux): PathLinux => file.replace(`${sharedDir}/`, '');
+  return Object.keys(filesStatus).reduce((acc, file) => {
+    acc[fileWithoutSharedDir(file)] = filesStatus[file];
+    return acc;
+  }, {});
 }
