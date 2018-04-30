@@ -39,7 +39,6 @@ export default function loginToBitSrc(
       }
       try {
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
-        const queryData = url.parse(request.url, true).query || {};
         if (clientGeneratedId !== clientId) {
           logger.error(`clientId mismatch, expecting: ${clientGeneratedId} got ${clientId}`);
           closeConnection(ERROR_RESPONSE);
