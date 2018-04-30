@@ -1534,6 +1534,7 @@ console.log(barFoo.default());`;
     });
     describe('import is-type as a dependency and then import it directly', () => {
       let localConsumerFiles;
+      let localScope;
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -1543,6 +1544,7 @@ console.log(barFoo.default());`;
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        localScope = helper.cloneLocalScope();
       });
       it('should rewrite is-type directly into "components" directory', () => {
         const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
@@ -1573,6 +1575,21 @@ console.log(barFoo.default());`;
         it('should not break is-string component', () => {
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.have.string('got is-string');
+        });
+      });
+      describe('removing is-string', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.removeComponent(`${helper.remoteScope}/utils/is-string`, '-f -d -s');
+        });
+        it('should not delete is-type from the filesystem', () => {
+          localConsumerFiles = helper.getConsumerFiles();
+          const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
+          expect(localConsumerFiles).to.include(expectedLocation);
+        });
+        it('should not delete is-type from bitMap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
         });
       });
     });
