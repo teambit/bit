@@ -28,7 +28,8 @@ describe('bit test command', function () {
   let clonedScopePath;
   before(() => {
     helper.reInitLocalScope();
-    helper.importTester('bit.envs/testers/mocha@0.0.12');
+    // do not upgrade to v0.0.12 of mocha tester, there is a problem with this version.
+    helper.importTester('bit.envs/testers/mocha@0.0.4');
     clonedScopePath = helper.cloneLocalScope();
   });
   after(() => {
