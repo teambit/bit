@@ -9,6 +9,9 @@ import type { ForkLevel } from '../api/consumer/lib/test';
 import { TESTS_FORK_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
+import ExternalError from '../error/external-error';
+import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>,
@@ -93,7 +96,10 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
       // if (type === 'error') return reject(payload);
       // if (payload.specPath) payload.specPath = testFile.relative;
       const deserializedResults = deserializeResults(results);
-      return resolve(deserializedResults);
+      if (deserializedResults.type === 'error') {
+        reject(deserializedResults.error);
+      }
+      return resolve(deserializedResults.results);
     });
 
     child.on('error', (e) => {
@@ -104,6 +110,25 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
 
 function deserializeResults(results) {
   if (!results) return undefined;
+  if (results.type === 'error') {
+    let deserializedError = deserializeError(results.error);
+    // Special desrialization for external errors
+    if (deserializedError.originalError) {
+      const deserializedOriginalError = deserializeError(deserializedError.originalError);
+      if (results.error.name = ExternalBuildError.name) {
+        deserializedError = new ExternalBuildError(deserializedOriginalError, deserializedError.id);
+      } else if (results.error.name = ExternalTestError.name) {
+        deserializedError = new ExternalTestError(deserializedOriginalError, deserializedError.id);
+      } else {
+        deserializedError = new ExternalError(deserializedOriginalError);
+      }
+    }
+    const finalResults = {
+      type: 'error',
+      error: deserializedError
+    };
+    return finalResults;
+  }
   const deserializeFailure = (failure) => {
     if (!failure) return undefined;
     const deserializedFailure = failure;
@@ -124,5 +149,5 @@ function deserializeResults(results) {
   };
 
   const deserializedResults = results.map(deserializeResult);
-  return deserializedResults;
+  return { type: 'results', results: deserializedResults };
 }

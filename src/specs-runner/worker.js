@@ -2,6 +2,7 @@
 // TODO - move to language specific driver.
 import serializeError from 'serialize-error';
 import { testInProcess } from '../api/consumer/lib/test';
+import ExternalError from '../error/external-error';
 
 const testOneComponent = verbose => async (id: string) => {
   const res = await testInProcess(id, verbose);
@@ -15,16 +16,34 @@ function run() {
     return process.send([]);
   }
   const testAllP = ids.map(testOneComponent(verbose));
-  Promise.all(testAllP).then((results) => {
-    const serializedResults = serializeResults(results);
-    return process.send(serializedResults);
-  });
+  Promise.all(testAllP)
+    .then((results) => {
+      const serializedResults = serializeResults(results);
+      return process.send(serializedResults);
+    })
+    .catch((e) => {
+      const serializedResults = serializeResults(e);
+      return process.send(serializedResults);      
+    });
 }
 
 run();
 
 function serializeResults(results) {
   if (!results) return undefined;
+  if (results instanceof Error) {
+    // In case of extenral error also serialize the original error
+    if (results instanceof ExternalError) {
+      results.originalError = serializeError(results.originalError);
+    }
+
+    const serializedErr = serializeError(results);
+    const finalResults = {
+      type: 'error',
+      error: serializedErr
+    };
+    return finalResults;
+  }
   const serializeFailure = (failure) => {
     if (!failure) return undefined;
     const serializedFailure = failure;
@@ -47,5 +66,5 @@ function serializeResults(results) {
   };
 
   const serializedResults = results.map(serializeResult);
-  return serializedResults;
+  return { type: 'results', results: serializedResults };
 }
