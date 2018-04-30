@@ -48,6 +48,7 @@ describe('bit test command', function () {
   describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
