@@ -148,6 +148,6 @@ function deserializeResults(results) {
     return result;
   };
 
-  const deserializedResults = results.map(deserializeResult);
+  const deserializedResults = results.results.map(deserializeResult);
   return { type: 'results', results: deserializedResults };
 }
