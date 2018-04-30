@@ -1062,7 +1062,8 @@ export default class Consumer {
     const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
       force ? resolvedIDs : regularComponents,
       force,
-      true
+      true,
+      this
     );
 
     const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);

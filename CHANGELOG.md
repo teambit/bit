@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit remove` to not delete dependencies when they were imported directly
+
 ## [0.12.12] - 2018-04-29
 
 ### New

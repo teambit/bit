@@ -4,11 +4,12 @@ import pMapSeries from 'p-map-series';
 import { RemovedObjects } from '../removed-components';
 import logger from '../../logger/logger';
 import { BitId, BitIds } from '../../bit-id';
-import { LATEST_BIT_VERSION } from '../../constants';
+import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
 import { Symlink } from '../models';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import type { BitIdStr } from '../../bit-id/bit-id';
+import { Consumer } from '../../consumer';
 
 export default class RemoveModelComponents {
   scope: Scope;
@@ -16,12 +17,14 @@ export default class RemoveModelComponents {
   bitIdsStr: BitIdStr[];
   force: boolean;
   removeSameOrigin: boolean = false;
-  constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean) {
+  consumer: ?Consumer;
+  constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
     this.bitIds = bitIds;
     this.bitIdsStr = bitIds.map(id => id.toStringWithoutVersion());
     this.force = force;
     this.removeSameOrigin = removeSameOrigin;
+    this.consumer = consumer;
   }
 
   async remove(): Promise<RemovedObjects> {
@@ -83,10 +86,18 @@ export default class RemoveModelComponents {
         dependent => dependent === bitIdStr || BitId.parse(dependent).scope !== dependencyId.scope,
         dependentsIdsStr
       );
+      let isNested = true;
+      if (this.consumer) {
+        const componentMap = this.consumer.bitMap.getComponent(dependencyId);
+        if (componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
+          isNested = false;
+        }
+      }
       if (
         R.isEmpty(relevantDependents) &&
         !this.bitIdsStr.includes(dependencyId.toStringWithoutVersion()) && // don't delete dependency if it is already deleted as an individual
-        (dependencyId.scope !== bitId.scope || this.removeSameOrigin)
+        (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
+        isNested
       ) {
         await this._removeComponent(dependencyId, componentList, true);
         return dependencyId;
