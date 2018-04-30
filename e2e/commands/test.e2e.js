@@ -218,6 +218,8 @@ describe('bit test command', function () {
       it('should show success message of installing the environment', () => {
         expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
       });
+      // TODO: Gilad - fix this (it fails because of this output printed throw the child process of a fork process)
+      // TODO: It doe's work as expected when using --fork-level NONE
       it('should show success message of installing npm-packages', () => {
         expect(output).to.have.string('successfully ran npm install at');
       });
