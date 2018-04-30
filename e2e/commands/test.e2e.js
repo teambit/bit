@@ -143,6 +143,7 @@ describe('bit test command', function () {
     let outputLines;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
