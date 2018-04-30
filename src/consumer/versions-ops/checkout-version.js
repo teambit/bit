@@ -174,8 +174,16 @@ async function applyVersion(
     writePackageJson
   });
 
-  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(filesStatus, componentWithDependencies.component);
-  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(modifiedStatus, componentWithDependencies.component);
+  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(
+    filesStatus,
+    componentWithDependencies.component,
+    componentMap
+  );
+  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(
+    modifiedStatus,
+    componentWithDependencies.component,
+    componentMap
+  );
 
   return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
 }

@@ -19,15 +19,25 @@ describe('filesStatusWithoutSharedDir', () => {
     mainFile: 'bar/foo.js',
     scope: 'myScope'
   });
+  const componentMap = {
+    origin: 'IMPORTED'
+  };
   it('should return the same filesStatus when there is no originallySharedDir', () => {
     sandbox.stub(component, 'setOriginallySharedDir').returns();
-    const filesStatusResult = filesStatusWithoutSharedDir(originalFilesStatus, component);
+    const filesStatusResult = filesStatusWithoutSharedDir(originalFilesStatus, component, componentMap);
     expect(filesStatusResult).to.deep.equal(originalFilesStatus);
   });
-  it('should return the filesStatus without the sharedDir when there the originallySharedDir is set', () => {
+  it('should return the filesStatus without the sharedDir when there the originallySharedDir is set and is IMPORTED', () => {
     sandbox.stub(component, 'setOriginallySharedDir').returns();
     component.originallySharedDir = 'bar';
-    const filesStatusResult = filesStatusWithoutSharedDir(originalFilesStatus, component);
+    const filesStatusResult = filesStatusWithoutSharedDir(originalFilesStatus, component, componentMap);
     expect(filesStatusResult).to.deep.equal({ 'foo.js': 'updated' });
+  });
+  it('should return the same filesStatus when there the originallySharedDir is set and is AUTHORED', () => {
+    sandbox.stub(component, 'setOriginallySharedDir').returns();
+    component.originallySharedDir = 'bar';
+    componentMap.origin = 'AUTHORED';
+    const filesStatusResult = filesStatusWithoutSharedDir(originalFilesStatus, component, componentMap);
+    expect(filesStatusResult).to.deep.equal(originalFilesStatus);
   });
 });
