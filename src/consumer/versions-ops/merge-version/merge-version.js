@@ -14,6 +14,7 @@ import type { MergeResultsTwoWay } from './two-way-merge';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import ComponentMap from '../../bit-map/component-map';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -146,7 +147,10 @@ async function applyVersion(
   consumer.bitMap.removeComponent(component.id);
   component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin);
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(filesStatus, component, componentMap);
+  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(modifiedStatus, component, componentMap);
+
+  return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
 }
 
 async function applyModifiedVersion(
@@ -207,4 +211,20 @@ export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean
   if (theirs) return MergeOptions.theirs;
   if (manual) return MergeOptions.manual;
   return null;
+}
+
+export function filesStatusWithoutSharedDir(
+  filesStatus: FilesStatus,
+  component: Component,
+  componentMap: ComponentMap
+): FilesStatus {
+  if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return filesStatus;
+  component.setOriginallySharedDir();
+  if (!component.originallySharedDir) return filesStatus;
+  const sharedDir = component.originallySharedDir;
+  const fileWithoutSharedDir = (file: PathLinux): PathLinux => file.replace(`${sharedDir}/`, '');
+  return Object.keys(filesStatus).reduce((acc, file) => {
+    acc[fileWithoutSharedDir(file)] = filesStatus[file];
+    return acc;
+  }, {});
 }
