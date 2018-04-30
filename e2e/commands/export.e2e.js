@@ -360,11 +360,11 @@ describe('bit export command', function () {
       helper.createFile(
         'utils',
         'is-string2.js',
-        `const isType = require('${
-          isType
-        }'); module.exports = function isString() { return isType() +  ' and got is-string'; };`
+        `const isType = require('${isType}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`
       );
       helper.addComponent('utils/is-string2.js');
+      const bitShowOutput = helper.showComponentParsed('utils/is-string2');
+      expect(bitShowOutput.dependencies[0].id).to.have.string('utils/is-type@0.0.2');
       helper.commitComponent('utils/is-string2');
       helper.exportAllComponents();
 

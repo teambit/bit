@@ -7,18 +7,21 @@ import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
-import type { ImportOptions, ImportedVersions } from '../../../consumer/component/import-components';
+import type { ImportOptions, ImportDetails } from '../../../consumer/component/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
+import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
+import type { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
 
 export default class Import extends Command {
   name = 'import [ids...]';
-  description = 'import components into your current workspace.\n  https://docs.bitsrc.io/docs/importing-components.html';
+  description = `import components into your current workspace.\n  https://${BASE_DOCS_DOMAIN}/docs/importing-components.html`;
   alias = 'i';
   opts = [
     ['t', 'tester', 'import a tester environment component'],
     ['c', 'compiler', 'import a compiler environment component'],
-    ['', 'extension', 'import an extension component'],
+    ['x', 'extension', 'import an extension component'],
     ['e', 'environment', 'install development environment dependencies (compiler and tester)'],
     ['p', 'path <path>', 'import components into a specific directory'],
     [
@@ -41,6 +44,11 @@ export default class Import extends Command {
       '',
       'ignore-package-json',
       'do not generate package.json for the imported component(s). (it automatically enables skip-npm-install and save-dependencies-as-components flags)'
+    ],
+    [
+      'm',
+      'merge <strategy>',
+      'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ]
   ];
   loader = true;
@@ -62,7 +70,8 @@ export default class Import extends Command {
       ignoreDist = false,
       conf = false,
       skipNpmInstall = false,
-      ignorePackageJson = false
+      ignorePackageJson = false,
+      merge
     }: {
       tester?: boolean,
       compiler?: boolean,
@@ -77,7 +86,8 @@ export default class Import extends Command {
       ignoreDist?: boolean,
       conf?: boolean,
       skipNpmInstall?: boolean,
-      ignorePackageJson?: boolean
+      ignorePackageJson?: boolean,
+      merge?: MergeStrategy
     },
     packageManagerArgs: string[]
   ): Promise<any> {
@@ -90,6 +100,12 @@ export default class Import extends Command {
     if (ids.length && write) {
       throw new GeneralError('you cant use --write flag when importing specific ids');
     }
+    if (merge) {
+      const options = Object.keys(MergeOptions);
+      if (!options.includes(merge)) {
+        throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);
+      }
+    }
     const environmentOptions: EnvironmentOptions = {
       tester,
       compiler,
@@ -99,6 +115,7 @@ export default class Import extends Command {
     const importOptions: ImportOptions = {
       ids,
       verbose,
+      mergeStrategy: merge,
       writeToPath: path,
       objectsOnly: objects,
       writeToFs: write,
@@ -117,13 +134,13 @@ export default class Import extends Command {
   report({
     dependencies,
     envDependencies,
-    importedVersions,
+    importDetails,
     warnings,
     displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
     envDependencies?: Component[],
-    importedVersions: ImportedVersions,
+    importDetails: ImportDetails[],
     warnings?: {
       notInPackageJson: [],
       notInNodeModules: [],
@@ -146,8 +163,9 @@ export default class Import extends Command {
           ? 'successfully imported one component'
           : `successfully imported ${components.length} components`;
       const componentDependencies = components.map((component) => {
-        const versions = importedVersions[component.id.toStringWithoutVersion()];
-        return formatPlainComponentItemWithVersions(component, versions);
+        const details = importDetails.find(c => c.id === component.id.toStringWithoutVersion());
+        if (!details) throw new Error(`missing details of component ${component.id.toString()}`);
+        return formatPlainComponentItemWithVersions(component, details);
       });
       const componentDependenciesOutput = [chalk.green(title)].concat(componentDependencies).join('\n');
 

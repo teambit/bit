@@ -1,7 +1,5 @@
 /** @flow */
-import R from 'ramda';
-import path from 'path';
-import { bufferFrom, pathNormalizeToLinux } from '../../utils';
+import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
@@ -12,7 +10,7 @@ import {
   COMPONENT_ORIGINS,
   LATEST_BIT_VERSION
 } from '../../constants';
-import { MergeConflict, ComponentNotFound } from '../exceptions';
+import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
@@ -21,7 +19,6 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';
-import type { PathLinux } from '../../utils/path';
 
 export type ComponentTree = {
   component: Component,
@@ -181,7 +178,7 @@ export default class SourceRepository {
           return {
             name: file.basename,
             relativePath: consumerComponent.addSharedDir(file.relative),
-            file: Source.from(file.contents),
+            file: Source.from(eol.lf(file.contents)),
             test: file.test
           };
         })

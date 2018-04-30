@@ -23,6 +23,7 @@ describe('bit import', function () {
   });
 
   describe('stand alone component (without dependencies)', () => {
+    let importOutput;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
@@ -33,9 +34,16 @@ describe('bit import', function () {
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const output = helper.importComponent('global/simple');
-      expect(output.includes('successfully imported one component')).to.be.true;
-      expect(output.includes('global/simple')).to.be.true;
+      importOutput = helper.importComponent('global/simple');
+    });
+    it('should display a successful message', () => {
+      expect(importOutput).to.have.string('successfully imported one component');
+      expect(importOutput).to.have.string('global/simple');
+      expect(importOutput).to.have.string('0.0.1');
+    });
+    it('should indicate that the imported component is new', () => {
+      expect(importOutput).to.have.string('added');
+      expect(importOutput).to.not.have.string('updated');
     });
     it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
     it('should add the component to bit.json file', () => {
@@ -754,6 +762,17 @@ describe('bit import', function () {
       describe('and running bit import with "--write" flag', () => {
         before(() => {
           helper.runCmd('bit import --write --override');
+        });
+        it('should write the components files back', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+      describe('and running bit import with "--merge=manual" flag', () => {
+        before(() => {
+          helper.runCmd('bit import --merge=manual');
         });
         it('should write the components files back', () => {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1515,12 +1534,17 @@ console.log(barFoo.default());`;
     });
     describe('import is-type as a dependency and then import it directly', () => {
       let localConsumerFiles;
+      let localScope;
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('utils/is-string'); // imports is-type as a dependency
         helper.importComponent('utils/is-type');
         localConsumerFiles = helper.getConsumerFiles();
+
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        localScope = helper.cloneLocalScope();
       });
       it('should rewrite is-type directly into "components" directory', () => {
         const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
@@ -1541,10 +1565,32 @@ console.log(barFoo.default());`;
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
         helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2);
 
-        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
+      describe('moving is-type', () => {
+        before(() => {
+          helper.move('components/utils/is-type', 'another-dir');
+        });
+        it('should not break is-string component', () => {
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.have.string('got is-string');
+        });
+      });
+      describe('removing is-string', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.removeComponent(`${helper.remoteScope}/utils/is-string`, '-f -d -s');
+        });
+        it('should not delete is-type from the filesystem', () => {
+          localConsumerFiles = helper.getConsumerFiles();
+          const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
+          expect(localConsumerFiles).to.include(expectedLocation);
+        });
+        it('should not delete is-type from bitMap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
+        });
       });
     });
     describe('import is-type directly and then as a dependency', () => {
@@ -1659,6 +1705,7 @@ console.log(barFoo.default());`;
   });
 
   describe('import a component when the local version is modified', () => {
+    let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
@@ -1673,6 +1720,7 @@ console.log(barFoo.default());`;
 
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      localScope = helper.cloneLocalScope();
     });
     describe('without --override flag', () => {
       let output;
@@ -1702,6 +1750,30 @@ console.log(barFoo.default());`;
       it('should override the local changes', () => {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got foo');
+      });
+    });
+    describe('with --merge=manual', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        output = helper.importComponent('bar/foo --merge=manual');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+      it('should not override the local changes', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got foo v2');
+      });
+    });
+    describe('re-import a component after tagging the component', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.tagAllWithoutMessage();
+      });
+      it('should import successfully', () => {
+        const output = helper.importComponent('bar/foo');
+        expect(output).to.have.string('successfully imported');
       });
     });
   });

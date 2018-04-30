@@ -9,7 +9,8 @@ import {
   ConsumerNotFound,
   ComponentSpecsFailed,
   MissingDependencies,
-  NewerVersionFound
+  NewerVersionFound,
+  LoginFailed
 } from '../consumer/exceptions';
 import { DriverNotFound } from '../driver';
 import ComponentNotFoundInPath from '../consumer/component/exceptions/component-not-found-in-path';
@@ -34,6 +35,7 @@ import {
   VersionAlreadyExists,
   MergeConflict,
   MergeConflictOnRemote,
+  VersionNotFound,
   CyclicDependencies
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
@@ -54,6 +56,8 @@ import {
   NoFiles,
   EmptyDirectory,
   MissingComponentIdForImportedComponent,
+  VersionShouldBeRemoved,
+  TestIsDirectory,
   ExcludedMainFile
 } from '../consumer/component/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
@@ -83,6 +87,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
 
   [VersionAlreadyExists, err => `error: version ${err.version} already exists for ${err.componentId}`],
   [ConsumerNotFound, () => 'workspace not found. to initiate a new workspace, please use `bit init`'],
+  [LoginFailed, () => 'error: there was a problem with web authentication'],
+
   // [
   //   PluginNotFound,
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
@@ -171,8 +177,6 @@ once your changes are merged with the new remote version, please tag and export 
       )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
-
-  [ResolutionException, e => e.message],
   [
     DriverNotFound,
     err =>
@@ -186,6 +190,15 @@ once your changes are merged with the new remote version, please tag and export 
       'error: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file'
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
+  [
+    VersionShouldBeRemoved,
+    err => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`
+  ],
+  [
+    TestIsDirectory,
+    err =>
+      `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`
+  ],
   [
     MissingFilesFromComponent,
     (err) => {
@@ -202,6 +215,7 @@ once your changes are merged with the new remote version, please tag and export 
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
     err =>
@@ -212,9 +226,9 @@ once your changes are merged with the new remote version, please tag and export 
   [
     IncorrectIdForImportedComponent,
     err =>
-      `error: unable to add new files from the root directory of the component  "${chalk.bold(
-        err.importedId
-      )}" to "${chalk.bold(err.newId)}"`
+      `error: trying to add a file ${chalk.bold(err.filePath)} to a component-id "${chalk.bold(
+        err.newId
+      )}", however, this file already belong to "${chalk.bold(err.importedId)}"`
   ],
   [
     NoFiles,
@@ -258,6 +272,13 @@ to ignore this error, please use --ignore-newest-version flag`
     ExternalBuildError,
     err =>
       `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
+  [
+    ResolutionException,
+    err =>
+      `error: bit failed to require ${err.filePath} due to the following exception:\n${err.originalError.message}.\n${
         err.originalError.stack
       }`
   ],

@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - improve merge-conflict error on export to show all components with conflicts
+- fix `bit remove` to not delete dependencies when they were imported directly
+
+## [0.12.12] - 2018-04-29
+
+### New
+- introduce a new command `bit diff` to show the files diff for modified components
+- support importing component on top of a modified one and merging the changes by adding `--merge` flag to `bit import`
+- add -x flag to import (short for --extension)
+
+### Bug Fixes
+- fix an end of line issue between os
+- [#927](https://github.com/teambit/bit/issues/927) fix a case of link file (file that only requires another file) is part of the component
+- fix bit-move of a directly imported dependency
+- fix importing a different version of a dependent when dependencies are not saved as components
+- fix Yarn install when a relative path is written into package.json
+- fix bit-merge and bit-checkout commands for Windows
+- bug fix - import after tag command was showing an error "Cannot read property 'hash' of undefined"
+- fix bit-add to enable marking files as tests of existing components
+- bug fix - in some circumstances, same link files were written in parallel, resulting in invalid content
 
 ## [0.12.11] - 2018-04-10
 
@@ -155,6 +174,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - [#541](https://github.com/teambit/bit/issues/541) add package manager config to bit.json
 - support saving dists files on a pre-configured directory relative to consumer root
 - support `bit show --compare` with json format
+
+
 ### Changes
 - change auto-generated node_modules links to be the same as NPM installation of components (@bit/scope.box.name)
 - rename `bit bind` command to `bit link`

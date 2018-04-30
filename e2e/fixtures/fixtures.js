@@ -1,5 +1,6 @@
 export const isType = "module.exports = function isType() { return 'got is-type'; };";
 export const isTypeV2 = "module.exports = function isType() { return 'got is-type v2'; };";
+export const isTypeV3 = "module.exports = function isType() { return 'got is-type v3'; };";
 export const isTypeSpec = testShouldPass => `const expect = require('chai').expect;
 const isType = require('./is-type.js');
 

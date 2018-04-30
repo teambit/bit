@@ -6,14 +6,21 @@ import { Consumer } from '..';
 import Component from '../component';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
+import type { PathOsBased } from '../../utils/path';
 import Version from '../../scope/models/version';
 import { SourceFile } from '../component/sources';
-import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
+import {
+  getMergeStrategyInteractive,
+  FileStatus,
+  MergeOptions,
+  threeWayMerge,
+  filesStatusWithoutSharedDir
+} from './merge-version';
 import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 
-export type UseProps = {
+export type CheckoutProps = {
   version: string,
   ids: BitId[],
   promptMergeOptions: boolean,
@@ -29,8 +36,11 @@ type ComponentStatus = {
   mergeResults: ?MergeResultsThreeWay
 };
 
-export default (async function checkoutVersion(consumer: Consumer, useProps: UseProps): Promise<ApplyVersionResults> {
-  const { version, ids, promptMergeOptions } = useProps;
+export default (async function checkoutVersion(
+  consumer: Consumer,
+  checkoutProps: CheckoutProps
+): Promise<ApplyVersionResults> {
+  const { version, ids, promptMergeOptions } = checkoutProps;
   const { components } = await consumer.loadComponents(ids);
   const allComponentsP = components.map((component: Component) => {
     return getComponentStatus(consumer, component, version);
@@ -40,15 +50,15 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
     component => component.mergeResults && component.mergeResults.hasConflicts
   );
   if (componentWithConflict) {
-    if (!promptMergeOptions && !useProps.mergeStrategy) {
+    if (!promptMergeOptions && !checkoutProps.mergeStrategy) {
       throw new GeneralError(
         `automatic merge has failed for component ${componentWithConflict.id.toStringWithoutVersion()}.\nplease use "--manual" to manually merge changes or use "--theirs / --ours" to choose one of the conflicted versions`
       );
     }
-    if (!useProps.mergeStrategy) useProps.mergeStrategy = await getMergeStrategyInteractive();
+    if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
   const componentsResultsP = allComponents.map(({ id, componentFromFS, mergeResults }) => {
-    return applyVersion(consumer, id, componentFromFS, mergeResults, useProps);
+    return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
   const componentsResults = await Promise.all(componentsResultsP);
   if (consumer.bitMap.hasChanged) await consumer.bitMap.write();
@@ -57,7 +67,7 @@ export default (async function checkoutVersion(consumer: Consumer, useProps: Use
 });
 
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
-  const componentModel = await consumer.scope.sources.get(component.id);
+  const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
   if (!componentModel) {
     throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
   }
@@ -110,9 +120,9 @@ async function applyVersion(
   id: BitId,
   componentFromFS: Component,
   mergeResults: ?MergeResultsThreeWay,
-  useProps: UseProps
+  checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResult> {
-  const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = useProps;
+  const { mergeStrategy, verbose, skipNpmInstall, ignoreDist } = checkoutProps;
   const filesStatus = {};
   if (mergeResults && mergeResults.hasConflicts && mergeStrategy === MergeOptions.ours) {
     componentFromFS.files.forEach((file) => {
@@ -157,14 +167,25 @@ async function applyVersion(
   await consumer.writeToComponentsDir({
     componentsWithDependencies,
     installNpmPackages: shouldInstallNpmPackages(),
-    force: true,
+    override: true,
     writeBitJson: !!componentFromFS.bitJson, // write bit.json only if it was there before
     verbose,
     writeDists: !ignoreDist,
     writePackageJson
   });
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(
+    filesStatus,
+    componentWithDependencies.component,
+    componentMap
+  );
+  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(
+    modifiedStatus,
+    componentWithDependencies.component,
+    componentMap
+  );
+
+  return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
 }
 
 /**
@@ -172,7 +193,7 @@ async function applyVersion(
  * 1) there is no conflict => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.output.
  * 2) there is conflict and mergeStrategy is manual => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.conflict.
  */
-async function applyModifiedVersion(
+export async function applyModifiedVersion(
   componentFiles: SourceFile[],
   mergeResults: MergeResultsThreeWay,
   mergeStrategy: ?MergeStrategy
@@ -180,8 +201,9 @@ async function applyModifiedVersion(
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (file.conflict) {
       foundFile.contents = new Buffer(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
@@ -197,8 +219,9 @@ async function applyModifiedVersion(
     filesStatus[file.filePath] = FileStatus.added;
   });
   const overrideFilesP = mergeResults.overrideFiles.map(async (file) => {
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });

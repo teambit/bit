@@ -85,14 +85,18 @@ export default (async function exportAction(ids?: string[], remote: string, save
     } catch (err) {
       logger.error(err);
       ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
-      However, the eject operation has failed due to an error: ${err}`;
+      However, the eject operation has failed due to an error: ${err.msg || err}`;
+      // it might leave a damaged workspace behind. however, there are not much we can do to avoid
+      // it. previously, in case of eject failure, we continued the linkComponent, but then, a new
+      // bug introduced where bit-removed deleted directly imported dependencies, which fails
+      // link-components afterwards and ended up having more confusion about the failure
+      return Promise.reject(ejectErr);
     }
   }
   if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
   await consumer.bitMap.write();
   await linkComponents(componentsIds, consumer);
-  if (ejectErr) return Promise.reject(ejectErr);
   Analytics.setExtraData('num_components', componentsIds.length);
   return componentsIds;
 });

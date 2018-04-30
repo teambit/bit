@@ -1,4 +1,5 @@
 // @flow
+import path from 'path';
 import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
 import Component from '../../component';
@@ -10,9 +11,10 @@ import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';
 import type { MergeResultsTwoWay } from './two-way-merge';
-import type { PathLinux } from '../../../utils/path';
+import type { PathLinux, PathOsBased } from '../../../utils/path';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import ComponentMap from '../../bit-map/component-map';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -25,7 +27,8 @@ export const FileStatus = {
   overridden: chalk.yellow('overridden'),
   unchanged: chalk.green('unchanged')
 };
-export type ApplyVersionResult = { id: BitId, filesStatus: { [fileName: PathLinux]: $Values<typeof FileStatus> } };
+export type FilesStatus = { [fileName: PathLinux]: $Values<typeof FileStatus> };
+export type ApplyVersionResult = { id: BitId, filesStatus: FilesStatus };
 export type ApplyVersionResults = { components: ApplyVersionResult[], version: string };
 type ComponentStatus = {
   componentFromFS: Component,
@@ -144,7 +147,10 @@ async function applyVersion(
   consumer.bitMap.removeComponent(component.id);
   component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin);
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(filesStatus, component, componentMap);
+  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(modifiedStatus, component, componentMap);
+
+  return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
 }
 
 async function applyModifiedVersion(
@@ -155,8 +161,9 @@ async function applyModifiedVersion(
 ): Promise<Object> {
   const filesStatus = {};
   const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
-    const foundFile = componentFiles.find(componentFile => componentFile.relative === file.filePath);
-    if (!foundFile) throw new GeneralError(`file ${file.filePath} not found`);
+    const filePath: PathOsBased = path.normalize(file.filePath);
+    const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
+    if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
       const otherFile: SourceFileModel = file.otherFile;
@@ -204,4 +211,20 @@ export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean
   if (theirs) return MergeOptions.theirs;
   if (manual) return MergeOptions.manual;
   return null;
+}
+
+export function filesStatusWithoutSharedDir(
+  filesStatus: FilesStatus,
+  component: Component,
+  componentMap: ComponentMap
+): FilesStatus {
+  if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return filesStatus;
+  component.setOriginallySharedDir();
+  if (!component.originallySharedDir) return filesStatus;
+  const sharedDir = component.originallySharedDir;
+  const fileWithoutSharedDir = (file: PathLinux): PathLinux => file.replace(`${sharedDir}/`, '');
+  return Object.keys(filesStatus).reduce((acc, file) => {
+    acc[fileWithoutSharedDir(file)] = filesStatus[file];
+    return acc;
+  }, {});
 }

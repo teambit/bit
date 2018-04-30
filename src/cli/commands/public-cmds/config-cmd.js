@@ -1,15 +1,16 @@
 /** @flow */
 
 import rightpad from 'pad-right';
+import chalk from 'chalk';
 import Command from '../../command';
 import { objectToTupleArray } from '../../../utils';
-import chalk from 'chalk';
+import { BASE_DOCS_DOMAIN } from '../../../constants';
 // import { config } from '../../../api/consumer';
 const config = require('../../../api/consumer/lib/global-config');
 
 export default class Config extends Command {
   name = 'config';
-  description = 'global config management.\n  https://docs.bitsrc.io/docs/conf-config.html';
+  description = `global config management.\n  https://${BASE_DOCS_DOMAIN}/docs/conf-config.html`;
   alias = '';
   commands = [new ConfigSet(), new ConfigDel(), new ConfigGet(), new ConfigList()];
   opts = [];

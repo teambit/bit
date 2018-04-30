@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import logger from '../../../logger/logger';
+import { eol } from '../../../utils';
 import type { PathOsBased } from '../../../utils/path';
 
 export default class AbstractVinyl extends Vinyl {
@@ -22,7 +23,7 @@ export default class AbstractVinyl extends Vinyl {
     const filePath = writePath || this.path;
     logger.debug(`writing a file to the file-system at ${filePath}, force: ${force.toString()}`);
     if (!force && fs.existsSync(filePath)) return null;
-    await fs.outputFile(filePath, this.contents);
+    await fs.outputFile(filePath, eol.auto(this.contents));
     return filePath;
   }
 

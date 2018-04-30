@@ -3,6 +3,8 @@ import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
 import Component from '../consumer/component/consumer-component';
+import type { ImportDetails, ImportStatus } from '../consumer/component/import-components';
+import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 
 export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
 
@@ -16,11 +18,21 @@ export const formatPlainComponentItem = ({ scope, box, name, version, deprecated
     }`
   );
 
-export const formatPlainComponentItemWithVersions = (component: Component, versions: string[] = []): string => {
-  const status = versions.length ? 'updated' : 'up to date';
-  return `- ${c.green(status)} ${c.cyan(component.id.toStringWithoutVersion())} ${
-    versions.length ? `new versions: ${versions.join(', ')}` : ''
-  } ${component.deprecated ? c.yellow('deprecated') : ''}`;
+export const formatPlainComponentItemWithVersions = (component: Component, importDetails: ImportDetails): string => {
+  const status: ImportStatus = importDetails.status;
+  const id = component.id.toStringWithoutVersion();
+  const versions = importDetails.versions.length ? `new versions: ${importDetails.versions.join(', ')}` : '';
+  // $FlowFixMe component.version should be set here
+  const usedVersion = status === 'added' ? `, currently used version ${component.version}` : '';
+  const getConflictMessage = () => {
+    if (!importDetails.filesStatus) return '';
+    const conflictedFiles = Object.keys(importDetails.filesStatus) // $FlowFixMe file is set
+      .filter(file => importDetails.filesStatus[file] === FileStatus.manual);
+    if (!conflictedFiles.length) return '';
+    return `(the following files were saved with conflicts ${conflictedFiles.map(file => c.bold(file)).join(', ')}) `;
+  };
+  const deprecated = component.deprecated ? c.yellow('deprecated') : '';
+  return `- ${c.green(status)} ${c.cyan(id)} ${versions}${usedVersion} ${getConflictMessage()}${deprecated}`;
 };
 
 export const formatBitString = (bit: string): string => c.white('     > ') + c.cyan(`${bit}`);

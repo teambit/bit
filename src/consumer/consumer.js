@@ -43,16 +43,16 @@ import ComponentNotFoundInPath from './component/exceptions/component-not-found-
 import { installPackages, installNpmPackagesForComponents } from '../npm-client/install-packages';
 import GitHooksManager from '../git-hooks/git-hooks-manager';
 import { RemovedLocalObjects } from '../scope/removed-components';
-import { linkComponents, linkComponentsToNodeModules } from '../links';
+import { linkComponents } from '../links';
 import * as packageJson from './component/package-json';
 import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
-import type { PathChangeResult } from './bit-map/bit-map';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
+import { moveExistingComponent } from './component-ops/move-components';
 
 type ConsumerProps = {
   projectPath: string,
@@ -501,7 +501,7 @@ export default class Consumer {
         const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
         if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
           const component = componentWithDeps.component;
-          this.moveExistingComponent(component, relativeWrittenPath, writeToPath);
+          moveExistingComponent(this.bitMap, component, relativeWrittenPath, writeToPath);
         }
       });
     }
@@ -535,20 +535,6 @@ export default class Consumer {
       createNpmLinkFiles,
       writePackageJson
     );
-  }
-
-  moveExistingComponent(component: Component, oldPath: string, newPath: string) {
-    if (fs.existsSync(newPath)) {
-      throw new GeneralError(
-        `could not move the component ${
-          component.id
-        } from ${oldPath} to ${newPath} as the destination path already exists`
-      );
-    }
-    const componentMap = this.bitMap.getComponent(component.id);
-    componentMap.updateDirLocation(oldPath, newPath);
-    fs.moveSync(oldPath, newPath);
-    component.writtenPath = newPath;
   }
 
   /**
@@ -755,20 +741,36 @@ export default class Consumer {
       verbose
     });
 
-    // update bitmap
-    taggedComponents.forEach(component => this.bitMap.updateComponentId(component.id));
-    autoTaggedComponents.forEach((component) => {
+    // update bitmap with the new version
+    const taggedComponentIds = taggedComponents.map((component) => {
+      this.bitMap.updateComponentId(component.id);
+      return component.id;
+    });
+    const autoTaggedComponentIds = autoTaggedComponents.map((component) => {
       const id = component.toBitId();
       id.version = component.latest();
       this.bitMap.updateComponentId(id);
+      return id;
     });
-    await this.bitMap.write();
 
+    // update package.json with the new version
+    const allComponentIds = taggedComponentIds.concat(autoTaggedComponentIds);
+    const updatePackageJsonP = allComponentIds.map((componentId: BitId) => {
+      const componentMap = this.bitMap.getComponent(componentId, true);
+      if (componentMap.rootDir) {
+        return packageJson.updateAttribute(this, componentMap.rootDir, 'version', componentId.version);
+      }
+      return null;
+    });
+
+    await Promise.all([this.bitMap.write(), Promise.all(updatePackageJsonP)]);
     return { taggedComponents, autoTaggedComponents };
   }
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
-    if (!id.scope) { throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`); }
+    if (!id.scope) {
+      throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+    }
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_SEPARATOR));
@@ -807,31 +809,6 @@ export default class Consumer {
   composeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
-  }
-
-  async movePaths({ from, to }: { from: PathOsBased, to: PathOsBased }): PathChangeResult[] {
-    const fromExists = fs.existsSync(from);
-    const toExists = fs.existsSync(to);
-    if (fromExists && toExists) {
-      throw new GeneralError(`unable to move because both paths from (${from}) and to (${to}) already exist`);
-    }
-    if (!fromExists && !toExists) throw new GeneralError(`both paths from (${from}) and to (${to}) do not exist`);
-
-    const fromRelative = this.getPathRelativeToConsumer(from);
-    const toRelative = this.getPathRelativeToConsumer(to);
-    const changes = this.bitMap.updatePathLocation(fromRelative, toRelative, fromExists);
-    if (fromExists && !toExists) {
-      // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
-      fs.moveSync(from, to);
-    }
-    await this.bitMap.write();
-    if (!R.isEmpty(changes)) {
-      const componentsIds = changes.map(c => BitId.parse(c.id));
-      await packageJson.addComponentsToRoot(this, componentsIds);
-      const { components } = await this.loadComponents(componentsIds);
-      linkComponentsToNodeModules(components, this);
-    }
-    return changes;
   }
 
   static create(projectPath: string = process.cwd(), noGit: boolean = false): Promise<Consumer> {
@@ -941,7 +918,19 @@ export default class Consumer {
    * @param {boolean} track - keep tracking local staged components in bitmap.
    * @param {boolean} deleteFiles - delete local added files from fs.
    */
-  async remove(ids: string[], force: boolean, remote: boolean, track: boolean, deleteFiles: boolean) {
+  async remove({
+    ids,
+    force,
+    remote,
+    track,
+    deleteFiles
+  }: {
+    ids: string[],
+    force: boolean,
+    remote: boolean,
+    track: boolean,
+    deleteFiles: boolean
+  }) {
     logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'remove',
@@ -1073,7 +1062,8 @@ export default class Consumer {
     const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
       force ? resolvedIDs : regularComponents,
       force,
-      true
+      true,
+      this
     );
 
     const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
@@ -1124,7 +1114,7 @@ export default class Consumer {
 
   async eject(componentsIds: BitId[]) {
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
-    await this.remove(componentIdsWithoutScope, true, false, true);
+    await this.remove({ ids: componentIdsWithoutScope, force: true, remote: false, track: false, deleteFiles: true });
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     await packageJson.removeComponentsFromNodeModules(this, componentsIds);
     await installPackages(this, [], true, true);

@@ -153,6 +153,43 @@ describe('es6 components with link files', function () {
     });
   });
 
+  describe('when a component uses link file to import members AND that link file is part of the component', () => {
+    let utilIndexFixture;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createFile('utils', 'is-array.js', isArrayFixture);
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('utils', 'is-string.js', isStringFixture);
+      utilIndexFixture =
+        "export { default as isArray } from './is-array'; export { default as isString } from './is-string'; ";
+      helper.createFile('utils', 'index.js', utilIndexFixture);
+      // notice that in this case, the index.js file (link-file) is part of the component
+      helper.addComponentWithOptions('utils', { i: 'utils/misc' });
+      const fooBarFixture =
+        "import { isString, isArray } from '../utils'; export default function foo() { return isString() + ' and ' + isArray() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+    });
+    describe('when importing the component', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+      });
+      it('should generate the links correctly as if there was no link-file', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-string and got is-array and got foo');
+      });
+    });
+  });
+
   describe('when the link file uses default-import and specific-import together', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();

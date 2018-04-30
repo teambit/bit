@@ -604,6 +604,15 @@ export default class Helper {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }
 
+  diff(id?: string = '') {
+    const output = this.runCmd(`bit diff ${id}`);
+    return Helper.removeChalkCharacters(output);
+  }
+
+  move(from: string, to: string) {
+    return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
+  }
+
   getBitVersion() {
     return BIT_VERSION;
   }
