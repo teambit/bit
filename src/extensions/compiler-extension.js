@@ -82,17 +82,19 @@ export default class CompilerExtension extends EnvExtension {
     componentOrigin,
     componentFromModel,
     consumerBitJson,
-    componentBitJson
+    componentBitJson,
+    context
   }: {
     consumerPath: string,
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
     consumerBitJson: ConsumerBitJson,
-    componentBitJson: ?ComponentBitJson
+    componentBitJson: ?ComponentBitJson,
+    context?: Object
   }): Promise<?CompilerExtension> {
     if (componentBitJson && componentBitJson.hasCompiler()) {
-      return componentBitJson.loadCompiler(consumerPath, scopePath);
+      return componentBitJson.loadCompiler(consumerPath, scopePath, context);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
       if (componentFromModel && componentFromModel.compiler) {
@@ -105,7 +107,7 @@ export default class CompilerExtension extends EnvExtension {
     // and the original project import the new version with the new compiler
     // we want to load if from the models and not from the bit.json
     if (consumerBitJson.hasCompiler()) {
-      return consumerBitJson.loadCompiler(consumerPath, scopePath);
+      return consumerBitJson.loadCompiler(consumerPath, scopePath, context);
     }
     return undefined;
   }

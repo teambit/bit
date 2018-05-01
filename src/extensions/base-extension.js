@@ -21,7 +21,8 @@ type BaseArgs = {
 
 export type BaseLoadArgsProps = BaseArgs & {
   consumerPath?: ?string,
-  scopePath?: ?string
+  scopePath?: ?string,
+  context?: ?Object
 };
 
 type StaticProps = BaseArgs & {
@@ -59,6 +60,7 @@ export default class BaseExtension {
   rawConfig: Object;
   options: Object;
   dynamicConfig: Object;
+  context: Object;
   script: Function; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
 
@@ -67,6 +69,7 @@ export default class BaseExtension {
     this.rawConfig = extensionProps.rawConfig;
     this.options = extensionProps.options;
     this.dynamicConfig = extensionProps.dynamicConfig || extensionProps.rawConfig;
+    this.context = extensionProps.context;
     this.script = extensionProps.script;
     this.disabled = extensionProps.disabled;
     this.filePath = extensionProps.filePath;
@@ -158,7 +161,8 @@ export default class BaseExtension {
     rawConfig = {},
     options = {},
     consumerPath,
-    scopePath
+    scopePath,
+    context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
@@ -169,7 +173,7 @@ export default class BaseExtension {
         absPath = path.resolve(consumerPath, options.file);
       }
       const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(name, absPath, rawConfig, options);
-      const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, ...staticExtensionProps };
+      const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
       extensionProps.api = concreteBaseAPI;
       return extensionProps;
     }
@@ -187,7 +191,7 @@ export default class BaseExtension {
       const componentPath = _getExtensionPath(name, scopePath, options.core);
       staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options);
     }
-    const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, ...staticExtensionProps };
+    const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
     return extensionProps;
   }
 

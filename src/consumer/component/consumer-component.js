@@ -1113,13 +1113,19 @@ export default class Component {
       dists = undefined;
     }
 
+    const envsContext = {
+      componentDir: bitDir,
+      workspaceDir: consumerPath
+    };
+
     const propsToLoadEnvs = {
       consumerPath,
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitJson,
-      componentBitJson: rawComponentBitJson
+      componentBitJson: rawComponentBitJson,
+      context: envsContext
     };
 
     const compilerP = CompilerExtension.loadFromCorrectSource(propsToLoadEnvs);
@@ -1134,7 +1140,7 @@ export default class Component {
     // calculate the envsPackageDependencies (without install the env, which we don't want)
     const compilerDynamicPackageDependencies = compiler && compiler.loaded ? compiler.dynamicPackageDependencies : {};
     const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
-    const modelEnvsPackageDependencies = componentFromModel.envsPackageDependencies || {};
+    const modelEnvsPackageDependencies = componentFromModel ? componentFromModel.envsPackageDependencies || {} : {};
     const envsPackageDependencies = {
       ...modelEnvsPackageDependencies,
       ...testerDynamicPackageDependencies,

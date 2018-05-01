@@ -153,7 +153,7 @@ export default class AbstractBitJson {
     return this.tester;
   }
 
-  async loadCompiler(consumerPath: string, scopePath: string): Promise<?CompilerExtension> {
+  async loadCompiler(consumerPath: string, scopePath: string, context?: Object): Promise<?CompilerExtension> {
     if (!this.hasCompiler()) {
       return null;
     }
@@ -161,16 +161,23 @@ export default class AbstractBitJson {
       CompilerEnvType,
       consumerPath,
       scopePath,
-      CompilerExtension.load
+      CompilerExtension.load,
+      context
     );
     return compiler;
   }
 
-  async loadTester(consumerPath: string, scopePath: string): Promise<?TesterExtension> {
+  async loadTester(consumerPath: string, scopePath: string, context?: Object): Promise<?TesterExtension> {
     if (!this.hasTester()) {
       return null;
     }
-    const tester: TesterExtension = await this.loadEnv(TesterEnvType, consumerPath, scopePath, TesterExtension.load);
+    const tester: TesterExtension = await this.loadEnv(
+      TesterEnvType,
+      consumerPath,
+      scopePath,
+      TesterExtension.load,
+      context
+    );
     return tester;
   }
 
@@ -178,13 +185,14 @@ export default class AbstractBitJson {
     envType: EnvType,
     consumerPath: string,
     scopePath: string,
-    loadFunc: Function
+    loadFunc: Function,
+    context?: Object
   ): Promise<?CompilerExtension | ?TesterExtension> {
     const envs = this.getEnvsByType(envType);
     // TODO: Gilad - support more than one key of compiler
     const envName = Object.keys(envs)[0];
     const envObject = envs[envName];
-    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path);
+    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, context);
     const env = await loadFunc(envProps);
     return env;
   }
@@ -257,7 +265,8 @@ const getEnvsProps = (
   scopePath: string,
   envName: string,
   envObject: EnvExtensionObject,
-  bitJsonPath: string
+  bitJsonPath: string,
+  context?: Object
 ): EnvLoadArgsProps => {
   const envProps = {
     name: envName,
@@ -266,7 +275,8 @@ const getEnvsProps = (
     rawConfig: envObject.rawConfig,
     files: envObject.files,
     bitJsonPath,
-    options: envObject.options
+    options: envObject.options,
+    context
   };
   return envProps;
 };

@@ -30,6 +30,7 @@ chai.use(require('chai-fs'));
 // Component should not be modified after import when the envs didn't installed because of dynamicPackageDependencies (which we can't calculate without install the env)
 // should show the envPackageDependencies when running bit show
 // should add the envPackageDependencies to devDependencies in component's package.json
+// envs with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
 
 describe.skip('envs', function () {
   this.timeout(0);

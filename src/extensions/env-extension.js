@@ -134,9 +134,9 @@ export default class EnvExtension extends BaseExtension {
     return resolvedEjectedEnvsDirectory;
   }
 
-  async reload(): Promise<void> {
+  async reload(context?: Object): Promise<void> {
     super.reload();
-    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this);
+    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this, context);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
 
@@ -159,7 +159,8 @@ export default class EnvExtension extends BaseExtension {
       const dynamicPackageDependencies = await getDynamicPackageDependencies({
         rawConfig: envExtensionProps.rawConfig,
         dynamicConfig: envExtensionProps.dynamicConfig,
-        configFiles: envExtensionProps.files
+        configFiles: envExtensionProps.files,
+        context: envExtensionProps.context
       });
       return dynamicPackageDependencies;
     }
