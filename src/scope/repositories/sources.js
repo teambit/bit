@@ -3,7 +3,13 @@ import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
+import {
+  CFG_USER_NAME_KEY,
+  CFG_USER_EMAIL_KEY,
+  DEFAULT_BIT_RELEASE_TYPE,
+  COMPONENT_ORIGINS,
+  LATEST_BIT_VERSION
+} from '../../constants';
 import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -331,9 +337,7 @@ export default class SourceRepository {
       }
 
       const conflictVersions = component.diffWith(existingComponent);
-      throw local
-        ? new MergeConflict(component.id(), conflictVersions)
-        : new MergeConflictOnRemote(component.id(), conflictVersions);
+      throw new MergeConflict(component.id(), conflictVersions);
     });
   }
 }

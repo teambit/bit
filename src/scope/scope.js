@@ -23,7 +23,9 @@ import {
   ComponentNotFound,
   ResolutionException,
   DependencyNotFound,
-  CyclicDependencies
+  CyclicDependencies,
+  MergeConflictOnRemote,
+  MergeConflict
 } from './exceptions';
 import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
@@ -35,6 +37,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
+import type { ComponentTree } from './repositories/sources';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
@@ -592,6 +595,29 @@ export default class Scope {
     componentsObjects.component.scope = remoteScope;
   }
 
+  async _mergeObjects(manyObjects: ComponentTree[]) {
+    const mergeResults = await Promise.all(
+      manyObjects.map(async (objects) => {
+        try {
+          const result = await this.sources.merge(objects, true, false);
+          return result;
+        } catch (err) {
+          if (err instanceof MergeConflict) {
+            return err; // don't throw. instead, get all components with merge-conflicts
+          }
+          throw err;
+        }
+      })
+    );
+    const componentsWithConflicts = mergeResults.filter(result => result instanceof MergeConflict);
+    if (componentsWithConflicts.length) {
+      const idsAndVersions = componentsWithConflicts.map(c => ({ id: c.id, versions: c.versions }));
+      // sort to have a consistent error message
+      const idsAndVersionsSorted = R.sortBy(R.prop('id'), idsAndVersions);
+      throw new MergeConflictOnRemote(idsAndVersionsSorted);
+    }
+  }
+
   /**
    * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
    * saves a component into the objects directory of the remote scope, then, resolves its
@@ -605,7 +631,7 @@ export default class Scope {
       `exportManyBareScope: Going to save ${componentsObjects.length} components`
     );
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true, false)));
+    await this._mergeObjects(manyObjects);
     const manyCompVersions = await Promise.all(
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
