@@ -30,7 +30,6 @@ export type ImportOptions = {
   override: boolean, // default: false
   installNpmPackages: boolean, // default: true
   objectsOnly: boolean, // default: false
-  writeToFs: boolean, // default: false. relevant only for import-all, where "objectsOnly" flag is default to true.
   saveDependenciesAsComponents?: boolean // default: false
 };
 type ComponentMergeStatus = {
@@ -83,7 +82,7 @@ export default class ImportComponents {
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
-    this.options.objectsOnly = !(this.options.writeToFs || this.options.merge);
+    this.options.objectsOnly = !this.options.merge;
 
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();

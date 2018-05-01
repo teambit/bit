@@ -29,7 +29,6 @@ export default class Import extends Command {
       'objects',
       "import components objects only, don't write the components to the file system. This is a default behavior for import with no id"
     ],
-    ['', 'write', 'in case of import-all (when no id is specified), write the components to the file system'],
     ['d', 'display-dependencies', 'display the imported dependencies'],
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
@@ -62,7 +61,6 @@ export default class Import extends Command {
       extension = false,
       path,
       objects = false,
-      write = false,
       displayDependencies = false,
       environment = false,
       override = false,
@@ -78,7 +76,6 @@ export default class Import extends Command {
       extension?: boolean,
       path?: string,
       objects?: boolean,
-      write?: boolean,
       displayDependencies?: boolean,
       environment?: boolean,
       override?: boolean,
@@ -94,11 +91,8 @@ export default class Import extends Command {
     if (tester && compiler) {
       throw new GeneralError('you cant use tester and compiler flags combined');
     }
-    if (objects && write) {
-      throw new GeneralError('you cant use --objects and --write flags combined');
-    }
-    if (ids.length && write) {
-      throw new GeneralError('you cant use --write flag when importing specific ids');
+    if (objects && merge) {
+      throw new GeneralError('you cant use --objects and --merge flags combined');
     }
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
@@ -121,7 +115,6 @@ export default class Import extends Command {
       mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
-      writeToFs: write,
       withEnvironments: environment,
       override,
       writeDists: !ignoreDist,
