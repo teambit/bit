@@ -67,6 +67,7 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
+    envsPackageDependencies,
     files,
     mainFile,
     deprecated,
@@ -75,6 +76,9 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
   } = component;
 
   const ver = version ? `@${version}` : '';
+  const parsedDevPackageDependencies = parsePackages(devPackageDependencies);
+  const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies);
+  const printableDevPackageDependencies = parsedDevPackageDependencies.concat(parsedEnvsPackageDependencies);
   obj.id = isFromFs ? `${box}/${name}${ver} [file system]` : `${box}/${name}${ver}`;
   // TODO: Gilad - print compiler config in different table
   obj.compiler = compiler ? compiler.name : null;
@@ -82,7 +86,7 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
   obj.tester = tester ? tester.name : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies.toStringOfIds().concat(parsePackages(packageDependencies));
-  obj.devDependencies = devDependencies.toStringOfIds().concat(parsePackages(devPackageDependencies));
+  obj.devDependencies = devDependencies.toStringOfIds().concat(printableDevPackageDependencies);
   obj.peerDependencies = parsePackages(peerPackageDependencies);
 
   obj.files =

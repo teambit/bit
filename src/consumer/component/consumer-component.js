@@ -68,6 +68,7 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
+  envsPackageDependencies?: ?Object,
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -95,6 +96,7 @@ export default class Component {
   packageDependencies: Object;
   devPackageDependencies: Object;
   peerPackageDependencies: Object;
+  envsPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: SourceFile[];
   dists: Dists;
@@ -173,6 +175,7 @@ export default class Component {
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
+    envsPackageDependencies,
     files,
     docs,
     dists,
@@ -198,6 +201,7 @@ export default class Component {
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
+    this.envsPackageDependencies = envsPackageDependencies || {};
     this._files = files;
     this._docs = docs;
     this.setDists(dists);
@@ -897,6 +901,7 @@ export default class Component {
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies,
+      envsPackageDependencies: this.envsPackageDependencies,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
@@ -981,6 +986,7 @@ export default class Component {
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       docs,
       mainFile,
       dists,
@@ -1003,6 +1009,7 @@ export default class Component {
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       mainFile,
       files,
       docs,
@@ -1120,6 +1127,20 @@ export default class Component {
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
 
+    // Load the envsPackageDependencies from the actual compiler / tester or from the model
+    // if they are not loaded (aka not installed)
+    // We load it from model to prevent case when component is modified becasue changes in envsPackageDependencies
+    // That occur as a result that we import component but didn't import its envs so we can't
+    // calculate the envsPackageDependencies (without install the env, which we don't want)
+    const compilerDynamicPackageDependencies = compiler && compiler.loaded ? compiler.dynamicPackageDependencies : {};
+    const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
+    const modelEnvsPackageDependencies = componentFromModel.envsPackageDependencies || {};
+    const envsPackageDependencies = {
+      ...modelEnvsPackageDependencies,
+      ...testerDynamicPackageDependencies,
+      ...compilerDynamicPackageDependencies
+    };
+
     return new Component({
       name: id.name,
       box: id.box,
@@ -1136,6 +1157,7 @@ export default class Component {
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       deprecated
     });
   }

@@ -316,6 +316,7 @@ export default class Component extends BitObject {
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
+      envsPackageDependencies: clone(version.envsPackageDependencies),
       files,
       dists,
       docs: version.docs,

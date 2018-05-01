@@ -59,6 +59,7 @@ export type VersionProps = {
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
+  envsPackageDependencies?: { [string]: string },
   bindingPrefix?: string
 };
 
@@ -82,6 +83,7 @@ export default class Version extends BitObject {
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
+  envsPackageDependencies: { [string]: string };
   bindingPrefix: string;
 
   constructor({
@@ -101,6 +103,7 @@ export default class Version extends BitObject {
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
+    envsPackageDependencies,
     bindingPrefix
   }: VersionProps) {
     super();
@@ -120,6 +123,7 @@ export default class Version extends BitObject {
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
+    this.envsPackageDependencies = envsPackageDependencies || {};
     this.bindingPrefix = bindingPrefix;
     this.validateVersion();
   }
@@ -255,7 +259,8 @@ export default class Version extends BitObject {
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
-        peerPackageDependencies: this.peerPackageDependencies
+        peerPackageDependencies: this.peerPackageDependencies,
+        envsPackageDependencies: this.envsPackageDependencies
       },
       val => !!val
     );
@@ -286,6 +291,7 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       packageDependencies
     } = JSON.parse(contents);
     const _getDependencies = (deps = []) => {
@@ -331,6 +337,7 @@ export default class Version extends BitObject {
       flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       packageDependencies
     });
   }
@@ -376,7 +383,7 @@ export default class Version extends BitObject {
       };
     };
 
-    const mergeDevPackageDependencies = (
+    const mergePackageDependencies = (
       devPackageDependencies,
       compilerDynamicPakageDependencies = {},
       testerDynamicPakageDependencies = {}
@@ -405,12 +412,12 @@ export default class Version extends BitObject {
       specsResults,
       docs: component.docs,
       packageDependencies: component.packageDependencies,
-      devPackageDependencies: mergeDevPackageDependencies(
-        component.devPackageDependencies,
+      devPackageDependencies: component.devPackageDependencies,
+      peerPackageDependencies: component.peerPackageDependencies,
+      envsPackageDependencies: mergePackageDependencies(
         compilerDynamicPakageDependencies,
         testerDynamicPakageDependencies
       ),
-      peerPackageDependencies: component.peerPackageDependencies,
       flattenedDependencies,
       flattenedDevDependencies,
       dependencies: component.dependencies.get(),
@@ -503,6 +510,7 @@ export default class Version extends BitObject {
     _validatePackageDependencies(this.packageDependencies);
     _validatePackageDependencies(this.devPackageDependencies);
     _validatePackageDependencies(this.peerPackageDependencies);
+    _validatePackageDependencies(this.envsPackageDependencies);
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {

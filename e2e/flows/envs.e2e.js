@@ -16,7 +16,6 @@ chai.use(require('chai-fs'));
 // eject env twice should not break the bit.json
 // eject only compiler or only tester
 // eject to custom folder
-// add dynamic deps from the compiler to component dev deps
 // dynamic config should be written as raw config when ejecting
 // change the default dir for envs (in consumer bit.json)
 // imported - should not show the component as modified if a file added to @bit-envs folder
@@ -27,6 +26,10 @@ chai.use(require('chai-fs'));
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // should move envs files during bit move command
 // different fork levels should work
+// Should store the dynamicPackageDependencies to envPackageDependencies in component models
+// Component should not be modified after import when the envs didn't installed because of dynamicPackageDependencies (which we can't calculate without install the env)
+// should show the envPackageDependencies when running bit show
+// should add the envPackageDependencies to devDependencies in component's package.json
 
 describe.skip('envs', function () {
   this.timeout(0);
