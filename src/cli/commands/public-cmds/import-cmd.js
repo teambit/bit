@@ -47,7 +47,7 @@ export default class Import extends Command {
     ],
     [
       'm',
-      'merge <strategy>',
+      'merge [strategy]',
       'merge local changes with the imported version. strategy should be "theirs", "ours" or "manual"'
     ]
   ];
@@ -100,11 +100,13 @@ export default class Import extends Command {
     if (ids.length && write) {
       throw new GeneralError('you cant use --write flag when importing specific ids');
     }
-    if (merge) {
+    let mergeStrategy;
+    if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);
       if (!options.includes(merge)) {
         throw new GeneralError(`merge must be one of the following: ${options.join(', ')}`);
       }
+      mergeStrategy = merge;
     }
     const environmentOptions: EnvironmentOptions = {
       tester,
@@ -115,7 +117,8 @@ export default class Import extends Command {
     const importOptions: ImportOptions = {
       ids,
       verbose,
-      mergeStrategy: merge,
+      merge: !!merge,
+      mergeStrategy,
       writeToPath: path,
       objectsOnly: objects,
       writeToFs: write,
