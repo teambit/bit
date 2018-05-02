@@ -43,11 +43,8 @@ function compile(files, distPath) {
     plugins: [require.resolve('babel-plugin-transform-object-rest-spread')]
   };
 
-  try {
-    return files.map(file => runBabel(file, options, distPath)).reduce((a, b) => a.concat(b));
-  } catch (e) {
-    throw e;
-  }
+  return files.map(file => runBabel(file, options, distPath)).reduce((a, b) => a.concat(b));
+  
 }
 
 module.exports = {

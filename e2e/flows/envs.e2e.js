@@ -6,9 +6,7 @@ import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-// should store the env files in the scope
 // should send the env files to the remote scope
-// should store the dynamic config in the models
 // should support declare env in old format (string)
 // should not show component in modified if the compiler defined in old format (string)
 // should load the envs from component bit.json if exist
@@ -34,7 +32,7 @@ chai.use(require('chai-fs'));
 // should add the envPackageDependencies to devDependencies in component's package.json
 // envs with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
 
-describe.only('envs', function () {
+describe('envs', function () {
   this.timeout(0);
   const helper = new Helper();
   const compilerId = 'compilers/new-babel';
