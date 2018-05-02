@@ -224,7 +224,7 @@ export default class SourceRepository {
     message: string,
     exactVersion: ?string,
     releaseType: string,
-    dists?: Object,
+    dists: ?Object,
     specsResults?: any
   }): Promise<Component> {
     const objectRepo = this.objects();
