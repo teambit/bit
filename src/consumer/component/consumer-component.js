@@ -682,13 +682,13 @@ export default class Component {
         : component.files.filter(file => file.test);
 
       let specsResults: RawTestsResults[];
+
       try {
         if (tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
           const context: Object = {
-            componentObject: this.toObject(),
-            rootDistFolder
+            componentObject: component.toObject()
           };
           const actionParams = {
             testFiles: testFilesList,
@@ -699,7 +699,7 @@ export default class Component {
             context
           };
 
-          specsResults = await tester.action();
+          specsResults = await tester.action(actionParams);
         } else {
           logger.debug('running tests using old format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using old format');
