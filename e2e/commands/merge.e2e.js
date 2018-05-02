@@ -84,6 +84,14 @@ describe('bit merge command', function () {
       helper.commitAllComponents();
       localScope = helper.cloneLocalScope();
     });
+    it('as an intermediate step, make sure the dependencies are correct', () => {
+      const barFoo = helper.catComponent('bar/foo@0.0.2');
+      expect(barFoo.dependencies).to.have.lengthOf(1);
+      expect(barFoo.dependencies[0].id).to.equal('utils/is-string@0.0.2');
+      expect(barFoo.flattenedDependencies).to.have.lengthOf(2);
+      expect(barFoo.flattenedDependencies).to.include('utils/is-string@0.0.2');
+      expect(barFoo.flattenedDependencies).to.include('utils/is-type@0.0.2');
+    });
     describe('as authored', () => {
       before(() => {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFooAuthor);

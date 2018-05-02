@@ -62,8 +62,35 @@ async function getFlattenedDependencies(
     return flattenedDependencies;
   });
   const flattened = await Promise.all(flattenedP);
-  // console.log('flattened', flattened);
-  return R.flatten(flattened);
+  return R.uniq(R.flatten(flattened));
+}
+
+function updateDependenciesVersions(componentsToTag: Component[]): void {
+  const updateDependencyVersion = (dependency) => {
+    const foundDependency = componentsToTag.find(
+      component => component.id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
+    );
+    if (foundDependency) dependency.id.version = foundDependency.version;
+  };
+  componentsToTag.forEach((componentToTag) => {
+    componentToTag.dependencies.get().forEach(dependency => updateDependencyVersion(dependency));
+    componentToTag.devDependencies.get().forEach(dependency => updateDependencyVersion(dependency));
+  });
+}
+
+async function setFutureVersions(
+  componentsToTag: Component[],
+  scope: Scope,
+  releaseType: string,
+  exactVersion: ?string
+): Promise<void> {
+  await Promise.all(
+    componentsToTag.map(async (componentToTag) => {
+      const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
+      const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+      componentToTag.version = version;
+    })
+  );
 }
 
 export default (async function tagModelComponent({
@@ -85,7 +112,6 @@ export default (async function tagModelComponent({
   consumer: Consumer,
   verbose?: boolean
 }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
-  // TODO: Change the return type
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
@@ -95,7 +121,7 @@ export default (async function tagModelComponent({
     // Store it in a map so we can take it easily from the sorted array which contain only the id
     consumerComponentsIdsMap[componentIdString] = consumerComponent;
   });
-  const componentsToTag = consumerComponents;
+  const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
   const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
@@ -129,26 +155,12 @@ export default (async function tagModelComponent({
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');
 
   // go through all components and find the future versions for them
-  await Promise.all(
-    componentsToTag.map(async (componentToTag) => {
-      const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
-      const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
-      componentToTag.version = version;
-    })
-  );
+  await setFutureVersions(componentsToTag, scope, releaseType, exactVersion);
   // go through all dependencies and update their versions
-  componentsToTag.forEach((componentToTag) => {
-    componentToTag.dependencies.get().forEach((dependency) => {
-      if (!dependency.id.hasVersion()) {
-        const foundDependency = componentsToTag.find(
-          component => component.id.toStringWithoutVersion() === dependency.id.toString()
-        );
-        if (foundDependency) dependency.id.version = foundDependency.version;
-      }
-    });
-  });
+  updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
   const { graphDeps, graphDevDeps } = buildComponentsGraph(componentsToTag);
+
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent) => {
     const consumerComponentId = consumerComponent.id.toString();
