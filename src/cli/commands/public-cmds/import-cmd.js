@@ -94,6 +94,9 @@ export default class Import extends Command {
     if (objects && merge) {
       throw new GeneralError('you cant use --objects and --merge flags combined');
     }
+    if (override && merge) {
+      throw new GeneralError('you cant use --override and --merge flags combined');
+    }
     let mergeStrategy;
     if (merge && R.is(String, merge)) {
       const options = Object.keys(MergeOptions);
