@@ -115,9 +115,9 @@ function deserializeResults(results) {
     // Special desrialization for external errors
     if (deserializedError.originalError) {
       const deserializedOriginalError = deserializeError(deserializedError.originalError);
-      if (results.error.name = ExternalBuildError.name) {
+      if (results.error.name === ExternalBuildError.name) {
         deserializedError = new ExternalBuildError(deserializedOriginalError, deserializedError.id);
-      } else if (results.error.name = ExternalTestError.name) {
+      } else if (results.error.name === ExternalTestError.name) {
         deserializedError = new ExternalTestError(deserializedOriginalError, deserializedError.id);
       } else {
         deserializedError = new ExternalError(deserializedOriginalError);
