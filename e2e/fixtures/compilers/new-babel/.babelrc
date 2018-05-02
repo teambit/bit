@@ -1,0 +1,9 @@
+{
+  "presets": ["env"],
+  "sourceMaps": true,
+  "ast": false,
+  "minified": true,
+  "plugins": [
+    "transform-object-rest-spread"
+  ]
+}

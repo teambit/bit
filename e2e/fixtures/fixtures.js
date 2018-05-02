@@ -40,3 +40,7 @@ describe('foo', () => {
 });`;
 export const appPrintBarFoo = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
 export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); console.log(barFoo());";
+export const objectRestSpread = `const g = 5;
+const x = {a: "a", b: "b"}
+const y = {c: "c"}
+const z = {...x, ...y}`
