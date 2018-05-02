@@ -13,7 +13,7 @@ import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
 import { ComponentSpecsFailed } from '../../consumer/exceptions';
 import { pathNormalizeToLinux } from '../../utils';
-import { Source } from '../../consumer/component/sources';
+import Source from '../models/source';
 import { DependencyNotFound } from '../exceptions';
 import { BitId } from '../../bit-id';
 import { flattenDependencyIds } from '../flatten-dependencies';

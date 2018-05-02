@@ -9,7 +9,6 @@ import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
-import Source from './models/source';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
