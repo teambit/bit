@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support components with cyclic dependencies
+- remove `--write` flag from `bit import`, the newly introduced `--merge` flag takes care of that
+- improve merge-conflict error on export to show all components with conflicts
+- fix `bit remove` to not delete dependencies when they were imported directly
+
 ## [0.12.12] - 2018-04-29
 
 ### New

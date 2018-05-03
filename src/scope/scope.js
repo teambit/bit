@@ -4,14 +4,11 @@ import semver from 'semver';
 import fs from 'fs-extra';
 import R, { merge, splitWhen } from 'ramda';
 import chalk from 'chalk';
-import Toposort from 'toposort-class';
 import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
-import { flattenDependencyIds } from './flatten-dependencies';
 import ComponentObjects from './component-objects';
 import ComponentModel from './models/component';
-import Source from './models/source';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
@@ -23,7 +20,9 @@ import {
   ComponentNotFound,
   ResolutionException,
   DependencyNotFound,
-  CyclicDependencies
+  CyclicDependencies,
+  MergeConflictOnRemote,
+  MergeConflict
 } from './exceptions';
 import IsolatedEnvironment from '../environment';
 import { RemoteScopeNotFound, PermissionDenied } from './network/exceptions';
@@ -35,6 +34,7 @@ import { Repository, Ref, BitObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
+import type { ComponentTree } from './repositories/sources';
 import Consumer from '../consumer/consumer';
 import { index } from '../search/indexer';
 import loader from '../cli/loader';
@@ -56,7 +56,6 @@ import Component from '../consumer/component/consumer-component';
 import { RemovedObjects } from './removed-components';
 import DependencyGraph from './graph/graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
-import { ComponentSpecsFailed } from '../consumer/exceptions';
 import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';
 import { Analytics } from '../analytics/analytics';
@@ -258,7 +257,7 @@ export default class Scope {
     });
   }
 
-  importDependencies(dependencies: BitId[]) {
+  importDependencies(dependencies: BitId[]): Promise<VersionDependencies[]> {
     return new Promise((resolve, reject) => {
       return this.importMany(dependencies)
         .then(resolve)
@@ -268,180 +267,6 @@ export default class Scope {
           return reject(new DependencyNotFound(e.id));
         });
     });
-  }
-
-  async putMany({
-    consumerComponents,
-    message,
-    exactVersion,
-    releaseType,
-    force,
-    consumer,
-    verbose = false
-  }: {
-    consumerComponents: ConsumerComponent[],
-    message: string,
-    exactVersion: ?string,
-    releaseType: string,
-    force: ?boolean,
-    consumer: Consumer,
-    verbose?: boolean
-  }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
-    // TODO: Change the return type
-    loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
-    const topSort = new Toposort();
-    const allDependencies = new Map();
-    const consumerComponentsIdsMap: Map<string, ConsumerComponent> = new Map();
-    // Concat and unique all the dependencies from all the components so we will not import
-    // the same dependency more then once, it's mainly for performance purpose
-    consumerComponents.forEach((consumerComponent) => {
-      const componentIdString = consumerComponent.id.toString();
-      // Store it in a map so we can take it easily from the sorted array which contain only the id
-      consumerComponentsIdsMap.set(componentIdString, consumerComponent);
-      const dependenciesIdsStrings = consumerComponent.getAllDependencies().map(dependency => dependency.id.toString());
-      topSort.add(componentIdString, dependenciesIdsStrings || []);
-    });
-
-    let sortedConsumerComponentsIds;
-    // Sort the consumerComponents by the dependency order so we can commit those without the dependencies first
-    try {
-      sortedConsumerComponentsIds = topSort.sort().reverse();
-    } catch (e) {
-      throw new CyclicDependencies(e);
-    }
-
-    const componentsToTag = sortedConsumerComponentsIds.map(id => consumerComponentsIdsMap.get(id)).filter(c => c);
-    const componentsToTagIds = componentsToTag.map(c => c.id);
-    const componentsToTagIdsLatest = await this.latestVersions(componentsToTagIds, false);
-    const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
-    const autoTagComponents = await this.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
-    // this.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
-    const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.id()));
-    const autoTagConsumerComponents = autoTagComponentsLoaded.components;
-    const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
-
-    logger.debug('scope.putMany: sequentially build all components');
-    Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
-    await this.buildMultiple(componentsToBuildAndTest, consumer, verbose);
-
-    logger.debug('scope.putMany: sequentially test all components');
-    let testsResults = [];
-    try {
-      testsResults = await this.testMultiple({
-        components: componentsToBuildAndTest,
-        consumer,
-        verbose,
-        rejectOnFailure: !force
-      });
-    } catch (err) {
-      // if force is true, ignore the tests and continue
-      if (!force) {
-        if (!verbose) throw new ComponentSpecsFailed();
-        throw err;
-      }
-    }
-    logger.debug('scope.putMany: sequentially persist all components');
-    Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');
-    const getFlattenForDependency = async (dependency, cache) => {
-      // Try to get the flatten dependencies from cache
-      let flattenedDependencies = cache.get(dependency.id.toString());
-      if (flattenedDependencies) return Promise.resolve(flattenedDependencies);
-
-      // Calculate the flatten dependencies
-      if (
-        consumerComponentsIdsMap.has(dependency.id.toStringWithoutVersion()) ||
-        consumerComponentsIdsMap.has(dependency.id.toString())
-      ) {
-        // when a dependency includes in the components list to tag, don't use the existing version, because the
-        // existing version will be obsolete once it's tagged. Instead, remove the version, and later on, when
-        // importDependencies is called, it'll fetch the newly tagged version.
-        dependency.id.version = undefined;
-      }
-      const versionDependencies = await this.importDependencies([dependency.id]);
-      // Copy the exact version from flattenedDependency to dependencies
-      if (!dependency.id.hasVersion()) {
-        dependency.id.version = first(versionDependencies).component.version;
-      }
-
-      flattenedDependencies = await flattenDependencyIds(versionDependencies, this.objects);
-
-      // Store the flatten dependencies in cache
-      cache.set(dependency.id.toString(), flattenedDependencies);
-
-      return flattenedDependencies;
-    };
-    const getFlattenForComponent = async (consumerComponent, cache, dev = false) => {
-      const dependencies = dev ? consumerComponent.devDependencies : consumerComponent.dependencies;
-      const flattenedDependenciesP = dependencies.get().map(dependency => getFlattenForDependency(dependency, cache));
-      let flattenedDependencies = await Promise.all(flattenedDependenciesP);
-      flattenedDependencies = R.flatten(flattenedDependencies);
-      const predicate = id => id.toString(); // TODO: should be moved to BitId class
-      return R.uniqBy(predicate)(flattenedDependencies);
-    };
-
-    const persistComponentsP = sortedConsumerComponentsIds.map(consumerComponentId => async () => {
-      const consumerComponent = consumerComponentsIdsMap.get(consumerComponentId);
-      // This happens when there is a dependency which have been already committed
-      if (!consumerComponent) return Promise.resolve([]);
-      const flattenedDependencies = await getFlattenForComponent(consumerComponent, allDependencies);
-      const flattenedDevDependencies = await getFlattenForComponent(consumerComponent, allDependencies, true);
-
-      // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
-      // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
-      // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
-      // consumerComponent.dists.distEntryShouldBeStripped is set to true.
-      // because the model always has the paths of the original author, in case part of the path was stripped, add it
-      // back before saving to the model. this way, when the author updates the components, the paths will be correct.
-      const addSharedDirAndDistEntry = (pathStr) => {
-        const withSharedDir = consumerComponent.originallySharedDir
-          ? pathLib.join(consumerComponent.originallySharedDir, pathStr)
-          : pathStr;
-        const withDistEntry = consumerComponent.dists.distEntryShouldBeStripped
-          ? pathLib.join(consumer.bitJson.distEntry, withSharedDir)
-          : withSharedDir;
-        return pathNormalizeToLinux(withDistEntry);
-      };
-      const dists = !consumerComponent.dists.isEmpty()
-        ? consumerComponent.dists.get().map((dist) => {
-          return {
-            name: dist.basename,
-            relativePath: addSharedDirAndDistEntry(dist.relative),
-            file: Source.from(dist.contents),
-            test: dist.test
-          };
-        })
-        : null;
-
-      const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
-
-      const component = await this.sources.addSource({
-        source: consumerComponent,
-        flattenedDependencies,
-        flattenedDevDependencies,
-        message,
-        exactVersion,
-        releaseType,
-        dists,
-        specsResults: testResult ? testResult.specs : undefined
-      });
-      const deps = await component.toVersionDependencies(LATEST, this, this.name);
-      consumerComponent.version = deps.component.version;
-      await deps.toConsumer(this.objects);
-      // await index(consumerComponent, this.getPath());
-      return consumerComponent;
-    });
-
-    // Run the persistence one by one not in parallel!
-    loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
-    const components = await persistComponentsP.reduce(
-      (promise, func) => promise.then(result => func().then(Array.prototype.concat.bind(result))),
-      Promise.resolve([])
-    );
-    const taggedIds = components.map(c => c.id);
-    const autoTaggedComponents = await this.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
-    await this.objects.persist();
-
-    return { taggedComponents: components, autoTaggedComponents };
   }
 
   /**
@@ -592,6 +417,29 @@ export default class Scope {
     componentsObjects.component.scope = remoteScope;
   }
 
+  async _mergeObjects(manyObjects: ComponentTree[]) {
+    const mergeResults = await Promise.all(
+      manyObjects.map(async (objects) => {
+        try {
+          const result = await this.sources.merge(objects, true, false);
+          return result;
+        } catch (err) {
+          if (err instanceof MergeConflict) {
+            return err; // don't throw. instead, get all components with merge-conflicts
+          }
+          throw err;
+        }
+      })
+    );
+    const componentsWithConflicts = mergeResults.filter(result => result instanceof MergeConflict);
+    if (componentsWithConflicts.length) {
+      const idsAndVersions = componentsWithConflicts.map(c => ({ id: c.id, versions: c.versions }));
+      // sort to have a consistent error message
+      const idsAndVersionsSorted = R.sortBy(R.prop('id'), idsAndVersions);
+      throw new MergeConflictOnRemote(idsAndVersionsSorted);
+    }
+  }
+
   /**
    * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
    * saves a component into the objects directory of the remote scope, then, resolves its
@@ -605,7 +453,7 @@ export default class Scope {
       `exportManyBareScope: Going to save ${componentsObjects.length} components`
     );
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects, true, false)));
+    await this._mergeObjects(manyObjects);
     const manyCompVersions = await Promise.all(
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
@@ -927,13 +775,18 @@ export default class Scope {
    * Remove components from scope
    * @force Boolean  - remove component from scope even if other components use it
    */
-  async removeMany(bitIds: BitIds, force: boolean, removeSameOrigin: boolean = false): Promise<RemovedObjects> {
+  async removeMany(
+    bitIds: BitIds,
+    force: boolean,
+    removeSameOrigin: boolean = false,
+    consumer?: Consumer
+  ): Promise<RemovedObjects> {
     logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
     );
-    const removeComponents = new RemoveModelComponents(this, bitIds, force, removeSameOrigin);
+    const removeComponents = new RemoveModelComponents(this, bitIds, force, removeSameOrigin, consumer);
     return removeComponents.remove();
   }
 

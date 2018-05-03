@@ -191,7 +191,7 @@ describe('bit import', function () {
         before(() => {
           helper.mimicGitCloneLocalProject(false);
           helper.addRemoteScope();
-          helper.runCmd('bit import --write --override');
+          helper.runCmd('bit import --merge');
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should write the internal files according to their original paths', () => {
@@ -236,7 +236,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --override --write');
+              helper.runCmd('bit import --merge');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -290,7 +290,7 @@ describe('bit import', function () {
             before(() => {
               helper.mimicGitCloneLocalProject(false);
               helper.addRemoteScope();
-              helper.runCmd('bit import --write --ignore-dist --override');
+              helper.runCmd('bit import --merge --ignore-dist');
               localConsumerFiles = helper.getConsumerFiles();
             });
             it('should write the internal files according to their relative paths', () => {
@@ -748,7 +748,7 @@ describe('bit import', function () {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
       });
-      describe('and running bit import without "--write" flag', () => {
+      describe('and running bit import without "--merge" flag', () => {
         before(() => {
           helper.importAllComponents();
           localConsumerFiles = helper.getConsumerFiles();
@@ -757,17 +757,6 @@ describe('bit import', function () {
           localConsumerFiles.forEach((file) => {
             expect(file).to.not.startsWith('components');
           });
-        });
-      });
-      describe('and running bit import with "--write" flag', () => {
-        before(() => {
-          helper.runCmd('bit import --write --override');
-        });
-        it('should write the components files back', () => {
-          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-          const result = helper.runCmd('node app.js');
-          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
       });
       describe('and running bit import with "--merge=manual" flag', () => {
@@ -793,7 +782,7 @@ describe('bit import', function () {
         const output = helper.listLocalScope();
         expect(output).to.have.string('found 0 components in local scope');
       });
-      describe('after running bit import (without --write flag)', () => {
+      describe('after running bit import (without --merge flag)', () => {
         before(() => {
           helper.importAllComponents();
         });
@@ -802,7 +791,7 @@ describe('bit import', function () {
           expect(output).to.have.string('found 3 components in local scope');
         });
         it('should not override the current files', () => {
-          // as opposed to running import without '--write', the files should remain intact
+          // as opposed to running import with '--merge', the files should remain intact
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
@@ -1534,6 +1523,7 @@ console.log(barFoo.default());`;
     });
     describe('import is-type as a dependency and then import it directly', () => {
       let localConsumerFiles;
+      let localScope;
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -1543,6 +1533,7 @@ console.log(barFoo.default());`;
 
         const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        localScope = helper.cloneLocalScope();
       });
       it('should rewrite is-type directly into "components" directory', () => {
         const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
@@ -1573,6 +1564,21 @@ console.log(barFoo.default());`;
         it('should not break is-string component', () => {
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.have.string('got is-string');
+        });
+      });
+      describe('removing is-string', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.removeComponent(`${helper.remoteScope}/utils/is-string`, '-f -d -s');
+        });
+        it('should not delete is-type from the filesystem', () => {
+          localConsumerFiles = helper.getConsumerFiles();
+          const expectedLocation = path.join('components', 'utils', 'is-type', 'is-type.js');
+          expect(localConsumerFiles).to.include(expectedLocation);
+        });
+        it('should not delete is-type from bitMap', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property(`${helper.remoteScope}/utils/is-type@0.0.1`);
         });
       });
     });
@@ -1825,7 +1831,7 @@ console.log(barFoo.default());`;
       before(() => {
         helper.mimicGitCloneLocalProject(false);
         helper.addRemoteScope();
-        helper.runCmd('bit import --write --override');
+        helper.runCmd('bit import --merge');
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";

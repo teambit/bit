@@ -822,6 +822,7 @@ describe('bit tag command', function () {
     });
   });
   describe('with --scope flag', () => {
+    let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -845,6 +846,7 @@ describe('bit tag command', function () {
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
+      localScope = helper.cloneLocalScope();
     });
     describe('without --all flag', () => {
       describe('when current components have lower versions', () => {
@@ -892,6 +894,7 @@ describe('bit tag command', function () {
         });
         it('should continue tagging the authored components', () => {
           expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('bar/foo@0.1.4');
         });
       });
     });
@@ -899,11 +902,12 @@ describe('bit tag command', function () {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
+          helper.getClonedLocalScope(localScope);
           output = helper.commitAllComponents('msg', '--scope 0.2.0 --all');
         });
         it('should tag all components with the specified version including the imported components', () => {
           // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
-          // current version of is-string derived from the last test: 0.1.5, so auto-tag would tag it to 0.1.6
+          // current version of is-string is 0.0.1, so auto-tag would tag it to 0.0.2
           expect(output).to.have.string('2 components tagged');
           expect(output).to.have.string('bar/foo@0.2.0');
           expect(output).to.have.string('utils/is-string@0.2.0');

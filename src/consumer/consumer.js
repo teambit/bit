@@ -53,6 +53,7 @@ import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import { moveExistingComponent } from './component-ops/move-components';
+import tagModelComponent from '../scope/component-ops/tag-model-component';
 
 type ConsumerProps = {
   projectPath: string,
@@ -722,7 +723,7 @@ export default class Consumer {
         if (component.componentFromModel) {
           // otherwise it's a new component, so this check is irrelevant
           const modelComponent = await this.scope.getModelComponentIfExist(component.id);
-          if (!modelComponent) throw new GeneralError('');
+          if (!modelComponent) throw new GeneralError(`component ${component.id} was not found in the model`);
           const latest = modelComponent.latest();
           if (latest !== component.version) {
             throw new NewerVersionFound(component.id.toStringWithoutVersion(), component.version, latest);
@@ -731,8 +732,9 @@ export default class Consumer {
       });
       await Promise.all(throwForNewestVersions);
     }
-    const { taggedComponents, autoTaggedComponents } = await this.scope.putMany({
+    const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
       consumerComponents: components,
+      scope: this.scope,
       message,
       exactVersion,
       releaseType,
@@ -1062,7 +1064,8 @@ export default class Consumer {
     const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
       force ? resolvedIDs : regularComponents,
       force,
-      true
+      true,
+      this
     );
 
     const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);

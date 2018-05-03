@@ -15,21 +15,33 @@ describe('merge functionality', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
+
+      helper.createFile('bar2', 'foo2.js');
+      helper.addComponent('bar2/foo2.js');
+      helper.commitComponent('bar2/foo2');
+
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
+      helper.importComponent('bar2/foo2');
       const scopeWithV1 = helper.cloneLocalScope();
       helper.commitComponent('bar/foo', 'msg', '-f');
+      helper.commitComponent('bar2/foo2', 'msg', '-f');
       helper.exportAllComponents(); // v2 is exported
 
       helper.getClonedLocalScope(scopeWithV1);
       helper.commitComponent('bar/foo', 'msg', '-f');
+      helper.commitComponent('bar2/foo2', 'msg', '-f');
     });
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
       const exportFunc = () => helper.exportAllComponents(); // v2 is exported again
-      const error = new MergeConflictOnRemote(`${helper.remoteScope}/bar/foo`, ['0.0.2']);
+      const idsAndVersions = [
+        { id: `${helper.remoteScope}/bar/foo`, versions: ['0.0.2'] },
+        { id: `${helper.remoteScope}/bar2/foo2`, versions: ['0.0.2'] }
+      ];
+      const error = new MergeConflictOnRemote(idsAndVersions);
       helper.expectToThrow(exportFunc, error);
     });
     it('should throw MergeConflict error when importing the component', () => {

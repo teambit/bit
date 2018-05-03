@@ -13,12 +13,14 @@ import { filterAsync, pathNormalizeToLinux } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
-import { threeWayMerge, MergeOptions, FileStatus } from '../versions-ops/merge-version';
+import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import Version from '../../version';
+import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
   verbose: boolean, // default: false
+  merge?: boolean, // default: false
   mergeStrategy?: MergeStrategy,
   withEnvironments: boolean, // default: false
   writeToPath?: string,
@@ -28,10 +30,12 @@ export type ImportOptions = {
   override: boolean, // default: false
   installNpmPackages: boolean, // default: true
   objectsOnly: boolean, // default: false
-  writeToFs: boolean, // default: false. relevant only for import-all, where "objectsOnly" flag is default to true.
   saveDependenciesAsComponents?: boolean // default: false
 };
-
+type ComponentMergeStatus = {
+  componentWithDependencies: ComponentWithDependencies,
+  mergeResults: ?MergeResultsThreeWay
+};
 type ImportedVersions = { [id: string]: string[] };
 export type ImportStatus = 'added' | 'updated' | 'up to date';
 export type ImportDetails = { id: string, versions: string[], status: ImportStatus, filesStatus: ?FilesStatus };
@@ -78,7 +82,7 @@ export default class ImportComponents {
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
-    this.options.objectsOnly = !(this.options.writeToFs || this.options.mergeStrategy);
+    this.options.objectsOnly = !(this.options.merge || this.options.override);
 
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
@@ -173,7 +177,7 @@ export default class ImportComponents {
     // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
-    if (this.options.override || this.options.objectsOnly || this.options.mergeStrategy) return Promise.resolve();
+    if (this.options.override || this.options.objectsOnly || this.options.merge) return Promise.resolve();
     const modifiedComponents = await filterAsync(ids, (id) => {
       return this.consumer.getComponentStatusById(id).then(status => status.modified || status.newlyCreated);
     });
@@ -190,22 +194,11 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
-  /**
-   * 1) when there are conflicts and the strategy is "ours", don't write the imported component to
-   * the filesystem, only update bitmap.
-   *
-   * 2) when there are conflicts and the strategy is "theirs", override the local changes by the
-   * imported component. (similar to --override)
-   *
-   * 3) when there is no conflict or there are conflicts and the strategy is manual, write the files
-   * according to the merge result. (done by applyModifiedVersion())
-   */
-  async _updateComponentFilesPerMergeStrategy(
-    componentWithDependencies: ComponentWithDependencies
-  ): Promise<?FilesStatus> {
+  async _getMergeStatus(componentWithDependencies: ComponentWithDependencies): Promise<ComponentMergeStatus> {
     const component = componentWithDependencies.component;
     const componentStatus = await this.consumer.getComponentStatusById(component.id);
-    if (!componentStatus.modified) return null;
+    const mergeStatus: ComponentMergeStatus = { componentWithDependencies, mergeResults: null };
+    if (!componentStatus.modified) return mergeStatus;
     const componentModel = await this.consumer.scope.sources.get(component.id);
     if (!componentModel) {
       throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
@@ -227,8 +220,26 @@ export default class ImportComponents {
       currentVersion: component.id.version,
       baseComponent
     });
+    mergeStatus.mergeResults = mergeResults;
+    return mergeStatus;
+  }
 
-    const files = componentWithDependencies.component.files;
+  /**
+   * 1) when there are conflicts and the strategy is "ours", don't write the imported component to
+   * the filesystem, only update bitmap.
+   *
+   * 2) when there are conflicts and the strategy is "theirs", override the local changes by the
+   * imported component. (similar to --override)
+   *
+   * 3) when there is no conflict or there are conflicts and the strategy is manual, write the files
+   * according to the merge result. (done by applyModifiedVersion())
+   */
+  async _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): Promise<?FilesStatus> {
+    const mergeResults = componentMergeStatus.mergeResults;
+    if (!mergeResults) return null;
+    const component = componentMergeStatus.componentWithDependencies.component;
+    const files = component.files;
+
     const filesStatus = {};
     if (mergeResults.hasConflicts && this.options.mergeStrategy === MergeOptions.ours) {
       // don't write the files to the filesystem, only bump the bitmap version.
@@ -256,19 +267,34 @@ export default class ImportComponents {
   async updateAllComponentsAccordingToMergeStrategy(
     componentsWithDependencies: ComponentWithDependencies[]
   ): Promise<ComponentWithDependencies[]> {
-    if (!this.options.mergeStrategy) return componentsWithDependencies;
+    if (!this.options.merge) return componentsWithDependencies;
+    const componentsStatusP = componentsWithDependencies.map((componentWithDependencies: ComponentWithDependencies) => {
+      return this._getMergeStatus(componentWithDependencies);
+    });
+    const componentsStatus = await Promise.all(componentsStatusP);
+    const componentWithConflict = componentsStatus.find(
+      component => component.mergeResults && component.mergeResults.hasConflicts
+    );
+    if (componentWithConflict && !this.options.mergeStrategy) {
+      this.options.mergeStrategy = await getMergeStrategyInteractive();
+    }
     this.mergeStatus = {};
-    return filterAsync(componentsWithDependencies, async (componentWithDependencies: ComponentWithDependencies) => {
-      const filesStatus: ?FilesStatus = await this._updateComponentFilesPerMergeStrategy(componentWithDependencies);
-      if (!filesStatus) return true;
+
+    const componentsToWriteP = componentsStatus.map(async (componentStatus) => {
+      const filesStatus: ?FilesStatus = await this._updateComponentFilesPerMergeStrategy(componentStatus);
+      const componentWithDependencies = componentStatus.componentWithDependencies;
+      if (!filesStatus) return componentWithDependencies;
       this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;
       const unchangedFiles = Object.keys(filesStatus).filter(file => filesStatus[file] === FileStatus.unchanged);
       if (unchangedFiles.length === Object.keys(filesStatus).length) {
         // all files are unchanged
-        return false;
+        return null;
       }
-      return true;
+      return componentWithDependencies;
     });
+    const componentsToWrite = await Promise.all(componentsToWriteP);
+    const removeNulls = R.reject(R.isNil);
+    return removeNulls(componentsToWrite);
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[], override: boolean = true) {
