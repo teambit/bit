@@ -626,6 +626,10 @@ export default class Helper {
     return this.runCmd(`bit search ${args}`);
   }
 
+  status() {
+    return this.runCmd('bit status');
+  }
+
   showComponent(id: string = 'bar/foo') {
     return this.runCmd(`bit show ${id}`);
   }
@@ -648,7 +652,7 @@ export default class Helper {
    * cloned scope.
    */
   cloneLocalScope() {
-    const clonedScope = generateRandomStr();
+    const clonedScope = `${generateRandomStr()}-clone`;
     const clonedScopePath = path.join(this.e2eDir, clonedScope);
     if (this.debugMode) console.log(`cloning a scope from ${this.localScopePath} to ${clonedScopePath}`);
     fs.copySync(this.localScopePath, clonedScopePath);
