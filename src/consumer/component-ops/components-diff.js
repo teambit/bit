@@ -9,9 +9,11 @@ import { Tmp } from '../../scope/repositories';
 import diffFiles from '../../utils/diff-files';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import { Version } from '../../scope/models';
+import { diffBetweenModelAndFS } from './components-object-diff';
 
 type FileDiff = { filePath: string, diffOutput: string };
-export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[] };
+export type FieldsDiff = { fieldName: string, diffOutput: string };
+export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[], fieldsDiff?: ?(FieldsDiff[]) };
 
 export default (async function componentsDiff(
   consumer: Consumer,
@@ -99,7 +101,11 @@ async function getComponentDiff(consumer: Consumer, tmp: Tmp, component: Compone
   const modelFiles = component.componentFromModel.files;
   const fsFiles = component.cloneFilesWithSharedDir();
   diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, version, version);
-  diffResult.hasDiff = !!diffResult.filesDiff.find(file => file.diffOutput);
+  diffResult.fieldsDiff = diffBetweenModelAndFS(component);
+  diffResult.hasDiff = !!(
+    (diffResult.filesDiff && diffResult.filesDiff.find(file => file.diffOutput)) ||
+    diffResult.fieldsDiff
+  );
   return diffResult;
 }
 

@@ -153,6 +153,20 @@ describe('bit diff command', function () {
       // notice the leading plus sign
       expect(output).to.have.string(`+${barFooV2}`);
     });
+    describe('other fields diff', () => {
+      it('should indicate that the mainFile was changed', () => {
+        expect(output).to.have.string('--- Main File (0.0.1 original)');
+        expect(output).to.have.string('+++ Main File (0.0.1 modified)');
+        expect(output).to.have.string('- bar/foo.js');
+        expect(output).to.have.string('+ bar/foo2.js');
+      });
+      it('should indicate that the files array were changed', () => {
+        expect(output).to.have.string('--- Files (0.0.1 original)');
+        expect(output).to.have.string('+++ Files (0.0.1 modified)');
+        expect(output).to.have.string('- [ bar/foo.js ]');
+        expect(output).to.have.string('+ [ bar/foo2.js ]');
+      });
+    });
   });
   describe('component with multiple versions', () => {
     before(() => {

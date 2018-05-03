@@ -23,11 +23,14 @@ export default class Diff extends Command {
     return diffResults
       .map((diffResult) => {
         if (diffResult.hasDiff) {
-          const title = chalk.cyan(`showing diff for ${chalk.bold(diffResult.id.toString())}`);
+          const titleStr = `showing diff for ${chalk.bold(diffResult.id.toString())}`;
+          const titleSeparator = new Array(titleStr.length).fill('-').join('');
+          const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
           // $FlowFixMe
           const filesWithDiff = diffResult.filesDiff.filter(file => file.diffOutput);
           const files = filesWithDiff.map(fileDiff => fileDiff.diffOutput).join('\n');
-          return `${title}\n${files}`;
+          const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map(field => field.diffOutput).join('\n') : '';
+          return `${title}\n${files}\n${fields}`;
         }
         return chalk.red(`no diff for ${chalk.bold(diffResult.id.toString())}`);
       })
