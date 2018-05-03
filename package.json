@@ -101,7 +101,6 @@
     "string-format": "^0.5.0",
     "symlink-or-copy": "^1.1.8",
     "table": "^4.0.3",
-    "toposort-class": "^1.0.1",
     "tty-table": "^2.5.5",
     "uniqid": "^4.1.1",
     "user-home": "^2.0.0",

@@ -429,8 +429,8 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id} ${value}`);
   }
 
-  importAllComponents(writeToFileSystem = false) {
-    return this.runCmd(`bit import ${writeToFileSystem ? '--write' : ''}`);
+  importAllComponents(writeToFileSystem: boolean = false) {
+    return this.runCmd(`bit import ${writeToFileSystem ? '--merge' : ''}`);
   }
 
   isolateComponent(id: string, flags: string): string {

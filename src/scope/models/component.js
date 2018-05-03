@@ -165,14 +165,18 @@ export default class Component extends BitObject {
     );
   }
 
+  getVersionToAdd(releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
+    if (exactVersion && this.versions[exactVersion]) {
+      throw new VersionAlreadyExists(exactVersion, this.id());
+    }
+    return exactVersion || this.version(releaseType);
+  }
+
   /**
    * if exactVersion is defined, add exact version instead of using the semver mechanism
    */
   addVersion(version: Version, releaseType: string = DEFAULT_BIT_RELEASE_TYPE, exactVersion: ?string): string {
-    if (exactVersion && this.versions[exactVersion]) {
-      throw new VersionAlreadyExists(exactVersion, this.id());
-    }
-    const versionToAdd = exactVersion || this.version(releaseType);
+    const versionToAdd = this.getVersionToAdd(releaseType, exactVersion);
     this.versions[versionToAdd] = version.hash();
     this.markVersionAsLocal(versionToAdd);
     return versionToAdd;
