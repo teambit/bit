@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import chalk from 'chalk';
-import { getDependencyStatus } from '../../../api/consumer';
+import { dependencyStatus } from '../../../api/consumer';
 import { DependencyStatusResult } from '../../../consumer/component-ops/dependency-status';
 import logger from '../../../logger/logger';
 
@@ -18,7 +18,7 @@ export default class DependencyStatus extends Command {
     const dependencyStatusProps: DependencyStatusProps = {
       main_file : main_file
     };
-    return getDependencyStatus(dependencyStatusProps);
+    return dependencyStatus(dependencyStatusProps);
 }
 
 report(dependencyStatusResult: DependencyStatusResul): string {
