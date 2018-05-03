@@ -1,5 +1,7 @@
 // @flow
 import R from 'ramda';
+import rightpad from 'pad-right';
+import chalk from 'chalk';
 import glob from 'glob';
 import os from 'os';
 import path from 'path';
@@ -53,11 +55,11 @@ export default class Helper {
   }
 
   runCmd(cmd: string, cwd: string = this.localScopePath) {
-    if (this.debugMode) console.log('cwd: ', cwd); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
-    if (this.debugMode) console.log('command: ', cmd); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     const cmdOutput = childProcess.execSync(cmd, { cwd });
-    if (this.debugMode) console.log('output: ', cmdOutput.toString()); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), cmdOutput.toString()); // eslint-disable-line
     return cmdOutput.toString();
   }
 
@@ -92,7 +94,7 @@ export default class Helper {
   }
 
   addBitJsonDependencies(bitJsonPath: string, dependencies: Object, packageDependencies: Object) {
-    const bitJson = fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
+    const bitJson = this.readBitJson(bitJsonPath);
     bitJson.dependencies = bitJson.dependencies || {};
     bitJson.packageDependencies = bitJson.packageDependencies || {};
     Object.assign(bitJson.dependencies, dependencies);
@@ -101,7 +103,13 @@ export default class Helper {
   }
 
   readBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    return fs.readJSONSync(bitJsonPath) || {};
+    return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
+  }
+
+  addKeyValToBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json'), key: string, val: Any) {
+    const bitJson = this.readBitJson(bitJsonPath);
+    bitJson[key] = val;
+    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
 
   getEnvNameFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
@@ -304,12 +312,14 @@ export default class Helper {
         remoteScopePath: path.join(this.e2eDir, generateRandomStr())
       };
       if (this.debugMode) {
-        console.log(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`);
+        console.log(
+          chalk.green(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`)
+        );
       }
       fs.copySync(this.localScopePath, this.cache.localScopePath);
       fs.copySync(this.remoteScopePath, this.cache.remoteScopePath);
     } else {
-      if (this.debugMode) console.log(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`);
+      if (this.debugMode) { console.log(chalk.green(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`)); }
       fs.removeSync(this.localScopePath);
       fs.removeSync(this.remoteScopePath);
       fs.copySync(this.cache.localScopePath, this.localScopePath);
@@ -615,7 +625,7 @@ export default class Helper {
   ) {
     const sourceFile = path.join(__dirname, 'fixtures', pathToFile);
     const distFile = path.join(cwd, newName);
-    if (this.debugMode) console.log(`copying fixture ${sourceFile} to ${distFile}\n`); // eslint-disable-line
+    if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
   }
 
