@@ -76,8 +76,8 @@ function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
   } = component;
 
   const ver = version ? `@${version}` : '';
-  const parsedDevPackageDependencies = parsePackages(devPackageDependencies);
-  const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies);
+  const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
+  const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies) || [];
   const printableDevPackageDependencies = parsedDevPackageDependencies.concat(parsedEnvsPackageDependencies);
   obj.id = isFromFs ? `${box}/${name}${ver} [file system]` : `${box}/${name}${ver}`;
   // TODO: Gilad - print compiler config in different table
