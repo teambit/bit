@@ -1,14 +1,15 @@
 /** @flow */
 import R from 'ramda';
 import c from 'chalk';
-import diff from 'object-diff';
 import { table } from 'table';
-import normalize from 'normalize-path';
-import arrayDifference from 'array-difference';
 import rightpad from 'pad-right';
 
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import paintDocumentation from './docs-template';
+import {
+  componentToPrintableForDiff,
+  getDiffBetweenObjects
+} from '../../consumer/component-ops/components-object-diff';
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
@@ -41,61 +42,6 @@ const fields = [
   'specs',
   'deprecated'
 ];
-
-function comparator(a, b) {
-  if (a instanceof Array && b instanceof Array) {
-    return R.isEmpty(arrayDifference(a, b));
-  }
-  return a === b;
-}
-
-function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
-  const obj = {};
-  const parsePackages = (packages) => {
-    return !R.isEmpty(packages) && !R.isNil(packages)
-      ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
-      : null;
-  };
-  const {
-    name,
-    box,
-    lang,
-    compilerId,
-    testerId,
-    dependencies,
-    devDependencies,
-    packageDependencies,
-    devPackageDependencies,
-    peerPackageDependencies,
-    files,
-    mainFile,
-    deprecated,
-    version,
-    docs
-  } = component;
-
-  const ver = version ? `@${version}` : '';
-  obj.id = isFromFs ? `${box}/${name}${ver} [file system]` : `${box}/${name}${ver}`;
-  obj.compiler = compilerId ? compilerId.toString() : null;
-  obj.language = lang || null;
-  obj.tester = testerId ? testerId.toString() : null;
-  obj.mainFile = mainFile ? normalize(mainFile) : null;
-  obj.dependencies = dependencies.toStringOfIds().concat(parsePackages(packageDependencies));
-  obj.devDependencies = devDependencies.toStringOfIds().concat(parsePackages(devPackageDependencies));
-  obj.peerDependencies = parsePackages(peerPackageDependencies);
-
-  obj.files =
-    files && !R.isEmpty(files) && !R.isNil(files)
-      ? files.filter(file => !file.test).map(file => normalize(file.relative))
-      : null;
-  obj.specs =
-    files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
-      ? files.filter(file => file.test).map(file => normalize(file.relative))
-      : null;
-  obj.deprecated = deprecated ? 'True' : null;
-  obj.docs = docs;
-  return obj;
-}
 
 function generateDependenciesTable(component: ConsumerComponent, showRemoteVersion) {
   if (!component.hasDependencies()) {
@@ -147,7 +93,7 @@ function calculatePadRightLength(str: string, columnWidth: number): string {
 }
 
 function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: boolean) {
-  const printableComponent = convertObjectToPrintable(component, false);
+  const printableComponent = componentToPrintableForDiff(component);
   const rows = fields
     .map((field) => {
       const arr = [];
@@ -182,16 +128,11 @@ function paintWithCompare(
   componentToCompareTo: ConsumerComponent,
   showRemoteVersion: boolean
 ) {
-  const printableOriginalComponent = convertObjectToPrintable(originalComponent, true);
-  const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo, false);
+  const printableOriginalComponent = componentToPrintableForDiff(originalComponent);
+  printableOriginalComponent.id += ' [file system]';
+  const printableComponentToCompare = componentToPrintableForDiff(componentToCompareTo);
 
-  const componentsDiffs = diff.custom(
-    {
-      equal: comparator
-    },
-    printableOriginalComponent,
-    printableComponentToCompare
-  );
+  const componentsDiffs = getDiffBetweenObjects(printableOriginalComponent, printableComponentToCompare);
 
   const rows = fields
     .map((field) => {
