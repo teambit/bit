@@ -3,9 +3,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import { it } from 'mocha';
+import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 
-chai.use(require('chai-fs'));
+// chai.use(require('chai-fs'));
 
 // should send the env files to the remote scope
 
@@ -14,23 +14,6 @@ chai.use(require('chai-fs'));
 // should not show component in modified if the compiler defined in old format (string)
 // should not show components as modified for consumer bit.json in old format
 // should not show components as modified for component with old model format
-
-// imported enviorment
-
-// without ejceting (--conf)
-// should load the envs (include files) from models if there is no bit.json
-// Component should not be modified after import when the envs didn't installed because of dynamicPackageDependencies (which we can't calculate without install the env)
-// should add the envPackageDependencies to devDependencies in component's package.json
-
-// with ejceting (--conf)
-// should load the envs from component bit.json if exist
-// should store the files under DEFAULT_EJECTED_ENVS_DIR_PATH
-// should store the files under custom folder if defined
-// should write the dynamic config as raw config
-// imported - should not show the component as modified if a file added to @bit-envs folder
-// imported - should show the component as modified if an env file has been changed
-// imported - should show the component as modified if env config has been changed
-// should move envs files during bit move command
 
 // Tests
 // different fork levels should work
@@ -94,8 +77,11 @@ describe('envs', function () {
     helper.destroyEnv();
   });
 
-  describe.only('author enviorment', () => {
-    // TODO: should load the envs from consumer bit.json for authored component
+  describe('author enviorment', () => {
+    // TODO: reimport component on author after changing file/config of its env in different project
+    // (should load env from model)
+    // TODO: reimport component on author after changing the component code in different project
+    // And change the env config in the root bit.json (should load from root bit.json)
 
     let componentModel;
     let compilerModel;
@@ -217,4 +203,128 @@ describe('envs', function () {
       });
     });
   });
+  describe('imported enviorment', () => {
+    const componentFolder = path.join('components', 'comp', 'my-comp');
+    const envFilesFolder = path.join(componentFolder, DEFAULT_EJECTED_DIR_ENVS);
+    const compilerFilesFolder = path.join(envFilesFolder, 'Compiler');
+    const testerFilesFolder = path.join(envFilesFolder, 'Tester');
+    let fullComponentFolder;
+    let bitJsonPath;
+    describe('without ejceting (--conf)', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('comp/my-comp');
+      });
+      it('should not show the component as modified after import', () => {
+        // Make sure the component is not modified before the changes
+        const statusOutput = helper.status();
+        expect(statusOutput).to.have.string('nothing to tag or export');
+        expect(statusOutput).to.not.have.string('modified');
+      });
+      it("should add the envPackageDependencies to devDependencies in component's package.json", () => {
+        const packageJson = helper.readComponentPackageJson('comp/my-comp');
+        const devDeps = packageJson.devDependencies;
+        expect(devDeps).to.include({
+          'babel-plugin-transform-object-rest-spread': '^6.26.0',
+          'babel-preset-env': '^1.6.1',
+          'lodash.get': '4.4.2'
+        });
+      });
+    });
+    describe.only('with ejceting (--conf)', () => {
+      describe('with default ejectedEnvsDirectory', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
+          fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
+        });
+        it('should store the files under DEFAULT_EJECTED_ENVS_DIR_PATH', () => {
+          const envFilesGlob = path.join(envFilesFolder, '**', '*');
+          const envFiles = helper.getConsumerFiles(envFilesGlob);
+          const babelrcPath = path.join(envFilesFolder, 'Compiler', '.babelrc');
+          expect(envFiles).to.include(babelrcPath);
+          const mochaConfig = path.join(envFilesFolder, 'Tester', 'config');
+          expect(envFiles).to.include(mochaConfig);
+        });
+        describe('dynamic config as raw config', () => {
+          let bitJson;
+          before(() => {
+            bitJsonPath = path.join(fullComponentFolder, 'bit.json');
+            bitJson = helper.readBitJson(bitJsonPath);
+          });
+          it('should write the compiler dynamic config as raw config', () => {
+            const env = helper.getEnvFromBitJsonByType(bitJson, 'compiler');
+            expect(env.rawConfig).to.include({
+              a: 'b',
+              valToDynamic: 'dyanamicValue'
+            });
+          });
+          it('should write the tester dynamic config as raw config', () => {
+            const env = helper.getEnvFromBitJsonByType(bitJson, 'tester');
+            expect(env.rawConfig).to.include({
+              a: 'b',
+              valToDynamic: 'dyanamicValue'
+            });
+          });
+        });
+        it('should not show the component as modified if a file added to @bit-envs folder', () => {
+          helper.createFile('compilerFilesFolder', 'someFile.js', '{"someConfKey": "someConfVal"}');
+          helper.createFile('testerFilesFolder', 'someFile.js', '{"someConfKey": "someConfVal"}');
+          const statusOutput = helper.status();
+          expect(statusOutput).to.have.string('nothing to tag or export');
+          expect(statusOutput).to.not.have.string('modified');
+        });
+        describe('change envs files/config', () => {
+          let importedScopeBeforeChanges;
+          before(() => {
+            importedScopeBeforeChanges = helper.cloneLocalScope();
+          });
+          beforeEach(() => {
+            // Restore to clean state of the scope
+            helper.getClonedLocalScope(importedScopeBeforeChanges);
+            // Make sure the component is not modified before the changes
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('nothing to tag or export');
+            expect(statusOutput).to.not.have.string('modified');
+          });
+          it('should show the component as modified if compiler config has been changed', () => {
+            helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', 'compiler');
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+          it('should show the component as modified if tester config has been changed', () => {
+            helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', 'tester');
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+          it('should show the component as modified if compiler file has been changed', () => {
+            helper.createFile(compilerFilesFolder, '.babelrc', '{"some": "thing"}');
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+          it('should show the component as modified if compiler file has been changed', () => {
+            helper.createFile(testerFilesFolder, 'config', 'something');
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+        });
+        it('should move envs files during bit move command', () => {});
+      });
+      describe('with custom ejectedEnvsDirectory', () => {
+        it('should store the files under the custom directory', () => {});
+        it('should not show the component as modified if a file added to ejectedEnvsDirectory', () => {});
+        it('should show the component as modified if env file has been changed', () => {});
+        it('should move envs files during bit move command', () => {});
+      });
+    });
+  });
+
+  // without ejceting (--conf)
+  // should load the envs (include files) from models if there is no bit.json
 });

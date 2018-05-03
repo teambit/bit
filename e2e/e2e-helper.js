@@ -110,6 +110,13 @@ export default class Helper {
     return envName;
   }
 
+  getEnvFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
+    const basePath = ['env', envType];
+    const env = R.path(basePath, bitJson);
+    const envName = Object.keys(env)[0];
+    return env[envName];
+  }
+
   addKeyValToEnvPropInBitJson(
     bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
     propName: string,
@@ -167,6 +174,11 @@ export default class Helper {
   readPackageJson(packageJsonFolder: string = this.localScopePath) {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
+  }
+
+  readComponentPackageJson(id: string) {
+    const packageJsonFolderPath = path.join(this.localScopePath, 'components', id);
+    return this.readPackageJson(packageJsonFolderPath);
   }
 
   catScope() {
