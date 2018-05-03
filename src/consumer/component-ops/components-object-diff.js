@@ -91,11 +91,8 @@ export function diffBetweenModelAndFS(component: Component): ?(FieldsDiff[]) {
   const titleLeft = (field: string): string => `--- ${prettifyFieldName(field)} (${labelLeft})\n`;
   const titleRight = (field: string): string => `+++ ${prettifyFieldName(field)} (${labelRight})\n`;
   const printFieldValue = (fieldValue: string | Array<string>): string => {
-    // $FlowFixMe
-    if (R.is(Array, fieldValue)) return `[ ${fieldValue.join(', ')} ]`;
-    else if (R.is(String, fieldValue))
-    // $FlowFixMe
-    { return fieldValue; }
+    if (typeof fieldValue === 'string') return fieldValue;
+    if (Array.isArray(fieldValue)) return `[ ${fieldValue.join(', ')} ]`;
     throw new Error(`diffBetweenFSandModel: not support ${typeof fieldValue}`);
   };
   const printFieldLeft = (field: string): string => {
