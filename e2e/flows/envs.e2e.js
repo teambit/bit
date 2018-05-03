@@ -3,34 +3,42 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { it } from 'mocha';
 
 chai.use(require('chai-fs'));
 
 // should send the env files to the remote scope
+
+// backward compatibility
 // should support declare env in old format (string)
 // should not show component in modified if the compiler defined in old format (string)
-// should load the envs from component bit.json if exist
-// should load the envs (include files) from models if there is no bit.json
-// should load the envs from consumer bit.json for authored component
-// eject env should create bit.json if not exists
-// eject env twice should not break the bit.json
-// eject only compiler or only tester
-// eject to custom folder
-// dynamic config should be written as raw config when ejecting
-// change the default dir for envs (in consumer bit.json)
-// imported - should not show the component as modified if a file added to @bit-envs folder
-// author - should show the component as modified if an env file has been changed
-// imported - should show the component as modified if an env file has been changed
 // should not show components as modified for consumer bit.json in old format
 // should not show components as modified for component with old model format
-// should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
-// should move envs files during bit move command
-// different fork levels should work
-// Should store the dynamicPackageDependencies to envPackageDependencies in component models
+
+// imported enviorment
+
+// without ejceting (--conf)
+// should load the envs (include files) from models if there is no bit.json
 // Component should not be modified after import when the envs didn't installed because of dynamicPackageDependencies (which we can't calculate without install the env)
-// should show the envPackageDependencies when running bit show
 // should add the envPackageDependencies to devDependencies in component's package.json
-// envs with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
+
+// with ejceting (--conf)
+// should load the envs from component bit.json if exist
+// should store the files under DEFAULT_EJECTED_ENVS_DIR_PATH
+// should store the files under custom folder if defined
+// should write the dynamic config as raw config
+// imported - should not show the component as modified if a file added to @bit-envs folder
+// imported - should show the component as modified if an env file has been changed
+// imported - should show the component as modified if env config has been changed
+// should move envs files during bit move command
+
+// Tests
+// different fork levels should work
+// should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
+// test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
+
+// Build
+// should build the component correctly (loading the .babelrc and the dyanmicPackages)
 
 describe('envs', function () {
   this.timeout(0);
@@ -58,6 +66,7 @@ describe('envs', function () {
     helper.tagAllWithoutMessage();
     helper.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
+    helper.addRemoteScope();
     helper.initNpm();
     helper.addRemoteEnvironment();
     helper.importCompiler(`${helper.envScope}/${compilerId}`);
@@ -78,67 +87,134 @@ describe('envs', function () {
     helper.installNpmPackage('chai', '4.1.2');
     helper.tagAllWithoutMessage();
     helper.cloneLocalScope();
+    helper.exportAllComponents();
   });
 
   after(() => {
     helper.destroyEnv();
   });
 
-  describe('storing envs metadata in the models ', () => {
+  describe.only('author enviorment', () => {
+    // TODO: should load the envs from consumer bit.json for authored component
+
     let componentModel;
     let compilerModel;
     let testerModel;
+    let envsPackageDependencies;
     before(() => {
       componentModel = helper.catComponent('comp/my-comp@0.0.1');
       compilerModel = componentModel.compiler;
       testerModel = componentModel.tester;
+      envsPackageDependencies = componentModel.envsPackageDependencies;
     });
-
-    it('should store the compiler name in the model', () => {
-      expect(compilerModel.name).to.equal(`${helper.envScope}/${compilerId}@0.0.1`);
-    });
-    it('should store the tester name in the model', () => {
-      expect(testerModel.name).to.equal(`${helper.envScope}/${testerId}@0.0.1`);
-    });
-    it('should store the compiler dynamic config in the model', () => {
-      expect(compilerModel.config).to.include({
-        a: 'b',
-        valToDynamic: 'dyanamicValue'
+    describe('storing envs metadata in the models for author', () => {
+      it('should store the compiler name in the model', () => {
+        expect(compilerModel.name).to.equal(`${helper.envScope}/${compilerId}@0.0.1`);
+      });
+      it('should store the tester name in the model', () => {
+        expect(testerModel.name).to.equal(`${helper.envScope}/${testerId}@0.0.1`);
+      });
+      it('should store the compiler dynamic config in the model', () => {
+        expect(compilerModel.config).to.include({
+          a: 'b',
+          valToDynamic: 'dyanamicValue'
+        });
+      });
+      it('should store the tester dynamic config in the model', () => {
+        expect(testerModel.config).to.include({
+          a: 'b',
+          valToDynamic: 'dyanamicValue'
+        });
+      });
+      it('should store the compiler files metadata in the model', () => {
+        expect(compilerModel.files).to.have.lengthOf(1);
+        expect(compilerModel.files[0]).to.include({ name: '.babelrc' });
+        expect(compilerModel.files[0])
+          .to.have.property('file')
+          .that.is.a('string');
+      });
+      it('should store the tester files metadata in the model', () => {
+        expect(testerModel.files).to.have.lengthOf(1);
+        expect(testerModel.files[0]).to.include({ name: 'config' });
+        expect(testerModel.files[0])
+          .to.have.property('file')
+          .that.is.a('string');
+      });
+      it('should store the compiler files in the model', () => {
+        const babelRcObjectHash = compilerModel.files[0].file;
+        const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
+        const babelRcPath = path.join(helper.localScopePath, '.babelrc');
+        const babelRcFromFS = fs.readFileSync(babelRcPath).toString();
+        expect(babelRcFromModel).to.equal(babelRcFromFS);
+      });
+      it('should store the tester files in the model', () => {
+        const mochaConfigHash = testerModel.files[0].file;
+        const mochaConfigFromModel = helper.catObject(mochaConfigHash).trim();
+        const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.js');
+        const mochaConfigFromFS = fs.readFileSync(mochaConfigPath).toString();
+        expect(mochaConfigFromModel).to.equal(mochaConfigFromFS);
+      });
+      describe('should store the dynamicPackageDependencies to envPackageDependencies in the model', () => {
+        it('should store the compiler dynamicPackageDependencies', () => {
+          expect(envsPackageDependencies).to.include({
+            'babel-plugin-transform-object-rest-spread': '^6.26.0',
+            'babel-preset-env': '^1.6.1'
+          });
+        });
+        it('should store the tester dynamicPackageDependencies', () => {
+          expect(envsPackageDependencies).to.include({
+            'lodash.get': '4.4.2'
+          });
+        });
       });
     });
-    it('should store the tester dynamic config in the model', () => {
-      expect(testerModel.config).to.include({
-        a: 'b',
-        valToDynamic: 'dyanamicValue'
+    it('should show the envPackageDependencies when running bit show', () => {
+      const output = helper.showComponent('comp/my-comp');
+      expect(output).to.have.string('babel-plugin-transform-object-rest-spread@^6.26.0');
+      expect(output).to.have.string('babel-preset-env@^1.6.1');
+      expect(output).to.have.string('lodash.get@4.4.2');
+    });
+    describe('changing envs files/config', () => {
+      let authorScopeBeforeChanges;
+      before(() => {
+        authorScopeBeforeChanges = helper.cloneLocalScope();
       });
-    });
-    it('should store the compiler files metadata in the model', () => {
-      expect(compilerModel.files).to.have.lengthOf(1);
-      expect(compilerModel.files[0]).to.include({ name: '.babelrc' });
-      expect(compilerModel.files[0])
-        .to.have.property('file')
-        .that.is.a('string');
-    });
-    it('should store the tester files metadata in the model', () => {
-      expect(testerModel.files).to.have.lengthOf(1);
-      expect(testerModel.files[0]).to.include({ name: 'config' });
-      expect(testerModel.files[0])
-        .to.have.property('file')
-        .that.is.a('string');
-    });
-    it('should store the compiler files in the model', () => {
-      const babelRcObjectHash = compilerModel.files[0].file;
-      const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
-      const babelRcPath = path.join(helper.localScopePath, '.babelrc');
-      const babelRcFromFS = fs.readFileSync(babelRcPath).toString();
-      expect(babelRcFromModel).to.equal(babelRcFromFS);
-    });
-    it('should store the tester files in the model', () => {
-      const mochaConfigHash = testerModel.files[0].file;
-      const mochaConfigFromModel = helper.catObject(mochaConfigHash).trim();
-      const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.js');
-      const mochaConfigFromFS = fs.readFileSync(mochaConfigPath).toString();
-      expect(mochaConfigFromModel).to.equal(mochaConfigFromFS);
+      beforeEach(() => {
+        // Restore to clean state of the scope
+        helper.getClonedLocalScope(authorScopeBeforeChanges);
+        // Make sure the component is not modified before the changes
+        const statusOutput = helper.status();
+        expect(statusOutput).to.have.string('nothing to tag or export');
+        expect(statusOutput).to.not.have.string('modified');
+      });
+      describe('changing config files', () => {
+        it('should show the component as modifed after changning compiler config files', () => {
+          helper.createFile('', '.babelrc', '{"some": "thing"}');
+          const statusOutput = helper.status();
+          expect(statusOutput).to.have.string('modified components');
+          expect(statusOutput).to.have.string('comp/my-comp ... ok');
+        });
+        it('should show the component as modifed after changning tester config files', () => {
+          helper.createFile('', 'mocha-config.js', 'something');
+          const statusOutput = helper.status();
+          expect(statusOutput).to.have.string('modified components');
+          expect(statusOutput).to.have.string('comp/my-comp ... ok');
+        });
+      });
+      describe('changing envs raw config', () => {
+        it('should show the component as modifed after changning compiler raw config', () => {
+          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'compiler');
+          const statusOutput = helper.status();
+          expect(statusOutput).to.have.string('modified components');
+          expect(statusOutput).to.have.string('comp/my-comp ... ok');
+        });
+        it('should show the component as modifed after changning tester raw config', () => {
+          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'tester');
+          const statusOutput = helper.status();
+          expect(statusOutput).to.have.string('modified components');
+          expect(statusOutput).to.have.string('comp/my-comp ... ok');
+        });
+      });
     });
   });
 });
