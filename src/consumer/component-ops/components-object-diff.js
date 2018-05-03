@@ -6,6 +6,8 @@ import normalize from 'normalize-path';
 import arrayDifference from 'array-difference';
 import Component from '../component/consumer-component';
 import type { FieldsDiff } from './components-diff';
+import { COMPONENT_ORIGINS } from '../../constants';
+import { Consumer } from '..';
 
 export function componentToPrintableForDiff(component: Component): Object {
   const obj = {};
@@ -78,9 +80,14 @@ export function getDiffBetweenObjects(objectLeft: Object, objectRight: Object): 
   );
 }
 
-export function diffBetweenModelAndFS(component: Component): ?(FieldsDiff[]) {
+export function diffBetweenModelAndFS(consumer: Consumer, component: Component): ?(FieldsDiff[]) {
   const componentFromModel = component.componentFromModel;
   if (!componentFromModel) throw new Error('diffBetweenFSandModel: componentFromModel is missing');
+  if (!component.componentMap) throw new Error('diffBetweenFSandModel: componentMap is missing');
+  if (component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+    component.stripOriginallySharedDir(consumer.bitMap);
+    componentFromModel.stripOriginallySharedDir(consumer.bitMap);
+  }
   const printableFromFS = componentToPrintableForDiff(component);
   const printableFromModel = componentToPrintableForDiff(componentFromModel);
   const otherFieldsDiff = getDiffBetweenObjects(printableFromFS, printableFromModel);

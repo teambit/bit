@@ -101,7 +101,7 @@ async function getComponentDiff(consumer: Consumer, tmp: Tmp, component: Compone
   const modelFiles = component.componentFromModel.files;
   const fsFiles = component.cloneFilesWithSharedDir();
   diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, version, version);
-  diffResult.fieldsDiff = diffBetweenModelAndFS(component);
+  diffResult.fieldsDiff = diffBetweenModelAndFS(consumer, component);
   diffResult.hasDiff = !!(
     (diffResult.filesDiff && diffResult.filesDiff.find(file => file.diffOutput)) ||
     diffResult.fieldsDiff
