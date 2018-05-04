@@ -74,6 +74,10 @@ describe('bit diff command', function () {
         it('should show the added part with leading + (plus sign)', () => {
           expect(diffOutput).to.have.string("+module.exports = function foo() { return 'got foo v2'; };");
         });
+        it('should show a success message also when running from an inner directory', () => {
+          const outputInner = helper.runCmd('bit diff bar/foo', path.join(helper.localScopePath, 'bar'));
+          expect(outputInner).to.have.string(successDiffMessage);
+        });
       });
     });
   });
