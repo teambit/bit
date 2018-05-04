@@ -3,12 +3,12 @@ import R from 'ramda';
 import c from 'chalk';
 import { table } from 'table';
 import rightpad from 'pad-right';
-
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import paintDocumentation from './docs-template';
 import {
   componentToPrintableForDiff,
-  getDiffBetweenObjects
+  getDiffBetweenObjects,
+  prettifyFieldName
 } from '../../consumer/component-ops/components-object-diff';
 
 const COLUMN_WIDTH = 50;
@@ -98,7 +98,7 @@ function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: bo
     .map((field) => {
       const arr = [];
 
-      const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
+      const title = prettifyFieldName(field);
       if (!printableComponent[field]) return null;
 
       arr.push(c.cyan(title));

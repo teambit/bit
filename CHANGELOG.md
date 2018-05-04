@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add `bit show --compare` data into `bit diff` to easily see why a component is modified in one command
 - support components with cyclic dependencies
 - remove `--write` flag from `bit import`, the newly introduced `--merge` flag takes care of that
 - improve merge-conflict error on export to show all components with conflicts
