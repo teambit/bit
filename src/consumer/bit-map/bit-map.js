@@ -43,6 +43,11 @@ export default class BitMap {
     this.paths = {};
   }
 
+  markAsChanged() {
+    this.hasChanged = true;
+    this._invalidateCache();
+  }
+
   setComponent(id: string, componentMap: ComponentMap) {
     const bitId = BitId.parse(id);
     if (!bitId.hasVersion() && bitId.scope) {
@@ -62,6 +67,7 @@ export default class BitMap {
     }
 
     this.components[id] = componentMap;
+    this.markAsChanged();
   }
 
   static ensure(dirPath: string): Promise<BitMap> {
@@ -69,31 +75,35 @@ export default class BitMap {
   }
 
   static load(dirPath: PathOsBased): BitMap {
-    // support old bitmaps
-    const mapPath =
-      fs.existsSync(path.join(dirPath, OLD_BIT_MAP)) && !fs.existsSync(path.join(dirPath, BIT_MAP))
-        ? path.join(dirPath, OLD_BIT_MAP)
-        : path.join(dirPath, BIT_MAP);
+    const standardLocation = path.join(dirPath, BIT_MAP);
+    const oldLocation = path.join(dirPath, OLD_BIT_MAP);
+    const getBitMapLocation = (): ?PathOsBased => {
+      if (fs.existsSync(standardLocation)) return standardLocation;
+      if (fs.existsSync(oldLocation)) return oldLocation;
+      return null;
+    };
+    const bitMapLocation = getBitMapLocation();
     const components = {};
-    let version;
-    if (fs.existsSync(mapPath)) {
-      try {
-        const mapFileContent = fs.readFileSync(mapPath);
-        const componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
-        version = componentsJson.version;
-        // Don't treat version like component
-        delete componentsJson.version;
-        Object.keys(componentsJson).forEach((componentId) => {
-          components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
-        });
-
-        return new BitMap(dirPath, mapPath, components, version);
-      } catch (e) {
-        throw new InvalidBitMap(mapPath);
-      }
+    if (!bitMapLocation) {
+      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
+      return new BitMap(dirPath, standardLocation, components, BIT_VERSION);
     }
-    logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will probably create a new one if needed`);
-    return new BitMap(dirPath, mapPath, components, version || BIT_VERSION);
+    const mapFileContent = fs.readFileSync(bitMapLocation);
+    let componentsJson;
+    try {
+      componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
+    } catch (e) {
+      logger.error(e);
+      throw new InvalidBitMap(bitMapLocation, e.message);
+    }
+    const version = componentsJson.version;
+    // Don't treat version like component
+    delete componentsJson.version;
+    Object.keys(componentsJson).forEach((componentId) => {
+      components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
+    });
+
+    return new BitMap(dirPath, bitMapLocation, components, version);
   }
 
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
@@ -180,6 +190,7 @@ export default class BitMap {
       // $FlowFixMe at this stage we know that dependencies is not null
       this.components[parentId].dependencies.push(dependency);
     }
+    this.markAsChanged();
   }
 
   deleteOlderVersionsOfComponent(componentId: BitId): void {
@@ -307,7 +318,7 @@ export default class BitMap {
     }
     this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
-    this._invalidateCache();
+    this.markAsChanged();
     return this.components[componentIdStr];
   }
 
@@ -330,7 +341,7 @@ export default class BitMap {
     );
     this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
-    this._invalidateCache();
+    this.markAsChanged();
     return this.components[componentIdStr];
   }
 
@@ -340,7 +351,7 @@ export default class BitMap {
 
   _removeFromComponentsArray(componentId: BitIdStr) {
     delete this.components[componentId];
-    this._invalidateCache();
+    this.markAsChanged();
   }
 
   removeComponent(id: string | BitId) {
@@ -367,6 +378,7 @@ export default class BitMap {
       return;
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
+    this.markAsChanged();
   }
 
   isExistWithSameVersion(id: BitId) {
@@ -410,6 +422,7 @@ export default class BitMap {
         component.dependencies.push(newIdString);
       }
     });
+    this.markAsChanged();
   }
 
   /**
@@ -497,12 +510,26 @@ export default class BitMap {
       throw new GeneralError(errorMsg);
     }
 
+    this.markAsChanged();
     return allChanges;
   }
 
-  write(): Promise<any> {
+  /**
+   * do not call this function directly, let consumer.onDestroy() call it.
+   * consumer.onDestroy() is being called (manually) at the end of the command process.
+   * the risk of calling this method in other places is a parallel writing of this file, which
+   * may result in a damaged file
+   */
+  async write(): Promise<any> {
+    if (!this.hasChanged) return null;
     logger.debug('writing to bit.map');
     const bitMapContent = Object.assign({}, this.components, { version: this.version });
+    return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+  }
+
+  async create(): Promise<any> {
+    logger.debug('creating a new bit.map file');
+    const bitMapContent = { version: this.version };
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }
 }

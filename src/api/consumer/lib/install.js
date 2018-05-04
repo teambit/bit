@@ -10,6 +10,7 @@ export default (async function installAction(
 ): Promise<LinksResult[]> {
   const consumer: Consumer = await loadConsumer();
   consumer.packageManagerArgs = packageManagerArgs;
-  if (ids.length) return installIds(consumer, ids, verbose);
-  return install(consumer, verbose);
+  const installResults = ids.length ? await installIds(consumer, ids, verbose) : await install(consumer, verbose);
+  await consumer.onDestroy();
+  return installResults;
 });

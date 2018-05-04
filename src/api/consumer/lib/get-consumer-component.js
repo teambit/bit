@@ -35,5 +35,6 @@ export default (async function getConsumerBit({
       throw new NothingToCompareTo(id);
     }
   }
+  await consumer.onDestroy();
   return { component };
 });

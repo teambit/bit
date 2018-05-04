@@ -44,7 +44,7 @@ import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compar
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
-import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
+import { MissingMainFile, MissingBitMapComponent, InvalidBitMap } from '../consumer/bit-map/exceptions';
 import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
@@ -188,6 +188,13 @@ once your changes are merged with the new remote version, please tag and export 
     MissingMainFile,
     err =>
       'error: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file'
+  ],
+  [
+    InvalidBitMap,
+    err =>
+      `error: unable to parse your bitMap file at ${chalk.bold(err.path)}, due to an error ${chalk.bold(
+        err.errorMessage
+      )}`
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [

@@ -10,5 +10,7 @@ export default (async function merge(
   mergeStrategy: MergeStrategy
 ): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
-  return mergeVersion(consumer, version, bitIds, mergeStrategy);
+  const mergeResults = await mergeVersion(consumer, version, bitIds, mergeStrategy);
+  await consumer.onDestroy();
+  return mergeResults;
 });
