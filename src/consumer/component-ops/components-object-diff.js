@@ -80,35 +80,40 @@ export function getDiffBetweenObjects(objectLeft: Object, objectRight: Object): 
   );
 }
 
-export function diffBetweenModelAndFS(consumer: Consumer, component: Component): ?(FieldsDiff[]) {
-  const componentFromModel = component.componentFromModel;
-  if (!componentFromModel) throw new Error('diffBetweenFSandModel: componentFromModel is missing');
-  if (!component.componentMap) throw new Error('diffBetweenFSandModel: componentMap is missing');
-  if (component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-    component.stripOriginallySharedDir(consumer.bitMap);
-    componentFromModel.stripOriginallySharedDir(consumer.bitMap);
+export function diffBetweenComponentsObjects(
+  consumer: Consumer,
+  componentLeft: Component,
+  componentRight: Component
+): ?(FieldsDiff[]) {
+  const componentMap = consumer.bitMap.getComponent(componentLeft.id, false, true);
+  if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+    componentLeft.stripOriginallySharedDir(consumer.bitMap);
+    componentRight.stripOriginallySharedDir(consumer.bitMap);
   }
-  const printableFromFS = componentToPrintableForDiff(component);
-  const printableFromModel = componentToPrintableForDiff(componentFromModel);
-  const otherFieldsDiff = getDiffBetweenObjects(printableFromFS, printableFromModel);
+  const printableLeft = componentToPrintableForDiff(componentLeft);
+  const printableRight = componentToPrintableForDiff(componentRight);
+  const otherFieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);
   if (!otherFieldsDiff || R.isEmpty(otherFieldsDiff)) return undefined;
-  if (!component.version) throw new Error('diffBetweenFSandModel component does not have a version');
-  const labelLeft = `${component.version} original`;
-  const labelRight = `${component.version} modified`;
+  if (!componentLeft.version || !componentRight.version) {
+    throw new Error('diffBetweenComponentsObjects component does not have a version');
+  }
+  const areVersionsTheSame = componentLeft.version === componentRight.version;
+  const labelLeft = areVersionsTheSame ? `${componentLeft.version} original` : componentLeft.version;
+  const labelRight = areVersionsTheSame ? `${componentRight.version} modified` : componentRight.version;
   const titleLeft = (field: string): string => `--- ${prettifyFieldName(field)} (${labelLeft})\n`;
   const titleRight = (field: string): string => `+++ ${prettifyFieldName(field)} (${labelRight})\n`;
   const printFieldValue = (fieldValue: string | Array<string>): string => {
     if (typeof fieldValue === 'string') return fieldValue;
     if (Array.isArray(fieldValue)) return `[ ${fieldValue.join(', ')} ]`;
-    throw new Error(`diffBetweenFSandModel: not support ${typeof fieldValue}`);
+    throw new Error(`diffBetweenComponentsObjects: not support ${typeof fieldValue}`);
   };
   const printFieldLeft = (field: string): string => {
-    const fieldValue = printableFromModel[field];
+    const fieldValue = printableLeft[field];
     if (!fieldValue) return '';
     return `- ${printFieldValue(fieldValue)}\n`;
   };
   const printFieldRight = (field: string): string => {
-    const fieldValue = printableFromFS[field];
+    const fieldValue = printableRight[field];
     if (!fieldValue) return '';
     return `+ ${printFieldValue(fieldValue)}\n`;
   };

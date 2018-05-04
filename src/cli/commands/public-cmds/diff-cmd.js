@@ -23,7 +23,7 @@ export default class Diff extends Command {
     return diffResults
       .map((diffResult) => {
         if (diffResult.hasDiff) {
-          const titleStr = `showing diff for ${chalk.bold(diffResult.id.toString())}`;
+          const titleStr = `showing diff for ${chalk.bold(diffResult.id.toStringWithoutVersion())}`;
           const titleSeparator = new Array(titleStr.length).fill('-').join('');
           const title = chalk.cyan(`${titleSeparator}\n${titleStr}\n${titleSeparator}`);
           // $FlowFixMe
