@@ -201,7 +201,7 @@ export default class Consumer {
   }
 
   async write(): Promise<Consumer> {
-    await Promise.all([this.bitJson.write({ bitDir: this.projectPath }), this.scope.ensureDir(), this.bitMap.create()]);
+    await Promise.all([this.bitJson.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
     return this;
   }
 

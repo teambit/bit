@@ -526,10 +526,4 @@ export default class BitMap {
     const bitMapContent = Object.assign({}, this.components, { version: this.version });
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }
-
-  async create(): Promise<any> {
-    logger.debug('creating a new bit.map file');
-    const bitMapContent = { version: this.version };
-    return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
-  }
 }
