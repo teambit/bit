@@ -21,6 +21,7 @@ describe('envs', function () {
   const helper = new Helper();
   const compilerId = 'compilers/new-babel';
   const testerId = 'testers/new-mocha';
+  let authorScopeBeforeChanges;
   before(() => {
     helper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
@@ -57,12 +58,13 @@ describe('envs', function () {
     helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', 'tester');
     helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', 'tester');
     helper.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
-    helper.addComponentWithOptions('objRestSpread.js', { i: 'comp/my-comp' });
+    helper.createFile('', 'pass.spec.js', fixtures.passTest);
+    helper.addComponentWithOptions('objRestSpread.js', { i: 'comp/my-comp', t: '"*.spec.js"', m: 'objRestSpread.js' });
     helper.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.installNpmPackage('babel-preset-env', '1.6.1');
     helper.installNpmPackage('chai', '4.1.2');
     helper.tagAllWithoutMessage();
-    helper.cloneLocalScope();
+    authorScopeBeforeChanges = helper.cloneLocalScope();
     helper.exportAllComponents();
   });
 
@@ -164,11 +166,122 @@ describe('envs', function () {
         'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"b"};var y={c:"c"};var z=_extends({},x,y);'
       );
     });
-    describe('changing envs files/config', () => {
-      let authorScopeBeforeChanges;
-      before(() => {
-        authorScopeBeforeChanges = helper.cloneLocalScope();
+    describe('testing components', () => {
+      describe('with success tests', () => {
+        it('should show tests passed', () => {
+          const output = helper.testComponent('comp/my-comp');
+          expect(output).to.have.string('tests passed');
+          expect(output).to.have.string('total duration');
+          expect(output).to.have.string('✔   group of passed tests');
+        });
       });
+      describe('with failing tests', () => {
+        before(() => {
+          helper.createFile('', 'fail.spec.js', fixtures.failTest);
+          helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+        });
+        describe('with default fork level', () => {
+          it('should show results without define fork level', () => {
+            const output = helper.testComponent('comp/my-comp');
+            expect(output).to.have.string('tests failed');
+            expect(output).to.have.string('✔   group of passed tests');
+            expect(output).to.have.string('❌   group of failed tests');
+          });
+          it('should show results when there is exception on a test file', () => {
+            helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
+            let output;
+            try {
+              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.testComponent('comp/my-comp');
+            } catch (e) {
+              output = e.message;
+            }
+            expect(output).to.have.string('bit failed to test');
+            expect(output).to.have.string('comp/my-comp@0.0.1 with the following exception:');
+            expect(output).to.have.string('exception during test file');
+          });
+        });
+        describe('with fork level - NONE', () => {
+          before(() => {
+            helper.getClonedLocalScope(authorScopeBeforeChanges);
+            helper.createFile('', 'fail.spec.js', fixtures.failTest);
+            helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+          });
+          it('should show results with failing tests', () => {
+            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
+            expect(output).to.have.string('tests failed');
+            expect(output).to.have.string('✔   group of passed tests');
+            expect(output).to.have.string('❌   group of failed tests');
+          });
+          it('should show results when there is exception on a test file', () => {
+            helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
+            let output;
+            try {
+              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
+            } catch (e) {
+              output = e.message;
+            }
+            expect(output).to.have.string('bit failed to test');
+            expect(output).to.have.string('comp/my-comp@0.0.1 with the following exception:');
+            expect(output).to.have.string('exception during test file');
+          });
+        });
+        describe('with fork level - ONE', () => {
+          before(() => {
+            helper.getClonedLocalScope(authorScopeBeforeChanges);
+            helper.createFile('', 'fail.spec.js', fixtures.failTest);
+            helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+          });
+          it('should show results with failing tests', () => {
+            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
+            expect(output).to.have.string('tests failed');
+            expect(output).to.have.string('✔   group of passed tests');
+            expect(output).to.have.string('❌   group of failed tests');
+          });
+          it('should show results when there is exception on a test file', () => {
+            helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
+            let output;
+            try {
+              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
+            } catch (e) {
+              output = e.message;
+            }
+            expect(output).to.have.string('bit failed to test');
+            expect(output).to.have.string('comp/my-comp@0.0.1 with the following exception:');
+            expect(output).to.have.string('exception during test file');
+          });
+        });
+        describe('with fork level - COMPONENT', () => {
+          before(() => {
+            helper.getClonedLocalScope(authorScopeBeforeChanges);
+            helper.createFile('', 'fail.spec.js', fixtures.failTest);
+            helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+          });
+          it('should show results with failing tests', () => {
+            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
+            expect(output).to.have.string('tests failed');
+            expect(output).to.have.string('✔   group of passed tests');
+            expect(output).to.have.string('❌   group of failed tests');
+          });
+          it('should show results when there is exception on a test file', () => {
+            helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
+            let output;
+            try {
+              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
+            } catch (e) {
+              output = e.message;
+            }
+            expect(output).to.have.string('bit failed to test');
+            expect(output).to.have.string('comp/my-comp@0.0.1 with the following exception:');
+            expect(output).to.have.string('exception during test file');
+          });
+        });
+      });
+    });
+    describe('changing envs files/config', () => {
       beforeEach(() => {
         // Restore to clean state of the scope
         helper.getClonedLocalScope(authorScopeBeforeChanges);
