@@ -1280,6 +1280,12 @@ console.log(barFoo.default());`;
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
+      it('bit diff should not show any diff', () => {
+        const outputAll = helper.runWithTryCatch('bit diff');
+        expect(outputAll).to.have.string('no modified components');
+        const outputBarFoo = helper.runWithTryCatch('bit diff bar/foo');
+        expect(outputBarFoo).to.have.string('no diff for');
+      });
     });
   });
 

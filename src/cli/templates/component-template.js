@@ -1,14 +1,15 @@
 /** @flow */
 import R from 'ramda';
 import c from 'chalk';
-import diff from 'object-diff';
 import { table } from 'table';
-import normalize from 'normalize-path';
-import arrayDifference from 'array-difference';
 import rightpad from 'pad-right';
-
 import ConsumerComponent from '../../consumer/component/consumer-component';
 import paintDocumentation from './docs-template';
+import {
+  componentToPrintableForDiff,
+  getDiffBetweenObjects,
+  prettifyFieldName
+} from '../../consumer/component-ops/components-object-diff';
 
 const COLUMN_WIDTH = 50;
 const tableColumnConfig = {
@@ -41,66 +42,6 @@ const fields = [
   'specs',
   'deprecated'
 ];
-
-function comparator(a, b) {
-  if (a instanceof Array && b instanceof Array) {
-    return R.isEmpty(arrayDifference(a, b));
-  }
-  return a === b;
-}
-
-function convertObjectToPrintable(component: ConsumerComponent, isFromFs) {
-  const obj = {};
-  const parsePackages = (packages) => {
-    return !R.isEmpty(packages) && !R.isNil(packages)
-      ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
-      : null;
-  };
-  const {
-    name,
-    box,
-    lang,
-    compiler,
-    tester,
-    dependencies,
-    devDependencies,
-    packageDependencies,
-    devPackageDependencies,
-    peerPackageDependencies,
-    envsPackageDependencies,
-    files,
-    mainFile,
-    deprecated,
-    version,
-    docs
-  } = component;
-
-  const ver = version ? `@${version}` : '';
-  const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
-  const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies) || [];
-  const printableDevPackageDependencies = parsedDevPackageDependencies.concat(parsedEnvsPackageDependencies);
-  obj.id = isFromFs ? `${box}/${name}${ver} [file system]` : `${box}/${name}${ver}`;
-  // TODO: Gilad - print compiler config in different table
-  obj.compiler = compiler ? compiler.name : null;
-  obj.language = lang || null;
-  obj.tester = tester ? tester.name : null;
-  obj.mainFile = mainFile ? normalize(mainFile) : null;
-  obj.dependencies = dependencies.toStringOfIds().concat(parsePackages(packageDependencies));
-  obj.devDependencies = devDependencies.toStringOfIds().concat(printableDevPackageDependencies);
-  obj.peerDependencies = parsePackages(peerPackageDependencies);
-
-  obj.files =
-    files && !R.isEmpty(files) && !R.isNil(files)
-      ? files.filter(file => !file.test).map(file => normalize(file.relative))
-      : null;
-  obj.specs =
-    files && !R.isEmpty(files) && !R.isNil(files) && R.find(R.propEq('test', true))(files)
-      ? files.filter(file => file.test).map(file => normalize(file.relative))
-      : null;
-  obj.deprecated = deprecated ? 'True' : null;
-  obj.docs = docs;
-  return obj;
-}
 
 function generateDependenciesTable(component: ConsumerComponent, showRemoteVersion) {
   if (!component.hasDependencies()) {
@@ -152,12 +93,12 @@ function calculatePadRightLength(str: string, columnWidth: number): string {
 }
 
 function paintWithoutCompare(component: ConsumerComponent, showRemoteVersion: boolean) {
-  const printableComponent = convertObjectToPrintable(component, false);
+  const printableComponent = componentToPrintableForDiff(component);
   const rows = fields
     .map((field) => {
       const arr = [];
 
-      const title = `${field[0].toUpperCase()}${field.substr(1)}`.replace(/([A-Z])/g, ' $1').trim();
+      const title = prettifyFieldName(field);
       if (!printableComponent[field]) return null;
 
       arr.push(c.cyan(title));
@@ -187,16 +128,11 @@ function paintWithCompare(
   componentToCompareTo: ConsumerComponent,
   showRemoteVersion: boolean
 ) {
-  const printableOriginalComponent = convertObjectToPrintable(originalComponent, true);
-  const printableComponentToCompare = convertObjectToPrintable(componentToCompareTo, false);
+  const printableOriginalComponent = componentToPrintableForDiff(originalComponent);
+  printableOriginalComponent.id += ' [file system]';
+  const printableComponentToCompare = componentToPrintableForDiff(componentToCompareTo);
 
-  const componentsDiffs = diff.custom(
-    {
-      equal: comparator
-    },
-    printableOriginalComponent,
-    printableComponentToCompare
-  );
+  const componentsDiffs = getDiffBetweenObjects(printableOriginalComponent, printableComponentToCompare);
 
   const rows = fields
     .map((field) => {
