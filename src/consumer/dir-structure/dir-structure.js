@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import format from 'string-format';
 import {
   DEFAULT_COMPONENTES_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
@@ -39,6 +40,16 @@ export default class BitStructure {
 
   get ejectedEnvsDirStructure(): string {
     return this.ejectedEnvsDirectory;
+  }
+
+  /**
+   * Return only the static parts of the ejectedEnvs dir
+   * Used for adding it to the ignore list
+   */
+  get staticEjectedEnvsDirStructure(): string {
+    const ejectedEnvsDirectory = this.ejectedEnvsDirectory;
+    const staticEjectedEnvsDirectory = format(ejectedEnvsDirectory, { envType: '' });
+    return staticEjectedEnvsDirectory;
   }
 
   get componentsDirStructure(): Object {
