@@ -54,12 +54,36 @@ export default class Helper {
     }
   }
 
+  // #region General
+  // #endregion
+
+  // #region scopes utils (init, remote etc')
+  // #endregion
+
+  // #region file system utils (create / delete / modify files etc')
+  // #endregion
+
+  // #region Bit commands
+  // #endregion
+
+  // #region bit.json manipulation
+  // #endregion
+
+  // #region .bitmap manipulation
+  // #endregion
+
+  // #region Packages/package.json maniplulation
+  // #endregion
+
+  // #region fixtures utils
+  // #endregion
+
   runCmd(cmd: string, cwd: string = this.localScopePath) {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     const cmdOutput = childProcess.execSync(cmd, { cwd });
-    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), cmdOutput.toString()); // eslint-disable-line
+    if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
   }
 
@@ -319,7 +343,9 @@ export default class Helper {
       fs.copySync(this.localScopePath, this.cache.localScopePath);
       fs.copySync(this.remoteScopePath, this.cache.remoteScopePath);
     } else {
-      if (this.debugMode) { console.log(chalk.green(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`)); }
+      if (this.debugMode) {
+        console.log(chalk.green(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`));
+      }
       fs.removeSync(this.localScopePath);
       fs.removeSync(this.remoteScopePath);
       fs.copySync(this.cache.localScopePath, this.localScopePath);
