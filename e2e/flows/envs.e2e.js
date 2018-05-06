@@ -5,7 +5,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 
-// backward compatibility
+// TODO: backward compatibility
 // should support declare env in old format (string)
 // should not show component in modified if the compiler defined in old format (string)
 // should not show components as modified for consumer bit.json in old format
@@ -15,12 +15,6 @@ import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 // different fork levels should work
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
-
-// Build
-// should build the component correctly (loading the .babelrc and the dyanmicPackages)
-
-// without ejceting (--conf)
-// should load the envs (include files) from models if there is no bit.json
 
 describe('envs', function () {
   this.timeout(0);
@@ -325,8 +319,8 @@ describe('envs', function () {
           });
         });
         it('should not show the component as modified if a file added to @bit-envs folder', () => {
-          helper.createFile('compilerFilesFolder', 'someFile.js', '{"someConfKey": "someConfVal"}');
-          helper.createFile('testerFilesFolder', 'someFile.js', '{"someConfKey": "someConfVal"}');
+          helper.createFile(compilerFilesFolder, 'someFile.js', '{"someConfKey": "someConfVal"}');
+          helper.createFile(testerFilesFolder, 'someFile.js', '{"someConfKey": "someConfVal"}');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('nothing to tag or export');
           expect(statusOutput).to.not.have.string('modified');
@@ -363,7 +357,7 @@ describe('envs', function () {
             expect(statusOutput).to.have.string('modified components');
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
           });
-          it('should show the component as modified if compiler file has been changed', () => {
+          it('should show the component as modified if tester file has been changed', () => {
             helper.createFile(testerFilesFolder, 'config', 'something');
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string('modified components');
@@ -406,8 +400,41 @@ describe('envs', function () {
           const mochaConfig = path.join(envFilesFolder, 'Tester', 'config');
           expect(envFiles).to.include(mochaConfig);
         });
-        it('should not show the component as modified if a file added to ejectedEnvsDirectory', () => {});
-        it('should show the component as modified if env file has been changed', () => {});
+        it('should not show the component as modified if a file added to ejectedEnvsDirectory', () => {
+          helper.createFile('compilerFilesFolder', 'someFile.js', '{"someConfKey": "someConfVal"}');
+          helper.createFile('testerFilesFolder', 'someFile.js', '{"someConfKey": "someConfVal"}');
+          const statusOutput = helper.status();
+          expect(statusOutput).to.have.string('nothing to tag or export');
+          expect(statusOutput).to.not.have.string('modified');
+        });
+        describe('change envs files', () => {
+          before(() => {
+            helper.getClonedLocalScope(importedScopeBeforeChanges);
+          });
+          beforeEach(() => {
+            // Make sure the component is not modified before the changes
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('nothing to tag or export');
+            expect(statusOutput).to.not.have.string('modified');
+          });
+          afterEach(() => {
+            // Restore to clean state of the scope
+            helper.getClonedLocalScope(importedScopeBeforeChanges);
+          });
+
+          it('should show the component as modified if compiler file has been changed', () => {
+            helper.createFile(compilerFilesFolder, '.babelrc', '{"some": "thing"}');
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+          it('should show the component as modified if tester file has been changed', () => {
+            helper.createFile(testerFilesFolder, 'config', 'something');
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+        });
         it('should move envs files during bit move command', () => {
           const newComponentfolder = path.join('components', 'new-path');
           const newEnvFilesFolder = path.join(newComponentfolder, ejectedEnvsDirectory);
