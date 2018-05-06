@@ -11,8 +11,7 @@ import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 // should not show components as modified for consumer bit.json in old format
 // should not show components as modified for component with old model format
 
-// Tests
-// different fork levels should work
+// TODO: Tests
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
 
@@ -64,8 +63,8 @@ describe('envs', function () {
     helper.installNpmPackage('babel-preset-env', '1.6.1');
     helper.installNpmPackage('chai', '4.1.2');
     helper.tagAllWithoutMessage();
-    authorScopeBeforeChanges = helper.cloneLocalScope();
     helper.exportAllComponents();
+    authorScopeBeforeChanges = helper.cloneLocalScope();
   });
 
   after(() => {
@@ -364,6 +363,46 @@ describe('envs', function () {
           'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
         );
       });
+      describe('testing components', () => {
+        describe('with success tests', () => {
+          it('should show tests passed', () => {
+            const output = helper.testComponent('comp/my-comp');
+            expect(output).to.have.string('tests passed');
+            expect(output).to.have.string('total duration');
+            expect(output).to.have.string('✔   group of passed tests');
+          });
+        });
+        describe('with failing tests', () => {
+          before(() => {
+            helper.createFile(componentFolder, 'fail.spec.js', fixtures.failTest);
+            const failSpecPath = path.join(componentFolder, 'fail.spec.js');
+            helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
+          });
+          describe('with default fork level', () => {
+            it('should show results without define fork level', () => {
+              const output = helper.testComponent('comp/my-comp');
+              expect(output).to.have.string('tests failed');
+              expect(output).to.have.string('✔   group of passed tests');
+              expect(output).to.have.string('❌   group of failed tests');
+            });
+            it('should show results when there is exception on a test file', () => {
+              helper.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
+              const exceptionSpecPath = path.join(componentFolder, 'exception.spec.js');
+
+              let output;
+              try {
+                helper.addComponentWithOptions(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
+                helper.testComponent('comp/my-comp');
+              } catch (e) {
+                output = e.message;
+              }
+              expect(output).to.have.string('bit failed to test');
+              expect(output).to.have.string('comp/my-comp@0.0.1 with the following exception:');
+              expect(output).to.have.string('exception during test file');
+            });
+          });
+        });
+      });
     });
     describe('with ejceting (--conf)', () => {
       let fullComponentFolder;
@@ -409,6 +448,46 @@ describe('envs', function () {
             'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
           );
         });
+        describe('testing components', () => {
+          describe('with success tests', () => {
+            it('should show tests passed', () => {
+              const output = helper.testComponent('comp/my-comp');
+              expect(output).to.have.string('tests passed');
+              expect(output).to.have.string('total duration');
+              expect(output).to.have.string('✔   group of passed tests');
+            });
+          });
+          describe('with failing tests', () => {
+            before(() => {
+              helper.getClonedLocalScope(importedScopeBeforeChanges);
+              helper.createFile(componentFolder, 'fail.spec.js', fixtures.failTest);
+              const failSpecPath = path.join(componentFolder, 'fail.spec.js');
+              helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
+            });
+            describe('with default fork level', () => {
+              it('should show results without define fork level', () => {
+                const output = helper.testComponent('comp/my-comp');
+                expect(output).to.have.string('tests failed');
+                expect(output).to.have.string('✔   group of passed tests');
+                expect(output).to.have.string('❌   group of failed tests');
+              });
+              it('should show results when there is exception on a test file', () => {
+                helper.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
+                const exceptionSpecPath = path.join(componentFolder, 'exception.spec.js');
+                helper.addComponentWithOptions(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
+                let output;
+                try {
+                  helper.testComponent('comp/my-comp');
+                } catch (e) {
+                  output = e.message;
+                }
+                expect(output).to.have.string('bit failed to test');
+                expect(output).to.have.string('comp/my-comp@0.0.1 with the following exception:');
+                expect(output).to.have.string('exception during test file');
+              });
+            });
+          });
+        });
         describe('dynamic config as raw config', () => {
           let bitJson;
           before(() => {
@@ -432,6 +511,7 @@ describe('envs', function () {
           });
         });
         it('should not show the component as modified if a file added to @bit-envs folder', () => {
+          helper.getClonedLocalScope(importedScopeBeforeChanges);
           helper.createFile(compilerFilesFolder, 'someFile.js', '{"someConfKey": "someConfVal"}');
           helper.createFile(testerFilesFolder, 'someFile.js', '{"someConfKey": "someConfVal"}');
           const statusOutput = helper.status();
@@ -500,10 +580,12 @@ describe('envs', function () {
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.addRemoteEnvironment();
-          helper.addKeyValToBitJson(bitJsonPath, 'ejectedEnvsDirectory', 'custom-envs-config/{envType}');
+          const rootBitJsonPath = path.join(helper.localScopePath, 'bit.json');
+          helper.addKeyValToBitJson(rootBitJsonPath, 'ejectedEnvsDirectory', 'custom-envs-config/{envType}');
           helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
-          importedScopeBeforeChanges = helper.cloneLocalScope();
           fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
+          bitJsonPath = path.join(fullComponentFolder, 'bit.json');
+          importedScopeBeforeChanges = helper.cloneLocalScope();
         });
         it('should store the files under the custom directory', () => {
           const envFilesGlob = path.join(envFilesFolder, '**', '*');
@@ -561,6 +643,7 @@ describe('envs', function () {
         });
         it('should build the component successfully', () => {
           // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
+          helper.getClonedLocalScope(importedScopeBeforeChanges);
           helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
           const output = helper.build('comp/my-comp');
           expect(output).to.have.string('dist/objRestSpread.js.map');
