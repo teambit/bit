@@ -48,7 +48,7 @@ module.exports = function cabinet(options) {
 
   var resolver = defaultLookups[ext];
 
-  if ((ext === '.css' || ext === '.sass' || ext === '.less') && partial.startsWith('~')) {
+  if ((ext === '.css' || ext === '.sass' || ext === '.scss' || ext === '.less') && partial.startsWith('~')) {
     // webpack syntax for resolving a module
     partial = partial.replace('~', '');
     resolver = jsLookup;
