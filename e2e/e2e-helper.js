@@ -659,15 +659,22 @@ export default class Helper {
 
   createRemoteScopeWithComponentsFixture() {}
 
-  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd = this.localScopePath) {
+  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd: string = this.localScopePath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
 
-  testComponent(id) {
-    return this.runCmd(`bit test ${id || ''}`);
+  testComponent(id: string = '') {
+    return this.runCmd(`bit test ${id}`);
+  }
+
+  testComponentWithOptions(id: string = '', options: ?Object, cwd: string = this.localScopePath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit test ${id} ${value}`, cwd);
   }
 
   searchComponent(args) {
