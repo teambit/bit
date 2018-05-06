@@ -344,15 +344,19 @@ export default class Component {
 
     const runBuild = async (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
+      let componentDir;
       if (componentMap) {
         // $FlowFixMe
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+        componentDir =
+          consumer && componentMap.rootDir ? path.join(consumer.getPath(), componentMap.rootDir) : undefined;
       }
       return Promise.resolve()
         .then(() => {
           const context: Object = {
             componentObject: this.toObject(),
-            rootDistFolder
+            rootDistFolder,
+            componentDir
           };
 
           // Change the cwd to make sure we found the needed files
