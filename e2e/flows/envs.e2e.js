@@ -1,4 +1,4 @@
-import chai, { expect } from 'chai';
+import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
@@ -159,6 +159,17 @@ describe('envs', function () {
       expect(output).to.have.string('babel-preset-env@^1.6.1');
       expect(output).to.have.string('lodash.get@4.4.2');
     });
+    it('should build the component successfully', () => {
+      const output = helper.build('comp/my-comp');
+      expect(output).to.have.string('dist/objRestSpread.js.map');
+      expect(output).to.have.string('dist/objRestSpread.js');
+      // const distFilePath = path.join(helper.localScopePath, 'components', 'comp', 'my-comp', 'dist', 'objRestSpread.js');
+      const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
+      const distContent = fs.readFileSync(distFilePath).toString();
+      expect(distContent).to.have.string(
+        'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"b"};var y={c:"c"};var z=_extends({},x,y);'
+      );
+    });
     describe('changing envs files/config', () => {
       let authorScopeBeforeChanges;
       before(() => {
@@ -203,10 +214,13 @@ describe('envs', function () {
     });
   });
   describe('imported enviorment', () => {
+    const componentFolder = path.join('components', 'comp', 'my-comp');
+
     describe('without ejceting (--conf)', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
+        helper.addRemoteEnvironment();
         helper.importComponent('comp/my-comp');
       });
       it('should not show the component as modified after import', () => {
@@ -224,9 +238,27 @@ describe('envs', function () {
           'lodash.get': '4.4.2'
         });
       });
+      it('should build the component successfully', () => {
+        // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
+        helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
+        const output = helper.build('comp/my-comp');
+        expect(output).to.have.string('dist/objRestSpread.js.map');
+        expect(output).to.have.string('dist/objRestSpread.js');
+        const distFilePath = path.join(
+          helper.localScopePath,
+          'components',
+          'comp',
+          'my-comp',
+          'dist',
+          'objRestSpread.js'
+        );
+        const distContent = fs.readFileSync(distFilePath).toString();
+        expect(distContent).to.have.string(
+          'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
+        );
+      });
     });
     describe('with ejceting (--conf)', () => {
-      const componentFolder = path.join('components', 'comp', 'my-comp');
       let fullComponentFolder;
       let bitJsonPath;
 
@@ -238,6 +270,7 @@ describe('envs', function () {
         before(() => {
           helper.reInitLocalScope();
           helper.addRemoteScope();
+          helper.addRemoteEnvironment();
           helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
           importedScopeBeforeChanges = helper.cloneLocalScope();
           fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
@@ -249,6 +282,25 @@ describe('envs', function () {
           expect(envFiles).to.include(babelrcPath);
           const mochaConfig = path.join(envFilesFolder, 'Tester', 'config');
           expect(envFiles).to.include(mochaConfig);
+        });
+        it('should build the component successfully', () => {
+          // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
+          helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
+          const output = helper.build('comp/my-comp');
+          expect(output).to.have.string('dist/objRestSpread.js.map');
+          expect(output).to.have.string('dist/objRestSpread.js');
+          const distFilePath = path.join(
+            helper.localScopePath,
+            'components',
+            'comp',
+            'my-comp',
+            'dist',
+            'objRestSpread.js'
+          );
+          const distContent = fs.readFileSync(distFilePath).toString();
+          expect(distContent).to.have.string(
+            'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
+          );
         });
         describe('dynamic config as raw config', () => {
           let bitJson;
@@ -340,6 +392,7 @@ describe('envs', function () {
         before(() => {
           helper.reInitLocalScope();
           helper.addRemoteScope();
+          helper.addRemoteEnvironment();
           helper.addKeyValToBitJson(bitJsonPath, 'ejectedEnvsDirectory', 'custom-envs-config/{envType}');
           helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
           importedScopeBeforeChanges = helper.cloneLocalScope();
@@ -365,6 +418,25 @@ describe('envs', function () {
           expect(envFiles).to.include(babelrcPath);
           const mochaConfig = path.join(newEnvFilesFolder, 'Tester', 'config');
           expect(envFiles).to.include(mochaConfig);
+        });
+        it('should build the component successfully', () => {
+          // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
+          helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
+          const output = helper.build('comp/my-comp');
+          expect(output).to.have.string('dist/objRestSpread.js.map');
+          expect(output).to.have.string('dist/objRestSpread.js');
+          const distFilePath = path.join(
+            helper.localScopePath,
+            'components',
+            'comp',
+            'my-comp',
+            'dist',
+            'objRestSpread.js'
+          );
+          const distContent = fs.readFileSync(distFilePath).toString();
+          expect(distContent).to.have.string(
+            'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
+          );
         });
       });
     });

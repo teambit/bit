@@ -43,4 +43,8 @@ export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); consol
 export const objectRestSpread = `const g = 5;
 const x = {a: "a", b: "b"}
 const y = {c: "c"}
+const z = {...x, ...y}`;
+export const objectRestSpreadWithChange = `const g = 5;
+const x = {a: "a", b: "c"}
+const y = {c: "c"}
 const z = {...x, ...y}`
