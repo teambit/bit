@@ -53,7 +53,13 @@ const compiler = {
     const vinylBabelrc = getFileByName('.babelrc', configFiles);    
     const rawBabelrc = vinylBabelrc.contents.toString();
     const babelrc = JSON.parse(rawBabelrc);
-  
+    const componentDir = context && context.componentDir
+    
+    if (componentDir) {
+      babelrc.plugins = babelrc.plugins.map(pluginName => resolvePlugin(componentDir, pluginName));
+      babelrc.presets = babelrc.presets.map(presetName => resolvePreset(componentDir, presetName));
+    }
+
     try {
       const builtFiles = files.map(file => runBabel(file, babelrc, context.rootDistFolder)).reduce((a, b) => a.concat(b));
       return {files: builtFiles};
@@ -84,8 +90,23 @@ function getPrefixedPackageName(pluginName, prefix) {
   return pluginName;
 }
 
+function resolvePlugin(componentDir, pluginName) {
+  const resolvedName = getPluginPackageName(pluginName);
+  return resolvePackagesFromComponentDir(componentDir, resolvedName);
+}
+
+function resolvePreset(componentDir, presetName) {
+  const resolvedName = getPresetPackageName(presetName);
+  return resolvePackagesFromComponentDir(componentDir, resolvedName);
+}
+
+function resolvePackagesFromComponentDir(componentDir, packagName) {
+  const resolvedPackage = require.resolve(packagName, { paths: [componentDir] });
+  return resolvedPackage;
+}
+
 function loadPackgeJsonSync(componentDir, workspaceDir) {
-  const packageJsonName = 'package.json'
+  const packageJsonName = 'package.json';
   let packageJsonPath;
   if (componentDir) {
     packageJsonPath = path.join(componentDir, packageJsonName);
