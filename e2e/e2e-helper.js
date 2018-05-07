@@ -601,7 +601,7 @@ export default class Helper {
    */
   installNpmPackage(name: string, version: ?string, cwd: string = this.localScopePath) {
     const versionWithDelimiter = version ? `@${version}` : '';
-    const cmd = `npm i ${name}${versionWithDelimiter}`;
+    const cmd = `npm i --save ${name}${versionWithDelimiter}`;
     return this.runCmd(cmd, cwd);
   }
 
