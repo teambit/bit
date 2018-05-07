@@ -19,9 +19,10 @@ function getComponentFiles(consumer: Consumer) {
   const componentsMaps = bitmap.getAllComponents();
   let componentFile = [];
   Object.values(componentsMaps).forEach(function (value) {
-    if (value && value.files) {
-      const currentFiles = value.files.map(file => file.relativePath);
-      componentFile = componentFile.concat(currentFiles);
+    if (value && value.files && Array.isArray(value.files)) {
+       let currentFiles = [];
+       value.files.forEach(file => currentFiles.push(file.relativePath));
+       componentFile = componentFile.concat(currentFiles);
     }
   });
   return componentFile;
@@ -35,10 +36,10 @@ export default (async function getDependencyStatus(
   const componentFiles = getComponentFiles(consumer);
   const missingDependencyFiles = [];
   topLevelDependencies.forEach(function (dependency) {
-    if (!componentFiles.includes(dependency)) {
-      if (dependency.startsWith(',')) {
-        dependency = dependency.substring(1);
-      }
+    if (dependency.startsWith(',')) {
+      dependency = dependency.substring(1);
+    }
+    if (!componentFiles.includes(dependency)) {    
       missingDependencyFiles.push(dependency);
     }
   });
