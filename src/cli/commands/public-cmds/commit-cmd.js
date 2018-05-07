@@ -5,6 +5,7 @@ import Component from '../../../consumer/component';
 import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 const chalk = require('chalk');
 
@@ -60,10 +61,10 @@ export default class Export extends Command {
     }
 
     if (!id && !all && !scope) {
-      return Promise.reject('missing [id]. to tag all components, please use --all flag');
+      throw new GeneralError('missing [id]. to tag all components, please use --all flag');
     }
     if (id && all) {
-      return Promise.reject(
+      throw new GeneralError(
         'you can use either a specific component [id] to tag a particular component or --all flag to tag them all'
       );
     }
