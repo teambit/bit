@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 
-describegt=('bit dependency status', function () {
+describe('bit dependency status', function () {
   this.timeout(0);
   const helper = new Helper();  
   after(() => {
