@@ -186,7 +186,7 @@ export default class ImportComponents {
     });
 
     if (modifiedComponents.length) {
-      return Promise.reject(
+      throw new GeneralError(
         chalk.yellow(
           `unable to import the following components due to local changes, use --override flag to override your local changes\n${modifiedComponents.join(
             '\n'

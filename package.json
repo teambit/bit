@@ -3,6 +3,7 @@
   "version": "0.12.13-dev.1",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
+  "preferGlobal": true,
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
     "precommit": "lint-staged",
