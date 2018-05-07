@@ -211,6 +211,12 @@ export default class Component {
         throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
     });
+    const bitIdFields = ['compiler', 'tester'];
+    bitIdFields.forEach((field) => {
+      if (this[field] && !(this[field] instanceof BitId)) {
+        throw new Error(`failed loading a component ${this.id}, the field "${field}" must be an instance of BitId`);
+      }
+    });
   }
 
   setDependencies(dependencies?: Dependency[]) {
