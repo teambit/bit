@@ -17,7 +17,7 @@ export default class DependencyStatus extends Command {
          mainFile: mainFile
     };
     return dependencyStatus(dependencyStatusProps);
-}
+  }
 
 report(dependencyStatusResult: DependencyStatusResult): string {
     if (dependencyStatusResult.missingFiles.length === 0) {
@@ -30,5 +30,5 @@ report(dependencyStatusResult: DependencyStatusResult): string {
       return file;
     });
     return output;
-}
+  }
 }
