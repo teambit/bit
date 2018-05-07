@@ -207,7 +207,6 @@ export default class Version extends BitObject {
     const dists = extractRefsFromFiles(this.dists);
     const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
     const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
-    // TODO: Gilad - support testers
     return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
   }
 
