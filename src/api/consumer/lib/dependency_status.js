@@ -1,7 +1,7 @@
 /** @flow */
-import { getDependencyStatus } from '../../../consumer/component-ops/dependency-status';
-import { DependencyStatusResult } from '../../../consumer/component-ops/dependency-status';
-import DependencyStatusProps from '../../../consumer/component-ops/dependency-status';
+import type { getDependencyStatus } from '../../../consumer/component-ops/dependency-status';
+import type { DependencyStatusResult } from '../../../consumer/component-ops/dependency-status';
+import type { DependencyStatusProps }  from '../../../consumer/component-ops/dependency-status';
 import { loadConsumer, Consumer } from '../../../consumer';
 
 
