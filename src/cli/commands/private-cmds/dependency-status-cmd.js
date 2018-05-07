@@ -20,7 +20,7 @@ export default class DependencyStatus extends Command {
     return dependencyStatus(dependencyStatusProps);
 }
 
-report(dependencyStatusResult: DependencyStatusResul): string {
+report(dependencyStatusResult: DependencyStatusResult): string {
   if(dependencyStatusResult.missingFiles.length === 0) {
     const output = chalk.green(`All files in dependency tree are marked as components`);
     return output;  
