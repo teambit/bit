@@ -1,5 +1,5 @@
 /** @flow */
-import type { DependencyStatusResult, DependencyStatusProps, getDependencyStatus} from '../../../consumer/component-ops/dependency-status';
+import type { DependencyStatusResult, DependencyStatusProps, getDependencyStatus } from '../../../consumer/component-ops/dependency-status';
 import { loadConsumer, Consumer } from '../../../consumer';
 
 
