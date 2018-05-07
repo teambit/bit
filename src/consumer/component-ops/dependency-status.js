@@ -2,7 +2,7 @@
 import * as packageJson from '../component/package-json';
 import { 
     DEFAULT_BINDINGS_PREFIX 
-} from '../../../src/constants';
+} from '../../constants';
 
 export type DependencyStatusResult = { missingFiles: string[] };
 export type DependencyStatusProps = { mainFile: string[] };
@@ -11,7 +11,7 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
     const driver = await consumer.driver.getDriver(false);
     let paths = dependencyStatusProps.mainFile;
     const consumerPath = consumer.getPath();
-    const tree = await driver.getDependencyTree(consumerPath, consumerPath, paths, '@bit');
+    const tree = await driver.getDependencyTree(consumerPath, consumerPath, paths, DEFAULT_BINDINGS_PREFIX);
     const topLevelDependencies = Object.keys(tree.tree).map(topLevelFile => topLevelFile);    
     return topLevelDependencies;
 
