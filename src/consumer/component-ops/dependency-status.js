@@ -1,43 +1,47 @@
 // @flow
 import * as packageJson from '../component/package-json';
-export type DependencyStatusResult = { missing_files: string[] };
-//import { DEFAULT_BINDINGS_PREFIX } from '../../../src/constants';
-export type DependencyStatusProps = { main_file: string };
+import { 
+    DEFAULT_BINDINGS_PREFIX 
+} from '../../../src/constants';
+
+export type DependencyStatusResult = { missingFiles: string[] };
+export type DependencyStatusProps = { mainFile: string[] };
 
 async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps:DependencyStatusProps) {
     const driver = await consumer.driver.getDriver(false);
-    let files = [];
-    files.push(dependencyStatusProps.main_file);
+    let paths = dependencyStatusProps.mainFile;
     const consumerPath = consumer.getPath();
-    const tree = await driver.getDependencyTree(consumerPath, consumerPath, files, '@bit');
-    const top_level_dependencies = Object.keys(tree.tree).map(top_level_file=>top_level_file);    
-    return top_level_dependencies;
+    const tree = await driver.getDependencyTree(consumerPath, consumerPath, paths, '@bit');
+    const topLevelDependencies = Object.keys(tree.tree).map(topLevelFile => topLevelFile);    
+    return topLevelDependencies;
 
 }
 
 function getComponentFiles(consumer: Consumer) {
     let bitmap = consumer.bitMap;
     const componentsMaps = bitmap.getAllComponents();
-    let component_files = [];
-    Object.keys(componentsMaps).forEach(function(key) {
-            let current_files = componentsMaps[key].files.map(file=>file.relativePath);
-            component_files = component_files.concat(current_files);
+    let componentFile = [];
+    Object.values(componentsMaps).forEach(function(value) {
+            let currentFiles = value.files.map(file => file.relativePath);
+            componentFile = componentFile.concat(currentFiles);
         });
-    return component_files;
+    return componentFile;
 }
 
 export async function getDependencyStatus( consumer: Consumer, dependencyStatusProps:DependencyStatusProps): 
-    Promise<DependencyStatusResult[]> {
-    const top_level_dependencies = await getTopLevelDependencies(consumer, dependencyStatusProps);    
-    let component_files = getComponentFiles(consumer);   
-
-    let missing_dependency_files = [];
-    top_level_dependencies.forEach(function(dependency) {
-        if(!component_files.includes(dependency)){
-            missing_dependency_files.push(dependency);
+    Promise<DependencyStatusResult[]>  {
+    const topLevelDependencies = await getTopLevelDependencies(consumer, dependencyStatusProps);    
+    let componentFiles = getComponentFiles(consumer);   
+    let missingDependencyFiles = [];
+    topLevelDependencies.forEach(function(dependency) {
+        if(!componentFiles.includes(dependency)){
+            if(dependency.startsWith(',')) {
+                dependency = dependency.substring(1);
+            }
+            missingDependencyFiles.push(dependency);
         }
     });
 
-    const results: DependencyStatusResult = { missing_files: missing_dependency_files };    
+    const results: DependencyStatusResult = { missingFiles: missingDependencyFiles };    
     return results;
 }

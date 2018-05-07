@@ -6,29 +6,28 @@ import { DependencyStatusResult } from '../../../consumer/component-ops/dependen
 import logger from '../../../logger/logger';
 
 export default class DependencyStatus extends Command {
-  name = 'dependency-status <main_file> ';
+  name = 'dependency-status [mainFile...]';
   private = true;
   description = 'returns the status of the dependency status of bit map against bit dependencies';
   alias = '';
   opts = [];
   migration = true;
 
-  action([main_file]: [string]): Promise<DependencyStatusResult> {
-    logger.info('main file is ' +  main_file);
+  action([mainFile]: [string[]]): Promise<DependencyStatusResult> {
     const dependencyStatusProps: DependencyStatusProps = {
-      main_file : main_file
+      mainFile : mainFile
     };
     return dependencyStatus(dependencyStatusProps);
 }
 
 report(dependencyStatusResult: DependencyStatusResul): string {
-  if(dependencyStatusResult.missing_files.length == 0) {
+  if(dependencyStatusResult.missingFiles.length === 0) {
     const output = chalk.green(`All files in dependency tree are marked as components`);
     return output;  
   } 
   let output = chalk.green(`The following file exist in dependency tree but are not a component:\n`);
-  output += dependencyStatusResult.missing_files.map((missing_file) => {   
-    const file = chalk.bold(missing_file + '\n');    
+  output += dependencyStatusResult.missingFiles.map((missingFile) => {   
+    const file = chalk.bold(missingFile + '\n');    
     return file;
   });
   return output;
