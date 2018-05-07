@@ -28,8 +28,7 @@ function getComponentFiles(consumer: Consumer) {
   return componentFile;
 }
 
-export default async function getDependencyStatus(consumer: Consumer, dependencyStatusProps: DependencyStatusProps): 
-  Promise<DependencyStatusResult[]> {
+export default async function getDependencyStatus(consumer: Consumer, dependencyStatusProps: DependencyStatusProps): Promise<DependencyStatusResult[]> {
   const topLevelDependencies = await getTopLevelDependencies(consumer, dependencyStatusProps);    
   let componentFiles = getComponentFiles(consumer);   
   const missingDependencyFiles = [];

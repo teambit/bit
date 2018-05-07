@@ -1,6 +1,6 @@
 /** @flow */
-import Command from '../../command';
 import chalk from 'chalk';
+import Command from '../../command';
 import { dependencyStatus } from '../../../api/consumer';
 import type { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 
