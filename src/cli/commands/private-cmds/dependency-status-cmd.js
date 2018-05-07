@@ -15,13 +15,13 @@ export default class DependencyStatus extends Command {
 
   action([mainFile]: [string[]]): Promise<DependencyStatusResult> {
     const dependencyStatusProps: DependencyStatusProps = {
-      mainFile : mainFile
+         mainFile: mainFile
     };
     return dependencyStatus(dependencyStatusProps);
 }
 
 report(dependencyStatusResult: DependencyStatusResult): string {
-    if(dependencyStatusResult.missingFiles.length === 0) {
+    if (dependencyStatusResult.missingFiles.length === 0) {
       const output = chalk.green(`All files in dependency tree are marked as components`);
       return output;  
     } 
