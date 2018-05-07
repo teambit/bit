@@ -34,6 +34,7 @@ import {
   CorruptedComponent,
   VersionAlreadyExists,
   MergeConflict,
+  HashMismatch,
   MergeConflictOnRemote,
   VersionNotFound,
   CyclicDependencies
@@ -126,6 +127,13 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
+  [
+    HashMismatch,
+    err => `found hash mismatch of ${chalk.bold(err.id)}, version ${chalk.bold(err.version)}.
+  originalHash: ${chalk.bold(err.originalHash)}.
+  currentHash: ${chalk.bold(err.currentHash)}
+  this usually happens when a component is old and the migration script was not running or interrupted`
+  ],
   [
     MergeConflict,
     err =>
