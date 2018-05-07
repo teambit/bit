@@ -15,7 +15,7 @@ import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
 
-describe.only('envs', function () {
+describe('envs', function () {
   this.timeout(0);
   const helper = new Helper();
   const compilerId = 'compilers/new-babel';
