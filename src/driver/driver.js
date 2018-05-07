@@ -51,6 +51,13 @@ export default class Driver {
     return driver.getDependencyTree(cwd, consumerPath, fullPaths, bindingPrefix);
   }
 
+
+  // TODO: Improve flow object return type
+  login(token: string, configPath: string, registryUrl: string): Object {
+    const driver = this.getDriver(false);
+    return driver.login(token, configPath, registryUrl);
+  }
+
   static load(lang) {
     return new Driver(lang);
   }
