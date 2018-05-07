@@ -20,9 +20,11 @@ function getComponentFiles(consumer: Consumer) {
   let componentFile = [];
   Object.values(componentsMaps).forEach(function (value) {
     if (value && value.files && Array.isArray(value.files)) {
-       let currentFiles = [];
-       value.files.forEach(file => currentFiles.push(file.relativePath));
-       componentFile = componentFile.concat(currentFiles);
+      const currentFiles = [];
+      value.files.forEach(function (file) {
+        if (file && file.relativePath) currentFiles.push(file.relativePath);
+      });
+      componentFile = componentFile.concat(currentFiles);
     }
   });
   return componentFile;
@@ -39,7 +41,7 @@ export default (async function getDependencyStatus(
     if (dependency.startsWith(',')) {
       dependency = dependency.substring(1);
     }
-    if (!componentFiles.includes(dependency)) {    
+    if (!componentFiles.includes(dependency)) {
       missingDependencyFiles.push(dependency);
     }
   });
