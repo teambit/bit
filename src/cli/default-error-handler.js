@@ -151,7 +151,10 @@ to resolve this conflict and merge your remote and local changes, please do the 
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
-  [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
+  [
+    UnexpectedNetworkError,
+    err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
+  ],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
   [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
@@ -303,6 +306,8 @@ export default (err: Error): ?string => {
 
   Analytics.setError(LEVEL.INFO, err.makeAnonymous());
   const [, func] = error;
-  logger.error(`User gets the following error: ${func(err)}`);
-  return chalk.red(func(err));
+  const errorMessage = func(err);
+  err.message = errorMessage;
+  logger.error(`User gets the following error: ${errorMessage}`);
+  return chalk.red(errorMessage);
 };
