@@ -20,7 +20,7 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
 function getComponentFiles(consumer: Consumer) {
   const bitmap = consumer.bitMap;
   const componentsMaps = bitmap.getAllComponents();
-  const componentFile = [];
+  let componentFile = [];
   Object.values(componentsMaps).forEach( function(value) {
     const currentFiles = value.files.map(file => file.relativePath);
     componentFile = componentFile.concat(currentFiles);
