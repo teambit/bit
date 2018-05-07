@@ -3,7 +3,7 @@ import type {
   DependencyStatusResult,
   DependencyStatusProps,
   getDependencyStatus
-git } from '../../../consumer/component-ops/dependency-status';
+} from '../../../consumer/component-ops/dependency-status';
 import { loadConsumer, Consumer } from '../../../consumer';
 
 export default (async function dependencyStatus(
