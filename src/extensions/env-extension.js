@@ -13,6 +13,7 @@ import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import Repository from '../scope/repository';
 import { pathJoinLinux } from '../utils';
+import { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -89,12 +90,11 @@ export default class EnvExtension extends BaseExtension {
     return modelObject;
   }
 
-  // TODO: Gilad - change the return type
   /**
    * Get a bit.json representation of the env instance
    * @param {string} ejectedEnvDirectory - The base path of where the env config files are stored
    */
-  toBitJsonObject(ejectedEnvDirectory: string): Compilers {
+  toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
     const files = {};
     this.files.forEach((file) => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.name);
