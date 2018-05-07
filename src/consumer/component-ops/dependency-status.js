@@ -1,5 +1,6 @@
 // @flow
 import * as packageJson from '../component/package-json';
+import { Consumer } from '..';
 import { 
     DEFAULT_BINDINGS_PREFIX 
 } from '../../constants';

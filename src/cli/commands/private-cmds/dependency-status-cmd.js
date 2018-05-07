@@ -2,7 +2,7 @@
 import Command from '../../command';
 import chalk from 'chalk';
 import { dependencyStatus } from '../../../api/consumer';
-import { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
+import type { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
 import logger from '../../../logger/logger';
 
 export default class DependencyStatus extends Command {
