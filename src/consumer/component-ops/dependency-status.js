@@ -19,7 +19,7 @@ function getComponentFiles(consumer: Consumer) {
   const componentsMaps = bitmap.getAllComponents();
   let componentFile = [];
   Object.values(componentsMaps).forEach(function (value) {
-    if (value.files) {
+    if (value && value.files) {
       const currentFiles = value.files.map(file => file.relativePath);
       componentFile = componentFile.concat(currentFiles);
     }
@@ -30,7 +30,7 @@ function getComponentFiles(consumer: Consumer) {
 export default (async function getDependencyStatus(
   consumer: Consumer,
   dependencyStatusProps: DependencyStatusProps
-): Promise<DependencyStatusResult[]> {
+): Promise<DependencyStatusResult> {
   const topLevelDependencies = await getTopLevelDependencies(consumer, dependencyStatusProps);
   const componentFiles = getComponentFiles(consumer);
   const missingDependencyFiles = [];

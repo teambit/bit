@@ -1,9 +1,6 @@
 /** @flow */
-import type {
-  DependencyStatusResult,
-  DependencyStatusProps,
-  getDependencyStatus
-} from '../../../consumer/component-ops/dependency-status';
+import type { DependencyStatusResult, DependencyStatusProps } from '../../../consumer/component-ops/dependency-status';
+import getDependencyStatus from '../../../consumer/component-ops/dependency-status';
 import { loadConsumer, Consumer } from '../../../consumer';
 
 export default (async function dependencyStatus(
