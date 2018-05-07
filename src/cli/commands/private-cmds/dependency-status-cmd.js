@@ -21,15 +21,15 @@ export default class DependencyStatus extends Command {
 }
 
 report(dependencyStatusResult: DependencyStatusResult): string {
-  if(dependencyStatusResult.missingFiles.length === 0) {
-    const output = chalk.green(`All files in dependency tree are marked as components`);
-    return output;  
-  } 
-  let output = chalk.green(`The following file exist in dependency tree but are not a component:\n`);
-  output += dependencyStatusResult.missingFiles.map((missingFile) => {   
-    const file = chalk.bold(missingFile + '\n');    
-    return file;
-  });
-  return output;
+    if(dependencyStatusResult.missingFiles.length === 0) {
+      const output = chalk.green(`All files in dependency tree are marked as components`);
+      return output;  
+    } 
+    let output = chalk.green(`The following file exist in dependency tree but are not a component:\n`);
+    output += dependencyStatusResult.missingFiles.map((missingFile) => {   
+      const file = chalk.bold(missingFile + '\n');    
+      return file;
+    });
+    return output;
 }
 }
