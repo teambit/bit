@@ -2,7 +2,7 @@ const Mocha = require('mocha');
 let logger;
 
 const tester = {
-  init: (rawConfig, dynamicConfig, api) => {
+  init: ({ rawConfig, dynamicConfig, api }) => {
     logger = api.getLogger();
   },
   getDynamicConfig: ({ rawConfig }) => {

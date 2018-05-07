@@ -83,7 +83,7 @@ export default class BaseExtension {
   async init(): Promise<boolean> {
     try {
       if (this.script.init && typeof this.script.init === 'function') {
-        await this.script.init(this.rawConfig, this.dynamicConfig, this.api);
+        await this.script.init({ rawConfig: this.rawConfig, dynamicConfig: this.dynamicConfig, api: this.api });
       }
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
