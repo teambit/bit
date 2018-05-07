@@ -74,6 +74,10 @@ describe('bit diff command', function () {
         it('should show the added part with leading + (plus sign)', () => {
           expect(diffOutput).to.have.string("+module.exports = function foo() { return 'got foo v2'; };");
         });
+        it('should show a success message also when running from an inner directory', () => {
+          const outputInner = helper.runCmd('bit diff bar/foo', path.join(helper.localScopePath, 'bar'));
+          expect(outputInner).to.have.string(successDiffMessage);
+        });
       });
     });
   });
@@ -98,8 +102,8 @@ describe('bit diff command', function () {
         output = helper.diff();
       });
       it('should show diff for all modified components', () => {
-        expect(output).to.have.string('bar/foo@0.0.1');
-        expect(output).to.have.string('utils/is-type@0.0.1');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('utils/is-type');
         expect(output).to.have.string(barFooV1);
         expect(output).to.have.string(barFooV2);
         expect(output).to.have.string(fixtures.isType);
@@ -152,6 +156,55 @@ describe('bit diff command', function () {
       expect(output).to.have.string(`+++ ${barFoo2File} (0.0.1 modified)`);
       // notice the leading plus sign
       expect(output).to.have.string(`+${barFooV2}`);
+    });
+    describe('other fields diff', () => {
+      it('should indicate that the mainFile was changed', () => {
+        expect(output).to.have.string('--- Main File (0.0.1 original)');
+        expect(output).to.have.string('+++ Main File (0.0.1 modified)');
+        expect(output).to.have.string('- bar/foo.js');
+        expect(output).to.have.string('+ bar/foo2.js');
+      });
+      it('should indicate that the files array were changed', () => {
+        expect(output).to.have.string('--- Files (0.0.1 original)');
+        expect(output).to.have.string('+++ Files (0.0.1 modified)');
+        expect(output).to.have.string('- [ bar/foo.js ]');
+        expect(output).to.have.string('+ [ bar/foo2.js ]');
+      });
+    });
+    describe('running bit diff between the previous version and the last version', () => {
+      before(() => {
+        helper.tagAllWithoutMessage();
+        output = helper.diff('bar/foo 0.0.1 0.0.2');
+      });
+      it('should indicate the deleted files as deleted', () => {
+        expect(output).to.have.string(`--- ${barFooFile} (0.0.1)`);
+        expect(output).to.have.string(`+++ ${barFooFile} (0.0.2)`);
+        expect(output).to.have.string(`-${barFooV1}`);
+      });
+      it('should indicate the added files as added', () => {
+        const barFoo2File = path.join('bar', 'foo2.js');
+        expect(output).to.have.string(`--- ${barFoo2File} (0.0.1)`);
+        expect(output).to.have.string(`+++ ${barFoo2File} (0.0.2)`);
+        expect(output).to.have.string(`+${barFooV2}`);
+      });
+      describe('other fields diff', () => {
+        it('should indicate that the mainFile was changed', () => {
+          expect(output).to.have.string('--- Main File (0.0.1)');
+          expect(output).to.have.string('+++ Main File (0.0.2)');
+          expect(output).to.have.string('- bar/foo.js');
+          expect(output).to.have.string('+ bar/foo2.js');
+        });
+        it('should indicate that the files array were changed', () => {
+          expect(output).to.have.string('--- Files (0.0.1)');
+          expect(output).to.have.string('+++ Files (0.0.2)');
+          expect(output).to.have.string('- [ bar/foo.js ]');
+          expect(output).to.have.string('+ [ bar/foo2.js ]');
+        });
+      });
+      it('should have the same output as running diff of the previous version', () => {
+        const diffOfVersionOutput = helper.diff('bar/foo 0.0.1');
+        expect(diffOfVersionOutput).to.be.equal(output);
+      });
     });
   });
   describe('component with multiple versions', () => {

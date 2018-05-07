@@ -1,6 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 
 const assertArrays = require('chai-arrays');
 
@@ -470,39 +471,13 @@ describe('bit status command', function () {
       it('should display that component as deleted component', () => {
         expect(output.includes('deleted components')).to.be.true;
       });
-    });
-  });
-  // @todo: fix this along with 'import component is-type as a dependency of is-string and then import is-type directly' e2e-test.
-  describe.skip('after importing a component that uses a dependency with relative-path', () => {
-    let output;
-    before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
-      const isStringFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
-      helper.commitAllComponents();
-      helper.exportAllComponents();
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
-      helper.importComponent('utils/is-type');
-      output = helper.runCmd('bit status');
-    });
-    it('should not show the main component as missing dependencies', () => {
-      expect(output.includes('missing dependencies')).to.be.false;
-    });
-    it('should not display any component as new', () => {
-      expect(output.includes('no new components')).to.be.true;
-    });
-    it('should not display any component as modified', () => {
-      expect(output.includes('modified components')).to.be.false;
-    });
-    it('should not display any component as staged', () => {
-      expect(output.includes('no staged components')).to.be.true;
+      describe('running bit diff', () => {
+        it('should throw an exception MissingFilesFromComponent', () => {
+          const diffFunc = () => helper.diff('bar/foo');
+          const error = new MissingFilesFromComponent('bar/foo');
+          helper.expectToThrow(diffFunc, error);
+        });
+      });
     });
   });
   describe('when a component requires a missing component with absolute syntax (require bit/component-name)', () => {

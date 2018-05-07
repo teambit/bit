@@ -622,5 +622,10 @@ describe('bit checkout command', function () {
       expect(output).to.not.have.string('bar/foo.js');
       expect(output).to.have.string('foo.js');
     });
+    it('bit-diff should not show any changes related to the originallySharedDir', () => {
+      const diffOutput = helper.runWithTryCatch('bit diff bar/foo');
+      expect(diffOutput).to.have.string('no diff for');
+      expect(diffOutput).to.not.have.string('foo.js');
+    });
   });
 });
