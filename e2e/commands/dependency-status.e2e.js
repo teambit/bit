@@ -4,13 +4,13 @@ import Helper from '../e2e-helper';
 
 describe('bit dependency status', function () {
   this.timeout(0);
-  const helper = new Helper();  
+  const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
 
   describe('all files mapped', () => {
-    before(() => {      
+    before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.reInitLocalScope();
       helper.copyFixtureComponents('dependency-status');
@@ -20,11 +20,11 @@ describe('bit dependency status', function () {
     });
     it('Should print no missing files as all files are mapped', () => {
       const output = helper.runCmd('bit dependency-status dependency-status-test-files/b.js');
-      expect(output).to.have.string('All files in dependency tree are marked as components');        
+      expect(output).to.have.string('All files in dependency tree are marked as components');
     });
   });
   describe('not all files mapped', () => {
-    before(() => {      
+    before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.reInitLocalScope();
       helper.copyFixtureComponents('dependency-status');
@@ -33,8 +33,8 @@ describe('bit dependency status', function () {
     });
     it('Should print missing files which are not mapped to bit components', () => {
       const output = helper.runCmd('bit dependency-status dependency-status-test-files/b.js');
-      expect(output).to.have.string('The following file exist in dependency tree but are not a component');        
-      expect(output).to.have.string('c.js');        
+      expect(output).to.have.string('The following file exist in dependency tree but are not a component');
+      expect(output).to.have.string('c.js');
     });
   });
 });
