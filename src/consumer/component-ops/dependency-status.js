@@ -25,7 +25,7 @@ function getComponentFiles(consumer: Consumer) {
   return componentFile;
 }
 
-export async function getDependencyStatus(
+export default async function getDependencyStatus(
   consumer: Consumer,
   dependencyStatusProps: DependencyStatusProps
 ): Promise<DependencyStatusResult[]> {
