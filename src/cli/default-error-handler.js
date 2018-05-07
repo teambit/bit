@@ -309,7 +309,9 @@ export default (err: Error): ?string => {
   if (!error) return formatUnhandled(err);
   /* this is an error that bit knows how to handle dont send to sentry */
 
-  Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  if (err.makeAnonymous) {
+    Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  }
   const [, func] = error;
   logger.error(`User gets the following error: ${func(err)}`);
   return chalk.red(func(err));
