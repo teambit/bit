@@ -13,6 +13,7 @@ import ResolutionException from './resolution-exception';
 import DependencyNotFound from './dependency-not-found';
 import CorruptedComponent from './corrupted-component';
 import CyclicDependencies from './cyclic-dependencie';
+import HashMismatch from './hash-mismatch';
 
 export {
   ScopeNotFound,
@@ -25,6 +26,7 @@ export {
   VersionAlreadyExists,
   ScopeAlreadyExists,
   BitNotInScope,
+  HashMismatch,
   ResolutionException,
   DependencyNotFound,
   CorruptedComponent,

@@ -9,6 +9,7 @@ import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
 import ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
+import { HashMismatch } from './exceptions';
 
 export default class ComponentVersion {
   component: Component;
@@ -83,12 +84,22 @@ export default class ComponentVersion {
   async toObjects(repo: Repository): Promise<ComponentObjects> {
     const version = await this.getVersion(repo);
     if (!version) throw new GeneralError(`failed loading version ${this.version} of ${this.component.id()}`);
-    const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
-      this.component.asRaw(repo),
-      version.collectRaw(repo),
-      version.asRaw(repo),
-      repo.getScopeMetaObject()
-    ]);
-    return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
+    try {
+      const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
+        this.component.asRaw(repo),
+        version.collectRaw(repo),
+        version.asRaw(repo),
+        repo.getScopeMetaObject()
+      ]);
+      return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
+    } catch (err) {
+      logger.error(err);
+      const originalVersionHash = this.component.versions[this.version];
+      const currentVersionHash = version.hash();
+      if (originalVersionHash !== currentVersionHash) {
+        throw new HashMismatch(this.component.id(), this.version, originalVersionHash, currentVersionHash);
+      }
+      throw err;
+    }
   }
 }
