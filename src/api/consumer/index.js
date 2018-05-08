@@ -27,6 +27,7 @@ import checkout from './lib/checkout';
 import merge from './lib/merge';
 import diff from './lib//diff';
 import migrate from './lib/migrate';
+import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
 
 export {
@@ -55,6 +56,7 @@ export {
   getDriver,
   watchAll,
   add,
+  dependencyStatus,
   untrack,
   unTagAction,
   move,
