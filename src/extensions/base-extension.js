@@ -6,6 +6,7 @@ import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
+import type { PathOsBased } from '../utils/path';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -20,17 +21,18 @@ type BaseArgs = {
 };
 
 export type BaseLoadArgsProps = BaseArgs & {
-  consumerPath?: ?string,
-  scopePath?: ?string,
+  consumerPath: PathOsBased,
+  scopePath: PathOsBased,
   context?: ?Object
 };
 
 type StaticProps = BaseArgs & {
   dynamicConfig: Object,
   filePath: string,
-  script: Function,
+  script?: Function,
   disabled: boolean,
-  loaded: boolean
+  loaded: boolean,
+  context?: Object
 };
 
 type InstanceSpecificProps = {
