@@ -47,6 +47,7 @@ export function moveExistingComponent(bitMap: BitMap, component: Component, oldP
       `could not move the component ${component.id.toString()} from ${oldPath} to ${newPath} as the destination path already exists`
     );
   }
+  if (newPath.startsWith(oldPath)) throw new GeneralError(`unable to move '${oldPath}' into itself '${newPath}'`);
   const componentMap = bitMap.getComponent(component.id);
   componentMap.updateDirLocation(oldPath, newPath);
   fs.moveSync(oldPath, newPath);
