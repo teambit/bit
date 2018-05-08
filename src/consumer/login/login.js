@@ -6,12 +6,20 @@ import os from 'os';
 import chalk from 'chalk';
 import url from 'url';
 import { setSync, getSync } from '../../api/consumer/lib/global-config';
-import { CFG_USER_TOKEN_KEY, DEFAULT_HUB_LOGIN, CFG_HUB_LOGIN_KEY, DEFAULT_LANGUAGE, DEFAULT_REGISTRY_URL, CFG_REGISTRY_URL_KEY } from '../../constants';
+import {
+  CFG_USER_TOKEN_KEY,
+  DEFAULT_HUB_LOGIN,
+  CFG_HUB_LOGIN_KEY,
+  DEFAULT_LANGUAGE,
+  DEFAULT_REGISTRY_URL,
+  CFG_REGISTRY_URL_KEY
+} from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import { Driver } from '../../driver';
+import { PathToNpmrcNotExist, WriteToNpmrcError } from './exceptions';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
@@ -22,13 +30,19 @@ export default function loginToBitSrc(
   noLaunchBrowser?: boolean,
   npmrcPath: string,
   skipRegistryConfig: boolean
-): Promise<{ isAlreadyLoggedIn?: boolean, username?: string }> {
+): Promise<{
+  isAlreadyLoggedIn?: boolean,
+  username?: string
+}> {
   return new Promise((resolve, reject) => {
     const clientGeneratedId = uuid();
     const driver = Driver.load(DEFAULT_LANGUAGE);
+    let scopedRegistryConfigPath;
     if (getSync(CFG_USER_TOKEN_KEY)) {
       // $FlowFixMe
-      return resolve({ isAlreadyLoggedIn: true });
+      return resolve({
+        isAlreadyLoggedIn: true
+      });
     }
     const server = http.createServer((request, response) => {
       const closeConnection = (statusCode?: number) => {
@@ -49,10 +63,27 @@ export default function loginToBitSrc(
           reject(new LoginFailed());
         }
         setSync(CFG_USER_TOKEN_KEY, token);
-        if (!skipRegistryConfig) driver.npmLogin(token, npmrcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
-        response.writeHead(REDIRECT, { Location: redirectUri });
+        if (!skipRegistryConfig) {
+          try {
+            scopedRegistryConfigPath = driver.npmLogin(
+              token,
+              npmrcPath,
+              getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL
+            );
+          } catch (e) {
+            if (e.code === 'PathNotExist') reject(new PathToNpmrcNotExist(e.path));
+            reject(new WriteToNpmrcError(e.path));
+          }
+        }
+
+        response.writeHead(REDIRECT, {
+          Location: redirectUri
+        });
         closeConnection();
-        resolve({ username });
+        resolve({
+          username,
+          npmrcPath: scopedRegistryConfigPath
+        });
       } catch (err) {
         logger.err(`err on login: ${err}`);
         closeConnection(ERROR_RESPONSE);

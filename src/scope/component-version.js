@@ -94,8 +94,8 @@ export default class ComponentVersion {
       return new ComponentObjects(compObject, objects.concat([versionBuffer, scopeMeta]));
     } catch (err) {
       logger.error(err);
-      const originalVersionHash = this.component.versions[this.version];
-      const currentVersionHash = version.hash();
+      const originalVersionHash = this.component.versions[this.version].toString();
+      const currentVersionHash = version.hash().toString();
       if (originalVersionHash !== currentVersionHash) {
         throw new HashMismatch(this.component.id(), this.version, originalVersionHash, currentVersionHash);
       }
