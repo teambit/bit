@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - fix error "Maximum call stack size exceeded" when tagging or building a huge file
 
-## [0.12.13-dev.3] - 2018-05-08
+## [0.12.13-dev.4] - 2018-05-08
 
 - add error handling to bit login
 
