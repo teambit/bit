@@ -16,9 +16,9 @@ export default class Login extends Command {
   // $FlowFixMe
   action(
     [nothing]: [string[]],
-    { port, noLaunchBrowser = false, rcPath, skipRegistryConfig = false }: { port: string, noLaunchBrowser?: boolean, rcPath: string, skipRegistryConfig: boolean }
+    { port, noLaunchBrowser = false, npmrcPath, skipRegistryConfig = false }: { port: string, noLaunchBrowser?: boolean, npmrcPath: string, skipRegistryConfig: boolean }
   ): Promise<any> {
-    return login(port, noLaunchBrowser, rcPath, skipRegistryConfig);
+    return login(port, noLaunchBrowser, npmrcPath, skipRegistryConfig);
   }
   report({ isAlreadyLoggedIn = false, username }: { isAlreadyLoggedIn: boolean, username: string }): string {
     if (isAlreadyLoggedIn) return chalk.yellow('already logged in');

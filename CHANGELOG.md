@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve the error-message "unexpected network error has occurred" to provide some useful data
 - when running bit login, also configure bitsrc registry for npm
 
 ## [0.12.13-dev.1] - 2018-05-06

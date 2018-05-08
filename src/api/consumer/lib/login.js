@@ -4,8 +4,8 @@ import loginToBitSrc from '../../../consumer/login/login';
 export default (async function loginAction(
   port: string,
   noLaunchBrowser?: boolean,
-  rcPath: string,
+  npmrcPath: string,
   skipRegistryConfig: boolean
 ): Promise<{ isAlreadyLoggedIn?: boolean, username?: string }> {
-  return loginToBitSrc(port, noLaunchBrowser, rcPath, skipRegistryConfig);
+  return loginToBitSrc(port, noLaunchBrowser, npmrcPath, skipRegistryConfig);
 });
