@@ -1,5 +1,5 @@
 /** @flow */
-import replaceBuffer from 'replace-buffer';
+import replaceBuffer from './buffer/replace-buffer-non-recursive';
 
 const isWindows = typeof process !== 'undefined' && process.platform === 'win32';
 const linebreak = isWindows ? '\r\n' : '\n';
@@ -10,7 +10,7 @@ function converts(text: string | Buffer, to: string) {
   let str = text;
   if (Buffer.isBuffer(text)) {
     newLines.forEach(function (newLine) {
-      str = replaceBuffer(str, newLine, to);
+      if (newLine !== to) str = replaceBuffer(str, newLine, to);
     });
     return str;
   }
