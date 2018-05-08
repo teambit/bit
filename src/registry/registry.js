@@ -4,10 +4,12 @@ import path from 'path';
 import iniBuilder from 'ini-builder';
 import userHome from 'user-home';
 import { DEFAULT_BINDINGS_PREFIX } from '../constants';
+import { PathToNpmrcNotExist, WriteToNpmrcError } from './exceptions';
 
 function findrc(pathToNpmrc: string) {
   let userNpmrc = path.join(userHome, '.npmrc');
-  if (pathToNpmrc && fs.existsSync(pathToNpmrc)) {
+  if (pathToNpmrc) {
+    if (!fs.existsSync(pathToNpmrc)) throw new PathToNpmrcNotExist(pathToNpmrc);
     const stats = fs.statSync(pathToNpmrc);
     if (stats.isFile()) userNpmrc = pathToNpmrc;
     else userNpmrc = path.join(pathToNpmrc, '.npmrc');
@@ -38,8 +40,13 @@ function mergeOrCreateConfig(token: string, url: string, config: Array<Object> =
   return config;
 }
 
-export default function npmLogin(token: string, pathToNpmrc: string, url: string): void {
+export default function npmLogin(token: string, pathToNpmrc: string, url: string): string {
   const npmrcPath = findrc(pathToNpmrc);
   const npmrcConfig = (fs.existsSync(npmrcPath)) ? mergeOrCreateConfig(token, url, iniBuilder.parse(fs.readFileSync(npmrcPath, 'utf-8'))) : mergeOrCreateConfig(token, url);
-  fs.writeFileSync(npmrcPath, iniBuilder.serialize(npmrcConfig));
+  try {
+    fs.writeFileSync(npmrcPath, iniBuilder.serialize(npmrcConfig));
+  } catch (err) {
+    throw new WriteToNpmrcError(npmrcPath);
+  }
+  return npmrcPath;
 }
