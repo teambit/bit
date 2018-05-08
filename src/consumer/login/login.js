@@ -71,7 +71,6 @@ export default function loginToBitSrc(
               getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL
             );
           } catch (e) {
-            if (e.code === 'PathNotExist') reject(new PathToNpmrcNotExist(e.path));
             reject(new WriteToNpmrcError(e.path));
           }
         }
