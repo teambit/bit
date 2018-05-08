@@ -173,6 +173,8 @@ export const CFG_USER_TOKEN_KEY = 'user.token';
 
 export const CFG_USER_NAME_KEY = 'user.name';
 
+export const CFG_REGISTRY_URL_KEY = 'registry';
+
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
 export const CFG_HUB_DOMAIN_KEY = 'hub_domain';
@@ -340,6 +342,8 @@ export const BIT_VERSION = packageFile.version;
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
 export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
+
+export const DEFAULT_REGISTRY_URL = 'https://node.bitsrc.io';
 
 export const SKIP_UPDATE_FLAG = '--skip-update';
 

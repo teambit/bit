@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.13-dev.2] - 2018-05-08
+
+- improve the error-message "unexpected network error has occurred" to provide some useful data
+- when running bit login, also configure bitsrc registry for npm
+
 ## [0.12.13-dev.1] - 2018-05-06
 
 - add `bit show --compare` data into `bit diff` to easily see why a component is modified in one command
