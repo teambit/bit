@@ -8,7 +8,6 @@ describe('bit dependency status', function () {
   after(() => {
     helper.destroyEnv();
   });
-
   describe('all files mapped', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
