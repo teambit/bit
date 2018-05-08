@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import { BitId } from '../../src/bit-id';
 
-describe('Bit-id', () => {
+describe('BitId', () => {
   describe('getValidBitId', () => {
     it('should convert CSSComp to css-comp', () => {
       const bitName = 'CSSComp';
@@ -40,6 +40,12 @@ describe('Bit-id', () => {
       const bitName = 'app-Bar';
       const global = 'CSS!!####@comp';
       expect(BitId.getValidBitId(global, bitName).toString()).to.equal('css!!####@comp/app-bar');
+    });
+  });
+  describe('toString', () => {
+    it('should not contain the version as latest', () => {
+      const bitId = BitId.parse('bit.envs/mocha/react@latest');
+      expect(bitId.toString()).to.equal('bit.envs/mocha/react');
     });
   });
 });

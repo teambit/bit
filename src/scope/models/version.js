@@ -119,7 +119,13 @@ export default class Version extends BitObject {
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new GeneralError(`failed creating a version object, the field "${field}" can't be empty`);
+      if (!this[field]) throw new Error(`failed creating a version object, the field "${field}" can't be empty`);
+    });
+    const bitIdFields = ['compiler', 'tester'];
+    bitIdFields.forEach((field) => {
+      if (this[field] && !(this[field] instanceof BitId)) {
+        throw new Error(`failed creating a version object, the field "${field}" must be an instance of BitId`);
+      }
     });
   }
 
@@ -311,10 +317,6 @@ export default class Version extends BitObject {
       peerPackageDependencies,
       packageDependencies
     });
-  }
-
-  static from(versionProps: VersionProps): Version {
-    return new Version(versionProps);
   }
 
   static fromComponent({
