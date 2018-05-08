@@ -28,8 +28,7 @@ export function componentToPrintableForDiff(component: Component): Object {
     envsPackageDependencies,
     files,
     mainFile,
-    deprecated,
-    docs
+    deprecated
   } = component;
   const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
   const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies) || [];
@@ -59,7 +58,6 @@ export function componentToPrintableForDiff(component: Component): Object {
       ? files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
   obj.deprecated = deprecated ? 'True' : null;
-  obj.docs = docs;
   return obj;
 }
 
