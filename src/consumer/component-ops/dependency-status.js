@@ -18,7 +18,8 @@ function getComponentFiles(consumer: Consumer) {
   const bitmap = consumer.bitMap;
   const componentsMaps = bitmap.getAllComponents();
   let componentFile = [];
-  Object.values(componentsMaps).forEach(function (value) {
+  const values = Object.keys(componentsMaps).map(key => componentsMaps[key]);
+  values.forEach(function (value) {
     if (value && value.files && Array.isArray(value.files)) {
       const currentFiles = [];
       value.files.forEach(function (file) {
