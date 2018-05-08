@@ -65,6 +65,7 @@ import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
 import GeneralError from '../error/general-error';
+import AbstractError from '../error/abstract-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -309,8 +310,10 @@ export default (err: Error): ?string => {
   if (!error) return formatUnhandled(err);
   /* this is an error that bit knows how to handle dont send to sentry */
 
-  if (err.makeAnonymous) {
+  if (err instanceof AbstractError) {
     Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  } else {
+    Analytics.setError(LEVEL.FATAL, err);
   }
   const [, func] = error;
   logger.error(`User gets the following error: ${func(err)}`);
