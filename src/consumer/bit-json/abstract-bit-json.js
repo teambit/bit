@@ -20,6 +20,7 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS
 } from '../../constants';
+import { EnvLoadArgsProps } from '../../extensions/env-extension';
 
 export type RegularExtensionObject = {
   rawConfig: Object,
@@ -105,7 +106,7 @@ export default class AbstractBitJson {
     return testerObj;
   }
 
-  set tester(tester: string | testers) {
+  set tester(tester: string | Testers) {
     this._tester = transformEnvToObject(tester);
   }
 

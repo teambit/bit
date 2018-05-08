@@ -9,21 +9,21 @@ const testOneComponent = verbose => async (id: string) => {
   return res[0];
 };
 
-function run() {
+function run(): Promise<void> {
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
   const verbose: boolean = process.env.__verbose__ === true;
   if (!ids || !ids.length) {
     return process.send([]);
   }
   const testAllP = ids.map(testOneComponent(verbose));
-  Promise.all(testAllP)
+  return Promise.all(testAllP)
     .then((results) => {
       const serializedResults = serializeResults(results);
       return process.send(serializedResults);
     })
     .catch((e) => {
       const serializedResults = serializeResults(e);
-      return process.send(serializedResults);      
+      return process.send(serializedResults);
     });
 }
 

@@ -9,6 +9,7 @@ import ConsumerComponent from '../../../consumer/component';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 import { TESTS_FORK_LEVEL } from '../../../constants';
 import specsRunner from '../../../specs-runner/specs-runner';
+import GeneralError from '../../../error/general-error';
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 
@@ -38,6 +39,7 @@ export default (async function test(
     const results = await specsRunner({ ids, forkLevel, verbose });
     return results;
   }
+  throw new GeneralError('unknown fork level, fork level must be one of: NONE, ONE, COMPONENT');
 });
 
 export const testInProcess = async (

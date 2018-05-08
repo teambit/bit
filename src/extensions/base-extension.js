@@ -138,7 +138,7 @@ export default class BaseExtension {
     this.filePath = componentPath;
   }
 
-  static transformStringToModelObject(name: string) {
+  static transformStringToModelObject(name: string): BaseExtensionModel {
     return {
       name,
       config: {}
@@ -195,7 +195,7 @@ export default class BaseExtension {
     return extensionProps;
   }
 
-  static loadFromModelObject(modelObject) {
+  static loadFromModelObject(modelObject: string | BaseExtensionModel) {
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {

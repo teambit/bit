@@ -6,20 +6,18 @@ import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
-import { CompilerEnvType } from './compiler-extension';
-import { TesterEnvType } from './tester-extension';
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import Repository from '../scope/repository';
 import { pathJoinLinux } from '../utils';
-import { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
+import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
 // I would expect something like:
 // type EnvType = CompilerEnvType | TesterEnvType would work
-type EnvType = 'Compiler' | 'Tester';
+export type EnvType = 'Compiler' | 'Tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType,
@@ -48,6 +46,7 @@ export default class EnvExtension extends BaseExtension {
     if (this.script && this.script.action && typeof this.script.action === 'function') {
       return this.script.action;
     }
+    return undefined;
   }
 
   /**
@@ -70,11 +69,11 @@ export default class EnvExtension extends BaseExtension {
     this.files = extensionProps.files;
   }
 
-  async install(scope: Scope, opts: { verbose: boolean }) {
+  async install(scope: Scope, opts: { verbose: boolean }): ?Promise<ComponentWithDependencies[]> {
     // Skip the installation in case of using specific file
     // options.file usually used for develop your extension
     if (this.options.file) {
-      return;
+      return undefined;
     }
     const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
     const installResult = await scope.installEnvironment(installOpts);
