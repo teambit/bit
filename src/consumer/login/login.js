@@ -49,7 +49,7 @@ export default function loginToBitSrc(
           reject(new LoginFailed());
         }
         setSync(CFG_USER_TOKEN_KEY, token);
-        if (!skipRegistryConfig) driver.login(token, rcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL );
+        if (!skipRegistryConfig) driver.npmLogin(token, rcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
         response.writeHead(REDIRECT, { Location: redirectUri });
         closeConnection();
         resolve({ username });

@@ -53,9 +53,9 @@ export default class Driver {
 
 
   // TODO: Improve flow object return type
-  login(token: string, configPath: string, registryUrl: string): Object {
+  npmLogin(token: string, configPath: string, registryUrl: string): Object {
     const driver = this.getDriver(false);
-    return driver.login(token, configPath, registryUrl);
+    return driver.npmLogin(token, configPath, registryUrl);
   }
 
   static load(lang) {

@@ -6,7 +6,6 @@
   "preferGlobal": true,
   "scripts": {
     "dev-link": "node ./scripts/establish-dev-link.js $1",
-
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "flow-coverage": "flow-coverage-report -i \"./src/**/*.js\"",
     "lint": "eslint \"{src,specs,e2e}/**/*.js\" && flow check",

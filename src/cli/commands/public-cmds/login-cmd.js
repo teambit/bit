@@ -10,7 +10,7 @@ export default class Login extends Command {
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'no-launch-browser', 'do not open a browser for authentication'],
-    ['r', 'rc-path <path>', 'path to npmrc file to configure bitsrc registry'],
+    ['', 'npmrc-path <path>', 'path to npmrc file to configure bitsrc registry'],
     ['', 'skip-registry-config [boolean]', 'dont configure bitsrc registry'],
   ];
   // $FlowFixMe
