@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.16-dev.2] - 2018-05-08
+
 - support for bit login (set registry with token)
 
 ## [0.10.16-dev.1] - 2018-05-06
