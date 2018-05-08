@@ -27,8 +27,7 @@ export function componentToPrintableForDiff(component: Component): Object {
     peerPackageDependencies,
     files,
     mainFile,
-    deprecated,
-    docs
+    deprecated
   } = component;
 
   obj.id = component.id.toStringWithoutScope();
@@ -55,7 +54,6 @@ export function componentToPrintableForDiff(component: Component): Object {
       ? files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
   obj.deprecated = deprecated ? 'True' : null;
-  obj.docs = docs;
   return obj;
 }
 
