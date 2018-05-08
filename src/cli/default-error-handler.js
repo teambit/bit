@@ -67,6 +67,8 @@ import ExternalBuildError from '../consumer/component/exceptions/external-build-
 import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import GeneralError from '../error/general-error';
+import AbstractError from '../error/abstract-error';
+import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -232,6 +234,9 @@ once your changes are merged with the new remote version, please tag and export 
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
+  [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
+
   [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
@@ -322,7 +327,11 @@ export default (err: Error): ?string => {
   if (!error) return formatUnhandled(err);
   /* this is an error that bit knows how to handle dont send to sentry */
 
-  Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  if (err instanceof AbstractError) {
+    Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  } else {
+    Analytics.setError(LEVEL.FATAL, err);
+  }
   const [, func] = error;
   const errorMessage = func(err);
   err.message = errorMessage;
