@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support for bit login (set registry with token)
+
 ## [0.10.16-dev.1] - 2018-05-06
 
 - adding scss to support ~
