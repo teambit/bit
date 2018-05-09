@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix error "Maximum call stack size exceeded" when tagging or building a large file
+
 ## [0.12.13] - 2018-05-09
 
 ### New
