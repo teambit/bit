@@ -7,6 +7,7 @@
  * stack size exceeded".
  */
 export default function replaceBuffer(buffer: Buffer, oldStr: string, newStr: string): Buffer {
+  if (!(buffer instanceof Buffer)) throw new Error(`replaceBuffer expect to get Buffer, got ${typeof buffer} instead`);
   if (!buffer.includes(oldStr)) return buffer;
   const bufferOldStr = Buffer.from(oldStr);
   const bufferOldStrLength = bufferOldStr.length;
