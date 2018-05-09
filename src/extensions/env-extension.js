@@ -139,9 +139,9 @@ export default class EnvExtension extends BaseExtension {
     return resolvedEjectedEnvsDirectory;
   }
 
-  async reload(context?: Object): Promise<void> {
-    super.reload();
-    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this, context);
+  async reload(): Promise<void> {
+    await super.reload();
+    const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
 
