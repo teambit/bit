@@ -73,7 +73,7 @@ export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export const DEFAULT_EXTENSIONS = {
   'ext-docs-parser': {
-    config: {},
+    rawConfig: {},
     options: {
       core: true
     }

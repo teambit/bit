@@ -7,7 +7,7 @@ import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
 import CompilerExtension, { CompilerEnvType } from '../../extensions/compiler-extension';
 import TesterExtension, { TesterEnvType } from '../../extensions/tester-extension';
-import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension';
+import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
 import type { PathOsBased } from '../../utils/path';
 import { BitJsonAlreadyExists } from './exceptions';
 import {
@@ -20,7 +20,6 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS
 } from '../../constants';
-import { EnvLoadArgsProps } from '../../extensions/env-extension';
 
 export type RegularExtensionObject = {
   rawConfig: Object,
