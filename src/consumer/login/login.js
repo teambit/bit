@@ -19,7 +19,6 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import { Driver } from '../../driver';
-import { PathToNpmrcNotExist, WriteToNpmrcError } from './exceptions';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
@@ -34,10 +33,10 @@ export default function loginToBitSrc(
   isAlreadyLoggedIn?: boolean,
   username?: string
 }> {
+  let actualNpmrcPath = npmrcPath;
   return new Promise((resolve, reject) => {
     const clientGeneratedId = uuid();
     const driver = Driver.load(DEFAULT_LANGUAGE);
-    let scopedRegistryConfigPath;
     if (getSync(CFG_USER_TOKEN_KEY)) {
       // $FlowFixMe
       return resolve({
@@ -57,6 +56,7 @@ export default function loginToBitSrc(
       }
       try {
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
+        let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
           logger.error(`clientId mismatch, expecting: ${clientGeneratedId} got ${clientId}`);
           closeConnection(ERROR_RESPONSE);
@@ -65,13 +65,10 @@ export default function loginToBitSrc(
         setSync(CFG_USER_TOKEN_KEY, token);
         if (!skipRegistryConfig) {
           try {
-            scopedRegistryConfigPath = driver.npmLogin(
-              token,
-              npmrcPath,
-              getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL
-            );
+            actualNpmrcPath = driver.npmLogin(token, npmrcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
           } catch (e) {
-            reject(new WriteToNpmrcError(e.path));
+            actualNpmrcPath = e.path;
+            writeToNpmrcError = true;
           }
         }
 
@@ -81,7 +78,8 @@ export default function loginToBitSrc(
         closeConnection();
         resolve({
           username,
-          npmrcPath: scopedRegistryConfigPath
+          npmrcPath: actualNpmrcPath,
+          writeToNpmrcError
         });
       } catch (err) {
         logger.err(`err on login: ${err}`);

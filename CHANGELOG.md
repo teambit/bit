@@ -7,25 +7,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix error "Maximum call stack size exceeded" when tagging or building a huge file
+- fix error "Maximum call stack size exceeded" when tagging or building a large file
 
-## [0.12.13-dev.4] - 2018-05-08
+## [0.12.13] - 2018-05-09
 
-- add error handling to bit login
-
-## [0.12.13-dev.2] - 2018-05-08
-
-- improve the error-message "unexpected network error has occurred" to provide some useful data
-- when running bit login, also configure bitsrc registry for npm
-
-## [0.12.13-dev.1] - 2018-05-06
-
+### New
 - add `bit show --compare` data into `bit diff` to easily see why a component is modified in one command
+- when running bit login, also configure bitsrc registry for npm
+- adding scss to support ~
 - support components with cyclic dependencies
+### Changes
 - remove `--write` flag from `bit import`, the newly introduced `--merge` flag takes care of that
 - improve merge-conflict error on export to show all components with conflicts
+### Bug Fixes
 - fix `bit remove` to not delete dependencies when they were imported directly
-- adding scss to support ~
+- add error handling to bit login
+- improve the error-message "unexpected network error has occurred" to provide some useful data
 
 ## [0.12.12] - 2018-04-29
 

@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "0.12.13-dev.4",
+  "version": "0.12.13",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -40,7 +40,7 @@
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^0.10.16-dev.4",
+    "bit-javascript": "0.10.16",
     "buffer-from": "^0.1.1",
     "chalk": "^2.1.0",
     "chokidar": "^1.7.0",
