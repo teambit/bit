@@ -27,7 +27,7 @@ export default (async function run({
   ids: ?(string[]),
   forkLevel: ForkLevel,
   verbose: ?boolean
-}): Promise<RawTestsResults> {
+}): Promise<?RawTestsResults> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
     logger.debug('specs-runner.run', 'running tests on one child process without ids');
@@ -42,6 +42,7 @@ export default (async function run({
   logger.debug('specs-runner.run', 'running tests on child process for each component');
   const allRunnersP = ids.map(id => runOnChildProcess({ ids: [id], verbose }));
   const allRunnersResults = await Promise.all(allRunnersP);
+  if (!allRunnersResults) return undefined;
   const finalResults = allRunnersResults.reduce((acc, curr) => {
     acc.push(curr[0]);
     return acc;
@@ -62,11 +63,11 @@ function getDebugPort(): ?number {
   return null;
 }
 
-function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?boolean }): Promise<RawTestsResults> {
+function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?boolean }): Promise<?RawTestsResults> {
   return new Promise((resolve, reject) => {
     const debugPort = getDebugPort();
     const openPort = debugPort ? debugPort + 1 : null;
-    const baseEnv = {
+    const baseEnv: Object = {
       __verbose__: verbose
     };
     // Don't use ternary condition since if we put it as undefined
@@ -96,8 +97,9 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
       // if (type === 'error') return reject(payload);
       // if (payload.specPath) payload.specPath = testFile.relative;
       const deserializedResults = deserializeResults(results);
+      if (!deserializedResults) return resolve(undefined);
       if (deserializedResults.type === 'error') {
-        reject(deserializedResults.error);
+        return reject(deserializedResults.error);
       }
       return resolve(deserializedResults.results);
     });
@@ -108,7 +110,7 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
   });
 }
 
-function deserializeResults(results) {
+function deserializeResults(results): ?{ type: 'results' | 'error', error?: Error, results?: RawTestsResults } {
   if (!results) return undefined;
   if (results.type === 'error') {
     let deserializedError = deserializeError(results.error);
