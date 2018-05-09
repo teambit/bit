@@ -19,7 +19,6 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
 import { Driver } from '../../driver';
-import { PathToNpmrcNotExist, WriteToNpmrcError } from './exceptions';
 
 const ERROR_RESPONSE = 500;
 const DEFAULT_PORT = 8085;
@@ -68,7 +67,6 @@ export default function loginToBitSrc(
           try {
             actualNpmrcPath = driver.npmLogin(token, npmrcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
           } catch (e) {
-            // reject(new WriteToNpmrcError(e.path));
             actualNpmrcPath = e.path;
             writeToNpmrcError = true;
           }
