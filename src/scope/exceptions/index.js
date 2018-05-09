@@ -1,5 +1,6 @@
 /** @flow */
 import ScopeNotFound from './scope-not-found';
+import ScopeJsonNotFound from './scope-json-not-found';
 import ScopeAlreadyExists from './scope-already-exists';
 import SourceNotFound from './source-not-found';
 import BitNotInScope from './bit-not-in-scope';
@@ -17,6 +18,7 @@ import HashMismatch from './hash-mismatch';
 
 export {
   ScopeNotFound,
+  ScopeJsonNotFound,
   ComponentNotFound,
   SourceNotFound,
   HashNotFound,

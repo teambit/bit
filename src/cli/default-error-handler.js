@@ -28,6 +28,7 @@ import {
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
   ScopeNotFound,
+  ScopeJsonNotFound,
   ResolutionException,
   ComponentNotFound,
   DependencyNotFound,
@@ -167,6 +168,13 @@ once your changes are merged with the new remote version, please tag and export 
   ],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
+  [
+    ScopeJsonNotFound,
+    err =>
+      `error: scope.json file was not found at ${chalk.bold(err.path)}, please use ${chalk.bold(
+        'bit init'
+      )} to recreate the file`
+  ],
   [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
   [
     MissingDependencies,
