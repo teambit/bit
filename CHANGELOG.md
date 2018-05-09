@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit init` to recreate scope.json if not exists
+
 ## [0.12.13] - 2018-05-09
 
 ### New
