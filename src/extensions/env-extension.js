@@ -23,18 +23,18 @@ export type EnvType = 'Compiler' | 'Tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType,
-  dynamicPackageDependencies?: ?Object,
-  files: ExtensionFile[]
+  dynamicPackageDependencies?: ?Object
 };
 
 export type EnvExtensionOptions = BaseExtensionOptions;
 
 export type EnvLoadArgsProps = BaseLoadArgsProps &
   EnvExtensionExtraProps & {
-    bitJsonPath: PathOsBased
+    bitJsonPath: PathOsBased,
+    files: string[]
   };
 
-export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps;
+export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps & { files: ExtensionFile[] };
 
 export type EnvExtensionModel = BaseExtensionModel & {
   files: ExtensionFileModel[]
@@ -176,7 +176,10 @@ export default class EnvExtension extends BaseExtension {
   /**
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
-  static async loadFromModelObject(modelObject: EnvExtensionModel, repository: Repository): Promise<EnvExtensionProps> {
+  static async loadFromModelObject(
+    modelObject: EnvExtensionModel & { envType: EnvType },
+    repository: Repository
+  ): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {

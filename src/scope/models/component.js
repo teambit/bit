@@ -3,7 +3,7 @@ import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
-import { ScopeMeta } from '../models';
+import { ScopeMeta, Source } from '../models';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
@@ -280,10 +280,11 @@ export default class Component extends BitObject {
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
-    const loadFileInstance = className => async (file) => {
-      const content = await file.file.load(repository);
+    const loadFileInstance = ClassName => async (file) => {
+      const loadP = file.file.load(repository);
+      const content: Source = ((await loadP: any): Source);
       if (!content) throw new GeneralError(`failed loading file ${file.relativePath} from the model`);
-      return new className({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
+      return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
     };
     const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;

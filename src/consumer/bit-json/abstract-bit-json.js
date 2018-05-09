@@ -157,13 +157,9 @@ export default class AbstractBitJson {
     if (!this.hasCompiler()) {
       return null;
     }
-    const compiler: CompilerExtension = await this.loadEnv(
-      CompilerEnvType,
-      consumerPath,
-      scopePath,
-      CompilerExtension.load,
-      context
-    );
+
+    const compilerP = this.loadEnv(CompilerEnvType, consumerPath, scopePath, CompilerExtension.load, context);
+    const compiler: CompilerExtension = ((await compilerP: any): CompilerExtension);
     return compiler;
   }
 
@@ -171,13 +167,9 @@ export default class AbstractBitJson {
     if (!this.hasTester()) {
       return null;
     }
-    const tester: TesterExtension = await this.loadEnv(
-      TesterEnvType,
-      consumerPath,
-      scopePath,
-      TesterExtension.load,
-      context
-    );
+    const testerP = this.loadEnv(TesterEnvType, consumerPath, scopePath, TesterExtension.load, context);
+
+    const tester: ?TesterExtension = ((await testerP: any): TesterExtension);
     return tester;
   }
 
@@ -192,7 +184,7 @@ export default class AbstractBitJson {
     // TODO: Gilad - support more than one key of compiler
     const envName = Object.keys(envs)[0];
     const envObject = envs[envName];
-    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, context);
+    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, envType, context);
     const env = await loadFunc(envProps);
     return env;
   }
@@ -266,6 +258,7 @@ const getEnvsProps = (
   envName: string,
   envObject: EnvExtensionObject,
   bitJsonPath: string,
+  envType: EnvType,
   context?: Object
 ): EnvLoadArgsProps => {
   const envProps = {
@@ -276,6 +269,7 @@ const getEnvsProps = (
     files: envObject.files,
     bitJsonPath,
     options: envObject.options,
+    envType,
     context
   };
   return envProps;
