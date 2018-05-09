@@ -48,11 +48,11 @@ export default class Login extends Command {
   }): string {
     if (isAlreadyLoggedIn) return chalk.yellow('already logged in');
     const successLoginMessage = chalk.green(`success! logged in as ${username}`);
-    let writeToNpmrcMessage = '';
+    let writeToNpmrcMessage = '\n';
     if (!skipRegistryConfig) {
       writeToNpmrcMessage = writeToNpmrcError
-        ? chalk.yellow(`unable to add @bit as a scoped registry at "${chalk.bold(npmrcPath)}"\n`)
-        : chalk.green(`successfully added @bit as a scoped registry at ${npmrcPath}\n`);
+        ? chalk.yellow(`\nunable to add @bit as a scoped registry at "${chalk.bold(npmrcPath)}"\n`)
+        : chalk.green(`\nsuccessfully added @bit as a scoped registry at ${npmrcPath}\n`);
     }
     const finalMessage = `${writeToNpmrcMessage}${successLoginMessage}`;
     return finalMessage;
