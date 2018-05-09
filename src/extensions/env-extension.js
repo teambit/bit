@@ -11,7 +11,9 @@ import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import Repository from '../scope/repository';
 import { pathJoinLinux } from '../utils';
+import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
+import { ComponentWithDependencies } from '../scope';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -21,13 +23,16 @@ export type EnvType = 'Compiler' | 'Tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType,
-  dynamicPackageDependencies?: Object,
-  files?: ExtensionFile[]
+  dynamicPackageDependencies?: ?Object,
+  files: ExtensionFile[]
 };
 
 export type EnvExtensionOptions = BaseExtensionOptions;
 
-export type EnvLoadArgsProps = BaseLoadArgsProps & EnvExtensionExtraProps;
+export type EnvLoadArgsProps = BaseLoadArgsProps &
+  EnvExtensionExtraProps & {
+    bitJsonPath: PathOsBased
+  };
 
 export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps;
 
@@ -36,7 +41,7 @@ export type EnvExtensionModel = BaseExtensionModel & {
 };
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
-  dynamicPackageDependencies: Object;
+  dynamicPackageDependencies: ?Object;
   files: ExtensionFile[];
 
   /**
@@ -69,7 +74,7 @@ export default class EnvExtension extends BaseExtension {
     this.files = extensionProps.files;
   }
 
-  async install(scope: Scope, opts: { verbose: boolean }): ?Promise<ComponentWithDependencies[]> {
+  async install(scope: Scope, opts: { verbose: boolean }): Promise<?(ComponentWithDependencies[])> {
     // Skip the installation in case of using specific file
     // options.file usually used for develop your extension
     if (this.options.file) {
@@ -92,6 +97,7 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Get a bit.json representation of the env instance
    * @param {string} ejectedEnvDirectory - The base path of where the env config files are stored
+   * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
     const files = {};
@@ -142,6 +148,7 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Loading from props (usually from bit.json)
    * @param {*} props
+   * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
@@ -166,6 +173,9 @@ export default class EnvExtension extends BaseExtension {
     return undefined;
   }
 
+  /**
+   * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
+   */
   static async loadFromModelObject(modelObject: EnvExtensionModel, repository: Repository): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
