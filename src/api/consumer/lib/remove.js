@@ -18,5 +18,7 @@ export default (async function remove({
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer = await loadConsumer();
-  return consumer.remove({ ids, force, remote, track, deleteFiles });
+  const removeResults = await consumer.remove({ ids, force, remote, track, deleteFiles });
+  await consumer.onDestroy();
+  return removeResults;
 });

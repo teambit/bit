@@ -3,10 +3,13 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
-import Bit from '../../../consumer/component';
+import Component from '../../../consumer/component';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
-export default (async function test(id?: string, verbose: ?boolean): Promise<Bit> {
+export default (async function test(
+  id?: string,
+  verbose: ?boolean
+): Promise<Array<{ component: Component, specs: Object }>> {
   const consumer: Consumer = await loadConsumer();
   const getComponents = async () => {
     if (id) {
@@ -22,5 +25,7 @@ export default (async function test(id?: string, verbose: ?boolean): Promise<Bit
   };
   const components = await getComponents();
 
-  return consumer.scope.testMultiple({ components, consumer, verbose });
+  const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose });
+  await consumer.onDestroy();
+  return testsResults;
 });

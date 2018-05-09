@@ -30,7 +30,6 @@ export async function movePaths(
     // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
     fs.moveSync(from, to);
   }
-  await consumer.bitMap.write();
   if (!R.isEmpty(changes)) {
     const componentsIds = changes.map(c => BitId.parse(c.id));
     await packageJson.addComponentsToRoot(consumer, componentsIds);
