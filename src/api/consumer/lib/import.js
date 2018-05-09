@@ -95,6 +95,7 @@ export default (async function importAction(
     installNpmPackages: importOptions.installNpmPackages
   });
   Analytics.setExtraData('num_components', bitIds.length);
+  await consumer.onDestroy();
   return { dependencies, envDependencies, importDetails, warnings };
 });
 

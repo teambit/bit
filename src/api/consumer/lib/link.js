@@ -1,8 +1,11 @@
 // @flow
 import { loadConsumer, Consumer } from '../../../consumer';
 import { linkAllToNodeModules } from '../../../links';
+import type { LinksResult } from '../../../links/node-modules-linker';
 
-export default (async function linkAction() {
+export default (async function linkAction(): Promise<LinksResult[]> {
   const consumer: Consumer = await loadConsumer();
-  return linkAllToNodeModules(consumer);
+  const linkResults = await linkAllToNodeModules(consumer);
+  await consumer.onDestroy();
+  return linkResults;
 });

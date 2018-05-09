@@ -15,8 +15,7 @@ export async function build(id: string, verbose: boolean): Promise<?Array<string
   if (result === null) return null;
   const distFilePaths = await component.dists.writeDists(component, consumer);
   consumer.bitMap.addMainDistFileToComponent(component.id, distFilePaths);
-  await consumer.bitMap.write();
-  // await consumer.driver.runHook('onBuild', [component]);
+  await consumer.onDestroy();
   return distFilePaths;
 }
 
@@ -36,7 +35,6 @@ export async function buildAll(verbose: boolean): Promise<Object> {
   allComponents.forEach((component) => {
     componentsObj[component.component] = component.buildResults;
   });
-  await consumer.bitMap.write();
-  // await consumer.driver.runHook('onBuild', allComponents);
+  await consumer.onDestroy();
   return componentsObj;
 }
