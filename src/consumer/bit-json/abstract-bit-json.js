@@ -59,8 +59,8 @@ export default class AbstractBitJson {
   /** @deprecated * */
   spec: string;
   path: string;
-  _compiler: Compilers;
-  _tester: Testers;
+  _compiler: Compilers | string;
+  _tester: Testers | string;
   dependencies: { [string]: string };
   devDependencies: { [string]: string };
   lang: string;
@@ -146,7 +146,7 @@ export default class AbstractBitJson {
     return !!this.tester && this._tester !== NO_PLUGIN_TYPE && !R.isEmpty(this.tester);
   }
 
-  getEnvsByType(type: EnvType): Envs {
+  getEnvsByType(type: EnvType): ?Compilers | ?Testers {
     if (type === CompilerEnvType) {
       return this.compiler;
     }
@@ -181,6 +181,7 @@ export default class AbstractBitJson {
     context?: Object
   ): Promise<?CompilerExtension | ?TesterExtension> {
     const envs = this.getEnvsByType(envType);
+    if (!envs) return undefined;
     // TODO: Gilad - support more than one key of compiler
     const envName = Object.keys(envs)[0];
     const envObject = envs[envName];
