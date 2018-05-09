@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.12.13-dev.5] - 2018-05-08
+
+- bit login outputs
+
 ## [0.12.13-dev.4] - 2018-05-08
 
 - add error handling to bit login
