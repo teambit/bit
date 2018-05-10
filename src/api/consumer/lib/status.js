@@ -40,7 +40,7 @@ export default (async function status(): Promise<StatusResult> {
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
   Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
   Analytics.setExtraData('deleted', deletedComponents.length);
-
+  await consumer.onDestroy();
   return {
     newComponents: ComponentsList.sortComponentsByName(newComponents),
     modifiedComponent: ComponentsList.sortComponentsByName(modifiedComponent),

@@ -109,8 +109,14 @@ export default class Helper {
     } catch (err) {
       output = err.toString();
     }
+    const alignOutput = (str) => {
+      if (!str) return str;
+      // on Mac the directory '/var' is sometimes shown as '/private/var'
+      // $FlowFixMe
+      return Helper.removeChalkCharacters(str).replace('/private/var/', '/var/');
+    };
     const errorString = defaultErrorHandler(error);
-    expect(Helper.removeChalkCharacters(output)).to.have.string(Helper.removeChalkCharacters(errorString));
+    expect(alignOutput(output)).to.have.string(alignOutput(errorString));
   }
 
   setHubDomain(domain: string = 'hub.bitsrc.io') {

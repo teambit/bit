@@ -12,8 +12,16 @@ import ComponentModel from './models/component';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_VERSION, DEFAULT_BIT_VERSION } from '../constants';
+import { propogateUntil, currentDirName, pathHasAll, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
+import {
+  BIT_HIDDEN_DIR,
+  LATEST,
+  OBJECTS_DIR,
+  BITS_DIRNAME,
+  BIT_VERSION,
+  DEFAULT_BIT_VERSION,
+  SCOPE_JSON
+} from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
   ScopeNotFound,
@@ -63,7 +71,7 @@ import GeneralError from '../error/general-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
 const removeNils = R.reject(R.isNil);
-const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
+const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 export type ScopeDescriptor = {
   name: string
@@ -1270,7 +1278,7 @@ export default class Scope {
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 
-  static load(absPath: string): Promise<Scope> {
+  static async load(absPath: string): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
     if (!scopePath) throw new ScopeNotFound();
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
@@ -1278,9 +1286,7 @@ export default class Scope {
     }
     const path = scopePath;
 
-    return readFile(getScopeJsonPath(scopePath)).then((rawScopeJson) => {
-      const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString());
-      return new Scope({ path, scopeJson });
-    });
+    const scopeJson = await ScopeJson.loadFromFile(getScopeJsonPath(scopePath));
+    return new Scope({ path, scopeJson });
   }
 }

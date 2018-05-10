@@ -204,12 +204,11 @@ export default class Consumer {
     };
   }
 
-  write(): Promise<Consumer> {
-    return this.bitJson
-      .write({ bitDir: this.projectPath })
-      .then(() => this.scope.ensureDir())
-      .then(() => this.bitMap.write())
-      .then(() => this);
+  async write(): Promise<Consumer> {
+    await Promise.all([this.bitJson.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
+    this.bitMap.markAsChanged();
+    await this.bitMap.write();
+    return this;
   }
 
   getComponentsPath(): PathOsBased {
@@ -331,7 +330,6 @@ export default class Consumer {
         allComponents.push(component);
       }
     }
-    if (this.bitMap.hasChanged) await this.bitMap.write();
 
     return { components: allComponents.concat(alreadyLoadedComponents), deletedComponents };
   }
@@ -520,7 +518,6 @@ export default class Consumer {
       writeToPath
     );
 
-    await this.bitMap.write();
     if (installNpmPackages) {
       await installNpmPackagesForComponents(
         this,
@@ -769,7 +766,7 @@ export default class Consumer {
       return null;
     });
 
-    await Promise.all([this.bitMap.write(), Promise.all(updatePackageJsonP)]);
+    await Promise.all(updatePackageJsonP);
     return { taggedComponents, autoTaggedComponents };
   }
 
@@ -867,7 +864,7 @@ export default class Consumer {
     });
   }
 
-  static locateProjectScope(projectPath) {
+  static locateProjectScope(projectPath: string) {
     if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
       return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
     }
@@ -880,19 +877,18 @@ export default class Consumer {
       return Promise.resolve(null);
     }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
-      await Consumer.create(currentPath).then(consumer => consumer.write());
+      const consumer = await Consumer.create(currentPath);
+      await Promise.all([consumer.bitJson.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
     const bitJsonP = ConsumerBitJson.load(projectPath);
-    return Promise.all([scopeP, bitJsonP]).then(
-      ([scope, bitJson]) =>
-        new Consumer({
-          projectPath,
-          bitJson,
-          scope
-        })
-    );
+    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    return new Consumer({
+      projectPath,
+      bitJson,
+      scope
+    });
   }
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
@@ -1036,8 +1032,7 @@ export default class Consumer {
     this.bitMap.removeComponents(componentsToRemoveFromFs);
     this.bitMap.removeComponents(removedDependencies);
     componentsToRemoveFromFs.map(x => delete bitJson.dependencies[x.toStringWithoutVersion()]);
-    bitJson.write({ bitDir: this.projectPath });
-    return this.bitMap.write();
+    await bitJson.write({ bitDir: this.projectPath });
   }
   /**
    * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
@@ -1126,5 +1121,9 @@ export default class Consumer {
     await installPackages(this, [], true, true);
 
     return componentsIds;
+  }
+
+  async onDestroy() {
+    return this.bitMap.write();
   }
 }

@@ -1,8 +1,10 @@
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import { GIT_HOOKS_NAMES, BIT_GIT_DIR, BIT_HIDDEN_DIR } from '../../src/constants';
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
+import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 
 const assertArrays = require('chai-arrays');
 
@@ -141,6 +143,33 @@ describe('run bit init', function () {
       //     expect(hookPath).not.be.a.path(`hook ${hookName} created but it should not`);
       //   });
       // });
+    });
+  });
+  describe('when scope.json is missing', () => {
+    let scopeJsonPath;
+    before(() => {
+      helper.reInitLocalScope();
+      scopeJsonPath = path.join(helper.localScopePath, '.bit/scope.json');
+      fs.removeSync(scopeJsonPath);
+    });
+    describe('running any command other than bit init', () => {
+      it('should throw an exception ScopeJsonNotFound', () => {
+        const func = () => helper.runCmd('bit ls');
+        const error = new ScopeJsonNotFound(scopeJsonPath);
+        helper.expectToThrow(func, error);
+      });
+    });
+    describe('running bit init', () => {
+      let output;
+      before(() => {
+        output = helper.initLocalScope();
+      });
+      it('should show a success message', () => {
+        expect(output).to.have.string('successfully initialized');
+      });
+      it('should recreate scope.json file', () => {
+        expect(scopeJsonPath).to.be.a.file();
+      });
     });
   });
 });

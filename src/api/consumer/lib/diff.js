@@ -12,7 +12,9 @@ export default (async function diff(values: string[]): Promise<any> {
   if (!bitIds || !bitIds.length) {
     throw new GeneralError('there are no modified components to diff');
   }
-  return componentsDiff(consumer, bitIds, version, toVersion);
+  const diffResults = await componentsDiff(consumer, bitIds, version, toVersion);
+  await consumer.onDestroy();
+  return diffResults;
 });
 
 async function parseValues(

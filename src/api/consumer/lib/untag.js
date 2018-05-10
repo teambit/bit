@@ -9,7 +9,7 @@ import GeneralError from '../../../error/general-error';
  * in case the untagged version is the current version in bitmap, update to the latest version
  * or, remove the version completely in case all versions were untagged
  */
-async function updateBitMap(consumer: Consumer, untagResults: untagResult[]): Promise<void> {
+function updateBitMap(consumer: Consumer, untagResults: untagResult[]): void {
   untagResults.forEach((result: untagResult) => {
     const { id, versions, component } = result;
     const idStr = id.toString();
@@ -24,10 +24,8 @@ async function updateBitMap(consumer: Consumer, untagResults: untagResult[]): Pr
         newId.version = component.latest();
       }
       consumer.bitMap.updateComponentId(newId);
-      consumer.bitMap.hasChanged = true;
     }
   });
-  if (consumer.bitMap.hasChanged) await consumer.bitMap.write();
 }
 
 export default (async function unTagAction(version?: string, force: boolean, id?: string): Promise<untagResult[]> {
@@ -44,6 +42,7 @@ export default (async function unTagAction(version?: string, force: boolean, id?
     return removeLocalVersionsForAllComponents(consumer.scope, version, force);
   };
   const results = await untag();
-  await updateBitMap(consumer, results);
+  updateBitMap(consumer, results);
+  await consumer.onDestroy();
   return results;
 });

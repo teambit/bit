@@ -918,4 +918,20 @@ describe('bit tag command', function () {
       });
     });
   });
+  describe('with Windows end-of-line characters', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      const impl = 'hello\r\n world\r\n';
+      helper.createComponentBarFoo(impl);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+    });
+    it('should write the file to the model with Linux EOL characters', () => {
+      const barFoo = helper.catComponent('bar/foo@latest');
+      const fileHash = barFoo.files[0].file;
+      const fileContent = helper.runCmd(`bit cat-object ${fileHash} -s`);
+      // notice how the \r is stripped
+      expect(fileContent).to.have.string('"hello\\n world\\n"');
+    });
+  });
 });

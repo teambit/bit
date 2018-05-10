@@ -15,7 +15,7 @@ export default (async function untrack(componentIds: string[], all: ?boolean): P
 
   if (all) {
     newComponents.forEach(componentId => consumer.bitMap.removeComponent(componentId));
-    await consumer.bitMap.write();
+    await consumer.onDestroy();
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
@@ -28,6 +28,6 @@ export default (async function untrack(componentIds: string[], all: ?boolean): P
       consumer.bitMap.getComponent(bitId, false) ? unRemovableComponents.push(bitId) : missing.push(bitId);
     }
   });
-  await consumer.bitMap.write();
+  await consumer.onDestroy();
   return { untrackedComponents, unRemovableComponents, missingComponents: missing };
 });

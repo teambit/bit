@@ -43,7 +43,9 @@ export default (async function test(
 export const testInProcess = async (id?: string, verbose: ?boolean): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
   const components = await _getComponents(consumer, id, verbose);
-  return consumer.scope.testMultiple({ components, consumer, verbose });
+  const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose });
+  await consumer.onDestroy();
+  return testsResults;
 };
 
 const _getComponents = async (consumer: Consumer, id?: string, verbose: ?boolean) => {

@@ -107,7 +107,6 @@ export default class AddComponents {
   exclude: PathOrDSL[];
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: ?boolean;
-  writeToBitMap: boolean; // (default = true)
   warnings: Object;
   ignoreList: string[];
   gitIgnore: any;
@@ -123,7 +122,6 @@ export default class AddComponents {
     this.exclude = addProps.exclude || [];
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
-    this.writeToBitMap = !addProps.trackDirFeature; // trackDir feature doesn't need to write to bitMap
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {};
   }
@@ -513,7 +511,6 @@ export default class AddComponents {
         if (addedResult) addedComponents.push(addedResult);
       }
     }
-    if (this.writeToBitMap) await this.bitMap.write();
     Analytics.setExtraData('num_components', addedComponents.length);
     return { addedComponents, warnings: this.warnings };
   }

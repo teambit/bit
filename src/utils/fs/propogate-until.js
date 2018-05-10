@@ -27,6 +27,22 @@ export function pathHas(patterns: string[]): (absPath: string) => boolean {
 }
 
 /**
+ * determine whether given path have all files/dirs
+ */
+export function pathHasAll(patterns: string[]): (absPath: string) => boolean {
+  return (absPath: string) => {
+    let state = true;
+    const paths = composePath(absPath, patterns);
+    for (const potentialPath of paths) {
+      if (!state) return false;
+      state = fs.existsSync(potentialPath);
+    }
+
+    return state;
+  };
+}
+
+/**
  * propogates the FS from given path and until passing pattern function test.
  * @name propogateUntil
  * @param {string} fromPath

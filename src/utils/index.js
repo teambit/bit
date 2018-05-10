@@ -19,7 +19,7 @@ import filter from './object/filter';
 import resolveGroupId from './os-resolve-group-id';
 import toResultObject from './promise-to-result-object';
 import empty from './object/empty';
-import { propogateUntil, pathHas } from './fs/propogate-until';
+import { propogateUntil, pathHas, pathHasAll } from './fs/propogate-until';
 import isBitUrl from './is-bit-url';
 import bufferToReadStream from './buffer/to-read-stream';
 import toBase64 from './string/to-base64';
@@ -124,6 +124,7 @@ export {
   resolveHomePath,
   propogateUntil,
   pathHas,
+  pathHasAll,
   first,
   bufferToReadStream,
   listDirectories,

@@ -55,7 +55,6 @@ export async function mergeVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, mergeStrategy);
   });
   const mergedComponents = await Promise.all(mergedComponentsP);
-  await consumer.bitMap.write();
 
   return { components: mergedComponents, version };
 }

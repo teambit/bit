@@ -61,7 +61,6 @@ export default (async function checkoutVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
   const componentsResults = await Promise.all(componentsResultsP);
-  if (consumer.bitMap.hasChanged) await consumer.bitMap.write();
 
   return { components: componentsResults, version };
 });
