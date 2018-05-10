@@ -40,7 +40,8 @@ export default (async function run({
   }
   Analytics.addBreadCrumb('specs-runner.run', 'running tests on child process for each component');
   logger.debug('specs-runner.run', 'running tests on child process for each component');
-  const allRunnersP = ids.map(id => runOnChildProcess({ ids: [id], verbose }));
+  const wrappedRunOnChildProcess = id => () => runOnChildProcess({ ids: [id], verbose });
+  const allRunnersP = ids.map(wrappedRunOnChildProcess);
   const allRunnersResults = await Promise.all(allRunnersP);
   if (!allRunnersResults) return undefined;
   const finalResults = allRunnersResults.reduce((acc, curr) => {

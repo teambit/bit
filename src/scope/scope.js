@@ -60,6 +60,7 @@ import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
+import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
@@ -307,7 +308,7 @@ export default class Scope {
     consumer: Consumer,
     verbose: boolean,
     rejectOnFailure?: boolean
-  }): Promise<Array<{ componentId: string, specs: SpecsResults }>> {
+  }): Promise<SpecsResultsWithComponentId> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);

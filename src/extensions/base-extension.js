@@ -6,18 +6,21 @@ import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
+import type { EnvExtensionOptions } from './env-extension';
+import type { ExtensionOptions } from './extension';
 import type { PathOsBased } from '../utils/path';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
 export type BaseExtensionOptions = {
-  file?: string
+  file?: ?string
 };
 
 type BaseArgs = {
   name: string,
   rawConfig: Object,
-  options: BaseExtensionOptions
+  // options: BaseExtensionOptions
+  options: ExtensionOptions | EnvExtensionOptions
 };
 
 export type BaseLoadArgsProps = BaseArgs & {
@@ -32,7 +35,7 @@ type StaticProps = BaseArgs & {
   script?: Function,
   disabled: boolean,
   loaded: boolean,
-  context?: Object
+  context?: ?Object
 };
 
 type InstanceSpecificProps = {
@@ -62,8 +65,8 @@ export default class BaseExtension {
   rawConfig: Object;
   options: Object;
   dynamicConfig: Object;
-  context: Object;
-  script: Function; // Store the required plugin
+  context: ?Object;
+  script: ?Function; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
 
   constructor(extensionProps: BaseExtensionProps) {
@@ -84,7 +87,7 @@ export default class BaseExtension {
    */
   async init(): Promise<boolean> {
     try {
-      if (this.script.init && typeof this.script.init === 'function') {
+      if (this.script && this.script.init && typeof this.script.init === 'function') {
         await this.script.init({ rawConfig: this.rawConfig, dynamicConfig: this.dynamicConfig, api: this.api });
       }
       this.initialized = true;

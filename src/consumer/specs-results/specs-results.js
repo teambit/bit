@@ -54,6 +54,8 @@ export type RawTestsResults = {
   specPath: PathOsBased
 };
 
+export type SpecsResultsWithComponentId = Array<{ componentId: string, specs: SpecsResults }>;
+
 export default class SpecsResults {
   tests: Test[];
   stats: Stats;
