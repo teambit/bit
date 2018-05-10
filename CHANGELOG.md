@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.1] - 2018-05-10
+
+- new environments architecture!
 - fix `bit init` to recreate scope.json if not exists
 - fix error "Maximum call stack size exceeded" when tagging or building a large file
 
