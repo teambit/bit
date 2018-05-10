@@ -74,7 +74,7 @@ export default class EnvExtension extends BaseExtension {
     this.files = extensionProps.files;
   }
 
-  async install(scope: Scope, opts: { verbose: boolean }): Promise<?(ComponentWithDependencies[])> {
+  async install(scope: Scope, opts: { verbose: boolean }, context?: Object): Promise<?(ComponentWithDependencies[])> {
     // Skip the installation in case of using specific file
     // options.file usually used for develop your extension
     if (this.options.file) {
@@ -83,7 +83,7 @@ export default class EnvExtension extends BaseExtension {
     const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
     const installResult = await scope.installEnvironment(installOpts);
     this.setExtensionPathInScope(scope.getPath());
-    await this.reload();
+    await this.reload(context);
     return installResult;
   }
 
@@ -139,7 +139,10 @@ export default class EnvExtension extends BaseExtension {
     return resolvedEjectedEnvsDirectory;
   }
 
-  async reload(): Promise<void> {
+  async reload(context?: Object): Promise<void> {
+    if (context) {
+      this.context = context;
+    }
     await super.reload();
     // $FlowFixMe
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);

@@ -837,8 +837,12 @@ export default class Component {
       return componentStatus.modified;
     };
     const bitMap = consumer ? consumer.bitMap : undefined;
+    const consumerPath = consumer ? consumer.getPath() : '';
     const componentMap = bitMap && bitMap.getComponent(this.id.toString());
-
+    let componentDir = consumerPath;
+    if (componentMap) {
+      componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
+    }
     const needToRebuild = await isNeededToReBuild();
     if (!needToRebuild && !this.dists.isEmpty()) {
       logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
@@ -852,7 +856,7 @@ export default class Component {
     }
     logger.debug('compiler found, start building');
     if (!this.compiler.loaded) {
-      await this.compiler.install(scope, { verbose });
+      await this.compiler.install(scope, { verbose }, { workspaceDir: consumerPath, componentDir });
     }
 
     const builtFiles = await this.buildIfNeeded({
