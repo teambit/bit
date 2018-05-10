@@ -448,7 +448,13 @@ export async function loadDependenciesForComponent(
   const missingDependencies = {};
   const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
-    return driver.getDependencyTree(bitDir, consumerPath, allFiles, component.bindingPrefix);
+    return driver.getDependencyTree(
+      bitDir,
+      consumerPath,
+      allFiles,
+      component.bindingPrefix,
+      consumer.bitJson.resolveModules
+    );
     // const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
     // if (!testsFiles.length) return nonTestsTree;
     // const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);

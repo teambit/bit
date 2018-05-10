@@ -16,6 +16,11 @@ const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
+export type ResolveModulesConfig = {
+  modulesDirectories: string[],
+  aliases: { [string]: string } // e.g. { '@': 'src' }
+};
+
 type consumerBitJsonProps = {
   impl?: string,
   spec?: string,
@@ -35,7 +40,8 @@ type consumerBitJsonProps = {
   packageManagerArgs?: string[],
   packageManagerProcessOptions?: Object,
   useWorkspaces?: boolean,
-  manageWorkspaces?: boolean
+  manageWorkspaces?: boolean,
+  resolveModules?: ResolveModulesConfig
 };
 
 export default class ConsumerBitJson extends AbstractBitJson {
@@ -52,6 +58,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   packageManagerProcessOptions: ?Object; // package manager process options
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
+  resolveModules: ?ResolveModulesConfig;
 
   constructor({
     impl,
@@ -72,7 +79,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
     packageManagerArgs,
     packageManagerProcessOptions,
     useWorkspaces = DEFAULT_USE_WORKSPACES,
-    manageWorkspaces = DEFAULT_MANAGE_WORKSPACES
+    manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
+    resolveModules
   }: consumerBitJsonProps) {
     super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
@@ -86,6 +94,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     this.packageManagerProcessOptions = packageManagerProcessOptions;
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
+    this.resolveModules = resolveModules;
   }
 
   toPlainObject() {
@@ -150,7 +159,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       packageManagerArgs,
       packageManagerProcessOptions,
       useWorkspaces,
-      manageWorkspaces
+      manageWorkspaces,
+      resolveModules
     } = object;
 
     return new ConsumerBitJson({
@@ -171,6 +181,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       packageManagerProcessOptions,
       useWorkspaces,
       manageWorkspaces,
+      resolveModules,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist)
     });
