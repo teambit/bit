@@ -61,6 +61,7 @@ export default class Extension extends BaseExtension {
     registerCommand: (newCommand: NewCommand): void => {
       // TODO: validate new command format
       logger.info(`registering new command ${newCommand.name}`);
+      // $FlowFixMe
       this.commands.push(new ExtensionCommand(newCommand));
     },
     /**
@@ -116,6 +117,7 @@ export default class Extension extends BaseExtension {
    * {string} consumerPath - path to the consumer folder (to load the file relatively)
    * {string} scopePath - scope which stores the extension code
    */
+  // $FlowFixMe
   static async load(props: LoadArgsProps): Promise<Extension> {
     props.rawConfig = props.rawConfig || {};
     props.options = props.options || {};

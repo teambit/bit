@@ -164,6 +164,7 @@ export default class BaseExtension {
   static async load({
     name,
     rawConfig = {},
+    // $FlowFixMe
     options = {},
     consumerPath,
     scopePath,
@@ -194,6 +195,7 @@ export default class BaseExtension {
     };
     // Require extension from scope
     if (scopePath) {
+      // $FlowFixMe
       const componentPath = _getExtensionPath(name, scopePath, options.core);
       staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options);
     }

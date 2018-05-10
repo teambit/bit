@@ -5,6 +5,7 @@ import { testInProcess } from '../api/consumer/lib/test';
 import ExternalError from '../error/external-error';
 
 const testOneComponent = verbose => async (id: string) => {
+  // $FlowFixMe
   const res = await testInProcess(id, verbose);
   return res[0];
 };
@@ -13,16 +14,19 @@ function run(): Promise<void> {
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
   const verbose: boolean = process.env.__verbose__ === true;
   if (!ids || !ids.length) {
+    // $FlowFixMe
     return process.send([]);
   }
   const testAllP = ids.map(testOneComponent(verbose));
   return Promise.all(testAllP)
     .then((results) => {
       const serializedResults = serializeResults(results);
+      // $FlowFixMe
       return process.send(serializedResults);
     })
     .catch((e) => {
       const serializedResults = serializeResults(e);
+      // $FlowFixMe
       return process.send(serializedResults);
     });
 }

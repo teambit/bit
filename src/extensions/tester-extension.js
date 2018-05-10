@@ -52,12 +52,14 @@ export default class TesterExtension extends EnvExtension {
     if (extension.loaded) {
       await extension.init();
     }
+    // $FlowFixMe
     return extension;
   }
 
   static async loadFromModelObject(
     modelObject: string | TesterExtensionModel,
     repository: Repository
+    // $FlowFixMe
   ): Promise<?TesterExtension> {
     if (!modelObject) return undefined;
     const actualObject =
@@ -92,6 +94,7 @@ export default class TesterExtension extends EnvExtension {
     componentBitJson: ?ComponentBitJson
   }): Promise<?TesterExtension> {
     if (componentBitJson && componentBitJson.hasTester()) {
+      // $FlowFixMe
       return componentBitJson.loadTester(consumerPath, scopePath);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
@@ -105,6 +108,7 @@ export default class TesterExtension extends EnvExtension {
     // and the original project import the new version with the new tester
     // we want to load if from the models and not from the bit.json
     if (consumerBitJson.hasTester()) {
+      // $FlowFixMe
       return consumerBitJson.loadTester(consumerPath, scopePath);
     }
     return undefined;

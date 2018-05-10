@@ -141,6 +141,7 @@ export default class EnvExtension extends BaseExtension {
 
   async reload(): Promise<void> {
     await super.reload();
+    // $FlowFixMe
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
@@ -152,6 +153,7 @@ export default class EnvExtension extends BaseExtension {
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
+    // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
@@ -177,6 +179,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async loadFromModelObject(
+    // $FlowFixMe
     modelObject: EnvExtensionModel & { envType: EnvType },
     repository: Repository
   ): Promise<EnvExtensionProps> {

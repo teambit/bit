@@ -46,6 +46,7 @@ export default class CompilerExtension extends EnvExtension {
    * Loading from props (usually from bit.json)
    * @param {*} props
    */
+  // $FlowFixMe
   static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
     props.envType = CompilerEnvType;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
@@ -59,6 +60,7 @@ export default class CompilerExtension extends EnvExtension {
   static async loadFromModelObject(
     modelObject: string | CompilerExtensionModel,
     repository: Repository
+    // $FlowFixMe
   ): Promise<?CompilerExtension> {
     if (!modelObject) return undefined;
     const actualObject =
@@ -95,6 +97,7 @@ export default class CompilerExtension extends EnvExtension {
     context?: Object
   }): Promise<?CompilerExtension> {
     if (componentBitJson && componentBitJson.hasCompiler()) {
+      // $FlowFixMe
       return componentBitJson.loadCompiler(consumerPath, scopePath, context);
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
@@ -108,6 +111,7 @@ export default class CompilerExtension extends EnvExtension {
     // and the original project import the new version with the new compiler
     // we want to load if from the models and not from the bit.json
     if (consumerBitJson.hasCompiler()) {
+      // $FlowFixMe
       return consumerBitJson.loadCompiler(consumerPath, scopePath, context);
     }
     return undefined;
