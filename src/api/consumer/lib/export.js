@@ -81,6 +81,7 @@ export default (async function exportAction(ids?: string[], remote: string, save
   if (eject) {
     try {
       const results = await consumer.eject(componentsIds);
+      await consumer.onDestroy();
       return results;
     } catch (err) {
       logger.error(err);
