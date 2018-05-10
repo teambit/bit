@@ -56,17 +56,14 @@ export default class TesterExtension extends EnvExtension {
   }
 
   static async loadFromModelObject(
-    modelObject: TesterExtensionModel,
+    modelObject: string | TesterExtensionModel,
     repository: Repository
-  ): Promise<TesterExtension> {
+  ): Promise<?TesterExtension> {
     if (!modelObject) return undefined;
-    let actualObject;
-    if (typeof modelObject === 'string') {
-      actualObject = BaseExtension.transformStringToModelObject(modelObject);
-    } else {
-      actualObject = { ...modelObject };
-    }
-    actualObject.envType = TesterEnvType;
+    const actualObject =
+      typeof modelObject === 'string'
+        ? { envType: TesterEnvType, ...BaseExtension.transformStringToModelObject(modelObject) }
+        : { envType: TesterEnvType, ...modelObject };
     const envExtensionProps: EnvExtensionProps = await super.loadFromModelObject(actualObject, repository);
     const extension: TesterExtension = new TesterExtension(envExtensionProps);
     return extension;

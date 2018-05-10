@@ -15,6 +15,11 @@ export type ExtensionFileModel = {
   file: Ref
 };
 
+export type ExtensionFileObject = {
+  name: string,
+  file: string
+};
+
 export default class ExtensionFile extends AbstractVinyl {
   static async load(
     name: string,
@@ -22,7 +27,7 @@ export default class ExtensionFile extends AbstractVinyl {
     consumerPath: PathOsBased,
     base: PathOsBased = consumerPath,
     extendedProps?: Object
-  ): Promise<?ExtensionFile> {
+  ): Promise<ExtensionFile> {
     try {
       const baseFile = await vinylFile.read(filePath, { base, cwd: consumerPath });
       const file = new ExtensionFile(baseFile);
@@ -41,12 +46,12 @@ export default class ExtensionFile extends AbstractVinyl {
   }
 
   static async loadFromBitJsonObject(
-    bitJsonObj,
+    bitJsonObj: PathOsBased,
     consumerPath: PathOsBased,
     bitJsonPath: PathOsBased
   ): Promise<ExtensionFile[]> {
     if (!bitJsonObj || R.isEmpty(bitJsonObj)) return [];
-    const loadP = [];
+    const loadP: Promise<ExtensionFile>[] = [];
     const bitJsonDirPath = path.dirname(bitJsonPath);
     const loadFile = (value, key) => {
       // TODO: Gilad - support component bit json
@@ -85,7 +90,7 @@ export default class ExtensionFile extends AbstractVinyl {
    * The opposite action of fromObjectToModelObject
    * @param {*} file
    */
-  static fromModelObjectToObject(file): { name: string, file: string } {
+  static fromModelObjectToObject(file: ExtensionFileModel): ExtensionFileObject {
     return {
       name: file.name,
       file: file.file.toString()
@@ -98,7 +103,7 @@ export default class ExtensionFile extends AbstractVinyl {
    * The opposite action of fromModelObjectToObject
    * @param {*} file
    */
-  static fromObjectToModelObject(file): ExtensionFileModel {
+  static fromObjectToModelObject(file: ExtensionFileObject): ExtensionFileModel {
     return {
       name: file.name,
       file: new Ref(file.file)

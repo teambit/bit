@@ -9,7 +9,7 @@ import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseE
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
-import Repository from '../scope/repository';
+import { Repository } from '../scope/objects';
 import { pathJoinLinux } from '../utils';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
@@ -37,7 +37,7 @@ export type EnvLoadArgsProps = BaseLoadArgsProps &
 export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps & { files: ExtensionFile[] };
 
 export type EnvExtensionModel = BaseExtensionModel & {
-  files: ExtensionFileModel[]
+  files?: ExtensionFileModel[]
 };
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;

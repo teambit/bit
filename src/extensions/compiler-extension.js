@@ -46,7 +46,7 @@ export default class CompilerExtension extends EnvExtension {
    * Loading from props (usually from bit.json)
    * @param {*} props
    */
-  static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
+  static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
     props.envType = CompilerEnvType;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
@@ -63,8 +63,8 @@ export default class CompilerExtension extends EnvExtension {
     if (!modelObject) return undefined;
     const actualObject =
       typeof modelObject === 'string'
-        ? { envType: 'Compiler', ...BaseExtension.transformStringToModelObject(modelObject) }
-        : { envType: 'Compiler', ...modelObject };
+        ? { envType: CompilerEnvType, ...BaseExtension.transformStringToModelObject(modelObject) }
+        : { envType: CompilerEnvType, ...modelObject };
     const envExtensionProps: EnvExtensionProps = await super.loadFromModelObject(actualObject, repository);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
     return extension;
