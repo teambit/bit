@@ -1,7 +1,5 @@
 /** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
-import Component from '../../../consumer/component/consumer-component';
-import SpecsResults from '../../../consumer/specs-results';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
@@ -10,6 +8,7 @@ import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 import { TESTS_FORK_LEVEL } from '../../../constants';
 import specsRunner from '../../../specs-runner/specs-runner';
 import GeneralError from '../../../error/general-error';
+import type { SpecsResultsWithComponentId } from '../../../consumer/specs-results/specs-results';
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 
@@ -24,7 +23,7 @@ export default (async function test(
   id?: string,
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.COMPONENT,
   verbose: ?boolean
-): Promise<ConsumerComponent> {
+): Promise<SpecsResultsWithComponentId> {
   if (forkLevel === TESTS_FORK_LEVEL.NONE) {
     return testInProcess(id, verbose);
   }
@@ -42,10 +41,7 @@ export default (async function test(
   throw new GeneralError('unknown fork level, fork level must be one of: NONE, ONE, COMPONENT');
 });
 
-export const testInProcess = async (
-  id?: string,
-  verbose: ?boolean
-): Promise<Array<{ component: Component, specs: SpecsResults }>> => {
+export const testInProcess = async (id?: string, verbose: ?boolean): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
   const components = await _getComponents(consumer, id, verbose);
   return consumer.scope.testMultiple({ components, consumer, verbose });
