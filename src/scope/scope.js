@@ -307,7 +307,7 @@ export default class Scope {
     consumer: Consumer,
     verbose: boolean,
     rejectOnFailure?: boolean
-  }): Promise<Array<{ component: Component, specs: SpecsResults }>> {
+  }): Promise<Array<{ componentId: string, specs: SpecsResults }>> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
