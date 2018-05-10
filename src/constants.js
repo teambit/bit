@@ -43,23 +43,16 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
-export const IGNORE_LIST = [
-  '**/.bit.map.json',
-  '**/.bitmap',
-  '**/.gitignore',
-  '**/bit.json',
-  '**/bitBindings.js',
-  '**/node_modules/**',
-  '**/package.json',
-  '**/package-lock.json',
-  '**/yarn.lock',
-  '**/LICENSE'
-];
-
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED',
   AUTHORED: 'AUTHORED',
   NESTED: 'NESTED' // which is a nested dependency
+};
+
+export const TESTS_FORK_LEVEL = {
+  NONE: 'NONE',
+  ONE: 'ONE',
+  COMPONENT: 'COMPONENT'
 };
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
@@ -80,7 +73,7 @@ export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export const DEFAULT_EXTENSIONS = {
   'ext-docs-parser': {
-    config: {},
+    rawConfig: {},
     options: {
       core: true
     }
@@ -106,6 +99,10 @@ export const DEFAULT_COMPONENTES_DIR_PATH = `${BITS_DIRNAME}/{namespace}/{name}`
 export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
 
 export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
+
+export const DEFAULT_EJECTED_DIR_ENVS = '@bit-envs';
+
+export const DEFAULT_EJECTED_ENVS_DIR_PATH = `${DEFAULT_EJECTED_DIR_ENVS}/{envType}`;
 
 export const DEFAULT_SEPARATOR = '/';
 
@@ -152,6 +149,20 @@ export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 // Setting this to 99999 to prevent this issue:
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
+
+export const IGNORE_LIST = [
+  '**/.bit.map.json',
+  '**/.bitmap',
+  '**/.gitignore',
+  '**/bit.json',
+  '**/bitBindings.js',
+  '**/node_modules/**',
+  `**/${DEFAULT_EJECTED_DIR_ENVS}/**`,
+  '**/package.json',
+  '**/package-lock.json',
+  '**/yarn.lock',
+  '**/LICENSE'
+];
 
 /**
  * bit global config keys

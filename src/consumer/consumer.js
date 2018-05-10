@@ -49,6 +49,8 @@ import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
+import CompilerExtension from '../extensions/compiler-extension';
+import TesterExtension from '../extensions/tester-extension';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
@@ -110,13 +112,14 @@ export default class Consumer {
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
   }
-
-  get testerId(): ?BitId {
-    return BitId.parse(this.bitJson.testerId);
+  get compiler(): ?CompilerExtension {
+    const compiler = this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
+    return compiler;
   }
 
-  get compilerId(): ?BitId {
-    return BitId.parse(this.bitJson.compilerId);
+  get tester(): ?TesterExtension {
+    const tester = this.bitJson.loadTester(this.projectPath, this.scope.getPath());
+    return tester;
   }
 
   get driver(): Driver {
@@ -130,7 +133,8 @@ export default class Consumer {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
         this.bitJson.componentsDefaultDirectory,
-        this.bitJson.dependenciesDirectory
+        this.bitJson.dependenciesDirectory,
+        this.bitJson.ejectedEnvsDirectory
       );
     }
     return this._dirStructure;

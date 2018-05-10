@@ -36,13 +36,13 @@ export default (async function importAction(
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {
-        consumer.bitJson.compilerId = id;
+        consumer.bitJson.compiler = id;
         Analytics.setExtraData('build_env', id);
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
-        consumer.bitJson.testerId = id;
+        consumer.bitJson.tester = id;
         Analytics.setExtraData('test_env', id);
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }

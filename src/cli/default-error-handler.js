@@ -65,6 +65,8 @@ import {
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
+import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import GeneralError from '../error/general-error';
 import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
@@ -98,6 +100,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [
     ProtocolNotSupported,
     () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
@@ -175,7 +178,10 @@ once your changes are merged with the new remote version, please tag and export 
         'bit init'
       )} to recreate the file`
   ],
-  [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
+  [
+    ComponentSpecsFailed,
+    err => `${err.specsResultsAndIdPretty}component's tests has failed, please fix them before tagging`
+  ],
   [
     MissingDependencies,
     (err) => {
@@ -305,6 +311,10 @@ to ignore this error, please use --ignore-newest-version flag`
       `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
         err.originalError.stack
       }`
+  ],
+  [
+    InvalidCompilerInterface,
+    err => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`
   ],
   [
     ResolutionException,

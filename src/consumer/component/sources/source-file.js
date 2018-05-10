@@ -1,4 +1,5 @@
 // @flow
+import R from 'ramda';
 import vinylFile from 'vinyl-file';
 import AbstractVinyl from './abstract-vinyl';
 import FileSourceNotFound from '../exceptions/file-source-not-found';
@@ -14,13 +15,14 @@ export default class SourceFile extends AbstractVinyl {
   static load(
     filePath: PathOsBased,
     distTarget: PathOsBased,
-    base: PathOsBased = consumerPath,
+    base: PathOsBased = consumerPath, // TODO: change params order to fix lint error
     consumerPath: PathOsBased,
     extendedProps: Object
   ): SourceFile | null {
     try {
       const file = new SourceFile(vinylFile.readSync(filePath, { base, cwd: consumerPath }));
-      for (const k in extendedProps) file[k] = extendedProps[k];
+      const addToFile = (value, key) => (file[key] = value); /* eslint-disable-line no-return-assign */
+      R.forEachObjIndexed(addToFile, extendedProps);
       return file;
     } catch (err) {
       logger.error(`failed loading file ${filePath}. Error: ${err}`);
@@ -32,13 +34,13 @@ export default class SourceFile extends AbstractVinyl {
   }
 
   static loadFromParsedString(parsedString: Object): ?SourceFile {
-    if (!parsedString) return;
+    if (!parsedString) return null;
     const opts = super.loadFromParsedString(parsedString);
     return new SourceFile(opts);
   }
 
-  static loadFromParsedStringArray(arr: Object[]) {
-    if (!arr) return;
+  static loadFromParsedStringArray(arr: Object[]): ?(SourceFile[]) {
+    if (!arr) return null;
     return arr.map(this.loadFromParsedString);
   }
 

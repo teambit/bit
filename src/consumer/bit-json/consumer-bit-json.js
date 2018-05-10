@@ -1,25 +1,16 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
 import R from 'ramda';
-import path from 'path';
 import AbstractBitJson from './abstract-bit-json';
-import { BitJsonNotFound, BitJsonAlreadyExists, InvalidBitJson } from './exceptions';
+import type { Extensions, Compilers, Testers } from './abstract-bit-json';
+import { BitJsonNotFound, InvalidBitJson } from './exceptions';
 import {
-  BIT_JSON,
   DEFAULT_COMPONENTES_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
+  DEFAULT_EJECTED_ENVS_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
-import type { PathOsBased } from '../../utils/path';
-
-function composePath(bitPath: PathOsBased): PathOsBased {
-  return path.join(bitPath, BIT_JSON);
-}
-
-function hasExisting(bitPath: string): boolean {
-  return fs.existsSync(composePath(bitPath));
-}
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -28,8 +19,8 @@ const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 type consumerBitJsonProps = {
   impl?: string,
   spec?: string,
-  compiler?: string,
-  tester?: string,
+  compiler?: string | Compilers,
+  tester?: string | Testers,
   dependencies?: { [string]: string },
   saveDependenciesAsComponents?: boolean,
   lang?: string,
@@ -37,8 +28,9 @@ type consumerBitJsonProps = {
   distEntry?: ?string,
   componentsDefaultDirectory?: string,
   dependenciesDirectory?: string,
+  ejectedEnvsDirectory?: string,
   bindingPrefix?: string,
-  extensions?: Object,
+  extensions?: Extensions,
   packageManager?: 'npm' | 'yarn',
   packageManagerArgs?: string[],
   packageManagerProcessOptions?: Object,
@@ -53,6 +45,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   distEntry: ?string;
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
+  ejectedEnvsDirectory: string;
   saveDependenciesAsComponents: boolean; // save hub dependencies as bit components rather than npm packages
   packageManager: 'npm' | 'yarn'; // package manager client to use
   packageManagerArgs: ?(string[]); // package manager client to use
@@ -72,6 +65,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     distEntry,
     componentsDefaultDirectory = DEFAULT_COMPONENTES_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
+    ejectedEnvsDirectory = DEFAULT_EJECTED_ENVS_DIR_PATH,
     bindingPrefix,
     extensions,
     packageManager = DEFAULT_PACKAGE_MANAGER,
@@ -85,6 +79,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory;
     this.dependenciesDirectory = dependenciesDirectory;
+    this.ejectedEnvsDirectory = ejectedEnvsDirectory;
     this.saveDependenciesAsComponents = saveDependenciesAsComponents;
     this.packageManager = packageManager;
     this.packageManagerArgs = packageManagerArgs;
@@ -98,6 +93,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     let consumerObject = R.merge(superObject, {
       componentsDefaultDirectory: this.componentsDefaultDirectory,
       dependenciesDirectory: this.dependenciesDirectory,
+      ejectedEnvsDirectory: this.ejectedEnvsDirectory,
       saveDependenciesAsComponents: this.saveDependenciesAsComponents,
       packageManager: this.packageManager,
       packageManagerArgs: this.packageManagerArgs,
@@ -114,6 +110,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
 
     const isPropDefault = (val, key) => {
       if (key === 'dependenciesDirectory') return val !== DEFAULT_DEPENDENCIES_DIR_PATH;
+      if (key === 'ejectedEnvsDirectory') return val !== DEFAULT_EJECTED_ENVS_DIR_PATH;
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
@@ -123,31 +120,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      if (!override && hasExisting(bitDir)) {
-        throw new BitJsonAlreadyExists();
-      }
-
-      const respond = (err, res) => {
-        if (err) return reject(err);
-        return resolve(res);
-      };
-
-      fs.writeFile(composePath(bitDir), this.toJson(), respond);
-    });
-  }
-
   static create(): ConsumerBitJson {
     return new ConsumerBitJson({});
   }
 
-  static ensure(dirPath): Promise<ConsumerBitJson> {
-    return new Promise((resolve) => {
-      return this.load(dirPath)
-        .then(resolve)
-        .catch(() => resolve(this.create()));
-    });
+  static async ensure(dirPath): Promise<ConsumerBitJson> {
+    try {
+      const consumerBitJson = await this.load(dirPath);
+      return consumerBitJson;
+    } catch (err) {
+      return this.create();
+    }
   }
 
   static fromPlainObject(object: Object) {
@@ -158,6 +141,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       lang,
       componentsDefaultDirectory,
       dependenciesDirectory,
+      ejectedEnvsDirectory,
       dist,
       bindingPrefix,
       extensions,
@@ -181,6 +165,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
+      ejectedEnvsDirectory,
       packageManager,
       packageManagerArgs,
       packageManagerProcessOptions,
@@ -191,18 +176,17 @@ export default class ConsumerBitJson extends AbstractBitJson {
     });
   }
 
-  static load(dirPath: string): Promise<ConsumerBitJson> {
-    return new Promise((resolve, reject) => {
-      if (!hasExisting(dirPath)) return reject(new BitJsonNotFound());
-      return fs.readFile(composePath(dirPath), (err, data) => {
-        if (err) return reject(err);
-        try {
-          const file = JSON.parse(data.toString('utf8'));
-          return resolve(this.fromPlainObject(file));
-        } catch (e) {
-          return reject(new InvalidBitJson(composePath(dirPath)));
-        }
-      });
-    });
+  static async load(dirPath: string): Promise<ConsumerBitJson> {
+    const isExisting = await AbstractBitJson.hasExisting(dirPath);
+    if (!isExisting) throw new BitJsonNotFound();
+    const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    try {
+      const file = await fs.readJson(bitJsonPath);
+      const consumerBitJson = this.fromPlainObject(file);
+      consumerBitJson.path = bitJsonPath;
+      return consumerBitJson;
+    } catch (e) {
+      throw new InvalidBitJson(bitJsonPath);
+    }
   }
 }

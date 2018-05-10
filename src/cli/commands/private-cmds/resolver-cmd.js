@@ -21,7 +21,7 @@ class ResolverSet extends Command {
   }
 
   report(resolverPath): string {
-    return `resovler path has changed successfully to - ${chalk.yellow(resolverPath)}`;
+    return `resolver path has changed successfully to - ${chalk.yellow(resolverPath)}`;
   }
 }
 

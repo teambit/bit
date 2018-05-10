@@ -9,6 +9,8 @@ export default class Impl extends Source {
     function getTemplate() {
       try {
         if (!compilerId) return createTemplate({ name });
+        // TODO: This need to be fixed.. it won't work any more
+        // $FlowFixMe
         const testerModule = scope.loadEnvironment(compilerId);
         return testerModule.getTemplate(name);
       } catch (e) {

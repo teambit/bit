@@ -137,13 +137,14 @@ export default (async function tagModelComponent({
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
+  const testsResultsP = scope.testMultiple({
+    components: componentsToBuildAndTest,
+    consumer,
+    verbose,
+    rejectOnFailure: !force
+  });
   try {
-    testsResults = await scope.testMultiple({
-      components: componentsToBuildAndTest,
-      consumer,
-      verbose,
-      rejectOnFailure: !force
-    });
+    testsResults = await testsResultsP;
   } catch (err) {
     // if force is true, ignore the tests and continue
     if (!force) {
@@ -190,7 +191,7 @@ export default (async function tagModelComponent({
       })
       : null;
 
-    const testResult = testsResults.find(result => result.component.id.toString() === consumerComponentId);
+    const testResult = testsResults.find(result => result.componentId === consumerComponentId);
     const flattenedDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,

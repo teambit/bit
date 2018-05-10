@@ -3,7 +3,7 @@ import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
-import { ScopeMeta } from '../models';
+import { ScopeMeta, Source } from '../models';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
@@ -26,6 +26,8 @@ import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import { BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
+import CompilerExtension from '../../extensions/compiler-extension';
+import TesterExtension from '../../extensions/tester-extension';
 
 type State = {
   versions?: {
@@ -278,25 +280,25 @@ export default class Component extends BitObject {
   async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
-    const filesP = Promise.all(
-      version.files.map(async (file) => {
-        const content = await file.file.load(repository);
-        if (!content) throw new GeneralError(`failed loading a file ${file.relativePath} from the model`);
-        return new SourceFile({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
-      })
-    );
-    const distsP = version.dists
-      ? Promise.all(
-        version.dists.map(async (dist) => {
-          const content = await dist.file.load(repository);
-          if (!content) throw new GeneralError(`failed loading a dist file ${dist.relativePath} from the model`);
-          return new Dist({ base: '.', path: dist.relativePath, contents: content.contents, test: dist.test });
-        })
-      )
-      : null;
+    const loadFileInstance = ClassName => async (file) => {
+      const loadP = file.file.load(repository);
+      const content: Source = ((await loadP: any): Source);
+      if (!content) throw new GeneralError(`failed loading file ${file.relativePath} from the model`);
+      return new ClassName({ base: '.', path: file.relativePath, contents: content.contents, test: file.test });
+    };
+    const filesP = version.files ? Promise.all(version.files.map(loadFileInstance(SourceFile))) : null;
+    const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    const [files, dists, scopeMeta] = await Promise.all([filesP, distsP, scopeMetaP]);
+    const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
+    const testerP = TesterExtension.loadFromModelObject(version.tester, repository);
+    const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
+      filesP,
+      distsP,
+      scopeMetaP,
+      compilerP,
+      testerP
+    ]);
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
@@ -310,8 +312,8 @@ export default class Component extends BitObject {
       lang: this.lang,
       bindingPrefix: this.bindingPrefix,
       mainFile: version.mainFile || null,
-      compilerId: version.compiler,
-      testerId: version.tester,
+      compiler,
+      tester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       flattenedDependencies: BitIds.clone(version.flattenedDependencies),
@@ -319,6 +321,7 @@ export default class Component extends BitObject {
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
+      envsPackageDependencies: clone(version.envsPackageDependencies),
       files,
       dists,
       docs: version.docs,
