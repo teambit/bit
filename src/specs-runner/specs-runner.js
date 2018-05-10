@@ -4,7 +4,6 @@ import R from 'ramda';
 import { fork } from 'child_process';
 import deserializeError from 'deserialize-error';
 import { Results } from '../consumer/specs-results';
-import type { RawTestsResults } from '../consumer/specs-results/specs-results';
 import type { ForkLevel } from '../api/consumer/lib/test';
 import { TESTS_FORK_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
@@ -12,6 +11,7 @@ import logger from '../logger/logger';
 import ExternalError from '../error/external-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
+import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>,
@@ -27,24 +27,34 @@ export default (async function run({
   ids: ?(string[]),
   forkLevel: ForkLevel,
   verbose: ?boolean
-}): Promise<?RawTestsResults> {
+}): Promise<?SpecsResultsWithComponentId> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
     logger.debug('specs-runner.run', 'running tests on one child process without ids');
-    return runOnChildProcess({ verbose });
+    return runOnChildProcess({
+      verbose
+    });
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process with ids');
     logger.debug('specs-runner.run', 'running tests on one child process with ids');
-    return runOnChildProcess({ ids, verbose });
+    return runOnChildProcess({
+      ids,
+      verbose
+    });
   }
   Analytics.addBreadCrumb('specs-runner.run', 'running tests on child process for each component');
   logger.debug('specs-runner.run', 'running tests on child process for each component');
-  const wrappedRunOnChildProcess = id => () => runOnChildProcess({ ids: [id], verbose });
-  const allRunnersP = ids.map(wrappedRunOnChildProcess);
-  const allRunnersResults = await Promise.all(allRunnersP);
-  if (!allRunnersResults) return undefined;
+  const allRunnersP = ids.map(id =>
+    runOnChildProcess({
+      ids: [id],
+      verbose
+    })
+  );
+  const allRunnersResults = ((await Promise.all(allRunnersP): any): SpecsResultsWithComponentId);
+  if (!allRunnersResults || !allRunnersResults.length) return undefined;
   const finalResults = allRunnersResults.reduce((acc, curr) => {
+    if (!curr || !curr[0]) return acc;
     acc.push(curr[0]);
     return acc;
   }, []);
@@ -64,7 +74,13 @@ function getDebugPort(): ?number {
   return null;
 }
 
-function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?boolean }): Promise<?RawTestsResults> {
+function runOnChildProcess({
+  ids,
+  verbose
+}: {
+  ids?: ?(string[]),
+  verbose: ?boolean
+}): Promise<?SpecsResultsWithComponentId> {
   return new Promise((resolve, reject) => {
     const debugPort = getDebugPort();
     const openPort = debugPort ? debugPort + 1 : null;
@@ -111,7 +127,13 @@ function runOnChildProcess({ ids, verbose }: { ids?: ?(string[]), verbose: ?bool
   });
 }
 
-function deserializeResults(results): ?{ type: 'results' | 'error', error?: Error, results?: RawTestsResults } {
+function deserializeResults(
+  results
+): ?{
+  type: 'results' | 'error',
+  error?: Error,
+  results?: SpecsResultsWithComponentId
+} {
   if (!results) return undefined;
   if (results.type === 'error') {
     let deserializedError = deserializeError(results.error);
@@ -152,5 +174,8 @@ function deserializeResults(results): ?{ type: 'results' | 'error', error?: Erro
   };
 
   const deserializedResults = results.results.map(deserializeResult);
-  return { type: 'results', results: deserializedResults };
+  return {
+    type: 'results',
+    results: deserializedResults
+  };
 }
