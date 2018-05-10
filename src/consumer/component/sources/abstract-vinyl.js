@@ -40,8 +40,7 @@ export default class AbstractVinyl extends Vinyl {
     };
   }
 
-  static loadFromParsedString(parsedString: Object): ?AbstractVinylProps {
-    if (!parsedString) return undefined;
+  static loadFromParsedString(parsedString: Object): AbstractVinylProps {
     const contents = Buffer.isBuffer(parsedString._contents)
       ? parsedString._contents
       : new Buffer(parsedString._contents);

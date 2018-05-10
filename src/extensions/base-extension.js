@@ -24,8 +24,8 @@ type BaseArgs = {
 };
 
 export type BaseLoadArgsProps = BaseArgs & {
-  consumerPath: PathOsBased,
-  scopePath: PathOsBased,
+  consumerPath?: ?PathOsBased,
+  scopePath?: ?PathOsBased,
   context?: ?Object
 };
 
@@ -174,8 +174,9 @@ export default class BaseExtension {
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
       let absPath = options.file;
+      const file = options.file || '';
       if (!path.isAbsolute(options.file) && consumerPath) {
-        absPath = path.resolve(consumerPath, options.file);
+        absPath = path.resolve(consumerPath, file);
       }
       const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(name, absPath, rawConfig, options);
       const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };

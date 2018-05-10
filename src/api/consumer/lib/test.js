@@ -3,7 +3,6 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
-import ConsumerComponent from '../../../consumer/component';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 import { TESTS_FORK_LEVEL } from '../../../constants';
 import specsRunner from '../../../specs-runner/specs-runner';
