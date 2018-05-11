@@ -45,6 +45,35 @@ describe('es6 components with link files', function () {
     });
   });
 
+  // @todo: support this scenario
+  // the bar/foo.js requires an index file => utils/index.js,
+  // which requires another index file: utils/is-string/index.js,
+  // which requires a real file utils/is-string/is-string.js
+  // bit-javascript should do the heavy lifting and provides with a final 'linkFile',
+  // which will be possible to conclude the sourceRelativePath: "utils/index.js"
+  // and the destinationRelativePath: "utils/is-string/is-string.js", all the rest index files are irrelevant.
+  // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
+  describe('multiple link files', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
+      helper.createFile('utils/is-string', 'index.js', "export { default as isString } from './is-string';");
+      helper.createFile('utils', 'index.js', "export { default as isString } from './is-string';");
+      helper.addComponent('utils/is-string/is-string.js');
+      const fooBarFixture =
+        "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+    });
+    it('should not consider both index files as a dependencies', () => {
+      output = helper.runCmd('bit status');
+      expect(output).to.have.string('bar/foo ... ok');
+      expect(output).to.not.have.string('missing dependencies');
+    });
+  });
+
   describe('when a component uses link file to import multiple members', () => {
     let utilIndexFixture;
     before(() => {

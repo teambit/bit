@@ -20,6 +20,7 @@ import GeneralError from '../../error/general-error';
 import ExtensionFile from '../../extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
+import type { RelativePath } from '../../consumer/component/dependencies/dependency';
 
 type CiProps = {
   error: Object,
@@ -146,8 +147,10 @@ export default class Version extends BitObject {
       if (dependencies && dependencies.length) {
         dependencies.forEach((dependency) => {
           if (dependency.relativePaths && dependency.relativePaths.length) {
-            dependency.relativePaths.forEach((relativePath) => {
-              if (relativePath.importSpecifiers) delete relativePath.importSpecifiers;
+            dependency.relativePaths.forEach((relativePath: RelativePath) => {
+              delete relativePath.importSpecifiers;
+              delete relativePath.importSource;
+              delete relativePath.isCustomResolveUsed;
             });
           }
         });

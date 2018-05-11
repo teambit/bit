@@ -11,11 +11,30 @@ import { Driver } from '../../driver';
 import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
-import type { RelativePath } from './dependencies/dependency';
+import type { RelativePath, ImportSpecifier } from './dependencies/dependency';
 import type { PathLinux } from '../../utils/path';
 import ComponentBitJson from '../bit-json';
 import Dependencies from './dependencies/dependencies';
 import GeneralError from '../../error/general-error';
+
+type FileObject = {
+  file: string,
+  importSpecifiers?: ImportSpecifier[],
+  importSource: string,
+  isCustomResolveUsed?: boolean,
+  isLink?: boolean,
+  linkDependencies?: Object[]
+};
+
+type FileDependencies = {
+  files: FileObject[],
+  packages?: Object,
+  bits?: string[]
+};
+
+type Tree = {
+  [main_file: string]: FileDependencies
+};
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -37,7 +56,7 @@ import GeneralError from '../../error/general-error';
  * @param driver
  */
 function findComponentsOfDepsFiles(
-  tree: Object,
+  tree: Tree,
   files: string[],
   testsFiles: string[],
   entryComponentId: string,
@@ -59,12 +78,12 @@ function findComponentsOfDepsFiles(
   const rootDir: PathLinux = entryComponentMap.rootDir;
   const processedFiles = [];
 
-  const traverseTreeForComponentId = (depFile) => {
+  const traverseTreeForComponentId = (depFile: PathLinux) => {
     if (!tree[depFile] || (!tree[depFile].files && !tree[depFile].bits)) return;
     const rootDirFullPath = path.join(consumerPath, rootDir);
     if (tree[depFile].files && tree[depFile].files.length) {
       for (const file of tree[depFile].files) {
-        const fullDepFile = path.resolve(rootDirFullPath, file);
+        const fullDepFile = path.resolve(rootDirFullPath, file.file);
         const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
         const componentId = consumer.bitMap.getComponentIdByPath(depRelativeToConsumer);
         if (componentId) return componentId; // eslint-disable-line consistent-return
@@ -78,11 +97,11 @@ function findComponentsOfDepsFiles(
     }
 
     for (const file of tree[depFile].files) {
-      if (file !== depFile) {
-        const componentId = traverseTreeForComponentId(file);
+      if (file.file !== depFile) {
+        const componentId = traverseTreeForComponentId(file.file);
         if (componentId) return componentId; // eslint-disable-line consistent-return
       } else {
-        logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
+        logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file.file} depends on itself`);
       }
     }
   };
@@ -154,9 +173,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   const processDepFile = (
     originFile: string,
     depFile: string,
-    importSpecifiers?: Object,
+    importSpecifiers?: ImportSpecifier[],
     linkFile?: string,
-    isTestFile: boolean = false
+    isTestFile: boolean = false,
+    depFileObject: FileObject
   ) => {
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
@@ -189,9 +209,16 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
       sourceRelativePath = depRootDir ? depFileRelative : depFile;
     }
 
-    const depsPaths = { sourceRelativePath, destinationRelativePath };
+    const depsPaths: RelativePath = {
+      sourceRelativePath,
+      destinationRelativePath,
+      importSource: depFileObject.importSource
+    };
     if (importSpecifiers) {
       depsPaths.importSpecifiers = importSpecifiers;
+    }
+    if (depFileObject.isCustomResolveUsed) {
+      depsPaths.isCustomResolveUsed = depFileObject.isCustomResolveUsed;
     }
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
@@ -222,10 +249,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     }
   };
 
-  const processLinkFile = (originFile: string, linkFile: Object, isTestFile: boolean = false) => {
-    if (!linkFile.dependencies || R.isEmpty(linkFile.dependencies)) return;
-    const nonLinkFiles = [];
-    linkFile.dependencies.forEach((dependency) => {
+  const processLinkFile = (originFile: string, linkFile: FileObject, isTestFile: boolean = false) => {
+    if (!linkFile.linkDependencies || R.isEmpty(linkFile.linkDependencies)) return;
+    const nonLinkImportSpecifiers = [];
+    linkFile.linkDependencies.forEach((dependency) => {
       const component = getComponentIdByDepFile(linkFile.file);
       if (component.componentId) {
         // the linkFile is already a component, no need to treat it differently than other depFile
@@ -234,40 +261,22 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
         // also, delete the linkFile attribute of importSpecifiers so then once the component is
         // imported and the link is generated, it won't be treated as a linkFile.
         dependency.importSpecifiers.map(a => delete a.linkFile);
-        nonLinkFiles.push(dependency.importSpecifiers);
+        nonLinkImportSpecifiers.push(dependency.importSpecifiers);
       } else {
-        processDepFile(originFile, dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile);
+        processDepFile(originFile, dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile, linkFile);
       }
     });
-    if (nonLinkFiles.length) {
-      processDepFile(originFile, linkFile.file, R.flatten(nonLinkFiles), undefined, isTestFile);
+    if (nonLinkImportSpecifiers.length) {
+      processDepFile(originFile, linkFile.file, R.flatten(nonLinkImportSpecifiers), undefined, isTestFile, linkFile);
     }
   };
 
-  const processDepFiles = (
-    originFile: string,
-    allDepsFiles: string[],
-    importSpecifiers: Object,
-    isTestFile: boolean = false
-  ) => {
-    if (allDepsFiles && !R.isEmpty(allDepsFiles)) {
-      allDepsFiles.forEach((depFile) => {
-        let finalImportSpecifiers = R.clone(importSpecifiers);
-        if (importSpecifiers) {
-          const importSpecifiersFound = importSpecifiers.find(specifierFile => specifierFile.file === depFile);
-          if (importSpecifiersFound) finalImportSpecifiers = importSpecifiersFound.importSpecifiers;
-        }
-        processDepFile(originFile, depFile, finalImportSpecifiers, undefined, isTestFile);
-      });
-    }
-  };
-
-  const processLinkFiles = (originFile: string, allLinkFiles: Object[], isTestFile: boolean = false) => {
-    if (allLinkFiles && !R.isEmpty(allLinkFiles)) {
-      allLinkFiles.forEach((linkFile) => {
-        processLinkFile(originFile, linkFile, isTestFile);
-      });
-    }
+  const processDepFiles = (originFile: string, allDepsFiles: FileObject[], isTestFile: boolean = false) => {
+    if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
+    allDepsFiles.forEach((depFile: FileObject) => {
+      if (depFile.isLink) processLinkFile(originFile, depFile, isTestFile);
+      else processDepFile(originFile, depFile.file, depFile.importSpecifiers, undefined, isTestFile, depFile);
+    });
   };
 
   const processBits = (bits, isTestFile: boolean = false) => {
@@ -337,12 +346,11 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     devComponentsDeps = R.pick(devComponentsOnlyNames, devComponentsDeps);
   };
 
-  files.forEach((file) => {
+  files.forEach((file: string) => {
     const isTestFile = R.contains(file, testsFiles);
     processPackages(file, tree[file].packages, isTestFile);
     processBits(tree[file].bits, isTestFile);
-    processDepFiles(file, tree[file].files, tree[file].importSpecifiers, isTestFile);
-    processLinkFiles(file, tree[file].linkFiles, isTestFile);
+    processDepFiles(file, tree[file].files, isTestFile);
   });
   removeDevDepsIfTheyAlsoRegulars();
 
@@ -393,34 +401,6 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
 }
 
 /**
- * Merge the dependencies-trees we got from all files to one big dependency-tree
- * @param {Array<Object>} depTrees
- * @return {{missing: {packages: Array, files: Array}, tree: {}}}
- */
-// function mergeDependencyTrees(depTrees: Array<Object>): Object {
-//   const dependencyTree = {
-//     missing: { packages: [], files: [], bits: [] },
-//     tree: {}
-//   };
-//   depTrees.forEach((dep) => {
-//     if (dep.missing.packages.length) {
-//       dependencyTree.missing.packages.push(...dep.missing.packages);
-//     }
-//     if (dep.missing.files && dep.missing.files.length) {
-//       dependencyTree.missing.files.push(...dep.missing.files);
-//     }
-//     if (dep.missing.bits) {
-//       dependencyTree.missing.bits.push(...dep.missing.bits);
-//     }
-//     Object.assign(dependencyTree.tree, dep.tree);
-//   });
-//   dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
-//   dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);
-//   dependencyTree.missing.bits = R.uniq(dependencyTree.missing.bits);
-//   return dependencyTree;
-// }
-
-/**
  * Load components and packages dependencies for a component. The process is as follows:
  * 1) Use the language driver to parse the component files and find for each file its dependencies.
  * 2) The results we get from the driver per file tells us what are the files and packages that depend on our file.
@@ -455,12 +435,6 @@ export async function loadDependenciesForComponent(
       component.bindingPrefix,
       consumer.bitJson.resolveModules
     );
-    // const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
-    // if (!testsFiles.length) return nonTestsTree;
-    // const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
-    // // ignore package dependencies of tests for now
-    // testsTree.missing.packages = [];
-    // return mergeDependencyTrees([nonTestsTree, testsTree]);
   };
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const dependenciesTree = await getDependenciesTree();
