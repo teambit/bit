@@ -88,6 +88,10 @@ export default class Dependencies {
     );
   }
 
+  getById(id: string): Dependency {
+    return this.dependencies.find(dep => dep.id.toString() === id);
+  }
+
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
     const dependenciesIds = this.dependencies.map(dependency => dependency.id);
     const localDependencies = await scope.latestVersions(dependenciesIds);

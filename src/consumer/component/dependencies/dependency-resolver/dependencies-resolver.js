@@ -17,6 +17,7 @@ import ComponentBitJson from '../../../bit-json';
 import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import type { RelativePath } from '../dependency';
+import Dependency from '../dependency';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -317,6 +318,58 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   };
 
   /**
+   * currently the only unidentified packages being process are the ones coming from custom-modules-resolution.
+   * assuming the author used custom-resolution, which enable using non-relative import syntax,
+   * for example, requiring the file 'src/utils/is-string' from anywhere as require('utils/is-string');
+   * now, when the component is imported, the driver recognizes 'utils/is-string' as a package,
+   * because it's not relative.
+   * the goal here is to use the 'package' the driver found and match it with one of the
+   * dependencies from the model. In the example above, we might find in the model, a dependency
+   * is-string with importSource of 'utils/is-string'.
+   * Once a match is found, copy the relativePaths from the model. Before coping, we must strip the
+   * originallySharedDir, because in this process, the component is loaded from the filesystem and
+   * as such the sharedDir is expected to be stripped.
+   */
+  const processUnidentifiedPackages = (originFile, unidentifiedPackages?: string[], isTestFile) => {
+    if (!unidentifiedPackages) return;
+    if (!componentFromModel) return; // not relevant, the component is not imported
+    const importSourceMap = {};
+    const dependencies: Dependencies = isTestFile
+      ? componentFromModel.devDependencies
+      : componentFromModel.dependencies;
+    if (dependencies.isEmpty()) return;
+    dependencies.get().forEach((dependency: Dependency) => {
+      dependency.relativePaths.forEach((relativePath: RelativePath) => {
+        if (relativePath.isCustomResolveUsed) {
+          importSourceMap[relativePath.importSource] = dependency.id;
+        }
+      });
+    });
+    if (R.isEmpty(importSourceMap)) return;
+    // clone before stripping the sharedDir to not change the model by mistake
+    const clonedDependencies = new Dependencies(dependencies.getClone());
+    if (entryComponentMap.originallySharedDir) {
+      clonedDependencies.stripOriginallySharedDir(consumer.bitMap, entryComponentMap.originallySharedDir);
+    }
+    unidentifiedPackages.forEach((unidentifiedPackage) => {
+      const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
+      const packageWithNoNodeModules = packageLinuxFormat.replace('node_modules/', '');
+      const foundImportSource = Object.keys(importSourceMap).find(importSource =>
+        packageWithNoNodeModules.startsWith(importSource)
+      );
+      if (foundImportSource) {
+        const dependencyId = importSourceMap[foundImportSource];
+        const dependencyIdStr = dependencyId.toString();
+        if (isTestFile && !devComponentsDeps[dependencyIdStr]) {
+          devComponentsDeps[dependencyIdStr] = dependencies.getById(dependencyIdStr).relativePaths;
+        } else if (!isTestFile && !componentsDeps[dependencyIdStr]) {
+          componentsDeps[dependencyIdStr] = clonedDependencies.getById(dependencyIdStr).relativePaths;
+        }
+      }
+    });
+  };
+
+  /**
    * Remove the dependencies which appear both in dev and regular deps from the dev
    * Because if a dependency is both dev dependency and regular dependecy it should be treated as regular one
    * Apply for both packages and components dependencies
@@ -333,7 +386,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     processPackages(file, tree[file].packages, isTestFile);
     processBits(tree[file].bits, isTestFile);
     processDepFiles(file, tree[file].files, isTestFile);
-    // processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile);
+    processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile);
   });
   removeDevDepsIfTheyAlsoRegulars();
 
