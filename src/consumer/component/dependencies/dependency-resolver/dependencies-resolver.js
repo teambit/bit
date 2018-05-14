@@ -3,39 +3,20 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import semver from 'semver';
-import { COMPONENT_ORIGINS } from '../../constants';
-import ComponentMap from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
-import Component from '../component';
-import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux, first } from '../../utils';
-import logger from '../../logger/logger';
-import { Consumer } from '../../consumer';
-import Dependency from './dependencies/dependency';
-import type { RelativePath, ImportSpecifier } from './dependencies/dependency';
-import type { PathLinux } from '../../utils/path';
-import ComponentBitJson from '../bit-json';
-import Dependencies from './dependencies/dependencies';
-import GeneralError from '../../error/general-error';
-
-type FileObject = {
-  file: string,
-  importSpecifiers?: ImportSpecifier[],
-  importSource: string,
-  isCustomResolveUsed?: boolean,
-  isLink?: boolean,
-  linkDependencies?: Object[]
-};
-
-type FileDependencies = {
-  files: FileObject[],
-  packages?: Object,
-  bits?: string[]
-};
-
-type Tree = {
-  [main_file: string]: FileDependencies
-};
+import { COMPONENT_ORIGINS } from '../../../../constants';
+import ComponentMap from '../../../bit-map/component-map';
+import { BitId } from '../../../../bit-id';
+import Component from '../../../component';
+import { Driver } from '../../../../driver';
+import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../../../utils';
+import logger from '../../../../logger/logger';
+import { Consumer } from '../../../../consumer';
+import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
+import type { PathLinux } from '../../../../utils/path';
+import ComponentBitJson from '../../../bit-json';
+import Dependencies from '../dependencies';
+import GeneralError from '../../../../error/general-error';
+import type { RelativePath } from '../dependency';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.

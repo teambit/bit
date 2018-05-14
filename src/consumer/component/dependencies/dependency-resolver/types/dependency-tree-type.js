@@ -37,6 +37,7 @@ export type LinkFile = {
 export type FileDependencies = {
   files: FileObject[],
   packages?: Object,
+  unidentifiedPackages?: string[],
   bits?: Object
 };
 
