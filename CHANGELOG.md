@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support "export X from Y" syntax of ES6 without importing X first
+
 ## [0.10.16] - 2018-05-09
 
 - support for bit login (set registry with token in npmrc file)
