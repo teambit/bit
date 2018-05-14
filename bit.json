@@ -1,10 +1,23 @@
 {
     "env": {
-        "compiler": "none",
-        "tester": "none"
+        "compiler": {
+            "none": {
+                "rawConfig": {},
+                "options": {}
+            }
+        },
+        "tester": {
+            "none": {
+                "rawConfig": {},
+                "options": {}
+            }
+        }
     },
-    "dependencies": {},
-    "structure": "components/{namespace}/{name}",
+    "dependencies": {
+        "david.bit-javascript/dependency-tree/types": "0.0.1"
+    },
+    "componentsDefaultDirectory": "components/{namespace}/{name}",
+    "packageManager": "npm",
     "dist": {
         "target": "dist"
     }

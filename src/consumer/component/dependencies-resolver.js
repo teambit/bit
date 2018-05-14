@@ -8,9 +8,10 @@ import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../utils';
+import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux, first } from '../../utils';
 import logger from '../../logger/logger';
 import { Consumer } from '../../consumer';
+import Dependency from './dependencies/dependency';
 import type { RelativePath, ImportSpecifier } from './dependencies/dependency';
 import type { PathLinux } from '../../utils/path';
 import ComponentBitJson from '../bit-json';
@@ -351,6 +352,7 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     processPackages(file, tree[file].packages, isTestFile);
     processBits(tree[file].bits, isTestFile);
     processDepFiles(file, tree[file].files, isTestFile);
+    // processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile);
   });
   removeDevDepsIfTheyAlsoRegulars();
 
@@ -510,11 +512,6 @@ export async function loadDependenciesForComponent(
   if (!R.isEmpty(traversedDeps.relativeDeps)) {
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }
-  /*  if (!R.isEmpty(traversedDeps.missingDeps)) {
-    if (missingComponents[fileDep.originFile]) missingComponents[fileDep.originFile].push(componentId);
-    else missingComponents[fileDep.originFile] = [componentId];
-    missingComponents = missingComponents.concat(traversedDeps.missingDeps);
-  } */
   if (!R.isEmpty(missingLinks)) missingDependencies.missingLinks = missingLinks;
   if (!R.isEmpty(missingComponents)) missingDependencies.missingComponents = missingComponents;
   // assign missingDependencies to component only when it has data.

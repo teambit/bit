@@ -111,7 +111,8 @@
     "vinyl-file": "^3.0.0",
     "vinyl-write": "^0.2.2",
     "winston": "^2.4.0",
-    "yn": "^2.0.0"
+    "yn": "^2.0.0",
+    "@bit/david.bit-javascript.dependency-tree.types": "file:./src/consumer/component/dependencies/dependency-resolver/types"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
