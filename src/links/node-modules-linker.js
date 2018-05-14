@@ -130,56 +130,79 @@ function writeMissingLinks(consumer: Consumer, component, componentMap, bitMap) 
   return R.flatten(result);
 }
 
+function _linkImportedComponents(consumer: Consumer, component: Component, componentMap: ComponentMap): LinksResult {
+  const componentId = component.id;
+  const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
+  const linkPath = consumer.toAbsolutePath(relativeLinkPath);
+  // when a user moves the component directory, use component.writtenPath to find the correct target
+  const srcTarget = component.writtenPath || consumer.toAbsolutePath(componentMap.rootDir);
+  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
+    const distTarget = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+    symlinkPackages(srcTarget, distTarget, consumer, component.dependenciesSavedAsComponents);
+    createSymlinkOrCopy(componentId, distTarget, linkPath);
+  } else {
+    createSymlinkOrCopy(componentId, srcTarget, linkPath);
+  }
+
+  const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
+  const boundDependencies = component.hasDependencies()
+    ? writeDependenciesLinks(component, componentMap, consumer)
+    : [];
+  const boundMissingDependencies =
+    component.missingDependencies && component.missingDependencies.missingLinks
+      ? writeMissingLinks(consumer, component, componentMap, consumer.bitMap)
+      : [];
+
+  return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
+}
+
+/**
+ * nested components are linked only during the import process. running `bit link` command won't
+ * link them because the nested dependencies are not loaded during consumer.loadComponents()
+ */
+function _linkNestedComponents(consumer: Consumer, component: Component, componentMap: ComponentMap): LinksResult {
+  const componentId = component.id;
+  if (!component.hasDependencies()) return { id: componentId, bound: [] };
+  const bound = writeDependenciesLinks(component, componentMap, consumer);
+  return { id: componentId, bound };
+}
+
+/**
+ * authored components are linked only when they were exported before
+ */
+function _linkAuthoredComponents(consumer: Consumer, component: Component, componentMap: ComponentMap): LinksResult {
+  const componentId = component.id;
+  if (!componentId.scope) return { id: componentId, bound: [] }; // scope is a must to generate the link
+  const filesToBind = componentMap.getFilesRelativeToConsumer();
+  const bound = filesToBind.map((file) => {
+    const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
+    const destRelative = pathRelativeLinux(path.dirname(dest), file);
+    const fileContent = `module.exports = require('${destRelative}');`;
+    fs.outputFileSync(dest, fileContent);
+    return { from: dest, to: file };
+  });
+  linkToMainFile(component, componentMap, componentId, consumer);
+  return { id: componentId, bound };
+}
+
+/**
+ * link given components to node_modules, so it's possible to use absolute link instead of relative
+ * for example, require('@bit/remote-scope.bar.foo)
+ */
 export default function linkComponents(components: Component[], consumer: Consumer): LinksResult[] {
   return components.map((component) => {
     const componentId = component.id;
     logger.debug(`linking component to node_modules: ${componentId}`);
     const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
-    if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
-      const linkPath = consumer.toAbsolutePath(relativeLinkPath);
-      // when a user moves the component directory, use component.writtenPath to find the correct target
-      const srcTarget = component.writtenPath || consumer.toAbsolutePath(componentMap.rootDir);
-      if (
-        !component.dists.isEmpty() &&
-        component.dists.writeDistsFiles &&
-        !consumer.shouldDistsBeInsideTheComponent()
-      ) {
-        const distTarget = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-        symlinkPackages(srcTarget, distTarget, consumer, component.dependenciesSavedAsComponents);
-        createSymlinkOrCopy(componentId, distTarget, linkPath);
-      } else {
-        createSymlinkOrCopy(componentId, srcTarget, linkPath);
-      }
-
-      const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
-      const boundDependencies = component.hasDependencies()
-        ? writeDependenciesLinks(component, componentMap, consumer)
-        : [];
-      const boundMissingDependencies =
-        component.missingDependencies && component.missingDependencies.missingLinks
-          ? writeMissingLinks(consumer, component, componentMap, consumer.bitMap)
-          : [];
-
-      return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
+    switch (componentMap.origin) {
+      case COMPONENT_ORIGINS.IMPORTED:
+        return _linkImportedComponents(consumer, component, componentMap);
+      case COMPONENT_ORIGINS.NESTED:
+        return _linkNestedComponents(consumer, component, componentMap);
+      case COMPONENT_ORIGINS.AUTHORED:
+        return _linkAuthoredComponents(consumer, component, componentMap);
+      default:
+        throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
     }
-    if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      if (!component.hasDependencies()) return { id: componentId, bound: [] };
-      const bound = writeDependenciesLinks(component, componentMap, consumer);
-      return { id: componentId, bound };
-    }
-
-    // origin is AUTHORED
-    if (!componentId.scope) return { id: componentId, bound: [] }; // scope is a must to generate the link
-    const filesToBind = componentMap.getFilesRelativeToConsumer();
-    const bound = filesToBind.map((file) => {
-      const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      const destRelative = pathRelativeLinux(path.dirname(dest), file);
-      const fileContent = `module.exports = require('${destRelative}');`;
-      fs.outputFileSync(dest, fileContent);
-      return { from: dest, to: file };
-    });
-    linkToMainFile(component, componentMap, componentId, consumer);
-    return { id: componentId, bound };
   });
 }
