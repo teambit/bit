@@ -1,3 +1,5 @@
+import fs from 'fs-extra';
+import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
@@ -41,6 +43,21 @@ describe('custom module resolutions', function () {
       expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.js');
       expect(dependency.relativePaths[0].importSource).to.equal('utils/is-string');
       expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+      });
+      it('should generate the non-relative links correctly', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
     });
   });
 });

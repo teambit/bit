@@ -12,12 +12,16 @@ import logger from '../logger/logger';
 import { pathRelativeLinux } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getLinkContent, getIndexFileName } from './link-generator';
-import type { PathOsBased } from '../utils/path';
+import type { PathOsBased, PathLinux } from '../utils/path';
 import GeneralError from '../error/general-error';
+import { Dependency } from '../consumer/component/dependencies';
+import type { RelativePath } from '../consumer/component/dependencies/Dependency';
+
+type LinkDetail = { from: string, to: string };
 
 export type LinksResult = {
   id: BitId,
-  bound: Array<{ from: string, to: string }>
+  bound: LinkDetail[]
 };
 
 /**
@@ -43,7 +47,7 @@ function writeDependencyLink(
   bitId: BitId,
   rootDir: PathOsBased, // absolute path
   bindingPrefix: string
-) {
+): LinkDetail {
   const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
   const destPath = path.join(parentRootDir, relativeDestPath);
   createSymlinkOrCopy(bitId, rootDir, destPath);
@@ -72,11 +76,36 @@ function symlinkPackages(from: string, to: string, consumer, dependenciesSavedAs
   });
 }
 
-function writeDependenciesLinks(component: Component, componentMap, consumer: Consumer) {
-  return component.getAllDependencies().map((dependency) => {
+/**
+ * relevant when custom-module-resolution was used in the original (authored) component
+ */
+function writeNonRelativeDependenciesLinks(
+  parentComponentMap: ComponentMap,
+  dependency: Dependency,
+  dependencyRootDir: PathLinux
+): LinkDetail[] {
+  // $FlowFixMe
+  const parentRootDir: string = parentComponentMap.rootDir;
+  const writeLink = (importSource: string): LinkDetail => {
+    const destPath = path.join(parentRootDir, 'node_modules', importSource);
+    createSymlinkOrCopy(dependency.id, dependencyRootDir, destPath);
+    return { from: parentRootDir, to: dependencyRootDir };
+  };
+  const writtenLinks = [];
+  dependency.relativePaths.forEach((relativePath: RelativePath) => {
+    if (relativePath.isCustomResolveUsed) {
+      writtenLinks.push(writeLink(relativePath.importSource));
+    }
+  });
+  return writtenLinks;
+}
+
+function writeDependenciesLinks(component: Component, componentMap: ComponentMap, consumer: Consumer): LinkDetail[] {
+  return component.getAllDependencies().map((dependency: Dependency) => {
     const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
     const writtenLinks = [];
     if (!dependencyComponentMap) return writtenLinks;
+    if (!componentMap.rootDir) throw new Error(`rootDir is missing from ${component.id.toString()}`);
     writtenLinks.push(
       writeDependencyLink(
         consumer.toAbsolutePath(componentMap.rootDir),
@@ -85,10 +114,13 @@ function writeDependenciesLinks(component: Component, componentMap, consumer: Co
         component.bindingPrefix
       )
     );
+    if (!dependencyComponentMap.rootDir) throw new Error(`rootDir is missing from ${dependency.id.toString()}`);
+    writeNonRelativeDependenciesLinks(componentMap, dependency, dependencyComponentMap.rootDir);
     if (!consumer.shouldDistsBeInsideTheComponent()) {
       const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
       writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
+      // writeNonRelativeDependenciesLinks() // @todo
       symlinkPackages(from, to, consumer);
     }
     return writtenLinks;
@@ -111,14 +143,14 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   fs.outputFileSync(dest, fileContent);
 }
 
-function writeMissingLinks(consumer: Consumer, component, componentMap, bitMap) {
+function writeMissingLinks(consumer: Consumer, component, componentMap: ComponentMap) {
   const missingLinks = component.missingDependencies.missingLinks;
   const result = Object.keys(component.missingDependencies.missingLinks).map((key) => {
     return missingLinks[key].map((dependencyIdStr) => {
-      const dependencyId = bitMap.getExistingComponentId(dependencyIdStr);
+      const dependencyId = consumer.bitMap.getExistingComponentId(dependencyIdStr);
       if (!dependencyId) return null;
 
-      const dependencyComponentMap = bitMap.getComponent(dependencyId);
+      const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
       return writeDependencyLink(
         consumer.toAbsolutePath(componentMap.rootDir),
         BitId.parse(dependencyId),
@@ -150,10 +182,11 @@ function _linkImportedComponents(consumer: Consumer, component: Component, compo
     : [];
   const boundMissingDependencies =
     component.missingDependencies && component.missingDependencies.missingLinks
-      ? writeMissingLinks(consumer, component, componentMap, consumer.bitMap)
+      ? writeMissingLinks(consumer, component, componentMap)
       : [];
-
-  return { id: componentId, bound: bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]) };
+  const boundAll = bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]);
+  // $FlowFixMe
+  return { id: componentId, bound: boundAll };
 }
 
 /**
