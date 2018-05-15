@@ -109,18 +109,17 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
   }
 
   // Get the package relative path to the node_modules dir
-  let packageDir = packageFullPath;
-  // Check if the full path is path to the index file and not only to the directory
-  const stats = fs.statSync(packageFullPath);
-  if (stats.isFile()) {
-    packageDir = path.dirname(packageFullPath);
-  }
+  const indexOfLastNodeModules = packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1;
+  const indexOfPackageFolderEnd = packageFullPath.indexOf(path.sep, indexOfLastNodeModules);
+  const packageDir = packageFullPath.substring(0, indexOfPackageFolderEnd);
+
   // don't propagate here since loading a package.json of another folder and taking the version from it will result wrong version
   // This for example happen in the following case:
   // if you have 2 authored component which one dependet on the other
   // we will look for the package.json on the dependency but won't find it
   // if we propagate we will take the version from the root's package json which has nothing with the component version
   const packageInfo = PackageJson.loadSync(packageDir, false);
+
   if (!packageInfo) return null; // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
   result[packageInfo.name] = packageInfo.version;
   return result;
@@ -273,6 +272,7 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
       });
     }
     if (packageJson) {
+      console.log('packageJson here')
       const result = findPackagesInPackageJson(packageJson, missingPackages);
       groups.packages = result.missingPackages;
       Object.assign(foundPackages, result.foundPackages);
