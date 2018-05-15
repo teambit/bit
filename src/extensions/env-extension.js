@@ -14,6 +14,7 @@ import { pathJoinLinux } from '../utils';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 import { ComponentWithDependencies } from '../scope';
+import { Analytics } from '../analytics/analytics';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -75,6 +76,8 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async install(scope: Scope, opts: { verbose: boolean }, context?: Object): Promise<?(ComponentWithDependencies[])> {
+    Analytics.addBreadCrumb('env-extension', 'install env extension');
+
     // Skip the installation in case of using specific file
     // options.file usually used for develop your extension
     if (this.options.file) {
@@ -88,6 +91,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toModelObject(): EnvExtensionModel {
+    Analytics.addBreadCrumb('env-extension', 'toModelObject');
     const baseObject: BaseExtensionModel = super.toModelObject();
     const files = this.files.map(file => file.toModelObject());
     const modelObject = { files, ...baseObject };
@@ -100,6 +104,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
+    Analytics.addBreadCrumb('env-extension', 'toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.name);
@@ -129,6 +134,7 @@ export default class EnvExtension extends BaseExtension {
     ejectedEnvsDirectory: string,
     envType: EnvType
   }): Promise<string> {
+    Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
     const resolvedEjectedEnvsDirectory = format(ejectedEnvsDirectory, { envType });
     const newBase = path.join(bitDir, resolvedEjectedEnvsDirectory);
     const writeP = this.files.map((file) => {
@@ -140,6 +146,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async reload(context?: Object): Promise<void> {
+    Analytics.addBreadCrumb('env-extension', 'reload');
     if (context) {
       this.context = context;
     }
@@ -155,6 +162,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
+    Analytics.addBreadCrumb('env-extension', 'load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
@@ -165,6 +173,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   static async loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): Promise<?Object> {
+    Analytics.addBreadCrumb('env-extension', 'loadDynamicPackageDependencies');
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       const dynamicPackageDependencies = await getDynamicPackageDependencies({
@@ -186,6 +195,7 @@ export default class EnvExtension extends BaseExtension {
     modelObject: EnvExtensionModel & { envType: EnvType },
     repository: Repository
   ): Promise<EnvExtensionProps> {
+    Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {

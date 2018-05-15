@@ -8,6 +8,7 @@ import ConsumerComponent from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
+import { Analytics } from '../analytics/analytics';
 
 export type TesterExtensionOptions = EnvExtensionOptions;
 export type TesterExtensionModel = EnvExtensionModel;
@@ -21,6 +22,7 @@ export default class TesterExtension extends EnvExtension {
   }
 
   toModelObject(): TesterExtensionModel {
+    Analytics.addBreadCrumb('tester-extension', 'toModelObject');
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;
@@ -38,6 +40,7 @@ export default class TesterExtension extends EnvExtension {
     bitDir: string,
     ejectedEnvsDirectory: string
   }): Promise<string> {
+    Analytics.addBreadCrumb('tester-extension', 'writeFilesToFs');
     return super.writeFilesToFs({ bitDir, ejectedEnvsDirectory, envType: this.envType });
   }
 
@@ -46,6 +49,7 @@ export default class TesterExtension extends EnvExtension {
    * @param {*} props
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
+    Analytics.addBreadCrumb('tester-extension', 'load');
     props.envType = TesterEnvType;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: TesterExtension = new TesterExtension(envExtensionProps);
@@ -61,6 +65,7 @@ export default class TesterExtension extends EnvExtension {
     repository: Repository
     // $FlowFixMe
   ): Promise<?TesterExtension> {
+    Analytics.addBreadCrumb('tester-extension', 'loadFromModelObject');
     if (!modelObject) return undefined;
     const actualObject =
       typeof modelObject === 'string'
@@ -93,6 +98,7 @@ export default class TesterExtension extends EnvExtension {
     consumerBitJson: ConsumerBitJson,
     componentBitJson: ?ComponentBitJson
   }): Promise<?TesterExtension> {
+    Analytics.addBreadCrumb('tester-extension', 'loadFromCorrectSource');
     if (componentBitJson && componentBitJson.hasTester()) {
       // $FlowFixMe
       return componentBitJson.loadTester(consumerPath, scopePath);
