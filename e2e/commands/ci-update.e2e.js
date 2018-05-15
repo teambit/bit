@@ -21,7 +21,7 @@ describe('bit ci-update', function () {
   describe('component with tester and nested dependencies', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       const level1Fixture = "module.exports = function level1() { return 'level1'; };";
       helper.createFile('', 'level1.js', level1Fixture);
       const level0Fixture =
@@ -33,7 +33,7 @@ describe('bit ci-update', function () {
         "var level0 = require('./level0'); module.exports = function comp() { return 'comp ' + level0()};";
       helper.createFile('', 'file.js', fileFixture);
       helper.createFile('', 'file.spec.js', fileSpecFixture(true));
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('file.js', { i: 'comp/comp', t: 'file.spec.js' });
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -47,7 +47,7 @@ describe('bit ci-update', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponent('utils/is-type.js');
       helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
@@ -56,7 +56,7 @@ describe('bit ci-update', function () {
       helper.addComponentBarFoo();
 
       helper.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
       helper.build(); // needed for building the dependencies
       helper.commitAllComponents();

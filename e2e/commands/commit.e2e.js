@@ -244,7 +244,7 @@ describe('bit tag command', function () {
   });
   describe('tag one component with failing tests', () => {
     before(() => {
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');
       describe('failing test', () => {
@@ -254,7 +254,7 @@ describe('bit tag command', function () {
       });`;
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', failingTest);
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
     });
     it('should throw error if the bit id does not exists', () => {
@@ -916,6 +916,22 @@ describe('bit tag command', function () {
           expect(output).not.to.have.string('utils/is-type');
         });
       });
+    });
+  });
+  describe('with Windows end-of-line characters', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      const impl = 'hello\r\n world\r\n';
+      helper.createComponentBarFoo(impl);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+    });
+    it('should write the file to the model with Linux EOL characters', () => {
+      const barFoo = helper.catComponent('bar/foo@latest');
+      const fileHash = barFoo.files[0].file;
+      const fileContent = helper.runCmd(`bit cat-object ${fileHash} -s`);
+      // notice how the \r is stripped
+      expect(fileContent).to.have.string('"hello\\n world\\n"');
     });
   });
 });

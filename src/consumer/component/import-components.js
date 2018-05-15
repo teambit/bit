@@ -90,7 +90,7 @@ export default class ImportComponents {
     if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!this.options.withEnvironments) {
         return Promise.reject(new NothingToImport());
-      } else if (R.isNil(this.consumer.testerId) && R.isNil(this.consumer.compilerId)) {
+      } else if (R.isNil(this.consumer.tester) && R.isNil(this.consumer.compiler)) {
         return Promise.reject(new NothingToImport());
       }
     }
@@ -119,16 +119,19 @@ export default class ImportComponents {
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
-      const envComponents = await this.consumer.scope.installEnvironment({
-        ids: [
-          { componentId: this.consumer.testerId, type: 'tester' },
-          { componentId: this.consumer.compilerId, type: 'compiler' }
-        ],
-        verbose: this.options.verbose
-      });
+      const compiler = this.consumer.compiler;
+      const tester = this.consumer.tester;
+      const envsPromises = [];
+      if (compiler) {
+        envsPromises.push(compiler.install());
+      }
+      if (tester) {
+        envsPromises.push(tester.install());
+      }
+      const envComponents = await Promise.all(envsPromises);
       return {
         dependencies: componentsAndDependencies,
-        envDependencies: envComponents,
+        envComponents,
         importDetails
       };
     }
@@ -183,7 +186,7 @@ export default class ImportComponents {
     });
 
     if (modifiedComponents.length) {
-      return Promise.reject(
+      throw new GeneralError(
         chalk.yellow(
           `unable to import the following components due to local changes, use --override flag to override your local changes\n${modifiedComponents.join(
             '\n'

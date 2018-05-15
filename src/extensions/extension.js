@@ -1,19 +1,18 @@
 /** @flow */
 
-import path from 'path';
 import R from 'ramda';
-import logger, { createExtensionLogger } from '../logger/logger';
+import BaseExtension from './base-extension';
+import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions } from './base-extension';
+import logger from '../logger/logger';
 import ExtensionCommand from './extension-command';
 import IsolatedEnvironment from '../environment';
-import { Scope, loadScope } from '../scope';
-import { loadConsumer } from '../consumer';
-import { BitId } from '../bit-id';
+import { loadScope } from '../scope';
+import { Consumer, loadConsumer } from '../consumer';
 import loader from '../cli/loader';
 import HooksManager, { HookAction } from '../hooks';
 import { HOOKS_NAMES } from '../constants';
 
-const HooksManagerInstance = HooksManager.getInstance();
-const CORE_EXTENSIONS_PATH = './core-extensions';
+const HooksManagerInstance: HooksManager = HooksManager.getInstance();
 
 type NewCommand = {
   name: string,
@@ -29,13 +28,20 @@ type Commands = {
   [string]: NewCommand
 };
 
-export type ExtensionProps = {
-  name: string,
-  registeredHooksActions: RegisteredHooksActions,
-  commands?: Commands,
-  rawConfig: Object,
-  dynamicConfig: Object
+type ExtensionProps = BaseExtensionProps & {
+  newHooks?: string[],
+  registeredHooksActions?: RegisteredHooksActions,
+  commands?: Array<Commands>
 };
+
+export type ExtensionOptions = BaseExtensionOptions & {
+  core?: boolean,
+  disabled?: boolean
+};
+
+export type LoadArgsProps = BaseLoadArgsProps;
+
+export type { ExtensionProps };
 
 /**
  * A class which represent an extension
@@ -44,25 +50,18 @@ export type ExtensionProps = {
  * Load extension
  * Config
  */
-export default class Extension {
-  name: string;
-  loaded: boolean;
-  disabled: boolean;
-  filePath: string;
+export default class Extension extends BaseExtension {
   registeredHooksActions: RegisteredHooksActions;
   newHooks: string[];
-  commands: Commands;
-  rawConfig: Object;
-  options: Object;
-  dynamicConfig: Object;
-  script: Function; // Store the required plugin
+  commands: Array<Commands>;
   api = {
     /**
      * API to resiter new command to bit
      */
-    registerCommand: (newCommand: NewCommand) => {
+    registerCommand: (newCommand: NewCommand): void => {
       // TODO: validate new command format
       logger.info(`registering new command ${newCommand.name}`);
+      // $FlowFixMe
       this.commands.push(new ExtensionCommand(newCommand));
     },
     /**
@@ -87,28 +86,23 @@ export default class Extension {
      */
     triggerHook: (hookName: string, args: ?Object) => {
       if (!R.contains(hookName, this.newHooks)) {
-        logger.debug(`trying to trigger the hook ${hookName} which not registerd by this extension`);
+        logger.debug(`trying to trigger the hook ${hookName} which not registered by this extension`);
         return;
       }
       HooksManagerInstance.triggerHook(hookName, args);
     },
-    /**
-     * API to get logger
-     */
-    getLogger: () => createExtensionLogger(this.name),
     getLoader: () => loader,
     HOOKS_NAMES: _getHooksNames(),
-    createIsolatedEnv: _createIsolatedEnv
+    createIsolatedEnv: _createIsolatedEnv,
+    ...super.api
   };
 
   constructor(extensionProps: ExtensionProps) {
-    this.name = extensionProps.name;
-    this.rawConfig = extensionProps.rawConfig;
-    this.options = extensionProps.options;
-    this.dynamicConfig = extensionProps.rawConfig;
-    this.commands = [];
-    this.registeredHooksActions = {};
-    this.newHooks = [];
+    super(extensionProps);
+    this.extendAPI(extensionProps.api, this.api);
+    this.commands = extensionProps.commands || [];
+    this.registeredHooksActions = extensionProps.registeredHooksActions || {};
+    this.newHooks = extensionProps.newHooks || [];
   }
 
   /**
@@ -116,72 +110,30 @@ export default class Extension {
    * The extension will be from scope by default or from file
    * if there is file(path) in the options
    * The file path is relative to the bit.json of the project or absolute
-   * @param {string} name - name of the extension
-   * @param {Object} rawConfig - raw config for the extension
-   * @param {Object} options - extension options such as - disabled, file, core
-   * @param {string} consumerPath - path to the consumer folder (to load the file relatively)
-   * @param {string} scopePath - scope which stores the extension code
+   * @param {string} props - loading properties with the following fields:
+   * {string} name - name of the extension
+   * {Object} rawConfig - raw config for the extension
+   * {Object} options - extension options such as - disabled, file, core
+   * {string} consumerPath - path to the consumer folder (to load the file relatively)
+   * {string} scopePath - scope which stores the extension code
    */
-  static async load(
-    name: string,
-    rawConfig: Object = {},
-    options: Object = {},
-    consumerPath: ?string,
-    scopePath: ?string
-  ): Promise<Extension> {
-    // logger.info(`loading extension ${name}`);
-    // Require extension from _debugFile
-    if (options.file) {
-      let absPath = options.file;
-      if (!path.isAbsolute(options.file)) {
-        absPath = path.resolve(consumerPath, options.file);
-      }
-      return Extension.loadFromFile(name, absPath, rawConfig, options);
+  // $FlowFixMe
+  static async load(props: LoadArgsProps): Promise<Extension> {
+    props.rawConfig = props.rawConfig || {};
+    props.options = props.options || {};
+    const baseExtensionProps: BaseExtensionProps = await super.load(props);
+    // const extensionProps: ExtensionProps = ((await super.load(props): BaseExtensionProps): ExtensionProps);
+    // const extensionProps: ExtensionProps = (baseExtensionProps: ExtensionProps);
+    const extensionProps: ExtensionProps = {
+      commands: [],
+      registeredHooksActions: {},
+      newHooks: [],
+      ...baseExtensionProps
+    };
+    const extension: Extension = new Extension(extensionProps);
+    if (extension.loaded) {
+      await extension.init();
     }
-    // Require extension from scope
-    try {
-      const componentPath = _getExtensionPath(name, scopePath, options.core);
-      return Extension.loadFromFile(name, componentPath, rawConfig, options);
-    } catch (err) {
-      logger.error(`loading extension ${name} faild`);
-      logger.error(err);
-      return null;
-    }
-  }
-
-  static async loadFromFile(name: string, filePath: string, rawConfig: Object = {}, options: Object = {}): Extension {
-    logger.info(`loading extension ${name} from ${filePath}`);
-    const extension = new Extension({ name, rawConfig, options });
-    // Skip disabled extensions
-    if (options.disabled) {
-      extension.disabled = true;
-      logger.info(`skip extension ${name} because it is disabled`);
-      extension.loaded = false;
-      return extension;
-    }
-    extension.filePath = filePath;
-    try {
-      const script = require(filePath);
-      extension.script = script.default ? script.default : script;
-      if (extension.script.getDynamicConfig && typeof extension.script.getDynamicConfig === 'function') {
-        extension.dynamicConfig = await extension.script.getDynamicConfig(rawConfig);
-      }
-      if (extension.script.init && typeof extension.script.init === 'function') {
-        await extension.script.init(rawConfig, extension.dynamicConfig, extension.api);
-      }
-      // Make sure to not kill the process if an extension didn't load correctly
-    } catch (err) {
-      if (err.code === 'MODULE_NOT_FOUND') {
-        const msg = `loading extension ${name} faild, the file ${filePath} not found`;
-        logger.error(msg);
-        console.error(msg);
-      }
-      logger.error(`loading extension ${name} faild`);
-      logger.error(err);
-      extension.loaded = false;
-      return extension;
-    }
-    extension.loaded = true;
     return extension;
   }
 
@@ -211,28 +163,8 @@ const _loadScope = async (scopePath: ?string) => {
     return loadScope(scopePath);
   }
   // If a scope path was not provided we will get the consumer's scope
-  const consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer();
   return consumer.scope;
-};
-
-const _getCoreExtensionPath = (name: string): string => {
-  const componentPath = path.join(__dirname, CORE_EXTENSIONS_PATH, name);
-  return componentPath;
-};
-
-const _getRegularExtensionPath = (name: string, scopePath: string): string => {
-  const bitId = BitId.parse(name);
-  const internalComponentsPath = Scope.getComponentsRelativePath();
-  const internalComponentPath = Scope.getComponentRelativePath(bitId);
-  const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
-  return componentPath;
-};
-
-const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = false): string => {
-  if (isCore) {
-    return _getCoreExtensionPath(name);
-  }
-  return _getRegularExtensionPath(name, scopePath);
 };
 
 const _getHooksNames = () => {

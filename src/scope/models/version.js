@@ -1,5 +1,7 @@
 /** @flow */
 import R from 'ramda';
+import semver from 'semver';
+import packageNameValidate from 'validate-npm-package-name';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
@@ -12,7 +14,10 @@ import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constant
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
+import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
+import type { TesterExtensionModel } from '../../extensions/tester-extension';
 import GeneralError from '../../error/general-error';
+import ExtensionFile from '../../extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 
@@ -41,8 +46,8 @@ export type Log = {
 export type VersionProps = {
   files?: ?Array<SourceFileModel>,
   dists?: ?Array<DistFileModel>,
-  compiler?: ?BitId,
-  tester?: ?BitId,
+  compiler?: ?CompilerExtensionModel,
+  tester?: ?TesterExtensionModel,
   log: Log,
   ci?: CiProps,
   specsResults?: ?Results,
@@ -54,15 +59,19 @@ export type VersionProps = {
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
+  envsPackageDependencies?: { [string]: string },
   bindingPrefix?: string
 };
 
+/**
+ * Represent a version model in the scope
+ */
 export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   dists: ?Array<DistFileModel>;
-  compiler: ?BitId;
-  tester: ?BitId;
+  compiler: ?CompilerExtensionModel;
+  tester: ?TesterExtensionModel;
   log: Log;
   ci: CiProps | {};
   specsResults: ?Results;
@@ -74,6 +83,7 @@ export default class Version extends BitObject {
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
+  envsPackageDependencies: { [string]: string };
   bindingPrefix: string;
 
   constructor({
@@ -93,6 +103,7 @@ export default class Version extends BitObject {
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
+    envsPackageDependencies,
     bindingPrefix
   }: VersionProps) {
     super();
@@ -112,6 +123,7 @@ export default class Version extends BitObject {
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
+    this.envsPackageDependencies = envsPackageDependencies || {};
     this.bindingPrefix = bindingPrefix;
     this.validateVersion();
   }
@@ -187,38 +199,50 @@ export default class Version extends BitObject {
   }
 
   refs(): Ref[] {
-    const files = this.files ? this.files.map(file => file.file) : [];
-    const dists = this.dists ? this.dists.map(dist => dist.file) : [];
-    return [...dists, ...files].filter(ref => ref);
+    const extractRefsFromFiles = (files) => {
+      const refs = files ? files.map(file => file.file) : [];
+      return refs;
+    };
+    const files = extractRefsFromFiles(this.files);
+    const dists = extractRefsFromFiles(this.dists);
+    const compilerFiles = this.compiler ? extractRefsFromFiles(this.compiler.files) : [];
+    const testerFiles = this.tester ? extractRefsFromFiles(this.tester.files) : [];
+    return [...dists, ...files, ...compilerFiles, ...testerFiles].filter(ref => ref);
   }
 
   toObject() {
+    const _convertFileToObject = (file) => {
+      return {
+        file: file.file.toString(),
+        relativePath: file.relativePath,
+        name: file.name,
+        test: file.test
+      };
+    };
+
+    const _convertEnvToObject = (env) => {
+      if (typeof env === 'string') {
+        return env;
+      }
+      const result = {
+        name: env.name,
+        config: env.config,
+        files: []
+      };
+      if (env.files && !R.isEmpty(env.files)) {
+        result.files = env.files.map(ExtensionFile.fromModelObjectToObject);
+      }
+      return result;
+    };
+
     return filterObject(
       {
-        files: this.files
-          ? this.files.map((file) => {
-            return {
-              file: file.file.toString(),
-              relativePath: file.relativePath,
-              name: file.name,
-              test: file.test
-            };
-          })
-          : null,
+        files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
-        dists: this.dists
-          ? this.dists.map((dist) => {
-            return {
-              file: dist.file.toString(),
-              relativePath: dist.relativePath,
-              name: dist.name,
-              test: dist.test
-            };
-          })
-          : null,
-        compiler: this.compiler ? this.compiler.toString() : null,
+        dists: this.dists ? this.dists.map(_convertFileToObject) : null,
+        compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
-        tester: this.tester ? this.tester.toString() : null,
+        tester: this.tester ? _convertEnvToObject(this.tester) : null,
         log: {
           message: this.log.message,
           date: this.log.date,
@@ -234,7 +258,8 @@ export default class Version extends BitObject {
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
-        peerPackageDependencies: this.peerPackageDependencies
+        peerPackageDependencies: this.peerPackageDependencies,
+        envsPackageDependencies: this.envsPackageDependencies
       },
       val => !!val
     );
@@ -265,9 +290,10 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       packageDependencies
     } = JSON.parse(contents);
-    const getDependencies = (deps = []) => {
+    const _getDependencies = (deps = []) => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
         return deps.map(dependency => ({ id: BitId.parse(dependency) }));
@@ -279,21 +305,22 @@ export default class Version extends BitObject {
       }));
     };
 
+    const parseFile = (file) => {
+      return {
+        file: Ref.from(file.file),
+        relativePath: file.relativePath,
+        name: file.name,
+        test: file.test
+      };
+    };
+
     return new Version({
       mainFile,
-      files: files
-        ? files.map((file) => {
-          return { file: Ref.from(file.file), relativePath: file.relativePath, name: file.name, test: file.test };
-        })
-        : null,
-      dists: dists
-        ? dists.map((dist) => {
-          return { file: Ref.from(dist.file), relativePath: dist.relativePath, name: dist.name, test: dist.test };
-        })
-        : null,
-      compiler: compiler ? BitId.parse(compiler) : null,
+      files: files ? files.map(parseFile) : null,
+      dists: dists ? dists.map(parseFile) : null,
+      compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
-      tester: tester ? BitId.parse(tester) : null,
+      tester: tester ? parseEnv(tester) : null,
       log: {
         message: log.message,
         date: log.date,
@@ -303,20 +330,28 @@ export default class Version extends BitObject {
       ci,
       specsResults,
       docs,
-      dependencies: getDependencies(dependencies),
+      dependencies: _getDependencies(dependencies),
       flattenedDependencies: BitIds.deserialize(flattenedDependencies),
-      devDependencies: getDependencies(devDependencies),
+      devDependencies: _getDependencies(devDependencies),
       flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
       devPackageDependencies,
       peerPackageDependencies,
+      envsPackageDependencies,
       packageDependencies
     });
   }
 
   static from(versionProps: VersionProps): Version {
-    return new Version(versionProps);
+    const compiler = versionProps.compiler ? parseEnv(versionProps.compiler) : null;
+    const tester = versionProps.tester ? parseEnv(versionProps.tester) : null;
+    const actualVersionProps = { ...versionProps, compiler, tester };
+    return new Version(actualVersionProps);
   }
 
+  /**
+   * Create version model object from consumer component
+   * @param {*} param0
+   */
   static fromComponent({
     component,
     files,
@@ -338,21 +373,35 @@ export default class Version extends BitObject {
     username: ?string,
     email: ?string
   }) {
+    const parseFile = (file) => {
+      return {
+        file: file.file.hash(),
+        relativePath: file.relativePath,
+        name: file.name,
+        test: file.test
+      };
+    };
+
+    const mergePackageDependencies = (
+      devPackageDependencies,
+      compilerDynamicPakageDependencies = {},
+      testerDynamicPakageDependencies = {}
+    ) => {
+      return { ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies, ...devPackageDependencies };
+    };
+
+    const compilerDynamicPakageDependencies = component.compiler
+      ? component.compiler.dynamicPackageDependencies
+      : undefined;
+    const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
+
     return new Version({
       mainFile: component.mainFile,
-      files: files
-        ? files.map((file) => {
-          return { file: file.file.hash(), relativePath: file.relativePath, name: file.name, test: file.test };
-        })
-        : null,
-      dists: dists
-        ? dists.map((dist) => {
-          return { file: dist.file.hash(), relativePath: dist.relativePath, name: dist.name, test: dist.test };
-        })
-        : null,
-      compiler: component.compilerId,
+      files: files ? files.map(parseFile) : null,
+      dists: dists ? dists.map(parseFile) : null,
+      compiler: component.compiler ? component.compiler.toModelObject() : undefined,
       bindingPrefix: component.bindingPrefix,
-      tester: component.testerId,
+      tester: component.tester ? component.tester.toModelObject() : undefined,
       log: {
         message,
         username,
@@ -364,6 +413,10 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
+      envsPackageDependencies: mergePackageDependencies(
+        compilerDynamicPakageDependencies,
+        testerDynamicPakageDependencies
+      ),
       flattenedDependencies,
       flattenedDevDependencies,
       dependencies: component.dependencies.get(),
@@ -391,8 +444,51 @@ export default class Version extends BitObject {
   modelFilesToSourceFiles(repository: Repository): Promise<SourceFile[]> {
     return Promise.all(this.files.map(file => SourceFile.loadFromSourceFileModel(file, repository)));
   }
-
+  /**
+   * Validate the version model properties, to make sure we are not inserting something
+   * in the wrong format
+   */
   validate(): void {
+    const _validateEnv = (env) => {
+      // Compiler is in the new form of extension
+      if (env && typeof env !== 'string') {
+        if (!env.name) {
+          throw new GeneralError(`${message}, the compiler is missing the name attribute`);
+        }
+      }
+      if (env && env.files) {
+        const compilerName = env.name || '';
+        env.files.forEach((file) => {
+          if (!file.name) {
+            throw new GeneralError(
+              `${message}, the compiler ${compilerName} has a file which missing the name attribute`
+            );
+          }
+        });
+      }
+    };
+
+    /**
+     * Validate that the package name and version are valid
+     * @param {*} packageName
+     * @param {*} packageVersion
+     */
+    const _validatePackageDependency = (packageVersion, packageName) => {
+      const version = semver.valid(packageVersion);
+      const versionRange = semver.validRange(packageVersion);
+      const packageNameValidateResult = packageNameValidate(packageName);
+      if (!packageNameValidateResult.validForNewPackages && !packageNameValidateResult.validForOldPackages) {
+        const errors = packageNameValidateResult.errors || [];
+        throw new GeneralError(`${packageName} is invalid package name, errors:  ${errors.join()}`);
+      }
+      if (!version && !versionRange) {
+        throw new GeneralError(`${packageName} version - ${packageVersion} is not a valid semantic version`);
+      }
+    };
+    const _validatePackageDependencies = (packageDependencies) => {
+      R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
+    };
+
     const message = 'unable to save Version object';
     if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
     if (!isValidPath(this.mainFile)) throw new GeneralError(`${message}, the mainFile ${this.mainFile} is invalid`);
@@ -408,6 +504,12 @@ export default class Version extends BitObject {
     if (!foundMainFile) {
       throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
     }
+    _validateEnv(this.compiler);
+    _validateEnv(this.tester);
+    _validatePackageDependencies(this.packageDependencies);
+    _validatePackageDependencies(this.devPackageDependencies);
+    _validatePackageDependencies(this.peerPackageDependencies);
+    _validatePackageDependencies(this.envsPackageDependencies);
     if (this.dists && this.dists.length) {
       this.dists.forEach((file) => {
         if (!isValidPath(file.relativePath)) {
@@ -429,3 +531,14 @@ export default class Version extends BitObject {
     if (!this.log) throw new GeneralError(`${message},the log object is missing`);
   }
 }
+
+const parseEnv = (env) => {
+  if (typeof env === 'string') {
+    return env;
+  }
+  return {
+    name: env.name,
+    config: env.config,
+    files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
+  };
+};

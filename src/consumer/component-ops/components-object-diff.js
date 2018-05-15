@@ -18,23 +18,26 @@ export function componentToPrintableForDiff(component: Component): Object {
   };
   const {
     lang,
-    compilerId,
-    testerId,
+    compiler,
+    tester,
     dependencies,
     devDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
+    envsPackageDependencies,
     files,
     mainFile,
-    deprecated,
-    docs
+    deprecated
   } = component;
+  const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
+  const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies) || [];
+  const printableDevPackageDependencies = parsedDevPackageDependencies.concat(parsedEnvsPackageDependencies);
 
   obj.id = component.id.toStringWithoutScope();
-  obj.compiler = compilerId ? compilerId.toString() : null;
+  obj.compiler = compiler ? compiler.name : null;
   obj.language = lang || null;
-  obj.tester = testerId ? testerId.toString() : null;
+  obj.tester = tester ? tester.name : null;
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies
     .toStringOfIds()
@@ -42,7 +45,7 @@ export function componentToPrintableForDiff(component: Component): Object {
     .filter(x => x);
   obj.devDependencies = devDependencies
     .toStringOfIds()
-    .concat(parsePackages(devPackageDependencies))
+    .concat(printableDevPackageDependencies)
     .filter(x => x);
   obj.peerDependencies = parsePackages(peerPackageDependencies);
 
@@ -55,7 +58,6 @@ export function componentToPrintableForDiff(component: Component): Object {
       ? files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
   obj.deprecated = deprecated ? 'True' : null;
-  obj.docs = docs;
   return obj;
 }
 

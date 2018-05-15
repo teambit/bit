@@ -28,12 +28,14 @@ import {
 import RemoteNotFound from '../remotes/exceptions/remote-not-found';
 import {
   ScopeNotFound,
+  ScopeJsonNotFound,
   ResolutionException,
   ComponentNotFound,
   DependencyNotFound,
   CorruptedComponent,
   VersionAlreadyExists,
   MergeConflict,
+  HashMismatch,
   MergeConflictOnRemote,
   VersionNotFound,
   CyclicDependencies
@@ -44,7 +46,7 @@ import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compar
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
 import FileSourceNotFound from '../consumer/component/exceptions/file-source-not-found';
-import { MissingMainFile, MissingBitMapComponent } from '../consumer/bit-map/exceptions';
+import { MissingMainFile, MissingBitMapComponent, InvalidBitMap } from '../consumer/bit-map/exceptions';
 import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
@@ -63,7 +65,11 @@ import {
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
+import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import GeneralError from '../error/general-error';
+import AbstractError from '../error/abstract-error';
+import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -94,6 +100,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   //   err => `error: The compiler "${err.plugin}" is not installed, please use "bit install ${err.plugin}" to install it.`
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
+  [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
   [
     ProtocolNotSupported,
     () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
@@ -127,6 +134,13 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
   [
+    HashMismatch,
+    err => `found hash mismatch of ${chalk.bold(err.id)}, version ${chalk.bold(err.version)}.
+  originalHash: ${chalk.bold(err.originalHash)}.
+  currentHash: ${chalk.bold(err.currentHash)}
+  this usually happens when a component is old and the migration script was not running or interrupted`
+  ],
+  [
     MergeConflict,
     err =>
       `error: merge conflict occurred while importing the component ${err.id}. conflict version(s): ${err.versions.join(
@@ -151,10 +165,23 @@ to resolve this conflict and merge your remote and local changes, please do the 
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
-  [UnexpectedNetworkError, () => 'error: unexpected network error has occurred'],
+  [
+    UnexpectedNetworkError,
+    err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
+  ],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
-  [ComponentSpecsFailed, () => "component's tests has failed, please fix them before tagging"],
+  [
+    ScopeJsonNotFound,
+    err =>
+      `error: scope.json file was not found at ${chalk.bold(err.path)}, please use ${chalk.bold(
+        'bit init'
+      )} to recreate the file`
+  ],
+  [
+    ComponentSpecsFailed,
+    err => `${err.specsResultsAndIdPretty}component's tests has failed, please fix them before tagging`
+  ],
   [
     MissingDependencies,
     (err) => {
@@ -189,6 +216,13 @@ once your changes are merged with the new remote version, please tag and export 
     err =>
       'error: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file'
   ],
+  [
+    InvalidBitMap,
+    err =>
+      `error: unable to parse your bitMap file at ${chalk.bold(err.path)}, due to an error ${chalk.bold(
+        err.errorMessage
+      )}`
+  ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [
     VersionShouldBeRemoved,
@@ -215,6 +249,9 @@ once your changes are merged with the new remote version, please tag and export 
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
+  [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
+
   [VersionNotFound, err => `error: version "${chalk.bold(err.version)}" was not found.`],
   [
     MissingComponentIdForImportedComponent,
@@ -276,6 +313,10 @@ to ignore this error, please use --ignore-newest-version flag`
       }`
   ],
   [
+    InvalidCompilerInterface,
+    err => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`
+  ],
+  [
     ResolutionException,
     err =>
       `error: bit failed to require ${err.filePath} due to the following exception:\n${err.originalError.message}.\n${
@@ -301,8 +342,14 @@ export default (err: Error): ?string => {
   if (!error) return formatUnhandled(err);
   /* this is an error that bit knows how to handle dont send to sentry */
 
-  Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  if (err instanceof AbstractError) {
+    Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+  } else {
+    Analytics.setError(LEVEL.FATAL, err);
+  }
   const [, func] = error;
-  logger.error(`User gets the following error: ${func(err)}`);
-  return chalk.red(func(err));
+  const errorMessage = func(err);
+  err.message = errorMessage;
+  logger.error(`User gets the following error: ${errorMessage}`);
+  return chalk.red(errorMessage);
 };

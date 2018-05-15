@@ -1,59 +1,74 @@
+// @flow
 // TODO - move to language specific driver.
-const GeneralError = require('../error/general-error');
+import serializeError from 'serialize-error';
+import { testInProcess } from '../api/consumer/lib/test';
+import ExternalError from '../error/external-error';
 
-const serializeError = require('serialize-error');
+const testOneComponent = verbose => async (id: string) => {
+  // $FlowFixMe
+  const res = await testInProcess(id, verbose);
+  return res[0];
+};
 
-try {
-  const mainFilePath = process.env.__mainFile__;
-  const testFilePath = process.env.__testFilePath__;
-  const testerFilePath = process.env.__tester__;
-
-  const mockery = require('mockery');
-  mockery.enable({
-    warnOnReplace: false,
-    warnOnUnregistered: false,
-    useCleanCache: true
-  }); // enable mocks on process
-
-  const tester = require(testerFilePath);
-
-  // define the __impl__ global
-  global.__impl__ = mainFilePath;
-
-  // register globals
-  if (tester.globals) {
-    Object.keys(tester.globals).forEach((g) => {
-      global[g] = tester.globals[g];
-    });
+function run(): Promise<void> {
+  const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
+  const verbose: boolean = process.env.__verbose__ === true;
+  if (!ids || !ids.length) {
+    // $FlowFixMe
+    return process.send([]);
   }
-
-  // register modules
-  if (tester.modules) {
-    Object.keys(tester.modules).forEach((m) => {
-      mockery.registerMock(m, tester.modules[m]);
-    });
-  }
-
-  if (!tester.run) {
-    process.send({
-      type: 'error',
-      payload: `"${process.env.__testerId__}" doesn't have a valid tester interface`
-    });
-    process.exit(1);
-  }
-
-  tester
-    .run(testFilePath)
+  const testAllP = ids.map(testOneComponent(verbose));
+  return Promise.all(testAllP)
     .then((results) => {
-      if (!results) throw new GeneralError(`tester did not return any result for the file ${testFilePath}`);
-      mockery.disable();
-      results.specPath = testFilePath;
-      return process.send({ type: 'results', payload: results });
+      const serializedResults = serializeResults(results);
+      // $FlowFixMe
+      return process.send(serializedResults);
     })
-    .catch((err) => {
-      mockery.disable();
-      return process.send({ type: 'error', payload: serializeError(err) });
+    .catch((e) => {
+      const serializedResults = serializeResults(e);
+      // $FlowFixMe
+      return process.send(serializedResults);
     });
-} catch (e) {
-  process.send({ type: 'error', payload: serializeError(e) });
+}
+
+run();
+
+function serializeResults(results) {
+  if (!results) return undefined;
+  if (results instanceof Error) {
+    // In case of extenral error also serialize the original error
+    if (results instanceof ExternalError) {
+      results.originalError = serializeError(results.originalError);
+    }
+
+    const serializedErr = serializeError(results);
+    const finalResults = {
+      type: 'error',
+      error: serializedErr
+    };
+    return finalResults;
+  }
+  const serializeFailure = (failure) => {
+    if (!failure) return undefined;
+    const serializedFailure = failure;
+    if (failure.err && failure.err instanceof Error) {
+      serializedFailure.err = serializeError(failure.err);
+    }
+    return serializedFailure;
+  };
+
+  const serializeSpec = (spec) => {
+    if (!spec.failures) return spec;
+    spec.failures = spec.failures.map(serializeFailure);
+    return spec;
+  };
+
+  const serializeResult = (result) => {
+    if (!result.specs) return result;
+    result.specs = result.specs.map(serializeSpec);
+    return result;
+  };
+
+  const serializedResults = results.map(serializeResult);
+  return { type: 'results', results: serializedResults };
 }

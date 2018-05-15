@@ -40,3 +40,30 @@ describe('foo', () => {
 });`;
 export const appPrintBarFoo = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
 export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); console.log(barFoo());";
+export const objectRestSpread = `const g = 5;
+const x = {a: "a", b: "b"}
+const y = {c: "c"}
+const z = {...x, ...y}`;
+export const objectRestSpreadWithChange = `const g = 5;
+const x = {a: "a", b: "c"}
+const y = {c: "c"}
+const z = {...x, ...y}`;
+export const passTest = `const expect = require('chai').expect
+describe('group of passed tests', () => {
+  it('passed test case', () => {
+    expect(true).to.be.true;
+  });
+});`
+export const failTest = `const expect = require('chai').expect
+describe('group of failed tests', () => {
+  it('failed test case', () => {
+    expect(true).to.be.false;
+  });
+});`
+export const exceptionTest = `const expect = require('chai').expect
+describe('group of failed tests', () => {
+  throw new Error('exception during test file');
+  it('failed test case', () => {
+    expect(true).to.be.false;
+  });
+});`

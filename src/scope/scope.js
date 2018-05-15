@@ -12,8 +12,16 @@ import ComponentModel from './models/component';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHas, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
-import { BIT_HIDDEN_DIR, LATEST, OBJECTS_DIR, BITS_DIRNAME, BIT_VERSION, DEFAULT_BIT_VERSION } from '../constants';
+import { propogateUntil, currentDirName, pathHasAll, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
+import {
+  BIT_HIDDEN_DIR,
+  LATEST,
+  OBJECTS_DIR,
+  BITS_DIRNAME,
+  BIT_VERSION,
+  DEFAULT_BIT_VERSION,
+  SCOPE_JSON
+} from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
   ScopeNotFound,
@@ -60,9 +68,10 @@ import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
+import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
 const removeNils = R.reject(R.isNil);
-const pathHasScope = pathHas([OBJECTS_DIR, BIT_HIDDEN_DIR]);
+const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
 
 export type ScopeDescriptor = {
   name: string
@@ -307,13 +316,13 @@ export default class Scope {
     consumer: Consumer,
     verbose: boolean,
     rejectOnFailure?: boolean
-  }): Promise<Array<{ component: Component, specs: Object }>> {
+  }): Promise<SpecsResultsWithComponentId> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
     const test = async (component: Component) => {
-      if (!component.testerId) {
-        return { component, missingTester: true };
+      if (!component.tester) {
+        return { componentId: component.id.toStringWithoutScope(), missingTester: true };
       }
       const specs = await component.runSpecs({
         scope: this,
@@ -321,7 +330,7 @@ export default class Scope {
         consumer,
         verbose
       });
-      return { component, specs };
+      return { componentId: component.id.toStringWithoutScope(), specs };
     };
     return pMapSeries(components, test);
   }
@@ -1046,14 +1055,17 @@ export default class Scope {
   /**
    * sync method that loads the environment/(path to environment component)
    */
-  loadEnvironment(bitId: BitId, opts: ?{ pathOnly?: ?boolean, bareScope?: ?boolean }) {
-    logger.debug(`scope.loadEnvironment, id: ${bitId}`);
-    Analytics.addBreadCrumb('loadEnvironment', `scope.loadEnvironment, id: ${Analytics.hashData(bitId.toString())}`);
-    if (!bitId) throw new Error('scope.loadEnvironment a required argument "bitId" is missing');
+  isEnvironmentInstalled(bitId: BitId) {
+    logger.debug(`scope.isEnvironmentInstalled, id: ${bitId}`);
+    Analytics.addBreadCrumb(
+      'isEnvironmentInstalled',
+      `scope.isEnvironmentInstalled, id: ${Analytics.hashData(bitId.toString())}`
+    );
+    if (!bitId) throw new Error('scope.isEnvironmentInstalled a required argument "bitId" is missing');
     const notFound = () => {
       logger.debug(`Unable to find an env component ${bitId.toString()}`);
       Analytics.addBreadCrumb(
-        'loadEnvironment',
+        'isEnvironmentInstalled',
         `Unable to find an env component ${Analytics.hashData(bitId.toString())}`
       );
 
@@ -1068,17 +1080,9 @@ export default class Scope {
     }
     if (!IsolatedEnvironment.isEnvironmentInstalled(envPath)) return notFound();
 
-    if (opts && opts.pathOnly) {
-      return envPath;
-    }
-
-    try {
-      logger.debug(`Requiring an environment file at ${envPath}`);
-      Analytics.addBreadCrumb('loadEnvironment', `Requiring an environment file at ${Analytics.hashData(envPath)}`);
-      return require(envPath);
-    } catch (e) {
-      throw new ResolutionException(e, envPath);
-    }
+    logger.debug(`found an environment file at ${envPath}`);
+    Analytics.addBreadCrumb('isEnvironmentInstalled', `found an environment file at ${Analytics.hashData(envPath)}`);
+    return true;
   }
 
   // TODO: Change name since it also used to install extension
@@ -1108,7 +1112,7 @@ export default class Scope {
     const predicate = id => id.componentId.toString(); // TODO: should be moved to BitId class
     const uniqIds = R.uniqBy(predicate)(idsWithoutNils);
     const nonExistingEnvsIds = uniqIds.filter((id) => {
-      return !this.loadEnvironment(id.componentId, { pathOnly: true });
+      return !this.isEnvironmentInstalled(id.componentId);
     });
     if (!nonExistingEnvsIds.length) {
       logger.debug('scope.installEnvironment, all environment were successfully loaded, nothing to install');
@@ -1274,7 +1278,7 @@ export default class Scope {
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
   }
 
-  static load(absPath: string): Promise<Scope> {
+  static async load(absPath: string): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
     if (!scopePath) throw new ScopeNotFound();
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
@@ -1282,9 +1286,7 @@ export default class Scope {
     }
     const path = scopePath;
 
-    return readFile(getScopeJsonPath(scopePath)).then((rawScopeJson) => {
-      const scopeJson = ScopeJson.loadFromJson(rawScopeJson.toString());
-      return new Scope({ path, scopeJson });
-    });
+    const scopeJson = await ScopeJson.loadFromFile(getScopeJsonPath(scopePath));
+    return new Scope({ path, scopeJson });
   }
 }

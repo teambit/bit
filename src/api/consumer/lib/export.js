@@ -81,6 +81,7 @@ export default (async function exportAction(ids?: string[], remote: string, save
   if (eject) {
     try {
       const results = await consumer.eject(componentsIds);
+      await consumer.onDestroy();
       return results;
     } catch (err) {
       logger.error(err);
@@ -95,8 +96,8 @@ export default (async function exportAction(ids?: string[], remote: string, save
   }
   if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
-  await consumer.bitMap.write();
   await linkComponents(componentsIds, consumer);
   Analytics.setExtraData('num_components', componentsIds.length);
+  await consumer.onDestroy();
   return componentsIds;
 });

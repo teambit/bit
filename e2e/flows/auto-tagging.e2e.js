@@ -117,8 +117,8 @@ describe('auto tagging functionality', function () {
       let commitOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.importTester('bit.envs/testers/mocha@0.0.4');
-        helper.addNpmPackage('chai', '4.1.2');
+        helper.importTester('bit.envs/testers/mocha@0.0.12');
+        helper.installNpmPackage('chai', '4.1.2');
         helper.createFile('utils', 'is-type.js', fixtures.isType);
         helper.addComponent('utils/is-type.js');
         helper.createFile('utils', 'is-string.js', fixtures.isString);

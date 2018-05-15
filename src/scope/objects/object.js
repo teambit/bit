@@ -17,7 +17,7 @@ function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
 }
 
 export default class BitObject {
-  id(): string {
+  id(): string | Buffer {
     throw new GeneralError('id() was not implemented...');
   }
 
