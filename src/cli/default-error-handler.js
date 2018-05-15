@@ -67,6 +67,7 @@ import ExternalTestError from '../consumer/component/exceptions/external-test-er
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
 import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
+import ExtensionNameNotValid from '../extensions/exceptions/extension-name-not-valid';
 import GeneralError from '../error/general-error';
 import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
@@ -101,6 +102,13 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   // ],
   [FileSourceNotFound, err => `file or directory "${err.path}" was not found`],
   [ExtensionFileNotFound, err => `file "${err.path}" was not found`],
+  [
+    ExtensionNameNotValid,
+    err =>
+      `error: the extension name "${
+        err.name
+      }" is not a valid component id (it must contain a scope name) fix it on your bit.json file`
+  ],
   [
     ProtocolNotSupported,
     () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'

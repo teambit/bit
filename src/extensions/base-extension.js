@@ -8,7 +8,9 @@ import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
 import type { EnvExtensionOptions } from './env-extension';
 import type { ExtensionOptions } from './extension';
+import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import type { PathOsBased } from '../utils/path';
+import { Analytics } from '../analytics/analytics';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -86,6 +88,7 @@ export default class BaseExtension {
    * Run the extension's init function
    */
   async init(): Promise<boolean> {
+    Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
       if (this.script && this.script.init && typeof this.script.init === 'function') {
         await this.script.init({ rawConfig: this.rawConfig, dynamicConfig: this.dynamicConfig, api: this.api });
@@ -130,6 +133,7 @@ export default class BaseExtension {
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
   async reload(): Promise<void> {
+    Analytics.addBreadCrumb('base-extension', 'reload extension');
     const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options);
     if (baseProps.loaded) {
       this.loaded = baseProps.loaded;
@@ -172,6 +176,7 @@ export default class BaseExtension {
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
+    Analytics.addBreadCrumb('base-extension', 'load extension');
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
       let absPath = options.file;
@@ -204,6 +209,7 @@ export default class BaseExtension {
   }
 
   static loadFromModelObject(modelObject: string | BaseExtensionModel) {
+    Analytics.addBreadCrumb('base-extension', 'load extension from model object');
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {
@@ -239,6 +245,7 @@ export default class BaseExtension {
     options: Object = {}
   ): Promise<StaticProps> {
     logger.info(`loading extension ${name} from ${filePath}`);
+    Analytics.addBreadCrumb('base-extension', 'load extension from file');
     const extensionProps: StaticProps = {
       name,
       rawConfig,
@@ -296,7 +303,14 @@ const _getCoreExtensionPath = (name: string): string => {
 };
 
 const _getRegularExtensionPath = (name: string, scopePath: string): string => {
-  const bitId: BitId = BitId.parse(name);
+  let bitId: BitId;
+  try {
+    bitId = BitId.parse(name);
+  } catch (err) {
+    throw new ExtensionNameNotValid(name);
+  }
+  if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(name);
+
   const internalComponentsPath = Scope.getComponentsRelativePath();
   const internalComponentPath = Scope.getComponentRelativePath(bitId);
   const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
