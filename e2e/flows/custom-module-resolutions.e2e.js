@@ -16,7 +16,7 @@ describe('custom module resolutions', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const bitJson = helper.readBitJson();
-      bitJson.resolveModules = { modulesDirectories: 'src' };
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.writeBitJson(bitJson);
 
       helper.createFile('src/utils', 'is-type.js', fixtures.isType);

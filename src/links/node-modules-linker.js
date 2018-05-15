@@ -80,21 +80,25 @@ function symlinkPackages(from: string, to: string, consumer, dependenciesSavedAs
  * relevant when custom-module-resolution was used in the original (authored) component
  */
 function writeNonRelativeDependenciesLinks(
+  parentComponent: Component,
+  consumer: Consumer,
   parentComponentMap: ComponentMap,
-  dependency: Dependency,
-  dependencyRootDir: PathLinux
+  dependency: Dependency
 ): LinkDetail[] {
   // $FlowFixMe
-  const parentRootDir: string = parentComponentMap.rootDir;
-  const writeLink = (importSource: string): LinkDetail => {
+  const parentRootDir: string = parentComponent.dists.isEmpty()
+    ? parentComponentMap.rootDir
+    : parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+  const writeLink = (importSource: string, sourceRelativePath: string): LinkDetail => {
     const destPath = path.join(parentRootDir, 'node_modules', importSource);
-    createSymlinkOrCopy(dependency.id, dependencyRootDir, destPath);
-    return { from: parentRootDir, to: dependencyRootDir };
+    const from = path.join(parentRootDir, sourceRelativePath);
+    createSymlinkOrCopy(dependency.id, from, destPath);
+    return { from, to: destPath };
   };
   const writtenLinks = [];
   dependency.relativePaths.forEach((relativePath: RelativePath) => {
     if (relativePath.isCustomResolveUsed) {
-      writtenLinks.push(writeLink(relativePath.importSource));
+      writtenLinks.push(writeLink(relativePath.importSource, relativePath.sourceRelativePath));
     }
   });
   return writtenLinks;
@@ -114,13 +118,11 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
         component.bindingPrefix
       )
     );
-    if (!dependencyComponentMap.rootDir) throw new Error(`rootDir is missing from ${dependency.id.toString()}`);
-    writeNonRelativeDependenciesLinks(componentMap, dependency, dependencyComponentMap.rootDir);
+    writeNonRelativeDependenciesLinks(component, consumer, componentMap, dependency);
     if (!consumer.shouldDistsBeInsideTheComponent()) {
       const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
       writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
-      // writeNonRelativeDependenciesLinks() // @todo
       symlinkPackages(from, to, consumer);
     }
     return writtenLinks;
