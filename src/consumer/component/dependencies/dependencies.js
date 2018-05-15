@@ -114,6 +114,18 @@ export default class Dependencies {
     });
   }
 
+  getCustomResolvedData(): { [import_source: string]: BitId } {
+    const importSourceMap = {};
+    this.dependencies.forEach((dependency: Dependency) => {
+      dependency.relativePaths.forEach((relativePath: RelativePath) => {
+        if (relativePath.isCustomResolveUsed) {
+          importSourceMap[relativePath.importSource] = dependency.id;
+        }
+      });
+    });
+    return importSourceMap;
+  }
+
   validate(): void {
     if (!Array.isArray(this.dependencies)) throw new GeneralError('dependencies must be an array');
     this.dependencies.forEach((dependency) => {

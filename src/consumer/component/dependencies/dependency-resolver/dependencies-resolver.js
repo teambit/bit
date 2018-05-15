@@ -331,18 +331,11 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   const processUnidentifiedPackages = (originFile, unidentifiedPackages?: string[], isTestFile) => {
     if (!unidentifiedPackages) return;
     if (!componentFromModel) return; // not relevant, the component is not imported
-    const importSourceMap = {};
     const dependencies: Dependencies = isTestFile
       ? componentFromModel.devDependencies
       : componentFromModel.dependencies;
     if (dependencies.isEmpty()) return;
-    dependencies.get().forEach((dependency: Dependency) => {
-      dependency.relativePaths.forEach((relativePath: RelativePath) => {
-        if (relativePath.isCustomResolveUsed) {
-          importSourceMap[relativePath.importSource] = dependency.id;
-        }
-      });
-    });
+    const importSourceMap = dependencies.getCustomResolvedData();
     if (R.isEmpty(importSourceMap)) return;
     // clone before stripping the sharedDir to not change the model by mistake
     const clonedDependencies = new Dependencies(dependencies.getClone());

@@ -9,7 +9,7 @@ import Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
-import { pathRelativeLinux } from '../utils';
+import { pathRelativeLinux, first } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getLinkContent, getIndexFileName } from './link-generator';
 import type { PathOsBased, PathLinux } from '../utils/path';
@@ -59,20 +59,29 @@ function writeDependencyLink(
  * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
  * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
  */
-function symlinkPackages(from: string, to: string, consumer, dependenciesSavedAsComponents: boolean = true) {
+function symlinkPackages(from: string, to: string, consumer, component: Component) {
+  const dependenciesSavedAsComponents = component.dependenciesSavedAsComponents;
   const fromNodeModules = path.join(from, 'node_modules');
   const toNodeModules = path.join(to, 'node_modules');
-  const dirsIncludesBindingPrefix = glob.sync('*', { cwd: fromNodeModules });
+  logger.debug(`symlinkPackages for dists outside the component directory from ${fromNodeModules} to ${toNodeModules}`);
+  const unfilteredDirs = glob.sync('*', { cwd: fromNodeModules });
   // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
   // otherwise, node_modules/@bit has packages as any other directory in node_modules
-  const dirs = dependenciesSavedAsComponents
-    ? dirsIncludesBindingPrefix.filter(dir => dir !== consumer.bitJson.bindingPrefix)
-    : dirsIncludesBindingPrefix;
+  const dirsToFilter = dependenciesSavedAsComponents ? [consumer.bitJson.bindingPrefix] : [];
+  const customResolvedData = component.dependencies.getCustomResolvedData();
+  if (!R.isEmpty(customResolvedData)) {
+    // filter out packages that are actually symlinks to dependencies
+    Object.keys(customResolvedData).forEach(importSource => dirsToFilter.push(first(importSource.split('/'))));
+  }
+  const dirs = dirsToFilter.length ? unfilteredDirs.filter(dir => !dirsToFilter.includes(dir)) : unfilteredDirs;
   if (!dirs.length) return;
   logger.debug(`deleting the content of ${toNodeModules}`);
   fs.emptyDirSync(toNodeModules);
   dirs.forEach((dir) => {
-    symlinkOrCopy.sync(path.join(fromNodeModules, dir), path.join(toNodeModules, dir));
+    const fromDir = path.join(fromNodeModules, dir);
+    const toDir = path.join(toNodeModules, dir);
+    logger.debug(`generating a symlink for package, from ${fromDir} to ${toDir}`);
+    symlinkOrCopy.sync(fromDir, toDir);
   });
 }
 
@@ -85,20 +94,34 @@ function writeNonRelativeDependenciesLinks(
   parentComponentMap: ComponentMap,
   dependency: Dependency
 ): LinkDetail[] {
-  // $FlowFixMe
-  const parentRootDir: string = parentComponent.dists.isEmpty()
-    ? parentComponentMap.rootDir
-    : parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
-  const writeLink = (importSource: string, sourceRelativePath: string): LinkDetail => {
-    const destPath = path.join(parentRootDir, 'node_modules', importSource);
-    const from = path.join(parentRootDir, sourceRelativePath);
-    createSymlinkOrCopy(dependency.id, from, destPath);
-    return { from, to: destPath };
+  const writeLink = (symlinkPath: string, realPath: string): LinkDetail => {
+    if (!path.isAbsolute(symlinkPath) || !path.isAbsolute(realPath)) {
+      throw new Error(`writeNonRelativeDependenciesLinks, symlinkPath and realPath must be absolute.
+      Otherwise it's impossible to import from an inner directory. got: ${symlinkPath} and ${realPath}`);
+    }
+    createSymlinkOrCopy(dependency.id, realPath, symlinkPath);
+    return { from: realPath, to: symlinkPath };
   };
   const writtenLinks = [];
   dependency.relativePaths.forEach((relativePath: RelativePath) => {
     if (relativePath.isCustomResolveUsed) {
-      writtenLinks.push(writeLink(relativePath.importSource, relativePath.sourceRelativePath));
+      const getSymlinkPath = prefix => path.join(prefix, 'node_modules', relativePath.importSource);
+      const getRealPath = prefix => path.join(prefix, relativePath.sourceRelativePath);
+      // $FlowFixMe
+      const parentRootDir = consumer.toAbsolutePath(parentComponentMap.rootDir);
+      const parentRootDirConsideringDist =
+        parentComponent.dists.isEmpty() || !consumer.shouldDistsBeInsideTheComponent()
+          ? parentRootDir
+          : parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+      const symlinkPath = getSymlinkPath(parentRootDir);
+      const realPath = getRealPath(parentRootDirConsideringDist);
+      writtenLinks.push(writeLink(symlinkPath, realPath));
+      if (!consumer.shouldDistsBeInsideTheComponent()) {
+        const parentRootDirDist = parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+        const realPathDist = getRealPath(parentRootDirDist);
+        const symlinkPathDist = getSymlinkPath(parentRootDirDist);
+        writtenLinks.push(writeLink(symlinkPathDist, realPathDist));
+      }
     }
   });
   return writtenLinks;
@@ -120,10 +143,14 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
     );
     writeNonRelativeDependenciesLinks(component, consumer, componentMap, dependency);
     if (!consumer.shouldDistsBeInsideTheComponent()) {
+      // when dists are written outside the component, it doesn't matter whether a component
+      // has dists files or not, in case it doesn't have, the files are copied from the component
+      // dir into the dist dir. (see consumer-component.write())
       const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
       writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
-      symlinkPackages(from, to, consumer);
+      // @todo: why is it from a component to its dependency? shouldn't it be from component src to dist/component?
+      symlinkPackages(from, to, consumer, component);
     }
     return writtenLinks;
   });
@@ -172,7 +199,7 @@ function _linkImportedComponents(consumer: Consumer, component: Component, compo
   const srcTarget = component.writtenPath || consumer.toAbsolutePath(componentMap.rootDir);
   if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distTarget = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-    symlinkPackages(srcTarget, distTarget, consumer, component.dependenciesSavedAsComponents);
+    symlinkPackages(srcTarget, distTarget, consumer, component);
     createSymlinkOrCopy(componentId, distTarget, linkPath);
   } else {
     createSymlinkOrCopy(componentId, srcTarget, linkPath);
