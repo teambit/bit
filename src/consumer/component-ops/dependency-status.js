@@ -39,9 +39,6 @@ export default (async function getDependencyStatus(
   const componentFiles = getComponentFiles(consumer);
   const missingDependencyFiles = [];
   topLevelDependencies.forEach(function (dependency) {
-    if (dependency.startsWith(',')) {
-      dependency = dependency.substring(1);
-    }
     if (!componentFiles.includes(dependency)) {
       missingDependencyFiles.push(dependency);
     }
