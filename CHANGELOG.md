@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.17-dev.2] - 2018-05-15
+
+- fix issue with load package deps when main file not in the root of the package
+
+## [0.10.17-dev.1] - 2018-05-14
+
 - support "export X from Y" syntax of ES6 without importing X first
 
 ## [0.10.16] - 2018-05-09
