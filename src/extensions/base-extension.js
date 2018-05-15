@@ -8,6 +8,7 @@ import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
 import type { EnvExtensionOptions } from './env-extension';
 import type { ExtensionOptions } from './extension';
+import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import type { PathOsBased } from '../utils/path';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
@@ -296,7 +297,14 @@ const _getCoreExtensionPath = (name: string): string => {
 };
 
 const _getRegularExtensionPath = (name: string, scopePath: string): string => {
-  const bitId: BitId = BitId.parse(name);
+  let bitId: BitId;
+  try {
+    bitId = BitId.parse(name);
+  } catch (err) {
+    throw new ExtensionNameNotValid(name);
+  }
+  if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(name);
+
   const internalComponentsPath = Scope.getComponentsRelativePath();
   const internalComponentPath = Scope.getComponentRelativePath(bitId);
   const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
