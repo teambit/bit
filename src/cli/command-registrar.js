@@ -25,7 +25,9 @@ function errorHandler(e) {
 
 function logAndExit(str) {
   loader.off();
-  console.log(str); // eslint-disable-line
+  if (str) {
+    console.log(str); // eslint-disable-line
+  }
   process.exit(0);
 }
 
