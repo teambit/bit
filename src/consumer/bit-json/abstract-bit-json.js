@@ -243,11 +243,9 @@ export default class AbstractBitJson {
 
 const transformEnvToObject = (env): Envs => {
   if (typeof env === 'string') {
+    if (env === NO_PLUGIN_TYPE) return {};
     return {
-      [env]: {
-        rawConfig: {},
-        options: {}
-      }
+      [env]: {}
     };
   }
   return env;

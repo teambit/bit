@@ -9,6 +9,7 @@ import { COMPONENT_ORIGINS } from '../constants';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
+import { Analytics } from '../analytics/analytics';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
 export type CompilerExtensionModel = EnvExtensionModel;
@@ -22,6 +23,7 @@ export default class CompilerExtension extends EnvExtension {
   }
 
   toModelObject(): CompilerExtensionModel {
+    Analytics.addBreadCrumb('compiler-extension', 'toModelObject');
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;
@@ -39,6 +41,7 @@ export default class CompilerExtension extends EnvExtension {
     bitDir: string,
     ejectedEnvsDirectory: string
   }): Promise<string> {
+    Analytics.addBreadCrumb('compiler-extension', 'writeFilesToFs');
     return super.writeFilesToFs({ bitDir, ejectedEnvsDirectory, envType: this.envType });
   }
 
@@ -48,6 +51,7 @@ export default class CompilerExtension extends EnvExtension {
    */
   // $FlowFixMe
   static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
+    Analytics.addBreadCrumb('compiler-extension', 'load');
     props.envType = CompilerEnvType;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
@@ -62,6 +66,7 @@ export default class CompilerExtension extends EnvExtension {
     repository: Repository
     // $FlowFixMe
   ): Promise<?CompilerExtension> {
+    Analytics.addBreadCrumb('compiler-extension', 'loadFromModelObject');
     if (!modelObject) return undefined;
     const actualObject =
       typeof modelObject === 'string'
@@ -96,6 +101,7 @@ export default class CompilerExtension extends EnvExtension {
     componentBitJson: ?ComponentBitJson,
     context?: Object
   }): Promise<?CompilerExtension> {
+    Analytics.addBreadCrumb('compiler-extension', 'loadFromCorrectSource');
     if (componentBitJson && componentBitJson.hasCompiler()) {
       // $FlowFixMe
       return componentBitJson.loadCompiler(consumerPath, scopePath, context);
