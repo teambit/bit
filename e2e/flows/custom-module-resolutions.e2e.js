@@ -114,6 +114,29 @@ describe('custom module resolutions', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.string('modified');
       });
+      describe('deleting the link generated for the custom-module-resolution', () => {
+        before(() => {
+          fs.removeSync(path.join(helper.localScopePath, 'components/bar/foo/node_modules'));
+        });
+        it('bit status should show it as missing links and not as missing packages dependencies', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.have.string('missing links');
+          expect(output).to.not.have.string('missing packages dependencies');
+        });
+        describe('bit link', () => {
+          let linkOutput;
+          before(() => {
+            linkOutput = helper.runCmd('bit link');
+          });
+          it('should recreate the missing link', () => {
+            expect(linkOutput).to.have.string('components/bar/foo/node_modules/@/utils/is-string');
+          });
+          it('should recreate the links correctly', () => {
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
+        });
+      });
     });
   });
 });

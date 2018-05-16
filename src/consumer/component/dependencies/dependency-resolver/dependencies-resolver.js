@@ -469,8 +469,34 @@ export default (async function loadDependenciesForComponent(
   const missingPackagesDependenciesOnFs = {};
   const missingComponents = {};
   const missingLinks = {};
+  const missingCustomModuleResolutionLinks = {};
 
   const componentFiles = component.files;
+  /**
+   * given missing packages name, find whether they were dependencies with custom-resolve before.
+   */
+  const findOriginallyCustomModuleResolvedDependencies = (packages: string[]): ?Object => {
+    if (!packages) return undefined;
+    if (!componentFromModel) return undefined; // not relevant, the component is not imported
+    const dependencies: Dependencies = new Dependencies(componentFromModel.getAllDependencies());
+    if (dependencies.isEmpty()) return undefined;
+    const importSourceMap = dependencies.getCustomResolvedData();
+    if (R.isEmpty(importSourceMap)) return undefined;
+    const foundPackages = packages.reduce((acc, value) => {
+      const packageLinuxFormat = pathNormalizeToLinux(value);
+      const foundImportSource = Object.keys(importSourceMap).find(importSource =>
+        importSource.startsWith(packageLinuxFormat)
+      );
+      if (foundImportSource) {
+        const dependencyId = importSourceMap[foundImportSource];
+        acc[value] = dependencyId;
+      }
+      return acc;
+    }, {});
+
+    return R.isEmpty(foundPackages) ? undefined : foundPackages;
+  };
+
   dependenciesTree.missing.forEach((fileDep) => {
     const doesFileExistInComponent = !R.isEmpty(
       componentFiles.filter(componentFile => componentFile.relative === fileDep.originFile)
@@ -482,10 +508,22 @@ export default (async function loadDependenciesForComponent(
         } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
       }
       if (fileDep.packages && !R.isEmpty(fileDep.packages)) {
-        // missingDependencies.missingPackagesDependenciesOnFs = fileDep.packages;
-        if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
-          missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
-        } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+        const customResolvedDependencies = findOriginallyCustomModuleResolvedDependencies(fileDep.packages);
+        if (customResolvedDependencies) {
+          Object.keys(customResolvedDependencies).forEach((missingPackage) => {
+            const componentId = customResolvedDependencies[missingPackage].toString();
+            if (missingCustomModuleResolutionLinks[fileDep.originFile]) { missingCustomModuleResolutionLinks[fileDep.originFile].push(componentId); } else missingCustomModuleResolutionLinks[fileDep.originFile] = [componentId];
+          });
+        }
+        const missingPackages = customResolvedDependencies
+          ? R.difference(fileDep.packages, Object.keys(customResolvedDependencies))
+          : fileDep.packages;
+
+        if (!R.isEmpty(missingPackages)) {
+          if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
+            missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
+          } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+        }
       }
 
       if (fileDep.bits && !R.isEmpty(fileDep.bits)) {
@@ -538,6 +576,7 @@ export default (async function loadDependenciesForComponent(
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }
   if (!R.isEmpty(missingLinks)) missingDependencies.missingLinks = missingLinks;
+  if (!R.isEmpty(missingCustomModuleResolutionLinks)) { missingDependencies.missingCustomModuleResolutionLinks = missingCustomModuleResolutionLinks; }
   if (!R.isEmpty(missingComponents)) missingDependencies.missingComponents = missingComponents;
   // assign missingDependencies to component only when it has data.
   // Otherwise, when it's empty, component.missingDependencies will be an empty object ({}), and for some weird reason,

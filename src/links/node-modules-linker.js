@@ -191,6 +191,26 @@ function writeMissingLinks(consumer: Consumer, component, componentMap: Componen
   return R.flatten(result);
 }
 
+function writeMissingCustomResolvedLinks(consumer: Consumer, component: Component, componentMap: ComponentMap) {
+  if (!component.componentFromModel) return [];
+  const missingLinks = component.missingDependencies.missingCustomModuleResolutionLinks;
+  const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
+  const links = dependenciesStr.map((dependencyStr) => {
+    const dependency =
+      component.componentFromModel.dependencies.getById(dependencyStr) ||
+      component.componentFromModel.devDependencies.getById(dependencyStr);
+    if (!dependency) {
+      throw new Error(
+        `writeMissingCustomResolvedLinks failed finding dependency ${dependencyStr} in the model of ${component.id.toString()}`
+      ); 
+    }
+    const dependencyCloned = Dependency.getClone(dependency);
+    Dependency.stripOriginallySharedDir(dependencyCloned, consumer.bitMap, component.originallySharedDir);
+    return writeNonRelativeDependenciesLinks(component, consumer, componentMap, dependencyCloned);
+  });
+  return R.flatten(links);
+}
+
 function _linkImportedComponents(consumer: Consumer, component: Component, componentMap: ComponentMap): LinksResult {
   const componentId = component.id;
   const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
@@ -213,7 +233,15 @@ function _linkImportedComponents(consumer: Consumer, component: Component, compo
     component.missingDependencies && component.missingDependencies.missingLinks
       ? writeMissingLinks(consumer, component, componentMap)
       : [];
-  const boundAll = bound.concat([...R.flatten(boundDependencies), ...boundMissingDependencies]);
+  const boundMissingCustomResolvedLinks =
+    component.missingDependencies && component.missingDependencies.missingCustomModuleResolutionLinks
+      ? writeMissingCustomResolvedLinks(consumer, component, componentMap)
+      : [];
+  const boundAll = bound.concat([
+    ...R.flatten(boundDependencies),
+    ...boundMissingDependencies,
+    ...boundMissingCustomResolvedLinks
+  ]);
   // $FlowFixMe
   return { id: componentId, bound: boundAll };
 }

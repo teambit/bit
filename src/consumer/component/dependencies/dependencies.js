@@ -25,10 +25,7 @@ export default class Dependencies {
   }
 
   getClone(): Dependency[] {
-    return this.dependencies.map(dependency => ({
-      id: dependency.id,
-      relativePaths: R.clone(dependency.relativePaths)
-    }));
+    return this.dependencies.map(dependency => Dependency.getClone(dependency));
   }
 
   deserialize(dependencies: Dependency[]): Dependency[] {
@@ -62,23 +59,8 @@ export default class Dependencies {
   }
 
   stripOriginallySharedDir(bitMap: BitMap, originallySharedDir: string): void {
-    const pathWithoutSharedDir = (pathStr, sharedDir) => {
-      if (!sharedDir) return pathStr;
-      const partToRemove = `${sharedDir}/`;
-      return pathStr.replace(partToRemove, '');
-    };
     this.dependencies.forEach((dependency) => {
-      const dependencyId = dependency.id.toString();
-      const depFromBitMap = bitMap.getComponent(dependencyId);
-      dependency.relativePaths.forEach((relativePath: RelativePath) => {
-        relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
-        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-          relativePath.destinationRelativePath = pathWithoutSharedDir(
-            relativePath.destinationRelativePath,
-            depFromBitMap.originallySharedDir
-          );
-        }
-      });
+      Dependency.stripOriginallySharedDir(dependency, bitMap, originallySharedDir);
     });
   }
 

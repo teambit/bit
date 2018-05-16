@@ -1,7 +1,10 @@
 /** @flow */
+import R from 'ramda';
 import { BitId } from '../../../bit-id';
 import type { PathLinux } from '../../../utils/path';
 import type { ImportSpecifier } from './dependency-resolver/types/dependency-tree-type';
+import BitMap from '../../bit-map';
+import { COMPONENT_ORIGINS } from '../../../constants';
 
 export type RelativePath = {
   sourceRelativePath: PathLinux,
@@ -17,5 +20,31 @@ export default class Dependency {
   constructor(id: BitId, relativePaths: RelativePath[]) {
     this.id = id;
     this.relativePaths = relativePaths;
+  }
+
+  static stripOriginallySharedDir(dependency: Dependency, bitMap: BitMap, originallySharedDir: string): void {
+    const pathWithoutSharedDir = (pathStr, sharedDir) => {
+      if (!sharedDir) return pathStr;
+      const partToRemove = `${sharedDir}/`;
+      return pathStr.replace(partToRemove, '');
+    };
+    const dependencyId = dependency.id.toString();
+    const depFromBitMap = bitMap.getComponent(dependencyId);
+    dependency.relativePaths.forEach((relativePath: RelativePath) => {
+      relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
+      if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+        relativePath.destinationRelativePath = pathWithoutSharedDir(
+          relativePath.destinationRelativePath,
+          depFromBitMap.originallySharedDir
+        );
+      }
+    });
+  }
+
+  static getClone(dependency: Dependency): Object {
+    return {
+      id: dependency.id,
+      relativePaths: R.clone(dependency.relativePaths)
+    };
   }
 }
