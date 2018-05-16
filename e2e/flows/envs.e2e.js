@@ -448,7 +448,7 @@ describe.only('envs', function () {
             'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
           );
         });
-        describe.only('testing components', () => {
+        describe('testing components', () => {
           describe('with success tests', () => {
             it('should show tests passed', () => {
               const output = helper.testComponent('comp/my-comp');
@@ -464,7 +464,7 @@ describe.only('envs', function () {
               const failSpecPath = path.join(componentFolder, 'fail.spec.js');
               helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
             });
-            describe('with default fork level', () => {
+            describe.only('with default fork level', () => {
               it('should show results without define fork level', () => {
                 const output = helper.testComponent('comp/my-comp');
                 expect(output).to.have.string('tests failed');
