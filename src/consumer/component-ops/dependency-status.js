@@ -9,7 +9,13 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
   const driver = await consumer.driver.getDriver(false);
   const paths = dependencyStatusProps.mainFile;
   const consumerPath = consumer.getPath();
-  const tree = await driver.getDependencyTree(consumerPath, consumerPath, paths, DEFAULT_BINDINGS_PREFIX);
+  const tree = await driver.getDependencyTree({
+    baseDir: consumerPath,
+    consumerPath,
+    filePaths: paths,
+    bindingPrefix: DEFAULT_BINDINGS_PREFIX,
+    resolveModulesConfig: consumer.bitJson.resolveModules
+  });
   const topLevelDependencies = Object.keys(tree.tree).map(topLevelFile => topLevelFile);
   return topLevelDependencies;
 }

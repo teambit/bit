@@ -11,15 +11,11 @@ import {
   DEFAULT_PACKAGE_MANAGER
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
+import type { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
-
-export type ResolveModulesConfig = {
-  modulesDirectories: string[],
-  aliases: { [string]: string } // e.g. { '@': 'src' }
-};
 
 type consumerBitJsonProps = {
   impl?: string,

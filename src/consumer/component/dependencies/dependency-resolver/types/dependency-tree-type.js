@@ -44,3 +44,16 @@ export type FileDependencies = {
 export type Tree = {
   [main_file: string]: FileDependencies
 };
+
+export type ResolveModulesConfig = {
+  modulesDirectories: string[],
+  aliases: { [string]: string } // e.g. { '@': 'src' }
+};
+
+export type DependencyTreeParams = {
+  baseDir: string,
+  consumerPath: string,
+  filePaths: string[],
+  bindingPrefix: string,
+  resolveModulesConfig: ?ResolveModulesConfig
+};
