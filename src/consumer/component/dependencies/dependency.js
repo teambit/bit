@@ -7,8 +7,8 @@ export type RelativePath = {
   sourceRelativePath: PathLinux,
   destinationRelativePath: PathLinux,
   importSpecifiers?: ImportSpecifier[],
-  importSource: string, // needed when isCustomResolveUsed=true
-  isCustomResolveUsed?: boolean // custom resolve can be configured on consumer bit.json file in resolveModules attribute
+  isCustomResolveUsed?: boolean, // custom resolve can be configured on consumer bit.json file in resolveModules attribute
+  importSource?: string // available when isCustomResolveUsed=true, contains the import path. e.g. "import x from 'src/utils'", importSource is 'src/utils'.
 };
 
 export default class Dependency {

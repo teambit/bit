@@ -192,14 +192,14 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
 
     const depsPaths: RelativePath = {
       sourceRelativePath,
-      destinationRelativePath,
-      importSource: depFileObject.importSource
+      destinationRelativePath
     };
     if (importSpecifiers) {
       depsPaths.importSpecifiers = importSpecifiers;
     }
     if (depFileObject.isCustomResolveUsed) {
       depsPaths.isCustomResolveUsed = depFileObject.isCustomResolveUsed;
+      depsPaths.importSource = depFileObject.importSource;
     }
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
