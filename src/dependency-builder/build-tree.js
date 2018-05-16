@@ -272,7 +272,6 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
       });
     }
     if (packageJson) {
-      console.log('packageJson here')
       const result = findPackagesInPackageJson(packageJson, missingPackages);
       groups.packages = result.missingPackages;
       Object.assign(foundPackages, result.foundPackages);
