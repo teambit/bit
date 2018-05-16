@@ -53,7 +53,7 @@ describe('es6 components with link files', function () {
   // which will be possible to conclude the sourceRelativePath: "utils/index.js"
   // and the destinationRelativePath: "utils/is-string/is-string.js", all the rest index files are irrelevant.
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
-  describe('multiple link files', () => {
+  describe.skip('multiple link files', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
