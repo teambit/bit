@@ -322,7 +322,7 @@ describe.only('envs', function () {
   describe('imported enviorment', () => {
     const componentFolder = path.join('components', 'comp', 'my-comp');
 
-    describe.only('without ejceting (--conf)', () => {
+    describe('without ejceting (--conf)', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -408,7 +408,7 @@ describe.only('envs', function () {
       let fullComponentFolder;
       let bitJsonPath;
 
-      describe('with default ejectedEnvsDirectory', () => {
+      describe.only('with default ejectedEnvsDirectory', () => {
         const envFilesFolder = path.join(componentFolder, DEFAULT_EJECTED_DIR_ENVS);
         const compilerFilesFolder = path.join(envFilesFolder, 'Compiler');
         const testerFilesFolder = path.join(envFilesFolder, 'Tester');
