@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.3] - 2018-05-16
+
+-  fix bit test with fork-level one
+
 ## [13.0.0-dev.2] - 2018-05-15
 
 - envs fixes
