@@ -15,7 +15,7 @@ import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
 
-describe('envs', function () {
+describe.only('envs', function () {
   this.timeout(0);
   const helper = new Helper();
   const compilerId = 'compilers/new-babel';
@@ -471,7 +471,7 @@ describe('envs', function () {
                 expect(output).to.have.string('✔   group of passed tests');
                 expect(output).to.have.string('❌   group of failed tests');
               });
-              it.only('should show results when there is exception on a test file', () => {
+              it('should show results when there is exception on a test file', () => {
                 helper.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
                 const exceptionSpecPath = path.join(componentFolder, 'exception.spec.js');
                 helper.addComponentWithOptions(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
