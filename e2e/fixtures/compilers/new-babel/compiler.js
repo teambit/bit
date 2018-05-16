@@ -101,7 +101,9 @@ function resolvePreset(componentDir, presetName) {
 }
 
 function resolvePackagesFromComponentDir(componentDir, packagName) {
+  console.log('resolvePackagesFromComponentDir, componentDir', packagName, componentDir)
   const resolvedPackage = require.resolve(packagName, { paths: [componentDir] });
+  console.log('resolvePackagesFromComponentDir, resolvedPackage', resolvedPackage)
   return resolvedPackage;
 }
 

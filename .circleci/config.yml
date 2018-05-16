@@ -190,7 +190,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-    parallelism: 4
+    parallelism: 1
     steps:
       - attach_workspace:
           at: ./
@@ -215,9 +215,6 @@ jobs:
       - run: ssh-add ~/.ssh/id_rsa
       - run: cd bit && mkdir junit
       - run:
-          name: npm link bit-javascript to bit
-          command: cd bit && npm link ../bit-javascript
-      - run:
           name: npm link bit to global
           command: cd bit && npm link
       - run: bit config set analytics_reporting false
@@ -229,9 +226,9 @@ jobs:
 
       - run:
           name: Run e2e tests
-          command: cd bit && circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
+        #   command: cd bit && circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
           # command which support only - for debug purpose
-        #   command: cd bit && npm run e2e-test-circle --debug
+          command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -252,19 +249,7 @@ workflows:
       - install_npm_deps:
           requires:
             - checkout_code
-      - install_bit_javascript_npm_deps:
-          requires:
-            - checkout_code
       - build:
-          requires:
-            - install_npm_deps
-      - build_bit_javascript:
-          requires:
-            - install_bit_javascript_npm_deps
-      - unit_test:
-          requires:
-            - build
-      - lint:
           requires:
             - install_npm_deps
       - e2e_test:
