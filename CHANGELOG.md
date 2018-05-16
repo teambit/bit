@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.4] - 2018-05-16
+
+- bump bit-js version
+
 ## [13.0.0-dev.3] - 2018-05-16
 
 -  fix bit test with fork-level one
