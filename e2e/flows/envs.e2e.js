@@ -319,7 +319,7 @@ describe.only('envs', function () {
       });
     });
   });
-  describe('imported enviorment', () => {
+  describe.only('imported enviorment', () => {
     const componentFolder = path.join('components', 'comp', 'my-comp');
 
     describe('without ejceting (--conf)', () => {
