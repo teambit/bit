@@ -42,7 +42,8 @@ jobs:
       - run: npm config set @bit:registry https://node.bitsrc.io
       - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-      # - run: npm config set @bit:registry https://node-stg.bitsrc.io
+    #   - run: npm config set @bit:registry https://node-stg.bitsrc.io
+    #   - run: echo "//node.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
           key: bitsrc-registry1
           # key: bitsrc-registry-stg
@@ -223,6 +224,8 @@ jobs:
       - run: bit config set error_reporting false
       - run: bit config set user.name tester
       - run: bit config set user.email ci@bitsrc.io
+      # uncomment to configure circle to run against stg enviorment
+    #   - run: bit config set hub_domain hub-stg.bitsrc.io 
 
       - run:
           name: Run e2e tests
