@@ -113,4 +113,34 @@ describe('support vue files', function () {
       });
     });
   });
+  describe('custom module resolutions', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { aliases: { '@': 'directives' } };
+      helper.writeBitJson(bitJson);
+
+      const autocompleteFixture = `<script>
+import autofocus from '@/autofocus';
+</script>`;
+      helper.createFile('UI', 'Autocomplete.vue', autocompleteFixture);
+      helper.createFile('directives', 'autofocus.js', 'export default {}');
+      helper.addComponent('UI/Autocomplete.vue');
+      helper.addComponent('directives/autofocus.js');
+    });
+    it('should recognize dependencies using "@" as an alias', () => {
+      const output = helper.showComponentParsed('ui/autocomplete');
+      expect(output.dependencies).to.have.lengthOf(1);
+      const dependency = output.dependencies[0];
+      expect(dependency.id).to.equal('directives/autofocus');
+      expect(dependency.relativePaths[0].sourceRelativePath).to.equal('directives/autofocus.js');
+      expect(dependency.relativePaths[0].destinationRelativePath).to.equal('directives/autofocus.js');
+      expect(dependency.relativePaths[0].importSource).to.equal('@/autofocus');
+      expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+    });
+    it('bit status should not warn about missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.string('missing');
+    });
+  });
 });
