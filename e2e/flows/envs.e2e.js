@@ -464,14 +464,14 @@ describe.only('envs', function () {
               const failSpecPath = path.join(componentFolder, 'fail.spec.js');
               helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
             });
-            describe.only('with default fork level', () => {
+            describe('with default fork level', () => {
               it('should show results without define fork level', () => {
                 const output = helper.testComponent('comp/my-comp');
                 expect(output).to.have.string('tests failed');
                 expect(output).to.have.string('✔   group of passed tests');
                 expect(output).to.have.string('❌   group of failed tests');
               });
-              it('should show results when there is exception on a test file', () => {
+              it.only('should show results when there is exception on a test file', () => {
                 helper.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
                 const exceptionSpecPath = path.join(componentFolder, 'exception.spec.js');
                 helper.addComponentWithOptions(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
