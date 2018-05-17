@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support custom module resolution
+
 ## [13.0.0-dev.4] - 2018-05-16
 
 - bump bit-js version
