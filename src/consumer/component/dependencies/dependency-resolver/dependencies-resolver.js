@@ -512,7 +512,9 @@ export default (async function loadDependenciesForComponent(
         if (customResolvedDependencies) {
           Object.keys(customResolvedDependencies).forEach((missingPackage) => {
             const componentId = customResolvedDependencies[missingPackage].toString();
-            if (missingCustomModuleResolutionLinks[fileDep.originFile]) { missingCustomModuleResolutionLinks[fileDep.originFile].push(componentId); } else missingCustomModuleResolutionLinks[fileDep.originFile] = [componentId];
+            if (missingCustomModuleResolutionLinks[fileDep.originFile]) {
+              missingCustomModuleResolutionLinks[fileDep.originFile].push(componentId);
+            } else missingCustomModuleResolutionLinks[fileDep.originFile] = [componentId];
           });
         }
         const missingPackages = customResolvedDependencies
@@ -576,7 +578,9 @@ export default (async function loadDependenciesForComponent(
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }
   if (!R.isEmpty(missingLinks)) missingDependencies.missingLinks = missingLinks;
-  if (!R.isEmpty(missingCustomModuleResolutionLinks)) { missingDependencies.missingCustomModuleResolutionLinks = missingCustomModuleResolutionLinks; }
+  if (!R.isEmpty(missingCustomModuleResolutionLinks)) {
+    missingDependencies.missingCustomModuleResolutionLinks = missingCustomModuleResolutionLinks;
+  }
   if (!R.isEmpty(missingComponents)) missingDependencies.missingComponents = missingComponents;
   // assign missingDependencies to component only when it has data.
   // Otherwise, when it's empty, component.missingDependencies will be an empty object ({}), and for some weird reason,
