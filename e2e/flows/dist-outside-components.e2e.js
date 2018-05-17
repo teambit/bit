@@ -341,4 +341,57 @@ export default function foo() { return isString() + ' and got foo'; };`;
       });
     });
   });
+
+  describe('when using custom-module-resolution syntax', () => {
+    before(() => {
+      helper.getClonedLocalScope(scopeWithCompiler);
+      helper.reInitRemoteScope();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
+      helper.writeBitJson(bitJson);
+
+      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
+      helper.createFile('src/utils', 'is-type.js', isTypeFixture);
+      helper.addComponent('src/utils/is-type.js');
+      const isStringFixture = `import isType from 'utils/is-type';
+ export default function isString() { return isType() +  ' and got is-string'; };`;
+      helper.createFile('src/utils', 'is-string.js', isStringFixture);
+      helper.addComponent('src/utils/is-string.js');
+      const fooBarFixture = `import isString from 'utils/is-string';
+export default function foo() { return isString() + ' and got foo'; };`;
+      helper.createFile('src/bar', 'foo.js', fooBarFixture);
+      helper.addComponent('src/bar/foo.js');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.modifyFieldInBitJson('dist', { target: 'dist' });
+      helper.importComponent('bar/foo');
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    it('should not indicate that missing dependencies', () => {
+      const status = helper.runCmd('bit status');
+      expect(status).to.not.have.string('missing');
+      expect(status).to.not.have.string('modified');
+    });
+    describe('"bit build" after updating the imported component', () => {
+      before(() => {
+        const fooBarFixtureV2 = `import isString from 'utils/is-string';
+export default function foo() { return isString() + ' and got foo v2'; };`;
+        helper.createFile('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
+        helper.addRemoteEnvironment();
+        helper.build();
+      });
+      it('should save the dists file in the same place "bit import" saved them', () => {
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+      });
+    });
+  });
 });

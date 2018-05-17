@@ -12,7 +12,7 @@ import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
-import { Dependencies } from '../../consumer/component/dependencies';
+import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
 import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
 import type { TesterExtensionModel } from '../../extensions/tester-extension';
@@ -20,6 +20,7 @@ import GeneralError from '../../error/general-error';
 import ExtensionFile from '../../extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
+import type { RelativePath } from '../../consumer/component/dependencies/dependency';
 
 type CiProps = {
   error: Object,
@@ -138,21 +139,21 @@ export default class Version extends BitObject {
   id() {
     const obj = this.toObject();
 
-    // remove importSpecifiers from the ID, it's not needed for the ID calculation.
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
-
     const getDependencies = (deps) => {
-      const dependencies = R.clone(deps);
-      if (dependencies && dependencies.length) {
-        dependencies.forEach((dependency) => {
-          if (dependency.relativePaths && dependency.relativePaths.length) {
-            dependency.relativePaths.forEach((relativePath) => {
-              if (relativePath.importSpecifiers) delete relativePath.importSpecifiers;
-            });
-          }
-        });
-      }
-      return dependencies;
+      const clonedDependencies = R.clone(deps);
+      if (!clonedDependencies) return clonedDependencies;
+      return clonedDependencies.map((dependency: Dependency) => {
+        return {
+          id: dependency.id,
+          relativePaths: dependency.relativePaths.map((relativePath) => {
+            return {
+              sourceRelativePath: relativePath.sourceRelativePath,
+              destinationRelativePath: relativePath.destinationRelativePath
+            };
+          })
+        };
+      });
     };
 
     const filterFunction = (val, key) => {

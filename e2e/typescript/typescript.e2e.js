@@ -287,4 +287,73 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       expect(result.trim()).to.equal('');
     });
   });
+  describe('with custom module resolution', () => {
+    describe('using module directories', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const bitJson = helper.readBitJson();
+        bitJson.resolveModules = { modulesDirectories: ['src'] };
+        helper.writeBitJson(bitJson);
+        const isTypeFixture = "export default function isType() { return 'got is-type'; };";
+        helper.createFile('src/utils', 'is-type.ts', isTypeFixture);
+        helper.addComponent('src/utils/is-type.ts');
+        const isStringFixture =
+          "import isType from 'utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
+        helper.createFile('src/utils', 'is-string.ts', isStringFixture);
+        helper.addComponent('src/utils/is-string.ts');
+        const fooBarFixture =
+          "import isString from 'utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
+        helper.createFile('src/bar', 'foo.ts', fooBarFixture);
+        helper.addComponent('src/bar/foo.ts');
+      });
+      it('bit status should not warn about missing packages', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.string('missing');
+      });
+      it('bit show should show the dependencies correctly', () => {
+        const output = helper.showComponentParsed('bar/foo');
+        expect(output.dependencies).to.have.lengthOf(1);
+        const dependency = output.dependencies[0];
+        expect(dependency.id).to.equal('utils/is-string');
+        expect(dependency.relativePaths[0].sourceRelativePath).to.equal('src/utils/is-string.ts');
+        expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.ts');
+        expect(dependency.relativePaths[0].importSource).to.equal('utils/is-string');
+        expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+      });
+    });
+    describe('using aliases', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const bitJson = helper.readBitJson();
+        bitJson.resolveModules = { aliases: { '@': 'src' } };
+        helper.writeBitJson(bitJson);
+
+        const isTypeFixture = "export default function isType() { return 'got is-type'; };";
+        helper.createFile('src/utils', 'is-type.ts', isTypeFixture);
+        helper.addComponent('src/utils/is-type.ts');
+        const isStringFixture =
+          "import isType from '@/utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
+        helper.createFile('src/utils', 'is-string.ts', isStringFixture);
+        helper.addComponent('src/utils/is-string.ts');
+        const fooBarFixture =
+          "import isString from '@/utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
+        helper.createFile('src/bar', 'foo.ts', fooBarFixture);
+        helper.addComponent('src/bar/foo.ts');
+      });
+      it('bit status should not warn about missing packages', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.string('missing');
+      });
+      it('bit show should show the dependencies correctly', () => {
+        const output = helper.showComponentParsed('bar/foo');
+        expect(output.dependencies).to.have.lengthOf(1);
+        const dependency = output.dependencies[0];
+        expect(dependency.id).to.equal('utils/is-string');
+        expect(dependency.relativePaths[0].sourceRelativePath).to.equal('src/utils/is-string.ts');
+        expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.ts');
+        expect(dependency.relativePaths[0].importSource).to.equal('@/utils/is-string');
+        expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+      });
+    });
+  });
 });

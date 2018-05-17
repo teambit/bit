@@ -900,6 +900,27 @@ describe('bit import', function () {
         );
       });
     });
+    describe('when dist is set to a non-default directory', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.importComponent('bar/foo');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should copy the components into the dist directory', () => {
+        const expectedLocation = path.join('dist', 'components', 'bar', 'foo', 'bar', 'foo.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+      });
+      it('should copy also the dependencies into the dist directory', () => {
+        const expectedLocation = path.join(
+          'dist/components/.dependencies/utils/is-string',
+          helper.remoteScope,
+          '0.0.1/utils/is-string.js'
+        );
+        expect(localConsumerFiles).to.include(expectedLocation);
+      });
+    });
   });
 
   describe('components with auto-resolve dependencies using css', () => {

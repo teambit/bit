@@ -2,7 +2,6 @@
 import R from 'ramda';
 import { Dependency } from './';
 import type { RelativePath } from './dependency';
-import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import Scope from '../../../scope/scope';
 import BitMap from '../../bit-map';
@@ -25,10 +24,7 @@ export default class Dependencies {
   }
 
   getClone(): Dependency[] {
-    return this.dependencies.map(dependency => ({
-      id: dependency.id,
-      relativePaths: R.clone(dependency.relativePaths)
-    }));
+    return this.dependencies.map(dependency => Dependency.getClone(dependency));
   }
 
   deserialize(dependencies: Dependency[]): Dependency[] {
@@ -62,23 +58,8 @@ export default class Dependencies {
   }
 
   stripOriginallySharedDir(bitMap: BitMap, originallySharedDir: string): void {
-    const pathWithoutSharedDir = (pathStr, sharedDir) => {
-      if (!sharedDir) return pathStr;
-      const partToRemove = `${sharedDir}/`;
-      return pathStr.replace(partToRemove, '');
-    };
     this.dependencies.forEach((dependency) => {
-      const dependencyId = dependency.id.toString();
-      const depFromBitMap = bitMap.getComponent(dependencyId);
-      dependency.relativePaths.forEach((relativePath: RelativePath) => {
-        relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
-        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-          relativePath.destinationRelativePath = pathWithoutSharedDir(
-            relativePath.destinationRelativePath,
-            depFromBitMap.originallySharedDir
-          );
-        }
-      });
+      Dependency.stripOriginallySharedDir(dependency, bitMap, originallySharedDir);
     });
   }
 
@@ -86,6 +67,10 @@ export default class Dependencies {
     return R.flatten(
       this.dependencies.map(dependency => dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath))
     );
+  }
+
+  getById(id: string): Dependency {
+    return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
@@ -108,6 +93,23 @@ export default class Dependencies {
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
     });
+  }
+
+  getCustomResolvedData(): { [import_source: string]: BitId } {
+    const importSourceMap = {};
+    this.dependencies.forEach((dependency: Dependency) => {
+      dependency.relativePaths.forEach((relativePath: RelativePath) => {
+        if (relativePath.isCustomResolveUsed) {
+          if (!relativePath.importSource) {
+            throw new Error(
+              `${dependency.id.toString()} relativePath.importSource must be set when relativePath.isCustomResolveUsed`
+            );
+          }
+          importSourceMap[relativePath.importSource] = dependency.id;
+        }
+      });
+    });
+    return importSourceMap;
   }
 
   validate(): void {
