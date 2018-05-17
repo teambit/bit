@@ -18,12 +18,12 @@ export async function removeLocalVersion(
 ): Promise<untagResult> {
   const component: ComponentModel = await scope.getComponentModel(id);
   const localVersions = component.getLocalVersions();
-  if (!localVersions.length) return Promise.reject(`unable to untag ${id}, the component is not staged`);
+  if (!localVersions.length) throw new GeneralError(`unable to untag ${id}, the component is not staged`);
   if (version && !component.hasVersion(version)) {
-    return Promise.reject(`unable to untag ${id}, the version ${version} does not exist`);
+    throw new GeneralError(`unable to untag ${id}, the version ${version} does not exist`);
   }
   if (version && !localVersions.includes(version)) {
-    return Promise.reject(`unable to untag ${id}, the version ${version} was exported already`);
+    throw new GeneralError(`unable to untag ${id}, the version ${version} was exported already`);
   }
   const versionsToRemove = version ? [version] : localVersions;
 
@@ -68,7 +68,7 @@ export async function removeLocalVersionsForAllComponents(
   });
   if (!candidateComponents.length) {
     const versionOutput = version ? `${version} ` : '';
-    return Promise.reject(`no components found with version ${versionOutput}to untag on your workspace`);
+    throw new GeneralError(`no components found with version ${versionOutput}to untag on your workspace`);
   }
 
   // if no version is given, there is risk of deleting dependencies version without their dependents.

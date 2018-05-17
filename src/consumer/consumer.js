@@ -49,10 +49,13 @@ import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
 import ImportComponents from './component/import-components';
 import type { ImportOptions, ImportResult } from './component/import-components';
+import CompilerExtension from '../extensions/compiler-extension';
+import TesterExtension from '../extensions/tester-extension';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import { moveExistingComponent } from './component-ops/move-components';
+import tagModelComponent from '../scope/component-ops/tag-model-component';
 
 type ConsumerProps = {
   projectPath: string,
@@ -109,13 +112,14 @@ export default class Consumer {
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
   }
-
-  get testerId(): ?BitId {
-    return BitId.parse(this.bitJson.testerId);
+  get compiler(): ?CompilerExtension {
+    const compiler = this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
+    return compiler;
   }
 
-  get compilerId(): ?BitId {
-    return BitId.parse(this.bitJson.compilerId);
+  get tester(): ?TesterExtension {
+    const tester = this.bitJson.loadTester(this.projectPath, this.scope.getPath());
+    return tester;
   }
 
   get driver(): Driver {
@@ -129,7 +133,8 @@ export default class Consumer {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
         this.bitJson.componentsDefaultDirectory,
-        this.bitJson.dependenciesDirectory
+        this.bitJson.dependenciesDirectory,
+        this.bitJson.ejectedEnvsDirectory
       );
     }
     return this._dirStructure;
@@ -199,12 +204,11 @@ export default class Consumer {
     };
   }
 
-  write(): Promise<Consumer> {
-    return this.bitJson
-      .write({ bitDir: this.projectPath })
-      .then(() => this.scope.ensureDir())
-      .then(() => this.bitMap.write())
-      .then(() => this);
+  async write(): Promise<Consumer> {
+    await Promise.all([this.bitJson.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
+    this.bitMap.markAsChanged();
+    await this.bitMap.write();
+    return this;
   }
 
   getComponentsPath(): PathOsBased {
@@ -326,7 +330,6 @@ export default class Consumer {
         allComponents.push(component);
       }
     }
-    if (this.bitMap.hasChanged) await this.bitMap.write();
 
     return { components: allComponents.concat(alreadyLoadedComponents), deletedComponents };
   }
@@ -515,7 +518,6 @@ export default class Consumer {
       writeToPath
     );
 
-    await this.bitMap.write();
     if (installNpmPackages) {
       await installNpmPackagesForComponents(
         this,
@@ -722,7 +724,7 @@ export default class Consumer {
         if (component.componentFromModel) {
           // otherwise it's a new component, so this check is irrelevant
           const modelComponent = await this.scope.getModelComponentIfExist(component.id);
-          if (!modelComponent) throw new GeneralError('');
+          if (!modelComponent) throw new GeneralError(`component ${component.id} was not found in the model`);
           const latest = modelComponent.latest();
           if (latest !== component.version) {
             throw new NewerVersionFound(component.id.toStringWithoutVersion(), component.version, latest);
@@ -731,8 +733,9 @@ export default class Consumer {
       });
       await Promise.all(throwForNewestVersions);
     }
-    const { taggedComponents, autoTaggedComponents } = await this.scope.putMany({
+    const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
       consumerComponents: components,
+      scope: this.scope,
       message,
       exactVersion,
       releaseType,
@@ -763,7 +766,7 @@ export default class Consumer {
       return null;
     });
 
-    await Promise.all([this.bitMap.write(), Promise.all(updatePackageJsonP)]);
+    await Promise.all(updatePackageJsonP);
     return { taggedComponents, autoTaggedComponents };
   }
 
@@ -861,7 +864,7 @@ export default class Consumer {
     });
   }
 
-  static locateProjectScope(projectPath) {
+  static locateProjectScope(projectPath: string) {
     if (fs.existsSync(path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR))) {
       return path.join(projectPath, DOT_GIT_DIR, BIT_GIT_DIR);
     }
@@ -874,19 +877,18 @@ export default class Consumer {
       return Promise.resolve(null);
     }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
-      await Consumer.create(currentPath).then(consumer => consumer.write());
+      const consumer = await Consumer.create(currentPath);
+      await Promise.all([consumer.bitJson.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
     const bitJsonP = ConsumerBitJson.load(projectPath);
-    return Promise.all([scopeP, bitJsonP]).then(
-      ([scope, bitJson]) =>
-        new Consumer({
-          projectPath,
-          bitJson,
-          scope
-        })
-    );
+    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    return new Consumer({
+      projectPath,
+      bitJson,
+      scope
+    });
   }
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
@@ -1030,8 +1032,7 @@ export default class Consumer {
     this.bitMap.removeComponents(componentsToRemoveFromFs);
     this.bitMap.removeComponents(removedDependencies);
     componentsToRemoveFromFs.map(x => delete bitJson.dependencies[x.toStringWithoutVersion()]);
-    bitJson.write({ bitDir: this.projectPath });
-    return this.bitMap.write();
+    await bitJson.write({ bitDir: this.projectPath });
   }
   /**
    * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
@@ -1062,7 +1063,8 @@ export default class Consumer {
     const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
       force ? resolvedIDs : regularComponents,
       force,
-      true
+      true,
+      this
     );
 
     const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
@@ -1119,5 +1121,9 @@ export default class Consumer {
     await installPackages(this, [], true, true);
 
     return componentsIds;
+  }
+
+  async onDestroy() {
+    return this.bitMap.write();
   }
 }

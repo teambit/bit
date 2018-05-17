@@ -1,27 +1,19 @@
 /** @flow */
 import R from 'ramda';
-import path from 'path';
-import fs from 'fs';
-import { BIT_JSON } from '../../constants';
+import fs from 'fs-extra';
 import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
+import type { Compilers, Testers } from './abstract-bit-json';
 import ConsumerBitJson from './consumer-bit-json';
 import type { PathOsBased } from '../../utils/path';
-
-export function composePath(bitPath: PathOsBased): PathOsBased {
-  return path.join(bitPath, BIT_JSON);
-}
-
-export function hasExisting(bitPath: PathOsBased): boolean {
-  return fs.existsSync(composePath(bitPath));
-}
+import Component from '../component';
 
 export type BitJsonProps = {
   impl?: string,
   spec?: string,
   lang?: string,
-  compiler?: string,
-  tester?: string,
+  compiler?: string | Compilers,
+  tester?: string | Testers,
   dependencies?: Object,
   devDependencies?: Object,
   packageDependencies?: Object,
@@ -71,27 +63,11 @@ export default class ComponentBitJson extends AbstractBitJson {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
-  write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-      if (!override && hasExisting(bitDir)) {
-        return resolve(false);
-      }
-
-      const repspond = (err, res) => {
-        if (err) return reject(err);
-        return resolve(res);
-      };
-
-      fs.writeFile(composePath(bitDir), this.toJson(), repspond);
-    });
-  }
-
   validate(bitJsonPath: string) {
     if (
       typeof this.getImplBasename() !== 'string' ||
-      typeof this.compilerId !== 'string' ||
-      typeof this.testerId !== 'string' ||
-      (this.lang && typeof this.testerId !== 'string') ||
+      typeof this.compiler !== 'object' ||
+      typeof this.tester !== 'object' ||
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
@@ -115,9 +91,7 @@ export default class ComponentBitJson extends AbstractBitJson {
     });
   }
 
-  mergeWithComponentData(component) {
-    this.compiler = component.compilerId ? component.compilerId.toString() : null;
-    this.tester = component.testerId ? component.testerId.toString() : null;
+  mergeWithComponentData(component: Component) {
     this.bindingPrefix = component.bindingPrefix;
     this.lang = component.lang;
   }
@@ -148,17 +122,20 @@ export default class ComponentBitJson extends AbstractBitJson {
 
   static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitJson {
     let thisBJ = {};
+    let bitJsonPath = '';
     if (dirPath) {
-      const bitJsonPath = composePath(dirPath);
+      bitJsonPath = AbstractBitJson.composePath(dirPath);
       if (fs.existsSync(bitJsonPath)) {
         try {
-          thisBJ = JSON.parse(fs.readFileSync(bitJsonPath).toString('utf8'));
+          thisBJ = fs.readJsonSync(bitJsonPath);
         } catch (e) {
           throw new InvalidBitJson(bitJsonPath);
         }
       }
     }
 
-    return ComponentBitJson.mergeWithProto(thisBJ, protoBJ);
+    const componentBitJson = ComponentBitJson.mergeWithProto(thisBJ, protoBJ);
+    componentBitJson.path = bitJsonPath;
+    return componentBitJson;
   }
 }

@@ -43,23 +43,16 @@ export const BIT_MAP = '.bitmap';
 
 export const OLD_BIT_MAP = '.bit.map.json';
 
-export const IGNORE_LIST = [
-  '**/.bit.map.json',
-  '**/.bitmap',
-  '**/.gitignore',
-  '**/bit.json',
-  '**/bitBindings.js',
-  '**/node_modules/**',
-  '**/package.json',
-  '**/package-lock.json',
-  '**/yarn.lock',
-  '**/LICENSE'
-];
-
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED',
   AUTHORED: 'AUTHORED',
   NESTED: 'NESTED' // which is a nested dependency
+};
+
+export const TESTS_FORK_LEVEL = {
+  NONE: 'NONE',
+  ONE: 'ONE',
+  COMPONENT: 'COMPONENT'
 };
 
 export const DEFAULT_IMPL_NAME = 'impl.js';
@@ -80,7 +73,7 @@ export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export const DEFAULT_EXTENSIONS = {
   'ext-docs-parser': {
-    config: {},
+    rawConfig: {},
     options: {
       core: true
     }
@@ -106,6 +99,10 @@ export const DEFAULT_COMPONENTES_DIR_PATH = `${BITS_DIRNAME}/{namespace}/{name}`
 export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
 
 export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
+
+export const DEFAULT_EJECTED_DIR_ENVS = '@bit-envs';
+
+export const DEFAULT_EJECTED_ENVS_DIR_PATH = `${DEFAULT_EJECTED_DIR_ENVS}/{envType}`;
 
 export const DEFAULT_SEPARATOR = '/';
 
@@ -153,6 +150,20 @@ export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 // https://github.com/mscdex/ssh2/issues/142
 export const DEFAULT_SSH_READY_TIMEOUT = 99999;
 
+export const IGNORE_LIST = [
+  '**/.bit.map.json',
+  '**/.bitmap',
+  '**/.gitignore',
+  '**/bit.json',
+  '**/bitBindings.js',
+  '**/node_modules/**',
+  `**/${DEFAULT_EJECTED_DIR_ENVS}/**`,
+  '**/package.json',
+  '**/package-lock.json',
+  '**/yarn.lock',
+  '**/LICENSE'
+];
+
 /**
  * bit global config keys
  */
@@ -161,6 +172,8 @@ export const CFG_USER_EMAIL_KEY = 'user.email';
 export const CFG_USER_TOKEN_KEY = 'user.token';
 
 export const CFG_USER_NAME_KEY = 'user.name';
+
+export const CFG_REGISTRY_URL_KEY = 'registry';
 
 export const CFG_SSH_KEY_FILE_KEY = 'ssh_key_file';
 
@@ -329,6 +342,8 @@ export const BIT_VERSION = packageFile.version;
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
 export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
+
+export const DEFAULT_REGISTRY_URL = 'https://node.bitsrc.io';
 
 export const SKIP_UPDATE_FLAG = '--skip-update';
 

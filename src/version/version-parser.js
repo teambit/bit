@@ -46,5 +46,5 @@ export default function versionParser(versionStr: string): Version {
   if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (isRegular(versionStr)) return returnRegular(versionStr);
   if (!isNaN(versionStr)) return convertToSemVer(versionStr);
-  throw new InvalidVersion();
+  throw new InvalidVersion(versionStr);
 }

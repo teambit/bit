@@ -603,4 +603,29 @@ describe('bit checkout command', function () {
       });
     });
   });
+  describe('component with originallySharedDir', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+      helper.tagScope('0.0.5');
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      output = helper.checkoutVersion('0.0.1', 'bar/foo');
+    });
+    it('should show the updated files without the originallySharedDir', () => {
+      expect(output).to.not.have.string('bar/foo.js');
+      expect(output).to.have.string('foo.js');
+    });
+    it('bit-diff should not show any changes related to the originallySharedDir', () => {
+      const diffOutput = helper.runWithTryCatch('bit diff bar/foo');
+      expect(diffOutput).to.have.string('no diff for');
+      expect(diffOutput).to.not.have.string('foo.js');
+    });
+  });
 });

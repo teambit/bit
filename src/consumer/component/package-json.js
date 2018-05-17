@@ -82,7 +82,9 @@ function getPackageDependencyValue(
     return dependencyId.version;
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
-  if (!dependencyRootDir) { throw new GeneralError(`rootDir is missing from an imported component ${dependencyId.toString()}`); }
+  if (!dependencyRootDir) {
+    throw new GeneralError(`rootDir is missing from an imported component ${dependencyId.toString()}`);
+  }
   if (!parentComponentMap.rootDir) throw new GeneralError('rootDir is missing from an imported component');
   const rootDirRelative = pathRelativeLinux(parentComponentMap.rootDir, dependencyRootDir);
   return convertToValidPathForPackageManager(rootDirRelative);
@@ -175,7 +177,8 @@ async function write(
       homepage: component._getHomepage(),
       main: pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile)),
       dependencies: component.packageDependencies,
-      devDependencies: component.devPackageDependencies,
+      // Add envsPackageDependencies to the devDependencies in the package.json
+      devDependencies: { ...component.devPackageDependencies, ...component.envsPackageDependencies },
       peerDependencies: component.peerPackageDependencies,
       componentRootFolder: dir,
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`

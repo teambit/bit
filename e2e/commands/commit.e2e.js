@@ -244,7 +244,7 @@ describe('bit tag command', function () {
   });
   describe('tag one component with failing tests', () => {
     before(() => {
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       const failingTest = `const expect = require('chai').expect;
       const foo = require('./foo.js');
       describe('failing test', () => {
@@ -254,7 +254,7 @@ describe('bit tag command', function () {
       });`;
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', failingTest);
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
     });
     it('should throw error if the bit id does not exists', () => {
@@ -822,6 +822,7 @@ describe('bit tag command', function () {
     });
   });
   describe('with --scope flag', () => {
+    let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -845,6 +846,7 @@ describe('bit tag command', function () {
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
+      localScope = helper.cloneLocalScope();
     });
     describe('without --all flag', () => {
       describe('when current components have lower versions', () => {
@@ -892,6 +894,7 @@ describe('bit tag command', function () {
         });
         it('should continue tagging the authored components', () => {
           expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('bar/foo@0.1.4');
         });
       });
     });
@@ -899,11 +902,12 @@ describe('bit tag command', function () {
       describe('when current components have lower versions', () => {
         let output;
         before(() => {
+          helper.getClonedLocalScope(localScope);
           output = helper.commitAllComponents('msg', '--scope 0.2.0 --all');
         });
         it('should tag all components with the specified version including the imported components', () => {
           // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
-          // current version of is-string derived from the last test: 0.1.5, so auto-tag would tag it to 0.1.6
+          // current version of is-string is 0.0.1, so auto-tag would tag it to 0.0.2
           expect(output).to.have.string('2 components tagged');
           expect(output).to.have.string('bar/foo@0.2.0');
           expect(output).to.have.string('utils/is-string@0.2.0');
@@ -912,6 +916,22 @@ describe('bit tag command', function () {
           expect(output).not.to.have.string('utils/is-type');
         });
       });
+    });
+  });
+  describe('with Windows end-of-line characters', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      const impl = 'hello\r\n world\r\n';
+      helper.createComponentBarFoo(impl);
+      helper.addComponentBarFoo();
+      helper.commitComponentBarFoo();
+    });
+    it('should write the file to the model with Linux EOL characters', () => {
+      const barFoo = helper.catComponent('bar/foo@latest');
+      const fileHash = barFoo.files[0].file;
+      const fileContent = helper.runCmd(`bit cat-object ${fileHash} -s`);
+      // notice how the \r is stripped
+      expect(fileContent).to.have.string('"hello\\n world\\n"');
     });
   });
 });

@@ -1,10 +1,17 @@
 /** @flow */
+import path from 'path';
 import R from 'ramda';
+import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
+import type { ExtensionOptions } from '../../extensions/extension';
+import CompilerExtension, { CompilerEnvType } from '../../extensions/compiler-extension';
+import TesterExtension, { TesterEnvType } from '../../extensions/tester-extension';
+import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
+import type { PathOsBased } from '../../utils/path';
+import { BitJsonAlreadyExists } from './exceptions';
 import {
-  DEFAULT_COMPILER_ID,
-  DEFAULT_TESTER_ID,
+  BIT_JSON,
   DEFAULT_IMPL_NAME,
   DEFAULT_SPECS_NAME,
   DEFAULT_DEPENDENCIES,
@@ -14,16 +21,36 @@ import {
   DEFAULT_EXTENSIONS
 } from '../../constants';
 
+export type RegularExtensionObject = {
+  rawConfig: Object,
+  options: ExtensionOptions
+};
+
+export type EnvExtensionObject = {
+  rawConfig: Object,
+  options: EnvExtensionOptions,
+  files: string[]
+};
+
+export type TesterExtensionObject = EnvExtensionObject;
+
+export type CompilerExtensionObject = EnvExtensionObject;
+
+export type Extensions = { [extensionName: string]: RegularExtensionObject };
+export type Envs = { [envName: string]: CompilerExtensionObject };
+export type Compilers = { [compilerName: string]: CompilerExtensionObject };
+export type Testers = { [testerName: string]: TesterExtensionObject };
+
 export type AbstractBitJsonProps = {
   impl?: string,
   spec?: string,
-  compiler?: string,
-  tester?: string,
+  compiler?: string | Compilers,
+  tester?: string | Testers,
   dependencies?: Object,
   devDependencies?: Object,
   lang?: string,
   bindingPrefix?: string,
-  extensions?: Object
+  extensions?: Extensions
 };
 
 export default class AbstractBitJson {
@@ -31,13 +58,14 @@ export default class AbstractBitJson {
   impl: string;
   /** @deprecated * */
   spec: string;
-  compiler: string;
-  tester: string;
+  path: string;
+  _compiler: Compilers | string;
+  _tester: Testers | string;
   dependencies: { [string]: string };
   devDependencies: { [string]: string };
   lang: string;
   bindingPrefix: string;
-  extensions: Object;
+  extensions: Extensions;
 
   constructor({
     impl,
@@ -52,8 +80,8 @@ export default class AbstractBitJson {
   }: AbstractBitJsonProps) {
     this.impl = impl || DEFAULT_IMPL_NAME;
     this.spec = spec || DEFAULT_SPECS_NAME;
-    this.compiler = compiler || DEFAULT_COMPILER_ID;
-    this.tester = tester || DEFAULT_TESTER_ID;
+    this._compiler = compiler || {};
+    this._tester = tester || {};
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
     this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
     this.lang = lang || DEFAULT_LANGUAGE;
@@ -61,20 +89,24 @@ export default class AbstractBitJson {
     this.extensions = extensions || DEFAULT_EXTENSIONS;
   }
 
-  get compilerId(): string {
-    return this.compiler;
+  get compiler(): ?Compilers {
+    const compilerObj = transformEnvToObject(this._compiler);
+    if (R.isEmpty(compilerObj)) return undefined;
+    return compilerObj;
   }
 
-  set compilerId(compilerId: string) {
-    this.compiler = compilerId;
+  set compiler(compiler: string | Compilers) {
+    this._compiler = transformEnvToObject(compiler);
   }
 
-  get testerId(): string {
-    return this.tester;
+  get tester(): ?Testers {
+    const testerObj = transformEnvToObject(this._tester);
+    if (R.isEmpty(testerObj)) return undefined;
+    return testerObj;
   }
 
-  set testerId(testerId: string) {
-    this.tester = testerId;
+  set tester(tester: string | Testers) {
+    this._tester = transformEnvToObject(tester);
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -107,11 +139,55 @@ export default class AbstractBitJson {
   }
 
   hasCompiler(): boolean {
-    return !!this.compiler && this.compiler !== NO_PLUGIN_TYPE;
+    return !!this.compiler && this._compiler !== NO_PLUGIN_TYPE && !R.isEmpty(this.compiler);
   }
 
   hasTester(): boolean {
-    return !!this.tester && this.tester !== NO_PLUGIN_TYPE;
+    return !!this.tester && this._tester !== NO_PLUGIN_TYPE && !R.isEmpty(this.tester);
+  }
+
+  getEnvsByType(type: EnvType): ?Compilers | ?Testers {
+    if (type === CompilerEnvType) {
+      return this.compiler;
+    }
+    return this.tester;
+  }
+
+  async loadCompiler(consumerPath: string, scopePath: string, context?: Object): Promise<?CompilerExtension> {
+    if (!this.hasCompiler()) {
+      return null;
+    }
+
+    const compilerP = this.loadEnv(CompilerEnvType, consumerPath, scopePath, CompilerExtension.load, context);
+    const compiler: CompilerExtension = ((await compilerP: any): CompilerExtension);
+    return compiler;
+  }
+
+  async loadTester(consumerPath: string, scopePath: string, context?: Object): Promise<?TesterExtension> {
+    if (!this.hasTester()) {
+      return null;
+    }
+    const testerP = this.loadEnv(TesterEnvType, consumerPath, scopePath, TesterExtension.load, context);
+
+    const tester: ?TesterExtension = ((await testerP: any): TesterExtension);
+    return tester;
+  }
+
+  async loadEnv(
+    envType: EnvType,
+    consumerPath: string,
+    scopePath: string,
+    loadFunc: Function,
+    context?: Object
+  ): Promise<?CompilerExtension | ?TesterExtension> {
+    const envs = this.getEnvsByType(envType);
+    if (!envs) return undefined;
+    // TODO: Gilad - support more than one key of compiler
+    const envName = Object.keys(envs)[0];
+    const envObject = envs[envName];
+    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, envType, context);
+    const env = await loadFunc(envProps);
+    return env;
   }
 
   getDependencies(): BitIds {
@@ -132,8 +208,8 @@ export default class AbstractBitJson {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
         env: {
-          compiler: this.compilerId,
-          tester: this.testerId
+          compiler: this.compiler,
+          tester: this.tester
         },
         dependencies: this.dependencies,
         extensions: this.extensions
@@ -142,8 +218,58 @@ export default class AbstractBitJson {
     );
   }
 
+  async write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
+    const isExisting = await AbstractBitJson.hasExisting(bitDir);
+    if (!override && isExisting) {
+      throw new BitJsonAlreadyExists();
+    }
+
+    return fs.writeFile(AbstractBitJson.composePath(bitDir), this.toJson());
+  }
+
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
+
+  static composePath(bitPath: PathOsBased): PathOsBased {
+    return path.join(bitPath, BIT_JSON);
+  }
+
+  static async hasExisting(bitPath: string): Promise<boolean> {
+    return fs.exists(this.composePath(bitPath));
+  }
 }
+
+const transformEnvToObject = (env): Envs => {
+  if (typeof env === 'string') {
+    if (env === NO_PLUGIN_TYPE) return {};
+    return {
+      [env]: {}
+    };
+  }
+  return env;
+};
+
+const getEnvsProps = (
+  consumerPath: string,
+  scopePath: string,
+  envName: string,
+  envObject: EnvExtensionObject,
+  bitJsonPath: string,
+  envType: EnvType,
+  context?: Object
+): EnvLoadArgsProps => {
+  const envProps = {
+    name: envName,
+    consumerPath,
+    scopePath,
+    rawConfig: envObject.rawConfig,
+    files: envObject.files,
+    bitJsonPath,
+    options: envObject.options,
+    envType,
+    context
+  };
+  return envProps;
+};

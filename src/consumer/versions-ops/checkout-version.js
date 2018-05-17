@@ -9,7 +9,13 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathOsBased } from '../../utils/path';
 import Version from '../../scope/models/version';
 import { SourceFile } from '../component/sources';
-import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } from './merge-version';
+import {
+  getMergeStrategyInteractive,
+  FileStatus,
+  MergeOptions,
+  threeWayMerge,
+  filesStatusWithoutSharedDir
+} from './merge-version';
 import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
@@ -55,7 +61,6 @@ export default (async function checkoutVersion(
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
   const componentsResults = await Promise.all(componentsResultsP);
-  if (consumer.bitMap.hasChanged) await consumer.bitMap.write();
 
   return { components: componentsResults, version };
 });
@@ -168,7 +173,18 @@ async function applyVersion(
     writePackageJson
   });
 
-  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(
+    filesStatus,
+    componentWithDependencies.component,
+    componentMap
+  );
+  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(
+    modifiedStatus,
+    componentWithDependencies.component,
+    componentMap
+  );
+
+  return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
 }
 
 /**

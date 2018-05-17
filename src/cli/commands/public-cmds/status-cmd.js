@@ -75,7 +75,7 @@ export default class Status extends Command {
 
     const importPendingWarning = importPendingComponents.length
       ? chalk.yellow(
-        'your workspace has outdated objects, please use "bit import" to pull the latest object from the remote scope\n\n'
+        'your workspace has outdated objects, please use "bit import" to pull the latest object from the remote scope\n'
       )
       : '';
 

@@ -39,13 +39,14 @@ jobs:
     working_directory: ~/bit
     steps:
       # prod registry
-      - run: npm config set @bit:registry https://node.bitsrc.io
-      - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
+    #   - run: npm config set @bit:registry https://node.bitsrc.io
+    #   - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-      # - run: npm config set @bit:registry https://node-stg.bitsrc.io
+      - run: npm config set @bit:registry https://node-stg.bitsrc.io
+      - run: echo "//node.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
-          key: bitsrc-registry1
-          # key: bitsrc-registry-stg
+        #   key: bitsrc-registry1
+          key: bitsrc-registry-stg
           paths:
             - ~/.npmrc
 
@@ -204,8 +205,8 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry1
-          # key: bitsrc-registry-stg
+        #   key: bitsrc-registry1
+          key: bitsrc-registry-stg
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
@@ -223,12 +224,14 @@ jobs:
       - run: bit config set error_reporting false
       - run: bit config set user.name tester
       - run: bit config set user.email ci@bitsrc.io
+      # uncomment to configure circle to run against stg enviorment
+      - run: bit config set hub_domain hub-stg.bitsrc.io 
 
       - run:
           name: Run e2e tests
           command: cd bit && circleci tests glob "e2e/**/*.e2e.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
-          #   command which support only - for debug purpose
-          #   command: cd bit && npm run e2e-test-circle
+          # command which support only - for debug purpose
+        #   command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always

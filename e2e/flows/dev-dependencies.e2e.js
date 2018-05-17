@@ -17,7 +17,7 @@ describe('dev-dependencies functionality', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler('bit.envs/compilers/babel');
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       clonedScope = helper.cloneLocalScope();
     });
     describe('with dev-dependencies same as dependencies', () => {
@@ -31,7 +31,7 @@ describe('dev-dependencies functionality', function () {
         helper.addComponentBarFoo();
 
         helper.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
-        helper.addNpmPackage('chai', '4.1.2');
+        helper.installNpmPackage('chai', '4.1.2');
         helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();
@@ -87,7 +87,7 @@ describe('foo', () => {
   });
 });`
         );
-        helper.addNpmPackage('chai', '4.1.2');
+        helper.installNpmPackage('chai', '4.1.2');
         helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();

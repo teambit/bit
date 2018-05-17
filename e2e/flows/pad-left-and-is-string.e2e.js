@@ -30,7 +30,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.addComponent('src/pad-left -t src/pad-left/pad-left.spec.js -i string/pad-left');
 
       helper.importCompiler('bit.envs/compilers/flow@0.0.6');
-      helper.importTester('bit.envs/testers/mocha@0.0.4');
+      helper.importTester('bit.envs/testers/mocha@0.0.12');
       helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.runCmd('npm init -y');
       helper.runCmd('npm install chai -D');

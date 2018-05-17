@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import { inspect } from 'util';
 import { HOOKS_NAMES } from '../constants';
 import logger from '../logger/logger';
 import * as errors from './exceptions';
@@ -139,7 +140,7 @@ export default class HooksManager {
 }
 
 function _stringifyIfNeeded(val) {
-  return typeof val === 'string' ? val : JSON.stringify(val);
+  return typeof val === 'string' ? val : inspect(val, { depth: null });
 }
 
 /**

@@ -30,7 +30,6 @@ export async function movePaths(
     // user would like to physically move the file. Otherwise (!fromExists and toExists), user would like to only update bit.map
     fs.moveSync(from, to);
   }
-  await consumer.bitMap.write();
   if (!R.isEmpty(changes)) {
     const componentsIds = changes.map(c => BitId.parse(c.id));
     await packageJson.addComponentsToRoot(consumer, componentsIds);
@@ -47,6 +46,7 @@ export function moveExistingComponent(bitMap: BitMap, component: Component, oldP
       `could not move the component ${component.id.toString()} from ${oldPath} to ${newPath} as the destination path already exists`
     );
   }
+  if (newPath.startsWith(oldPath)) throw new GeneralError(`unable to move '${oldPath}' into itself '${newPath}'`);
   const componentMap = bitMap.getComponent(component.id);
   componentMap.updateDirLocation(oldPath, newPath);
   fs.moveSync(oldPath, newPath);

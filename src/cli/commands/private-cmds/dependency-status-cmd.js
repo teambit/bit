@@ -10,7 +10,6 @@ export default class DependencyStatus extends Command {
   description = 'returns the status of the dependency status of bit map against bit dependencies';
   alias = '';
   opts = [];
-  loader = true;
   migration = true;
 
   action([mainFile]: [string[]]): Promise<DependencyStatusResult> {
@@ -25,7 +24,6 @@ export default class DependencyStatus extends Command {
       return output;
     }
     let output = chalk.red('The following file exist in dependency tree but are not a component:\n');
-
     const files = dependencyStatusResult.missingFiles.map((missingFile) => {
       const file = chalk.bold(missingFile);
       return file;

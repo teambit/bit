@@ -24,18 +24,16 @@ export default class VersionDependencies {
     this.sourceScope = sourceScope;
   }
 
-  toConsumer(repo: Repository): Promise<ComponentWithDependencies> {
+  async toConsumer(repo: Repository): Promise<ComponentWithDependencies> {
     const dependenciesP = Promise.all(this.dependencies.map(dep => dep.toConsumer(repo)));
     const devDependenciesP = Promise.all(this.devDependencies.map(dep => dep.toConsumer(repo)));
     const componentP = this.component.toConsumer(repo);
-    return Promise.all([componentP, dependenciesP, devDependenciesP]).then(
-      ([component, dependencies, devDependencies]) =>
-        new ComponentWithDependencies({
-          component,
-          dependencies,
-          devDependencies
-        })
-    );
+    const [component, dependencies, devDependencies] = await Promise.all([componentP, dependenciesP, devDependenciesP]);
+    return new ComponentWithDependencies({
+      component,
+      dependencies,
+      devDependencies
+    });
   }
 
   toObjects(repo: Repository): Promise<ComponentObjects> {

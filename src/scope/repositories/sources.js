@@ -1,9 +1,16 @@
 /** @flow */
+import R from 'ramda';
 import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE } from '../../constants';
+import {
+  CFG_USER_NAME_KEY,
+  CFG_USER_EMAIL_KEY,
+  DEFAULT_BIT_RELEASE_TYPE,
+  COMPONENT_ORIGINS,
+  LATEST_BIT_VERSION
+} from '../../constants';
 import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
@@ -177,6 +184,8 @@ export default class SourceRepository {
           };
         })
         : null;
+    const compilerFiles = R.path(['compiler', 'files'], consumerComponent);
+    const testerFiles = R.path(['tester', 'files'], consumerComponent);
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
@@ -199,7 +208,7 @@ export default class SourceRepository {
       email
     });
 
-    return { version, files };
+    return { version, files, compilerFiles, testerFiles };
   }
 
   async addSource({
@@ -218,14 +227,14 @@ export default class SourceRepository {
     message: string,
     exactVersion: ?string,
     releaseType: string,
-    dists?: Object,
+    dists: ?Object,
     specsResults?: any
   }): Promise<Component> {
     const objectRepo = this.objects();
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, files } = await this.consumerComponentToVersion({
+    const { version, files, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
       message,
       flattenedDependencies,
@@ -238,6 +247,8 @@ export default class SourceRepository {
 
     if (files) files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
+    if (compilerFiles) compilerFiles.forEach(file => objectRepo.add(file.file));
+    if (testerFiles) testerFiles.forEach(file => objectRepo.add(file.file));
 
     return component;
   }
@@ -331,9 +342,7 @@ export default class SourceRepository {
       }
 
       const conflictVersions = component.diffWith(existingComponent);
-      throw local
-        ? new MergeConflict(component.id(), conflictVersions)
-        : new MergeConflictOnRemote(component.id(), conflictVersions);
+      throw new MergeConflict(component.id(), conflictVersions);
     });
   }
 }

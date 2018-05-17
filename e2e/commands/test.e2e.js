@@ -28,6 +28,7 @@ describe('bit test command', function () {
   let clonedScopePath;
   before(() => {
     helper.reInitLocalScope();
+    // do not upgrade to v0.0.12 of mocha tester, there is a problem with this version.
     helper.importTester('bit.envs/testers/mocha@0.0.4');
     clonedScopePath = helper.cloneLocalScope();
   });
@@ -48,6 +49,7 @@ describe('bit test command', function () {
   describe('when tests are passed', () => {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
@@ -94,21 +96,11 @@ describe('bit test command', function () {
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should print the exception message when running bit test --verbose', () => {
-      let output;
-      try {
-        helper.testComponent('utils/is-type --verbose');
-      } catch (err) {
-        output = err.message;
-      }
+      const output = helper.testComponent('utils/is-type --verbose');
       expect(output).to.have.string('exception occurred with this spec file');
     });
     it('should print the exception message also when running bit test without --verbose flag', () => {
-      let output;
-      try {
-        helper.testComponent('utils/is-type');
-      } catch (err) {
-        output = err.message;
-      }
+      const output = helper.testComponent('utils/is-type');
       expect(output).to.have.string('exception occurred with this spec file');
     });
     describe('tagging the component without --force flag and without --verbose flag', () => {
@@ -152,6 +144,7 @@ describe('bit test command', function () {
     let outputLines;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
@@ -186,7 +179,7 @@ describe('bit test command', function () {
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
-      helper.addNpmPackage('chai', '4.1.2');
+      helper.installNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
 
       helper.reInitRemoteScope();
@@ -217,7 +210,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.testComponent('utils/is-type --verbose');
+        output = helper.testComponentWithOptions('utils/is-type', { '-verbose': '', '-fork-level': 'NONE' });
       });
       it('should import the tester and run the tests successfully', () => {
         expect(output).to.have.string('tests passed');
@@ -225,6 +218,8 @@ describe('bit test command', function () {
       it('should show success message of installing the environment', () => {
         expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
       });
+      // TODO: Gilad - fix this (it fails because of this output printed throw the child process of a fork process)
+      // TODO: It doe's work as expected when using --fork-level NONE
       it('should show success message of installing npm-packages', () => {
         expect(output).to.have.string('successfully ran npm install at');
       });
@@ -260,17 +255,13 @@ describe('bit test command', function () {
 
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', testWithEs6);
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('Should not be able to test without building first', () => {
-      let output;
-      try {
-        helper.testComponent('utils/is-type -v');
-      } catch (err) {
-        output = err.message;
-      }
+      const output = helper.testComponent('utils/is-type -v');
       expect(output).to.have.string('Unexpected token import');
     });
     it('Should be able to test after building', () => {

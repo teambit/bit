@@ -5,6 +5,7 @@ import { Remote } from '../remotes';
 import { SCOPE_JSON } from '../constants';
 import BitId from '../bit-id/bit-id';
 import GeneralError from '../error/general-error';
+import { ScopeJsonNotFound } from './exceptions';
 
 export function getPath(scopePath: string): string {
   return pathlib.join(scopePath, SCOPE_JSON);
@@ -90,8 +91,19 @@ export class ScopeJson {
     return writeFile(pathlib.join(path, SCOPE_JSON), this.toJson());
   }
 
-  static loadFromJson(json: string) {
+  static loadFromJson(json: string): ScopeJson {
     return new ScopeJson(JSON.parse(json));
+  }
+
+  static async loadFromFile(scopeJsonPath: string): Promise<ScopeJson> {
+    let rawScopeJson;
+    try {
+      rawScopeJson = await readFile(scopeJsonPath);
+    } catch (err) {
+      if (err.code === 'ENOENT') throw new ScopeJsonNotFound(scopeJsonPath);
+      throw err;
+    }
+    return ScopeJson.loadFromJson(rawScopeJson.toString());
   }
 
   getPopulatedLicense(): Promise<?string> {

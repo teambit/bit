@@ -52,6 +52,7 @@ export async function commitAction(args: {
   );
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
+  await consumer.onDestroy();
   return commitResults;
 }
 
@@ -122,6 +123,7 @@ export async function commitAllAction(args: {
     'num_components',
     R.concat(commitResults.taggedComponents, commitResults.autoTaggedComponents, commitResults.newComponents).length
   );
+  await consumer.onDestroy();
   return commitResults;
 }
 

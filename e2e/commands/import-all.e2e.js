@@ -69,17 +69,17 @@ describe('bit import command with no ids', function () {
       helper.createFile(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
       localScope = helper.cloneLocalScope();
     });
-    describe('without --override flag', () => {
+    describe('without any flag', () => {
+      // should import objects only
       let output;
       before(() => {
-        try {
-          helper.importAllComponents(true);
-        } catch (err) {
-          output = err.toString();
-        }
+        output = helper.importAllComponents();
       });
-      it('should display a warning saying it was unable to import', () => {
-        expect(output).to.have.string('unable to import');
+      it('should not display a warning saying it was unable to import', () => {
+        expect(output).to.not.have.string('unable to import');
+      });
+      it('should display a successful message', () => {
+        expect(output).to.have.string('successfully imported');
         expect(output).to.have.string('bar/foo');
         expect(output).to.have.string('bar/foo2');
       });
@@ -87,6 +87,7 @@ describe('bit import command with no ids', function () {
     describe('with --override flag', () => {
       let output;
       before(() => {
+        helper.getClonedLocalScope(localScope);
         output = helper.runCmd('bit import --override');
       });
       it('should display a successful message', () => {
@@ -94,10 +95,11 @@ describe('bit import command with no ids', function () {
         expect(output).to.have.string('bar/foo');
         expect(output).to.have.string('bar/foo2');
       });
-      it('should show them as modified', () => {
-        // because --write flag was not used
+      it('should override the ones from bit.json but not the AUTHORED from bitmap', () => {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('modified components');
+        expect(statusOutput).to.have.string('bar/foo');
+        expect(statusOutput).to.not.have.string('bar/foo2');
       });
     });
     describe('with --merge=manual flag', () => {

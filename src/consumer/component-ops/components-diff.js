@@ -9,9 +9,11 @@ import { Tmp } from '../../scope/repositories';
 import diffFiles from '../../utils/diff-files';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import { Version } from '../../scope/models';
+import { diffBetweenComponentsObjects } from './components-object-diff';
 
 type FileDiff = { filePath: string, diffOutput: string };
-export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[] };
+export type FieldsDiff = { fieldName: string, diffOutput: string };
+export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[], fieldsDiff?: ?(FieldsDiff[]) };
 
 export default (async function componentsDiff(
   consumer: Consumer,
@@ -44,6 +46,10 @@ export default (async function componentsDiff(
   }
 });
 
+function hasDiff(diffResult: DiffResults): boolean {
+  return !!((diffResult.filesDiff && diffResult.filesDiff.find(file => file.diffOutput)) || diffResult.fieldsDiff);
+}
+
 async function getComponentDiffOfVersion(
   consumer: Consumer,
   tmp: Tmp,
@@ -62,7 +68,10 @@ async function getComponentDiffOfVersion(
   // $FlowFixMe version must be defined as the component.componentFromModel do exist
   const versionB: string = component.id.version;
   diffResult.filesDiff = await getFilesDiff(tmp, versionFiles, fsFiles, version, versionB);
-  diffResult.hasDiff = !!diffResult.filesDiff.find(file => file.diffOutput);
+  const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
+  diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, fromVersionComponent, component);
+  diffResult.hasDiff = hasDiff(diffResult);
+
   return diffResult;
 }
 
@@ -84,7 +93,11 @@ async function getComponentDiffBetweenVersions(
   const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
   const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
   diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, version, toVersion);
-  diffResult.hasDiff = !!diffResult.filesDiff.find(file => file.diffOutput);
+  const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
+  const toVersionComponent = await modelComponent.toConsumerComponent(toVersion, consumer.scope.name, repository);
+  diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, fromVersionComponent, toVersionComponent);
+  diffResult.hasDiff = hasDiff(diffResult);
+
   return diffResult;
 }
 
@@ -99,7 +112,10 @@ async function getComponentDiff(consumer: Consumer, tmp: Tmp, component: Compone
   const modelFiles = component.componentFromModel.files;
   const fsFiles = component.cloneFilesWithSharedDir();
   diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, version, version);
-  diffResult.hasDiff = !!diffResult.filesDiff.find(file => file.diffOutput);
+  // $FlowFixMe we made sure already that component.componentFromModel is defined
+  diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, component.componentFromModel, component);
+  diffResult.hasDiff = hasDiff(diffResult);
+
   return diffResult;
 }
 
