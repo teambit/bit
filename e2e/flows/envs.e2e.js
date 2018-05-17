@@ -15,7 +15,7 @@ import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
 
-describe('envs', function () {
+describe.only('envs', function () {
   this.timeout(0);
   const helper = new Helper();
   const compilerId = 'compilers/new-babel';
@@ -39,6 +39,7 @@ describe('envs', function () {
     helper.addNpmPackage('fs-extra', '5.0.0');
     helper.addNpmPackage('mocha', '5.1.1');
     helper.addNpmPackage('vinyl', '2.1.0');
+    helper.addNpmPackage('resolve', '1.7.1');
     helper.tagAllWithoutMessage();
     helper.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
@@ -464,7 +465,7 @@ describe('envs', function () {
               const failSpecPath = path.join(componentFolder, 'fail.spec.js');
               helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
             });
-            describe('with default fork level', () => {
+            describe.only('with default fork level', () => {
               it('should show results without define fork level', () => {
                 const output = helper.testComponent('comp/my-comp');
                 expect(output).to.have.string('tests failed');
