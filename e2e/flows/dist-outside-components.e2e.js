@@ -345,6 +345,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
   describe('when using custom-module-resolution syntax', () => {
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
+      helper.reInitRemoteScope();
       const bitJson = helper.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.writeBitJson(bitJson);
