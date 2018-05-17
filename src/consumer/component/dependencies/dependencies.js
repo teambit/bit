@@ -101,6 +101,11 @@ export default class Dependencies {
     this.dependencies.forEach((dependency: Dependency) => {
       dependency.relativePaths.forEach((relativePath: RelativePath) => {
         if (relativePath.isCustomResolveUsed) {
+          if (!relativePath.importSource) {
+            throw new Error(
+              `${dependency.id.toString()} relativePath.importSource must be set when relativePath.isCustomResolveUsed`
+            ); 
+          }
           importSourceMap[relativePath.importSource] = dependency.id;
         }
       });
