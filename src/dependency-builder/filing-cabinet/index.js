@@ -1,6 +1,7 @@
 /**
 * this file had been forked from https://github.com/dependents/node-filing-cabinet
 */
+import { isRelativeImport } from '../../utils';
 
 var path = require('path');
 var debug = require('debug')('cabinet');
@@ -43,6 +44,7 @@ module.exports = function cabinet(options) {
   var configPath = options.configPath;
   var ast = options.ast;
   var ext = options.ext || path.extname(filename);
+  var resolveConfig = options.resolveConfig;
   const isScript = options.isScript;
   const content = options.content;
 
@@ -62,13 +64,13 @@ module.exports = function cabinet(options) {
   debug('found a resolver for ' + ext);
 
   // TODO: Change all resolvers to accept an options argument
-  var result = resolver(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content);
+  var result = resolver(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content, resolveConfig);
   var partialExt = path.extname(partial);
   if (!result && partialExt && partialExt !== ext) {
     resolver = defaultLookups[partialExt];
     if (resolver) {
       debug('dependency has a different extension (' + partialExt + ') than the original file (' + ext + '), trying to use its resolver instead');
-      result = resolver(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content);
+      result = resolver(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content, resolveConfig);
     }
   }
   debug('resolved path for ' + partial + ': ' + result);
@@ -137,7 +139,7 @@ module.exports._getJSType = function(options) {
  * @param  {Object} [ast]
  * @return {String}
  */
-function jsLookup(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content) {
+function jsLookup(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content, resolveConfig) {
   var type = module.exports._getJSType({
     config: config,
     webpackConfig: webpackConfig,
@@ -161,7 +163,7 @@ function jsLookup(partial, filename, directory, config, webpackConfig, configPat
 
     case 'commonjs':
       debug('using commonjs resolver');
-      return commonJSLookup(partial, filename, directory);
+      return commonJSLookup(partial, filename, directory, resolveConfig);
 
     case 'webpack':
       debug('using webpack resolver for es6');
@@ -170,13 +172,13 @@ function jsLookup(partial, filename, directory, config, webpackConfig, configPat
     case 'es6':
     default:
       debug('using commonjs resolver for es6');
-      return commonJSLookup(partial, filename, directory);
+      return commonJSLookup(partial, filename, directory, resolveConfig);
   }
 }
 
-function tsLookup(partial, filename, directory) {
+function tsLookup(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content, resolveConfig) {
   if (partial[0] !== '.') { // when a path is not relative, use the standard commonJS lookup
-    return commonJSLookup(partial, filename, directory);
+    return commonJSLookup(partial, filename, directory, resolveConfig);
   }
   debug('performing a typescript lookup');
 
@@ -196,13 +198,30 @@ function tsLookup(partial, filename, directory) {
   if (!resolvedModule) {
     // ts.resolveModuleName doesn't always work, fallback to commonJSLookup
     debug('failed resolving with tsLookup, trying commonJSLookup');
-    return commonJSLookup(partial, filename, directory);
+    return commonJSLookup(partial, filename, directory, resolveConfig);
   }
   debug('ts resolved module: ', resolvedModule);
   var result = resolvedModule ? resolvedModule.resolvedFileName : '';
 
   debug('result: ' + result);
   return result ? path.resolve(result) : '';
+}
+
+function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
+  const webpackResolveConfig = {};
+  if (resolveConfig.modulesDirectories) webpackResolveConfig.modules = resolveConfig.modulesDirectories;
+  if (resolveConfig.aliases) webpackResolveConfig.alias = resolveConfig.aliases;
+  webpackResolveConfig.extensions = Object.keys(defaultLookups).concat(['.json']);
+  try {
+    const resolver = webpackResolve.create.sync(webpackResolveConfig);
+    const lookupPath = isRelative(partial) ? path.dirname(filename) : directory;
+    return resolver(lookupPath, partial);
+  } catch (e) {
+    debug('error when resolving ' + partial);
+    debug(e.message);
+    debug(e.stack);
+    return '';
+  }
 }
 
 /**
@@ -214,7 +233,7 @@ function tsLookup(partial, filename, directory) {
  * @param  {String} directory
  * @return {String}
  */
-function commonJSLookup(partial, filename, directory) {
+function commonJSLookup(partial, filename, directory, resolveConfig) {
   directory = path.dirname(filename); // node_modules should be propagated from the file location backwards
   // Need to resolve partials within the directory of the module, not filing-cabinet
   var moduleLookupDir = path.join(directory, 'node_modules');
@@ -240,7 +259,12 @@ function commonJSLookup(partial, filename, directory) {
     });
     debug('resolved path: ' + result);
   } catch (e) {
-    debug('could not resolve ' + partial);
+    if (!isRelativeImport(partial) && resolveConfig) {
+      debug('trying to resolve using resolveConfig ' + JSON.stringify(resolveConfig));
+      result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+    } else {
+      debug('could not resolve ' + partial);
+    }
   }
 
   return result;

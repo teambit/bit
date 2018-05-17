@@ -1,0 +1,8 @@
+{
+    "env": {},
+    "dependencies": {
+        "david.bit-javascript/dependency-tree/types": "0.0.1"
+    },
+    "componentsDefaultDirectory": "components/{namespace}/{name}",
+    "packageManager": "npm"
+}

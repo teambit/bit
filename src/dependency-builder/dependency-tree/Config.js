@@ -15,6 +15,7 @@ function Config(options) {
   this.webpackConfig = options.webpackConfig;
   this.detectiveConfig = options.detective || options.detectiveConfig || {};
   this.pathMap = options.pathMap || [];
+  this.resolveConfig = options.resolveConfig;
 
   this.filter = options.filter;
 

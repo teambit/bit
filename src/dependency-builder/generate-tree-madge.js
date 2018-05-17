@@ -154,6 +154,7 @@ export default function generateTree(files, config) {
       directory: config.baseDir,
       requireConfig: config.requireConfig,
       webpackConfig: config.webpackConfig,
+      resolveConfig: config.resolveConfig,
       visited,
       filter: (dependencyFilePath, traversedFilePath) => {
         let dependencyFilterRes = true;

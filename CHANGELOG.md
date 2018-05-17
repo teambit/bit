@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support custom module resolution
+
 ## [0.10.17-dev.2] - 2018-05-15
 
 - fix issue with load package deps when main file not in the root of the package

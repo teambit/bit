@@ -9,7 +9,7 @@ const languageMap = {
     css: "scss",
     stylus: "styl"
 }
-module.exports = function(partial, filename, directory, config, webpackConfig, configPath, ast, isScript) {
+module.exports = function(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content, resolveConfig) {
   const cabinet = require('../../filing-cabinet');
 
   const fileContent = fs.readFileSync(filename);
@@ -21,6 +21,7 @@ module.exports = function(partial, filename, directory, config, webpackConfig, c
       filename: filename,
       directory: path.dirname(filename),
       content: script.content,
+      resolveConfig,
       ext: `.${scriptExt}` || path.extname(partial)
     });
   }
@@ -31,6 +32,7 @@ module.exports = function(partial, filename, directory, config, webpackConfig, c
       filename: `${path.join(path.dirname(filename), path.parse(filename).name)}.${styleExt}`,
       directory: path.dirname(filename),
       content: style.content,
+      resolveConfig,
       ext: `.${styleExt}`
     })
   });
