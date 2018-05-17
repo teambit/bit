@@ -23,7 +23,7 @@ export default class DependencyStatus extends Command {
       const output = chalk.green('All files in dependency tree are marked as components');
       return output;
     }
-    let output = chalk.green('The following file exist in dependency tree but are not a component:\n');
+    let output = chalk.red('The following file exist in dependency tree but are not a component:\n');
     const files = dependencyStatusResult.missingFiles.map((missingFile) => {
       const file = chalk.bold(missingFile);
       return file;
