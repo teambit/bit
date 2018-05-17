@@ -39,6 +39,7 @@ describe.only('envs', function () {
     helper.addNpmPackage('fs-extra', '5.0.0');
     helper.addNpmPackage('mocha', '5.1.1');
     helper.addNpmPackage('vinyl', '2.1.0');
+    helper.addNpmPackage('resolve', '1.7.1');
     helper.tagAllWithoutMessage();
     helper.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
