@@ -14,8 +14,11 @@ function run(): Promise<void> {
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
   const verbose: boolean = process.env.__verbose__ === true;
   if (!ids || !ids.length) {
-    // $FlowFixMe
-    return process.send([]);
+    return testInProcess(undefined, verbose).then((results) => {
+      const serializedResults = serializeResults(results);
+      // $FlowFixMe
+      return process.send(serializedResults);
+    });
   }
   const testAllP = ids.map(testOneComponent(verbose));
   return Promise.all(testAllP)
