@@ -15,7 +15,6 @@ import type { PathLinux } from '../../../../utils/path';
 import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import type { RelativePath } from '../dependency';
-import Dependency from '../dependency';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.

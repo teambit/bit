@@ -2,7 +2,6 @@
 import R from 'ramda';
 import { Dependency } from './';
 import type { RelativePath } from './dependency';
-import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import Scope from '../../../scope/scope';
 import BitMap from '../../bit-map';
@@ -104,7 +103,7 @@ export default class Dependencies {
           if (!relativePath.importSource) {
             throw new Error(
               `${dependency.id.toString()} relativePath.importSource must be set when relativePath.isCustomResolveUsed`
-            ); 
+            );
           }
           importSourceMap[relativePath.importSource] = dependency.id;
         }
