@@ -107,7 +107,7 @@ function resolvePackagesFromComponentDir(componentDir, packagName) {
   // but this option is only supported since node v8.9.0 so in order to support older versions
   // we used this package
   // const resolvedPackage = require.resolve(packagName, { paths: [componentDir] });
-  const resolvedPackage = resolve.sync(packagName, { basedir: [componentDir] });
+  const resolvedPackage = resolve.sync(packagName, { basedir: componentDir });
   console.log('resolvePackagesFromComponentDir, resolvedPackage', resolvedPackage)
   return resolvedPackage;
 }
