@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- prevent deleting non-empty directories when running `bit import` with `--path` flag, unless `--override` is used
+
 ## [13.0.0-dev.4] - 2018-05-16
 
 - bump bit-js version
