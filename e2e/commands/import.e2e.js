@@ -106,17 +106,78 @@ describe('bit import', function () {
     });
 
     describe('with a specific path, using -p flag', () => {
+      const componentFileLocation = path.join(helper.localScopePath, 'my-custom-location/simple.js');
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
       });
-      it('should write the component to the specified path', () => {
-        const expectedLocation = path.join(helper.localScopePath, 'my-custom-location', 'simple.js');
-        expect(fs.existsSync(expectedLocation)).to.be.true;
+      describe('when the destination is a non-exist directory', () => {
+        before(() => {
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should write the component to the specified path', () => {
+          expect(componentFileLocation).to.be.a.file();
+        });
       });
-
-      it('should write the internal files according to their relative paths', () => {});
+      describe('when the destination is an existing empty directory', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.ensureDirSync(path.join(helper.localScopePath, 'my-custom-location'));
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should write the component to the specified path', () => {
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination directory is not empty', () => {
+        let output;
+        const existingFile = path.join(helper.localScopePath, 'my-custom-location/my-file.js');
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.ensureDirSync(path.join(helper.localScopePath, 'my-custom-location'));
+          fs.outputFileSync(existingFile, 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(existingFile).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import to my-custom-location');
+        });
+        it('should import successfully if the --override flag is used', () => {
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location --override`);
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination is a file', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.outputFileSync(path.join(helper.localScopePath, 'my-custom-location'), 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(path.join(helper.localScopePath, 'my-custom-location')).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import to my-custom-location');
+        });
+        it('should throw an error also when the --override flag is used', () => {
+          output = helper.runWithTryCatch(
+            `bit import ${helper.remoteScope}/global/simple -p my-custom-location --override`
+          );
+          expect(output).to.have.string('unable to import to my-custom-location');
+        });
+      });
     });
 
     describe('re-import after deleting the component physically', () => {
