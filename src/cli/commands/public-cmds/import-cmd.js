@@ -7,7 +7,7 @@ import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
 import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
-import type { ImportOptions, ImportDetails } from '../../../consumer/component/import-components';
+import type { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN } from '../../../constants';

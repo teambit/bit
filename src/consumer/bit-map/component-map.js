@@ -7,8 +7,8 @@ import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } f
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
-import AddComponents from '../component/add-components';
-import { NoFiles, EmptyDirectory } from '../component/add-components/exceptions';
+import AddComponents from '../component-ops/add-components';
+import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import GeneralError from '../../error/general-error';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
