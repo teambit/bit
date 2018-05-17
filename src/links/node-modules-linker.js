@@ -132,10 +132,10 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
     const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
     const writtenLinks = [];
     if (!dependencyComponentMap) return writtenLinks;
-    if (!componentMap.rootDir) throw new Error(`rootDir is missing from ${component.id.toString()}`);
+    const parentRootDir = componentMap.rootDir || '.'; // compilers/testers don't have rootDir
     writtenLinks.push(
       writeDependencyLink(
-        consumer.toAbsolutePath(componentMap.rootDir),
+        consumer.toAbsolutePath(parentRootDir),
         dependency.id,
         consumer.toAbsolutePath(dependencyComponentMap.rootDir),
         component.bindingPrefix
@@ -202,7 +202,7 @@ function writeMissingCustomResolvedLinks(consumer: Consumer, component: Componen
     if (!dependency) {
       throw new Error(
         `writeMissingCustomResolvedLinks failed finding dependency ${dependencyStr} in the model of ${component.id.toString()}`
-      ); 
+      );
     }
     const dependencyCloned = Dependency.getClone(dependency);
     Dependency.stripOriginallySharedDir(dependencyCloned, consumer.bitMap, component.originallySharedDir);
