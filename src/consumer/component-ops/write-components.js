@@ -42,7 +42,7 @@ export default (async function writeToComponentsDir({
   excludeRegistryPrefix = false
 }: {
   consumer: Consumer,
-  silentPackageManagerResult: boolean,
+  silentPackageManagerResult?: boolean,
   componentsWithDependencies: ComponentWithDependencies[],
   writeToPath?: string,
   override?: boolean,

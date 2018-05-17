@@ -590,7 +590,7 @@ export default class Component {
     // 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
     // one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
     // 3) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
-    // never reach this function, see @writeToComponentsDir). Therefore, always add to bit.map.
+    // never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
