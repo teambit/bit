@@ -7,9 +7,4 @@ export default class ExcludedMainFile extends AbstractError {
     super();
     this.mainFile = mainFile;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.mainFile = this.toHash(clone.mainFile);
-    return clone;
-  }
 }

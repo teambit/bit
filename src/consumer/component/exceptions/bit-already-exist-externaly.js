@@ -8,9 +8,4 @@ export default class BitAlreadyExistExternalyError extends AbstractError {
     super();
     this.bitName = bitName;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.bitName = this.toHash(clone.bitName);
-    return clone;
-  }
 }

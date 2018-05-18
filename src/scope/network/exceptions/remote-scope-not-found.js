@@ -10,9 +10,4 @@ export default class RemoteScopeNotFound extends AbstractError {
     this.code = 129;
     this.name = name;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.name = this.toHash(clone.name);
-    return clone;
-  }
 }

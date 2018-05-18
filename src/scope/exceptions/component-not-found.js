@@ -10,9 +10,4 @@ export default class ComponentNotFound extends AbstractError {
     this.code = 127;
     this.id = id;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.id = this.toHash(clone.id);
-    return clone;
-  }
 }

@@ -10,9 +10,4 @@ export default class CorruptedComponent extends AbstractError {
     this.id = id;
     this.version = version;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.version = this.toHash(clone.version);
-    return clone;
-  }
 }
