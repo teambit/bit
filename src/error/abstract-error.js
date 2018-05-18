@@ -16,7 +16,6 @@ export default class AbstractError extends Error {
   // partially forked from 'utils-copy-error' package
   clone() {
     const error = this;
-    // create a new error
     // $FlowFixMe
     const err = new error.constructor(error.message);
 
@@ -24,17 +23,9 @@ export default class AbstractError extends Error {
       // $FlowFixMe
       if (error[field]) err[field] = error[field];
     });
-    // Any enumerable properties
     Object.keys(error).forEach((key) => {
-      const desc = Object.getOwnPropertyDescriptor(error, key);
       // $FlowFixMe
-      if (desc.hasOwnProperty('value')) {
-        // eslint-disable-line
-        // $FlowFixMe
-        desc.value = R.clone(error[key]);
-      }
-      // $FlowFixMe
-      Object.defineProperty(err, key, desc);
+      err[key] = error[key];
     });
     return err;
   }
