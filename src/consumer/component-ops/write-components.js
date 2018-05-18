@@ -86,7 +86,7 @@ export default (async function writeToComponentsDir({
       writeBitJson,
       writePackageJson,
       origin,
-      consumer: this,
+      consumer,
       writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
       componentMap,
       excludeRegistryPrefix
@@ -148,7 +148,7 @@ export default (async function writeToComponentsDir({
         writePackageJson,
         origin: COMPONENT_ORIGINS.NESTED,
         parent: componentWithDeps.component.id,
-        consumer: this,
+        consumer,
         componentMap,
         excludeRegistryPrefix
       });
@@ -170,7 +170,7 @@ export default (async function writeToComponentsDir({
 
   // add workspaces if flag is true
   await packageJson.addWorkspacesToPackageJson(
-    this,
+    consumer,
     consumer.getPath(),
     consumer.bitJson.componentsDefaultDirectory,
     consumer.bitJson.dependenciesDirectory,
@@ -179,20 +179,20 @@ export default (async function writeToComponentsDir({
 
   if (installNpmPackages) {
     await installNpmPackagesForComponents(
-      this,
+      consumer,
       componentsWithDependencies,
       verbose,
       silentPackageManagerResult,
       installPeerDependencies
     );
   }
-  if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
+  if (addToRootPackageJson) await packageJson.addComponentsToRoot(consumer, writtenComponents.map(c => c.id));
 
   return linkComponents(
     componentsWithDependencies,
     writtenComponents,
     writtenDependencies,
-    this,
+    consumer,
     createNpmLinkFiles,
     writePackageJson
   );
