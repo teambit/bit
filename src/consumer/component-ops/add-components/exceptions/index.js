@@ -8,6 +8,7 @@ import PathsNotExist from './paths-not-exist';
 import ExcludedMainFile from './excluded-main-file';
 import VersionShouldBeRemoved from './version-should-be-removed';
 import TestIsDirectory from './test-is-directory';
+import MainFileIsDir from './main-file-is-dir';
 
 export {
   DuplicateIds,
@@ -18,5 +19,6 @@ export {
   PathsNotExist,
   VersionShouldBeRemoved,
   ExcludedMainFile,
+  MainFileIsDir,
   TestIsDirectory
 };
