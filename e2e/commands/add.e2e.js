@@ -8,7 +8,8 @@ import {
   ExcludedMainFile,
   IncorrectIdForImportedComponent,
   TestIsDirectory,
-  VersionShouldBeRemoved
+  VersionShouldBeRemoved,
+  MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
 
 chai.use(require('chai-fs'));
@@ -1082,6 +1083,19 @@ describe('bit add command', function () {
     it('should throw an exception TestIsDirectory', () => {
       const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'specs' });
       const error = new TestIsDirectory('specs');
+      helper.expectToThrow(addFunc, error);
+    });
+  });
+  describe('add component when the main file is a directory', () => {
+    before(() => {
+      helper.initLocalScope();
+      helper.createComponentBarFoo();
+      helper.createFile('mainDir', 'mainFile.js');
+    });
+    it('should throw an exception TestIsDirectory', () => {
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', m: 'mainDir' });
+      const mainPath = path.join(helper.localScopePath, 'mainDir');
+      const error = new MainFileIsDir(mainPath);
       helper.expectToThrow(addFunc, error);
     });
   });

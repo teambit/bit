@@ -350,9 +350,3 @@ export const SKIP_UPDATE_FLAG = '--skip-update';
 export const LICENSE_FILENAME = 'LICENSE';
 
 export const ISOLATED_ENV_ROOT = 'environment';
-
-/**
- * bit add consts
- */
-
-export const REGEX_PATTERN = /{([^}]+)}/g;

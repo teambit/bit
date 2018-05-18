@@ -19,7 +19,7 @@ export default class Add extends Command {
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'component id, if not specified the name will be '],
-    ['m', 'main <file>', 'implementation/index file name'],
+    ['m', 'main <file>', 'implementation/index file name or dsl (src/{PARENT}/{FILE_NAME})'],
     ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
     ['e', 'exclude <file...>', 'exclude file name or dsl (src/{PARENT}/{FILE_NAME})'],

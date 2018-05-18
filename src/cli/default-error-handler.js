@@ -60,6 +60,7 @@ import {
   MissingComponentIdForImportedComponent,
   VersionShouldBeRemoved,
   TestIsDirectory,
+  MainFileIsDir,
   ExcludedMainFile
 } from '../consumer/component-ops/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
@@ -240,6 +241,13 @@ once your changes are merged with the new remote version, please tag and export 
     TestIsDirectory,
     err =>
       `error: the specified test path ${chalk.bold(err.path)} is a directory, please specify a file or a pattern DSL`
+  ],
+  [
+    MainFileIsDir,
+    err =>
+      `error: the specified main path ${chalk.bold(
+        err.mainFile
+      )} is a directory, please specify a file or a pattern DSL`
   ],
   [
     MissingFilesFromComponent,
