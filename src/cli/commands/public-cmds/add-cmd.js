@@ -4,7 +4,11 @@ import path from 'path';
 import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
-import type { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component/add-components/add-components';
+import type {
+  AddActionResults,
+  AddResult,
+  PathOrDSL
+} from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 import type { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';

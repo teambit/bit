@@ -9,7 +9,7 @@ import {
   IncorrectIdForImportedComponent,
   TestIsDirectory,
   VersionShouldBeRemoved
-} from '../../src/consumer/component/add-components/exceptions';
+} from '../../src/consumer/component-ops/add-components/exceptions';
 
 chai.use(require('chai-fs'));
 

@@ -10,6 +10,7 @@ import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
+import writeComponents from '../consumer/component-ops/write-components';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -58,6 +59,7 @@ export default class Environment {
     const componentsWithDependencies = await this.scope.getMany([bitId]);
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
+      consumer: this.consumer,
       componentsWithDependencies,
       writeToPath,
       override: opts.override,
@@ -74,7 +76,7 @@ export default class Environment {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
-    await this.consumer.writeToComponentsDir(concreteOpts);
+    await writeComponents(concreteOpts);
     await Environment.markEnvironmentAsInstalled(writeToPath);
     return R.head(componentsWithDependencies);
   }

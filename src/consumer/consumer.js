@@ -40,21 +40,17 @@ import { loadDependenciesForComponent, updateDependenciesVersions } from './comp
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
-import { installPackages, installNpmPackagesForComponents } from '../npm-client/install-packages';
-import GitHooksManager from '../git-hooks/git-hooks-manager';
+import { installPackages } from '../npm-client/install-packages';
 import { RemovedLocalObjects } from '../scope/removed-components';
-import { linkComponents } from '../links';
 import * as packageJson from './component/package-json';
-import Remotes from '../remotes/remotes';
 import { Dependencies } from './component/dependencies';
-import ImportComponents from './component/import-components';
-import type { ImportOptions, ImportResult } from './component/import-components';
+import ImportComponents from './component-ops/import-components';
+import type { ImportOptions, ImportResult } from './component-ops/import-components';
 import CompilerExtension from '../extensions/compiler-extension';
 import TesterExtension from '../extensions/tester-extension';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
-import { moveExistingComponent } from './component-ops/move-components';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 
 type ConsumerProps = {
@@ -354,189 +350,6 @@ export default class Consumer {
         return resolve();
       });
     });
-  }
-
-  /**
-   * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
-   * '/components/.dependencies' dir. Both directories are configurable in bit.json
-   * For example: global/a has a dependency my-scope/global/b@1. The directories will be:
-   * project/root/components/global/a/impl.js
-   * project/root/components/.dependencies/global/b/my-scope/1/impl.js
-   *
-   * In case there are some same dependencies shared between the components, it makes sure to
-   * write them only once.
-   */
-  async writeToComponentsDir({
-    silentPackageManagerResult,
-    componentsWithDependencies,
-    writeToPath,
-    override = true, // override files
-    writePackageJson = true,
-    writeBitJson = true,
-    writeBitDependencies = false,
-    createNpmLinkFiles = false,
-    writeDists = true,
-    saveDependenciesAsComponents = false,
-    installNpmPackages = true,
-    installPeerDependencies = false,
-    addToRootPackageJson = true,
-    verbose = false, // display the npm output
-    excludeRegistryPrefix = false
-  }: {
-    silentPackageManagerResult: boolean,
-    componentsWithDependencies: ComponentWithDependencies[],
-    writeToPath?: string,
-    override?: boolean,
-    writePackageJson?: boolean,
-    writeBitJson?: boolean,
-    writeBitDependencies?: boolean,
-    createNpmLinkFiles?: boolean,
-    writeDists?: boolean,
-    saveDependenciesAsComponents?: boolean, // as opposed to npm packages
-    installNpmPackages?: boolean,
-    installPeerDependencies?: boolean,
-    addToRootPackageJson?: boolean,
-    verbose?: boolean,
-    excludeRegistryPrefix?: boolean
-  }): Promise<Component[]> {
-    const dependenciesIdsCache = [];
-    const remotes: Remotes = await this.scope.remotes();
-    const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      const bitDir = writeToPath
-        ? path.resolve(writeToPath)
-        : this.composeComponentPath(componentWithDeps.component.id);
-      // if it doesn't go to the hub, it can't import dependencies as packages
-      componentWithDeps.component.dependenciesSavedAsComponents =
-        saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
-      // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
-      // find the component in bit.map
-      const componentMap = this.bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
-      const origin =
-        componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
-          ? COMPONENT_ORIGINS.AUTHORED
-          : COMPONENT_ORIGINS.IMPORTED;
-      if (origin === COMPONENT_ORIGINS.IMPORTED) {
-        componentWithDeps.component.stripOriginallySharedDir(this.bitMap);
-      }
-      // don't write dists files for authored components as the author has its own mechanism to generate them
-      // also, don't write dists file for imported component, unless the user used '--dist' flag
-      componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
-      return componentWithDeps.component.write({
-        bitDir,
-        override,
-        writeBitJson,
-        writePackageJson,
-        origin,
-        consumer: this,
-        writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-        componentMap,
-        excludeRegistryPrefix
-      });
-    });
-    const writtenComponents = await Promise.all(writeComponentsP);
-
-    const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
-        const dependencyId = dep.id.toString();
-        const depFromBitMap = this.bitMap.getComponent(dependencyId, false);
-        if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
-          // when depFromBitMap is true, it means that this component was imported as a component already before
-          // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
-          logger.debug(
-            `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
-          );
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )}. It'll be installed later using npm-client`
-          );
-          return Promise.resolve(null);
-        }
-        if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
-          dep.writtenPath = depFromBitMap.rootDir;
-          logger.debug(
-            `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
-          );
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )} as it already exists in bit map and file system`
-          );
-          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        if (dependenciesIdsCache[dependencyId]) {
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in cache`
-          );
-          dep.writtenPath = dependenciesIdsCache[dependencyId];
-          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        const depBitPath = this.composeDependencyPath(dep.id);
-        dep.writtenPath = depBitPath;
-        dependenciesIdsCache[dependencyId] = depBitPath;
-        // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
-        // and namespace can co-exist with different versions.
-        const componentMap = this.bitMap.getComponent(dep.id.toString(), false);
-        return dep.write({
-          bitDir: depBitPath,
-          override,
-          writePackageJson,
-          origin: COMPONENT_ORIGINS.NESTED,
-          parent: componentWithDeps.component.id,
-          consumer: this,
-          componentMap,
-          excludeRegistryPrefix
-        });
-      });
-
-      return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
-    });
-    const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
-    const writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
-    if (writeToPath) {
-      componentsWithDependencies.forEach((componentWithDeps) => {
-        const relativeWrittenPath = this.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
-        if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
-          const component = componentWithDeps.component;
-          moveExistingComponent(this.bitMap, component, relativeWrittenPath, writeToPath);
-        }
-      });
-    }
-
-    // add workspaces if flag is true
-    await packageJson.addWorkspacesToPackageJson(
-      this,
-      this.getPath(),
-      this.bitJson.componentsDefaultDirectory,
-      this.bitJson.dependenciesDirectory,
-      writeToPath
-    );
-
-    if (installNpmPackages) {
-      await installNpmPackagesForComponents(
-        this,
-        componentsWithDependencies,
-        verbose,
-        silentPackageManagerResult,
-        installPeerDependencies
-      );
-    }
-    if (addToRootPackageJson) await packageJson.addComponentsToRoot(this, writtenComponents.map(c => c.id));
-
-    return linkComponents(
-      componentsWithDependencies,
-      writtenComponents,
-      writtenDependencies,
-      this,
-      createNpmLinkFiles,
-      writePackageJson
-    );
   }
 
   /**

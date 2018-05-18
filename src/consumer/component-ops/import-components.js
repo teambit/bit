@@ -17,6 +17,7 @@ import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import Version from '../../version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
+import writeComponents from './write-components';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -318,7 +319,8 @@ export default class ImportComponents {
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[], override: boolean = true) {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
-    await this.consumer.writeToComponentsDir({
+    await writeComponents({
+      consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,

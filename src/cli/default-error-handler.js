@@ -61,7 +61,7 @@ import {
   VersionShouldBeRemoved,
   TestIsDirectory,
   ExcludedMainFile
-} from '../consumer/component/add-components/exceptions';
+} from '../consumer/component-ops/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
