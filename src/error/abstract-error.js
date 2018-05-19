@@ -25,7 +25,7 @@ export default class AbstractError extends Error {
     });
     Object.keys(error).forEach((key) => {
       // $FlowFixMe
-      err[key] = error[key];
+      err[key] = R.clone(error[key]);
     });
     return err;
   }
