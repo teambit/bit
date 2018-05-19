@@ -10,9 +10,4 @@ export default class ComponentNotFoundInPath extends AbstractError {
     this.code = 127;
     this.path = path;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.path = this.toHash(clone.path);
-    return clone;
-  }
 }

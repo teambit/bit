@@ -104,7 +104,6 @@
     "tty-table": "^2.5.5",
     "uniqid": "^4.1.1",
     "user-home": "^2.0.0",
-    "utils-copy-error": "^1.0.1",
     "uuid": "^3.0.1",
     "validate-npm-package-name": "^3.0.0",
     "vinyl": "^2.1.0",

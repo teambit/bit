@@ -64,7 +64,6 @@ src/consumer/component/sources/dist.js
 src/consumer/dir-structure/dir-structure.js
 src/remotes/remotes.js
 src/scope/component-version.js
-src/scope/exceptions/version-already-exists.js
 src/scope/migrations/component-version/remove-latest-from-compiler.js
 src/scope/sources-map.js
 src/search/serverless-index.js

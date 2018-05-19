@@ -7,9 +7,4 @@ export default class WriteToNpmrcError extends AbstractError {
     super();
     this.path = path;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.path = this.toHash(clone.path);
-    return clone;
-  }
 }

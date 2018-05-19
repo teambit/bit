@@ -12,11 +12,4 @@ export default class IncorrectIdForImportedComponent extends AbstractError {
     this.newId = newId;
     this.filePath = filePath;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.importedId = this.toHash(clone.importedId);
-    clone.newId = this.toHash(clone.newId);
-    clone.filePath = this.toHash(clone.filePath);
-    return clone;
-  }
 }

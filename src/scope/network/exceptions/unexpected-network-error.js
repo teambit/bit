@@ -7,9 +7,4 @@ export default class UnexpectedNetworkError extends AbstractError {
     super();
     this.message = message;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.message = this.toHash(clone.message);
-    return clone;
-  }
 }

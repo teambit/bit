@@ -10,11 +10,4 @@ export default class MissingMainFile extends AbstractError {
     this.mainFile = mainFile;
     this.files = files;
   }
-
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.mainFile = this.toHash(clone.mainFile);
-    clone.files = clone.files.map(file => this.toHash(file));
-    return clone;
-  }
 }

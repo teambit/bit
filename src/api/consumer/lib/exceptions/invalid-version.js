@@ -8,9 +8,4 @@ export default class InvalidVersion extends AbstractError {
     super();
     this.version = version;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.version = this.toHash(clone.version);
-    return clone;
-  }
 }

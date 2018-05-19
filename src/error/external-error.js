@@ -7,5 +7,4 @@ export default class ExternalError extends AbstractError {
     super();
     this.originalError = originalError;
   }
-  makeAnonymous() {}
 }
