@@ -60,5 +60,6 @@ export function propogateUntil(fromPath: string): ?string {
     [OBJECTS_DIR, path.join(BIT_HIDDEN_DIR, OBJECTS_DIR), path.join(DOT_GIT_DIR, BIT_GIT_DIR, OBJECTS_DIR)],
     { cwd: fromPath }
   );
+  if (!filePath) return null;
   return path.dirname(filePath);
 }
