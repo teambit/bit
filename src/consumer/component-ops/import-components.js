@@ -1,7 +1,6 @@
 /** @flow */
 import R from 'ramda';
 import chalk from 'chalk';
-import fs from 'fs-extra';
 import { NothingToImport } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component';
@@ -10,7 +9,7 @@ import { ComponentWithDependencies } from '../../scope';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
-import { filterAsync, pathNormalizeToLinux, isDir, isDirEmptySync } from '../../utils';
+import { filterAsync, pathNormalizeToLinux } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
