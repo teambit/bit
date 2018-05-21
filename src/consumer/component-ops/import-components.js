@@ -75,7 +75,6 @@ export default class ImportComponents {
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw));
-    if (this.options.writeToPath) this._throwErrorWhenDirectoryNotEmpty(this.options.writeToPath);
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._warnForModifiedOrNewComponents(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
@@ -85,7 +84,7 @@ export default class ImportComponents {
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
-    this.options.objectsOnly = !(this.options.merge || this.options.override);
+    this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
@@ -117,7 +116,7 @@ export default class ImportComponents {
       this.options.writePackageJson = false;
       this.options.installNpmPackages = false;
       // don't force the writing to the filesystem because as an author I may have some modified files
-      await this._writeToFileSystem(componentsAndDependenciesBitMap, false);
+      await this._writeToFileSystem(componentsAndDependenciesBitMap);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
@@ -198,19 +197,6 @@ export default class ImportComponents {
       );
     }
     return Promise.resolve();
-  }
-
-  _throwErrorWhenDirectoryNotEmpty(writeToPath: string) {
-    if (fs.pathExistsSync(writeToPath)) {
-      if (!isDir(writeToPath)) {
-        throw new GeneralError(`unable to import to ${writeToPath} because it's a file`);
-      }
-      if (!isDirEmptySync(writeToPath) && !this.options.override) {
-        throw new GeneralError(
-          `unable to import to ${writeToPath}, the directory is not empty. use --override flag to delete the directory and then import`
-        );
-      }
-    }
   }
 
   async _getMergeStatus(componentWithDependencies: ComponentWithDependencies): Promise<ComponentMergeStatus> {
@@ -316,7 +302,7 @@ export default class ImportComponents {
     return removeNulls(componentsToWrite);
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[], override: boolean = true) {
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
     await writeComponents({
@@ -329,7 +315,7 @@ export default class ImportComponents {
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
-      override
+      override: this.options.override
     });
   }
 }

@@ -105,6 +105,67 @@ describe('bit import', function () {
       });
     });
 
+    describe('when the default component directory already exist', () => {
+      const componentFileLocation = path.join(helper.localScopePath, 'components/global/simple/simple.js');
+      const componentDir = path.join(helper.localScopePath, 'components/global/simple');
+      describe('when the destination is an existing empty directory', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.ensureDirSync(componentDir);
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should write the component to the specified path', () => {
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination directory is not empty', () => {
+        let output;
+        const existingFile = path.join(componentDir, 'my-file.js');
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.outputFileSync(existingFile, 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(existingFile).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import');
+        });
+        it('should import successfully if the --override flag is used', () => {
+          output = helper.importComponent('global/simple --override');
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination is a file', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.outputFileSync(componentDir, 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(componentDir).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import');
+        });
+        it('should throw an error also when the --override flag is used', () => {
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple --override`);
+          expect(output).to.have.string('unable to import');
+        });
+      });
+    });
+
     describe('with a specific path, using -p flag', () => {
       const componentFileLocation = path.join(helper.localScopePath, 'my-custom-location/simple.js');
       before(() => {
@@ -147,7 +208,7 @@ describe('bit import', function () {
           expect(existingFile).to.be.a.file();
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('unable to import to my-custom-location');
+          expect(output).to.have.string('unable to import');
         });
         it('should import successfully if the --override flag is used', () => {
           helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location --override`);
@@ -169,13 +230,13 @@ describe('bit import', function () {
           expect(path.join(helper.localScopePath, 'my-custom-location')).to.be.a.file();
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('unable to import to my-custom-location');
+          expect(output).to.have.string('unable to import');
         });
         it('should throw an error also when the --override flag is used', () => {
           output = helper.runWithTryCatch(
             `bit import ${helper.remoteScope}/global/simple -p my-custom-location --override`
           );
-          expect(output).to.have.string('unable to import to my-custom-location');
+          expect(output).to.have.string('unable to import');
         });
       });
     });

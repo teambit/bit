@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - display a descriptive error-message when the added main-file is a directory
 - support custom module resolution
-- prevent deleting non-empty directories when running `bit import` with `--path` flag, unless `--override` is used
+- prevent deleting non-empty directories when running `bit import` unless `--override` is used
 
 ## [13.0.0-dev.4] - 2018-05-16
 

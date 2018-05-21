@@ -12,6 +12,33 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
 import { Consumer } from '..';
+import { isDir, isDirEmptySync } from '../../utils';
+import GeneralError from '../../error/general-error';
+import ComponentMap from '../bit-map/component-map';
+
+function throwErrorWhenDirectoryNotEmpty(
+  componentDir: string,
+  override: boolean,
+  componentMap: ?ComponentMap,
+  writeToPath: ?string
+) {
+  // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
+  // component is not new, and it's ok to override the existing directory.
+  if (!writeToPath && componentMap) return;
+  // if writeToPath specified and that directory is already used for that component, it's ok to override
+  if (writeToPath && componentMap && componentMap.rootDir && componentMap.rootDir === writeToPath) return;
+
+  if (fs.pathExistsSync(componentDir)) {
+    if (!isDir(componentDir)) {
+      throw new GeneralError(`unable to import to ${componentDir} because it's a file`);
+    }
+    if (!isDirEmptySync(componentDir) && !override) {
+      throw new GeneralError(
+        `unable to import to ${componentDir}, the directory is not empty. use --override flag to delete the directory and then import`
+      );
+    }
+  }
+}
 
 /**
  * write the components into '/components' dir (or according to the bit.map) and its dependencies in the
@@ -60,7 +87,7 @@ export default (async function writeToComponentsDir({
 }): Promise<Component[]> {
   const dependenciesIdsCache = {};
   const remotes: Remotes = await consumer.scope.remotes();
-  const writeComponentsP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
+  const writeComponentsParams = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
     const bitDir = writeToPath
       ? path.resolve(writeToPath)
       : consumer.composeComponentPath(componentWithDeps.component.id);
@@ -77,21 +104,26 @@ export default (async function writeToComponentsDir({
     if (origin === COMPONENT_ORIGINS.IMPORTED) {
       componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
     }
+    throwErrorWhenDirectoryNotEmpty(bitDir, override, componentMap, writeToPath);
     // don't write dists files for authored components as the author has its own mechanism to generate them
     // also, don't write dists file for imported component, unless the user used '--dist' flag
     componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
-    return componentWithDeps.component.write({
-      bitDir,
-      override,
-      writeBitJson,
-      writePackageJson,
-      origin,
-      consumer,
-      writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-      componentMap,
-      excludeRegistryPrefix
-    });
+    return {
+      component: componentWithDeps.component,
+      writeParams: {
+        bitDir,
+        override: true,
+        writeBitJson,
+        writePackageJson,
+        origin,
+        consumer,
+        writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
+        componentMap,
+        excludeRegistryPrefix
+      }
+    };
   });
+  const writeComponentsP = writeComponentsParams.map(({ component, writeParams }) => component.write(writeParams));
   const writtenComponents = await Promise.all(writeComponentsP);
 
   const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
@@ -144,7 +176,7 @@ export default (async function writeToComponentsDir({
       const componentMap = consumer.bitMap.getComponent(dep.id.toString(), false);
       return dep.write({
         bitDir: depBitPath,
-        override,
+        override: true,
         writePackageJson,
         origin: COMPONENT_ORIGINS.NESTED,
         parent: componentWithDeps.component.id,
