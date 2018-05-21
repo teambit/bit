@@ -6,6 +6,7 @@ import { BIT_GIT_DIR, BIT_HIDDEN_DIR } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 
+chai.use(require('chai-fs'));
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -17,16 +18,14 @@ describe('run bit init', function () {
   after(() => {
     helper.destroyEnv();
   });
-
-  // skip since we change the behaviour to work when running bit init twice
-  it.skip('Should tell the user there is already a scope when running bit init twice', () => {
-    let errorMsg;
-    try {
-      helper.initLocalScope();
-    } catch (err) {
-      errorMsg = err.message;
-    }
-    expect(errorMsg).to.have.string("there's already a scope");
+  describe('running bit init with path', () => {
+    before(() => {
+      helper.cleanLocalScope();
+      helper.runCmd('bit init my-dir');
+    });
+    it('should init Bit at that path', () => {
+      expect(path.join(helper.localScopePath, 'my-dir/bit.json')).to.be.a.file();
+    });
   });
   describe('automatic bit init when .bit.map.json already exists', () => {
     beforeEach(() => {
