@@ -956,7 +956,7 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (dev: boolean = false) => {
+    const getFlatten = (dev: boolean = false): BitIds => {
       const field = dev ? 'flattenedDevDependencies' : 'flattenedDependencies';
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
@@ -977,6 +977,20 @@ export default class Component {
     const dependencies = await getDependenciesComponents(getFlatten());
     const devDependencies = await getDependenciesComponents(getFlatten(true));
     return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
+  }
+
+  copyDependenciesFromModel(ids: string[]) {
+    const componentFromModel = this.componentFromModel;
+    if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
+    ids.forEach((id: string) => {
+      const dependency = componentFromModel.dependencies.getById(id);
+      if (dependency) this.dependencies.add(dependency);
+      else {
+        const devDependency = componentFromModel.devDependencies.getById(id);
+        if (!devDependency) throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
+        this.devDependencies.add(dependency);
+      }
+    });
   }
 
   static fromObject(object: Object): Component {
