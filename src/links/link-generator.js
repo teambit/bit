@@ -196,7 +196,7 @@ async function writeDependencyLinks(
     parentComponent: Component,
     parentComponentMap: ComponentMap
   ) => {
-    const parentDir = parentComponent.writtenPath || parentComponentMap.rootDir; // when running from bit build, the writtenPath is not available
+    const parentDir = parentComponent.writtenPath || consumer.toAbsolutePath(parentComponentMap.rootDir); // when running from bit build, the writtenPath is not available
     const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
     const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
     const hasDist = parentComponent.dists.writeDistsFiles && !parentComponent.dists.isEmpty();
@@ -214,7 +214,10 @@ async function writeDependencyLinks(
     const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
     const sourceRelativePath = relativePath.sourceRelativePath;
     // $FlowFixMe parentDir is not null
-    const linkPath = path.join(parentDir, sourceRelativePath);
+    const linkPath = relativePath.isCustomResolveUsed
+      ? path.join(parentDir, 'node_modules', relativePath.importSource)
+      : path.join(parentDir, sourceRelativePath);
+
     let distLinkPath: PathOsBased;
     const linkFiles = [];
     const depComponentMap = parentComponent.dependenciesSavedAsComponents
@@ -223,23 +226,43 @@ async function writeDependencyLinks(
 
     const depRootDir: ?PathOsBased = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
     const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
+    const depRootDirDist = depComponentMap
+      ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
+      : undefined;
+
     if (hasDist) {
-      const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
-      const depRootDirDist = depComponentMap
-        ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
-        : undefined;
-      distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
-      // Generate a link file inside dist folder of the dependent component
-      const linkFile = prepareLinkFile(
-        depId,
-        mainFile,
-        distLinkPath,
-        relativeDistPathInDependency,
-        relativePath,
-        depRootDirDist,
-        isNpmLink
-      );
-      linkFiles.push(linkFile);
+      if (relativePath.isCustomResolveUsed) {
+        if (!consumer.shouldDistsBeInsideTheComponent()) {
+          // when isCustomResolvedUsed, the link is generated inside node_module directory, so for
+          // dist inside the component, only one link is needed at the parentRootDir. for dist
+          // outside the component dir, another link is needed for the dist/parentRootDir.
+          distLinkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
+          const linkFile = prepareLinkFile(
+            depId,
+            mainFile,
+            distLinkPath,
+            relativeDistPathInDependency,
+            relativePath,
+            depRootDirDist,
+            isNpmLink
+          );
+          linkFiles.push(linkFile);
+        }
+      } else {
+        const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
+        distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
+        // Generate a link file inside dist folder of the dependent component
+        const linkFile = prepareLinkFile(
+          depId,
+          mainFile,
+          distLinkPath,
+          relativeDistPathInDependency,
+          relativePath,
+          depRootDirDist,
+          isNpmLink
+        );
+        linkFiles.push(linkFile);
+      }
     }
 
     const linkFile = prepareLinkFile(
@@ -248,7 +271,9 @@ async function writeDependencyLinks(
       linkPath,
       relativePathInDependency,
       relativePath,
-      depRootDir,
+      relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
+        ? depRootDirDist
+        : depRootDir,
       isNpmLink
     );
     linkFiles.push(linkFile);
@@ -331,7 +356,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   });
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
   const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
-  return linksWithoutDuplications.map(link => outputFile(link));
+  return Promise.all(linksWithoutDuplications.map(link => outputFile(link)));
 }
 
 /**

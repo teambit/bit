@@ -11,11 +11,10 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first } from '../utils';
 import Consumer from '../consumer/consumer';
-import { getLinkContent, getIndexFileName } from './link-generator';
-import type { PathOsBased, PathLinux } from '../utils/path';
+import { getLinkContent, getIndexFileName, writeDependencyLinks } from './link-generator';
+import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
 import { Dependency } from '../consumer/component/dependencies';
-import type { RelativePath } from '../consumer/component/dependencies/Dependency';
 
 type LinkDetail = { from: string, to: string };
 
@@ -85,48 +84,6 @@ function symlinkPackages(from: string, to: string, consumer, component: Componen
   });
 }
 
-/**
- * relevant when custom-module-resolution was used in the original (authored) component
- */
-function writeNonRelativeDependenciesLinks(
-  parentComponent: Component,
-  consumer: Consumer,
-  parentComponentMap: ComponentMap,
-  dependency: Dependency
-): LinkDetail[] {
-  const writeLink = (symlinkPath: string, realPath: string): LinkDetail => {
-    if (!path.isAbsolute(symlinkPath) || !path.isAbsolute(realPath)) {
-      throw new Error(`writeNonRelativeDependenciesLinks, symlinkPath and realPath must be absolute.
-      Otherwise it's impossible to import from an inner directory. got: ${symlinkPath} and ${realPath}`);
-    }
-    createSymlinkOrCopy(dependency.id, realPath, symlinkPath);
-    return { from: realPath, to: symlinkPath };
-  };
-  const writtenLinks = [];
-  dependency.relativePaths.forEach((relativePath: RelativePath) => {
-    if (relativePath.isCustomResolveUsed) {
-      const getSymlinkPath = prefix => path.join(prefix, 'node_modules', relativePath.importSource);
-      const getRealPath = prefix => path.join(prefix, relativePath.sourceRelativePath);
-      // $FlowFixMe
-      const parentRootDir = consumer.toAbsolutePath(parentComponentMap.rootDir);
-      const parentRootDirConsideringDist =
-        parentComponent.dists.isEmpty() || !consumer.shouldDistsBeInsideTheComponent()
-          ? parentRootDir
-          : parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
-      const symlinkPath = getSymlinkPath(parentRootDir);
-      const realPath = getRealPath(parentRootDirConsideringDist);
-      writtenLinks.push(writeLink(symlinkPath, realPath));
-      if (!consumer.shouldDistsBeInsideTheComponent()) {
-        const parentRootDirDist = parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
-        const realPathDist = getRealPath(parentRootDirDist);
-        const symlinkPathDist = getSymlinkPath(parentRootDirDist);
-        writtenLinks.push(writeLink(symlinkPathDist, realPathDist));
-      }
-    }
-  });
-  return writtenLinks;
-}
-
 function writeDependenciesLinks(component: Component, componentMap: ComponentMap, consumer: Consumer): LinkDetail[] {
   return component.getAllDependencies().map((dependency: Dependency) => {
     const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
@@ -141,7 +98,6 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
         component.bindingPrefix
       )
     );
-    writeNonRelativeDependenciesLinks(component, consumer, componentMap, dependency);
     if (!consumer.shouldDistsBeInsideTheComponent()) {
       // when dists are written outside the component, it doesn't matter whether a component
       // has dists files or not, in case it doesn't have, the files are copied from the component
@@ -191,27 +147,24 @@ function writeMissingLinks(consumer: Consumer, component, componentMap: Componen
   return R.flatten(result);
 }
 
-function writeMissingCustomResolvedLinks(consumer: Consumer, component: Component, componentMap: ComponentMap) {
+async function writeMissingCustomResolvedLinks(consumer: Consumer, component: Component) {
   if (!component.componentFromModel) return [];
+
+  const componentWithDependencies = await component.toComponentWithDependencies(consumer);
   const missingLinks = component.missingDependencies.missingCustomModuleResolutionLinks;
   const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
-  const links = dependenciesStr.map((dependencyStr) => {
-    const dependency =
-      component.componentFromModel.dependencies.getById(dependencyStr) ||
-      component.componentFromModel.devDependencies.getById(dependencyStr);
-    if (!dependency) {
-      throw new Error(
-        `writeMissingCustomResolvedLinks failed finding dependency ${dependencyStr} in the model of ${component.id.toString()}`
-      );
-    }
-    const dependencyCloned = Dependency.getClone(dependency);
-    Dependency.stripOriginallySharedDir(dependencyCloned, consumer.bitMap, component.originallySharedDir);
-    return writeNonRelativeDependenciesLinks(component, consumer, componentMap, dependencyCloned);
-  });
-  return R.flatten(links);
+
+  component.copyDependenciesFromModel(dependenciesStr);
+  await writeDependencyLinks([componentWithDependencies], consumer, false);
+  // @todo: return the links
+  return [];
 }
 
-function _linkImportedComponents(consumer: Consumer, component: Component, componentMap: ComponentMap): LinksResult {
+async function _linkImportedComponents(
+  consumer: Consumer,
+  component: Component,
+  componentMap: ComponentMap
+): Promise<LinksResult> {
   const componentId = component.id;
   const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
   const linkPath = consumer.toAbsolutePath(relativeLinkPath);
@@ -235,7 +188,7 @@ function _linkImportedComponents(consumer: Consumer, component: Component, compo
       : [];
   const boundMissingCustomResolvedLinks =
     component.missingDependencies && component.missingDependencies.missingCustomModuleResolutionLinks
-      ? writeMissingCustomResolvedLinks(consumer, component, componentMap)
+      ? await writeMissingCustomResolvedLinks(consumer, component)
       : [];
   const boundAll = bound.concat([
     ...R.flatten(boundDependencies),
@@ -279,20 +232,22 @@ function _linkAuthoredComponents(consumer: Consumer, component: Component, compo
  * link given components to node_modules, so it's possible to use absolute link instead of relative
  * for example, require('@bit/remote-scope.bar.foo)
  */
-export default function linkComponents(components: Component[], consumer: Consumer): LinksResult[] {
-  return components.map((component) => {
-    const componentId = component.id;
-    logger.debug(`linking component to node_modules: ${componentId}`);
-    const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
-    switch (componentMap.origin) {
-      case COMPONENT_ORIGINS.IMPORTED:
-        return _linkImportedComponents(consumer, component, componentMap);
-      case COMPONENT_ORIGINS.NESTED:
-        return _linkNestedComponents(consumer, component, componentMap);
-      case COMPONENT_ORIGINS.AUTHORED:
-        return _linkAuthoredComponents(consumer, component, componentMap);
-      default:
-        throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
-    }
-  });
-}
+export default (async function linkComponents(components: Component[], consumer: Consumer): Promise<LinksResult[]> {
+  return Promise.all(
+    components.map((component) => {
+      const componentId = component.id;
+      logger.debug(`linking component to node_modules: ${componentId}`);
+      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
+      switch (componentMap.origin) {
+        case COMPONENT_ORIGINS.IMPORTED:
+          return _linkImportedComponents(consumer, component, componentMap);
+        case COMPONENT_ORIGINS.NESTED:
+          return _linkNestedComponents(consumer, component, componentMap);
+        case COMPONENT_ORIGINS.AUTHORED:
+          return _linkAuthoredComponents(consumer, component, componentMap);
+        default:
+          throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
+      }
+    })
+  );
+});
