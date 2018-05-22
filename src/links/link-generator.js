@@ -213,9 +213,9 @@ async function writeDependencyLinks(
 
     const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
     const sourceRelativePath = relativePath.sourceRelativePath;
-    // $FlowFixMe parentDir is not null
     const linkPath = relativePath.isCustomResolveUsed
-      ? path.join(parentDir, 'node_modules', relativePath.importSource)
+      ? // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
+      path.join(parentDir, 'node_modules', relativePath.importSource)
       : path.join(parentDir, sourceRelativePath);
 
     let distLinkPath: PathOsBased;
@@ -236,6 +236,7 @@ async function writeDependencyLinks(
           // when isCustomResolvedUsed, the link is generated inside node_module directory, so for
           // dist inside the component, only one link is needed at the parentRootDir. for dist
           // outside the component dir, another link is needed for the dist/parentRootDir.
+          // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
           distLinkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
           const linkFile = prepareLinkFile(
             depId,

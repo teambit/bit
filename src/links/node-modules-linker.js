@@ -128,7 +128,7 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   fs.outputFileSync(dest, fileContent);
 }
 
-function writeMissingLinks(consumer: Consumer, component, componentMap: ComponentMap) {
+function writeMissingLinks(consumer: Consumer, component, componentMap: ComponentMap): LinkDetail[] {
   const missingLinks = component.missingDependencies.missingLinks;
   const result = Object.keys(component.missingDependencies.missingLinks).map((key) => {
     return missingLinks[key].map((dependencyIdStr) => {
@@ -153,10 +153,11 @@ async function writeMissingCustomResolvedLinks(consumer: Consumer, component: Co
   const componentWithDependencies = await component.toComponentWithDependencies(consumer);
   const missingLinks = component.missingDependencies.missingCustomModuleResolutionLinks;
   const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
-
   component.copyDependenciesFromModel(dependenciesStr);
   await writeDependencyLinks([componentWithDependencies], consumer, false);
-  // @todo: return the links
+
+  // for now, don't display these links as they're not symlinks, and are not compatible with the
+  // LinkDetail type
   return [];
 }
 
