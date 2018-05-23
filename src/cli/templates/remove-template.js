@@ -2,7 +2,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import { BitId } from '../../bit-id';
 
-export default ({ dependentBits, modifiedComponents = [], removedComponentIds, missingComponents }) => {
+export default ({ dependentBits, modifiedComponents = [], removedComponentIds, missingComponents }, isRemote) => {
   const paintMissingComponents = () => {
     if (R.isEmpty(missingComponents)) return '';
     return (
@@ -15,13 +15,18 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
       )
     );
   };
-  const paintRemoved = () =>
-    (!R.isEmpty(removedComponentIds)
-      ? chalk.green('successfully removed components:') +
-        chalk(
-          ` ${removedComponentIds.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
-        )
-      : '');
+  const paintRemoved = () => {
+    if (R.isEmpty(removedComponentIds)) return '';
+    const msg = isRemote
+      ? 'successfully removed components from the remote scope:'
+      : 'successfully removed components from the local scope (to remove from the remote scope, please re-run the command with --remote flag):';
+    return (
+      chalk.green(msg) +
+      chalk(
+        ` ${removedComponentIds.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}\n`
+      )
+    );
+  };
 
   const paintUnRemovedComponents = () => {
     if (R.isEmpty(dependentBits)) return '';
