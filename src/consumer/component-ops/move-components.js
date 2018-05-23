@@ -34,7 +34,7 @@ export async function movePaths(
     const componentsIds = changes.map(c => BitId.parse(c.id));
     await packageJson.addComponentsToRoot(consumer, componentsIds);
     const { components } = await consumer.loadComponents(componentsIds);
-    linkComponentsToNodeModules(components, consumer);
+    await linkComponentsToNodeModules(components, consumer);
     await reLinkDependents(consumer, components);
   }
   return changes;

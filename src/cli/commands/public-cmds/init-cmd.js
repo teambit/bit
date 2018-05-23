@@ -8,7 +8,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Init extends Command {
   name = 'init [path]';
-  description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
+  description = `initialize an empty bit scope\n  https://${BASE_DOCS_DOMAIN}/docs/cli-init.html`;
   alias = '';
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],

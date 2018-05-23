@@ -217,7 +217,7 @@ export default class SSH implements Network {
         return payload;
       })
       .catch((err) => {
-        throw new RemoteScopeNotFound(err);
+        throw new RemoteScopeNotFound(this.path);
       });
   }
 

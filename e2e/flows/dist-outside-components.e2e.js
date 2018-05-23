@@ -383,7 +383,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       before(() => {
         const fooBarFixtureV2 = `import isString from 'utils/is-string';
 export default function foo() { return isString() + ' and got foo v2'; };`;
-        helper.createFile('components/bar/foo/bar', 'foo.js', fooBarFixtureV2); // update component
+        helper.createFile('components/bar/foo', 'foo.js', fooBarFixtureV2); // update component
         helper.addRemoteEnvironment();
         helper.build();
       });

@@ -27,6 +27,10 @@ export default class Dependencies {
     return this.dependencies.map(dependency => Dependency.getClone(dependency));
   }
 
+  add(dependency: Dependency) {
+    this.dependencies.push(dependency);
+  }
+
   deserialize(dependencies: Dependency[]): Dependency[] {
     return dependencies.map(dependency => ({
       id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
@@ -63,9 +67,19 @@ export default class Dependencies {
     });
   }
 
+  /**
+   * needed for calculating the originallySharedDir. when isCustomResolveUsed, don't take into
+   * account the dependencies as they don't have relative paths
+   */
   getSourcesPaths(): string[] {
     return R.flatten(
-      this.dependencies.map(dependency => dependency.relativePaths.map(relativePath => relativePath.sourceRelativePath))
+      this.dependencies.map(dependency =>
+        dependency.relativePaths
+          .map((relativePath) => {
+            return relativePath.isCustomResolveUsed ? null : relativePath.sourceRelativePath;
+          })
+          .filter(x => x)
+      )
     );
   }
 
@@ -143,6 +157,11 @@ export default class Dependencies {
               relativePath.destinationRelativePath
             }`
           );
+        }
+        if (relativePath.isCustomResolveUsed) {
+          if (!relativePath.importSource) {
+            throw new Error(`a dependency ${dependency.id.toString()} is missing relativePath.importSource`);
+          }
         }
       });
     });
