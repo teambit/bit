@@ -262,7 +262,7 @@ describe('bit import', function () {
         helper.addRemoteScope();
         helper.importComponent('global/simple');
         fs.removeSync(path.join(helper.localScopePath, '.bitmap'));
-        output = helper.importComponent('global/simple');
+        output = helper.importComponent('global/simple --override');
       });
       it('should import the component successfully', () => {
         expect(output).to.have.string('successfully imported one component');
