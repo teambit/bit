@@ -4,7 +4,11 @@ import path from 'path';
 import R from 'ramda';
 import Command from '../../command';
 import { add } from '../../../api/consumer';
-import type { AddActionResults, AddResult, PathOrDSL } from '../../../consumer/component/add-components/add-components';
+import type {
+  AddActionResults,
+  AddResult,
+  PathOrDSL
+} from '../../../consumer/component-ops/add-components/add-components';
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 import type { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
@@ -15,7 +19,7 @@ export default class Add extends Command {
   alias = 'a';
   opts = [
     ['i', 'id <name>', 'component id, if not specified the name will be '],
-    ['m', 'main <file>', 'implementation/index file name'],
+    ['m', 'main <file>', 'implementation/index file name or dsl (src/{PARENT}/{FILE_NAME})'],
     ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
     ['e', 'exclude <file...>', 'exclude file name or dsl (src/{PARENT}/{FILE_NAME})'],

@@ -16,6 +16,7 @@ import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import Version from '../../version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
+import writeComponents from './write-components';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -82,7 +83,7 @@ export default class ImportComponents {
   }
 
   async importAccordingToBitJsonAndBitMap(): ImportResult {
-    this.options.objectsOnly = !(this.options.merge || this.options.override);
+    this.options.objectsOnly = !this.options.merge && !this.options.override;
 
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
@@ -114,7 +115,7 @@ export default class ImportComponents {
       this.options.writePackageJson = false;
       this.options.installNpmPackages = false;
       // don't force the writing to the filesystem because as an author I may have some modified files
-      await this._writeToFileSystem(componentsAndDependenciesBitMap, false);
+      await this._writeToFileSystem(componentsAndDependenciesBitMap);
     }
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
@@ -300,10 +301,11 @@ export default class ImportComponents {
     return removeNulls(componentsToWrite);
   }
 
-  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[], override: boolean = true) {
+  async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
-    await this.consumer.writeToComponentsDir({
+    await writeComponents({
+      consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,
@@ -312,7 +314,7 @@ export default class ImportComponents {
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
-      override
+      override: this.options.override
     });
   }
 }

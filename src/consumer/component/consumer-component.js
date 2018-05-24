@@ -590,7 +590,7 @@ export default class Component {
     // 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
     // one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
     // 3) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
-    // never reach this function, see @writeToComponentsDir). Therefore, always add to bit.map.
+    // never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
     if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
@@ -956,7 +956,7 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (dev: boolean = false) => {
+    const getFlatten = (dev: boolean = false): BitIds => {
       const field = dev ? 'flattenedDevDependencies' : 'flattenedDependencies';
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
@@ -977,6 +977,20 @@ export default class Component {
     const dependencies = await getDependenciesComponents(getFlatten());
     const devDependencies = await getDependenciesComponents(getFlatten(true));
     return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
+  }
+
+  copyDependenciesFromModel(ids: string[]) {
+    const componentFromModel = this.componentFromModel;
+    if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
+    ids.forEach((id: string) => {
+      const dependency = componentFromModel.dependencies.getById(id);
+      if (dependency) this.dependencies.add(dependency);
+      else {
+        const devDependency = componentFromModel.devDependencies.getById(id);
+        if (!devDependency) throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
+        this.devDependencies.add(dependency);
+      }
+    });
   }
 
   static fromObject(object: Object): Component {

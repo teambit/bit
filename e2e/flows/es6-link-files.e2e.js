@@ -45,6 +45,35 @@ describe('es6 components with link files', function () {
     });
   });
 
+  // @todo: support this scenario
+  // the bar/foo.js requires an index file => utils/index.js,
+  // which requires another index file: utils/is-string/index.js,
+  // which requires a real file utils/is-string/is-string.js
+  // bit-javascript should do the heavy lifting and provides with a final 'linkFile',
+  // which will be possible to conclude the sourceRelativePath: "utils/index.js"
+  // and the destinationRelativePath: "utils/is-string/is-string.js", all the rest index files are irrelevant.
+  // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
+  describe.skip('multiple link files', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
+      helper.createFile('utils/is-string', 'index.js', "export { default as isString } from './is-string';");
+      helper.createFile('utils', 'index.js', "export { default as isString } from './is-string';");
+      helper.addComponent('utils/is-string/is-string.js');
+      const fooBarFixture =
+        "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+    });
+    it('should not consider both index files as a dependencies', () => {
+      output = helper.runCmd('bit status');
+      expect(output).to.have.string('bar/foo ... ok');
+      expect(output).to.not.have.string('missing dependencies');
+    });
+  });
+
   describe('when a component uses link file to import multiple members', () => {
     let utilIndexFixture;
     before(() => {
@@ -87,6 +116,53 @@ describe('es6 components with link files', function () {
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
           path.join(helper.localScopePath, 'components', 'bar', 'foo', 'utils', 'index.js')
+        );
+        expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
+      });
+      it('should rewrite the relevant part of the link file', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-string and got foo');
+      });
+    });
+  });
+
+  describe('when a component uses link file to import multiple members with custom-module-resolution import', () => {
+    let utilIndexFixture;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
+      helper.writeBitJson(bitJson);
+
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createFile('src/utils', 'is-array.js', isArrayFixture);
+      helper.addComponent('src/utils/is-array.js');
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('src/utils', 'is-string.js', isStringFixture);
+      helper.addComponent('src/utils/is-string.js');
+      utilIndexFixture =
+        "import isArray from 'utils/is-array'; import isString from 'utils/is-string'; export { isArray, isString }; ";
+      helper.createFile('src/utils', 'index.js', utilIndexFixture);
+      const fooBarFixture =
+        "import { isString } from 'utils'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('src/bar', 'foo.js', fooBarFixture);
+      helper.addComponent('src/bar/foo.js');
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+    });
+    describe('when importing the component', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo ');
+      });
+      it('should auto-generate a link file', () => {
+        const currentUtilIndex = fs.readFileSync(
+          path.join(helper.localScopePath, 'components/bar/foo/node_modules/utils')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });

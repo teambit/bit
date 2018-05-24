@@ -8,9 +8,4 @@ export default class NoFiles extends AbstractError {
     super();
     this.ignoredFiles = ignoredFiles;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.ignoredFiles = clone.ignoredFiles.map(this.toHash);
-    return clone;
-  }
 }

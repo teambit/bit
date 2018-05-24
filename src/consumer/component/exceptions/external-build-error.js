@@ -7,9 +7,4 @@ export default class ExternalBuildError extends ExternalError {
     super(originalError);
     this.id = id;
   }
-  // makeAnonymous() {
-  //   const clone = this.clone();
-  //   clone.id = this.toHash(clone.id);
-  //   return clone;
-  // }
 }

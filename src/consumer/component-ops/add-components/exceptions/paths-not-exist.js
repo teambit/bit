@@ -7,9 +7,4 @@ export default class PathsNotExist extends AbstractError {
     super();
     this.paths = paths;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.paths = clone.paths.map(this.toHash);
-    return clone;
-  }
 }

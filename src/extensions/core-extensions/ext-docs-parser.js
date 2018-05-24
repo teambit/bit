@@ -9,7 +9,7 @@ const DocsParser = {
   // getDynamicConfig: (rawConfig) => {
   // },
 
-  init: (rawConfig, dynamicConfig, api) => {
+  init: ({ rawConfig, dynamicConfig, api }) => {
     api.registerActionToHook(api.HOOKS_NAMES['post-tag'], { name: 'parseDocs', run: parseDocs });
     api.registerActionToHook(api.HOOKS_NAMES['post-tag-all'], { name: 'parseDocs', run: parseDocs });
     logger = api.getLogger();

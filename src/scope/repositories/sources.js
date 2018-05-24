@@ -55,16 +55,14 @@ export default class SourceRepository {
 
   getMany(ids: BitId[]): Promise<ComponentDef[]> {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
-    return Promise.all(
-      ids.map((id) => {
-        return this.get(id).then((component) => {
-          return {
-            id,
-            component
-          };
-        });
-      })
-    );
+    return Promise.all(ids.map((id) => {
+      return this.get(id).then((component) => {
+        return {
+          id,
+          component
+        };
+      });
+    }));
   }
 
   async get(bitId: BitId): Promise<?Component> {
@@ -162,16 +160,16 @@ export default class SourceRepository {
     dists,
     specsResults
   }: {
-    consumerComponent: ConsumerComponent,
-    consumer: Consumer,
-    message?: string,
-    flattenedDependencies?: Object,
-    flattenedDevDependencies?: Object,
-    force?: boolean,
-    verbose?: boolean,
-    forHashOnly?: boolean,
-    dists?: Object,
-    specsResults?: any
+  consumerComponent: ConsumerComponent,
+  consumer: Consumer,
+  message?: string,
+  flattenedDependencies?: Object,
+  flattenedDevDependencies?: Object,
+  force?: boolean,
+  verbose?: boolean,
+  forHashOnly?: boolean,
+  dists?: Object,
+  specsResults?: any
   }): Promise<Object> {
     const files =
       consumerComponent.files && consumerComponent.files.length
@@ -193,7 +191,10 @@ export default class SourceRepository {
     consumerComponent.mainFile = consumerComponent.addSharedDir(consumerComponent.mainFile);
     consumerComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
-        relativePath.sourceRelativePath = consumerComponent.addSharedDir(relativePath.sourceRelativePath);
+        if (!relativePath.isCustomResolveUsed) {
+          // for isCustomResolveUsed it was never stripped
+          relativePath.sourceRelativePath = consumerComponent.addSharedDir(relativePath.sourceRelativePath);
+        }
       });
     });
     const version = Version.fromComponent({
@@ -208,7 +209,9 @@ export default class SourceRepository {
       email
     });
 
-    return { version, files, compilerFiles, testerFiles };
+    return {
+      version, files, compilerFiles, testerFiles 
+    };
   }
 
   async addSource({
@@ -221,20 +224,22 @@ export default class SourceRepository {
     dists,
     specsResults
   }: {
-    source: ConsumerComponent,
-    flattenedDependencies: BitId[],
-    flattenedDevDependencies: BitId[],
-    message: string,
-    exactVersion: ?string,
-    releaseType: string,
-    dists: ?Object,
-    specsResults?: any
+  source: ConsumerComponent,
+  flattenedDependencies: BitId[],
+  flattenedDevDependencies: BitId[],
+  message: string,
+  exactVersion: ?string,
+  releaseType: string,
+  dists: ?Object,
+  specsResults?: any
   }): Promise<Component> {
     const objectRepo = this.objects();
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on them model
     const component = await this.findOrAddComponent(source);
-    const { version, files, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
+    const {
+      version, files, compilerFiles, testerFiles 
+    } = await this.consumerComponentToVersion({
       consumerComponent: source,
       message,
       flattenedDependencies,

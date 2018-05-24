@@ -15,9 +15,4 @@ export default class DuplicateIds extends AbstractError {
     });
     this.componentObject = componentIds;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.componentObject = this.toHash(JSON.stringify(clone.componentObject));
-    return clone;
-  }
 }

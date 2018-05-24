@@ -39,13 +39,14 @@ jobs:
     working_directory: ~/bit
     steps:
       # prod registry
-      - run: npm config set @bit:registry https://node.bitsrc.io
-      - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
+    #   - run: npm config set @bit:registry https://node.bitsrc.io
+    #   - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-      # - run: npm config set @bit:registry https://node-stg.bitsrc.io
+      - run: npm config set @bit:registry https://node-stg.bitsrc.io
+      - run: echo "//node.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
-          key: bitsrc-registry1
-          # key: bitsrc-registry-stg
+        #   key: bitsrc-registry1
+          key: bitsrc-registry-stg
           paths:
             - ~/.npmrc
 
@@ -67,19 +68,19 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run
             # this step without cache
-            - npm-deps6-{{ checksum "./bit/package.json" }}
+            - npm-deps8-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps6
+            - npm-deps8
       # - run: ls ~/bit/node_modules
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
       - save_cache:
-          key: npm-deps6-{{ checksum "./bit/package.json" }}
+          key: npm-deps8-{{ checksum "./bit/package.json" }}
           paths:
             - ./bit/node_modules
       - save_cache:
-          key: npm-deps6
+          key: npm-deps8
           paths:
             - ./bit/node_modules
       - persist_to_workspace:
@@ -204,8 +205,8 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry1
-          # key: bitsrc-registry-stg
+        #   key: bitsrc-registry1
+          key: bitsrc-registry-stg
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
@@ -223,6 +224,8 @@ jobs:
       - run: bit config set error_reporting false
       - run: bit config set user.name tester
       - run: bit config set user.email ci@bitsrc.io
+      # uncomment to configure circle to run against stg enviorment
+      - run: bit config set hub_domain hub-stg.bitsrc.io
 
       - run:
           name: Run e2e tests

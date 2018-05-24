@@ -8,9 +8,4 @@ export default class PermissionDenied extends AbstractError {
     super();
     this.scope = scope;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.scope = this.toHash(clone.scope);
-    return clone;
-  }
 }

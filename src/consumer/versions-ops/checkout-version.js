@@ -19,6 +19,7 @@ import {
 import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
+import writeComponents from '../component-ops/write-components';
 
 export type CheckoutProps = {
   version: string,
@@ -163,7 +164,8 @@ async function applyVersion(
     modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
 
-  await consumer.writeToComponentsDir({
+  await writeComponents({
+    consumer,
     componentsWithDependencies,
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
