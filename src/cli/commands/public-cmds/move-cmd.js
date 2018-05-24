@@ -19,7 +19,7 @@ export default class Move extends Command {
   report(componentsChanged: PathChangeResult[]): string {
     const output = componentsChanged.map((component) => {
       const title = chalk.green(`moved component ${component.id}:\n`);
-      const files = component.changes.map(file => `from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}\n`);
+      const files = component.changes.map(file => `from ${chalk.bold(file.from)} to ${chalk.bold(file.to)}`).join('\n');
       return title + files;
     });
     return output.join('\n');

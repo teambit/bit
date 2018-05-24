@@ -163,7 +163,7 @@ export default (async function tagModelComponent({
   const { graphDeps, graphDevDeps } = buildComponentsGraph(componentsToTag);
 
   const dependenciesCache = {};
-  const persistComponent = async (consumerComponent) => {
+  const persistComponent = async (consumerComponent: Component) => {
     const consumerComponentId = consumerComponent.id.toString();
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
@@ -180,16 +180,17 @@ export default (async function tagModelComponent({
         : withSharedDir;
       return pathNormalizeToLinux(withDistEntry);
     };
-    const dists = !consumerComponent.dists.isEmpty()
-      ? consumerComponent.dists.get().map((dist) => {
-        return {
-          name: dist.basename,
-          relativePath: addSharedDirAndDistEntry(dist.relative),
-          file: Source.from(dist.contents),
-          test: dist.test
-        };
-      })
-      : null;
+    const dists =
+      !consumerComponent.dists.isEmpty() && consumerComponent.compiler
+        ? consumerComponent.dists.get().map((dist) => {
+          return {
+            name: dist.basename,
+            relativePath: addSharedDirAndDistEntry(dist.relative),
+            file: Source.from(dist.contents),
+            test: dist.test
+          };
+        })
+        : null;
 
     const testResult = testsResults.find(result => result.componentId === consumerComponentId);
     const flattenedDependencies = await getFlattenedDependencies(
