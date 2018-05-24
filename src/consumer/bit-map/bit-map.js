@@ -18,7 +18,7 @@ import { BitId, BitIds } from '../../bit-id';
 import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 
@@ -126,7 +126,7 @@ export default class BitMap {
     return componentsIds;
   }
 
-  _makePathRelativeToProjectRoot(pathToChange: string): PathOsBased {
+  _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {
     const absolutePath = path.resolve(pathToChange);
     return path.relative(this.projectRoot, absolutePath);
   }
@@ -494,8 +494,11 @@ export default class BitMap {
     }
   }
 
-  updatePathLocation(from: PathOsBased, to: PathOsBased, fromExists: boolean): PathChangeResult[] {
-    const existingPath = fromExists ? from : to;
+  updatePathLocation(
+    from: PathOsBasedRelative,
+    to: PathOsBasedRelative,
+    existingPath: PathOsBasedAbsolute
+  ): PathChangeResult[] {
     const isPathDir = isDir(existingPath);
     const allChanges = [];
     Object.keys(this.components).forEach((componentId) => {

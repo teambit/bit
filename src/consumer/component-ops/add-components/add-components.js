@@ -46,7 +46,7 @@ import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-type PathsStats = { [string]: { isDir: boolean } };
+type PathsStats = { [PathOsBased]: { isDir: boolean } };
 type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
@@ -385,14 +385,13 @@ export default class AddComponents {
         return { componentId: finalBitId, files: filteredMatchedFiles, mainFile: resolvedMainFile, trackDir };
       }
       // is file
-      const resolvedPath = path.resolve(componentPath);
-      const pathParsed = path.parse(resolvedPath);
+      const absolutePath = path.resolve(componentPath);
+      const pathParsed = path.parse(absolutePath);
       const relativeFilePath = this.consumer.getPathRelativeToConsumer(componentPath);
       if (!finalBitId) {
         let dirName = pathParsed.dir;
         if (!dirName) {
-          const absPath = path.resolve(componentPath);
-          dirName = path.dirname(absPath);
+          dirName = path.dirname(absolutePath);
         }
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
         const idFromPath = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);

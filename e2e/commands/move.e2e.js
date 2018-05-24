@@ -202,6 +202,30 @@ describe('bit move command', function () {
       expect(output.includes('bar/foo')).to.be.true;
     });
   });
+  describe('when the destination starts with the source dir', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      output = helper.runCmd('bit move bar bar2');
+    });
+    it('should not throw an error saying the path is not a directory', () => {
+      expect(output).to.have.string('moved component');
+    });
+  });
+  describe('when running from an inner directory', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      output = helper.runCmd('bit move foo.js myfoo.js', path.join(helper.localScopePath, 'bar'));
+    });
+    it('should not throw an error saying the path does not exist', () => {
+      expect(output).to.have.string('moved component');
+    });
+  });
   describe('move root directory after import', () => {
     const oldPath = path.join('components', 'bar');
     const newPath = path.join('components', 'utils');

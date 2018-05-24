@@ -1991,21 +1991,46 @@ console.log(barFoo.default());`;
       });
     });
     describe('re-import with a specific path', () => {
-      before(() => {
-        helper.importComponent('bar/foo -p new-location');
-        localConsumerFiles = helper.getConsumerFiles();
+      describe('from consumer root', () => {
+        before(() => {
+          helper.importComponent('bar/foo -p new-location');
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should move the component directory to the new location', () => {
+          const newLocation = path.join('new-location', 'bar', 'foo.js');
+          const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+          expect(localConsumerFiles).to.include(newLocation);
+          expect(localConsumerFiles).not.to.include(oldLocation);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
-      it('should move the component directory to the new location', () => {
-        const newLocation = path.join('new-location', 'bar', 'foo.js');
-        const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
-        expect(localConsumerFiles).to.include(newLocation);
-        expect(localConsumerFiles).not.to.include(oldLocation);
-      });
-      it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-        const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      describe('from an inner directory', () => {
+        before(() => {
+          helper.getClonedLocalScope(clonedScope);
+          helper.importComponent('bar/foo');
+          helper.runCmd(
+            `bit import ${helper.remoteScope}/bar/foo -p new-location`,
+            path.join(helper.localScopePath, 'components')
+          );
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should move the component directory to the new location', () => {
+          const newLocation = path.join('components', 'new-location', 'bar', 'foo.js');
+          const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+          expect(localConsumerFiles).to.include(newLocation);
+          expect(localConsumerFiles).not.to.include(oldLocation);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = "const barFoo = require('./components/new-location'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
     });
     describe('import a component and then its dependency directly', () => {
