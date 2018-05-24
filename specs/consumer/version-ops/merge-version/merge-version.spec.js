@@ -6,7 +6,7 @@ import ConsumerComponent from '../../../../src/consumer/component/consumer-compo
 describe('filesStatusWithoutSharedDir', () => {
   let sandbox;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
   });
   afterEach(() => {
     sandbox.restore();

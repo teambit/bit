@@ -8,7 +8,7 @@ describe.skip('Consumer', () => {
   describe('runAllInlineSpecs', () => {
     let sandbox;
     beforeEach(() => {
-      sandbox = sinon.sandbox.create();
+      sandbox = sinon.createSandbox();
     });
     afterEach(() => {
       sandbox.restore();
