@@ -9,7 +9,6 @@ import { Consumer } from '..';
 import type { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import type { PathChangeResult } from '../bit-map/bit-map';
 import Component from '../component/consumer-component';
-import BitMap from '../bit-map';
 import moveSync from '../../utils/fs/move-sync';
 
 export async function movePaths(
@@ -44,7 +43,7 @@ export async function movePaths(
 }
 
 export function moveExistingComponent(
-  bitMap: BitMap,
+  consumer: Consumer,
   component: Component,
   oldPath: PathOsBasedAbsolute,
   newPath: PathOsBasedAbsolute
@@ -54,8 +53,11 @@ export function moveExistingComponent(
       `could not move the component ${component.id.toString()} from ${oldPath} to ${newPath} as the destination path already exists`
     );
   }
-  const componentMap = bitMap.getComponent(component.id);
-  componentMap.updateDirLocation(oldPath, newPath);
+  const componentMap = consumer.bitMap.getComponent(component.id);
+  componentMap.updateDirLocation(
+    consumer.getPathRelativeToConsumer(oldPath),
+    consumer.getPathRelativeToConsumer(newPath)
+  );
   moveSync(oldPath, newPath);
   component.writtenPath = newPath;
 }

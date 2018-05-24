@@ -197,7 +197,7 @@ export default (async function writeToComponentsDir({
       const absoluteWriteToPath = path.resolve(writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
       if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
         const component = componentWithDeps.component;
-        moveExistingComponent(consumer.bitMap, component, absoluteWrittenPath, absoluteWriteToPath);
+        moveExistingComponent(consumer, component, absoluteWrittenPath, absoluteWriteToPath);
       }
     });
   }

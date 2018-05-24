@@ -10,6 +10,9 @@ export type PathOsBased = string; // OS based format. On Windows it's Windows fo
 export type PathOsBasedRelative = string;
 export type PathOsBasedAbsolute = string;
 
+export type PathRelative = string;
+export type PathAbsolute = string;
+
 export function pathJoinLinux(...paths): PathLinux {
   return normalize(path.join(...paths));
 }

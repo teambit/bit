@@ -48,7 +48,7 @@ import ImportComponents from './component-ops/import-components';
 import type { ImportOptions, ImportResult } from './component-ops/import-components';
 import CompilerExtension from '../extensions/compiler-extension';
 import TesterExtension from '../extensions/tester-extension';
-import type { PathOsBased } from '../utils/path';
+import type { PathOsBased, PathRelative, PathAbsolute, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
@@ -215,12 +215,13 @@ export default class Consumer {
     return this.projectPath;
   }
 
-  toAbsolutePath(pathStr: string): PathOsBased {
+  toAbsolutePath(pathStr: PathRelative): PathOsBasedAbsolute {
+    if (path.isAbsolute(pathStr)) throw new Error(`toAbsolutePath expects relative path, got ${pathStr}`);
     return path.join(this.projectPath, pathStr);
   }
 
-  getPathRelativeToConsumer(pathToCheck: string): PathOsBased {
-    const absolutePath = path.resolve(pathToCheck);
+  getPathRelativeToConsumer(pathToCheck: PathRelative | PathAbsolute): PathOsBasedRelative {
+    const absolutePath = path.resolve(pathToCheck); // if pathToCheck was absolute, it returns it back
     return path.relative(this.getPath(), absolutePath);
   }
 

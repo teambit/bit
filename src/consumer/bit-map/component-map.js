@@ -4,7 +4,7 @@ import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/path';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
@@ -116,7 +116,7 @@ export default class ComponentMap {
     return changes;
   }
 
-  updateDirLocation(dirFrom: PathOsBased, dirTo: PathOsBased): PathChange[] {
+  updateDirLocation(dirFrom: PathOsBasedRelative, dirTo: PathOsBasedRelative): PathChange[] {
     dirFrom = pathNormalizeToLinux(dirFrom);
     dirTo = pathNormalizeToLinux(dirTo);
     const changes = [];
