@@ -25,6 +25,7 @@ import { RemovedObjects } from '../../removed-components';
 import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
+import GeneralError from '../../../error/general-error';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const rejectNils = R.reject(R.isNil);
@@ -433,9 +434,13 @@ export default class SSH implements Network {
           if (e.skip) {
             return this.connect(key, passphrase);
           }
-
           logger.debug('SSH: connection failed', e);
           Analytics.addBreadCrumb('ssh', 'connection failed');
+          if (e.code === 'ENOTFOUND') {
+            throw new GeneralError(
+              `unable to find the SSH server. host: ${e.host}, port: ${e.port}. Original error message: ${e.message}`
+            );
+          }
 
           throw e;
         })
