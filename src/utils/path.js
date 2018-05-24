@@ -3,8 +3,12 @@ import path from 'path';
 import normalize from 'normalize-path';
 
 export type PathLinux = string; // Linux format path (even when running on Windows)
+export type PathLinuxRelative = string;
+export type PathLinuxAbsolute = string;
 
 export type PathOsBased = string; // OS based format. On Windows it's Windows format, on Linux it's Linux format.
+export type PathOsBasedRelative = string;
+export type PathOsBasedAbsolute = string;
 
 export function pathJoinLinux(...paths): PathLinux {
   return normalize(path.join(...paths));

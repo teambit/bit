@@ -193,9 +193,11 @@ export default (async function writeToComponentsDir({
   if (writeToPath) {
     componentsWithDependencies.forEach((componentWithDeps) => {
       const relativeWrittenPath = consumer.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
-      if (relativeWrittenPath && path.resolve(relativeWrittenPath) !== path.resolve(writeToPath)) {
+      const absoluteWrittenPath = consumer.toAbsolutePath(relativeWrittenPath);
+      const absoluteWriteToPath = path.resolve(writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
+      if (relativeWrittenPath && absoluteWrittenPath !== absoluteWriteToPath) {
         const component = componentWithDeps.component;
-        moveExistingComponent(consumer.bitMap, component, relativeWrittenPath, writeToPath);
+        moveExistingComponent(consumer.bitMap, component, absoluteWrittenPath, absoluteWriteToPath);
       }
     });
   }
