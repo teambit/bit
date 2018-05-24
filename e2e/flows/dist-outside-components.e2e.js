@@ -341,7 +341,6 @@ export default function foo() { return isString() + ' and got foo'; };`;
       });
     });
   });
-
   describe('when using custom-module-resolution syntax', () => {
     before(() => {
       helper.getClonedLocalScope(scopeWithCompiler);
@@ -393,5 +392,24 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
       });
     });
+  });
+});
+
+describe('dist-outside-components when no compiler has been set up', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  before(() => {
+    helper.reInitLocalScope();
+    helper.modifyFieldInBitJson('dist', { target: 'dist' });
+    helper.createComponentBarFoo();
+    helper.addComponentBarFoo();
+    helper.commitComponentBarFoo();
+  });
+  it('should not save the dists in the model', () => {
+    const catComponent = helper.catComponent('bar/foo@latest');
+    expect(catComponent).to.not.have.property('dists');
+  });
+  after(() => {
+    helper.destroyEnv();
   });
 });
