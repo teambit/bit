@@ -7,7 +7,7 @@ import * as consumer from '../../../../src/consumer';
 describe('export', () => {
   let sandbox;
   beforeEach(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
   });
   afterEach(() => {
     sandbox.restore();

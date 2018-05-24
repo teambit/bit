@@ -1,6 +1,6 @@
 /** @flow */
-import AddComponents from '../../../consumer/component/add-components';
-import type { AddProps, AddActionResults } from '../../../consumer/component/add-components/add-components';
+import AddComponents from '../../../consumer/component-ops/add-components';
+import type { AddProps, AddActionResults } from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
 
 export default (async function addAction(addProps: AddProps): Promise<AddActionResults> {

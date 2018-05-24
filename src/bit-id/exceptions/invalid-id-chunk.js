@@ -8,9 +8,4 @@ export default class InvalidIdChunk extends AbstractError {
     super();
     this.id = id;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.id = this.toHash(clone.id.toString());
-    return clone;
-  }
 }

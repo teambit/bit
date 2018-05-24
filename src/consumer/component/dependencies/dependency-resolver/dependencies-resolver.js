@@ -2,20 +2,19 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import semver from 'semver';
-import { COMPONENT_ORIGINS } from '../../constants';
-import ComponentMap from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
-import Component from '../component';
-import { Driver } from '../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../utils';
-import logger from '../../logger/logger';
-import { Consumer } from '../../consumer';
-import type { RelativePath } from './dependencies/dependency';
-import type { PathLinux } from '../../utils/path';
-import ComponentBitJson from '../bit-json';
-import Dependencies from './dependencies/dependencies';
-import GeneralError from '../../error/general-error';
+import { COMPONENT_ORIGINS } from '../../../../constants';
+import ComponentMap from '../../../bit-map/component-map';
+import { BitId } from '../../../../bit-id';
+import Component from '../../../component';
+import { Driver } from '../../../../driver';
+import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../../../utils';
+import logger from '../../../../logger/logger';
+import { Consumer } from '../../../../consumer';
+import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
+import type { PathLinux } from '../../../../utils/path';
+import Dependencies from '../dependencies';
+import GeneralError from '../../../../error/general-error';
+import type { RelativePath } from '../dependency';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -37,7 +36,7 @@ import GeneralError from '../../error/general-error';
  * @param driver
  */
 function findComponentsOfDepsFiles(
-  tree: Object,
+  tree: Tree,
   files: string[],
   testsFiles: string[],
   entryComponentId: string,
@@ -59,12 +58,12 @@ function findComponentsOfDepsFiles(
   const rootDir: PathLinux = entryComponentMap.rootDir;
   const processedFiles = [];
 
-  const traverseTreeForComponentId = (depFile) => {
+  const traverseTreeForComponentId = (depFile: PathLinux) => {
     if (!tree[depFile] || (!tree[depFile].files && !tree[depFile].bits)) return;
     const rootDirFullPath = path.join(consumerPath, rootDir);
     if (tree[depFile].files && tree[depFile].files.length) {
       for (const file of tree[depFile].files) {
-        const fullDepFile = path.resolve(rootDirFullPath, file);
+        const fullDepFile = path.resolve(rootDirFullPath, file.file);
         const depRelativeToConsumer = pathNormalizeToLinux(path.relative(consumerPath, fullDepFile));
         const componentId = consumer.bitMap.getComponentIdByPath(depRelativeToConsumer);
         if (componentId) return componentId; // eslint-disable-line consistent-return
@@ -78,11 +77,11 @@ function findComponentsOfDepsFiles(
     }
 
     for (const file of tree[depFile].files) {
-      if (file !== depFile) {
-        const componentId = traverseTreeForComponentId(file);
+      if (file.file !== depFile) {
+        const componentId = traverseTreeForComponentId(file.file);
         if (componentId) return componentId; // eslint-disable-line consistent-return
       } else {
-        logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file} depends on itself`);
+        logger.warn(`traverseTreeForComponentId found a cyclic dependency. ${file.file} depends on itself`);
       }
     }
   };
@@ -154,9 +153,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   const processDepFile = (
     originFile: string,
     depFile: string,
-    importSpecifiers?: Object,
+    importSpecifiers?: ImportSpecifier[],
     linkFile?: string,
-    isTestFile: boolean = false
+    isTestFile: boolean = false,
+    depFileObject: FileObject
   ) => {
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
@@ -189,9 +189,16 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
       sourceRelativePath = depRootDir ? depFileRelative : depFile;
     }
 
-    const depsPaths = { sourceRelativePath, destinationRelativePath };
+    const depsPaths: RelativePath = {
+      sourceRelativePath,
+      destinationRelativePath
+    };
     if (importSpecifiers) {
       depsPaths.importSpecifiers = importSpecifiers;
+    }
+    if (depFileObject.isCustomResolveUsed) {
+      depsPaths.isCustomResolveUsed = depFileObject.isCustomResolveUsed;
+      depsPaths.importSource = depFileObject.importSource;
     }
     const currentComponentsDeps = { [componentId]: [depsPaths] };
 
@@ -222,10 +229,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     }
   };
 
-  const processLinkFile = (originFile: string, linkFile: Object, isTestFile: boolean = false) => {
-    if (!linkFile.dependencies || R.isEmpty(linkFile.dependencies)) return;
-    const nonLinkFiles = [];
-    linkFile.dependencies.forEach((dependency) => {
+  const processLinkFile = (originFile: string, linkFile: FileObject, isTestFile: boolean = false) => {
+    if (!linkFile.linkDependencies || R.isEmpty(linkFile.linkDependencies)) return;
+    const nonLinkImportSpecifiers = [];
+    linkFile.linkDependencies.forEach((dependency) => {
       const component = getComponentIdByDepFile(linkFile.file);
       if (component.componentId) {
         // the linkFile is already a component, no need to treat it differently than other depFile
@@ -234,40 +241,22 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
         // also, delete the linkFile attribute of importSpecifiers so then once the component is
         // imported and the link is generated, it won't be treated as a linkFile.
         dependency.importSpecifiers.map(a => delete a.linkFile);
-        nonLinkFiles.push(dependency.importSpecifiers);
+        nonLinkImportSpecifiers.push(dependency.importSpecifiers);
       } else {
-        processDepFile(originFile, dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile);
+        processDepFile(originFile, dependency.file, dependency.importSpecifiers, linkFile.file, isTestFile, linkFile);
       }
     });
-    if (nonLinkFiles.length) {
-      processDepFile(originFile, linkFile.file, R.flatten(nonLinkFiles), undefined, isTestFile);
+    if (nonLinkImportSpecifiers.length) {
+      processDepFile(originFile, linkFile.file, R.flatten(nonLinkImportSpecifiers), undefined, isTestFile, linkFile);
     }
   };
 
-  const processDepFiles = (
-    originFile: string,
-    allDepsFiles: string[],
-    importSpecifiers: Object,
-    isTestFile: boolean = false
-  ) => {
-    if (allDepsFiles && !R.isEmpty(allDepsFiles)) {
-      allDepsFiles.forEach((depFile) => {
-        let finalImportSpecifiers = R.clone(importSpecifiers);
-        if (importSpecifiers) {
-          const importSpecifiersFound = importSpecifiers.find(specifierFile => specifierFile.file === depFile);
-          if (importSpecifiersFound) finalImportSpecifiers = importSpecifiersFound.importSpecifiers;
-        }
-        processDepFile(originFile, depFile, finalImportSpecifiers, undefined, isTestFile);
-      });
-    }
-  };
-
-  const processLinkFiles = (originFile: string, allLinkFiles: Object[], isTestFile: boolean = false) => {
-    if (allLinkFiles && !R.isEmpty(allLinkFiles)) {
-      allLinkFiles.forEach((linkFile) => {
-        processLinkFile(originFile, linkFile, isTestFile);
-      });
-    }
+  const processDepFiles = (originFile: string, allDepsFiles: FileObject[], isTestFile: boolean = false) => {
+    if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
+    allDepsFiles.forEach((depFile: FileObject) => {
+      if (depFile.isLink) processLinkFile(originFile, depFile, isTestFile);
+      else processDepFile(originFile, depFile.file, depFile.importSpecifiers, undefined, isTestFile, depFile);
+    });
   };
 
   const processBits = (bits, isTestFile: boolean = false) => {
@@ -326,6 +315,51 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
   };
 
   /**
+   * currently the only unidentified packages being process are the ones coming from custom-modules-resolution.
+   * assuming the author used custom-resolution, which enable using non-relative import syntax,
+   * for example, requiring the file 'src/utils/is-string' from anywhere as require('utils/is-string');
+   * now, when the component is imported, the driver recognizes 'utils/is-string' as a package,
+   * because it's not relative.
+   * the goal here is to use the 'package' the driver found and match it with one of the
+   * dependencies from the model. In the example above, we might find in the model, a dependency
+   * is-string with importSource of 'utils/is-string'.
+   * Once a match is found, copy the relativePaths from the model. Before coping, we must strip the
+   * originallySharedDir, because in this process, the component is loaded from the filesystem and
+   * as such the sharedDir is expected to be stripped.
+   */
+  const processUnidentifiedPackages = (originFile, unidentifiedPackages?: string[], isTestFile) => {
+    if (!unidentifiedPackages) return;
+    if (!componentFromModel) return; // not relevant, the component is not imported
+    const dependencies: Dependencies = isTestFile
+      ? componentFromModel.devDependencies
+      : componentFromModel.dependencies;
+    if (dependencies.isEmpty()) return;
+    const importSourceMap = dependencies.getCustomResolvedData();
+    if (R.isEmpty(importSourceMap)) return;
+    // clone before stripping the sharedDir to not change the model by mistake
+    const clonedDependencies = new Dependencies(dependencies.getClone());
+    if (entryComponentMap.originallySharedDir) {
+      clonedDependencies.stripOriginallySharedDir(consumer.bitMap, entryComponentMap.originallySharedDir);
+    }
+    unidentifiedPackages.forEach((unidentifiedPackage) => {
+      const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
+      const packageWithNoNodeModules = packageLinuxFormat.replace('node_modules/', '');
+      const foundImportSource = Object.keys(importSourceMap).find(importSource =>
+        packageWithNoNodeModules.startsWith(importSource)
+      );
+      if (foundImportSource) {
+        const dependencyId = importSourceMap[foundImportSource];
+        const dependencyIdStr = dependencyId.toString();
+        if (isTestFile && !devComponentsDeps[dependencyIdStr]) {
+          devComponentsDeps[dependencyIdStr] = dependencies.getById(dependencyIdStr).relativePaths;
+        } else if (!isTestFile && !componentsDeps[dependencyIdStr]) {
+          componentsDeps[dependencyIdStr] = clonedDependencies.getById(dependencyIdStr).relativePaths;
+        }
+      }
+    });
+  };
+
+  /**
    * Remove the dependencies which appear both in dev and regular deps from the dev
    * Because if a dependency is both dev dependency and regular dependecy it should be treated as regular one
    * Apply for both packages and components dependencies
@@ -337,12 +371,12 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     devComponentsDeps = R.pick(devComponentsOnlyNames, devComponentsDeps);
   };
 
-  files.forEach((file) => {
+  files.forEach((file: string) => {
     const isTestFile = R.contains(file, testsFiles);
     processPackages(file, tree[file].packages, isTestFile);
     processBits(tree[file].bits, isTestFile);
-    processDepFiles(file, tree[file].files, tree[file].importSpecifiers, isTestFile);
-    processLinkFiles(file, tree[file].linkFiles, isTestFile);
+    processDepFiles(file, tree[file].files, isTestFile);
+    processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile);
   });
   removeDevDepsIfTheyAlsoRegulars();
 
@@ -393,34 +427,6 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
 }
 
 /**
- * Merge the dependencies-trees we got from all files to one big dependency-tree
- * @param {Array<Object>} depTrees
- * @return {{missing: {packages: Array, files: Array}, tree: {}}}
- */
-// function mergeDependencyTrees(depTrees: Array<Object>): Object {
-//   const dependencyTree = {
-//     missing: { packages: [], files: [], bits: [] },
-//     tree: {}
-//   };
-//   depTrees.forEach((dep) => {
-//     if (dep.missing.packages.length) {
-//       dependencyTree.missing.packages.push(...dep.missing.packages);
-//     }
-//     if (dep.missing.files && dep.missing.files.length) {
-//       dependencyTree.missing.files.push(...dep.missing.files);
-//     }
-//     if (dep.missing.bits) {
-//       dependencyTree.missing.bits.push(...dep.missing.bits);
-//     }
-//     Object.assign(dependencyTree.tree, dep.tree);
-//   });
-//   dependencyTree.missing.packages = R.uniq(dependencyTree.missing.packages);
-//   dependencyTree.missing.files = R.uniq(dependencyTree.missing.files);
-//   dependencyTree.missing.bits = R.uniq(dependencyTree.missing.bits);
-//   return dependencyTree;
-// }
-
-/**
  * Load components and packages dependencies for a component. The process is as follows:
  * 1) Use the language driver to parse the component files and find for each file its dependencies.
  * 2) The results we get from the driver per file tells us what are the files and packages that depend on our file.
@@ -435,7 +441,7 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
  * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
  * component.missingDependencies.missingDependenciesOnFs
  */
-export async function loadDependenciesForComponent(
+export default (async function loadDependenciesForComponent(
   component: Component,
   bitDir: string,
   consumer: Consumer,
@@ -448,13 +454,13 @@ export async function loadDependenciesForComponent(
   const missingDependencies = {};
   const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getDependenciesTree = async () => {
-    return driver.getDependencyTree(bitDir, consumerPath, allFiles, component.bindingPrefix);
-    // const nonTestsTree = await driver.getDependencyTree(bitDir, consumerPath, nonTestsFiles, component.bindingPrefix);
-    // if (!testsFiles.length) return nonTestsTree;
-    // const testsTree = await driver.getDependencyTree(bitDir, consumerPath, testsFiles, component.bindingPrefix);
-    // // ignore package dependencies of tests for now
-    // testsTree.missing.packages = [];
-    // return mergeDependencyTrees([nonTestsTree, testsTree]);
+    return driver.getDependencyTree(
+      bitDir,
+      consumerPath,
+      allFiles,
+      component.bindingPrefix,
+      consumer.bitJson.resolveModules
+    );
   };
   // find the dependencies (internal files and packages) through automatic dependency resolution
   const dependenciesTree = await getDependenciesTree();
@@ -462,8 +468,34 @@ export async function loadDependenciesForComponent(
   const missingPackagesDependenciesOnFs = {};
   const missingComponents = {};
   const missingLinks = {};
+  const missingCustomModuleResolutionLinks = {};
 
   const componentFiles = component.files;
+  /**
+   * given missing packages name, find whether they were dependencies with custom-resolve before.
+   */
+  const findOriginallyCustomModuleResolvedDependencies = (packages: string[]): ?Object => {
+    if (!packages) return undefined;
+    if (!componentFromModel) return undefined; // not relevant, the component is not imported
+    const dependencies: Dependencies = new Dependencies(componentFromModel.getAllDependencies());
+    if (dependencies.isEmpty()) return undefined;
+    const importSourceMap = dependencies.getCustomResolvedData();
+    if (R.isEmpty(importSourceMap)) return undefined;
+    const foundPackages = packages.reduce((acc, value) => {
+      const packageLinuxFormat = pathNormalizeToLinux(value);
+      const foundImportSource = Object.keys(importSourceMap).find(importSource =>
+        importSource.startsWith(packageLinuxFormat)
+      );
+      if (foundImportSource) {
+        const dependencyId = importSourceMap[foundImportSource];
+        acc[value] = dependencyId;
+      }
+      return acc;
+    }, {});
+
+    return R.isEmpty(foundPackages) ? undefined : foundPackages;
+  };
+
   dependenciesTree.missing.forEach((fileDep) => {
     const doesFileExistInComponent = !R.isEmpty(
       componentFiles.filter(componentFile => componentFile.relative === fileDep.originFile)
@@ -475,10 +507,24 @@ export async function loadDependenciesForComponent(
         } else missingDependenciesOnFs[fileDep.originFile] = fileDep.files;
       }
       if (fileDep.packages && !R.isEmpty(fileDep.packages)) {
-        // missingDependencies.missingPackagesDependenciesOnFs = fileDep.packages;
-        if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
-          missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
-        } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+        const customResolvedDependencies = findOriginallyCustomModuleResolvedDependencies(fileDep.packages);
+        if (customResolvedDependencies) {
+          Object.keys(customResolvedDependencies).forEach((missingPackage) => {
+            const componentId = customResolvedDependencies[missingPackage].toString();
+            if (missingCustomModuleResolutionLinks[fileDep.originFile]) {
+              missingCustomModuleResolutionLinks[fileDep.originFile].push(componentId);
+            } else missingCustomModuleResolutionLinks[fileDep.originFile] = [componentId];
+          });
+        }
+        const missingPackages = customResolvedDependencies
+          ? R.difference(fileDep.packages, Object.keys(customResolvedDependencies))
+          : fileDep.packages;
+
+        if (!R.isEmpty(missingPackages)) {
+          if (missingPackagesDependenciesOnFs[fileDep.originFile]) {
+            missingPackagesDependenciesOnFs[fileDep.originFile].concat(fileDep.packages);
+          } else missingPackagesDependenciesOnFs[fileDep.originFile] = fileDep.packages;
+        }
       }
 
       if (fileDep.bits && !R.isEmpty(fileDep.bits)) {
@@ -530,12 +576,10 @@ export async function loadDependenciesForComponent(
   if (!R.isEmpty(traversedDeps.relativeDeps)) {
     missingDependencies.relativeComponents = traversedDeps.relativeDeps;
   }
-  /*  if (!R.isEmpty(traversedDeps.missingDeps)) {
-    if (missingComponents[fileDep.originFile]) missingComponents[fileDep.originFile].push(componentId);
-    else missingComponents[fileDep.originFile] = [componentId];
-    missingComponents = missingComponents.concat(traversedDeps.missingDeps);
-  } */
   if (!R.isEmpty(missingLinks)) missingDependencies.missingLinks = missingLinks;
+  if (!R.isEmpty(missingCustomModuleResolutionLinks)) {
+    missingDependencies.missingCustomModuleResolutionLinks = missingCustomModuleResolutionLinks;
+  }
   if (!R.isEmpty(missingComponents)) missingDependencies.missingComponents = missingComponents;
   // assign missingDependencies to component only when it has data.
   // Otherwise, when it's empty, component.missingDependencies will be an empty object ({}), and for some weird reason,
@@ -543,142 +587,4 @@ export async function loadDependenciesForComponent(
   if (!R.isEmpty(missingDependencies)) component.missingDependencies = missingDependencies;
 
   return component;
-}
-
-function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {
-  if (!componentFromModel) return null;
-  const id = componentFromModel
-    .getAllDependencies()
-    .find(dep => dep.id.toStringWithoutVersion() === componentId.toStringWithoutVersion());
-  if (!id) return null;
-  return id.id.toString();
-}
-
-function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?string {
-  const getVersion = (): ?string => {
-    if (!bitJson) return null;
-    if (!bitJson.dependencies && !bitJson.devDependencies) return null;
-    if (bitJson.dependencies[componentId.toStringWithoutVersion()]) {
-      return bitJson.dependencies[componentId.toStringWithoutVersion()];
-    }
-    if (bitJson.devDependencies) {
-      return bitJson.devDependencies[componentId.toStringWithoutVersion()];
-    }
-    return null;
-  };
-  const version = getVersion();
-  if (!version) return null;
-  componentId.version = version;
-  return componentId.toString();
-}
-
-/**
- * the logic of finding the dependency version in the package.json is mostly done in the driver
- * resolveNodePackage method.
- * it first searches in the dependent package.json and propagate up to the consumer root, if not
- * found it goes to the dependency package.json.
- */
-function getIdFromPackageJson(consumer: Consumer, component: Component, componentId: BitId): ?string {
-  if (!componentId.scope) return null;
-  const rootDir: PathLinux = component.componentMap.rootDir;
-  const consumerPath = consumer.getPath();
-  const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-  const packagePath = Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
-  const packageName = packagePath.replace(`node_modules${path.sep}`, '');
-  const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
-  if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component
-  const packageObject = consumer.driver.driver.resolveNodePackage(basePath, modulePath);
-  if (!packageObject || R.isEmpty(packageObject)) return null;
-  const packageId = Object.keys(packageObject)[0];
-  const version = packageObject[packageId];
-  if (!semver.valid(version)) return null; // it's probably a relative path to the component
-  componentId.version = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
-  return componentId.toString();
-}
-
-function getIdFromBitMap(consumer: Consumer, component: Component, componentId: BitId): ?string {
-  const componentMap: ComponentMap = component.componentMap;
-  if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
-    const dependencyId = componentMap.dependencies.find(
-      dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
-    );
-    if (dependencyId) return dependencyId;
-  }
-  return consumer.bitMap.getExistingComponentId(componentId.toStringWithoutVersion());
-}
-
-/**
- * The dependency version is determined by the following strategies by this order.
- * 1) if bit.json is different than the model, use bit.json
- * 2) if package.json is different than the model, use package.json. to find the package.json follow this steps:
- * 2 a) search in the component directory for package.json and look for dependencies or devDependencies with the name of the dependency
- * 2 b) if not found there, propagate until you reach the consumer root directory.
- * 2 c) if not found, go directly to the dependency directory and find the version in its package.json
- * 3) if bitmap has a version, use it.
- * 4) use the model if it has a version
- * 5) use the version from bit.json (regardless the status of the model)
- * 6) use the version from package.json (regardless the status of the model)
- *
- * cases where dependency version may be different than the model:
- * 1) user changed bit.json
- * 2) user changed package.json, either, manually or by npm-install —save.
- * 3) user updated a dependency with npm without —save.
- * 4) user imported the dependency with different version causing the bitmap to change.
- */
-export async function updateDependenciesVersions(consumer: Consumer, component: Component) {
-  const updateDependencies = async (dependencies: Dependencies) => {
-    dependencies.get().forEach((dependency) => {
-      const id = dependency.id;
-      const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
-      const idFromBitJson = getIdFromBitJson(component.bitJson, id);
-      const idFromPackageJson = getIdFromPackageJson(consumer, component, id);
-      const idFromBitMap = getIdFromBitMap(consumer, component, id);
-
-      // get from bitJson when it was changed from the model or when there is no model.
-      const getFromBitJsonIfChanged = () => {
-        if (!idFromBitJson) return null;
-        if (!idFromModel) return idFromBitJson;
-        if (idFromBitJson !== idFromModel) return idFromBitJson;
-        return null;
-      };
-      // get from packageJson when it was changed from the model or when there is no model.
-      const getFromPackageJsonIfChanged = () => {
-        if (!idFromPackageJson) return null;
-        if (!idFromModel) return idFromPackageJson;
-        if (idFromPackageJson !== idFromModel) return idFromPackageJson;
-        return null;
-      };
-      const getFromBitMap = () => {
-        if (idFromBitMap) return idFromBitMap;
-        return null;
-      };
-      const getFromModel = () => {
-        if (idFromModel) return idFromModel;
-        return null;
-      };
-      const getFromBitJsonOrPackageJson = () => {
-        if (idFromBitJson) return idFromBitJson;
-        if (idFromPackageJson) return idFromPackageJson;
-        return null;
-      };
-      const strategies: Function[] = [
-        getFromBitJsonIfChanged,
-        getFromPackageJsonIfChanged,
-        getFromBitMap,
-        getFromModel,
-        getFromBitJsonOrPackageJson
-      ];
-
-      for (const strategy of strategies) {
-        const strategyId = strategy();
-        if (strategyId) {
-          dependency.id.version = BitId.parse(strategyId).version;
-          logger.debug(`found dependency version ${dependency.id.toString()} in strategy ${strategy.name}`);
-          return;
-        }
-      }
-    });
-  };
-  updateDependencies(component.dependencies);
-  updateDependencies(component.devDependencies);
-}
+});

@@ -10,6 +10,7 @@ export const missingDependenciesLabels = {
   untrackedDependencies: 'untracked file dependencies (use "bit add <file>" to track untracked files as components)',
   missingDependenciesOnFs: 'non-existing dependency files (please make sure all files exists on your workspace)',
   missingLinks: 'missing links (use "bit link" to build missing component links)',
+  missingCustomModuleResolutionLinks: 'missing links (use "bit link" to build missing component links)',
   relativeComponents: 'components with relative import statements (please use absolute paths for imported components)'
 };
 

@@ -10,9 +10,4 @@ export default class MergeConflict extends AbstractError {
     this.id = id;
     this.versions = versions;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.id = this.toHash(clone.id);
-    return clone;
-  }
 }

@@ -1,0 +1,53 @@
+{
+  "files": [
+      {
+          "file": "4b17f1fcd9ad75f9a22498c017dd19e589857d24",
+          "relativePath": "src/bar/foo.ts",
+          "name": "foo.ts",
+          "test": false
+      }
+  ],
+  "mainFile": "src/bar/foo.ts",
+  "bindingPrefix": "@bit",
+  "log": {
+      "message": "",
+      "date": "1526560845405",
+      "username": "David First",
+      "email": "david@bitsrc.io"
+  },
+  "ci": {},
+  "docs": [],
+  "dependencies": [
+      {
+          "id": "utils/is-string@0.0.1",
+          "nonExistProperty": "SHOULD NOT APPEAR IN THE ID",
+          "relativePaths": [
+              {
+                  "sourceRelativePath": "src/utils/is-string.ts",
+                  "destinationRelativePath": "src/utils/is-string.ts",
+                  "nonExistProperty": "SHOULD NOT APPEAR IN THE ID",
+                  "importSpecifiers": [
+                      {
+                          "mainFile": {
+                              "isDefault": true,
+                              "name": "isString"
+                          }
+                      }
+                  ],
+                  "isCustomResolveUsed": true,
+                  "importSource": "@/utils/is-string"
+              }
+          ]
+      }
+  ],
+  "devDependencies": [],
+  "flattenedDependencies": [
+      "utils/is-type@0.0.1",
+      "utils/is-string@0.0.1"
+  ],
+  "flattenedDevDependencies": [],
+  "packageDependencies": {},
+  "devPackageDependencies": {},
+  "peerPackageDependencies": {},
+  "envsPackageDependencies": {}
+}

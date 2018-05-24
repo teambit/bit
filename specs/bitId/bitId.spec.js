@@ -42,4 +42,10 @@ describe('Bit-id', () => {
       expect(BitId.getValidBitId(global, bitName).toString()).to.equal('css!!####@comp/app-bar');
     });
   });
+  describe('toString', () => {
+    it('should not contain the version as latest', () => {
+      const bitId = BitId.parse('bit.envs/mocha/react@latest');
+      expect(bitId.toString()).to.equal('bit.envs/mocha/react');
+    });
+  });
 });

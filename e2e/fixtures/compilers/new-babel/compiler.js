@@ -2,6 +2,7 @@ const babel = require('babel-core');
 const Vinyl = require('vinyl');
 const path = require('path');
 const fs = require('fs-extra');
+const resolve = require('resolve');
 
 let logger;
 
@@ -101,7 +102,11 @@ function resolvePreset(componentDir, presetName) {
 }
 
 function resolvePackagesFromComponentDir(componentDir, packagName) {
-  const resolvedPackage = require.resolve(packagName, { paths: [componentDir] });
+  // This might be done using the paths option in node's built in require.resolve function
+  // but this option is only supported since node v8.9.0 so in order to support older versions
+  // we used this package
+  // const resolvedPackage = require.resolve(packagName, { paths: [componentDir] });
+  const resolvedPackage = resolve.sync(packagName, { basedir: componentDir });
   return resolvedPackage;
 }
 

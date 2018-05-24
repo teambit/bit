@@ -7,9 +7,4 @@ export default class VersionShouldBeRemoved extends AbstractError {
     super();
     this.id = id;
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.id = this.toHash(clone.id);
-    return clone;
-  }
 }

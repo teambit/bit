@@ -193,7 +193,10 @@ export default class SourceRepository {
     consumerComponent.mainFile = consumerComponent.addSharedDir(consumerComponent.mainFile);
     consumerComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
-        relativePath.sourceRelativePath = consumerComponent.addSharedDir(relativePath.sourceRelativePath);
+        if (!relativePath.isCustomResolveUsed) {
+          // for isCustomResolveUsed it was never stripped
+          relativePath.sourceRelativePath = consumerComponent.addSharedDir(relativePath.sourceRelativePath);
+        }
       });
     });
     const version = Version.fromComponent({

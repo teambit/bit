@@ -95,10 +95,10 @@ describe('bit import command with no ids', function () {
         expect(output).to.have.string('bar/foo');
         expect(output).to.have.string('bar/foo2');
       });
-      it('should override the ones from bit.json but not the AUTHORED from bitmap', () => {
+      it('should override them all', () => {
         const statusOutput = helper.runCmd('bit status');
-        expect(statusOutput).to.have.string('modified components');
-        expect(statusOutput).to.have.string('bar/foo');
+        expect(statusOutput).to.not.have.string('modified components');
+        expect(statusOutput).to.not.have.string('bar/foo');
         expect(statusOutput).to.not.have.string('bar/foo2');
       });
     });

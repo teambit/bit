@@ -105,18 +105,140 @@ describe('bit import', function () {
       });
     });
 
+    describe('when the default component directory already exist', () => {
+      const componentFileLocation = path.join(helper.localScopePath, 'components/global/simple/simple.js');
+      const componentDir = path.join(helper.localScopePath, 'components/global/simple');
+      describe('when the destination is an existing empty directory', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.ensureDirSync(componentDir);
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should write the component to the specified path', () => {
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination directory is not empty', () => {
+        let output;
+        const existingFile = path.join(componentDir, 'my-file.js');
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.outputFileSync(existingFile, 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(existingFile).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import');
+        });
+        it('should import successfully if the --override flag is used', () => {
+          output = helper.importComponent('global/simple --override');
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination is a file', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.outputFileSync(componentDir, 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(componentDir).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import');
+        });
+        it('should throw an error also when the --override flag is used', () => {
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple --override`);
+          expect(output).to.have.string('unable to import');
+        });
+      });
+    });
+
     describe('with a specific path, using -p flag', () => {
+      const componentFileLocation = path.join(helper.localScopePath, 'my-custom-location/simple.js');
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
       });
-      it('should write the component to the specified path', () => {
-        const expectedLocation = path.join(helper.localScopePath, 'my-custom-location', 'simple.js');
-        expect(fs.existsSync(expectedLocation)).to.be.true;
+      describe('when the destination is a non-exist directory', () => {
+        before(() => {
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should write the component to the specified path', () => {
+          expect(componentFileLocation).to.be.a.file();
+        });
       });
-
-      it('should write the internal files according to their relative paths', () => {});
+      describe('when the destination is an existing empty directory', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.ensureDirSync(path.join(helper.localScopePath, 'my-custom-location'));
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should write the component to the specified path', () => {
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination directory is not empty', () => {
+        let output;
+        const existingFile = path.join(helper.localScopePath, 'my-custom-location/my-file.js');
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.ensureDirSync(path.join(helper.localScopePath, 'my-custom-location'));
+          fs.outputFileSync(existingFile, 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(existingFile).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import');
+        });
+        it('should import successfully if the --override flag is used', () => {
+          helper.runCmd(`bit import ${helper.remoteScope}/global/simple -p my-custom-location --override`);
+          expect(componentFileLocation).to.be.a.file();
+        });
+      });
+      describe('when the destination is a file', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          fs.outputFileSync(path.join(helper.localScopePath, 'my-custom-location'), 'console.log()');
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple -p my-custom-location`);
+        });
+        it('should not import the component', () => {
+          expect(componentFileLocation).to.not.be.a.path();
+        });
+        it('should not delete the existing file', () => {
+          expect(path.join(helper.localScopePath, 'my-custom-location')).to.be.a.file();
+        });
+        it('should throw an error', () => {
+          expect(output).to.have.string('unable to import');
+        });
+        it('should throw an error also when the --override flag is used', () => {
+          output = helper.runWithTryCatch(
+            `bit import ${helper.remoteScope}/global/simple -p my-custom-location --override`
+          );
+          expect(output).to.have.string('unable to import');
+        });
+      });
     });
 
     describe('re-import after deleting the component physically', () => {
@@ -140,7 +262,7 @@ describe('bit import', function () {
         helper.addRemoteScope();
         helper.importComponent('global/simple');
         fs.removeSync(path.join(helper.localScopePath, '.bitmap'));
-        output = helper.importComponent('global/simple');
+        output = helper.importComponent('global/simple --override');
       });
       it('should import the component successfully', () => {
         expect(output).to.have.string('successfully imported one component');
@@ -837,6 +959,27 @@ describe('bit import', function () {
         expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
           `${helper.remoteScope}/utils/is-string@0.0.2`
         );
+      });
+    });
+    describe('when dist is set to a non-default directory', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.modifyFieldInBitJson('dist', { target: 'dist' });
+        helper.importComponent('bar/foo');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should copy the components into the dist directory', () => {
+        const expectedLocation = path.join('dist', 'components', 'bar', 'foo', 'bar', 'foo.js');
+        expect(localConsumerFiles).to.include(expectedLocation);
+      });
+      it('should copy also the dependencies into the dist directory', () => {
+        const expectedLocation = path.join(
+          'dist/components/.dependencies/utils/is-string',
+          helper.remoteScope,
+          '0.0.1/utils/is-string.js'
+        );
+        expect(localConsumerFiles).to.include(expectedLocation);
       });
     });
   });
@@ -1848,21 +1991,46 @@ console.log(barFoo.default());`;
       });
     });
     describe('re-import with a specific path', () => {
-      before(() => {
-        helper.importComponent('bar/foo -p new-location');
-        localConsumerFiles = helper.getConsumerFiles();
+      describe('from consumer root', () => {
+        before(() => {
+          helper.importComponent('bar/foo -p new-location');
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should move the component directory to the new location', () => {
+          const newLocation = path.join('new-location', 'bar', 'foo.js');
+          const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+          expect(localConsumerFiles).to.include(newLocation);
+          expect(localConsumerFiles).not.to.include(oldLocation);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
-      it('should move the component directory to the new location', () => {
-        const newLocation = path.join('new-location', 'bar', 'foo.js');
-        const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
-        expect(localConsumerFiles).to.include(newLocation);
-        expect(localConsumerFiles).not.to.include(oldLocation);
-      });
-      it('should be able to require its direct dependency and print results from all dependencies', () => {
-        const appJsFixture = "const barFoo = require('./new-location'); console.log(barFoo());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-        const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      describe('from an inner directory', () => {
+        before(() => {
+          helper.getClonedLocalScope(clonedScope);
+          helper.importComponent('bar/foo');
+          helper.runCmd(
+            `bit import ${helper.remoteScope}/bar/foo -p new-location`,
+            path.join(helper.localScopePath, 'components')
+          );
+          localConsumerFiles = helper.getConsumerFiles();
+        });
+        it('should move the component directory to the new location', () => {
+          const newLocation = path.join('components', 'new-location', 'bar', 'foo.js');
+          const oldLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
+          expect(localConsumerFiles).to.include(newLocation);
+          expect(localConsumerFiles).not.to.include(oldLocation);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = "const barFoo = require('./components/new-location'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
     });
     describe('import a component and then its dependency directly', () => {

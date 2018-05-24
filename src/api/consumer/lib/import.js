@@ -10,7 +10,7 @@ import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
-import type { ImportOptions } from '../../../consumer/component/import-components';
+import type { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
 

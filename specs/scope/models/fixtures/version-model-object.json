@@ -1,0 +1,87 @@
+{
+  "files": [{
+      "file": "3ef84ee58242de1b3feadfab4d12a7018de69e93",
+      "relativePath": "impl.js",
+      "name": "impl.js",
+      "test": false
+  }, {
+      "file": "b0f492d50dff231d3d50872f1fe42901a26be66e",
+      "relativePath": "spec.js",
+      "name": "spec.js",
+      "test": true
+  }],
+  "mainFile": "impl.js",
+  "dists": [{
+      "file": "aa633b24c97bb53dcd52b0ef5ac7f6aa7b7c85fa",
+      "relativePath": "dist.js",
+      "name": "dist.js",
+      "test": false
+  }],
+  "compiler": "bit.envs/compilers/babel",
+  "bindingPrefix": "@bit",
+  "tester": "bit.envs/mocha/react",
+  "log": {
+      "message": "init",
+      "date": "1497953762445",
+      "username": "David First",
+      "email": "david@bitsrc.io"
+  },
+  "ci": {
+      "startTime": "1497953909560",
+      "endTime": "1497953937808"
+  },
+  "specsResults": [{
+      "tests": [{
+          "title": "QuerySelectorAll should use GetElementByTagName",
+          "pass": true,
+          "err": null,
+          "duration": 5
+      }, {
+          "title": "QuerySelectorAll should use GetElementById",
+          "pass": true,
+          "err": null,
+          "duration": 2
+      }, {
+          "title": "QuerySelectorAll should use GetElementsByClassName",
+          "pass": true,
+          "err": null,
+          "duration": 2
+      }, {
+          "title": "QuerySelectorAll should use qsa for complex selectors",
+          "pass": true,
+          "err": null,
+          "duration": 9
+      }],
+      "stats": {
+          "start": "2017-06-20T10:18:57.361Z",
+          "end": "2017-06-20T10:18:57.792Z",
+          "duration": 431
+      },
+      "pass": true,
+      "specFile": "spec.js"
+  }],
+  "docs": [{
+      "name": "querySelectorAll",
+      "description": "# Returns all elements in the document that matches a specified CSS selector.",
+      "args": [{
+          "description": null,
+          "type": "object",
+          "name": "element"
+      }, {
+          "description": null,
+          "type": "string",
+          "name": "selector"
+      }],
+      "returns": {},
+      "access": "public",
+      "examples": [],
+      "static": false
+  }],
+  "dependencies": [],
+  "devDependencies": [],
+  "flattenedDependencies": [],
+  "flattenedDevDependencies": [],
+  "packageDependencies": {},
+  "devPackageDependencies": {},
+  "peerPackageDependencies": {}
+}

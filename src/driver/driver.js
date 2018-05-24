@@ -3,6 +3,10 @@ import path from 'path';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
+import type {
+  Tree,
+  ResolveModulesConfig
+} from '../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 
 export default class Driver {
   lang: string;
@@ -43,14 +47,26 @@ export default class Driver {
   }
 
   // TODO: Improve flow object return type
-  getDependencyTree(cwd: string, consumerPath: string, filePaths: string[], bindingPrefix: string): Promise<Object> {
+  getDependencyTree(
+    cwd: string,
+    consumerPath: string,
+    filePaths: string[],
+    bindingPrefix: string,
+    resolveModulesConfig: ResolveModulesConfig
+  ): Promise<{ missing: Object[], tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
     const fullPaths = filePaths.map(filePath => path.join(cwd, filePath));
     const driver = this.getDriver(false);
-    return driver.getDependencyTree(cwd, consumerPath, fullPaths, bindingPrefix);
-  }
 
+    return driver.getDependencyTree({
+      baseDir: cwd,
+      consumerPath,
+      filePaths: fullPaths,
+      bindingPrefix,
+      resolveModulesConfig
+    });
+  }
 
   // TODO: Improve flow object return type
   npmLogin(token: string, npmrcPath: string, registryUrl: string): Object {

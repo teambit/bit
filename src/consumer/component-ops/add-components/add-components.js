@@ -24,7 +24,7 @@ import { Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import type { BitIdStr } from '../../../bit-id/bit-id';
-import { COMPONENT_ORIGINS, REGEX_PATTERN, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER } from '../../../constants';
+import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER } from '../../../constants';
 import logger from '../../../logger/logger';
 import {
   PathsNotExist,
@@ -34,7 +34,8 @@ import {
   DuplicateIds,
   EmptyDirectory,
   TestIsDirectory,
-  ExcludedMainFile
+  ExcludedMainFile,
+  MainFileIsDir
 } from './exceptions';
 import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
@@ -45,13 +46,14 @@ import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
-type PathsStats = { [string]: { isDir: boolean } };
+type PathsStats = { [PathOsBased]: { isDir: boolean } };
 type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
   mainFile?: ?PathOsBased,
   trackDir?: PathOsBased // set only when one directory is added by author
 };
+const REGEX_DSL_PATTERN = /{([^}]+)}/g;
 
 /**
  * validatePaths - validate if paths entered by user exist and if not throw an error
@@ -268,7 +270,8 @@ export default class AddComponents {
    */
   _addMainFileToFiles(files: ComponentMapFile[]): ?PathOsBased {
     let mainFile = this.main;
-    if (mainFile && mainFile.match(REGEX_PATTERN)) {
+    if (mainFile && mainFile.match(REGEX_DSL_PATTERN)) {
+      // it's a DSL
       files.forEach((file) => {
         const fileInfo = calculateFileInfo(file.relativePath);
         const generatedFile = format(mainFile, fileInfo);
@@ -293,10 +296,13 @@ export default class AddComponents {
     }
     if (!mainFile) return undefined;
     const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
-    const mainPath = path.join(this.consumer.getPath(), mainFileRelativeToConsumer);
+    const mainPath = this.consumer.toAbsolutePath(mainFileRelativeToConsumer);
     if (fs.existsSync(mainPath)) {
       const shouldIgnore = this.gitIgnore.ignores(mainFileRelativeToConsumer);
       if (shouldIgnore) throw new ExcludedMainFile(mainFileRelativeToConsumer);
+      if (isDir(mainPath)) {
+        throw new MainFileIsDir(mainPath);
+      }
       const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(mainFileRelativeToConsumer)))(files);
       if (!foundFile) {
         files.push({
@@ -379,14 +385,13 @@ export default class AddComponents {
         return { componentId: finalBitId, files: filteredMatchedFiles, mainFile: resolvedMainFile, trackDir };
       }
       // is file
-      const resolvedPath = path.resolve(componentPath);
-      const pathParsed = path.parse(resolvedPath);
+      const absolutePath = path.resolve(componentPath);
+      const pathParsed = path.parse(absolutePath);
       const relativeFilePath = this.consumer.getPathRelativeToConsumer(componentPath);
       if (!finalBitId) {
         let dirName = pathParsed.dir;
         if (!dirName) {
-          const absPath = path.resolve(componentPath);
-          dirName = path.dirname(absPath);
+          dirName = path.dirname(absolutePath);
         }
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
         const idFromPath = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);

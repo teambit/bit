@@ -8,9 +8,4 @@ export default class ComponentSpecsFailed extends AbstractError {
     super();
     this.specsResultsAndIdPretty = specsResultsAndIdPretty || '';
   }
-  makeAnonymous() {
-    const clone = this.clone();
-    clone.specsResultsAndIdPretty = 'removed';
-    return clone;
-  }
 }

@@ -210,7 +210,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.testComponent('utils/is-type --verbose');
+        output = helper.testComponentWithOptions('utils/is-type', { '-verbose': '', '-fork-level': 'NONE' });
       });
       it('should import the tester and run the tests successfully', () => {
         expect(output).to.have.string('tests passed');

@@ -70,8 +70,11 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
           (!remoteVersion && localVersion === dependencyVersion)
             ? 'green'
             : 'red';
+        // $FlowFixMe
         row.push(c[color](dependencyVersion));
+        // $FlowFixMe
         row.push(c[color](localVersion));
+        // $FlowFixMe
         row.push(remoteVersion ? c[color](remoteVersion) : 'N/A');
       }
       dependencyRows.push(row);
