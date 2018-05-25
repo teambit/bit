@@ -347,7 +347,7 @@ export default class Component extends BitObject {
 
   toBuffer(pretty: boolean) {
     const args = getStringifyArgs(pretty);
-    return new Buffer(JSON.stringify(this.toObject(), ...args));
+    return Buffer.from(JSON.stringify(this.toObject(), ...args));
   }
 
   toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: boolean) {

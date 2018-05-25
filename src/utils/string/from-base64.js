@@ -11,5 +11,5 @@
  * ```
  */
 export default function fromBase64(base64: string): string {
-  return new Buffer(base64, 'base64').toString();
+  return Buffer.from(base64, 'base64').toString();
 }

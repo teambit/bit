@@ -12,6 +12,7 @@ import type {
 import AddTestsWithoutId from '../exceptions/add-tests-without-id';
 import type { PathOsBased } from '../../../utils/path';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 export default class Add extends Command {
   name = 'add [path...]';
@@ -47,7 +48,7 @@ export default class Add extends Command {
     }
   ): Promise<*> {
     if (namespace && id) {
-      return Promise.reject('please use either [id] or [namespace] to add a particular component');
+      throw new GeneralError('please use either [id] or [namespace] to add a particular component');
     }
 
     const normalizedPaths: PathOsBased[] = paths.map(p => path.normalize(p));
