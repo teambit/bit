@@ -6,6 +6,7 @@ import { RemovedObjects, RemovedLocalObjects } from '../../../scope/removed-comp
 import paintRemoved from '../../templates/remove-template';
 import { removePrompt } from '../../../prompts';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 export default class Remove extends Command {
   name = 'remove <ids...>';
@@ -34,7 +35,7 @@ export default class Remove extends Command {
     if (!silent) {
       const removePromptResult = await removePrompt();
       if (!yn(removePromptResult.shouldRemove)) {
-        return Promise.reject('the operation has been canceled');
+        throw new GeneralError('the operation has been canceled');
       }
     }
     return remove({ ids, remote, force, track, deleteFiles });
@@ -49,6 +50,7 @@ export default class Remove extends Command {
     return paintRemoved(localResult, false) + this.paintArray(remoteResult);
   }
   paintArray(removedObjectsArray: RemovedObjects[]) {
+    // $FlowFixMe
     return removedObjectsArray.map(item => paintRemoved(item, true));
   }
 }

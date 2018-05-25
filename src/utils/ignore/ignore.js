@@ -9,6 +9,7 @@ function getGitIgnoreFile(dir: string) {
 }
 
 export default function retrieveIgnoreList(cwd: string) {
+  // $FlowFixMe
   const ignoreList = getGitIgnoreFile(cwd).concat(IGNORE_LIST);
   return ignoreList;
 }

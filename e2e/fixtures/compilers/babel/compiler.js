@@ -23,7 +23,7 @@ const path = require('path');
 function runBabel(file, options, distPath) {
   const { code, map } = babel.transform(file.contents.toString(), options);
   const mappings = new Vinyl({
-    contents: new Buffer(map.mappings),
+    contents: Buffer.from(map.mappings),
     base: distPath,
     path: path.join(distPath, file.relative),
     basename: `${file.basename}.map`
@@ -31,7 +31,7 @@ function runBabel(file, options, distPath) {
   const distFile = file.clone();
   distFile.base = distPath;
   distFile.path = path.join(distPath, file.relative);
-  distFile.contents = code ? new Buffer(`${code}\n\n//# sourceMappingURL=${mappings.basename}`) : new Buffer(code);
+  distFile.contents = code ? Buffer.from(`${code}\n\n//# sourceMappingURL=${mappings.basename}`) : Buffer.from(code);
   return [mappings, distFile];
 }
 function compile(files, distPath) {
@@ -44,7 +44,7 @@ function compile(files, distPath) {
   };
 
   return files.map(file => runBabel(file, options, distPath)).reduce((a, b) => a.concat(b));
-  
+
 }
 
 module.exports = {

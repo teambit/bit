@@ -25,6 +25,7 @@ export async function buildAll(verbose: boolean): Promise<Object> {
     COMPONENT_ORIGINS.IMPORTED,
     COMPONENT_ORIGINS.AUTHORED
   ]);
+  // eslint-disable-next-line prefer-promise-reject-errors
   if (R.isEmpty(authoredAndImported)) return Promise.reject('nothing to build');
   const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
   loader.start(BEFORE_LOADING_COMPONENTS);

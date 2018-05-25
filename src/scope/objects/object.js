@@ -113,7 +113,7 @@ export default class BitObject {
   }
 
   serialize(): Buffer {
-    return Buffer.concat([new Buffer(this.header), this.toBuffer()]);
+    return Buffer.concat([Buffer.from(this.header), this.toBuffer()]);
   }
 
   validate(): void {
