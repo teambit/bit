@@ -8,7 +8,6 @@ import ScopeSearch from './commands/private-cmds/_search-cmd';
 import ScopeShow from './commands/private-cmds/_show-cmd';
 import Export from './commands/public-cmds/export-cmd';
 import List from './commands/public-cmds/list-cmd';
-import Reset from './commands/public-cmds/reset-cmd';
 import Commit from './commands/public-cmds/commit-cmd';
 import Import from './commands/public-cmds/import-cmd';
 import Install from './commands/public-cmds/install-cmd';
@@ -32,7 +31,6 @@ import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
 import ScopeConfig from './commands/public-cmds/scope-config-cmd';
 import Link from './commands/public-cmds/link-cmd';
-import Watch from './commands/public-cmds/watch-cmd';
 import Add from './commands/public-cmds/add-cmd';
 import Untrack from './commands/public-cmds/untrack-cmd';
 import Untag from './commands/public-cmds/untag-cmd';
@@ -62,7 +60,6 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Install(),
       new Export(),
       new Status(),
-      new Reset(),
       new List(),
       new Config(),
       new ClearCache(),
@@ -86,7 +83,6 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new ScopeConfig(),
       new Link(),
       new DependencyStatus(),
-      // new Watch(),
       new Add(),
       new Untrack(),
       new Untag(),
