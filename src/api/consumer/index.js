@@ -6,7 +6,6 @@ import listScope from './lib/list-scope';
 import { commitAction, commitAllAction } from './lib/commit';
 import status from './lib/status';
 import { build, buildAll } from './lib/build';
-import reset from './lib/reset';
 import importAction from './lib/import';
 import installAction from './lib/install';
 import exportAction from './lib/export';
@@ -43,7 +42,6 @@ export {
   commitAllAction,
   status,
   build,
-  reset,
   importAction,
   installAction,
   getConsumerComponent,
