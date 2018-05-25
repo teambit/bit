@@ -9,8 +9,9 @@ describe('versionParser()', () => {
   });
 
   it('should throw invalid version', () => {
+    const version = versionParser('latest');
     expect(() => {
-      versionParser('$1');
+      version('$1');
     }).to.throw();
   });
 
