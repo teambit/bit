@@ -40,7 +40,7 @@ const compiler = {
       pluginsNames.map(addParsedNameToResult(dynamicPackageDependencies, packageJson, getPluginPackageName));
       presetsNames.map(addParsedNameToResult(dynamicPackageDependencies, packageJson, getPresetPackageName));
     }
-    
+
     return dynamicPackageDependencies;
   },
   action: ({
@@ -51,11 +51,11 @@ const compiler = {
     api,
     context
   }) => {
-    const vinylBabelrc = getFileByName('.babelrc', configFiles);    
+    const vinylBabelrc = getFileByName('.babelrc', configFiles);
     const rawBabelrc = vinylBabelrc.contents.toString();
     const babelrc = JSON.parse(rawBabelrc);
     const componentDir = context && context.componentDir
-    
+
     if (componentDir) {
       babelrc.plugins = babelrc.plugins.map(pluginName => resolvePlugin(componentDir, pluginName));
       babelrc.presets = babelrc.presets.map(presetName => resolvePreset(componentDir, presetName));
@@ -119,7 +119,7 @@ function loadPackgeJsonSync(componentDir, workspaceDir) {
     if (packageJson) return packageJson;
   }
   packageJsonPath = path.join(workspaceDir, packageJsonName);
-  const packageJson = loadPackgeJsonFromPathSync(packageJsonPath);  
+  const packageJson = loadPackgeJsonFromPathSync(packageJsonPath);
   return packageJson;
 }
 
@@ -142,7 +142,7 @@ function getPackageVersion(packageName, packageJson) {
 function runBabel(file, options, distPath) {
   const { code, map } = babel.transform(file.contents.toString(), options);
   const mappings = new Vinyl({
-    contents: new Buffer(map.mappings),
+    contents: Buffer.from(map.mappings),
     base: distPath,
     path: path.join(distPath, file.relative),
     basename: `${file.basename}.map`
@@ -150,7 +150,7 @@ function runBabel(file, options, distPath) {
   const distFile = file.clone();
   distFile.base = distPath;
   distFile.path = path.join(distPath, file.relative);
-  distFile.contents = code ? new Buffer(`${code}\n\n//# sourceMappingURL=${mappings.basename}`) : new Buffer(code);
+  distFile.contents = code ? Buffer.from(`${code}\n\n//# sourceMappingURL=${mappings.basename}`) : Buffer.from(code);
   return [mappings, distFile];
 }
 

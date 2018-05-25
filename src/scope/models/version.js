@@ -163,24 +163,22 @@ export default class Version extends BitObject {
       return !!val;
     };
 
-    return JSON.stringify(
-      filterObject(
-        {
-          mainFile: obj.mainFile,
-          files: obj.files,
-          compiler: obj.compiler,
-          tester: obj.tester,
-          log: obj.log,
-          dependencies: getDependencies(obj.dependencies),
-          devDependencies: getDependencies(obj.devDependencies),
-          packageDependencies: obj.packageDependencies,
-          devPackageDependencies: obj.devPackageDependencies,
-          peerPackageDependencies: obj.peerPackageDependencies,
-          bindingPrefix: obj.bindingPrefix
-        },
-        filterFunction
-      )
-    );
+    return JSON.stringify(filterObject(
+      {
+        mainFile: obj.mainFile,
+        files: obj.files,
+        compiler: obj.compiler,
+        tester: obj.tester,
+        log: obj.log,
+        dependencies: getDependencies(obj.dependencies),
+        devDependencies: getDependencies(obj.devDependencies),
+        packageDependencies: obj.packageDependencies,
+        devPackageDependencies: obj.devPackageDependencies,
+        peerPackageDependencies: obj.peerPackageDependencies,
+        bindingPrefix: obj.bindingPrefix
+      },
+      filterFunction
+    ));
   }
 
   getAllFlattenedDependencies() {
@@ -364,15 +362,15 @@ export default class Version extends BitObject {
     username,
     email
   }: {
-    component: ConsumerComponent,
-    files: ?Array<SourceFileModel>,
-    flattenedDependencies: BitId[],
-    flattenedDevDependencies: BitId[],
-    message: string,
-    dists: ?Array<DistFileModel>,
-    specsResults: ?Results,
-    username: ?string,
-    email: ?string
+  component: ConsumerComponent,
+  files: ?Array<SourceFileModel>,
+  flattenedDependencies: BitId[],
+  flattenedDevDependencies: BitId[],
+  message: string,
+  dists: ?Array<DistFileModel>,
+  specsResults: ?Results,
+  username: ?string,
+  email: ?string
   }) {
     const parseFile = (file) => {
       return {
@@ -461,9 +459,7 @@ export default class Version extends BitObject {
         const compilerName = env.name || '';
         env.files.forEach((file) => {
           if (!file.name) {
-            throw new GeneralError(
-              `${message}, the compiler ${compilerName} has a file which missing the name attribute`
-            );
+            throw new GeneralError(`${message}, the compiler ${compilerName} has a file which missing the name attribute`);
           }
         });
       }

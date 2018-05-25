@@ -62,7 +62,7 @@ export default class Dists {
     return this.dists;
   }
 
-  getAsReadable() {
+  getAsReadable(): string[] {
     return this.dists.map(file => file.toReadableString());
   }
 

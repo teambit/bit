@@ -58,7 +58,9 @@ export default class SSH implements Network {
   host: string;
   _sshUsername: ?string; // Username entered by the user on the prompt user/pass process
 
-  constructor({ path, username, port, host }: SSHProps) {
+  constructor({
+    path, username, port, host 
+  }: SSHProps) {
     this.path = path;
     this.username = username;
     this.port = port;
@@ -226,11 +228,9 @@ export default class SSH implements Network {
     return this.exec('_list').then((str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
-      return rejectNils(
-        payload.map((c) => {
-          return c ? ConsumerComponent.fromString(c) : null;
-        })
-      );
+      return rejectNils(payload.map((c) => {
+        return c ? ConsumerComponent.fromString(c) : null;
+      }));
     });
   }
 
@@ -437,13 +437,10 @@ export default class SSH implements Network {
           logger.debug('SSH: connection failed', e);
           Analytics.addBreadCrumb('ssh', 'connection failed');
           if (e.code === 'ENOTFOUND') {
-            throw new GeneralError(
-              `unable to find the SSH server. host: ${e.host}, port: ${e.port}. Original error message: ${e.message}`
-            );
+            throw new GeneralError(`unable to find the SSH server. host: ${e.host}, port: ${e.port}. Original error message: ${e.message}`);
           }
 
           throw e;
-        })
-    );
+        }));
   }
 }

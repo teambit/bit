@@ -45,6 +45,6 @@ export default function versionParser(versionStr: string): Version {
   if (isLatest(versionStr)) return returnLatest();
   if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
   if (isRegular(versionStr)) return returnRegular(versionStr);
-  if (!isNaN(versionStr)) return convertToSemVer(versionStr);
+  if (!Number.isNaN(versionStr)) return convertToSemVer(versionStr);
   throw new InvalidVersion(versionStr);
 }

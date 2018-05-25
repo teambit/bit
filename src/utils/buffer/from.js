@@ -46,13 +46,13 @@ const isModern =
  * @returns Buffer
  * @example
  * ```js
- *  bufferFrom([1, 2, 3, 4]) // => <Buffer 01 02 03 04> 
+ *  bufferFrom([1, 2, 3, 4]) // => <Buffer 01 02 03 04>
  *  const arr = new Uint8Array([1, 2, 3, 4])
- *  bufferFrom(arr.buffer, 1, 2) // => <Buffer 02 03> 
+ *  bufferFrom(arr.buffer, 1, 2) // => <Buffer 02 03>
  *
- *  bufferFrom('test', 'utf8') // => <Buffer 74 65 73 74>  
+ *  bufferFrom('test', 'utf8') // => <Buffer 74 65 73 74>
  *  const buf = bufferFrom('test')
- *  bufferFrom(buf) // => <Buffer 74 65 73 74> 
+ *  bufferFrom(buf) // => <Buffer 74 65 73 74>
  * ```
  */
 module.exports = function from(value, encodingOrOffset, length) {

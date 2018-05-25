@@ -171,10 +171,10 @@ async function applyModifiedVersion(
       foundFile.contents = content.contents;
       filesStatus[file.filePath] = FileStatus.updated;
     } else if (file.conflict) {
-      foundFile.contents = new Buffer(file.conflict);
+      foundFile.contents = Buffer.from(file.conflict);
       filesStatus[file.filePath] = FileStatus.manual;
     } else if (file.output) {
-      foundFile.contents = new Buffer(file.output);
+      foundFile.contents = Buffer.from(file.output);
       filesStatus[file.filePath] = FileStatus.merged;
     } else {
       throw new GeneralError('file does not have output nor conflict');

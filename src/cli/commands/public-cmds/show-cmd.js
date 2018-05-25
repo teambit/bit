@@ -6,6 +6,7 @@ import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 export default class Show extends Command {
   name = 'show <id>';
@@ -36,7 +37,7 @@ export default class Show extends Command {
     }
 
     if (versions && (compare || outdated)) {
-      return Promise.reject('the [--compare] or [--outdated] flag cannot be used along with --versions');
+      throw new GeneralError('the [--compare] or [--outdated] flag cannot be used along with --versions');
     }
 
     if (versions) {
@@ -45,7 +46,7 @@ export default class Show extends Command {
         versions
       }));
     }
-    if (compare && outdated) return Promise.reject('please make sure to use either [--compare] or [--outdated], alone');
+    if (compare && outdated) { throw new GeneralError('please make sure to use either [--compare] or [--outdated], alone'); }
     return getBitComponent().then(({ component, componentModel }) => ({
       component,
       componentModel,
