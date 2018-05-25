@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- introduce a new flag `bit init --reset-hard` to delete Bit files in order to start from a clean workspace
+- introduce a new flag `bit init --reset` to recreate bit.json and .bitmap files in case they are corrupted
 - fix `bit move` and `bit import --path` when running from an inner directory
 - display a descriptive error-message when the added main-file is a directory
 - support custom module resolution

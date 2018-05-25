@@ -2,11 +2,12 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import { BIT_GIT_DIR, BIT_HIDDEN_DIR } from '../../src/constants';
+import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';
+import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
+import { InvalidBitJson } from '../../src/consumer/bit-json/exceptions';
 
-chai.use(require('chai-fs'));
 const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
@@ -168,6 +169,135 @@ describe('run bit init', function () {
       });
       it('should recreate scope.json file', () => {
         expect(scopeJsonPath).to.be.a.file();
+      });
+    });
+  });
+  describe('bit init --reset', () => {
+    describe('when bitMap file is invalid', () => {
+      let bitMapPath;
+      before(() => {
+        helper.reInitLocalScope();
+        const invalidBitMap = 'this is an invalid json';
+        bitMapPath = path.join(helper.localScopePath, BIT_MAP);
+        fs.outputFileSync(bitMapPath, invalidBitMap);
+      });
+      it('bit status should throw an exception InvalidBitMap', () => {
+        const statusCmd = () => helper.runCmd('bit status');
+        const error = new InvalidBitMap(bitMapPath, 'Unexpected token t');
+        helper.expectToThrow(statusCmd, error);
+      });
+      it('should create a new bitMap file', () => {
+        helper.runCmd('bit init --reset');
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('version');
+      });
+    });
+    describe('when bit.json file is invalid', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.corruptBitJson();
+      });
+      it('bit status should throw an exception InvalidBitJson', () => {
+        const bitJsonPath = path.join(helper.localScopePath, BIT_JSON);
+        const statusCmd = () => helper.runCmd('bit status');
+        const error = new InvalidBitJson(bitJsonPath, 'Unexpected token t');
+        helper.expectToThrow(statusCmd, error);
+      });
+      it('should create a new bit.json file', () => {
+        helper.runCmd('bit init --reset');
+        const bitJson = helper.readBitJson();
+        expect(bitJson).to.have.property('packageManager');
+      });
+    });
+  });
+  describe('an existing environment with model and with modified bitMap and bitJson', () => {
+    let localScope;
+    let bitMap;
+    let bitJson;
+    let localConsumerFiles;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo(); // this modifies bitMap
+      helper.tagAllWithoutMessage(); // this creates objects in .bit dir
+
+      // modify bit.json
+      bitJson = helper.readBitJson();
+      bitJson.packageManager = 'yarn';
+      helper.writeBitJson(bitJson);
+
+      bitMap = helper.readBitMap();
+      localConsumerFiles = helper.getConsumerFiles('*', true);
+      localScope = helper.cloneLocalScope();
+    });
+    describe('bit init', () => {
+      before(() => {
+        helper.runCmd('bit init');
+      });
+      it('should not change BitMap file', () => {
+        const currentBitMap = helper.readBitMap();
+        expect(currentBitMap).to.be.deep.equal(bitMap);
+        expect(currentBitMap).to.have.property('bar/foo@0.0.1');
+      });
+      it('should not change bit.json file', () => {
+        const currentBitJson = helper.readBitJson();
+        expect(currentBitJson).to.be.deep.equal(bitJson);
+        expect(currentBitJson.packageManager).to.be.equal('yarn');
+      });
+      it('should not change .bit directory', () => {
+        const currentFiles = helper.getConsumerFiles('*', true);
+        expect(currentFiles).to.be.deep.equal(localConsumerFiles);
+      });
+    });
+    describe('bit init --reset', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.runCmd('bit init --reset');
+      });
+      it('should not change BitMap file', () => {
+        const currentBitMap = helper.readBitMap();
+        expect(currentBitMap).to.be.deep.equal(bitMap);
+        expect(currentBitMap).to.have.property('bar/foo@0.0.1');
+      });
+      it('should not change bit.json file', () => {
+        const currentBitJson = helper.readBitJson();
+        expect(currentBitJson).to.be.deep.equal(bitJson);
+        expect(currentBitJson.packageManager).to.be.equal('yarn');
+      });
+      it('should not change .bit directory', () => {
+        const currentFiles = helper.getConsumerFiles('*', true);
+        expect(currentFiles).to.be.deep.equal(localConsumerFiles);
+      });
+    });
+    describe('bit init --reset-hard', () => {
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.runCmd('bit init --reset-hard');
+      });
+      it('should recreate the BitMap file', () => {
+        const currentBitMap = helper.readBitMap();
+        expect(currentBitMap).to.not.be.deep.equal(bitMap);
+        expect(currentBitMap).to.not.have.property('bar/foo@0.0.1');
+      });
+      it('should recreate the bit.json file', () => {
+        const currentBitJson = helper.readBitJson();
+        expect(currentBitJson).to.not.be.deep.equal(bitJson);
+        expect(currentBitJson.packageManager).to.not.be.equal('yarn');
+      });
+      it('should recreate .bit directory', () => {
+        const currentFiles = helper.getConsumerFiles('*', true);
+        expect(currentFiles).to.not.be.deep.equal(localConsumerFiles);
+      });
+      it('.bit/objects directory should be empty', () => {
+        const objectsDir = path.join(helper.localScopePath, '.bit', 'objects');
+        expect(objectsDir).to.be.a.directory().and.empty;
+      });
+      it('should not delete the user files', () => {
+        expect(path.join(helper.localScopePath, 'bar/foo.js')).to.be.a.file();
+      });
+      it('bit status should show nothing-to-tag', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.have.string('nothing to tag or export');
       });
     });
   });

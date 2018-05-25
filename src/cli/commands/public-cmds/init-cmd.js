@@ -5,6 +5,7 @@ import Command from '../../command';
 import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import GeneralError from '../../../error/general-error';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -13,13 +14,19 @@ export default class Init extends Command {
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
-    ['t', 'standalone [boolean]', 'do not nest component store within .git directory ']
+    ['t', 'standalone [boolean]', 'do not nest component store within .git directory '],
+    ['r', 'reset', 'write missing or damaged Bit files'],
+    [
+      '',
+      'reset-hard',
+      'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
+    ]
   ];
 
-  action([path]: [string], { bare, shared, standalone }: any): Promise<{ [string]: any }> {
+  action([path]: [string], { bare, shared, standalone, reset, resetHard }: any): Promise<{ [string]: any }> {
     if (path) path = pathlib.resolve(path);
-
     if (bare) {
+      if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
       if (typeof bare === 'boolean') bare = '';
       return initScope(path, bare, shared).then(({ created }) => {
         return {
@@ -28,17 +35,19 @@ export default class Init extends Command {
         };
       });
     }
-
-    return init(path, standalone).then(({ created, addedGitHooks, existingGitHooks }) => {
+    if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
+    return init(path, standalone, reset, resetHard).then(({ created, addedGitHooks, existingGitHooks }) => {
       return {
         created,
         addedGitHooks,
-        existingGitHooks
+        existingGitHooks,
+        reset,
+        resetHard
       };
     });
   }
 
-  report({ created, bare, addedGitHooks, existingGitHooks }: any): string {
+  report({ created, bare, addedGitHooks, existingGitHooks, reset, resetHard }: any): string {
     if (bare) {
       // if (!created) return `${chalk.grey('successfully reinitialized a bare bit scope.')}`;
       // @TODO - a case that you already have a bit scope
@@ -48,6 +57,8 @@ export default class Init extends Command {
     let initMessage = `${chalk.green('successfully initialized a bit workspace.')}`;
 
     if (!created) initMessage = `${chalk.grey('successfully reinitialized a bit workspace.')}`;
+    if (reset) initMessage = `${chalk.grey('your bit workspace has been reset successfully.')}`;
+    if (resetHard) initMessage = `${chalk.grey('your bit workspace has been hard-reset successfully.')}`;
     // const addedGitHooksTemplate = _generateAddedGitHooksTemplate(addedGitHooks);
     // const existingGitHooksTemplate = _generateExistingGitHooksTemplate(existingGitHooks);
     // return `${initMessage}\n${addedGitHooksTemplate}\n${existingGitHooksTemplate}`;
