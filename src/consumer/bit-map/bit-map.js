@@ -70,11 +70,7 @@ export default class BitMap {
     this.markAsChanged();
   }
 
-  static ensure(dirPath: string): Promise<BitMap> {
-    return Promise.resolve(this.load(dirPath));
-  }
-
-  static load(dirPath: PathOsBased): BitMap {
+  static load(dirPath: PathOsBasedAbsolute): BitMap {
     const standardLocation = path.join(dirPath, BIT_MAP);
     const oldLocation = path.join(dirPath, OLD_BIT_MAP);
     const getBitMapLocation = (): ?PathOsBased => {
@@ -104,6 +100,31 @@ export default class BitMap {
     });
 
     return new BitMap(dirPath, bitMapLocation, components, version);
+  }
+
+  /**
+   * if resetHard, delete the bitMap file.
+   * Otherwise, try to load it and only if the file is corrupted then delete it.
+   */
+  static reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): void {
+    const bitMapPath = path.join(dirPath, BIT_MAP);
+    const deleteBitMapFile = () => {
+      logger.info(`deleting the bitMap file at ${bitMapPath}`);
+      fs.removeSync(bitMapPath);
+    };
+    if (resetHard) {
+      deleteBitMapFile();
+      return;
+    }
+    try {
+      BitMap.load(dirPath);
+    } catch (err) {
+      if (err instanceof InvalidBitMap) {
+        deleteBitMapFile();
+        return;
+      }
+      throw err;
+    }
   }
 
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {

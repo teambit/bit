@@ -212,7 +212,11 @@ once your changes are merged with the new remote version, please tag and export 
         err.id
       )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
-  [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
+  [
+    InvalidBitJson,
+    err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
+    consider running ${chalk.bold('bit init --reset')} to recreate the file`
+  ],
   [
     DriverNotFound,
     err =>
@@ -230,7 +234,8 @@ once your changes are merged with the new remote version, please tag and export 
     err =>
       `error: unable to parse your bitMap file at ${chalk.bold(err.path)}, due to an error ${chalk.bold(
         err.errorMessage
-      )}`
+      )}.
+      consider running ${chalk.bold('bit init --reset')} to recreate the file`
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [

@@ -10,7 +10,7 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 
 const generateRandomStr = (size: number = 8): string => {
@@ -239,7 +239,7 @@ export default class Helper {
     return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
 
-  readBitMap(bitMapPath: string = path.join(this.localScopePath, '.bitmap'), withoutComment: boolean = true) {
+  readBitMap(bitMapPath: string = path.join(this.localScopePath, BIT_MAP), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     return json.parse(map.toString('utf8'), null, withoutComment);
   }
@@ -251,7 +251,7 @@ export default class Helper {
   }
 
   writeBitMap(bitMap: Object) {
-    const bitMapPath = path.join(this.localScopePath, '.bitmap');
+    const bitMapPath = path.join(this.localScopePath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
   setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
@@ -323,7 +323,7 @@ export default class Helper {
     },
     oldBitMapFile: boolean = false
   ) {
-    const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : '.bitmap');
+    const bitmapFile = path.join(cwd, oldBitMapFile ? '.bit.map.json' : BIT_MAP);
 
     const bitmap = {
       version: '0.11.1-testing'
