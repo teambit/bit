@@ -108,14 +108,12 @@ export default class Consumer {
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
   }
-  get compiler(): ?CompilerExtension {
-    const compiler = this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
-    return compiler;
+  get compiler(): Promise<?CompilerExtension> {
+    return this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
   }
 
-  get tester(): ?TesterExtension {
-    const tester = this.bitJson.loadTester(this.projectPath, this.scope.getPath());
-    return tester;
+  get tester(): Promise<?TesterExtension> {
+    return this.bitJson.loadTester(this.projectPath, this.scope.getPath());
   }
 
   get driver(): Driver {

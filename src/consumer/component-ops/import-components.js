@@ -88,10 +88,13 @@ export default class ImportComponents {
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
 
+    const compiler = await this.consumer.compiler;
+    const tester = await this.consumer.tester;
+
     if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!this.options.withEnvironments) {
         return Promise.reject(new NothingToImport());
-      } else if (R.isNil(this.consumer.tester) && R.isNil(this.consumer.compiler)) {
+      } else if (!tester && !compiler) {
         return Promise.reject(new NothingToImport());
       }
     }
@@ -120,8 +123,6 @@ export default class ImportComponents {
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
-      const compiler = this.consumer.compiler;
-      const tester = this.consumer.tester;
       const envsPromises = [];
       if (compiler) {
         envsPromises.push(compiler.install());

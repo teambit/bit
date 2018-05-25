@@ -26,6 +26,15 @@ describe('bit import command with no ids', function () {
       const output = helper.importAllComponents(true);
       expect(output.includes('successfully imported one component')).to.be.true;
     });
+    describe('running bit import with --environment flag when no compiler nor tester is installed', () => {
+      let output;
+      before(() => {
+        output = helper.runCmd('bit import --environment');
+      });
+      it('should not throw an error', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+    });
   });
   describe('with a component in bit.map', () => {
     before(() => {
