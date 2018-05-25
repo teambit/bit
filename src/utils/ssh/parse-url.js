@@ -12,13 +12,13 @@ export type SSHUrl = {
  * parse a string representing an SSH url
  * @name parseSSHUrl
  * @param {string} str SSH url to parse
- * @returns 
+ * @returns
  * @example
  * ```js
- *  parseSSHUrl('ssh://luke@host.com:/usr/lib') 
+ *  parseSSHUrl('ssh://luke@host.com:/usr/lib')
  *  // => { host: 'host.com', username: 'luke', port: 22, path: '/usr/lib' }
  * ```
- * 
+ *
  * @credit taken from mikeal/sequest and modified
  * to include path and protocol prefix parsing.
  */
@@ -37,12 +37,12 @@ export default function parseSSHUrl(str: string): SSHUrl {
     const [potentialPort, potentialPath] = str.slice(str.indexOf(':') + 1).split(':');
 
     const maybePort = parseInt(potentialPort);
-    if (!isNaN(maybePort) && isNumber(maybePort)) {
+    if (!Number.isNaN(maybePort) && isNumber(maybePort)) {
       port = maybePort;
       if (potentialPath) path = potentialPath;
     }
 
-    if (!potentialPath && isNaN(maybePort)) {
+    if (!potentialPath && Number.isNaN(maybePort)) {
       path = potentialPort;
     }
 

@@ -2,7 +2,6 @@
 // @TODO refactor this file to include only exports
 import first from './array/first';
 import bufferFrom from './buffer/from';
-import flatMap from './array/flat-map';
 import flatten from './array/flatten';
 import filterAsync from './array/filter-async';
 import resolveBoolean from './resolve-boolean';
@@ -132,7 +131,6 @@ export {
   removeFile,
   createSymlinkOrCopy,
   isDirEmptySync,
-  flatMap,
   flatten,
   currentDirName,
   immutableUnshift,
