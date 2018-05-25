@@ -9,7 +9,7 @@ import Remotes from '../../../../src/remotes/remotes';
 describe('ListScope', () => {
   let sandbox;
   before(() => {
-    sandbox = sinon.sandbox.create();
+    sandbox = sinon.createSandbox();
   });
   after(() => {
     sandbox.restore();
