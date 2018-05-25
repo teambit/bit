@@ -1,9 +1,11 @@
 import { expect } from 'chai';
 import getMigrationVersions from '../../src/migration/migration-helper';
+import logger from '../../src/logger/logger';
 
 describe('migration helper', () => {
   let migrationVersions;
   let versionsNumbers;
+  logger.debug = () => {};
   before(() => {
     const storeVersion = '0.0.3';
     const bitVersion = '0.0.6';
