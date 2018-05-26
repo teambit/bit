@@ -155,10 +155,7 @@ export default class SSH implements Network {
       case 130:
         return new PermissionDenied(`${this.host}:${this.path}`);
       case 131:
-        return new MergeConflictOnRemote(
-          (parsedError && parsedError.id) || err,
-          parsedError ? parsedError.versions : []
-        );
+        return new MergeConflictOnRemote(parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : []);
     }
   }
 
