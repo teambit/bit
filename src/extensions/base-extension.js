@@ -129,16 +129,7 @@ export default class BaseExtension {
   }
 
   toObject() {
-    const jsoned = {};
-    // let toConvert = proto || this;
-    Object.getOwnPropertyNames(this).forEach((prop) => {
-      // $FlowFixMe
-      const val = this[prop];
-      if (typeof val !== 'function') {
-        jsoned[prop] = val;
-      }
-    });
-    return jsoned;
+    return this.toModelObject();
   }
 
   /**

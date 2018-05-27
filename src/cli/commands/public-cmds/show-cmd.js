@@ -89,7 +89,7 @@ export default class Show extends Command {
           const readableFiles = env.files.map(file => file.toReadableString());
           return readableFiles;
         }
-        return undefined;
+        return [];
       };
 
       const makeComponentReadable = (comp: ConsumerComponent) => {
