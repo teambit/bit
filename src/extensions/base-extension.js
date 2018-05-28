@@ -128,6 +128,10 @@ export default class BaseExtension {
     };
   }
 
+  toObject() {
+    return this.toModelObject();
+  }
+
   /**
    * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
