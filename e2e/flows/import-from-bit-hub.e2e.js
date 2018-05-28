@@ -58,7 +58,7 @@ describe('importing bit components from bitsrc.io', function () {
     helper.destroyEnv();
     return bitsrcTester.deleteScope(scopeName);
   });
-  describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
+  describe.only('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${componentTestId}`);
