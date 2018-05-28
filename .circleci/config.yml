@@ -43,7 +43,7 @@ jobs:
     #   - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
       - run: npm config set @bit:registry https://node-stg.bitsrc.io
-      - run: echo "//node.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
+      - run: echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
         #   key: bitsrc-registry1
           key: bitsrc-registry-stg
