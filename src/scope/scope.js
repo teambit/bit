@@ -69,6 +69,7 @@ import SpecsResults from '../consumer/specs-results';
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+import type { PathOsBasedAbsolute } from '../utils/path';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -1246,11 +1247,18 @@ export default class Scope {
     return component.isolate(this, opts);
   }
 
-  static ensure(path: string = process.cwd(), name: ?string, groupName: ?string) {
+  static ensure(path: PathOsBasedAbsolute, name: ?string, groupName: ?string): Promise<Scope> {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
     return Promise.resolve(new Scope({ path, created: true, scopeJson }));
+  }
+
+  static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
+    if (resetHard) {
+      logger.info(`deleting the whole scope at ${path}`);
+      await fs.emptyDir(path);
+    }
   }
 
   static async load(absPath: string): Promise<Scope> {

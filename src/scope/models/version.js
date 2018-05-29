@@ -228,6 +228,10 @@ export default class Version extends BitObject {
       if (typeof env === 'string') {
         return env;
       }
+      // Store the env as string in case there is no config and files (for backward compatibility)
+      if (envNameOnly(env)) {
+        return env.name;
+      }
       const result = {
         name: env.name,
         config: env.config,
@@ -613,9 +617,20 @@ const parseEnv = (env) => {
   if (typeof env === 'string') {
     return env;
   }
+  // Store the env as string in case there is no config and files (for backward compatibility)
+  if (envNameOnly(env)) {
+    return env.name;
+  }
   return {
     name: env.name,
     config: env.config,
     files: env.files ? env.files.map(ExtensionFile.fromObjectToModelObject) : []
   };
+};
+
+const envNameOnly = (env) => {
+  if ((!env.config || R.isEmpty(env.config)) && (!env.files || R.isEmpty(env.files))) {
+    return true;
+  }
+  return false;
 };

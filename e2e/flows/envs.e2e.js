@@ -4,6 +4,7 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
+import { eol } from '../../src/utils';
 
 // TODO: backward compatibility
 // should support declare env in old format (string)
@@ -125,7 +126,7 @@ describe('envs', function () {
         const babelRcObjectHash = compilerModel.files[0].file;
         const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
         const babelRcPath = path.join(helper.localScopePath, '.babelrc');
-        const babelRcFromFS = fs.readFileSync(babelRcPath).toString();
+        const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString());
         expect(babelRcFromModel).to.equal(babelRcFromFS);
       });
       it('should store the tester files in the model', () => {
@@ -157,8 +158,8 @@ describe('envs', function () {
     });
     it('should build the component successfully', () => {
       const output = helper.build('comp/my-comp');
-      expect(output).to.have.string('dist/objRestSpread.js.map');
-      expect(output).to.have.string('dist/objRestSpread.js');
+      expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
+      expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       // const distFilePath = path.join(helper.localScopePath, 'components', 'comp', 'my-comp', 'dist', 'objRestSpread.js');
       const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
       const distContent = fs.readFileSync(distFilePath).toString();
@@ -349,8 +350,8 @@ describe('envs', function () {
         // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
         helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
         const output = helper.build('comp/my-comp');
-        expect(output).to.have.string('dist/objRestSpread.js.map');
-        expect(output).to.have.string('dist/objRestSpread.js');
+        expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
+        expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
         const distFilePath = path.join(
           helper.localScopePath,
           'components',
@@ -434,8 +435,8 @@ describe('envs', function () {
           // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
           helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
           const output = helper.build('comp/my-comp');
-          expect(output).to.have.string('dist/objRestSpread.js.map');
-          expect(output).to.have.string('dist/objRestSpread.js');
+          expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
+          expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
           const distFilePath = path.join(
             helper.localScopePath,
             'components',
@@ -647,8 +648,8 @@ describe('envs', function () {
           helper.getClonedLocalScope(importedScopeBeforeChanges);
           helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
           const output = helper.build('comp/my-comp');
-          expect(output).to.have.string('dist/objRestSpread.js.map');
-          expect(output).to.have.string('dist/objRestSpread.js');
+          expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
+          expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
           const distFilePath = path.join(
             helper.localScopePath,
             'components',

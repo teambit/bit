@@ -98,6 +98,14 @@ export default class EnvExtension extends BaseExtension {
     return modelObject;
   }
 
+  toObject(): Object {
+    Analytics.addBreadCrumb('env-extension', 'toObject');
+    const baseObject: Object = super.toObject();
+    const files = this.files;
+    const object = { files, ...baseObject };
+    return object;
+  }
+
   /**
    * Get a bit.json representation of the env instance
    * @param {string} ejectedEnvDirectory - The base path of where the env config files are stored

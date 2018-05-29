@@ -60,7 +60,7 @@ type ConsumerProps = {
   created?: boolean,
   isolated?: boolean,
   bitMap: BitMap,
-  addedGitHooks: ?(string[]),
+  addedGitHooks?: ?(string[]),
   existingGitHooks: ?(string[])
 };
 
@@ -155,7 +155,9 @@ export default class Consumer {
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
-      throw new GeneralError(`Failed loading the driver for ${this.bitJson.lang}. Got an error from the driver: ${err}`);
+      throw new GeneralError(
+        `Failed loading the driver for ${this.bitJson.lang}. Got an error from the driver: ${err}`
+      );
     }
   }
 
@@ -252,7 +254,9 @@ export default class Consumer {
     });
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, deletedComponents };
 
-    const driverExists = this.warnForMissingDriver('Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.');
+    const driverExists = this.warnForMissingDriver(
+      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
+    );
 
     const components = idsToProcess.map(async (id: BitId) => {
       const idWithConcreteVersionString: string = getLatestVersionNumber(
@@ -347,11 +351,14 @@ export default class Consumer {
     const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
-      modifiedComponent.toStringWithoutVersion());
+      modifiedComponent.toStringWithoutVersion()
+    );
     const candidateComponentsIds = Object.keys(candidateComponents).map(id => BitId.parse(id));
     // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
     // correct version
-    return candidateComponentsIds.filter(component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion()));
+    return candidateComponentsIds.filter(
+      component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
+    );
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<ModelComponent[]> {
@@ -605,37 +612,46 @@ export default class Consumer {
     return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
   }
 
-  static create(projectPath: string = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+  static create(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {
     return this.ensure(projectPath, noGit);
   }
 
-  static ensure(projectPath: PathOsBased = process.cwd(), noGit: boolean = false): Promise<Consumer> {
+  static _getScopePath(projectPath: PathOsBasedAbsolute, noGit: boolean): PathOsBasedAbsolute {
     const gitDirPath = path.join(projectPath, DOT_GIT_DIR);
     let resolvedScopePath = path.join(projectPath, BIT_HIDDEN_DIR);
-    // let addedGitHooks;
-    let existingGitHooks;
     if (!noGit && fs.existsSync(gitDirPath) && !fs.existsSync(resolvedScopePath)) {
       resolvedScopePath = path.join(gitDirPath, BIT_GIT_DIR);
-      // const gitHooksManager = GitHooksManager.init(gitDirPath);
-      // const writeHooksResult = gitHooksManager.writeAllHooks();
-      // addedGitHooks = writeHooksResult.added;
-      // existingGitHooks = writeHooksResult.alreadyExist;
     }
+    return resolvedScopePath;
+  }
+
+  static async ensure(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {
+    const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
+    let existingGitHooks;
+    const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
-    const bitMapP = BitMap.ensure(projectPath);
-
-    return Promise.all([scopeP, bitJsonP, bitMapP]).then(([scope, bitJson, bitMap]) => {
-      return new Consumer({
-        projectPath,
-        created: true,
-        scope,
-        bitJson,
-        bitMap,
-        // addedGitHooks,
-        existingGitHooks
-      });
+    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    return new Consumer({
+      projectPath,
+      created: true,
+      scope,
+      bitJson,
+      bitMap,
+      existingGitHooks
     });
+  }
+
+  /**
+   * if resetHard, delete consumer-files: bitMap and bit.json and also the local scope (.bit dir).
+   * otherwise, delete the consumer-files only when they are corrupted
+   */
+  static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit: boolean = false): Promise<void> {
+    const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
+    BitMap.reset(projectPath, resetHard);
+    const scopeP = Scope.reset(resolvedScopePath, resetHard);
+    const bitJsonP = ConsumerBitJson.reset(projectPath, resetHard);
+    await Promise.all([scopeP, bitJsonP]);
   }
 
   static async createWithExistingScope(
@@ -661,7 +677,7 @@ export default class Consumer {
     }
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
   }
-  static async load(currentPath: string, throws: boolean = true): Promise<?Consumer> {
+  static async load(currentPath: PathOsBasedAbsolute, throws: boolean = true): Promise<?Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) {
       if (throws) return Promise.reject(new ConsumerNotFound());
@@ -736,7 +752,9 @@ export default class Consumer {
     });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     if (remote && localIds.length) {
-      throw new GeneralError(`unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`);
+      throw new GeneralError(
+        `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
+      );
     }
     const remoteResult = remote && !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
     const localResult = !remote ? await this.removeLocal(bitIds, force, track, deleteFiles) : new RemovedLocalObjects();
@@ -768,21 +786,23 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
   async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
-    return Promise.all(bitIds.map(async (id) => {
-      const component = id.isLocal()
-        ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
-        : this.bitMap.getComponent(id);
-      if (!component) return null;
-      if (
-        (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
+    return Promise.all(
+      bitIds.map(async (id) => {
+        const component = id.isLocal()
+          ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
+          : this.bitMap.getComponent(id);
+        if (!component) return null;
+        if (
+          (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
           component.origin === COMPONENT_ORIGINS.NESTED
-      ) {
-        return fs.remove(path.join(this.getPath(), component.rootDir));
-      } else if (component.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-        return Promise.all(component.files.map(file => fs.remove(file.relativePath)));
-      }
-      return null;
-    }));
+        ) {
+          return fs.remove(path.join(this.getPath(), component.rootDir));
+        } else if (component.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
+          return Promise.all(component.files.map(file => fs.remove(file.relativePath)));
+        }
+        return null;
+      })
+    );
   }
   /**
    * resolveLocalComponentIds - method is used for resolving local component ids
@@ -839,15 +859,15 @@ export default class Consumer {
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
     if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
-      await Promise.all(resolvedIDs.map(async (id) => {
-        const componentStatus = await this.getComponentStatusById(id);
-        if (componentStatus.modified) modifiedComponents.push(id);
-        else regularComponents.push(id);
-      }));
+      await Promise.all(
+        resolvedIDs.map(async (id) => {
+          const componentStatus = await this.getComponentStatusById(id);
+          if (componentStatus.modified) modifiedComponents.push(id);
+          else regularComponents.push(id);
+        })
+      );
     }
-    const {
-      removedComponentIds, missingComponents, dependentBits, removedDependencies 
-    } = await this.scope.removeMany(
+    const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
       force ? resolvedIDs : regularComponents,
       force,
       true,
@@ -903,7 +923,11 @@ export default class Consumer {
   async eject(componentsIds: BitId[]) {
     const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
     await this.remove({
-      ids: componentIdsWithoutScope, force: true, remote: false, track: false, deleteFiles: true 
+      ids: componentIdsWithoutScope,
+      force: true,
+      remote: false,
+      track: false,
+      deleteFiles: true
     });
     await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
     await packageJson.removeComponentsFromNodeModules(this, componentsIds);

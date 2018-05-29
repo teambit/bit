@@ -171,6 +171,14 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
+    const setEol = (files) => {
+      if (!files) return;
+      const result = files.map((file) => {
+        file.file = Source.from(eol.lf(file.contents));
+        return file;
+      });
+      return result;
+    };
     const files =
       consumerComponent.files && consumerComponent.files.length
         ? consumerComponent.files.map((file) => {
@@ -182,8 +190,8 @@ export default class SourceRepository {
           };
         })
         : null;
-    const compilerFiles = R.path(['compiler', 'files'], consumerComponent);
-    const testerFiles = R.path(['tester', 'files'], consumerComponent);
+    const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
+    const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);

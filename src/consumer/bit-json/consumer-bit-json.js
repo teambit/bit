@@ -12,6 +12,8 @@ import {
 } from '../../constants';
 import filterObject from '../../utils/filter-object';
 import type { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
+import type { PathOsBasedAbsolute } from '../../utils/path';
+import logger from '../../logger/logger';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -129,13 +131,22 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return new ConsumerBitJson({});
   }
 
-  static async ensure(dirPath): Promise<ConsumerBitJson> {
+  static async ensure(dirPath: PathOsBasedAbsolute): Promise<ConsumerBitJson> {
     try {
       const consumerBitJson = await this.load(dirPath);
       return consumerBitJson;
     } catch (err) {
       return this.create();
     }
+  }
+
+  static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
+    const deleteBitJsonFile = async () => {
+      const bitJsonPath = AbstractBitJson.composePath(dirPath);
+      logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
+      await fs.remove(bitJsonPath);
+    };
+    if (resetHard) await deleteBitJsonFile();
   }
 
   static fromPlainObject(object: Object) {

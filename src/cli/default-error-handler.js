@@ -162,8 +162,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )}
 to resolve it and merge your local and remote changes, please do the following:
 1) bit untag ${err.id} ${err.versions.join(' ')}
-2) bit import
-3) bit checkout ${err.versions.join(' ')} ${err.id}
+2) bit import ${err.id} --merge
 once your changes are merged with the new remote version, you can tag and export a new version of the component to the remote scope.`
   ],
   [
@@ -174,8 +173,7 @@ once your changes are merged with the new remote version, you can tag and export
         .join(', ')} to the remote scope.
 to resolve this conflict and merge your remote and local changes, please do the following:
 1) bit untag [id] [version]
-2) bit import
-3) bit checkout [version] [id]
+2) bit import --merge
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
@@ -217,7 +215,11 @@ once your changes are merged with the new remote version, please tag and export 
         err.id
       )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
-  [InvalidBitJson, err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.`],
+  [
+    InvalidBitJson,
+    err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
+    consider running ${chalk.bold('bit init --reset')} to recreate the file`
+  ],
   [
     DriverNotFound,
     err =>
@@ -235,7 +237,8 @@ once your changes are merged with the new remote version, please tag and export 
     err =>
       `error: unable to parse your bitMap file at ${chalk.bold(err.path)}, due to an error ${chalk.bold(
         err.errorMessage
-      )}`
+      )}.
+      consider running ${chalk.bold('bit init --reset')} to recreate the file`
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
   [

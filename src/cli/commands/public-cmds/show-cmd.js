@@ -83,11 +83,26 @@ export default class Show extends Command {
 
     if (!component) return 'could not find the requested component';
     if (json) {
+      const makeEnvFilesReadable = (env) => {
+        if (!env) return undefined;
+        if (env.files && env.files.length) {
+          const readableFiles = env.files.map(file => file.toReadableString());
+          return readableFiles;
+        }
+        return [];
+      };
+
       const makeComponentReadable = (comp: ConsumerComponent) => {
         if (!comp) return comp;
         const componentObj = comp.toObject();
         componentObj.files = comp.files.map(file => file.toReadableString());
         componentObj.dists = componentObj.dists.getAsReadable();
+        if (comp.compiler) {
+          componentObj.compiler.files = makeEnvFilesReadable(comp.compiler);
+        }
+        if (comp.tester) {
+          componentObj.tester.files = makeEnvFilesReadable(comp.tester);
+        }
         return componentObj;
       };
       const componentFromFileSystem = makeComponentReadable(component);

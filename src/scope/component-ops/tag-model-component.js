@@ -216,7 +216,7 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent: Component) => {
-    const consumerComponentId = consumerComponent.id.toString();
+    const consumerComponentId = consumerComponent.id.toStringWithoutVersion();
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
     // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
@@ -244,7 +244,10 @@ export default (async function tagModelComponent({
         })
         : null;
 
-    const testResult = testsResults.find(result => result.componentId === consumerComponentId);
+    const testResult = testsResults.find((result) => {
+      const idWithoutVersion = BitId.parse(result.componentId).toStringWithoutVersion();
+      return idWithoutVersion === consumerComponentId;
+    });
     const flattenedDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,

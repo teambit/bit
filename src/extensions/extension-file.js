@@ -121,6 +121,13 @@ export default class ExtensionFile extends AbstractVinyl {
     };
   }
 
+  toReadableString() {
+    return {
+      name: this.name,
+      content: this.contents.toString()
+    };
+  }
+
   clone(): ExtensionFile {
     return new ExtensionFile(this);
   }

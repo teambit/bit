@@ -43,10 +43,10 @@ jobs:
     #   - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
       - run: npm config set @bit:registry https://node-stg.bitsrc.io
-      - run: echo "//node.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
+      - run: echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
         #   key: bitsrc-registry1
-          key: bitsrc-registry-stg
+          key: bitsrc-registry-stg1
           paths:
             - ~/.npmrc
 
@@ -190,6 +190,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
     parallelism: 4
     steps:
       - attach_workspace:
@@ -206,7 +207,7 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
         #   key: bitsrc-registry1
-          key: bitsrc-registry-stg
+          key: bitsrc-registry-stg1
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
