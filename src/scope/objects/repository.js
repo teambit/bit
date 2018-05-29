@@ -160,12 +160,8 @@ export default class Repository {
     delete this._cache[ref.toString()];
   }
 
-  add(object: ?BitObject, skipValidation: boolean = false): Repository {
+  add(object: ?BitObject): Repository {
     if (!object) return this;
-    logger.debug('validating object: ', object.hash().hash);
-    if (!skipValidation) {
-      object.validate();
-    }
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
     this.objects.push(object);
@@ -173,9 +169,9 @@ export default class Repository {
     return this;
   }
 
-  addMany(objects: BitObject[], skipValidation: boolean = false): Repository {
+  addMany(objects: BitObject[]): Repository {
     if (!objects || !objects.length) return this;
-    objects.forEach(obj => this.add(obj, skipValidation));
+    objects.forEach(obj => this.add(obj));
     return this;
   }
 
@@ -190,9 +186,10 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
-  persist(): Promise<[]> {
-    logger.debug(`repository: persisting ${this.objects.length} objects`);
+  persist(validate: boolean = true): Promise<boolean[]> {
+    logger.debug(`repository: persisting ${this.objects.length} objects, with validate = ${validate.toString()}`);
     // @TODO handle failures
+    if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
     return Promise.all(this.objects.map(object => this.persistOne(object)));
   }
 

@@ -17,18 +17,19 @@ function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
 }
 
 export default class BitObject {
+  validateBeforePersist: boolean = true; // validate the object before persisting
   id(): string | Buffer {
-    throw new GeneralError('id() was not implemented...');
+    throw new Error('id() was not implemented...');
   }
 
   // eslint-disable-next-line no-unused-vars
   toBuffer(pretty?: boolean): Buffer {
-    throw new GeneralError('toBuffer() was not implemented...');
+    throw new Error('toBuffer() was not implemented...');
   }
 
   // eslint-disable-next-line no-unused-vars
   static parse(data: *) {
-    throw new GeneralError('parse() was not implemented...');
+    throw new Error('parse() was not implemented...');
   }
 
   refs(): Ref[] {
@@ -114,10 +115,6 @@ export default class BitObject {
 
   serialize(): Buffer {
     return Buffer.concat([Buffer.from(this.header), this.toBuffer()]);
-  }
-
-  validate(): void {
-    throw new GeneralError('validate() was not implemented...');
   }
 
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {

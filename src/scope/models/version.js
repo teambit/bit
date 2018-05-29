@@ -21,6 +21,7 @@ import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import type { RelativePath } from '../../consumer/component/dependencies/dependency';
 import VersionInvalid from '../exceptions/version-invalid';
+import logger from '../../logger/logger';
 
 type CiProps = {
   error: Object,
@@ -132,7 +133,9 @@ export default class Version extends BitObject {
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) { throw new VersionInvalid(`failed creating a version object, the field "${field}" can't be empty`); }
+      if (!this[field]) {
+        throw new VersionInvalid(`failed creating a version object, the field "${field}" can't be empty`);
+      }
     });
   }
 
@@ -266,13 +269,8 @@ export default class Version extends BitObject {
     );
   }
 
-  /**
-   * it's not ideal performance wise.
-   * However, it's very important to make sure that it's possible to use the string to create a new
-   * Version object, and that the generated Version instance is valid.
-   * @todo: no need for the validation in repository.add() function for this BitObject instance.
-   */
   validateBeforePersisting(versionStr: string): void {
+    logger.debug('validating version object: ', this.hash().hash);
     const version = Version.parse(versionStr);
     version.validate();
   }
@@ -281,7 +279,7 @@ export default class Version extends BitObject {
     const obj = this.toObject();
     const args = getStringifyArgs(pretty);
     const str = JSON.stringify(obj, ...args);
-    this.validateBeforePersisting(str);
+    if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return bufferFrom(str);
   }
 
@@ -485,17 +483,18 @@ export default class Version extends BitObject {
         throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
       }
       if (!bitId.hasVersion()) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
+      if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
     };
     const _validateEnv = (env) => {
       if (!env) return;
-      if (typeof env !== 'string') {
-        // envs (compiler/testers) were strings before v13
-        validateType(env, 'env', 'object');
-        if (!env.name) {
-          throw new VersionInvalid(`${message}, the environment is missing the name attribute`);
-        }
-        validateBitIdStr(env.name, 'env.name');
+      if (typeof env === 'string') {
+        validateBitIdStr(env, 'environment-id');
       }
+      validateType(env, 'env', 'object');
+      if (!env.name) {
+        throw new VersionInvalid(`${message}, the environment is missing the name attribute`);
+      }
+      validateBitIdStr(env.name, 'env.name');
       if (env.files) {
         const compilerName = env.name || '';
         env.files.forEach((file) => {
@@ -535,7 +534,9 @@ export default class Version extends BitObject {
       if (!isValidPath(file.relativePath)) {
         throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is invalid`);
       }
-      if (!file.name) { throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the name attribute`); }
+      if (!file.name) {
+        throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the name attribute`);
+      }
       if (!file.file) throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the hash`);
       validateType(file.name, `${field}.name`, 'string');
       validateType(file.file, `${field}.file`, 'object');
@@ -610,7 +611,6 @@ export default class Version extends BitObject {
 
 const parseEnv = (env) => {
   if (typeof env === 'string') {
-    // backward compatibility
     return env;
   }
   return {

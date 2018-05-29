@@ -191,6 +191,18 @@ describe('Version', () => {
       version.compiler.files[0] = 'string';
       expect(validateFunc).to.throw('missing the name attribute');
     });
+    it('if a compiler is string, it should be a valid bit-id', () => {
+      version.compiler = 'this/is/invalid/bit/id';
+      expect(validateFunc).to.throw('the environment-id has an invalid Bit id');
+    });
+    it('if a compiler is string, it should have scope ', () => {
+      version.compiler = 'name@0.0.1';
+      expect(validateFunc).to.throw('does not have a scope');
+    });
+    it('if a compiler is string, it should have version', () => {
+      version.compiler = 'scope/box/name';
+      expect(validateFunc).to.throw('does not have a version');
+    });
     it('should throw for an invalid package version', () => {
       version.packageDependencies = { lodash: 'invalid-version' };
       expect(validateFunc).to.throw('is not a valid semantic version');
