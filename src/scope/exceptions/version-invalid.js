@@ -1,3 +1,4 @@
 // @flow
+import ValidationError from '../../error/validation-error';
 
-export default class VersionInvalid extends Error {}
+export default class VersionInvalid extends ValidationError {}
