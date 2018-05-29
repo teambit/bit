@@ -24,7 +24,12 @@
     "compiler": {
         "name": "bit.envs/compilers/react-typescript@0.0.5",
         "config": {},
-        "files": []
+        "files": [
+            {
+                "name": ".babelrc",
+                "file": "65b62ef50ad0df5809a3a019e077057d6578a388"
+            }
+        ]
     },
     "bindingPrefix": "@bit",
     "log": {

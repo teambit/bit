@@ -1,9 +1,8 @@
 import R from 'ramda';
 import { expect } from 'chai';
 import Version from '../../../src/scope/models/version';
-
-const versionFixture = require('./fixtures/version-model-object.json');
-const versionWithDepsFixture = require('./fixtures/version-model-extended.json');
+import versionFixture from './fixtures/version-model-object.json';
+import versionWithDepsFixture from './fixtures/version-model-extended.json';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
