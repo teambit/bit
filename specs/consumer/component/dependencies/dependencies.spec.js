@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { Dependencies } from '../../../../src/consumer/component/dependencies';
 import dependenciesFixture from './fixtures/dependencies-fixture.json';
 
-describe.only('Dependencies', () => {
+describe('Dependencies', () => {
   describe('validate()', () => {
     let dependencies;
     let validateFunc;
