@@ -4,6 +4,7 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
+import { eol } from '../../src/utils';
 
 // TODO: backward compatibility
 // should support declare env in old format (string)
@@ -125,7 +126,7 @@ describe('envs', function () {
         const babelRcObjectHash = compilerModel.files[0].file;
         const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
         const babelRcPath = path.join(helper.localScopePath, '.babelrc');
-        const babelRcFromFS = fs.readFileSync(babelRcPath).toString();
+        const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString());
         expect(babelRcFromModel).to.equal(babelRcFromFS);
       });
       it('should store the tester files in the model', () => {
