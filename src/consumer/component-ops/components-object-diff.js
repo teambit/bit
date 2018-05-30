@@ -129,8 +129,7 @@ export function diffBetweenComponentsObjects(
     .map((env: string) => {
       // $FlowFixMe
       const leftConfig = componentLeft[env] && componentLeft[env].dynamicConfig ? componentLeft[env].dynamicConfig : {};
-      // $FlowFixMe
-      const rightConfig =
+      const rightConfig = // $FlowFixMe
         componentRight[env] && componentRight[env].dynamicConfig ? componentRight[env].dynamicConfig : {};
       // $FlowFixMe we remove the null later
       if (JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return null;
