@@ -68,19 +68,30 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run
             # this step without cache
-            - npm-deps10-{{ checksum "./bit/package.json" }}
+            - npm-deps11-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps10
+            - npm-deps11
       # - run: ls ~/bit/node_modules
       - run:
+          name: "Update npm"
+          command: |
+            npm install npm@latest
+            sudo rm /usr/local/bin/npm
+            sudo ln -s /home/circleci/bit/node_modules/.bin/npm /usr/local/bin/npm
+      - run:
+          name: "Checking Versions"
+          command: |
+            node --version
+            npm --version
+      - run:
           name: Insatll npm dependencies
-          command: 'cd bit && npm install'
+          command: 'cd bit && npm ci'
       - save_cache:
-          key: npm-deps10-{{ checksum "./bit/package.json" }}
+          key: npm-deps11-{{ checksum "./bit/package.json" }}
           paths:
             - ./bit/node_modules
       - save_cache:
-          key: npm-deps10
+          key: npm-deps11
           paths:
             - ./bit/node_modules
       - persist_to_workspace:
