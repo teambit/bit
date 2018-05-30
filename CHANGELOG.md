@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.17-dev.7] - 2018-05-30
+
+- bug fix - packages on d.ts files were not recognized
+
 ## [0.10.17-dev.5] - 2018-05-27
 
 - lock stylable version since the new version no longer support node 6
