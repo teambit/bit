@@ -148,5 +148,6 @@ export function diffBetweenComponentsObjects(
     })
     .filter(x => x);
 
-  return fieldsDiffOutput.concat(fieldsEnvsConfigOutput);
+  const allDiffs = fieldsDiffOutput.concat(fieldsEnvsConfigOutput);
+  return R.isEmpty(allDiffs) ? undefined : allDiffs;
 }
