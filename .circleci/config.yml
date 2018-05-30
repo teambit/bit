@@ -76,6 +76,11 @@ jobs:
           name: "Update npm"
           command: 'npm install npm@latest'
       - run:
+          name: "Checking Versions"
+          command: |
+            node --version
+            npm --version
+      - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm ci'
       - save_cache:
