@@ -184,11 +184,12 @@ export default class Scope {
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
     // Add the new / updated objects
-    this.objects.addMany(resultObjects.newObjects, true);
+    this.objects.addMany(resultObjects.newObjects);
     // Remove old objects
     await this.objects.removeMany(resultObjects.refsToRemove);
     // Persists new / remove objects
-    await this.objects.persist();
+    const validateBeforePersist = false;
+    await this.objects.persist(validateBeforePersist);
     // Update the scope version
     this.scopeJson.set('version', BIT_VERSION);
     logger.debug(`updating scope version to version ${BIT_VERSION}`);

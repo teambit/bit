@@ -345,9 +345,18 @@ export default class Component extends BitObject {
     forEachObjIndexed(replace, this.versions);
   }
 
+  validateBeforePersisting(componentStr: string): void {
+    logger.debug('validating component object: ', this.hash().hash);
+    const component = Component.parse(componentStr);
+    component.validate();
+  }
+
   toBuffer(pretty: boolean) {
     const args = getStringifyArgs(pretty);
-    return Buffer.from(JSON.stringify(this.toObject(), ...args));
+    const obj = this.toObject();
+    const str = JSON.stringify(obj, ...args);
+    if (this.validateBeforePersist) this.validateBeforePersisting(str);
+    return Buffer.from(str);
   }
 
   toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: boolean) {

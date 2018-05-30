@@ -1917,7 +1917,7 @@ console.log(barFoo.default());`;
     });
   });
 
-  describe('component with shared directory across files and dependencies', () => {
+  describe('component with shared directory (originallySharedDir) across files and dependencies', () => {
     /**
      * Directory structure of the author
      * src/bar/foo.js

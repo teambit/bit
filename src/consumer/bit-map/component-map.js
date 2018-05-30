@@ -153,6 +153,10 @@ export default class ComponentMap {
     });
   }
 
+  getAllFilesPaths(): PathLinux[] {
+    return this.files.map(file => file.relativePath);
+  }
+
   getFilesGroupedByBeingTests(): { allFiles: string[], nonTestsFiles: string[], testsFiles: string[] } {
     const allFiles = [];
     const nonTestsFiles = [];

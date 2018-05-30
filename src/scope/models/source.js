@@ -28,8 +28,4 @@ export default class Source extends BitObject {
   static from(buffer: Buffer): Source {
     return new Source(buffer);
   }
-
-  validate(): void {
-    // @todo: implement
-  }
 }

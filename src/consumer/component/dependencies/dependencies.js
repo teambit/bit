@@ -6,7 +6,8 @@ import { BitId } from '../../../bit-id';
 import Scope from '../../../scope/scope';
 import BitMap from '../../bit-map';
 import { isValidPath } from '../../../utils';
-import GeneralError from '../../../error/general-error';
+import ValidationError from '../../../error/validation-error';
+import validateType from '../../../utils/validate-type';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -127,41 +128,85 @@ export default class Dependencies {
   }
 
   validate(): void {
-    if (!Array.isArray(this.dependencies)) throw new GeneralError('dependencies must be an array');
+    let message = 'failed validating the dependencies.';
+    validateType(message, this.dependencies, 'dependencies', 'array');
     this.dependencies.forEach((dependency) => {
-      if (!dependency.id) throw new GeneralError('one of the dependencies is missing ID');
+      validateType(message, dependency, 'dependency', 'object');
+      if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
       if (!dependency.relativePaths) {
-        throw new GeneralError(`a dependency ${dependency.id.toString()} is missing relativePaths`);
+        throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePaths`);
       }
+      const permittedProperties = ['id', 'relativePaths'];
+      const currentProperties = Object.keys(dependency);
+      currentProperties.forEach((currentProp) => {
+        if (!permittedProperties.includes(currentProp)) {
+          throw new ValidationError(
+            `a dependency ${dependency.id.toString()} has an undetected property "${currentProp}"`
+          );
+        }
+      });
+      validateType(message, dependency.relativePaths, 'dependency.relativePaths', 'array');
       dependency.relativePaths.forEach((relativePath) => {
-        if (!relativePath.sourceRelativePath) {
-          throw new GeneralError(
-            `a dependency ${dependency.id.toString()} is missing relativePaths.sourceRelativePath`
-          );
-        }
-        if (!relativePath.destinationRelativePath) {
-          throw new GeneralError(
-            `a dependency ${dependency.id.toString()} is missing relativePaths.destinationRelativePath`
-          );
-        }
-        if (!isValidPath(relativePath.sourceRelativePath)) {
-          throw new GeneralError(
-            `a dependency ${dependency.id.toString()} has an invalid sourceRelativePath ${
-              relativePath.sourceRelativePath
-            }`
-          );
-        }
-        if (!isValidPath(relativePath.destinationRelativePath)) {
-          throw new GeneralError(
-            `a dependency ${dependency.id.toString()} has an invalid destinationRelativePath ${
-              relativePath.destinationRelativePath
-            }`
-          );
-        }
+        message = `failed validating dependency ${dependency.id.toString()}.`;
+        validateType(message, dependency, 'dependency', 'object');
+        const requiredProps = ['sourceRelativePath', 'destinationRelativePath'];
+        const pathProps = ['sourceRelativePath', 'destinationRelativePath'];
+        const optionalProps = ['importSpecifiers', 'isCustomResolveUsed', 'importSource'];
+        const allProps = requiredProps.concat(optionalProps);
+        requiredProps.forEach((prop) => {
+          if (!relativePath[prop]) {
+            throw new ValidationError(`${message} relativePaths.${prop} is missing`);
+          }
+        });
+        pathProps.forEach((prop) => {
+          if (!isValidPath(relativePath[prop])) {
+            throw new ValidationError(`${message} relativePaths.${prop} has an invalid path`);
+          }
+        });
+        Object.keys(relativePath).forEach((prop) => {
+          if (!allProps.includes(prop)) {
+            throw new ValidationError(`${message} undetected property of relativePaths "${prop}"`);
+          }
+        });
         if (relativePath.isCustomResolveUsed) {
           if (!relativePath.importSource) {
-            throw new Error(`a dependency ${dependency.id.toString()} is missing relativePath.importSource`);
+            throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePath.importSource`);
           }
+          validateType(message, relativePath.importSource, 'relativePath.importSource', 'string');
+        }
+        if (relativePath.importSpecifiers) {
+          validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
+          relativePath.importSpecifiers.forEach((importSpecifier) => {
+            validateType(message, importSpecifier, 'importSpecifier', 'object');
+            if (!importSpecifier.mainFile) {
+              throw new ValidationError(`${message} mainFile property is missing from the importSpecifier`);
+            }
+            const specifierProps = ['isDefault', 'name'].sort().toString();
+            const mainFileProps = Object.keys(importSpecifier.mainFile)
+              .sort()
+              .toString();
+            if (mainFileProps !== specifierProps) {
+              throw new ValidationError(
+                `${message} expected properties of importSpecifier.mainFile "${specifierProps}", got "${mainFileProps}"`
+              );
+            }
+            if (importSpecifier.linkFile) {
+              const linkFileProps = Object.keys(importSpecifier.linkFile)
+                .sort()
+                .toString();
+              if (linkFileProps !== specifierProps) {
+                throw new ValidationError(
+                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${mainFileProps}"`
+                );
+              }
+            }
+            const specifierPermittedProps = ['mainFile', 'linkFile'];
+            Object.keys(importSpecifier).forEach((prop) => {
+              if (!specifierPermittedProps.includes(prop)) {
+                throw new ValidationError(`${message} undetected property of importSpecifier "${prop}"`);
+              }
+            });
+          });
         }
       });
     });

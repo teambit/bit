@@ -12,11 +12,14 @@ import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
 import { ComponentSpecsFailed } from '../../consumer/exceptions';
-import { pathNormalizeToLinux } from '../../utils';
+import { pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import Source from '../models/source';
 import { DependencyNotFound } from '../exceptions';
 import { BitId } from '../../bit-id';
 import { flattenDependencyIds } from '../flatten-dependencies';
+import ValidationError from '../../error/validation-error';
+import { COMPONENT_ORIGINS } from '../../constants';
+import type { PathLinux } from '../../utils/path';
 
 function buildComponentsGraph(components: Component[]) {
   const graphDeps = new Graph();
@@ -91,6 +94,55 @@ async function setFutureVersions(
       componentToTag.version = version;
     })
   );
+}
+
+/**
+ * make sure the originallySharedDir was added before saving the component. also, make sure it was
+ * not added twice.
+ * we need three objects for this:
+ * 1) component.pendingVersion => version pending to be saved in the filesystem. we want to make sure it has the added sharedDir.
+ * 2) component.componentFromModel => previous version of the component. it has the original sharedDir.
+ * 3) component.componentMap => current paths in the filesystem, which don't have the sharedDir.
+ *
+ * The component may be changed from the componentFromModel. The files may be removed and added and
+ * new files may added, so we can't compare the files of componentFromModel to component.
+ *
+ * What we can do is calculating the sharedDir from component.componentFromModel
+ * then, make sure that calculatedSharedDir + pathFromComponentMap === component.pendingVersion
+ */
+function validateOriginallySharedDir(components: Component[]): void {
+  const throwOnError = (expectedPath: PathLinux, actualPath: PathLinux) => {
+    if (expectedPath !== actualPath) {
+      throw new ValidationError(
+        `failed validating the component paths with sharedDir, expected path ${expectedPath}, got ${actualPath}`
+      );
+    }
+  };
+  const validateComponent = (component: Component) => {
+    if (!component.componentMap) throw new Error(`componentMap is missing from ${component.id.toString()}`);
+    if (!component.componentFromModel) return;
+    component.componentFromModel.setOriginallySharedDir();
+    const sharedDir = component.componentFromModel.originallySharedDir;
+    const pathWithSharedDir = (pathStr: PathLinux) => {
+      if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+        return pathJoinLinux(sharedDir, pathStr);
+      }
+      return pathStr;
+    };
+    const expectedMainFile = pathWithSharedDir(component.componentMap.mainFile);
+    throwOnError(expectedMainFile, component.pendingVersion.mainFile);
+    const componentMapFiles = component.componentMap.getAllFilesPaths();
+    const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
+    componentMapFiles.forEach((file) => {
+      const expectedFile = pathWithSharedDir(file);
+      if (!componentFiles.includes(expectedFile)) {
+        throw new ValidationError(
+          `failed validating the component paths, expected a file ${expectedFile} to be in ${componentFiles.toString()} array`
+        );
+      }
+    });
+  };
+  components.forEach(component => validateComponent(component));
 }
 
 export default (async function tagModelComponent({
@@ -227,7 +279,7 @@ export default (async function tagModelComponent({
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
   const taggedIds = taggedComponents.map(c => c.id);
   const autoTaggedComponents = await scope.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
+  validateOriginallySharedDir(taggedComponents);
   await scope.objects.persist();
-
   return { taggedComponents, autoTaggedComponents };
 });

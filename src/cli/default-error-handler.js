@@ -70,6 +70,7 @@ import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-c
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import ExtensionNameNotValid from '../extensions/exceptions/extension-name-not-valid';
 import GeneralError from '../error/general-error';
+import ValidationError from '../error/validation-error';
 import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 
@@ -132,6 +133,10 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )}" was not found. please track this component or use --ignore-missing-dependencies flag (not recommended)`
   ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
+  [
+    ValidationError,
+    err => `${err.message}\nThis error should have never happened. Please open a new Github issue with the bug details`
+  ],
   [ComponentNotFoundInPath, err => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [
     PermissionDenied,

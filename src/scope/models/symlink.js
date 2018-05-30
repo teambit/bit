@@ -54,8 +54,4 @@ export default class Symlink extends BitObject {
   static from(props: SymlinkProp) {
     return new Symlink(props);
   }
-
-  validate(): void {
-    // @todo: implement
-  }
 }

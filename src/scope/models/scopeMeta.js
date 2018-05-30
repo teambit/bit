@@ -52,8 +52,4 @@ export default class ScopeMeta extends BitObject {
   static from(props: ScopeMetaProps): ScopeMeta {
     return ScopeMeta.fromObject(props);
   }
-
-  validate(): void {
-    // @todo: implement
-  }
 }

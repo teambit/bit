@@ -163,13 +163,11 @@ export default class SourceRepository {
     specsResults
   }: {
     consumerComponent: ConsumerComponent,
-    consumer: Consumer,
     message?: string,
     flattenedDependencies?: Object,
     flattenedDevDependencies?: Object,
     force?: boolean,
     verbose?: boolean,
-    forHashOnly?: boolean,
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
@@ -218,6 +216,7 @@ export default class SourceRepository {
       username,
       email
     });
+    consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
 
     return { version, files, compilerFiles, testerFiles };
   }
@@ -243,7 +242,7 @@ export default class SourceRepository {
   }): Promise<Component> {
     const objectRepo = this.objects();
 
-    // if a component exists in the model, add a new version. Otherwise, create a new component on them model
+    // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     const component = await this.findOrAddComponent(source);
     const { version, files, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,

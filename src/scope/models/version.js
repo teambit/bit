@@ -16,11 +16,13 @@ import { Dependencies, Dependency } from '../../consumer/component/dependencies'
 import type { PathLinux } from '../../utils/path';
 import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
 import type { TesterExtensionModel } from '../../extensions/tester-extension';
-import GeneralError from '../../error/general-error';
 import ExtensionFile from '../../extensions/extension-file';
 import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import type { RelativePath } from '../../consumer/component/dependencies/dependency';
+import VersionInvalid from '../exceptions/version-invalid';
+import logger from '../../logger/logger';
+import validateType from '../../utils/validate-type';
 
 type CiProps = {
   error: Object,
@@ -45,7 +47,7 @@ export type Log = {
 };
 
 export type VersionProps = {
-  files?: ?Array<SourceFileModel>,
+  files: Array<SourceFileModel>,
   dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtensionModel,
   tester?: ?TesterExtensionModel,
@@ -132,7 +134,9 @@ export default class Version extends BitObject {
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
     nonEmptyFields.forEach((field) => {
-      if (!this[field]) throw new GeneralError(`failed creating a version object, the field "${field}" can't be empty`);
+      if (!this[field]) {
+        throw new VersionInvalid(`failed creating a version object, the field "${field}" can't be empty`);
+      }
     });
   }
 
@@ -270,14 +274,24 @@ export default class Version extends BitObject {
     );
   }
 
+  validateBeforePersisting(versionStr: string): void {
+    logger.debug('validating version object: ', this.hash().hash);
+    const version = Version.parse(versionStr);
+    version.validate();
+  }
+
   toBuffer(pretty: boolean): Buffer {
     const obj = this.toObject();
     const args = getStringifyArgs(pretty);
     const str = JSON.stringify(obj, ...args);
+    if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return bufferFrom(str);
   }
 
-  static parse(contents) {
+  /**
+   * used by the super class BitObject
+   */
+  static parse(contents: string): Version {
     const {
       mainFile,
       dists,
@@ -346,6 +360,9 @@ export default class Version extends BitObject {
     });
   }
 
+  /**
+   * used by raw-object.toRealObject()
+   */
   static from(versionProps: VersionProps): Version {
     const compiler = versionProps.compiler ? parseEnv(versionProps.compiler) : null;
     const tester = versionProps.tester ? parseEnv(versionProps.tester) : null;
@@ -454,19 +471,35 @@ export default class Version extends BitObject {
    * in the wrong format
    */
   validate(): void {
-    const _validateEnv = (env) => {
-      // Compiler is in the new form of extension
-      if (env && typeof env !== 'string') {
-        if (!env.name) {
-          throw new GeneralError(`${message}, the compiler is missing the name attribute`);
-        }
+    const message = 'unable to save Version object';
+    const validateBitIdStr = (bitIdStr: string, field: string) => {
+      validateType(message, bitIdStr, field, 'string');
+      let bitId;
+      try {
+        bitId = BitId.parse(bitIdStr);
+      } catch (err) {
+        throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
       }
-      if (env && env.files) {
+      if (!bitId.hasVersion()) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
+      if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
+    };
+    const _validateEnv = (env) => {
+      if (!env) return;
+      if (typeof env === 'string') {
+        validateBitIdStr(env, 'environment-id');
+        return;
+      }
+      validateType(message, env, 'env', 'object');
+      if (!env.name) {
+        throw new VersionInvalid(`${message}, the environment is missing the name attribute`);
+      }
+      validateBitIdStr(env.name, 'env.name');
+      if (env.files) {
         const compilerName = env.name || '';
         env.files.forEach((file) => {
           if (!file.name) {
-            throw new GeneralError(
-              `${message}, the compiler ${compilerName} has a file which missing the name attribute`
+            throw new VersionInvalid(
+              `${message}, the environment ${compilerName} has a file which missing the name attribute`
             );
           }
         });
@@ -484,30 +517,42 @@ export default class Version extends BitObject {
       const packageNameValidateResult = packageNameValidate(packageName);
       if (!packageNameValidateResult.validForNewPackages && !packageNameValidateResult.validForOldPackages) {
         const errors = packageNameValidateResult.errors || [];
-        throw new GeneralError(`${packageName} is invalid package name, errors:  ${errors.join()}`);
+        throw new VersionInvalid(`${packageName} is invalid package name, errors:  ${errors.join()}`);
       }
       if (!version && !versionRange) {
-        throw new GeneralError(`${packageName} version - ${packageVersion} is not a valid semantic version`);
+        throw new VersionInvalid(`${packageName} version - ${packageVersion} is not a valid semantic version`);
       }
     };
     const _validatePackageDependencies = (packageDependencies) => {
+      validateType(message, packageDependencies, 'packageDependencies', 'object');
       R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
     };
-
-    const message = 'unable to save Version object';
-    if (!this.mainFile) throw new GeneralError(`${message}, the mainFile is missing`);
-    if (!isValidPath(this.mainFile)) throw new GeneralError(`${message}, the mainFile ${this.mainFile} is invalid`);
-    if (!this.files || !this.files.length) throw new GeneralError(`${message}, the files are missing`);
-    let foundMainFile = false;
-    this.files.forEach((file) => {
+    const validateFile = (file, isDist: boolean = false) => {
+      const field = isDist ? 'dist-file' : 'file';
+      validateType(message, file, field, 'object');
       if (!isValidPath(file.relativePath)) {
-        throw new GeneralError(`${message}, the file ${file.relativePath} is invalid`);
+        throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is invalid`);
       }
-      if (!file.name) throw new GeneralError(`${message}, the file ${file.relativePath} is missing the name attribute`);
+      if (!file.name) {
+        throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the name attribute`);
+      }
+      if (!file.file) throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the hash`);
+      validateType(message, file.name, `${field}.name`, 'string');
+      validateType(message, file.file, `${field}.file`, 'object');
+      validateType(message, file.file.hash, `${field}.file.hash`, 'string');
+    };
+
+    if (!this.mainFile) throw new VersionInvalid(`${message}, the mainFile is missing`);
+    if (!isValidPath(this.mainFile)) throw new VersionInvalid(`${message}, the mainFile ${this.mainFile} is invalid`);
+    if (!this.files || !this.files.length) throw new VersionInvalid(`${message}, the files are missing`);
+    let foundMainFile = false;
+    validateType(message, this.files, 'files', 'array');
+    this.files.forEach((file) => {
+      validateFile(file);
       if (file.relativePath === this.mainFile) foundMainFile = true;
     });
     if (!foundMainFile) {
-      throw new GeneralError(`${message}, unable to find the mainFile ${this.mainFile} in the file list`);
+      throw new VersionInvalid(`${message}, unable to find the mainFile ${this.mainFile} in the files list`);
     }
     _validateEnv(this.compiler);
     _validateEnv(this.tester);
@@ -516,24 +561,50 @@ export default class Version extends BitObject {
     _validatePackageDependencies(this.peerPackageDependencies);
     _validatePackageDependencies(this.envsPackageDependencies);
     if (this.dists && this.dists.length) {
+      validateType(message, this.dists, 'dist', 'array');
+      // $FlowFixMe
       this.dists.forEach((file) => {
-        if (!isValidPath(file.relativePath)) {
-          throw new GeneralError(`${message}, the dist-file ${file.relativePath} is invalid`);
-        }
-        if (!file.name) {
-          throw new GeneralError(`${message}, the dist-file ${file.relativePath} is missing the name attribute`);
-        }
+        validateFile(file, true);
       });
+    }
+    if (!(this.dependencies instanceof Dependencies)) {
+      throw new VersionInvalid(
+        `${message}, dependencies must be an instance of Dependencies, got ${typeof this.dependencies}`
+      );
+    }
+    if (!(this.devDependencies instanceof Dependencies)) {
+      throw new VersionInvalid(
+        `${message}, devDependencies must be an instance of Dependencies, got ${typeof this.devDependencies}`
+      );
     }
     this.dependencies.validate();
     this.devDependencies.validate();
     if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
-      throw new GeneralError(`${message}, it has dependencies but its flattenedDependencies is empty`);
+      throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
     }
     if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
-      throw new GeneralError(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
+      throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
     }
-    if (!this.log) throw new GeneralError(`${message},the log object is missing`);
+    const validateFlattenedDependencies = (dependencies: string[]) => {
+      validateType(message, dependencies, 'dependencies', 'array');
+      dependencies.forEach((dependency) => {
+        if (!(dependency instanceof BitId)) {
+          throw new VersionInvalid(`${message}, a flattenedDependency expected to be BitId, got ${typeof dependency}`);
+        }
+        if (!dependency.hasVersion()) {
+          throw new VersionInvalid(
+            `${message}, the flattenedDependency ${dependency.toString()} does not have a version`
+          );
+        }
+      });
+    };
+    validateFlattenedDependencies(this.flattenedDependencies);
+    validateFlattenedDependencies(this.flattenedDevDependencies);
+    if (!this.log) throw new VersionInvalid(`${message}, the log object is missing`);
+    validateType(message, this.log, 'log', 'object');
+    if (this.bindingPrefix) {
+      validateType(message, this.bindingPrefix, 'bindingPrefix', 'string');
+    }
   }
 }
 

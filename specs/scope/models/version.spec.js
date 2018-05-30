@@ -1,8 +1,12 @@
+import R from 'ramda';
 import { expect } from 'chai';
 import Version from '../../../src/scope/models/version';
+import versionFixture from './fixtures/version-model-object.json';
+import versionWithDepsFixture from './fixtures/version-model-extended.json';
 
-const versionFixture = require('./fixtures/version-model-object.json');
-const versionWithDepsFixture = require('./fixtures/version-model-with-dependencies.json');
+const getVersionWithDepsFixture = () => {
+  return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
+};
 
 describe('Version', () => {
   describe('id()', () => {
@@ -70,7 +74,7 @@ describe('Version', () => {
     describe('version with dependencies', () => {
       let dependencies;
       before(() => {
-        const version = new Version(versionWithDepsFixture);
+        const version = getVersionWithDepsFixture();
         const idRaw = version.id();
         const idParsed = JSON.parse(idRaw);
         dependencies = idParsed.dependencies;
@@ -113,6 +117,158 @@ describe('Version', () => {
     it('should have a the same hash string also when loading the version from contents', () => {
       const versionFromContent = Version.parse(JSON.stringify(versionFixture));
       expect(versionFromContent.hash().toString()).to.equal(versionFixtureHash);
+    });
+  });
+  describe('validate()', () => {
+    let version;
+    let validateFunc;
+    beforeEach(() => {
+      version = getVersionWithDepsFixture();
+      validateFunc = () => version.validate();
+    });
+    it('should not throw when it has a valid version', () => {
+      expect(validateFunc).to.not.throw();
+    });
+    it('should throw when mainFile is empty', () => {
+      const errMsg = 'mainFile is missing';
+      version.mainFile = null;
+      expect(validateFunc).to.throw(errMsg);
+      version.mainFile = '';
+      expect(validateFunc).to.throw(errMsg);
+      version.mainFile = undefined;
+      expect(validateFunc).to.throw(errMsg);
+    });
+    it('should throw when mainFile path is absolute', () => {
+      version.mainFile = '/tmp/main.js';
+      expect(validateFunc).to.throw(`mainFile ${version.mainFile} is invalid`);
+    });
+    it('should throw when mainFile path is Windows format', () => {
+      version.mainFile = 'a\\tmp.js';
+      expect(validateFunc).to.throw(`mainFile ${version.mainFile} is invalid`);
+    });
+    it('should throw when the files are missing', () => {
+      version.files = undefined;
+      expect(validateFunc).to.throw('files are missing');
+      version.files = null;
+      expect(validateFunc).to.throw('files are missing');
+      version.files = [];
+      expect(validateFunc).to.throw('files are missing');
+    });
+    it('should throw when the file has no hash', () => {
+      version.files[0].file = '';
+      expect(validateFunc).to.throw('missing the hash');
+    });
+    it('should throw when the file has no name', () => {
+      version.files[0].name = '';
+      expect(validateFunc).to.throw('missing the name');
+    });
+    it('should throw when the file.name is not a string', () => {
+      version.files[0].name = true;
+      expect(validateFunc).to.throw('to be string, got boolean');
+    });
+    it('should throw when the file hash is not a string', () => {
+      version.files[0].file.hash = [];
+      expect(validateFunc).to.throw('to be string, got object');
+    });
+    it('should throw when the main file is not in the file lists', () => {
+      version.files[0].relativePath = 'anotherFile.js';
+      expect(validateFunc).to.throw('unable to find the mainFile');
+    });
+    it('compiler should have name attribute', () => {
+      version.compiler = {};
+      expect(validateFunc).to.throw('missing the name attribute');
+    });
+    it('compiler.name should be a string', () => {
+      version.compiler.name = true;
+      expect(validateFunc).to.throw('to be string, got boolean');
+    });
+    it('compiler.name should be a valid bit id with version', () => {
+      version.compiler.name = 'scope/pref/aaa@latest';
+      expect(validateFunc).to.throw('does not have a version');
+    });
+    it('compiler.files should have name attribute', () => {
+      version.compiler.files[0] = 'string';
+      expect(validateFunc).to.throw('missing the name attribute');
+    });
+    it('if a compiler is string, it should be a valid bit-id', () => {
+      version.compiler = 'this/is/invalid/bit/id';
+      expect(validateFunc).to.throw('the environment-id has an invalid Bit id');
+    });
+    it('if a compiler is string, it should have scope ', () => {
+      version.compiler = 'name@0.0.1';
+      expect(validateFunc).to.throw('does not have a scope');
+    });
+    it('if a compiler is string, it should have version', () => {
+      version.compiler = 'scope/box/name';
+      expect(validateFunc).to.throw('does not have a version');
+    });
+    it('should throw for an invalid package version', () => {
+      version.packageDependencies = { lodash: 'invalid-version' };
+      expect(validateFunc).to.throw('is not a valid semantic version');
+    });
+    it('should throw for invalid packageDependencies type', () => {
+      version.packageDependencies = 'invalid packages';
+      expect(validateFunc).to.throw('to be object, got string');
+    });
+    it('should throw for invalid devPackageDependencies type', () => {
+      version.devPackageDependencies = [1, 2, 3];
+      expect(validateFunc).to.throw('to be object, got array');
+    });
+    it('should throw for invalid peerPackageDependencies type', () => {
+      version.peerPackageDependencies = true;
+      expect(validateFunc).to.throw('to be object, got boolean');
+    });
+    it('should throw for invalid dist object', () => {
+      version.dists = 'invalid dists';
+      expect(validateFunc).to.throw('to be array, got string');
+    });
+    it('should throw for invalid dist.relativePath', () => {
+      version.dists[0].relativePath = 'invalid*path';
+      expect(validateFunc).to.throw(`dist-file ${version.dists[0].relativePath} is invalid`);
+    });
+    it('should throw for an empty dist.relativePath', () => {
+      version.dists[0].relativePath = '';
+      expect(validateFunc).to.throw(`dist-file ${version.dists[0].relativePath} is invalid`);
+    });
+    it('should throw for an invalid dist.name', () => {
+      version.dists[0].name = 4;
+      expect(validateFunc).to.throw('to be string, got number');
+    });
+    it('should throw when the file hash is not a string', () => {
+      version.dists[0].file.hash = {};
+      expect(validateFunc).to.throw('to be string, got object');
+    });
+    it('should throw when dependencies are invalid', () => {
+      version.dependencies = {};
+      expect(validateFunc).to.throw('dependencies must be an instance of Dependencies, got object');
+    });
+    it('should throw when devDependencies are invalid', () => {
+      version.devDependencies = {};
+      expect(validateFunc).to.throw('devDependencies must be an instance of Dependencies, got object');
+    });
+    it('should throw when there are dependencies and the flattenDependencies are empty', () => {
+      version.flattenedDependencies = [];
+      expect(validateFunc).to.throw('it has dependencies but its flattenedDependencies is empty');
+    });
+    it('should throw when a flattenDependency is invalid', () => {
+      version.flattenedDependencies = [1234];
+      expect(validateFunc).to.throw('expected to be BitId, got number');
+    });
+    it('should throw when a flattenDependency does not have a version', () => {
+      version.flattenedDependencies[0].version = null;
+      expect(validateFunc).to.throw('does not have a version');
+    });
+    it('should throw when the log is empty', () => {
+      version.log = undefined;
+      expect(validateFunc).to.throw('log object is missing');
+    });
+    it('should throw when the log has an invalid type', () => {
+      version.log = [];
+      expect(validateFunc).to.throw('to be object, got array');
+    });
+    it('should throw when the bindingPrefix has an invalid type', () => {
+      version.bindingPrefix = {};
+      expect(validateFunc).to.throw('to be string, got object');
     });
   });
 });
