@@ -74,7 +74,10 @@ jobs:
       # - run: ls ~/bit/node_modules
       - run:
           name: "Update npm"
-          command: 'npm install npm@latest'
+          command: |
+            npm install npm@latest
+            sudo rm /usr/local/bin/npm
+            sudo ln -s /home/circleci/bit/node_modules/.bin/npm /usr/local/bin/npm
       - run:
           name: "Checking Versions"
           command: |
