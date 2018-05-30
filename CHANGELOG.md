@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.7] - 2018-05-30
+
+- fix eol for windows for envs files
+- fix storing specs results on tag
+- store envs as strings in case there is no config / files
+- version validation during bit tag
+
 ## [13.0.0-dev.6] - 2018-05-27
 
 - bump bit-js version
