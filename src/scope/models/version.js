@@ -268,7 +268,8 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        envsPackageDependencies: this.envsPackageDependencies
+        // Do not store it if it's empty for backward compatibility
+        envsPackageDependencies: R.isEmpty(this.envsPackageDependencies) ? undefined : this.envsPackageDependencies
       },
       val => !!val
     );
@@ -355,7 +356,8 @@ export default class Version extends BitObject {
       flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      // Do not store it if it's empty for backward compatibility
+      envsPackageDependencies: R.isEmpty(envsPackageDependencies) ? undefined : envsPackageDependencies,
       packageDependencies
     });
   }
