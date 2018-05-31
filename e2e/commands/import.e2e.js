@@ -1430,6 +1430,19 @@ console.log(barFoo.default());`;
         expect(outputBarFoo).to.have.string('no diff for');
       });
     });
+    describe('import with --conf', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo --conf');
+      });
+      it('should save the compiler with id only without files and config because it does not use them', () => {
+        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo/bit.json'));
+        expect(bitJson).to.have.property('env');
+        expect(bitJson.env).to.have.property('compiler');
+        expect(bitJson.env.compiler).to.equal(`${helper.envScope}/compilers/babel@0.0.1`);
+      });
+    });
   });
 
   describe('modifying a dependent and a dependency at the same time', () => {

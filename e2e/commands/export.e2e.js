@@ -296,12 +296,16 @@ describe('bit export command', function () {
   });
 
   describe('with a PNG file', () => {
+    let pngSize;
+    let destPngFile;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
-      const destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
+      destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
       fs.copySync(sourcePngFile, destPngFile);
+      const stats = fs.statSync(destPngFile);
+      pngSize = stats.size;
       helper.runCmd('bit add bar -m foo.js -i bar/foo');
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -310,6 +314,16 @@ describe('bit export command', function () {
       const output = helper.listRemoteScope();
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
+    });
+    describe('after importing the file', () => {
+      before(() => {
+        helper.importComponent('bar/foo');
+      });
+      it('the size of the binary file should not be changed', () => {
+        const currentStats = fs.statSync(destPngFile);
+        const currentSize = currentStats.size;
+        expect(currentSize).to.equal(pngSize);
+      });
     });
   });
 

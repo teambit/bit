@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support bit-diff for envs files and configurations
+- fix import of binary files
 - recognize packages required from d.ts files
 
 ## [13.0.0-dev.7] - 2018-05-30

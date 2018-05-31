@@ -190,6 +190,21 @@ export default class AbstractBitJson {
     return env;
   }
 
+  /**
+   * before v13, envs were strings of bit-id.
+   * to be backward compatible, if an env doesn't have any files/config, convert it to a string
+   */
+  getBackwardCompatibleEnv(type: EnvType): ?Compilers | ?Testers | ?string {
+    const envObj = this.getEnvsByType(type);
+    if (!envObj) return undefined;
+    if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id, it's >= v13
+    const envId = Object.keys(envObj)[0];
+    if (R.isEmpty(envObj[envId].rawConfig) && R.isEmpty(envObj[envId].options) && R.isEmpty(envObj[envId].files)) {
+      return envId;
+    }
+    return envObj;
+  }
+
   getDependencies(): BitIds {
     return BitIds.fromObject(this.dependencies);
   }
@@ -208,8 +223,8 @@ export default class AbstractBitJson {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
         env: {
-          compiler: this.compiler,
-          tester: this.tester
+          compiler: this.getBackwardCompatibleEnv(CompilerEnvType),
+          tester: this.getBackwardCompatibleEnv(TesterEnvType)
         },
         dependencies: this.dependencies,
         extensions: this.extensions
