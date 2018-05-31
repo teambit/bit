@@ -161,7 +161,12 @@ export default class Version extends BitObject {
     };
 
     const filterFunction = (val, key) => {
-      if (key === 'devDependencies' || key === 'devPackageDependencies' || key === 'peerPackageDependencies') {
+      if (
+        key === 'devDependencies' ||
+        key === 'devPackageDependencies' ||
+        key === 'peerPackageDependencies' ||
+        key === 'envsPackageDependencies'
+      ) {
         return !R.isEmpty(val);
       }
       return !!val;
@@ -180,6 +185,7 @@ export default class Version extends BitObject {
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
+          envsPackageDependencies: obj.envsPackageDependencies,
           bindingPrefix: obj.bindingPrefix
         },
         filterFunction
@@ -405,11 +411,11 @@ export default class Version extends BitObject {
     };
 
     const mergePackageDependencies = (
-      devPackageDependencies,
+      envsPackageDependencies = {},
       compilerDynamicPakageDependencies = {},
       testerDynamicPakageDependencies = {}
     ) => {
-      return { ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies, ...devPackageDependencies };
+      return { ...envsPackageDependencies, ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies };
     };
 
     const compilerDynamicPakageDependencies = component.compiler
@@ -436,6 +442,7 @@ export default class Version extends BitObject {
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
       envsPackageDependencies: mergePackageDependencies(
+        component.envsPackageDependencies,
         compilerDynamicPakageDependencies,
         testerDynamicPakageDependencies
       ),
