@@ -94,8 +94,7 @@ export function diffBetweenComponentsObjects(
   }
   const printableLeft = componentToPrintableForDiff(componentLeft);
   const printableRight = componentToPrintableForDiff(componentRight);
-  const otherFieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);
-  if (!otherFieldsDiff || R.isEmpty(otherFieldsDiff)) return undefined;
+  const fieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);
   if (!componentLeft.version || !componentRight.version) {
     throw new Error('diffBetweenComponentsObjects component does not have a version');
   }
@@ -119,10 +118,36 @@ export function diffBetweenComponentsObjects(
     if (!fieldValue) return '';
     return `+ ${printFieldValue(fieldValue)}\n`;
   };
-  return Object.keys(otherFieldsDiff).map((field: string) => {
+  const fieldsDiffOutput = Object.keys(fieldsDiff).map((field: string) => {
     const title = titleLeft(field) + chalk.bold(titleRight(field));
     const value = chalk.red(printFieldLeft(field)) + chalk.green(printFieldRight(field));
     const diffOutput = title + value;
     return { fieldName: field, diffOutput };
   });
+  const envs = ['compiler', 'tester'];
+  const fieldsEnvsConfigOutput = envs
+    .map((env: string) => {
+      // $FlowFixMe
+      const leftConfig = componentLeft[env] && componentLeft[env].dynamicConfig ? componentLeft[env].dynamicConfig : {};
+      const rightConfig = // $FlowFixMe
+        componentRight[env] && componentRight[env].dynamicConfig ? componentRight[env].dynamicConfig : {};
+      // $FlowFixMe we remove the null later
+      if (JSON.stringify(leftConfig) === JSON.stringify(rightConfig)) return null;
+      const fieldName = `${env} configuration`;
+      const title = titleLeft(fieldName) + chalk.bold(titleRight(fieldName));
+      const getValue = (fieldValue: Object, left: boolean) => {
+        if (R.isEmpty(fieldValue)) return '';
+        const sign = left ? '-' : '+';
+        const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
+        return `${jsonOutput}\n`;
+      };
+      const value = chalk.red(getValue(leftConfig, true)) + chalk.green(getValue(rightConfig, false));
+
+      const diffOutput = title + value;
+      return { fieldName, diffOutput };
+    })
+    .filter(x => x);
+
+  const allDiffs = fieldsDiffOutput.concat(fieldsEnvsConfigOutput);
+  return R.isEmpty(allDiffs) ? undefined : allDiffs;
 }

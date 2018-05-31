@@ -73,7 +73,7 @@ describe('envs', function () {
     helper.destroyEnv();
   });
 
-  describe('author enviorment', () => {
+  describe('author environment', () => {
     // TODO: reimport component on author after changing file/config of its env in different project
     // (should load env from model)
     // TODO: reimport component on author after changing the component code in different project
@@ -292,36 +292,69 @@ describe('envs', function () {
         expect(statusOutput).to.not.have.string('modified');
       });
       describe('changing config files', () => {
-        it('should show the component as modifed after changning compiler config files', () => {
+        it('should show the component as modified after changing compiler config files', () => {
           helper.createFile('', '.babelrc', '{"some": "thing"}');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
-        it('should show the component as modifed after changning tester config files', () => {
+        it('should show the component as modified after changing tester config files', () => {
           helper.createFile('', 'mocha-config.js', 'something');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
+        it('bit-diff should show compiler file differences', () => {
+          helper.createFile('', '.babelrc', '{"some": "thing"}');
+          const diff = helper.diff('comp/my-comp');
+          expect(diff).to.have.string('--- .babelrc (0.0.1 original)');
+          expect(diff).to.have.string('+++ .babelrc (0.0.1 modified)');
+          expect(diff).to.have.string('-  "minified": true,');
+          expect(diff).to.have.string('+{"some": "thing"}');
+        });
+        it('bit-diff should show tester file differences', () => {
+          helper.createFile('', 'mocha-config.js', 'something');
+          const diff = helper.diff('comp/my-comp');
+          expect(diff).to.have.string('--- config (0.0.1 original)');
+          expect(diff).to.have.string('+++ config (0.0.1 modified)');
+          expect(diff).to.have.string('-{"someConfKey": "someConfVal"}');
+          expect(diff).to.have.string('+something');
+          expect(diff).to.not.have.string('mocha-config.js'); // the relative path on the FS should not appear in the diff
+        });
       });
       describe('changing envs raw config', () => {
-        it('should show the component as modifed after changning compiler raw config', () => {
+        it('should show the component as modified after changing compiler raw config', () => {
           helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'compiler');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
-        it('should show the component as modifed after changning tester raw config', () => {
+        it('should show the component as modified after changning tester raw config', () => {
           helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'tester');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
+        it('bit-diff should show compiler config differences', () => {
+          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'compiler');
+          const diff = helper.diff('comp/my-comp');
+          expect(diff).to.have.string('--- Compiler configuration (0.0.1 original)');
+          expect(diff).to.have.string('+++ Compiler configuration (0.0.1 modified)');
+          expect(diff).to.have.string('- "a": "b",');
+          expect(diff).to.have.string('+ "a": "c",');
+        });
+        it('bit-diff should show tester config differences', () => {
+          helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'tester');
+          const diff = helper.diff('comp/my-comp');
+          expect(diff).to.have.string('--- Tester configuration (0.0.1 original)');
+          expect(diff).to.have.string('+++ Tester configuration (0.0.1 modified)');
+          expect(diff).to.have.string('- "a": "b",');
+          expect(diff).to.have.string('+ "a": "c",');
+        });
       });
     });
   });
-  describe('imported enviorment', () => {
+  describe('imported environment', () => {
     const componentFolder = path.join('components', 'comp', 'my-comp');
 
     describe('without ejceting (--conf)', () => {
