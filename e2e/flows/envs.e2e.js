@@ -126,7 +126,7 @@ describe('envs', function () {
         const babelRcObjectHash = compilerModel.files[0].file;
         const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
         const babelRcPath = path.join(helper.localScopePath, '.babelrc');
-        const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString());
+        const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString(), babelRcPath);
         expect(babelRcFromModel).to.equal(babelRcFromFS);
       });
       it('should store the tester files in the model', () => {
