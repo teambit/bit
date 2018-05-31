@@ -56,7 +56,8 @@ export default class TesterExtension extends EnvExtension {
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: TesterExtension = new TesterExtension(envExtensionProps);
     if (extension.loaded) {
-      await extension.init();
+      const throws = true;
+      await extension.init(throws);
     }
     // $FlowFixMe
     return extension;

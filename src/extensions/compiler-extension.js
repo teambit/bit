@@ -58,7 +58,8 @@ export default class CompilerExtension extends EnvExtension {
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
     if (extension.loaded) {
-      await extension.init();
+      const throws = true;
+      await extension.init(throws);
     }
     return extension;
   }

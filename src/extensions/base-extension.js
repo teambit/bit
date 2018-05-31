@@ -89,7 +89,7 @@ export default class BaseExtension {
   /**
    * Run the extension's init function
    */
-  async init(): Promise<boolean> {
+  async init(throws: boolean = false): Promise<boolean> {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
       if (this.script && this.script.init && typeof this.script.init === 'function') {
@@ -100,6 +100,9 @@ export default class BaseExtension {
     } catch (err) {
       logger.error(`initialized extension ${this.name} failed`);
       logger.error(err);
+      if (throws) {
+        throw new ExtensionLoadError(err, this.name);
+      }
       this.initialized = false;
       return false;
     }
@@ -287,7 +290,6 @@ export default class BaseExtension {
       }
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
-      console.log('err', throws);
       if (err.code === 'MODULE_NOT_FOUND') {
         const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
         logger.warn(msg);
