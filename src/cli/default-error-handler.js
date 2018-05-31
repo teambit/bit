@@ -73,6 +73,9 @@ import GeneralError from '../error/general-error';
 import ValidationError from '../error/validation-error';
 import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
+import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
+import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension-get-dynamic-packages-error';
+import ExtensionInitError from '../extensions/exceptions/extension-init-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -335,6 +338,27 @@ to ignore this error, please use --ignore-newest-version flag`
       `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
         err.originalError.stack
       }`
+  ],
+  [
+    ExtensionLoadError,
+    err =>
+      `error: bit failed to load ${err.name} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
+  [
+    ExtensionInitError,
+    err =>
+      `error: bit failed to initialized ${err.name} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
+  [
+    ExtensionGetDynamicPackagesError,
+    err =>
+      `error: bit failed to get the dynamic packages from ${err.name} with the following exception:\n${
+        err.originalError.message
+      }.\n${err.originalError.stack}`
   ],
   [
     InvalidCompilerInterface,

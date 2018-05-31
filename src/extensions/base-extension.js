@@ -2,6 +2,7 @@
 
 import path from 'path';
 import R from 'ramda';
+import fs from 'fs-extra';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { ScopeNotFound } from '../scope/exceptions';
@@ -11,6 +12,7 @@ import type { ExtensionOptions } from './extension';
 import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
+import ExtensionLoadError from './exceptions/extension-load-error';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -28,7 +30,8 @@ type BaseArgs = {
 export type BaseLoadArgsProps = BaseArgs & {
   consumerPath?: ?PathOsBased,
   scopePath?: ?PathOsBased,
-  context?: ?Object
+  context?: ?Object,
+  throws?: ?boolean
 };
 
 type StaticProps = BaseArgs & {
@@ -87,7 +90,7 @@ export default class BaseExtension {
   /**
    * Run the extension's init function
    */
-  async init(): Promise<boolean> {
+  async init(throws: boolean = false): Promise<boolean> {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
       if (this.script && this.script.init && typeof this.script.init === 'function') {
@@ -98,6 +101,9 @@ export default class BaseExtension {
     } catch (err) {
       logger.error(`initialized extension ${this.name} failed`);
       logger.error(err);
+      if (throws) {
+        throw new ExtensionLoadError(err, this.name);
+      }
       this.initialized = false;
       return false;
     }
@@ -136,9 +142,9 @@ export default class BaseExtension {
    * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
-  async reload(): Promise<void> {
+  async reload({ throws }: Object): Promise<void> {
     Analytics.addBreadCrumb('base-extension', 'reload extension');
-    const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options);
+    const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options, throws);
     if (baseProps.loaded) {
       this.loaded = baseProps.loaded;
       this.script = baseProps.script;
@@ -176,10 +182,9 @@ export default class BaseExtension {
     options = {},
     consumerPath,
     scopePath,
+    throws,
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
-    // logger.info(`loading extension ${name}`);
-    // Require extension from _debugFile
     Analytics.addBreadCrumb('base-extension', 'load extension');
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
@@ -188,7 +193,13 @@ export default class BaseExtension {
       if (!path.isAbsolute(options.file) && consumerPath) {
         absPath = path.resolve(consumerPath, file);
       }
-      const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(name, absPath, rawConfig, options);
+      const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(
+        name,
+        absPath,
+        rawConfig,
+        options,
+        throws
+      );
       const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
       extensionProps.api = concreteBaseAPI;
       return extensionProps;
@@ -206,7 +217,7 @@ export default class BaseExtension {
     if (scopePath) {
       // $FlowFixMe
       const componentPath = _getExtensionPath(name, scopePath, options.core);
-      staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options);
+      staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options, throws);
     }
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
     return extensionProps;
@@ -246,7 +257,8 @@ export default class BaseExtension {
     name: string,
     filePath: string,
     rawConfig: Object = {},
-    options: Object = {}
+    options: Object = {},
+    throws: ?boolean = false
   ): Promise<StaticProps> {
     logger.info(`loading extension ${name} from ${filePath}`);
     Analytics.addBreadCrumb('base-extension', 'load extension from file');
@@ -267,9 +279,20 @@ export default class BaseExtension {
       return extensionProps;
     }
     extensionProps.filePath = filePath;
+    const isFileExist = await fs.exists(filePath);
+    if (!isFileExist) {
+      // Do not throw an error if the file not exist since we will install it later
+      // unless you specify the options.file which means you want a specific file which won't be installed automatically later
+      if (throws && options.file) {
+        const err = new Error(`the file ${filePath} not found`);
+        throw new ExtensionLoadError(err, extensionProps.name);
+      }
+      extensionProps.loaded = false;
+      return extensionProps;
+    }
+    // $FlowFixMe
+    const script = require(filePath); // eslint-disable-line
     try {
-      // $FlowFixMe
-      const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
       if (extensionProps.script.getDynamicConfig && typeof extensionProps.script.getDynamicConfig === 'function') {
         extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig({ rawConfig });
@@ -284,6 +307,9 @@ export default class BaseExtension {
       logger.error(`loading extension ${extensionProps.name} failed`);
       logger.error(err);
       extensionProps.loaded = false;
+      if (throws) {
+        throw new ExtensionLoadError(err, extensionProps.name);
+      }
       return extensionProps;
     }
     extensionProps.loaded = true;

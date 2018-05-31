@@ -15,6 +15,7 @@ import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
+import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -158,7 +159,8 @@ export default class EnvExtension extends BaseExtension {
     if (context) {
       this.context = context;
     }
-    await super.reload();
+    const throws = true;
+    await super.reload({ throws });
     // $FlowFixMe
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
@@ -184,13 +186,17 @@ export default class EnvExtension extends BaseExtension {
     Analytics.addBreadCrumb('env-extension', 'loadDynamicPackageDependencies');
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
-      const dynamicPackageDependencies = await getDynamicPackageDependencies({
-        rawConfig: envExtensionProps.rawConfig,
-        dynamicConfig: envExtensionProps.dynamicConfig,
-        configFiles: envExtensionProps.files,
-        context: envExtensionProps.context
-      });
-      return dynamicPackageDependencies;
+      try {
+        const dynamicPackageDependencies = await getDynamicPackageDependencies({
+          rawConfig: envExtensionProps.rawConfig,
+          dynamicConfig: envExtensionProps.dynamicConfig,
+          configFiles: envExtensionProps.files,
+          context: envExtensionProps.context
+        });
+        return dynamicPackageDependencies;
+      } catch (err) {
+        throw new ExtensionGetDynamicPackagesError(err, envExtensionProps.name);
+      }
     }
     return undefined;
   }
@@ -204,6 +210,7 @@ export default class EnvExtension extends BaseExtension {
     repository: Repository
   ): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
+    // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {
