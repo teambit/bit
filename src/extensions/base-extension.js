@@ -2,6 +2,7 @@
 
 import path from 'path';
 import R from 'ramda';
+import fs from 'fs-extra';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { ScopeNotFound } from '../scope/exceptions';
@@ -278,9 +279,20 @@ export default class BaseExtension {
       return extensionProps;
     }
     extensionProps.filePath = filePath;
+    const isFileExist = await fs.exists(filePath);
+    if (!isFileExist) {
+      // Do not throw an error if the file not exist since we will install it later
+      // unless you specify the options.file which means you want a specific file which won't be installed automatically later
+      if (throws && options.file) {
+        const err = new Error(`the file ${filePath} not found`);
+        throw new ExtensionLoadError(err, extensionProps.name);
+      }
+      extensionProps.loaded = false;
+      return extensionProps;
+    }
+    // $FlowFixMe
+    const script = require(filePath); // eslint-disable-line
     try {
-      // $FlowFixMe
-      const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
       if (extensionProps.script.getDynamicConfig && typeof extensionProps.script.getDynamicConfig === 'function') {
         extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig({ rawConfig });
