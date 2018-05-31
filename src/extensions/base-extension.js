@@ -11,6 +11,7 @@ import type { ExtensionOptions } from './extension';
 import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
+import ExtensionLoadError from './exceptions/extension-load-error';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -28,7 +29,8 @@ type BaseArgs = {
 export type BaseLoadArgsProps = BaseArgs & {
   consumerPath?: ?PathOsBased,
   scopePath?: ?PathOsBased,
-  context?: ?Object
+  context?: ?Object,
+  throws?: ?boolean
 };
 
 type StaticProps = BaseArgs & {
@@ -136,9 +138,9 @@ export default class BaseExtension {
    * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
-  async reload(): Promise<void> {
+  async reload(throws: boolean = false): Promise<void> {
     Analytics.addBreadCrumb('base-extension', 'reload extension');
-    const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options);
+    const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options, throws);
     if (baseProps.loaded) {
       this.loaded = baseProps.loaded;
       this.script = baseProps.script;
@@ -176,19 +178,27 @@ export default class BaseExtension {
     options = {},
     consumerPath,
     scopePath,
+    throws = false,
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     // logger.info(`loading extension ${name}`);
     // Require extension from _debugFile
     Analytics.addBreadCrumb('base-extension', 'load extension');
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
+    // console.log("loading")
     if (options.file) {
       let absPath = options.file;
       const file = options.file || '';
       if (!path.isAbsolute(options.file) && consumerPath) {
         absPath = path.resolve(consumerPath, file);
       }
-      const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(name, absPath, rawConfig, options);
+      const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile(
+        name,
+        absPath,
+        rawConfig,
+        options,
+        throws
+      );
       const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
       extensionProps.api = concreteBaseAPI;
       return extensionProps;
@@ -206,7 +216,7 @@ export default class BaseExtension {
     if (scopePath) {
       // $FlowFixMe
       const componentPath = _getExtensionPath(name, scopePath, options.core);
-      staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options);
+      staticExtensionProps = await BaseExtension.loadFromFile(name, componentPath, rawConfig, options, throws);
     }
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
     return extensionProps;
@@ -246,7 +256,8 @@ export default class BaseExtension {
     name: string,
     filePath: string,
     rawConfig: Object = {},
-    options: Object = {}
+    options: Object = {},
+    throws: boolean = false
   ): Promise<StaticProps> {
     logger.info(`loading extension ${name} from ${filePath}`);
     Analytics.addBreadCrumb('base-extension', 'load extension from file');
@@ -276,6 +287,7 @@ export default class BaseExtension {
       }
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
+      console.log('err', throws);
       if (err.code === 'MODULE_NOT_FOUND') {
         const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
         logger.warn(msg);
@@ -284,6 +296,9 @@ export default class BaseExtension {
       logger.error(`loading extension ${extensionProps.name} failed`);
       logger.error(err);
       extensionProps.loaded = false;
+      if (throws) {
+        throw new ExtensionLoadError(err, extensionProps.name);
+      }
       return extensionProps;
     }
     extensionProps.loaded = true;

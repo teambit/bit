@@ -51,6 +51,8 @@ export default class TesterExtension extends EnvExtension {
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('tester-extension', 'load');
     props.envType = TesterEnvType;
+    // Throw error if tester not loaded
+    props.throws = true;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: TesterExtension = new TesterExtension(envExtensionProps);
     if (extension.loaded) {

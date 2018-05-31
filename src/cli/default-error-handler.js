@@ -73,6 +73,7 @@ import GeneralError from '../error/general-error';
 import ValidationError from '../error/validation-error';
 import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
+import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -333,6 +334,13 @@ to ignore this error, please use --ignore-newest-version flag`
     ExternalBuildError,
     err =>
       `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
+        err.originalError.stack
+      }`
+  ],
+  [
+    ExtensionLoadError,
+    err =>
+      `error: bit failed to load ${err.name} with the following exception:\n${err.originalError.message}.\n${
         err.originalError.stack
       }`
   ],

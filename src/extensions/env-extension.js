@@ -158,7 +158,8 @@ export default class EnvExtension extends BaseExtension {
     if (context) {
       this.context = context;
     }
-    await super.reload();
+    const throws = true;
+    await super.reload(throws);
     // $FlowFixMe
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;

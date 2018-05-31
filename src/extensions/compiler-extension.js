@@ -53,6 +53,8 @@ export default class CompilerExtension extends EnvExtension {
   static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
     Analytics.addBreadCrumb('compiler-extension', 'load');
     props.envType = CompilerEnvType;
+    // Throw error if compiler not loaded
+    props.throws = true;
     const envExtensionProps: EnvExtensionProps = await super.load(props);
     const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
     if (extension.loaded) {
