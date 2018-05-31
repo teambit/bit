@@ -161,7 +161,12 @@ export default class Version extends BitObject {
     };
 
     const filterFunction = (val, key) => {
-      if (key === 'devDependencies' || key === 'devPackageDependencies' || key === 'peerPackageDependencies') {
+      if (
+        key === 'devDependencies' ||
+        key === 'devPackageDependencies' ||
+        key === 'peerPackageDependencies' ||
+        key === 'envsPackageDependencies'
+      ) {
         return !R.isEmpty(val);
       }
       return !!val;
@@ -180,6 +185,7 @@ export default class Version extends BitObject {
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
+          envsPackageDependencies: obj.envsPackageDependencies,
           bindingPrefix: obj.bindingPrefix
         },
         filterFunction
@@ -268,8 +274,7 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        // Do not store it if it's empty for backward compatibility
-        envsPackageDependencies: R.isEmpty(this.envsPackageDependencies) ? undefined : this.envsPackageDependencies
+        envsPackageDependencies: this.envsPackageDependencies
       },
       val => !!val
     );
@@ -356,8 +361,7 @@ export default class Version extends BitObject {
       flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
       devPackageDependencies,
       peerPackageDependencies,
-      // Do not store it if it's empty for backward compatibility
-      envsPackageDependencies: R.isEmpty(envsPackageDependencies) ? undefined : envsPackageDependencies,
+      envsPackageDependencies,
       packageDependencies
     });
   }
