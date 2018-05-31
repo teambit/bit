@@ -29,7 +29,7 @@ export default class AbstractVinyl extends Vinyl {
     const filePath = writePath || this.path;
     logger.debug(`writing a file to the file-system at ${filePath}, force: ${force.toString()}`);
     if (!force && fs.existsSync(filePath)) return null;
-    await fs.outputFile(filePath, eol.auto(this.contents));
+    await fs.outputFile(filePath, eol.auto(this.contents, this.relative));
     return filePath;
   }
 

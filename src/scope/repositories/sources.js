@@ -20,6 +20,7 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';
+import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 
 export type ComponentTree = {
   component: Component,
@@ -171,10 +172,10 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
-    const setEol = (files) => {
+    const setEol = (files: AbstractVinyl) => {
       if (!files) return;
       const result = files.map((file) => {
-        file.file = Source.from(eol.lf(file.contents));
+        file.file = Source.from(eol.lf(file.contents, file.relative));
         return file;
       });
       return result;
@@ -185,7 +186,7 @@ export default class SourceRepository {
           return {
             name: file.basename,
             relativePath: consumerComponent.addSharedDir(file.relative),
-            file: Source.from(eol.lf(file.contents)),
+            file: Source.from(eol.lf(file.contents, file.relative)),
             test: file.test
           };
         })
