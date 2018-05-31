@@ -184,11 +184,8 @@ export default class BaseExtension {
     throws = false,
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
-    // logger.info(`loading extension ${name}`);
-    // Require extension from _debugFile
     Analytics.addBreadCrumb('base-extension', 'load extension');
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
-    // console.log("loading")
     if (options.file) {
       let absPath = options.file;
       const file = options.file || '';
