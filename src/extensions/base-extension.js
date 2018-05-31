@@ -141,7 +141,7 @@ export default class BaseExtension {
    * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
-  async reload(throws: boolean = false): Promise<void> {
+  async reload({ throws }: Object): Promise<void> {
     Analytics.addBreadCrumb('base-extension', 'reload extension');
     const baseProps = await BaseExtension.loadFromFile(this.name, this.filePath, this.rawConfig, this.options, throws);
     if (baseProps.loaded) {

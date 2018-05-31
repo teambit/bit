@@ -160,7 +160,7 @@ export default class EnvExtension extends BaseExtension {
       this.context = context;
     }
     const throws = true;
-    await super.reload(throws);
+    await super.reload({ throws });
     // $FlowFixMe
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
@@ -210,6 +210,7 @@ export default class EnvExtension extends BaseExtension {
     repository: Repository
   ): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
+    // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {
