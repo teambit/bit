@@ -352,7 +352,7 @@ export default class Component {
           consumer && componentMap.rootDir ? path.join(consumer.getPath(), componentMap.rootDir) : undefined;
       }
       return Promise.resolve()
-        .then(() => {
+        .then(async () => {
           const context: Object = {
             componentObject: this.toObject(),
             rootDistFolder,
@@ -370,7 +370,7 @@ export default class Component {
               api: compiler.api,
               context
             };
-            const result = compiler.action(actionParams);
+            const result = await compiler.action(actionParams);
             // TODO: Gilad - handle return of main dist file
             if (!result || !result.files) {
               throw new Error('compiler return invalid response');
