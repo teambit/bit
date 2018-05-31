@@ -319,6 +319,7 @@ describe('envs', function () {
           expect(diff).to.have.string('+++ config (0.0.1 modified)');
           expect(diff).to.have.string('-{"someConfKey": "someConfVal"}');
           expect(diff).to.have.string('+something');
+          expect(diff).to.not.have.string('mocha-config.js'); // the relative path on the FS should not appear in the diff
         });
       });
       describe('changing envs raw config', () => {
@@ -342,7 +343,7 @@ describe('envs', function () {
           expect(diff).to.have.string('- "a": "b",');
           expect(diff).to.have.string('+ "a": "c",');
         });
-        it('bit-diff should show compiler tester differences', () => {
+        it('bit-diff should show tester config differences', () => {
           helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', 'tester');
           const diff = helper.diff('comp/my-comp');
           expect(diff).to.have.string('--- Tester configuration (0.0.1 original)');

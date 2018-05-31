@@ -170,7 +170,7 @@ async function getEnvFilesDiff(
     if (!filesAVersion || !filesBVersion) {
       throw new Error('diffBetweenComponentsObjects component does not have a version');
     }
-    return getFilesDiff(tmp, filesA, filesB, filesAVersion, filesBVersion);
+    return getFilesDiff(tmp, filesA, filesB, filesAVersion, filesBVersion, 'name');
   });
   const envsDiff = await Promise.all(envsDiffP);
   return R.flatten(envsDiff);
@@ -181,16 +181,17 @@ async function getFilesDiff(
   filesA: SourceFile[],
   filesB: SourceFile[],
   filesAVersion: string,
-  filesBVersion: string
+  filesBVersion: string,
+  fileNameAttribute?: string = 'relative'
 ): Promise<FileDiff[]> {
-  const filesAPaths = filesA.map(f => f.relative);
-  const filesBPaths = filesB.map(f => f.relative);
+  const filesAPaths = filesA.map(f => f[fileNameAttribute]);
+  const filesBPaths = filesB.map(f => f[fileNameAttribute]);
   const allPaths = R.uniq(filesAPaths.concat(filesBPaths));
   const fileALabel = filesAVersion === filesBVersion ? `${filesAVersion} original` : filesAVersion;
   const fileBLabel = filesAVersion === filesBVersion ? `${filesBVersion} modified` : filesBVersion;
   const filesDiffP = allPaths.map(async (relativePath) => {
     const getFilePath = async (files): Promise<PathOsBased> => {
-      const file = files.find(f => f.relative === relativePath);
+      const file = files.find(f => f[fileNameAttribute] === relativePath);
       const fileContent = file ? file.contents : '';
       return tmp.save(fileContent);
     };
