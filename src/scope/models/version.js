@@ -411,11 +411,11 @@ export default class Version extends BitObject {
     };
 
     const mergePackageDependencies = (
-      devPackageDependencies,
+      envsPackageDependencies = {},
       compilerDynamicPakageDependencies = {},
       testerDynamicPakageDependencies = {}
     ) => {
-      return { ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies, ...devPackageDependencies };
+      return { ...envsPackageDependencies, ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies };
     };
 
     const compilerDynamicPakageDependencies = component.compiler
@@ -442,6 +442,7 @@ export default class Version extends BitObject {
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
       envsPackageDependencies: mergePackageDependencies(
+        component.envsPackageDependencies,
         compilerDynamicPakageDependencies,
         testerDynamicPakageDependencies
       ),
