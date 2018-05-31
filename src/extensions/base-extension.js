@@ -181,7 +181,7 @@ export default class BaseExtension {
     options = {},
     consumerPath,
     scopePath,
-    throws = false,
+    throws,
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     Analytics.addBreadCrumb('base-extension', 'load extension');
@@ -257,7 +257,7 @@ export default class BaseExtension {
     filePath: string,
     rawConfig: Object = {},
     options: Object = {},
-    throws: boolean = false
+    throws: ?boolean = false
   ): Promise<StaticProps> {
     logger.info(`loading extension ${name} from ${filePath}`);
     Analytics.addBreadCrumb('base-extension', 'load extension from file');
