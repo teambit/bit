@@ -270,4 +270,21 @@ describe('bit diff command', function () {
       });
     });
   });
+  describe('component with dependencies', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('utils', 'is-string.js');
+      helper.createComponentBarFoo('import isString from "../utils/is-string"');
+      helper.addComponent('utils/is-string.js');
+      helper.addComponentBarFoo();
+      helper.tagAllWithoutMessage();
+      helper.runCmd('bit move utils utility');
+      helper.createComponentBarFoo('import isString from "../utility/is-string"');
+    });
+    it('should indicate relativePaths changes', () => {
+      const output = helper.diff('bar/foo');
+      expect(output).to.have.string('- "sourceRelativePath": "utils/is-string.js",');
+      expect(output).to.have.string('+ "sourceRelativePath": "utility/is-string.js",');
+    });
+  });
 });
