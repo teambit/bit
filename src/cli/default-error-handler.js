@@ -360,7 +360,7 @@ function formatUnhandled(err: Error): string {
 
 export default (err: Error): ?string => {
   const error = errorsMap.find(([ErrorType]) => {
-    return err instanceof ErrorType;
+    return err instanceof ErrorType || err.name === ErrorType.name; // in some cases, such as forked process, the received err is serialized.
   });
 
   if (!error) return formatUnhandled(err);
