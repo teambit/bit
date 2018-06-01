@@ -124,6 +124,33 @@ export function diffBetweenComponentsObjects(
     const diffOutput = title + value;
     return { fieldName: field, diffOutput };
   });
+
+  const dependenciesOutput = () => {
+    const dependenciesLeft = componentLeft.getAllDependencies();
+    const dependenciesRight = componentRight.getAllDependencies();
+    if (R.isEmpty(dependenciesLeft) || R.isEmpty(dependenciesRight)) return [];
+    return dependenciesLeft.reduce((acc, dependencyLeft) => {
+      const idStr = dependencyLeft.id.toString();
+      const dependencyRight = dependenciesRight.find(dep => dep.id.toString() === idStr);
+      if (!dependencyRight) return acc;
+      if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
+      const fieldName = `Dependency ${idStr} relative-paths`;
+      const title = titleLeft(fieldName) + chalk.bold(titleRight(fieldName));
+      const getValue = (fieldValue: Object, left: boolean) => {
+        if (R.isEmpty(fieldValue)) return '';
+        const sign = left ? '-' : '+';
+        const jsonOutput = JSON.stringify(fieldValue, null, `${sign} `);
+        return `${jsonOutput}\n`;
+      };
+      const value =
+        chalk.red(getValue(dependencyLeft.relativePaths, true)) +
+        chalk.green(getValue(dependencyRight.relativePaths, false));
+      const diffOutput = title + value;
+      acc.push({ fieldName, diffOutput });
+      return acc;
+    }, []);
+  };
+
   const envs = ['compiler', 'tester'];
   const fieldsEnvsConfigOutput = envs
     .map((env: string) => {
@@ -148,6 +175,6 @@ export function diffBetweenComponentsObjects(
     })
     .filter(x => x);
 
-  const allDiffs = fieldsDiffOutput.concat(fieldsEnvsConfigOutput);
+  const allDiffs = [...fieldsDiffOutput, ...fieldsEnvsConfigOutput, ...dependenciesOutput()];
   return R.isEmpty(allDiffs) ? undefined : allDiffs;
 }
