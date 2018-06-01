@@ -20,7 +20,7 @@ export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
  */
 export default (async function test(
   id?: string,
-  forkLevel: ForkLevel = TESTS_FORK_LEVEL.COMPONENT,
+  forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
   verbose: ?boolean
 ): Promise<SpecsResultsWithComponentId> {
   if (forkLevel === TESTS_FORK_LEVEL.NONE) {

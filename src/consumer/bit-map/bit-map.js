@@ -462,7 +462,7 @@ export default class BitMap {
   ): ComponentMap {
     const bitId: BitId = R.is(String, id) ? BitId.parse(id) : id;
     if (!ignoreVersion && bitId.hasVersion()) {
-      if (!this.components[bitId] && shouldThrow) throw new MissingBitMapComponent(bitId);
+      if (!this.components[bitId] && shouldThrow) throw new MissingBitMapComponent(bitId.toString());
       return this.components[bitId];
     }
     const idWithVersion = Object.keys(this.components).find(
@@ -471,7 +471,7 @@ export default class BitMap {
         (includeSearchByBoxAndNameOnly &&
           BitId.parse(componentId).toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion())
     );
-    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(bitId);
+    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(bitId.toString());
     // $FlowFixMe
     return this.components[idWithVersion];
   }
