@@ -87,6 +87,7 @@
     "porter-stemmer": "^0.9.1",
     "prompt": "^1.0.0",
     "ramda": "^0.24.1",
+    "ramda-adjunct": "^2.9.0",
     "regenerator-runtime": "^0.11.0",
     "requestify": "^0.2.5",
     "roadrunner": "^1.1.0",
