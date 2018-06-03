@@ -144,7 +144,7 @@ export default class Helper {
 
   getEnvNameFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const env = bitJson.env[envType];
-    const envName = Object.keys(env)[0];
+    const envName = typeof env === 'string' ? env : Object.keys(env)[0];
     return envName;
   }
 

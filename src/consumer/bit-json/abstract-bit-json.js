@@ -1,6 +1,7 @@
 /** @flow */
 import path from 'path';
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
@@ -199,7 +200,11 @@ export default class AbstractBitJson {
     if (!envObj) return undefined;
     if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id, it's >= v13
     const envId = Object.keys(envObj)[0];
-    if (R.isEmpty(envObj[envId].rawConfig) && R.isEmpty(envObj[envId].options) && R.isEmpty(envObj[envId].files)) {
+    if (
+      RA.isNilOrEmpty(envObj[envId].rawConfig) &&
+      RA.isNilOrEmpty(envObj[envId].options) &&
+      RA.isNilOrEmpty(envObj[envId].files)
+    ) {
       return envId;
     }
     return envObj;
