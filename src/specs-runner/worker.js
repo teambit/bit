@@ -3,6 +3,7 @@
 import serializeError from 'serialize-error';
 import { testInProcess } from '../api/consumer/lib/test';
 import ExternalError from '../error/external-error';
+import loader from '../cli/loader';
 
 const testOneComponent = verbose => async (id: string) => {
   // $FlowFixMe
@@ -11,6 +12,8 @@ const testOneComponent = verbose => async (id: string) => {
 };
 
 function run(): Promise<void> {
+  // Start the loader to make sure we show it on forked process
+  loader.on();
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
   const verbose: boolean = process.env.__verbose__ === true;
   if (!ids || !ids.length) {
