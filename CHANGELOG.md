@@ -7,13 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix adding the same file with different letter cases (uppercase/lowercase)
+
 ## [13.0.0-dev.8] - 2018-05-30
 
 - support bit-diff for envs files and configurations
 - fix import of binary files
 - recognize packages required from d.ts files
 - change default fork level to one
-- bit.json backward compatibility 
+- bit.json backward compatibility
 - envs error handling
 
 ## [13.0.0-dev.7] - 2018-05-30

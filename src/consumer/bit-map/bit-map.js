@@ -268,7 +268,7 @@ export default class BitMap {
    * it's safer to avoid saving both files and instead, replacing the old file with the new one.
    * in case a file has replaced and it is also a mainFile, replace the mainFile as well
    */
-  _updateFilesWithCurrentCase(componentId: string, newFiles: ComponentMapFile[]) {
+  _updateFilesWithCurrentLetterCases(componentId: string, newFiles: ComponentMapFile[]) {
     const currentComponentMap = this.components[componentId];
     const currentFiles = currentComponentMap.files;
     currentFiles.forEach((currentFile) => {
@@ -321,7 +321,7 @@ export default class BitMap {
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
-        this._updateFilesWithCurrentCase(componentIdStr, files);
+        this._updateFilesWithCurrentLetterCases(componentIdStr, files);
         // override the current componentMap.files with the given files argument
         this.components[componentIdStr].files = R.unionWith(
           R.eqBy(R.prop('relativePath')),
