@@ -90,7 +90,9 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
   // if we propagate we will take the version from the root's package json which has nothing with the component version
   const packageInfo = PackageJson.loadSync(packageDir, false);
 
-  if (!packageInfo) return null; // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
+  // when running 'bitjs get-dependencies' command, packageInfo is sometimes empty
+  // or when using custom-module-resolution it may be empty or the name/version are empty
+  if (!packageInfo || !packageInfo.name || !packageInfo.version) return null;
   result[packageInfo.name] = packageInfo.version;
   return result;
 }
