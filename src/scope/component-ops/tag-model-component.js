@@ -243,10 +243,12 @@ export default (async function tagModelComponent({
           };
         })
         : null;
-
     const testResult = testsResults.find((result) => {
-      const idWithoutVersion = BitId.parse(result.componentId).toStringWithoutVersion();
-      return idWithoutVersion === consumerComponentId;
+      const idWithoutScopeAndVersion = BitId.parse(result.componentId).toStringWithoutScopeAndVersion();
+      const consumerComponentIdWithoutScopeAndVersion = BitId.parse(
+        consumerComponentId
+      ).toStringWithoutScopeAndVersion();
+      return idWithoutScopeAndVersion === consumerComponentIdWithoutScopeAndVersion;
     });
     const flattenedDependencies = await getFlattenedDependencies(
       scope,
