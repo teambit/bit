@@ -190,7 +190,13 @@ export default class Consumer {
 
     const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, this.bitMap, verbose);
     result.bitMap.version = BIT_VERSION;
+    // mark the bitmap as changed to make sure it persist to FS
+    result.bitMap.markAsChanged();
+    // Update the version of the bitmap instance of the consumer (to prevent duplicate migration)
+    this.bitMap.version = result.bitMap.version;
     await result.bitMap.write();
+
+    loader.stop();
 
     return {
       run: true,

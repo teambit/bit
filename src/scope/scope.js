@@ -195,6 +195,7 @@ export default class Scope {
     logger.debug(`updating scope version to version ${BIT_VERSION}`);
     Analytics.addBreadCrumb('migrate', `updating scope version to version ${BIT_VERSION}`);
     await this.scopeJson.write(this.getPath());
+    loader.stop();
     return {
       run: true,
       success: true
