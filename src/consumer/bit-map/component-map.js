@@ -10,6 +10,7 @@ import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import GeneralError from '../../error/general-error';
+import ValidationError from '../../error/validation-error';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -243,39 +244,48 @@ export default class ComponentMap {
 
   validate(): void {
     const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
-    if (!this.mainFile) throw new GeneralError(`${errorMessage} mainFile attribute is missing`);
+    if (!this.mainFile) throw new ValidationError(`${errorMessage} mainFile attribute is missing`);
     if (!isValidPath(this.mainFile)) {
-      throw new GeneralError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
+      throw new ValidationError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
     }
     // if it's an environment component (such as compiler) the rootDir is empty
     if (!this.rootDir && this.origin === COMPONENT_ORIGINS.NESTED) {
-      throw new GeneralError(`${errorMessage} rootDir attribute is missing`);
+      throw new ValidationError(`${errorMessage} rootDir attribute is missing`);
     }
     // $FlowFixMe
     if (this.rootDir && !isValidPath(this.rootDir)) {
-      throw new GeneralError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
+      throw new ValidationError(`${errorMessage} rootDir attribute ${this.rootDir} is invalid`);
     }
     if (this.rootDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
-      throw new GeneralError(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
+      throw new ValidationError(`${errorMessage} rootDir attribute should not be set for AUTHORED component`);
     }
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      throw new GeneralError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
+      throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    if (!this.files || !this.files.length) throw new GeneralError(`${errorMessage} files list is missing`);
+    if (!this.files || !this.files.length) throw new ValidationError(`${errorMessage} files list is missing`);
     this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {
-        throw new GeneralError(`${errorMessage} file path ${file.relativePath} is invalid`);
+        throw new ValidationError(`${errorMessage} file path ${file.relativePath} is invalid`);
       }
     });
     const foundMainFile = this.files.find(file => file.relativePath === this.mainFile);
     if (!foundMainFile || R.isEmpty(foundMainFile)) {
-      throw new GeneralError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+      throw new ValidationError(`${errorMessage} mainFile ${this.mainFile} is not in the files list`);
+    }
+    const filesPaths = this.files.map(file => file.relativePath);
+    const duplicateFiles = filesPaths.filter(
+      file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
+    );
+    if (duplicateFiles.length) {
+      throw new ValidationError(`${errorMessage} the following files are duplicated ${duplicateFiles.join(', ')}`);
     }
     if (this.trackDir) {
       const trackDir = this.trackDir;
       this.files.forEach((file) => {
         if (!file.relativePath.startsWith(trackDir)) {
-          throw new GeneralError(`${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`);
+          throw new ValidationError(
+            `${errorMessage} a file path ${file.relativePath} is not in the trackDir ${trackDir}`
+          );
         }
       });
     }

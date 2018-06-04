@@ -33,6 +33,7 @@ export default class BitMap {
   hasChanged: boolean;
   version: string;
   paths: { [path: string]: string }; // path => componentId
+  pathsLowerCase: { [path: string]: string }; // path => componentId
 
   constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
     this.projectRoot = projectRoot;
@@ -41,6 +42,7 @@ export default class BitMap {
     this.hasChanged = false;
     this.version = version;
     this.paths = {};
+    this.pathsLowerCase = {};
   }
 
   markAsChanged() {
@@ -260,6 +262,28 @@ export default class BitMap {
     return R.unionWith(R.eqBy(R.prop('relativePath')), filesA, filesB);
   }
 
+  /**
+   * if an existing file is for example uppercase and the new file is lowercase it has different
+   * behavior according to the OS. some OS are case sensitive, some are not.
+   * it's safer to avoid saving both files and instead, replacing the old file with the new one.
+   * in case a file has replaced and it is also a mainFile, replace the mainFile as well
+   */
+  _updateFilesWithCurrentLetterCases(componentId: string, newFiles: ComponentMapFile[]) {
+    const currentComponentMap = this.components[componentId];
+    const currentFiles = currentComponentMap.files;
+    currentFiles.forEach((currentFile) => {
+      const sameFile = newFiles.find(
+        newFile => newFile.relativePath.toLowerCase() === currentFile.relativePath.toLowerCase()
+      );
+      if (sameFile && currentFile.relativePath !== sameFile.relativePath) {
+        if (currentComponentMap.mainFile === currentFile.relativePath) {
+          currentComponentMap.mainFile = sameFile.relativePath;
+        }
+        currentFile.relativePath = sameFile.relativePath;
+      }
+    });
+  }
+
   addComponent({
     componentId,
     files,
@@ -297,6 +321,7 @@ export default class BitMap {
       if (override) {
         this.components[componentIdStr].files = files;
       } else {
+        this._updateFilesWithCurrentLetterCases(componentIdStr, files);
         // override the current componentMap.files with the given files argument
         this.components[componentIdStr].files = R.unionWith(
           R.eqBy(R.prop('relativePath')),
@@ -368,6 +393,7 @@ export default class BitMap {
 
   _invalidateCache = () => {
     this.paths = {};
+    this.pathsLowerCase = {};
   };
 
   _removeFromComponentsArray(componentId: BitIdStr) {
@@ -496,9 +522,9 @@ export default class BitMap {
    * @returns {string} component id
    * @memberof BitMap
    */
-  getComponentIdByPath(componentPath: string): string {
+  getComponentIdByPath(componentPath: string, caseSensitive: boolean = true): string {
     this._populateAllPaths();
-    return this.paths[componentPath];
+    return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }
 
   _populateAllPaths() {
@@ -510,6 +536,7 @@ export default class BitMap {
             ? pathJoinLinux(component.rootDir, file.relativePath)
             : file.relativePath;
           this.paths[relativeToConsumer] = componentId;
+          this.pathsLowerCase[relativeToConsumer.toLowerCase()] = componentId;
         });
       });
     }

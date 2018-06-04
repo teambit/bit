@@ -554,12 +554,20 @@ export default class Version extends BitObject {
     if (!this.files || !this.files.length) throw new VersionInvalid(`${message}, the files are missing`);
     let foundMainFile = false;
     validateType(message, this.files, 'files', 'array');
+    const filesPaths = [];
     this.files.forEach((file) => {
       validateFile(file);
+      filesPaths.push(file.relativePath);
       if (file.relativePath === this.mainFile) foundMainFile = true;
     });
     if (!foundMainFile) {
       throw new VersionInvalid(`${message}, unable to find the mainFile ${this.mainFile} in the files list`);
+    }
+    const duplicateFiles = filesPaths.filter(
+      file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
+    );
+    if (duplicateFiles.length) {
+      throw new VersionInvalid(`${message} the following files are duplicated ${duplicateFiles.join(', ')}`);
     }
     _validateEnv(this.compiler);
     _validateEnv(this.tester);
