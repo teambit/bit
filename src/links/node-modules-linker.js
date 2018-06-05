@@ -74,12 +74,12 @@ function symlinkPackages(from: string, to: string, consumer, component: Componen
   }
   const dirs = dirsToFilter.length ? unfilteredDirs.filter(dir => !dirsToFilter.includes(dir)) : unfilteredDirs;
   if (!dirs.length) return;
-  logger.debug(`deleting the content of ${toNodeModules}`);
-  fs.emptyDirSync(toNodeModules);
+  fs.ensureDirSync(toNodeModules);
   dirs.forEach((dir) => {
     const fromDir = path.join(fromNodeModules, dir);
     const toDir = path.join(toNodeModules, dir);
-    logger.debug(`generating a symlink for package, from ${fromDir} to ${toDir}`);
+    logger.debug(`removing current ${toDir} and generating a symlink for package, from ${fromDir} to ${toDir}`);
+    fs.removeSync(toDir);
     symlinkOrCopy.sync(fromDir, toDir);
   });
 }

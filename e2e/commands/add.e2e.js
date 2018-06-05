@@ -1099,4 +1099,22 @@ describe('bit add command', function () {
       helper.expectToThrow(addFunc, error);
     });
   });
+  describe('add file as lowercase and then re-add it as CamelCase', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      fs.removeSync(path.join(helper.localScopePath, 'bar'));
+      helper.createFile('Bar', 'foo.js');
+      helper.addComponent('Bar/foo.js');
+    });
+    it('should update the files and the mainFile with the new case', () => {
+      const bitMap = helper.readBitMap();
+      const componentMap = bitMap['bar/foo'];
+      expect(componentMap.files).to.have.lengthOf(1);
+      expect(componentMap.files[0].relativePath).to.equal('Bar/foo.js');
+      expect(componentMap.files[0].relativePath).to.not.equal('bar/foo.js');
+      expect(componentMap.mainFile).to.equal('Bar/foo.js');
+    });
+  });
 });

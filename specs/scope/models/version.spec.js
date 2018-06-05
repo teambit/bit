@@ -174,6 +174,11 @@ describe('Version', () => {
       version.files[0].relativePath = 'anotherFile.js';
       expect(validateFunc).to.throw('unable to find the mainFile');
     });
+    it('should throw when the two files have the same name but different letter cases', () => {
+      version.files[1] = R.clone(version.files[0]);
+      version.files[1].relativePath = 'bar/Foo.ts';
+      expect(validateFunc).to.throw('files are duplicated bar/foo.ts, bar/Foo.ts');
+    });
     it('compiler should have name attribute', () => {
       version.compiler = {};
       expect(validateFunc).to.throw('missing the name attribute');

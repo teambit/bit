@@ -147,6 +147,86 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
       });
     });
+    describe('changing to custom module resolutions', () => {
+      let originalScopeWithCustomResolve;
+      before(() => {
+        helper.getClonedLocalScope(originalScope);
+        helper.getClonedRemoteScope(remoteScope);
+        const padLeftFile = path.join(helper.localScopePath, 'src', 'pad-left', 'pad-left.js');
+        const padLeftContent = fs.readFileSync(padLeftFile).toString();
+        const relativeSyntax = '../is-string/is-string';
+        const customSyntax = 'is-string';
+        fs.outputFileSync(padLeftFile, padLeftContent.replace(relativeSyntax, customSyntax));
+        const bitJson = helper.readBitJson();
+        bitJson.resolveModules = { modulesDirectories: ['src'] };
+        helper.writeBitJson(bitJson);
+
+        // an intermediate step, make sure, bit-diff is not throwing an error
+        const diffOutput = helper.diff();
+        expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
+
+        helper.tagAllWithoutMessage('--force');
+        helper.exportAllComponents();
+        originalScopeWithCustomResolve = helper.cloneLocalScope();
+      });
+      it('should not add both originallySharedDir and dist.entry because they are the same', () => {
+        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
+      });
+      it('should indicate that the dependency used custom-module-resolution', () => {
+        const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
+        const relativePath = padLeftModel.dependencies[0].relativePaths[0];
+        expect(relativePath).to.have.property('isCustomResolveUsed');
+        expect(relativePath).to.have.property('importSource');
+        expect(relativePath.importSource).to.equal('is-string');
+      });
+      describe('importing the component to another repo', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+          helper.importComponent('string/pad-left -p src/pad-left');
+        });
+        it('should not show the component as modified when imported', () => {
+          const status = helper.runCmd('bit status');
+          expect(status).to.not.have.string('modified');
+        });
+        describe('changing the component', () => {
+          before(() => {
+            const padLeftFile = path.join(helper.localScopePath, 'src', 'pad-left', 'pad-left.js');
+            const padLeftContent = fs.readFileSync(padLeftFile).toString();
+            fs.outputFileSync(padLeftFile, `${padLeftContent}\n`);
+
+            // intermediate step, make sure the component is modified
+            const status = helper.runCmd('bit status');
+            expect(status).to.have.string('modified');
+          });
+          it('should be able to pass the tests', () => {
+            const output = helper.testComponent('string/pad-left');
+            expect(output).to.have.string('tests passed');
+          });
+          describe('tag and export, then import back to the original repo', () => {
+            before(() => {
+              helper.tagAllWithoutMessage();
+              helper.exportAllComponents();
+              helper.getClonedLocalScope(originalScopeWithCustomResolve);
+              helper.importComponent('string/pad-left');
+            });
+            it('should not show the component as modified when imported', () => {
+              const status = helper.runCmd('bit status');
+              expect(status).to.not.have.string('modified');
+            });
+            it('should be able to pass the tests', () => {
+              // we must add NODE_PATH=dist for the author to workaround its environment as if it
+              // has custom-module-resolution set. In the real world, the author has babel or
+              // webpack configured to have "src" as the module resolved directory
+              const output = helper.runCmd('NODE_PATH=dist bit test string/pad-left');
+              expect(output).to.have.string('tests passed');
+            });
+          });
+        });
+      });
+    });
     describe('merge conflict scenario', () => {
       let output;
       let localConsumerFiles;
