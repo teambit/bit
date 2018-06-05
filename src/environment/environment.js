@@ -103,4 +103,13 @@ export default class Environment {
     logger.debug(`destroying the isolated environment at ${this.path}`);
     return fs.remove(this.path);
   }
+
+  async destroyIfExist(): Promise<*> {
+    const isExist = await fs.exists(this.path);
+    if (isExist) {
+      logger.debug(`destroying existing environment in path ${this.path}`);
+      return this.destroy();
+    }
+    return false;
+  }
 }
