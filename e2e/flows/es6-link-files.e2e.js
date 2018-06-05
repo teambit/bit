@@ -357,6 +357,45 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
     });
   });
 
+  describe('when the link file uses default-import and specific-import together and using ES6 and ES5 together', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
+      helper.createFile('utils', 'is-array.js', isArrayFixture);
+      helper.addComponent('utils/is-array.js');
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('utils', 'is-string.js', isStringFixture);
+      helper.addComponent('utils/is-string.js');
+      const isBooleanFixture = "export default function isBoolean() { return 'got is-boolean'; };";
+      helper.createFile('utils', 'is-boolean.js', isBooleanFixture);
+      helper.addComponent('utils/is-boolean.js');
+      const utilFixture = `import isArray from './is-array';
+import isString from './is-string';
+import isBoolean from './is-boolean';
+export default isArray;
+export { isString, isBoolean }; `;
+      helper.createFile('utils', 'index.js', utilFixture);
+      const fooBarFixture = `import isArray from '../utils';
+const isString = require('../utils').isString;
+export default function foo() { return isArray() + ' and ' + isString() + ' and got foo'; };`;
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo ');
+    });
+    it('should rewrite the relevant part of the link file', () => {
+      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-array and got is-string and got foo');
+    });
+  });
+
   describe('when a component uses non-link files with default-import and specific-import together', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();

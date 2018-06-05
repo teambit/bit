@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support mixed mode of common-js and ES6 ("require" and "import" together)
 - fix adding the same file with different letter cases (uppercase/lowercase)
 
 ## [13.0.0-dev.8] - 2018-05-30
