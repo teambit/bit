@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [0.10.17-dev.9] - 2018-06-05
+
 - support mixed mode of common-js and ES6 ("require" and "import" together)
 
 ## [0.10.17-dev.7] - 2018-05-30
