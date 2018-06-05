@@ -111,9 +111,6 @@ function convertTree(depTree, tree, pathCache, baseDir) {
 function getDetectiveOption(file, existingDetectiveOption) {
   const detectiveOption = existingDetectiveOption || {};
   const extension = path.extname(file);
-  detectiveOption.es6 = { importSpecifiers: {} };
-  detectiveOption.ts = { importSpecifiers: {} };
-  detectiveOption.stylable = { importSpecifiers: {} };
   if (extension === '.tsx') {
     detectiveOption.ts.ecmaFeatures = { jsx: true };
   }

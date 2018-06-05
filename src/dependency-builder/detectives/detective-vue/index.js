@@ -1,13 +1,33 @@
-const fs = require('fs');
 const compiler = require('vue-template-compiler');
-const flatten = require('lodash.flatten');
+
+const finalDependencies = {};
+const addDependencies = (dependencies, isScript) => {
+  let objDependencies = {};
+  if (Array.isArray(dependencies)) {
+    dependencies.forEach((dependency) => {
+      objDependencies[dependency] = {};
+    });
+  } else {
+    objDependencies = dependencies;
+  }
+  Object.keys(objDependencies).forEach((dependency) => {
+    finalDependencies[dependency] = objDependencies[dependency];
+    finalDependencies[dependency].isScript = isScript;
+  });
+};
 
 module.exports = function(src, options = {}) {
-  const precinct = require('../../precinct');
   options.useContent = true;
-  options.es6 = { mixedImports : true };
   const { script, styles } = compiler.parseComponent(src, { pad: 'line' });
-  const scriptDependencies  = script ? precinct(script.content, options ).map(dep => ({ isScript: true, dep })) : [];
-  const styleDependencies  = script ? flatten(styles.map(style => precinct(style.content, { type: style.lang || 'scss' } ).map(dep => ({ isScript: false , dep })))): [];
-  return scriptDependencies.concat(styleDependencies);
+  // it must be required here, otherwise, it'll be a cyclic dependency
+  const precinct = require('../../precinct');
+  if (script) {
+    const dependencies = precinct(script.content, options);
+    addDependencies(dependencies, true);
+  }
+  if (styles) {
+    styles.map(style => addDependencies(precinct(style.content, { type: style.lang || 'scss' }), false ));
+  }
+
+  return finalDependencies;
 };

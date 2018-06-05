@@ -6,7 +6,6 @@ var getModuleType = require('module-definition');
 var debug = require('debug')('precinct');
 var Walker = require('node-source-walk');
 
-var detectiveCjs = require('detective-cjs');
 var detectiveAmd = require('detective-amd');
 var detectiveEs6 = require('../detectives/detective-es6');
 var detectiveLess = require('detective-less');
@@ -71,17 +70,14 @@ function precinct(content, options) {
   debug('module type: ', type);
 
   var theDetective;
-  var mixedMode = options.es6 && options.es6.mixedImports;
 
   switch (type) {
     case 'commonjs':
-      theDetective = mixedMode ? detectiveEs6Cjs : detectiveCjs;
+    case 'es6':
+      theDetective = detectiveEs6;
       break;
     case 'amd':
       theDetective = detectiveAmd;
-      break;
-    case 'es6':
-      theDetective = mixedMode ? detectiveEs6Cjs : detectiveEs6;
       break;
     case 'sass':
       theDetective = detectiveSass;
@@ -118,10 +114,6 @@ function precinct(content, options) {
 
   return dependencies;
 };
-
-function detectiveEs6Cjs(ast, detectiveOptions) {
-  return detectiveEs6(ast, detectiveOptions).concat(detectiveCjs(ast, detectiveOptions));
-}
 
 function assign(o1, o2) {
   for (var key in o2) {
@@ -168,10 +160,16 @@ precinct.paperwork = function(filename, options) {
 
   var deps = precinct(content, options);
 
-  if (!options.includeCore) {
-    return deps.filter(function(d) {
-      return d.dep ? !natives[d.dep] : !natives[d];
-    });
+  if (deps && !options.includeCore) {
+    if (Array.isArray(deps)) {
+      return deps.filter(function(d) {
+        return !natives[d];
+      });
+    }
+    return Object.keys(deps).reduce((acc, value) => {
+      if (!natives[value]) acc[value] = deps[value];
+      return acc;
+    }, {});
   }
 
   return deps;

@@ -1,3 +1,4 @@
+import R from 'ramda';
 import { isRelativeImport } from '../../utils';
 /**
 * this file had been forked from https://github.com/dependents/node-dependency-tree
@@ -83,30 +84,32 @@ module.exports.toList = function(options) {
  * @return {Array}
  */
 module.exports._getDependencies = function(config) {
-  var dependencies;
+  let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
+  var dependencies; // always an array
   var precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
 
   try {
-    dependencies = precinct.paperwork(config.filename, precinctOptions);
-
-    debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
-
+    dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);
+    dependencies = R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw)
+      ? Object.keys(dependenciesRaw)
+      : dependenciesRaw;
   } catch (e) {
     debug('error getting dependencies: ' + e.message);
     debug(e.stack);
     return [];
   }
+  const isDependenciesArray = Array.isArray(dependenciesRaw);
+  debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
 
   var resolvedDependencies = [];
   var pathMapDependencies = [];
-  var pathMapFile = {file: config.filename};
+  var pathMapFile = { file: config.filename };
 
   for (var i = 0, l = dependencies.length; i < l; i++) {
-    var dep = dependencies[i];
-    const isVue = (!Array.isArray(dep) && dep.isScript);
+    const dependency = dependencies[i];
     const cabinetParams = {
-      partial: dep,
+      partial: dependency,
       filename: config.filename,
       directory: config.directory,
       ast: precinct.ast,
@@ -114,14 +117,12 @@ module.exports._getDependencies = function(config) {
       webpackConfig: config.webpackConfig,
       resolveConfig: config.resolveConfig,
     };
-    if (!Array.isArray(dep) && dep.isScript !== undefined) { // used for vue - return array of objects
-      cabinetParams.partial = dep.dep;
-      cabinetParams.isScript = dep.isScript;
+    if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) { // used for vue
+      cabinetParams.isScript = dependenciesRaw[dependency].isScript;
     }
     const result = cabinet(cabinetParams);
-    const dependency = isVue || dep.dep ? dep.dep : dep;
     if (!result) {
-      debug('skipping an empty filepath resolution for partial: ' + dep);
+      debug('skipping an empty filepath resolution for partial: ' + dependency);
       if (config.nonExistent[config.filename]) {
         config.nonExistent[config.filename].push(dependency);
       } else {
@@ -138,16 +139,13 @@ module.exports._getDependencies = function(config) {
       } else {
         config.nonExistent[config.filename] = [dependency];
       }
-      debug('skipping non-empty but non-existent resolution: ' + result + ' for partial: ' + dep);
+      debug('skipping non-empty but non-existent resolution: ' + result + ' for partial: ' + dependency);
       continue;
     }
     const pathMap = { importSource: dependency, resolvedDep: result };
-    var importSpecifiersSupportedLang = ['es6', 'ts', 'stylable'];
-    importSpecifiersSupportedLang.forEach((lang) => {
-      if (precinctOptions[lang] && precinctOptions[lang].importSpecifiers && precinctOptions[lang].importSpecifiers[dependency]) {
-        pathMap.importSpecifiers = precinctOptions[lang].importSpecifiers[dependency];
-      }
-    });
+    if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
+      pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
+    }
     if (!isRelativeImport(dependency) && config.resolveConfig) {
       // is includes also packages, which actually don't use customResolve, however, they will be
       // filtered out later.
