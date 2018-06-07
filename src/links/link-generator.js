@@ -330,7 +330,9 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     });
     const flattenLinks = R.flatten(links);
     const groupLinks = groupBy(flattenLinks, link => link.linkPath);
-    const finalLinks = Object.keys(groupLinks).map((group) => {
+    const linksToWrite = [];
+    const postInstallLinks = [];
+    Object.keys(groupLinks).forEach((group) => {
       let content = '';
       const firstGroupItem = groupLinks[group][0];
       if (firstGroupItem.isEs6) {
@@ -338,13 +340,14 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
         content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
       }
       content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
-      return { filePath: group, content, postInstallLink: firstGroupItem.postInstallLink };
+      const linkFile = { filePath: group, content };
+      if (firstGroupItem.postInstallLink) postInstallLinks.push(linkFile);
+      else linksToWrite.push(linkFile);
     });
-    const postInstallLinks = finalLinks.filter(link => link.postInstallLink);
     if (postInstallLinks.length) {
       await generatePostInstallScript(parentComponent, postInstallLinks);
     }
-    return finalLinks.filter(link => !link.postInstallLink);
+    return linksToWrite;
   };
 
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
@@ -366,18 +369,21 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     );
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
-      const indirectLinks = componentWithDeps.allDependencies.map((dep: Component) => {
-        const depComponentMap = consumer.bitMap.getComponent(dep.id, true);
-        // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
-        // also the indirect ones
-        // The dep.dependencies contain only an id and relativePaths and not the full object
-        return componentLinks(componentWithDeps.allDependencies, dep, depComponentMap);
-      });
+      const indirectLinks = await Promise.all(
+        componentWithDeps.allDependencies.map((dep: Component) => {
+          const depComponentMap = consumer.bitMap.getComponent(dep.id, true);
+          // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
+          // also the indirect ones
+          // The dep.dependencies contain only an id and relativePaths and not the full object
+          return componentLinks(componentWithDeps.allDependencies, dep, depComponentMap);
+        })
+      );
       return [directLinks, ...indirectLinks];
     }
     return directLinks;
   });
-  const allLinks = Promise.all(allLinksP);
+  const allLinks = await Promise.all(allLinksP);
+
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
   const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
   return Promise.all(linksWithoutDuplications.map(link => outputFile(link)));
