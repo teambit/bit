@@ -52,7 +52,7 @@
     "execa": "^0.8.0",
     "find-up": "^2.1.0",
     "fs-extra": "^6.0.0",
-    "gitconfig": "teambit/node-gitconfig",
+    "@teambit/gitconfig": "^2.0.5",
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
     "group-array": "^0.3.3",

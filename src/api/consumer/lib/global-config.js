@@ -1,5 +1,5 @@
 /** @flow */
-import gitconfig from 'gitconfig';
+import gitconfig from '@teambit/gitconfig';
 import R from 'ramda';
 import { GlobalConfig } from '../../../global-config';
 import Config from '../../../global-config/config';
