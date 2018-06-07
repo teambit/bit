@@ -62,6 +62,75 @@ describe('custom module resolutions', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.string('modified');
       });
+      describe('importing the component using isolated environment', () => {
+        let isolatePath;
+        before(() => {
+          isolatePath = helper.isolateComponent('bar/foo', '-olw');
+        });
+        it('should be able to generate the links correctly and require the dependencies', () => {
+          const appJsFixture = `const barFoo = require('./');
+  console.log(barFoo());`;
+          fs.outputFileSync(path.join(isolatePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js', isolatePath);
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+    });
+  });
+  describe('using custom module directory when two files in the same component requires each other', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
+      helper.writeBitJson(bitJson);
+
+      helper.createFile('src/utils', 'is-type.js', fixtures.isType);
+      const isStringFixture =
+        "const isType = require('utils/is-type');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      const barFooFixture =
+        "const isString = require('utils/is-string');\n module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('src/utils', 'is-string.js', isStringFixture);
+      helper.createFile('src/bar', 'foo.js', barFooFixture);
+      helper.addComponent('src/utils/is-type.js');
+      helper.addComponentWithOptions('src/bar/foo.js src/utils/is-string.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+    });
+    it('bit status should not warn about missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.string('missing');
+    });
+    it('bit show should show the dependencies correctly', () => {
+      const output = helper.showComponentParsed('bar/foo');
+      expect(output.dependencies).to.have.lengthOf(1);
+      const dependency = output.dependencies[0];
+      expect(dependency.id).to.equal('utils/is-type');
+      expect(dependency.relativePaths[0].sourceRelativePath).to.equal('src/utils/is-type.js');
+      expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-type.js');
+      expect(dependency.relativePaths[0].importSource).to.equal('utils/is-type');
+      expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.tagAllWithoutMessage();
+        // an intermediate step, make sure it saves the customResolvedPaths in the model
+        const catComponent = helper.catComponent('bar/foo@latest');
+        expect(catComponent).to.have.property('customResolvedPaths');
+        expect(catComponent.customResolvedPaths[0].destinationPath).to.equal('src/utils/is-string.js');
+        expect(catComponent.customResolvedPaths[0].importSource).to.equal('utils/is-string');
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+      });
+      it.skip('should generate the non-relative links correctly', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it.skip('should not show the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.string('modified');
+      });
     });
   });
   describe('using alias', () => {

@@ -328,6 +328,7 @@ export default class Component extends BitObject {
       license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
+      customResolvedPaths: clone(version.customResolvedPaths),
       deprecated: this.deprecated
     });
   }

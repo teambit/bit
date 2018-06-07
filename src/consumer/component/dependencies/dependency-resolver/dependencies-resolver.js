@@ -33,7 +33,6 @@ import type { RelativePath } from '../dependency';
  * @param {consumer} consumer
  * @param {string} bindingPrefix
  * @param componentFromModel
- * @param driver
  */
 function findComponentsOfDepsFiles(
   tree: Tree,
@@ -43,8 +42,9 @@ function findComponentsOfDepsFiles(
   consumer: Consumer,
   bindingPrefix: string,
   componentFromModel: Component,
-  driver: Driver
+  consumerComponent: Component
 ): Object {
+  const driver: Driver = consumer.driver;
   const packagesDeps = {};
   let devPackagesDeps = {};
   const componentsDeps = {};
@@ -169,8 +169,17 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
       return;
     }
 
-    // happens when in the same component one file requires another one. In this case, there is noting to do
-    if (componentId === entryComponentId) return;
+    // happens when in the same component one file requires another one. In this case, there is
+    // noting to do regarding the dependencies
+    if (componentId === entryComponentId) {
+      if (depFileObject.isCustomResolveUsed) {
+        consumerComponent.customResolvedPaths.push({
+          destinationPath: depFileObject.file,
+          importSource: depFileObject.importSource
+        });
+      }
+      return;
+    }
 
     const componentMap = consumer.bitMap.getComponent(componentId);
     // found a dependency component. Add it to componentsDeps
@@ -555,7 +564,7 @@ export default (async function loadDependenciesForComponent(
     consumer,
     component.bindingPrefix,
     componentFromModel,
-    driver
+    component
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
   const traversedCompDevDeps = traversedDeps.devComponentsDeps;

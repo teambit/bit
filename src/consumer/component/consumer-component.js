@@ -50,6 +50,8 @@ import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
 import ConsumerComponent from '.';
 
+export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
+
 export type ComponentProps = {
   name: string,
   box: string,
@@ -69,6 +71,7 @@ export type ComponentProps = {
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
   envsPackageDependencies?: ?Object,
+  customResolvedPaths?: ?(customResolvedPath[]),
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -113,6 +116,7 @@ export default class Component {
   isolatedEnvironment: IsolatedEnvironment;
   missingDependencies: ?Object;
   deprecated: boolean;
+  customResolvedPaths: customResolvedPath[];
   _driver: Driver;
   _isModified: boolean;
 
@@ -182,7 +186,8 @@ export default class Component {
     specsResults,
     license,
     log,
-    deprecated
+    deprecated,
+    customResolvedPaths
   }: ComponentProps) {
     this.name = name;
     this.box = box || DEFAULT_BOX_NAME;
@@ -209,6 +214,7 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.customResolvedPaths = customResolvedPaths || [];
     this.validateComponent();
   }
 
@@ -494,6 +500,11 @@ export default class Component {
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.customResolvedPaths.forEach((customPath) => {
+      customPath.destinationPath = pathNormalizeToLinux(
+        pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
+      );
+    });
     this._wasOriginallySharedDirStripped = true;
   }
 

@@ -7,6 +7,7 @@ import Scope from '../scope';
 import Source from './source';
 import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
+import type { customResolvedPath } from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
@@ -47,6 +48,7 @@ export type Log = {
 };
 
 export type VersionProps = {
+  mainFile: PathLinux,
   files: Array<SourceFileModel>,
   dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtensionModel,
@@ -63,7 +65,8 @@ export type VersionProps = {
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
   envsPackageDependencies?: { [string]: string },
-  bindingPrefix?: string
+  bindingPrefix?: string,
+  customResolvedPaths?: customResolvedPath[]
 };
 
 /**
@@ -87,7 +90,8 @@ export default class Version extends BitObject {
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
   envsPackageDependencies: { [string]: string };
-  bindingPrefix: string;
+  bindingPrefix: ?string;
+  customResolvedPaths: ?(customResolvedPath[]);
 
   constructor({
     mainFile,
@@ -107,7 +111,8 @@ export default class Version extends BitObject {
     devPackageDependencies,
     peerPackageDependencies,
     envsPackageDependencies,
-    bindingPrefix
+    bindingPrefix,
+    customResolvedPaths
   }: VersionProps) {
     super();
     this.mainFile = mainFile;
@@ -128,6 +133,7 @@ export default class Version extends BitObject {
     this.peerPackageDependencies = peerPackageDependencies || {};
     this.envsPackageDependencies = envsPackageDependencies || {};
     this.bindingPrefix = bindingPrefix;
+    this.customResolvedPaths = customResolvedPaths;
     this.validateVersion();
   }
 
@@ -274,7 +280,8 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        envsPackageDependencies: this.envsPackageDependencies
+        envsPackageDependencies: this.envsPackageDependencies,
+        customResolvedPaths: this.customResolvedPaths
       },
       val => !!val
     );
@@ -316,7 +323,8 @@ export default class Version extends BitObject {
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,
-      packageDependencies
+      packageDependencies,
+      customResolvedPaths
     } = JSON.parse(contents);
     const _getDependencies = (deps = []) => {
       if (deps.length && R.is(String, first(deps))) {
@@ -362,7 +370,8 @@ export default class Version extends BitObject {
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,
-      packageDependencies
+      packageDependencies,
+      customResolvedPaths
     });
   }
 
@@ -449,7 +458,8 @@ export default class Version extends BitObject {
       flattenedDependencies,
       flattenedDevDependencies,
       dependencies: component.dependencies.get(),
-      devDependencies: component.devDependencies.get()
+      devDependencies: component.devDependencies.get(),
+      customResolvedPaths: component.customResolvedPaths
     });
   }
 
