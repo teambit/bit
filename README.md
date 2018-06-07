@@ -13,15 +13,15 @@
 
 ## About
 
-**Bit works with Git and NPM to easily share and sync code between projects.**
+**Bit works with Git and NPM to create a faster, more scalable workflow for sharing code across projects**.
 
-While code sharing speeds your development, it can also generate a lot of overhead when you have to split your repositories and work hard to make changes between them.
+Bit helps you easily share modules and components from any Javascript related project **without refactoring**, and use them in other projects with your favorite tools like NPM and Yarn.
 
-Bit eliminates this overhead by helping you easily isolate and share components from any repository, organize them for your team and sync changes across your projects.
+It also lets you import the shared code into any repository for further development so that you can modify and update these components and modules from any project using them. Changes can be synced across projects with an update system and an extension to Git’s merge utility. 
 
-Any team member can discover, use and develop components from any project so your team can collaborate, suggest updates, merge changes and stay in sync.
+For teams working together, Bit lets you collaborate on a joint collection of your favorite UI components, Node.js modules, JS functions and anything you choose. Any developer can discover shared code, use it, make changes, suggest updates and stay in sync.
 
-*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more organizations and communities every day.*
+*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team. It's used by more organizations and communities every day.*
 
 ## Contents
 
@@ -37,7 +37,7 @@ Any team member can discover, use and develop components from any project so you
 
 ## How It Works
 
-### Seamless code sharing
+### Effortless code sharing
 
 Instead of having to split repositories and create new ones just to publish packages, Bit helps you seamlessly isolate components (sets of files) from any existing repository and share them to be used, developed and synced in other projects.
 
@@ -46,7 +46,7 @@ To share components you don’t need to refactor or configure anything. Instead,
 This environment enables you to to use and develop components from other projects.
 For example, components written in typescript can be used and developed in a project written in flow-typed. It also lets Bit test and build your components in isolation, so you can know the exact state of every component.
 
-### Importing with Bit / Installing with NPM
+### Development from different repositories
 
 You can use Bit to [import](https://docs.bitsrc.io/docs/importing-components.html) components into any project you’re working on. Importing a component means you can use it and also make changes and continue to develop it from your project. Bit will track your components across different projects to sync changes between them.
 
@@ -56,13 +56,13 @@ Once shared to Bit’s hub, components automatically become available to [instal
 Combining the two workflows also allows you to easily make changes to components installed as packages right from any project consuming them.
 
 
-### Updating and merging component changes
+### Syncing changes between projects
 
 Since Bit tracks components across different projects, you can [update](https://docs.bitsrc.io/docs/updating-sourced-components.html) components with new versions and suggest updates to components shared by your team. When a component is changed in your project, Bit leverages Git’s merge utility to let you [merge](https://docs.bitsrc.io/docs/merge-changes.html) component changes between your projects.
 
 This workflow also helps you learn exactly which components are used by who and where, so you can easily make changes to components in multiple projects with universal control over your dependency graph.
 
-### Component discoverability
+### Discoverability and teamwork
 
 While making code sharing easier, Bit helps you organize your components and make them discoverable for your team to find and choose from.
 
@@ -193,7 +193,7 @@ $ bit init
 
 ```
 
-3. Now, let’s [track the components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) using `bit add` and let Bit detect their file / package depdency graphs.
+3. Now, let’s [track the components](https://docs.bitsrc.io/docs/isolating-and-tracking-components.html) using `bit add` and let Bit detect their file / package dependency graphs.
 
 ```bash
 
@@ -249,7 +249,7 @@ You can also check out Bit on **FreeCodeCamp** and **Hackernoon**.
 
 ## Supported Languages
 
-Bit's design is language agnostic. Still, as of today it requires language-specific drivers for language-sensitive features (binding etc). We released Bit’s driver for Javascript, and will be releasing more drivers in the future. You are also welcome to add your own.
+Bit's design is language agnostic. Still, as of today, it requires language-specific drivers for language-sensitive features (binding etc). We released Bit’s driver for Javascript, and will be releasing more drivers in the future. You are also welcome to add your own.
 
 * [bit-javascript](https://github.com/teambit/bit-javascript).
 
@@ -268,4 +268,3 @@ Feedbacks and questions are more than welcome via Bit's [Gitter channel](https:/
 Apache License, Version 2.0
 
 ![Analytics](https://ga-beacon.appspot.com/UA-96032224-1/bit/readme)
-
