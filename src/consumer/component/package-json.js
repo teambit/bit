@@ -25,6 +25,8 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import BitMap from '../bit-map';
 
+export type PackageJsonInstance = {};
+
 /**
  * Add components as dependencies to root package.json
  */
@@ -152,7 +154,7 @@ async function write(
   override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
-): Promise<boolean> {
+): Promise<PackageJsonInstance> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = async (dev: boolean = false) => {
     if (!writeBitDependencies) return {};
@@ -169,7 +171,6 @@ async function write(
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
     : convertIdToNpmName(component.id);
-
   const getPackageJsonInstance = (dir) => {
     const packageJson = new PackageJson(dir, {
       name,
@@ -196,7 +197,8 @@ async function write(
     await distPackageJson.write({ override });
   }
 
-  return packageJson.write({ override });
+  await packageJson.write({ override });
+  return packageJson;
 }
 
 async function updateAttribute(

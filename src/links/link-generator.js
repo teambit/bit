@@ -1,4 +1,5 @@
 // @flow
+import fs from 'fs-extra';
 import path from 'path';
 import normalize from 'normalize-path';
 import R from 'ramda';
@@ -23,6 +24,7 @@ import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
+import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -46,6 +48,8 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
+
+type LinkFile = { linkPath: string, linkContent: string, isEs6: boolean, postInstallLink?: boolean };
 
 // todo: move to bit-javascript
 function getIndexFileName(mainFile: string): string {
@@ -158,7 +162,7 @@ function prepareLinkFile(
   relativePath: Object,
   depRootDir: ?PathOsBased,
   isNpmLink: boolean
-) {
+): LinkFile {
   // this is used to convert the component name to a valid npm package  name
   const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
     DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
@@ -169,7 +173,7 @@ function prepareLinkFile(
   const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
   const importSpecifiers = relativePath.importSpecifiers;
   const linkContent = getLinkContent(relativeFilePath, importSpecifiers, isNpmLink, packagePath);
-  logger.debug(`writeLinkFile, on ${linkPath}`);
+  logger.debug(`prepareLinkFile, on ${linkPath}`);
   const linkPathExt = getExt(linkPath);
   const isEs6 = importSpecifiers && linkPathExt === 'js';
   return { linkPath, linkContent, isEs6 };
@@ -195,7 +199,7 @@ async function writeDependencyLinks(
     relativePath: RelativePath,
     parentComponent: Component,
     parentComponentMap: ComponentMap
-  ) => {
+  ): LinkFile[] => {
     const parentDir = parentComponent.writtenPath || consumer.toAbsolutePath(parentComponentMap.rootDir); // when running from bit build, the writtenPath is not available
     const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
     const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
@@ -213,10 +217,14 @@ async function writeDependencyLinks(
 
     const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
     const sourceRelativePath = relativePath.sourceRelativePath;
-    const linkPath = relativePath.isCustomResolveUsed
-      ? // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
-      path.join(parentDir, 'node_modules', relativePath.importSource)
-      : path.join(parentDir, sourceRelativePath);
+    const getLinkPath = () => {
+      if (!relativePath.isCustomResolveUsed) return path.join(parentDir, sourceRelativePath);
+      // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
+      const importSourcePath = path.join('node_modules', relativePath.importSource);
+      // if createNpmLinkFiles, the path will be part of the postinstall script, so it shouldn't be absolute
+      return createNpmLinkFiles ? importSourcePath : path.join(parentDir, importSourcePath);
+    };
+    const linkPath = getLinkPath();
 
     let distLinkPath: PathOsBased;
     const linkFiles = [];
@@ -277,15 +285,19 @@ async function writeDependencyLinks(
         : depRootDir,
       isNpmLink
     );
+    if (relativePath.isCustomResolveUsed && createNpmLinkFiles) {
+      linkFile.postInstallLink = true;
+    }
+
     linkFiles.push(linkFile);
     return linkFiles;
   };
 
-  const componentLinks = (
+  const componentLinks = async (
     dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
     parentComponent: Component,
     parentComponentMap: ComponentMap
-  ): Array<{ filePath: string, content: string }> => {
+  ): Promise<Array<{ filePath: string, content: string }>> => {
     const directDependencies: Dependency[] = parentComponent.getAllDependencies();
     const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
     if (!directDependencies || !directDependencies.length) return [];
@@ -318,18 +330,24 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     });
     const flattenLinks = R.flatten(links);
     const groupLinks = groupBy(flattenLinks, link => link.linkPath);
-    return Object.keys(groupLinks).map((group) => {
+    const finalLinks = Object.keys(groupLinks).map((group) => {
       let content = '';
-      if (groupLinks[group][0].isEs6) {
+      const firstGroupItem = groupLinks[group][0];
+      if (firstGroupItem.isEs6) {
         // check by the first item of the array, it can be any other item as well
         content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
       }
       content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
-      return { filePath: group, content };
+      return { filePath: group, content, postInstallLink: firstGroupItem.postInstallLink };
     });
+    const postInstallLinks = finalLinks.filter(link => link.postInstallLink);
+    if (postInstallLinks.length) {
+      await generatePostInstallScript(parentComponent, postInstallLinks);
+    }
+    return finalLinks.filter(link => !link.postInstallLink);
   };
 
-  const allLinks = componentDependencies.map((componentWithDeps: ComponentWithDependencies) => {
+  const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
     const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id, true);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
@@ -341,7 +359,11 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
     componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
-    const directLinks = componentLinks(componentWithDeps.allDependencies, componentWithDeps.component, componentMap);
+    const directLinks = await componentLinks(
+      componentWithDeps.allDependencies,
+      componentWithDeps.component,
+      componentMap
+    );
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
       const indirectLinks = componentWithDeps.allDependencies.map((dep: Component) => {
@@ -355,9 +377,31 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     }
     return directLinks;
   });
+  const allLinks = Promise.all(allLinksP);
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
   const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
   return Promise.all(linksWithoutDuplications.map(link => outputFile(link)));
+}
+
+async function generatePostInstallScript(component: Component, postInstallLinks) {
+  const componentDir = component.writtenPath;
+  // convert from array to object for easier parsing in the postinstall script
+  const linkPathsObject = postInstallLinks.reduce((acc, val) => {
+    acc[val.filePath] = val.content;
+    return acc;
+  }, {});
+  if (!component.packageJsonInstance) throw new Error(`packageJsonInstance is missing for ${component.id.toString()}`);
+  const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject));
+  const POST_INSTALL_FILENAME = '.bit.postinstall.js';
+  const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
+  // await fs.writeFile(postInstallFilePath, postInstallCode);
+  const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
+  component.packageJsonInstance.scripts = { postinstall: postInstallScript };
+  const override = true;
+  await Promise.all([
+    fs.writeFile(postInstallFilePath, postInstallCode),
+    component.packageJsonInstance.write({ override })
+  ]);
 }
 
 /**

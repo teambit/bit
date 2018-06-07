@@ -49,6 +49,7 @@ import GeneralError from '../../error/general-error';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
 import ConsumerComponent from '.';
+import type { PackageJsonInstance } from './package-json';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -119,6 +120,7 @@ export default class Component {
   customResolvedPaths: customResolvedPath[];
   _driver: Driver;
   _isModified: boolean;
+  packageJsonInstance: PackageJsonInstance;
 
   set files(val: SourceFile[]) {
     this._files = val;
@@ -303,7 +305,15 @@ export default class Component {
     writeBitDependencies?: boolean = false,
     excludeRegistryPrefix?: boolean = false
   ): Promise<boolean> {
-    return packageJson.write(consumer, this, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
+    const packageJsonInstance = await packageJson.write(
+      consumer,
+      this,
+      bitDir,
+      override,
+      writeBitDependencies,
+      excludeRegistryPrefix
+    );
+    this.packageJsonInstance = packageJsonInstance;
   }
 
   flattenedDependencies(): BitIds {
