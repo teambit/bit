@@ -290,7 +290,8 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
   describe('with custom module resolution', () => {
     describe('using module directories', () => {
       before(() => {
-        helper.reInitLocalScope();
+        helper.setNewLocalAndRemoteScopes();
+        helper.importCompiler('bit.envs/compilers/react-typescript');
         const bitJson = helper.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
         helper.writeBitJson(bitJson);
@@ -319,6 +320,21 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
         expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.ts');
         expect(dependency.relativePaths[0].importSource).to.equal('utils/is-string');
         expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+      });
+      describe('export and import the component to a new scope', () => {
+        before(() => {
+          helper.tagAllWithoutMessage();
+          helper.exportAllComponents();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
     });
     describe('using aliases', () => {

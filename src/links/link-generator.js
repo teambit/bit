@@ -22,7 +22,7 @@ import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
-import type { PathOsBased } from '../utils/path';
+import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import GeneralError from '../error/general-error';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 
@@ -200,7 +200,13 @@ async function writeDependencyLinks(
     parentComponent: Component,
     parentComponentMap: ComponentMap
   ): LinkFile[] => {
-    const parentDir = parentComponent.writtenPath || consumer.toAbsolutePath(parentComponentMap.rootDir); // when running from bit build, the writtenPath is not available
+    const getParentDir = (): PathOsBasedAbsolute => {
+      // when running from bit build, the writtenPath is not available
+      if (!parentComponent.writtenPath) return consumer.toAbsolutePath(parentComponentMap.rootDir);
+      if (path.isAbsolute(parentComponent.writtenPath)) return parentComponent.writtenPath;
+      return consumer.toAbsolutePath(parentComponent.writtenPath);
+    };
+    const parentDir = getParentDir();
     const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
     const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
     const hasDist = parentComponent.dists.writeDistsFiles && !parentComponent.dists.isEmpty();
@@ -220,7 +226,13 @@ async function writeDependencyLinks(
     const getLinkPath = () => {
       if (!relativePath.isCustomResolveUsed) return path.join(parentDir, sourceRelativePath);
       // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
-      const importSourcePath = path.join('node_modules', relativePath.importSource);
+      const importSource: string = relativePath.importSource;
+      const importSourceFileExt = relativeDistExtInDependency || path.extname(relativePath.sourceRelativePath);
+      // e.g. for require('utils/is-string'), the link should be at node_modules/utils/is-string/index.js
+      const importSourceFile = path.extname(importSource)
+        ? importSource
+        : path.join(importSource, `${DEFAULT_INDEX_NAME}.${importSourceFileExt}`);
+      const importSourcePath = path.join('node_modules', importSourceFile);
       // if createNpmLinkFiles, the path will be part of the postinstall script, so it shouldn't be absolute
       return createNpmLinkFiles ? importSourcePath : path.join(parentDir, importSourcePath);
     };
@@ -274,11 +286,16 @@ async function writeDependencyLinks(
       }
     }
 
+    const sourceRelativePathWithCompiledExt = `${getWithoutExt(
+      relativePathInDependency
+    )}.${relativeDistExtInDependency}`;
     const linkFile = prepareLinkFile(
       depId,
       mainFile,
       linkPath,
-      relativePathInDependency,
+      relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
+        ? sourceRelativePathWithCompiledExt
+        : relativePathInDependency,
       relativePath,
       relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
         ? depRootDirDist
