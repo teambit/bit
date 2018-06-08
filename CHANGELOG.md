@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.10] - 2018-06-08
+
+- fix custom module resolutions to work with components installed by a package manager
+
 ## [13.0.0-dev.9] - 2018-06-06
 
 - support mixed mode of common-js and ES6 ("require" and "import" together)

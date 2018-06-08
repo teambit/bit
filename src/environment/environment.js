@@ -66,7 +66,7 @@ export default class Environment {
       writePackageJson: !opts.noPackageJson,
       writeBitJson: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
-      createNpmLinkFiles: opts.npmLinks,
+      createNpmLinkFiles: opts.createNpmLinkFiles,
       saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean

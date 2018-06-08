@@ -162,7 +162,7 @@ describe('es6 components with link files', function () {
       });
       it('should auto-generate a link file', () => {
         const currentUtilIndex = fs.readFileSync(
-          path.join(helper.localScopePath, 'components/bar/foo/node_modules/utils')
+          path.join(helper.localScopePath, 'components/bar/foo/node_modules/utils/index.js')
         );
         expect(currentUtilIndex.toString()).to.not.equal(utilIndexFixture);
       });
