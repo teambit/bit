@@ -96,7 +96,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      describe.skip('exporting with --eject option', () => {
+      describe('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
         let isStringId;
@@ -149,9 +149,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     });
     describe('changing to custom module resolutions', () => {
       let originalScopeWithCustomResolve;
+      let originalScopeWithCustomResolveBeforeExport;
       before(() => {
-        helper.getClonedLocalScope(originalScope);
-        helper.getClonedRemoteScope(remoteScope);
+        helper.getClonedLocalScope(scopeBeforeExport);
+        helper.reInitRemoteScope();
         const padLeftFile = path.join(helper.localScopePath, 'src', 'pad-left', 'pad-left.js');
         const padLeftContent = fs.readFileSync(padLeftFile).toString();
         const relativeSyntax = '../is-string/is-string';
@@ -166,6 +167,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
         helper.tagAllWithoutMessage('--force');
+        originalScopeWithCustomResolveBeforeExport = helper.cloneLocalScope();
         helper.exportAllComponents();
         originalScopeWithCustomResolve = helper.cloneLocalScope();
       });
@@ -224,6 +226,42 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               expect(output).to.have.string('tests passed');
             });
           });
+        });
+      });
+      describe('exporting to bitsrc', () => {
+        let scopeName;
+        let isStringId;
+        let padLeftId;
+        let npmOutput;
+        before(() => {
+          helper.getClonedLocalScope(originalScopeWithCustomResolveBeforeExport);
+          return bitsrcTester
+            .loginToBitSrc()
+            .then(() => bitsrcTester.createScope())
+            .then((scope) => {
+              scopeName = scope;
+              isStringId = `${username}.${scopeName}.string.is-string`;
+              padLeftId = `${username}.${scopeName}.string.pad-left`;
+              helper.exportAllComponents(`${username}.${scopeName}`);
+              helper.reInitLocalScope();
+              helper.initNpm();
+              helper.runCmd(`npm i @bit/${username}.${scopeName}/string/pad-left`);
+            });
+        });
+        after(() => {
+          return bitsrcTester.deleteScope(scopeName);
+        });
+        it('should have the component files as a package (in node_modules)', () => {
+          const nodeModulesDir = path.join(helper.localScopePath, 'node_modules', '@bit');
+          expect(path.join(nodeModulesDir, isStringId)).to.be.a.path();
+          expect(path.join(nodeModulesDir, padLeftId)).to.be.a.path();
+        });
+        it('should indicate that postinstall script was installed', () => {
+          expect(npmOutput).to.have.string('node .bit.postinstall.js');
+        });
+        it('should generate .bit.postinstall.js file', () => {
+          const nodeModulesDir = path.join(helper.localScopePath, 'node_modules', '@bit');
+          expect(path.join(nodeModulesDir, padLeftId, '.bit.postinstall.js')).to.be.a.file();
         });
       });
     });

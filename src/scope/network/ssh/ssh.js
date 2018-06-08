@@ -151,7 +151,7 @@ export default class SSH implements Network {
       case 128:
         return new PermissionDenied(`${this.host}:${this.path}`);
       case 129:
-        return new RemoteScopeNotFound((parsedError && parsedError.id) || err);
+        return new RemoteScopeNotFound((parsedError && parsedError.name) || err);
       case 130:
         return new PermissionDenied(`${this.host}:${this.path}`);
       case 131:
