@@ -328,7 +328,11 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
       });
       return R.flatten(currLinks);
     });
-    const flattenLinks = R.flatten(links);
+    const internalCustomResolvedLinks = parentComponent.customResolvedPaths.length
+      ? getInternalCustomResolvedLinks(parentComponent, createNpmLinkFiles)
+      : [];
+    const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
+
     const groupLinks = groupBy(flattenLinks, link => link.linkPath);
     const linksToWrite = [];
     const postInstallLinks = [];
@@ -387,6 +391,33 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
   const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
   return Promise.all(linksWithoutDuplications.map(link => outputFile(link)));
+}
+
+/**
+ * when using custom module resolutions, and inside a component there is a file that requires
+ * another file by custom-resolved syntax, we must generate links on the imported component inside
+ * node_modules.
+ *
+ * E.g. original component "utils/jump" has two files:
+ * bar/foo.js => require('utils/is-string); // "src" is set to be a module-directory
+ * utils/is-string.js
+ *
+ * imported component:
+ * components/utils/jump/bar/foo.js
+ * components/utils/jump/utils/is-string.js
+ * components/utils/jump/node_modules/utils/is-string // this is the file we generate here
+ */
+function getInternalCustomResolvedLinks(component: Component, createNpmLinkFiles: boolean): LinkFile[] {
+  const componentDir = component.writtenPath;
+  const getDestination = (importSource: string) => `node_modules/${importSource}`;
+  return component.customResolvedPaths.map((customPath) => {
+    const sourceAbs = path.join(componentDir, customPath.destinationPath);
+    const dest = getDestination(customPath.importSource);
+    const destAbs = path.join(componentDir, dest);
+    const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
+    const linkContent = getLinkContent(destRelative);
+    return { linkPath: createNpmLinkFiles ? dest : destAbs, linkContent, postInstallLink: createNpmLinkFiles };
+  });
 }
 
 async function generatePostInstallScript(component: Component, postInstallLinks) {

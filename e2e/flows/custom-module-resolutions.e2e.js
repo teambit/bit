@@ -123,11 +123,11 @@ describe('custom module resolutions', function () {
         helper.importComponent('bar/foo');
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       });
-      it.skip('should generate the non-relative links correctly', () => {
+      it('should generate the non-relative links correctly', () => {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
-      it.skip('should not show the component as modified', () => {
+      it('should not show the component as modified', () => {
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.string('modified');
       });

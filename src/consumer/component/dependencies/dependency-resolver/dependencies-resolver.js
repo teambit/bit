@@ -348,7 +348,10 @@ Try to run "bit import ${componentId} --objects" to get the component saved in t
     // clone before stripping the sharedDir to not change the model by mistake
     const clonedDependencies = new Dependencies(dependencies.getClone());
     if (entryComponentMap.originallySharedDir) {
-      clonedDependencies.stripOriginallySharedDir(consumer.bitMap, entryComponentMap.originallySharedDir);
+      // @todo: disabled for now. When the files are saved into the model, we don't add the sharedDir
+      // in this case, so it should be fine. (see sources.consumerComponentToVersion())
+      // it needs some more thinking whether there are cases when it is needed
+      // clonedDependencies.stripOriginallySharedDir(consumer.bitMap, entryComponentMap.originallySharedDir);
     }
     unidentifiedPackages.forEach((unidentifiedPackage) => {
       const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
