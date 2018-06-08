@@ -17,14 +17,6 @@ please read the [code of conduct](CODE_OF_CONDUCT.md).
   $ yarn
 ```
 
-**[install bit](https://teambit.github.io/bit/installation.html)**
-
-perform bit import to fetch the project bit components.
-
-```bash
-  $ bit import
-```
-
 - install command globally and link (in order to use the "bit-dev" command globaly and always use the
   latest development build)
 ```bash
@@ -56,7 +48,7 @@ npm install -g flow-bin flow-typed
 
 ### Build
 
-- build legacy and modern distributions:
+- build distributions:
 ```bash
   npm run build
 ```
@@ -84,15 +76,20 @@ npm install -g flow-bin flow-typed
 ```bash
   npm run e2e-test --bit_bin=bit-dev
 ```
-Use "--debug" flag to watch the running commands and the output. It might be a useful tool for debugging failed e2e tests.
+Use `--debug` flag to watch the running commands and the output. It might be a useful tool for debugging failed e2e tests.
 
-Use "--with_ssh" flag to switch from exporting by using file-system to SSH approach. Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
+Use `--with_ssh` flag to switch from exporting by using file-system to SSH approach. Make sure you are able to run 'ssh `whoami`@127.0.0.1' on your local.
 
 ### Lint
 
-- run eslint
+- run eslint and Flow
 ```bash
   npm run lint
+```
+
+- the project has lint issues with some of the files, the following lint command is including all the passed files
+```base
+  npm run lint-circle
 ```
 
 ## Pull Requests
