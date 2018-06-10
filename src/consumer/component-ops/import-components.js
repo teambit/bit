@@ -125,10 +125,10 @@ export default class ImportComponents {
     if (this.options.withEnvironments) {
       const envsPromises = [];
       if (compiler) {
-        envsPromises.push(compiler.install());
+        envsPromises.push(compiler.install(this.consumer.scope, { verbose: this.options.verbose }));
       }
       if (tester) {
-        envsPromises.push(tester.install());
+        envsPromises.push(tester.install(this.consumer.scope, { verbose: this.options.verbose }));
       }
       const envComponents = await Promise.all(envsPromises);
       return {
