@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bit import -e flag
+
 ## [13.0.0-dev.10] - 2018-06-08
 
 - fix custom module resolutions to work with components installed by a package manager
