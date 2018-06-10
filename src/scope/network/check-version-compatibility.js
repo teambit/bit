@@ -30,19 +30,22 @@ export default function checkVersionCompatibility(remoteVersion: string) {
   const localPatch = semver.patch(BIT_VERSION);
 
   if (remoteMajor > localMajor) {
-    loader.off();
+    loader.stop();
     console.log(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    loader.start();
     return;
   }
 
   if (remoteMinor > localMinor) {
-    loader.off();
+    loader.stop();
     console.log(createMajorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    loader.start();
     return;
   }
 
   if (remotePatch > localPatch) {
-    loader.off();
+    loader.stop();
     console.log(createMinorMessage(remoteVersion, BIT_VERSION)); // eslint-disable-line
+    loader.start();
   }
 }
