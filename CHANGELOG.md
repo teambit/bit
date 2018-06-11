@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix bit import -e flag
+- throw an error when auto tag components has a newer version
 
 ## [13.0.0-dev.10] - 2018-06-08
 

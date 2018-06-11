@@ -51,6 +51,7 @@ import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
 import missingDepsTemplate from './templates/missing-dependencies-template';
+import newerVersionTemplate from './templates/newer-version-template';
 import {
   PathsNotExist,
   IncorrectIdForImportedComponent,
@@ -320,9 +321,8 @@ once your changes are merged with the new remote version, please tag and export 
   [NothingToCompareTo, err => 'no previous versions to compare'],
   [
     NewerVersionFound,
-    err => `unable to tag ${err.componentId}
-current version ${err.currentVersion} is older than the latest ${err.newestVersion}.
-to ignore this error, please use --ignore-newest-version flag`
+    // err => JSON.stringify(err.newerVersions)
+    err => newerVersionTemplate(err.newerVersions)
   ],
   [PromptCanceled, err => chalk.yellow('operation aborted')],
   [

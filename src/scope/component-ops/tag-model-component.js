@@ -1,6 +1,7 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
 import graphlib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import { Scope } from '..';
@@ -11,7 +12,7 @@ import ComponentModel from '../models/component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
-import { ComponentSpecsFailed } from '../../consumer/exceptions';
+import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
 import { pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import Source from '../models/source';
 import { DependencyNotFound } from '../exceptions';
@@ -20,6 +21,7 @@ import { flattenDependencyIds } from '../flatten-dependencies';
 import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
+import GeneralError from '../../error/general-error';
 
 function buildComponentsGraph(components: Component[]) {
   const graphDeps = new Graph();
@@ -153,6 +155,7 @@ export default (async function tagModelComponent({
   releaseType,
   force,
   consumer,
+  ignoreNewestVersion = false,
   verbose = false
 }: {
   consumerComponents: Component[],
@@ -162,6 +165,7 @@ export default (async function tagModelComponent({
   releaseType: string,
   force: ?boolean,
   consumer: Consumer,
+  ignoreNewestVersion: boolean,
   verbose?: boolean
 }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
@@ -182,6 +186,31 @@ export default (async function tagModelComponent({
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.id()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
+
+  // check for each one of the components whether it is using an old version
+  if (!ignoreNewestVersion) {
+    const newestVersionsP = componentsToBuildAndTest.map(async (component) => {
+      if (component.componentFromModel) {
+        // otherwise it's a new component, so this check is irrelevant
+        const modelComponent = await scope.getModelComponentIfExist(component.id);
+        if (!modelComponent) throw new GeneralError(`component ${component.id} was not found in the model`);
+        const latest = modelComponent.latest();
+        if (latest !== component.version) {
+          return {
+            componentId: component.id.toStringWithoutVersion(),
+            currentVersion: component.version,
+            latestVersion: latest
+          };
+        }
+      }
+      return null;
+    });
+    const newestVersions = await Promise.all(newestVersionsP);
+    const newestVersionsWithoutEmpty = newestVersions.filter(newest => newest);
+    if (!RA.isNilOrEmpty(newestVersionsWithoutEmpty)) {
+      throw new NewerVersionFound(newestVersionsWithoutEmpty);
+    }
+  }
 
   logger.debug('scope.putMany: sequentially build all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially build all components');
