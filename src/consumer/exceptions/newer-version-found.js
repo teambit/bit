@@ -1,17 +1,18 @@
 /** @flow */
 import AbstractError from '../../error/abstract-error';
 
+export type NewerVersion = {
+  componentId: string,
+  currentVersion: string,
+  latestVersion: string
+};
 export default class NewerVersionFound extends AbstractError {
-  componentId: string;
-  currentVersion: string;
-  newestVersion: string;
+  newerVersions: NewerVersion[];
 
-  constructor(componentId: string, currentVersion: string, newestVersion: string) {
+  constructor(newerVersions: NewerVersion[]) {
     super();
     this.name = 'NewerVersionFound';
-    this.componentId = componentId;
-    this.currentVersion = currentVersion;
-    this.newestVersion = newestVersion;
+    this.newerVersions = newerVersions;
   }
   makeAnonymous() {
     const clone = super.makeAnonymous();
