@@ -87,7 +87,7 @@ export function diffBetweenComponentsObjects(
   componentLeft: Component,
   componentRight: Component
 ): ?(FieldsDiff[]) {
-  const componentMap = consumer.bitMap.getComponent(componentLeft.id, false, true);
+  const componentMap = consumer.bitMap.getComponent(componentLeft.id, false, true, true);
   if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
     componentLeft.stripOriginallySharedDir(consumer.bitMap);
     componentRight.stripOriginallySharedDir(consumer.bitMap);

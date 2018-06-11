@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix bit import -e flag
+- fix output when running bit diff after tagging component
 
 ## [13.0.0-dev.10] - 2018-06-08
 
