@@ -8,7 +8,7 @@ import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
 import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies, NewerVersionFound } from './exceptions';
+import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitJson from './bit-json/consumer-bit-json';
@@ -522,21 +522,7 @@ export default class Consumer {
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
     }
-    // check for each one of the components whether it is using an old version
-    if (!ignoreNewestVersion) {
-      const throwForNewestVersions = components.map(async (component) => {
-        if (component.componentFromModel) {
-          // otherwise it's a new component, so this check is irrelevant
-          const modelComponent = await this.scope.getModelComponentIfExist(component.id);
-          if (!modelComponent) throw new GeneralError(`component ${component.id} was not found in the model`);
-          const latest = modelComponent.latest();
-          if (latest !== component.version) {
-            throw new NewerVersionFound(component.id.toStringWithoutVersion(), component.version, latest);
-          }
-        }
-      });
-      await Promise.all(throwForNewestVersions);
-    }
+
     const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
@@ -545,6 +531,7 @@ export default class Consumer {
       releaseType,
       force,
       consumer: this,
+      ignoreNewestVersion,
       verbose
     });
 

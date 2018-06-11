@@ -93,7 +93,9 @@ describe('bit checkout command', function () {
             });
             it('should throw an error NewerVersionFound', () => {
               const commitFunc = () => helper.commitComponent('bar/foo');
-              const error = new NewerVersionFound('bar/foo', '0.0.5', '0.0.10');
+              const error = new NewerVersionFound([
+                { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' }
+              ]);
               helper.expectToThrow(commitFunc, error);
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
