@@ -13,15 +13,20 @@
 
 ## About
 
-**Bit works with Git and NPM to create a faster, more scalable workflow for sharing code across projects**.
+**Bit scales code sharing and reduces the overhead around it**.
 
-Bit helps you easily share modules and components from any Javascript related project **without refactoring**, and use them in other projects with your favorite tools like NPM and Yarn.
+Code sharing is vital for the development and maintenance of your software’s codebase.
 
-It also lets you import the shared code into any repository for further development so that you can modify and update these components and modules from any project using them. Changes can be synced across projects with an update system and an extension to Git’s merge utility. 
+However, the overhead around it can be massive: refactoring code, splitting repositories, configuring packages, maintaining wikis, ownership issues and so on.
 
-For teams working together, Bit lets you collaborate on a joint collection of your favorite UI components, Node.js modules, JS functions and anything you choose. Any developer can discover shared code, use it, make changes, suggest updates and stay in sync.
+Bit works with **Git and NPM** to create a faster and more collaborative workflow for code sharing.
 
-*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team. It's used by more organizations and communities every day.*
+With Bit, any component or modules from any repository can be instantly shared and made available to use and even develop from any other project. 0 refactoring, 0 configurations.
+
+Teams can collaborate to share their components, develop them from different projects, suggest updates, merge changes and stay in sync.
+Popular use cases are UI components (React, Vue etc), Node.js modules, plain Javascript and more. Feel free to jump in and give it a try.
+
+*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team. Bit is adopted by more organizations and communities every day.*
 
 ## Contents
 
