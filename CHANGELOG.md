@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- prevent overriding local tags from remote components upon import
 - fix bit import -e flag
 - fix - init deletes resolve modules from bit.json
 - throw an error when auto tag components has a newer version

@@ -2149,6 +2149,32 @@ console.log(barFoo.default());`;
       expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*', 'test');
     });
   });
+  describe('importing a component when it has a local tag', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+      helper.createComponentBarFoo('v2');
+      const tagOutput = helper.tagAllWithoutMessage();
+      expect(tagOutput).to.have.string('0.0.2');
+
+      // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
+      helper.importComponent('bar/foo');
+    });
+    it('should not remove the local version', () => {
+      const catComponent = helper.catComponent('bar/foo');
+      expect(catComponent.versions).to.have.property('0.0.1');
+      expect(catComponent.versions).to.have.property('0.0.2');
+    });
+    it('should not override the local component', () => {
+      const catComponent = helper.catComponent('bar/foo');
+      expect(catComponent).to.have.property('state');
+      expect(catComponent.state).to.have.property('versions');
+      expect(catComponent.state.versions).to.have.property('0.0.2');
+    });
+  });
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();

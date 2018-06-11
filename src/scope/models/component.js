@@ -99,15 +99,20 @@ export default class Component extends BitObject {
   /**
    * returns only the versions that exist in both components (regardless whether the hash are the same)
    * e.g. this.component = [0.0.1, 0.0.2, 0.0.3], other component = [0.0.3, 0.0.4]. it returns only [0.0.3].
+   * Also, the version must be locally changed. Otherwise, it doesn't matter whether the hashes are
+   * different.
    */
   _getComparableVersionsObjects(
-    component: Component
+    otherComponent: Component // in case of merging, the otherComponent is the existing component, and "this" is the incoming component
   ): { thisComponentVersions: Versions, otherComponentVersions: Versions } {
-    const otherComponentVersions = filterObject(component.versions, (val, key) =>
-      Object.keys(this.versions).includes(key)
+    const otherLocalVersion = otherComponent.getLocalVersions();
+    const otherComponentVersions = filterObject(
+      otherComponent.versions,
+      (val, key) => Object.keys(this.versions).includes(key) && otherLocalVersion.includes(key)
     );
-    const thisComponentVersions = filterObject(this.versions, (val, key) =>
-      Object.keys(otherComponentVersions).includes(key)
+    const thisComponentVersions = filterObject(
+      this.versions,
+      (val, key) => Object.keys(otherComponentVersions).includes(key) && otherLocalVersion.includes(key)
     );
     return { thisComponentVersions, otherComponentVersions };
   }
