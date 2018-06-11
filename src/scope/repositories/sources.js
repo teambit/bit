@@ -378,12 +378,12 @@ export default class SourceRepository {
     const existingComponent: ?Component = await this.findComponent(component);
     if (!existingComponent) return this.put({ component, objects });
     const locallyChanged = await existingComponent.isLocallyChanged();
-    if ((local && !locallyChanged) || component.compatibleWith(existingComponent)) {
+    if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       const mergedComponent = this.mergeTwoComponentsObjects(existingComponent, component);
       return this.put({ component: mergedComponent, objects });
     }
 
-    const conflictVersions = component.diffWith(existingComponent);
+    const conflictVersions = component.diffWith(existingComponent, local);
     throw new MergeConflict(component.id(), conflictVersions);
   }
 }
