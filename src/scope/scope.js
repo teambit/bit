@@ -1124,32 +1124,35 @@ export default class Scope {
     const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
       const component: ComponentModel = componentObjects.component;
       if (!component) return null;
-      const latestVersion: Version = await component.loadVersion(component.latest(), this.objects);
+      const loadedVersion: Version = await component.loadVersion(
+        componentObjects.id.getVersion().toString(),
+        this.objects
+      );
       let pendingUpdate = false;
-      latestVersion.getAllDependencies().forEach((dependency) => {
+      loadedVersion.getAllDependencies().forEach((dependency) => {
         const committedComponentId = committedComponents.find(
           committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
         );
 
         if (!committedComponentId) return;
-        if (persist && semver.gt(committedComponentId.version, dependency.id.version)) {
-          pendingUpdate = true;
+        if (semver.gt(committedComponentId.version, dependency.id.version)) {
           dependency.id.version = committedComponentId.version;
-          const flattenDependencyToUpdate = latestVersion.flattenedDependencies.find(
+          const flattenDependencyToUpdate = loadedVersion.flattenedDependencies.find(
             flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
           );
           flattenDependencyToUpdate.version = committedComponentId.version;
-        } else if (!persist && semver.gte(committedComponentId.version, dependency.id.version)) {
+          pendingUpdate = true;
           // if !persist, we only check whether a modified component may cause auto-tagging
           // since it's only modified on the file-system, its version might be the same as the version stored in its
-          // dependents. That's why "semver.gte" is used instead of "server.gt".
+          // dependents. That's why in this case even equal means pendingUpdate
+        } else if (!persist && semver.eq(committedComponentId.version, dependency.id.version)) {
           pendingUpdate = true;
         }
       });
       if (pendingUpdate) {
         if (!persist) return component;
         const message = 'bump dependencies versions';
-        return this.sources.putAdditionalVersion(component, latestVersion, message);
+        return this.sources.putAdditionalVersion(component, loadedVersion, message);
       }
       return null;
     });
