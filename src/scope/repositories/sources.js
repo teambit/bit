@@ -281,7 +281,7 @@ export default class SourceRepository {
   }
 
   put({ component, objects }: ComponentTree): Component {
-    logger.debug(`sources.put, id: ${component.id()}`);
+    logger.debug(`sources.put, id: ${component.id()}, versions: ${component.listVersions().join(', ')}`);
     const repo: Repository = this.objects();
     repo.add(component);
 
@@ -379,6 +379,7 @@ export default class SourceRepository {
     if (!existingComponent) return this.put({ component, objects });
     const locallyChanged = await existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
+      logger.debug(`sources.merge component ${component.id()}`);
       const mergedComponent = this.mergeTwoComponentsObjects(existingComponent, component);
       return this.put({ component: mergedComponent, objects });
     }
