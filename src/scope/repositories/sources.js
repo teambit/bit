@@ -332,28 +332,58 @@ export default class SourceRepository {
   }
 
   /**
+   * merge the existing component with the data from the incoming component
+   * here, we assume that there is no conflict between the two, otherwise, this.merge() would throw
+   * a MergeConflict exception.
+   */
+  mergeTwoComponentsObjects(existingComponent: Component, incomingComponent: Component): Component {
+    // the base component to save is the existingComponent because it might contain local data that
+    // is not available in the remote component, such as the "state" property.
+    const mergedComponent = existingComponent;
+    // in case the existing version has is different than incoming version hash, use the incoming
+    // version because we hold the incoming component from a remote as the source of truth
+    Object.keys(existingComponent.versions).forEach((existingVersion) => {
+      if (incomingComponent.versions[existingVersion]) {
+        mergedComponent.versions[existingVersion] = incomingComponent.versions[existingVersion];
+      }
+    });
+    // in case the incoming component has versions that are not in the existing component, copy them
+    Object.keys(incomingComponent.versions).forEach((incomingVersion) => {
+      if (!existingComponent.versions[incomingVersion]) {
+        mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
+      }
+    });
+    return mergedComponent;
+  }
+
+  /**
    * Adds the objects into scope.object array, in-memory. It doesn't save anything to the file-system.
    *
    * When this function gets called originally from import command, the 'local' parameter is true. Otherwise, if it was
    * originated from export command, it'll be false.
    * If the 'local' is true and the existing component wasn't changed locally, it doesn't check for
    * discrepancies, but simply override the existing component.
+   * In this context, "discrepancy" means, same version but different hashes.
    * When using import command, it makes sense to override a component in case of discrepancies because the source of
    * truth should be the remote scope from where the import fetches the component.
+   * When the same component has different versions in the remote and the local, it merges the two
+   * by calling this.mergeTwoComponentsObjects().
    */
-  merge({ component, objects }: ComponentTree, inScope: boolean = false, local: boolean = true): Promise<Component> {
+  async merge(
+    { component, objects }: ComponentTree,
+    inScope: boolean = false,
+    local: boolean = true
+  ): Promise<Component> {
     if (inScope) component.scope = this.scope.name;
-    return this.findComponent(component).then((existingComponent: ?Component) => {
-      if (
-        !existingComponent ||
-        (local && !existingComponent.isLocallyChanged()) ||
-        component.compatibleWith(existingComponent)
-      ) {
-        return this.put({ component, objects });
-      }
+    const existingComponent: ?Component = await this.findComponent(component);
+    if (!existingComponent) return this.put({ component, objects });
+    const locallyChanged = await existingComponent.isLocallyChanged();
+    if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
+      const mergedComponent = this.mergeTwoComponentsObjects(existingComponent, component);
+      return this.put({ component: mergedComponent, objects });
+    }
 
-      const conflictVersions = component.diffWith(existingComponent);
-      throw new MergeConflict(component.id(), conflictVersions);
-    });
+    const conflictVersions = component.diffWith(existingComponent, local);
+    throw new MergeConflict(component.id(), conflictVersions);
   }
 }

@@ -99,26 +99,32 @@ export default class Component extends BitObject {
   /**
    * returns only the versions that exist in both components (regardless whether the hash are the same)
    * e.g. this.component = [0.0.1, 0.0.2, 0.0.3], other component = [0.0.3, 0.0.4]. it returns only [0.0.3].
+   * also, in case it is coming from 'bit import', the version must be locally changed.
+   * otherwise, it doesn't matter whether the hashes are different.
    */
   _getComparableVersionsObjects(
-    component: Component
+    otherComponent: Component, // in case of merging, the otherComponent is the existing component, and "this" is the incoming component
+    local: boolean // for 'bit import' the local is true, for 'bit export' the local is false
   ): { thisComponentVersions: Versions, otherComponentVersions: Versions } {
-    const otherComponentVersions = filterObject(component.versions, (val, key) =>
-      Object.keys(this.versions).includes(key)
+    const otherLocalVersion = otherComponent.getLocalVersions();
+    const otherComponentVersions = filterObject(
+      otherComponent.versions,
+      (val, key) => Object.keys(this.versions).includes(key) && (!local || otherLocalVersion.includes(key))
     );
-    const thisComponentVersions = filterObject(this.versions, (val, key) =>
-      Object.keys(otherComponentVersions).includes(key)
+    const thisComponentVersions = filterObject(
+      this.versions,
+      (val, key) => Object.keys(otherComponentVersions).includes(key) && (!local || otherLocalVersion.includes(key))
     );
     return { thisComponentVersions, otherComponentVersions };
   }
 
-  compatibleWith(component: Component): boolean {
-    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component);
+  compatibleWith(component: Component, local: boolean): boolean {
+    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component, local);
     return equals(thisComponentVersions, otherComponentVersions);
   }
 
-  diffWith(component: Component): string[] {
-    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component);
+  diffWith(component: Component, local: boolean): string[] {
+    const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component, local);
     return Object.keys(thisComponentVersions).filter(
       version => thisComponentVersions[version].hash !== otherComponentVersions[version].hash
     );
