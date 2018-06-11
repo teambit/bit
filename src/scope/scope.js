@@ -489,7 +489,7 @@ export default class Scope {
   }
 
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false, context: Object = {}) {
-    logger.debug(`getExternalOnes, ids: ${ids.join(', ')}`);
+    logger.debug(`getExternalOnes, ids: ${ids.join(', ')}, localFetch: ${localFetch.toString()}`);
     Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes, ids: ${Analytics.hashData(ids)}`);
     enrichContextFromGlobal(context);
     return this.sources.getMany(ids).then((defs) => {
@@ -520,7 +520,8 @@ export default class Scope {
   }
 
   /**
-   * If found locally, use them. Otherwise, fetch from remote and then, save into the model.
+   * recursive function.
+   * if found locally, use them. Otherwise, fetch from remote and then, save into the model.
    */
   getExternalMany(
     ids: BitId[],
@@ -547,10 +548,10 @@ export default class Scope {
       });
 
       if (left.length === 0) {
-        logger.debug('getExternalMany: no more ids left, all found locally, existing the method');
+        logger.debug('getExternalMany: no more ids left, all found locally, exiting the method');
         Analytics.addBreadCrumb(
           'getExternalMany',
-          'getExternalMany: no more ids left, all found locally, existing the method'
+          'getExternalMany: no more ids left, all found locally, exiting the method'
         );
         // $FlowFixMe - there should be a component because there no defs without components left.
         return Promise.all(defs.map(def => def.component.toVersionDependencies(def.id.version, this, def.id.scope)));
@@ -670,8 +671,8 @@ export default class Scope {
     return versionDeps.concat(externalDeps);
   }
 
-  async importManyOnes(ids: BitId[], cache: boolean): Promise<ComponentVersion[]> {
-    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}`);
+  async importManyOnes(ids: BitId[], cache: boolean = true): Promise<ComponentVersion[]> {
+    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
     Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
 
     const idsWithoutNils = removeNils(ids);
@@ -692,7 +693,7 @@ export default class Scope {
   }
 
   manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
-    return this.importManyOnes(ids).then(componentVersions =>
+    return this.importManyOnes(ids, false).then(componentVersions =>
       Promise.all(
         componentVersions.map((version) => {
           return version.toObjects(this.objects);

@@ -2156,23 +2156,60 @@ console.log(barFoo.default());`;
       helper.addComponentBarFoo();
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
-      helper.createComponentBarFoo('v2');
-      const tagOutput = helper.tagAllWithoutMessage();
-      expect(tagOutput).to.have.string('0.0.2');
+    });
+    describe('as author', () => {
+      before(() => {
+        helper.createComponentBarFoo('v2');
+        const tagOutput = helper.tagAllWithoutMessage();
+        expect(tagOutput).to.have.string('0.0.2');
 
-      // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
-      helper.importComponent('bar/foo');
+        // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
+        helper.importComponent('bar/foo');
+      });
+      it('should not remove the local version', () => {
+        const catComponent = helper.catComponent('bar/foo');
+        expect(catComponent.versions).to.have.property('0.0.1');
+        expect(catComponent.versions).to.have.property('0.0.2');
+      });
+      it('should not override the local component', () => {
+        const catComponent = helper.catComponent('bar/foo');
+        expect(catComponent).to.have.property('state');
+        expect(catComponent.state).to.have.property('versions');
+        expect(catComponent.state.versions).to.have.property('0.0.2');
+      });
     });
-    it('should not remove the local version', () => {
-      const catComponent = helper.catComponent('bar/foo');
-      expect(catComponent.versions).to.have.property('0.0.1');
-      expect(catComponent.versions).to.have.property('0.0.2');
-    });
-    it('should not override the local component', () => {
-      const catComponent = helper.catComponent('bar/foo');
-      expect(catComponent).to.have.property('state');
-      expect(catComponent.state).to.have.property('versions');
-      expect(catComponent.state.versions).to.have.property('0.0.2');
+    describe('as imported', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.createFile('components/bar/foo', 'foo.js', 'v2');
+        const tagOutput = helper.tagAllWithoutMessage();
+        expect(tagOutput).to.have.string('0.0.2');
+
+        // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
+        helper.importComponent('bar/foo');
+      });
+      it('should not remove the local version', () => {
+        const catComponent = helper.catComponent(`${helper.remoteScope}/bar/foo`);
+        expect(catComponent.versions).to.have.property('0.0.1');
+        expect(catComponent.versions).to.have.property('0.0.2');
+      });
+      it('should not override the local component', () => {
+        const catComponent = helper.catComponent(`${helper.remoteScope}/bar/foo`);
+        expect(catComponent).to.have.property('state');
+        expect(catComponent.state).to.have.property('versions');
+        expect(catComponent.state.versions).to.have.property('0.0.2');
+      });
+      describe('importing a specific version', () => {
+        let output;
+        before(() => {
+          output = helper.importComponent('bar/foo@0.0.1');
+        });
+        it('should not throw an error saying the component was not found', () => {
+          expect(output).to.have.string('successfully imported');
+        });
+      });
     });
   });
   describe.skip('Import compiler', () => {

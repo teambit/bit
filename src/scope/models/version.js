@@ -212,7 +212,7 @@ export default class Version extends BitObject {
     const flattenedDependencies = dev ? this.flattenedDevDependencies : this.flattenedDependencies;
     const dependencies = withEnvironments ? flattenedDependencies.concat(envDependencies) : flattenedDependencies;
     const allDependencies = dependencies.concat(this.flattenedDevDependencies);
-    return scope.importManyOnes(allDependencies, true);
+    return scope.importManyOnes(allDependencies);
   }
 
   refs(): Ref[] {
