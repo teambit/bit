@@ -106,7 +106,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
       packageManagerArgs: this.packageManagerArgs,
       packageManagerProcessOptions: this.packageManagerProcessOptions,
       useWorkspaces: this.useWorkspaces,
-      manageWorkspaces: this.manageWorkspaces
+      manageWorkspaces: this.manageWorkspaces,
+      resolveModules: this.resolveModules
     });
     if (this.distEntry || this.distTarget) {
       const dist = {};
@@ -121,6 +122,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       if (key === 'useWorkspaces') return val !== DEFAULT_USE_WORKSPACES;
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
+      if (key === 'resolveModules') return !R.isEmpty(val);
       return true;
     };
 
