@@ -17,3 +17,4 @@ export const BEFORE_INSTALL_NPM_DEPENDENCIES = 'ensuring package dependencies';
 export const BEFORE_EXPORT = 'exporting component';
 export const BEFORE_EXPORTS = 'exporting components';
 export const BEFORE_LOADING_COMPONENTS = 'loading components';
+export const BEFORE_CHECKOUT = 'checking out components to local workspace';
