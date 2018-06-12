@@ -206,7 +206,10 @@ once your changes are merged with the new remote version, please tag and export 
   ],
   [
     ComponentSpecsFailed,
-    err => `${err.specsResultsAndIdPretty}component's tests has failed, please fix them before tagging`
+    err =>
+      `${
+        err.specsResultsAndIdPretty
+      }component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command`
   ],
   [
     MissingDependencies,
