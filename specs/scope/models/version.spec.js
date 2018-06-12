@@ -208,8 +208,12 @@ describe('Version', () => {
       expect(validateFunc).to.throw('does not have a version');
     });
     it('should throw for an invalid package version', () => {
-      version.packageDependencies = { lodash: 'invalid-version' };
-      expect(validateFunc).to.throw('is not a valid semantic version');
+      version.packageDependencies = { lodash: 34 };
+      expect(validateFunc).to.throw('expected version of "lodash" to be string, got number');
+    });
+    it('should not throw for a package version which is a git url', () => {
+      version.packageDependencies = { userLib: 'git+ssh://git@git.bit.io' };
+      expect(validateFunc).to.not.throw();
     });
     it('should throw for invalid packageDependencies type', () => {
       version.packageDependencies = 'invalid packages';
