@@ -18,3 +18,4 @@ export const BEFORE_EXPORT = 'exporting component';
 export const BEFORE_EXPORTS = 'exporting components';
 export const BEFORE_LOADING_COMPONENTS = 'loading components';
 export const BEFORE_STATUS = 'fetching status';
+export const BEFORE_CHECKOUT = 'checking out components to local workspace';
