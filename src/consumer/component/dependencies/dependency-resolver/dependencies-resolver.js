@@ -31,7 +31,6 @@ import type { RelativePath } from '../dependency';
  * @param {string[]} testsFiles - component test files
  * @param {string} entryComponentId - component id for the entry of traversing - used to know which of the files are part of that component
  * @param {consumer} consumer
- * @param {string} bindingPrefix
  * @param componentFromModel
  */
 function findComponentsOfDepsFiles(
@@ -40,11 +39,11 @@ function findComponentsOfDepsFiles(
   testsFiles: string[],
   entryComponentId: string,
   consumer: Consumer,
-  bindingPrefix: string,
-  componentFromModel: Component,
   consumerComponent: Component
 ): Object {
   const driver: Driver = consumer.driver;
+  const bindingPrefix: string = consumerComponent.bindingPrefix;
+  const componentFromModel: Component = consumerComponent.componentFromModel;
   const packagesDeps = {};
   let devPackagesDeps = {};
   const componentsDeps = {};
@@ -115,7 +114,7 @@ function findComponentsOfDepsFiles(
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
         if (!componentFromModel) {
           throw new GeneralError(`Failed to resolve ${componentId} dependencies because the component is not in the model.
-Try to run "bit import ${componentId} --objects" to get the component saved in the model`);
+Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the component saved in the model`);
         }
         const componentBitId = BitId.parse(componentId);
         const dependency = componentFromModel
@@ -565,8 +564,6 @@ export default (async function loadDependenciesForComponent(
     testsFiles,
     idWithConcreteVersionString,
     consumer,
-    component.bindingPrefix,
-    componentFromModel,
     component
   );
   const traversedCompDeps = traversedDeps.componentsDeps;
