@@ -529,16 +529,14 @@ export default class Version extends BitObject {
      * @param {*} packageVersion
      */
     const _validatePackageDependency = (packageVersion, packageName) => {
-      const version = semver.valid(packageVersion);
-      const versionRange = semver.validRange(packageVersion);
       const packageNameValidateResult = packageNameValidate(packageName);
       if (!packageNameValidateResult.validForNewPackages && !packageNameValidateResult.validForOldPackages) {
         const errors = packageNameValidateResult.errors || [];
         throw new VersionInvalid(`${packageName} is invalid package name, errors:  ${errors.join()}`);
       }
-      if (!version && !versionRange) {
-        throw new VersionInvalid(`${packageName} version - ${packageVersion} is not a valid semantic version`);
-      }
+      // don't use semver.valid and semver.validRange to validate the package version because it
+      // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
+      validateType(message, packageVersion, `version of "${packageName}"`, 'string');
     };
     const _validatePackageDependencies = (packageDependencies) => {
       validateType(message, packageDependencies, 'packageDependencies', 'object');
