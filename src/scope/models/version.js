@@ -332,10 +332,28 @@ export default class Version extends BitObject {
         return deps.map(dependency => ({ id: BitId.parse(dependency) }));
       }
 
-      return deps.map(dependency => ({
-        id: BitId.parse(dependency.id),
-        relativePaths: dependency.relativePaths
-      }));
+      const getRelativePath = (relativePath) => {
+        if (relativePath.importSpecifiers) {
+          // backward compatibility. Before the massive validation was added, an item of
+          // relativePath.importSpecifiers array could be missing the mainFile property, which is
+          // an invalid ImportSpecifier. (instead the mainFile it had another importSpecifiers object).
+          relativePath.importSpecifiers = relativePath.importSpecifiers.filter(
+            importSpecifier => importSpecifier.mainFile
+          );
+          if (!relativePath.importSpecifiers.length) delete relativePath.importSpecifiers;
+        }
+
+        return relativePath;
+      };
+
+      return deps.map((dependency) => {
+        return {
+          id: BitId.parse(dependency.id),
+          relativePaths: Array.isArray(dependency.relativePaths)
+            ? dependency.relativePaths.map(getRelativePath)
+            : dependency.relativePaths
+        };
+      });
     };
 
     const parseFile = (file) => {
