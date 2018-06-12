@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - throw an error when auto tag components has a newer version
 - fix output when running bit diff after tagging component
 - fix - after auto-tagging a component with a pending update - it became modified
+- fix - handle bit diff for local components without specifying scope
 
 ## [13.0.0-dev.10] - 2018-06-08
 

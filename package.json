@@ -37,6 +37,7 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
+    "@teambit/gitconfig": "^2.0.5",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
@@ -52,7 +53,6 @@
     "execa": "^0.8.0",
     "find-up": "^2.1.0",
     "fs-extra": "^6.0.0",
-    "@teambit/gitconfig": "^2.0.5",
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
     "group-array": "^0.3.3",
@@ -62,6 +62,7 @@
     "istextorbinary": "^2.2.1",
     "jfs": "^0.2.6",
     "lodash.assignwith": "^4.2.0",
+    "lodash.find": "^4.6.0",
     "lodash.groupby": "^4.6.0",
     "lodash.includes": "^4.3.0",
     "lodash.isnil": "^4.0.0",

@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import lfind from 'lodash.find';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
@@ -28,8 +29,17 @@ export default (async function componentsDiff(
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
-        // $FlowFixMe - version, toVersion are string here, the error is unclear
-        return Promise.all(ids.map(id => getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion)));
+        // we already have the component in the components array, we just need to search for it
+        return Promise.all(
+          ids.map((id) => {
+            if (!id.scope && components) {
+              const foundComponent = lfind(components, o => o.box === id.box && o.name === id.name);
+              if (foundComponent) id.scope = foundComponent.scope;
+            }
+            // $FlowFixMe - version, toVersion are string here, the error is unclear
+            return getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion);
+          })
+        );
       }
       if (version) {
         // $FlowFixMe - version is string here, the error is unclear
