@@ -1,6 +1,5 @@
 // @flow
 import R from 'ramda';
-import lfind from 'lodash.find';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import GeneralError from '../../error/general-error';
@@ -26,20 +25,19 @@ export default (async function componentsDiff(
   if (!components) throw new GeneralError('failed loading the components');
   const tmp = new Tmp(consumer.scope);
 
+  // try to resolve ids scope of by components array
+  ids.forEach(function (id) {
+    if (!id.scope && components) {
+      const foundComponent = components.find(o => o.box === id.box && o.name === id.name);
+      if (foundComponent) id.scope = foundComponent.scope;
+    }
+  });
+
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
-        // we already have the component in the components array, we just need to search for it
-        return Promise.all(
-          ids.map((id) => {
-            if (!id.scope && components) {
-              const foundComponent = lfind(components, o => o.box === id.box && o.name === id.name);
-              if (foundComponent) id.scope = foundComponent.scope;
-            }
-            // $FlowFixMe - version, toVersion are string here, the error is unclear
-            return getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion);
-          })
-        );
+        // $FlowFixMe - version, toVersion are string here, the error is unclear
+        return Promise.all(ids.map(id => getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion)));
       }
       if (version) {
         // $FlowFixMe - version is string here, the error is unclear

@@ -62,7 +62,6 @@
     "istextorbinary": "^2.2.1",
     "jfs": "^0.2.6",
     "lodash.assignwith": "^4.2.0",
-    "lodash.find": "^4.6.0",
     "lodash.groupby": "^4.6.0",
     "lodash.includes": "^4.3.0",
     "lodash.isnil": "^4.0.0",
