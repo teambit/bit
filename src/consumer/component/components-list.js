@@ -155,12 +155,11 @@ export default class ComponentsList {
    * import-pending. Exclude them from the 'newComponents' and add them to 'importPendingComponents'.
    */
   async listNewComponentsAndImportPending() {
-    const allNewComponents = await this.listNewComponents(true);
+    const allNewComponents: Component[] = await this.listNewComponents(true);
     const newComponents = [];
     const importPendingComponents = [];
     allNewComponents.forEach((component) => {
-      const componentMap = this.bitMap.getComponent(component.id);
-      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && component.id.scope) {
+      if (component.id.scope) {
         importPendingComponents.push(component);
       } else {
         newComponents.push(component);
