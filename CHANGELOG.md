@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix - handle bit diff for local components without specifying scope
+- fix - show component on bit list even when there is duplicate entries in bitmap file
+
 ## [13.0.0-dev.11] - 2018-06-13
 
 - fix 'component not found' error when importing a component with a specific version while having a local tag
@@ -16,9 +19,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - throw an error when auto tag components has a newer version
 - fix output when running bit diff after tagging component
 - fix - after auto-tagging a component with a pending update - it became modified
-- fix - show component on bit list even when there is duplicate entries in bitmap file
-- added missing programmatic flags for bit isolate cm
-- fix - handle bit diff for local components without specifying scope
 - added missing programmatic flags for bit isolate cmd
 
 ## [13.0.0-dev.10] - 2018-06-08
