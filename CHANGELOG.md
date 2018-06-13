@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.11] - 2018-06-13
+
 - fix 'component not found' error when importing a component with a specific version while having a local tag
 - prevent overriding local tags from remote components upon import
 - fix bit import -e flag
