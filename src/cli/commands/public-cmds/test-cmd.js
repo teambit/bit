@@ -10,7 +10,7 @@ const validForkLevels = R.values(TESTS_FORK_LEVEL);
 export default class Test extends Command {
   name = 'test [id]';
   description = `test any set of components with configured tester (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html`;
-  alias = 't';
+  alias = '';
   opts = [
     ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running']
