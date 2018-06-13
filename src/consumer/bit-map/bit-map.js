@@ -231,15 +231,16 @@ export default class BitMap {
   /**
    * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name
    */
-  getExistingComponentId(componentIdStr: BitIdStr): ?BitIdStr {
-    if (this.components[componentIdStr]) return componentIdStr;
+  getExistingComponentId(componentIdStr: BitIdStr, origin?: ComponentOrigin | ComponentOrigin[]): ?BitIdStr {
+    const components = this.getAllComponents(origin);
+    if (components[componentIdStr]) return componentIdStr;
     const parsedId = BitId.parse(componentIdStr);
     if (parsedId.scope && !parsedId.hasVersion()) {
-      return Object.keys(this.components).find((component) => {
+      return Object.keys(components).find((component) => {
         return BitId.parse(component).toStringWithoutVersion() === componentIdStr;
       });
     }
-    return Object.keys(this.components).find((component) => {
+    return Object.keys(components).find((component) => {
       return BitId.parse(component).toStringWithoutScopeAndVersion() === componentIdStr;
     });
   }
