@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
@@ -253,6 +254,18 @@ describe('bit status command', function () {
     });
     it('should not display that component as staged', () => {
       expect(output.includes('staged components')).to.be.false;
+    });
+    describe('and then all objects were deleted', () => {
+      before(() => {
+        fs.removeSync(path.join(helper.localScopePath, '.bit'));
+        helper.runCmd('bit init');
+      });
+      it('should indicate that running "bit import" should solve the issue', () => {
+        output = helper.runCmd('bit status');
+        expect(output).to.have.string(
+          'your workspace has outdated objects, please use "bit import" to pull the latest object from the remote scope'
+        );
+      });
     });
   });
   describe('when a component is imported committed and modified again', () => {
