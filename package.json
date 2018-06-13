@@ -37,6 +37,7 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
+    "@teambit/gitconfig": "^2.0.5",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
@@ -52,7 +53,6 @@
     "execa": "^0.8.0",
     "find-up": "^2.1.0",
     "fs-extra": "^6.0.0",
-    "@teambit/gitconfig": "^2.0.5",
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
     "group-array": "^0.3.3",
