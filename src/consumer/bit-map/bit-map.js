@@ -237,7 +237,7 @@ export default class BitMap {
     const parsedId = BitId.parse(componentIdStr);
     if (parsedId.scope && !parsedId.hasVersion()) {
       return Object.keys(components).find((component) => {
-        return BitId.parse(component).toStringWithoutVersion();
+        return BitId.parse(component).toStringWithoutVersion() === componentIdStr;
       });
     }
     return Object.keys(components).find((component) => {
