@@ -160,7 +160,7 @@ export default class Dependencies {
         });
         pathProps.forEach((prop) => {
           if (!isValidPath(relativePath[prop])) {
-            throw new ValidationError(`${message} relativePaths.${prop} has an invalid path`);
+            throw new ValidationError(`${message} relativePaths.${prop} has an invalid path ${relativePath[prop]}`);
           }
         });
         Object.keys(relativePath).forEach((prop) => {

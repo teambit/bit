@@ -353,7 +353,7 @@ export default class Component extends BitObject {
   }
 
   validateBeforePersisting(componentStr: string): void {
-    logger.debug('validating component object: ', this.hash().hash);
+    logger.debug(`validating component object: ${this.hash().hash} ${this.id()}`);
     const component = Component.parse(componentStr);
     component.validate();
   }
