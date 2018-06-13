@@ -25,6 +25,14 @@ export default (async function componentsDiff(
   if (!components) throw new GeneralError('failed loading the components');
   const tmp = new Tmp(consumer.scope);
 
+  // try to resolve ids scope of by components array
+  ids.forEach(function (id) {
+    if (!id.scope && components) {
+      const foundComponent = components.find(o => o.box === id.box && o.name === id.name);
+      if (foundComponent) id.scope = foundComponent.scope;
+    }
+  });
+
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
