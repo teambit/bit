@@ -4,6 +4,8 @@ import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
 import { Component as ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
+import loader from '../../../cli/loader';
+import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';
 
 export type StatusResult = {
   newComponents: Component[],
@@ -17,6 +19,7 @@ export type StatusResult = {
 };
 
 export default (async function status(): Promise<StatusResult> {
+  loader.start(BEFORE_STATUS);
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
