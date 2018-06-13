@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix output when running bit diff after tagging component
 - fix - after auto-tagging a component with a pending update - it became modified
 - added missing programmatic flags for bit isolate cmd
+- fix - running bit log on local components with scope
 
 ## [13.0.0-dev.10] - 2018-06-08
 
