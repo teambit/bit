@@ -21,7 +21,11 @@ export default class Isolate extends Command {
       'save-dependencies-as-components [boolean]',
       'import the dependencies as bit components instead of as npm packages'
     ],
-    ['', 'exclude-registry-prefix [boolean]', 'exclude the registry prefix from the component\'s name in the package.json'],
+    [
+      '',
+      'exclude-registry-prefix [boolean]',
+      "exclude the registry prefix from the component's name in the package.json"
+    ],
     ['v', 'verbose [boolean]', 'print more logs'],
     ['', 'silent-client-result [boolean]', 'print environment install result']
   ];

@@ -27,7 +27,10 @@ export default function list({
     const components = cache ? await scope.list(showRemoteVersion) : await scope.listStage();
     if (consumer) {
       components.forEach((component) => {
-        const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
+        const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion(), [
+          COMPONENT_ORIGINS.AUTHORED,
+          COMPONENT_ORIGINS.IMPORTED
+        ]);
         if (existingBitMapId) {
           component.currentlyUsedVersion = existingBitMapId;
           component.componentMap = consumer.bitMap.getComponent(existingBitMapId);
