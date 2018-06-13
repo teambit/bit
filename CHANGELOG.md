@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - fix - handle bit diff for local components without specifying scope
 - fix - show component on bit list even when there is duplicate entries in bitmap file
+- fix - remove alias t from bit test command (confilcts with tag command)
 
 ## [13.0.0-dev.11] - 2018-06-13
 
