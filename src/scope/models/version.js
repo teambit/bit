@@ -332,10 +332,28 @@ export default class Version extends BitObject {
         return deps.map(dependency => ({ id: BitId.parse(dependency) }));
       }
 
-      return deps.map(dependency => ({
-        id: BitId.parse(dependency.id),
-        relativePaths: dependency.relativePaths
-      }));
+      const getRelativePath = (relativePath) => {
+        if (relativePath.importSpecifiers) {
+          // backward compatibility. Before the massive validation was added, an item of
+          // relativePath.importSpecifiers array could be missing the mainFile property, which is
+          // an invalid ImportSpecifier. (instead the mainFile it had another importSpecifiers object).
+          relativePath.importSpecifiers = relativePath.importSpecifiers.filter(
+            importSpecifier => importSpecifier.mainFile
+          );
+          if (!relativePath.importSpecifiers.length) delete relativePath.importSpecifiers;
+        }
+
+        return relativePath;
+      };
+
+      return deps.map((dependency) => {
+        return {
+          id: BitId.parse(dependency.id),
+          relativePaths: Array.isArray(dependency.relativePaths)
+            ? dependency.relativePaths.map(getRelativePath)
+            : dependency.relativePaths
+        };
+      });
     };
 
     const parseFile = (file) => {
@@ -529,16 +547,14 @@ export default class Version extends BitObject {
      * @param {*} packageVersion
      */
     const _validatePackageDependency = (packageVersion, packageName) => {
-      const version = semver.valid(packageVersion);
-      const versionRange = semver.validRange(packageVersion);
       const packageNameValidateResult = packageNameValidate(packageName);
       if (!packageNameValidateResult.validForNewPackages && !packageNameValidateResult.validForOldPackages) {
         const errors = packageNameValidateResult.errors || [];
         throw new VersionInvalid(`${packageName} is invalid package name, errors:  ${errors.join()}`);
       }
-      if (!version && !versionRange) {
-        throw new VersionInvalid(`${packageName} version - ${packageVersion} is not a valid semantic version`);
-      }
+      // don't use semver.valid and semver.validRange to validate the package version because it
+      // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
+      validateType(message, packageVersion, `version of "${packageName}"`, 'string');
     };
     const _validatePackageDependencies = (packageDependencies) => {
       validateType(message, packageDependencies, 'packageDependencies', 'object');

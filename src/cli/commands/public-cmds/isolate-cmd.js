@@ -15,7 +15,19 @@ export default class Isolate extends Command {
     ['', 'dist', 'write dist files (when exist) to the configured directory'],
     ['', 'conf', 'write the configuration file (bit.json)'],
     ['', 'no-package-json [boolean]', 'do not generate package.json for the isolated component'],
-    ['o', 'override [boolean]', 'override existing isolated component']
+    ['o', 'override [boolean]', 'override existing isolated component'],
+    [
+      '',
+      'save-dependencies-as-components [boolean]',
+      'import the dependencies as bit components instead of as npm packages'
+    ],
+    [
+      '',
+      'exclude-registry-prefix [boolean]',
+      "exclude the registry prefix from the component's name in the package.json"
+    ],
+    ['v', 'verbose [boolean]', 'print more logs'],
+    ['', 'silent-client-result [boolean]', 'print environment install result']
   ];
   loader = true;
 
@@ -30,7 +42,11 @@ export default class Isolate extends Command {
       dist: ?boolean,
       conf: ?boolean,
       noPackageJson: ?boolean,
-      override: ?boolean
+      override: ?boolean,
+      saveDependenciesAsComponents: ?boolean,
+      excludeRegistryPrefix: ?boolean,
+      verbose: ?boolean,
+      silentClientResult: ?boolean
     }
   ): Promise<any> {
     opts.writeToPath = opts.directory;

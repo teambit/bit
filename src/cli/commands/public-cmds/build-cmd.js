@@ -27,7 +27,7 @@ export default class Build extends Command {
   }
 
   report(res: ?(string[]) | string | Object): string {
-    const noCompilerSpecifiedError = chalk.red('compiler is not defined, please define a compiler in bit.json');
+    const noCompilerSpecifiedError = chalk.yellow('compiler is not defined, please define a compiler in bit.json');
     if (!res) return noCompilerSpecifiedError;
     if (Array.isArray(res)) {
       return chalk.cyan(res.join('\n'));

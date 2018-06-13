@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix output when running bit diff after tagging component
 - fix - after auto-tagging a component with a pending update - it became modified
 - fix - show component on bit list even when there is duplicate entries in bitmap file
+- added missing programmatic flags for bit isolate cm
 
 ## [13.0.0-dev.10] - 2018-06-08
 
