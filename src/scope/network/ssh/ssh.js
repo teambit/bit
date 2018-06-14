@@ -352,20 +352,22 @@ export default class SSH implements Network {
   userPassAuthentication(): Promise<SSH> {
     const conn = new SSH2();
     return new Promise((resolve, reject) => {
-      return this.composeUserPassObject().then((sshConfig) => {
-        conn
-          .on('error', (err) => {
-            if (err.message === AUTH_FAILED_MESSAGE) {
-              return reject(new AuthenticationFailed());
-            }
-            return reject(err);
-          })
-          .on('ready', () => {
-            this.connection = conn;
-            resolve(this);
-          })
-          .connect(sshConfig);
-      });
+      return this.composeUserPassObject()
+        .then((sshConfig) => {
+          conn
+            .on('error', (err) => {
+              if (err.message === AUTH_FAILED_MESSAGE) {
+                return reject(new AuthenticationFailed());
+              }
+              return reject(err);
+            })
+            .on('ready', () => {
+              this.connection = conn;
+              resolve(this);
+            })
+            .connect(sshConfig);
+        })
+        .catch(err => reject(err));
     });
   }
 
