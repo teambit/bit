@@ -24,5 +24,8 @@ export default {
   },
   '0.12.1': {
     Version: [versionMigrations.removeLatestFromCompiler]
+  },
+  '0.13.0': {
+    Version: [versionMigrations.removeDuplicatesFiles]
   }
 };

@@ -356,49 +356,6 @@ export default class Version extends BitObject {
       });
     };
 
-    const _getFiles = () => {
-      const filesPaths = files.map(file => file.relativePath);
-      const duplicateFiles = files.reduce((acc, file) => {
-        const lowerCaseFile = file.relativePath.toLowerCase();
-        const isDuplicate = filesPaths.filter(f => lowerCaseFile === f.toLowerCase()).length > 1;
-        if (isDuplicate) {
-          if (acc[lowerCaseFile]) acc[lowerCaseFile].push(file);
-          else acc[lowerCaseFile] = [file];
-        }
-        return acc;
-      }, {});
-      if (R.isEmpty(duplicateFiles)) return files;
-      logger.warn('found duplicate files, trying to guess which one to keep');
-
-      // first, make sure they're all have the same hash. otherwise, they're not different files.
-      // if the duplicates files have different letter case, and one is the same as mainFile, use it.
-      // if one of the duplication has test=true, use it.
-      // otherwise, just pick the first one.
-      const duplicateFilesNames = Object.keys(duplicateFiles);
-      const nonDuplicateFiles = files.filter(f => !duplicateFilesNames.includes(f.relativePath.toLowerCase()));
-      Object.keys(duplicateFiles).forEach((dupFileName) => {
-        const dupFile = duplicateFiles[dupFileName];
-        const firstItem = dupFile[0];
-        const fileHash = firstItem.file;
-        if (!dupFile.every(f => f.file === fileHash)) {
-          throw new Error('failed loading the files, some file names are identical but with different content');
-        }
-        const allSameLetterCase = dupFile.every(f => dupFile.relativePath === f.relativePath);
-        const testFile = dupFile.find(f => f.test);
-        if (!allSameLetterCase) {
-          const sameAsMainFile = dupFile.find(f => f.relativePath === mainFile);
-          if (sameAsMainFile) {
-            nonDuplicateFiles.push(sameAsMainFile);
-            return;
-          }
-        }
-        if (testFile) nonDuplicateFiles.push(testFile);
-        else nonDuplicateFiles.push(firstItem);
-      });
-      return nonDuplicateFiles;
-    };
-    const filesWithoutDuplicates = _getFiles();
-
     const parseFile = (file) => {
       return {
         file: Ref.from(file.file),
@@ -410,7 +367,7 @@ export default class Version extends BitObject {
 
     return new Version({
       mainFile,
-      files: filesWithoutDuplicates.map(parseFile),
+      files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
