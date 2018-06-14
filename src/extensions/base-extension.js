@@ -3,6 +3,7 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
+import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { ScopeNotFound } from '../scope/exceptions';
@@ -157,8 +158,14 @@ export default class BaseExtension {
    * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
    * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
    */
-  async reload({ throws }: Object): Promise<void> {
+  async reload(scopePath: string, { throws }: Object): Promise<void> {
     Analytics.addBreadCrumb('base-extension', 'reload extension');
+    if (!this.filePath && !this.options.core) {
+      const { resolvedPath, componentPath } = _getExtensionPath(this.name, scopePath, this.options.core);
+      this.filePath = resolvedPath;
+      this.rootDir = componentPath;
+    }
+    this.name = _addVersionToNameFromPathIfMissing(this.name, this.rootDir);
     const baseProps = await BaseExtension.loadFromFile({
       name: this.name,
       filePath: this.filePath,
@@ -240,8 +247,9 @@ export default class BaseExtension {
     if (scopePath) {
       // $FlowFixMe
       const { resolvedPath, componentPath } = _getExtensionPath(name, scopePath, options.core);
+      const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath);
       staticExtensionProps = await BaseExtension.loadFromFile({
-        name,
+        name: nameWithVersion,
         filePath: resolvedPath,
         rootDir: componentPath,
         rawConfig,
@@ -383,7 +391,7 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
   if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(name);
 
   const internalComponentsPath = Scope.getComponentsRelativePath();
-  const internalComponentPath = Scope.getComponentRelativePath(bitId);
+  const internalComponentPath = Scope.getComponentRelativePath(bitId, scopePath);
   const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
   try {
     // This might throw an error in case of imported component when the env
@@ -400,6 +408,30 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
       componentPath
     };
   }
+};
+
+const _getExtensionVersionFromComponentPath = (componentPath: string): ?string => {
+  const parsed = path.parse(componentPath);
+  const version = parsed.base;
+  if (!semver.valid(version)) {
+    return undefined;
+  }
+  return version;
+};
+
+const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string): string => {
+  let bitId: BitId;
+  try {
+    bitId = BitId.parse(name);
+  } catch (err) {
+    throw new ExtensionNameNotValid(name);
+  }
+  if (bitId.getVersion().latest) {
+    const version = _getExtensionVersionFromComponentPath(componentPath);
+    bitId.version = version;
+    return bitId.toString();
+  }
+  return name;
 };
 
 const baseApi = {
