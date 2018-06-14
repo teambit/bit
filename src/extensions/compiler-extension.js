@@ -105,9 +105,12 @@ export default class CompilerExtension extends EnvExtension {
     context?: Object
   }): Promise<?CompilerExtension> {
     Analytics.addBreadCrumb('compiler-extension', 'loadFromCorrectSource');
-    if (componentBitJson && componentBitJson.hasCompiler()) {
-      // $FlowFixMe
-      return componentBitJson.loadCompiler(consumerPath, scopePath, context);
+    if (componentBitJson) {
+      if (componentBitJson.hasCompiler()) {
+        // $FlowFixMe
+        return componentBitJson.loadCompiler(consumerPath, scopePath, context);
+      }
+      return undefined;
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
       if (componentFromModel && componentFromModel.compiler) {

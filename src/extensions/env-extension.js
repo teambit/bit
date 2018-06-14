@@ -87,7 +87,7 @@ export default class EnvExtension extends BaseExtension {
     const installOpts = { ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }], ...opts };
     const installResult = await scope.installEnvironment(installOpts);
     this.setExtensionPathInScope(scope.getPath());
-    await this.reload(context);
+    await this.reload(scope.getPath(), context);
     return installResult;
   }
 
@@ -154,13 +154,13 @@ export default class EnvExtension extends BaseExtension {
     return resolvedEjectedEnvsDirectory;
   }
 
-  async reload(context?: Object): Promise<void> {
+  async reload(scopePath: string, context?: Object): Promise<void> {
     Analytics.addBreadCrumb('env-extension', 'reload');
     if (context) {
       this.context = context;
     }
     const throws = true;
-    await super.reload({ throws });
+    await super.reload(scopePath, { throws });
     // $FlowFixMe
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
