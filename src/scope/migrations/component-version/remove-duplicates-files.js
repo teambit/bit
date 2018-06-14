@@ -19,8 +19,7 @@ function removeDuplicateFiles(versionModel: Version): Object {
       return acc;
     }, {});
     if (R.isEmpty(duplicateFiles)) return files;
-    logger.warn('found duplicate files, trying to guess which one to keep');
-
+    logger.warn('found duplicate files, making a decision which one to keep');
     // first, make sure they're all have the same hash. otherwise, they're not different files.
     // if the duplicates files have different letter case, and one is the same as mainFile, use it.
     // if one of the duplication has test=true, use it.
@@ -34,7 +33,7 @@ function removeDuplicateFiles(versionModel: Version): Object {
       if (!dupFile.every(f => f.file === fileHash)) {
         throw new Error('failed loading the files, some file names are identical but with different content');
       }
-      const allSameLetterCase = dupFile.every(f => dupFile.relativePath === f.relativePath);
+      const allSameLetterCase = dupFile.every(f => firstItem.relativePath === f.relativePath);
       const testFile = dupFile.find(f => f.test);
       if (!allSameLetterCase) {
         const sameAsMainFile = dupFile.find(f => f.relativePath === versionModel.mainFile);
@@ -48,8 +47,14 @@ function removeDuplicateFiles(versionModel: Version): Object {
     });
     return nonDuplicateFiles;
   };
-
-  versionModel.files = _getFiles(versionModel.files);
+  try {
+    const filesWithNoDuplications = _getFiles(versionModel.files);
+    versionModel.files = filesWithNoDuplications;
+  } catch (err) {
+    logger.error(
+      `failed removing duplicated files, err: ${err.message}. Leaving the version object as is with no changes`
+    );
+  }
   return versionModel;
 }
 
