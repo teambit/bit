@@ -515,7 +515,9 @@ export default class Version extends BitObject {
       } catch (err) {
         throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
       }
-      if (validateVersion && !bitId.hasVersion()) { throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`); }
+      if (validateVersion && !bitId.hasVersion()) {
+        throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
+      }
       if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
     };
     const _validateEnv = (env) => {
