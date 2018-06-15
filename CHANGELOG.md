@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix handle tsx files when detectiveOption is empty
+
 ## [0.10.17-dev.9] - 2018-06-05
 
 - support mixed mode of common-js and ES6 ("require" and "import" together)

@@ -112,6 +112,9 @@ function getDetectiveOption(file, existingDetectiveOption) {
   const detectiveOption = existingDetectiveOption || {};
   const extension = path.extname(file);
   if (extension === '.tsx') {
+    if (!detectiveOption.ts) {
+      detectiveOption.ts = {};
+    }
     detectiveOption.ts.ecmaFeatures = { jsx: true };
   }
   return detectiveOption;
