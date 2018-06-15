@@ -150,10 +150,22 @@ export default class Scope {
 
   /**
    * Get a relative (to scope) path to a specific component such as compiler / tester / extension
+   * Support getting the latest installed version
    * @param {BitId} id
    */
-  static getComponentRelativePath(id: BitId): string {
-    return pathLib.join(id.box, id.name, id.scope, id.version);
+  static getComponentRelativePath(id: BitId, scopePath?: string): string {
+    const realtivePath = pathLib.join(id.box, id.name, id.scope);
+    if (!id.getVersion().latest) {
+      return pathLib.join(realtivePath, id.version);
+    }
+    if (!scopePath) {
+      throw new Error(`could not find the latest version of ${id} without the scope path`);
+    }
+    const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), realtivePath);
+    if (!fs.existsSync(componentFullPath)) return '';
+    const versions = fs.readdirSync(componentFullPath);
+    const latestVersion = semver.maxSatisfying(versions, '*');
+    return pathLib.join(realtivePath, latestVersion);
   }
 
   getBitPathInComponentsDir(id: BitId): string {

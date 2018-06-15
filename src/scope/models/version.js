@@ -507,7 +507,7 @@ export default class Version extends BitObject {
    */
   validate(): void {
     const message = 'unable to save Version object';
-    const validateBitIdStr = (bitIdStr: string, field: string) => {
+    const validateBitIdStr = (bitIdStr: string, field: string, validateVersion: boolean = true) => {
       validateType(message, bitIdStr, field, 'string');
       let bitId;
       try {
@@ -515,13 +515,16 @@ export default class Version extends BitObject {
       } catch (err) {
         throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
       }
-      if (!bitId.hasVersion()) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
+      if (validateVersion && !bitId.hasVersion()) {
+        throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
+      }
       if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
     };
     const _validateEnv = (env) => {
       if (!env) return;
       if (typeof env === 'string') {
-        validateBitIdStr(env, 'environment-id');
+        // Do not validate version - for backward compatibility
+        validateBitIdStr(env, 'environment-id', false);
         return;
       }
       validateType(message, env, 'env', 'object');

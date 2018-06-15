@@ -102,9 +102,12 @@ export default class TesterExtension extends EnvExtension {
     componentBitJson: ?ComponentBitJson
   }): Promise<?TesterExtension> {
     Analytics.addBreadCrumb('tester-extension', 'loadFromCorrectSource');
-    if (componentBitJson && componentBitJson.hasTester()) {
-      // $FlowFixMe
-      return componentBitJson.loadTester(consumerPath, scopePath);
+    if (componentBitJson) {
+      if (componentBitJson.hasTester()) {
+        // $FlowFixMe
+        return componentBitJson.loadTester(consumerPath, scopePath);
+      }
+      return undefined;
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
       if (componentFromModel && componentFromModel.tester) {
