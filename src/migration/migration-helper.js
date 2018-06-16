@@ -4,24 +4,23 @@ import logger from '../logger/logger';
 
 export type MigrationResult = {
   run: boolean,
-  success: ?boolean
+  success?: ?boolean
 };
 
 export type MigrationDeclaration = {
   name: string,
-  migrate: Fucntion
+  migrate: Function
 };
 
 type AbstractVersionMigrations = {
-  version: string,
-  migrations: MigrationDeclaration[]
+  [version: string]: MigrationDeclaration[]
 };
 
 /**
  * A function which get a migration manifest and versions, and return a sorted array of the migrations to run
- * We are taking also the current version to prevent cases which a developer specify a migration to run for a future release, and we don't want it
- * to run now
- * 
+ * We are taking also the current version to prevent cases which a developer specify a migration to run for a
+ * future release, and we don't want it to run now
+ *
  * @export
  * @param {string} currentVersion - The current version of bit
  * @param {string} storeVersion  - The version of the store to check (for example scope version or .bit.map.json version)
@@ -49,9 +48,12 @@ export default function getMigrationVersions(
   const sortedMigrationToRun = sortedMigrationVersionsToRun.map(migrationVersion => ({
     [migrationVersion]: migratonManifest[migrationVersion]
   }));
-  logger.debug(`Found the following versions which need migration ${sortedMigrationVersionsToRun.join(', ')}`);
+  const infoMessage = sortedMigrationVersionsToRun.length
+    ? `Found the following versions that need migration ${sortedMigrationVersionsToRun.join(', ')}`
+    : 'none of the versions has migration to run';
+  logger.debug(infoMessage);
   if (verbose) {
-    console.log(`Found the following versions which need migration ${sortedMigrationVersionsToRun.join(', ')}`); // eslint-disable-line no-console
+    console.log(infoMessage); // eslint-disable-line no-console
   }
   return sortedMigrationToRun;
 }
