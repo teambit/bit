@@ -89,6 +89,28 @@ describe('removeDuplicateFiles', () => {
       expect(versionAfterMigration.files[0].relativePath).to.equal('bar/foo.js');
     });
   });
+  describe('two groups of duplicated files', () => {
+    let file1;
+    let file2;
+    let file3;
+    let file4;
+    let versionObject;
+    before(() => {
+      file1 = generateFileObject('bar/foo1.js');
+      file2 = generateFileObject('bar/foo1.js');
+      file3 = generateFileObject('bar/foo2.js');
+      file4 = generateFileObject('bar/foo2.js');
+      versionObject = getVersionObject();
+      versionObject.mainFile = 'bar/foo1.js';
+    });
+    it('should keep only one file from each group', () => {
+      versionObject.files = [file1, file3, file2, file4];
+      const versionAfterMigration = removeDuplicatesFiles.migrate(versionObject);
+      expect(versionAfterMigration.files).to.have.lengthOf(2);
+      expect(versionAfterMigration.files[0].relativePath).to.equal('bar/foo1.js');
+      expect(versionAfterMigration.files[1].relativePath).to.equal('bar/foo2.js');
+    });
+  });
   describe('two duplicated files with different hashes', () => {
     let file1;
     let file2;
