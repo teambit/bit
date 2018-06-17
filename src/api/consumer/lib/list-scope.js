@@ -3,7 +3,7 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import loader from '../../../cli/loader';
-import { BEFORE_REMOTE_LIST } from '../../../cli/loader/loader-messages';
+import { BEFORE_REMOTE_LIST, BEFORE_LOCAL_LIST } from '../../../cli/loader/loader-messages';
 import Remotes from '../../../remotes/remotes';
 import Remote from '../../../remotes/remote';
 import { COMPONENT_ORIGINS } from '../../../constants';
@@ -24,6 +24,7 @@ export default function list({
     return remote.list();
   };
   const scopeList = async (scope: Scope, consumer: Consumer) => {
+    loader.start(BEFORE_LOCAL_LIST);
     const components = cache ? await scope.list(showRemoteVersion) : await scope.listStage();
     if (consumer) {
       components.forEach((component) => {
