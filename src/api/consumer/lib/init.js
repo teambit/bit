@@ -7,9 +7,11 @@ export default (async function init(
   reset: boolean = false,
   resetHard: boolean = false
 ): Promise<Consumer> {
+  let overrideBitJson = false;
   if (reset || resetHard) {
     await Consumer.reset(absPath, resetHard, noGit);
+    overrideBitJson = true;
   }
   const consumer: Consumer = await Consumer.create(absPath, noGit);
-  return consumer.write();
+  return consumer.write({ overrideBitJson });
 });

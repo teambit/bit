@@ -204,7 +204,7 @@ describe('run bit init', function () {
         helper.expectToThrow(statusCmd, error);
       });
       it.only('should create a new bit.json file', () => {
-        helper.runCmd('bit init --reset-hard');
+        helper.runCmd('bit init --reset');
         const bitJson = helper.readBitJson();
         expect(bitJson).to.have.property('packageManager');
       });
