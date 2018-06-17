@@ -1132,7 +1132,7 @@ export default class Scope {
         return isolatedComponent;
       } catch (e) {
         if (e instanceof ComponentNotFound) {
-          e.dependentId = dependentId;
+          e.dependentId = dependentId.toString();
         }
         throw e;
       }
