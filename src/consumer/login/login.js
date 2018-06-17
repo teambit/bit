@@ -26,7 +26,7 @@ const REDIRECT = 302;
 
 export default function loginToBitSrc(
   port: string,
-  noLaunchBrowser?: boolean,
+  suppressBrowserLaunch?: boolean,
   npmrcPath: string,
   skipRegistryConfig: boolean
 ): Promise<{
@@ -101,7 +101,7 @@ export default function loginToBitSrc(
           process.platform
         }`
       );
-      if (!noLaunchBrowser) {
+      if (!suppressBrowserLaunch) {
         console.log(chalk.yellow(`Your browser has been opened to visit:\n${encoded}`)); // eslint-disable-line no-console
         opn(encoded);
       } else {
