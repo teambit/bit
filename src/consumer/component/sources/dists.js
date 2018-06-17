@@ -2,7 +2,7 @@
 import path from 'path';
 import Dist from '.';
 import Consumer from '../../consumer';
-import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS } from '../../../constants';
+import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
 import logger from '../../../logger/logger';
@@ -199,7 +199,9 @@ export default class Dists {
       }
       return path.join(distTarget, distEntryRelativeToModuleDir);
     });
-    const delimiter = process.platform === 'win32' ? ';' : ':';
-    return nodePaths.map(pathNormalizeToLinux).join(delimiter);
+    return nodePaths
+      .map(nodePath => consumer.toAbsolutePath(nodePath))
+      .map(pathNormalizeToLinux)
+      .join(NODE_PATH_SEPARATOR);
   }
 }

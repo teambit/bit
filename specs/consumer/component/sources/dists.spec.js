@@ -6,6 +6,7 @@ describe('Dists', () => {
     let consumer;
     before(() => {
       consumer = { bitJson: {} };
+      consumer.toAbsolutePath = src => src;
     });
     it('should return null when custom module resolution is not configured', () => {
       expect(Dists.getNodePathDir(consumer)).to.be.null;

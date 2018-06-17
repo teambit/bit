@@ -21,7 +21,8 @@ import {
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
   SCOPE_JSON,
-  COMPONENT_ORIGINS
+  COMPONENT_ORIGINS,
+  NODE_PATH_SEPARATOR
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
@@ -336,7 +337,13 @@ export default class Scope {
           !component.dists.isEmpty()
       );
     if (isNodePathNeeded) {
-      process.env.NODE_PATH = nodePathDirDist;
+      const getCurrentNodePathWithDirDist = () => {
+        if (!process.env.NODE_PATH) return nodePathDirDist;
+        const separator = process.env.NODE_PATH.endsWith(NODE_PATH_SEPARATOR) ? '' : NODE_PATH_SEPARATOR;
+        // $FlowFixMe
+        return process.env.NODE_PATH + separator + nodePathDirDist;
+      };
+      process.env.NODE_PATH = getCurrentNodePathWithDirDist();
       // $FlowFixMe
       require('module').Module._initPaths(); // eslint-disable-line
     }
