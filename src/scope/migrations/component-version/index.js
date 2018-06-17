@@ -6,6 +6,7 @@ import ensureMainFileDeclartaion from './ensure-main-file';
 import specsResultstoArrayDeclartaion from './specs-results-to-array';
 import updateBindingPrefixToNewDefault from './update-binding-prefix-to-new-default';
 import removeLatestFromCompiler from './remove-latest-from-compiler';
+import removeDuplicatesFiles from './remove-duplicates-files';
 
 export {
   addBindingPrefixDeclartaion,
@@ -15,5 +16,6 @@ export {
   ensureMainFileDeclartaion,
   changeImportSpecifiersToArray,
   updateBindingPrefixToNewDefault,
-  removeLatestFromCompiler
+  removeLatestFromCompiler,
+  removeDuplicatesFiles
 };

@@ -367,7 +367,7 @@ export default class Version extends BitObject {
 
     return new Version({
       mainFile,
-      files: files ? files.map(parseFile) : null,
+      files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
