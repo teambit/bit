@@ -877,7 +877,11 @@ export default class Component {
     }
     logger.debug('compiler found, start building');
     if (!this.compiler.loaded) {
-      await this.compiler.install(scope, { verbose }, { workspaceDir: consumerPath, componentDir });
+      await this.compiler.install(
+        scope,
+        { verbose },
+        { workspaceDir: consumerPath, componentDir, dependentId: this.id }
+      );
     }
 
     const builtFiles = await this.buildIfNeeded({

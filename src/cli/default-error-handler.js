@@ -121,7 +121,17 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/[namespace]/<name>'],
-  [ComponentNotFound, err => `error: component "${chalk.bold(err.id)}" was not found`],
+  [
+    ComponentNotFound,
+    (err) => {
+      const msg = err.dependentId
+        ? `error: the component dependency "${chalk.bold(err.id)}" required by "${chalk.bold(
+          err.dependentId
+        )}" was not found`
+        : `error: component "${chalk.bold(err.id)}" was not found`;
+      return msg;
+    }
+  ],
   [
     CorruptedComponent,
     err =>
