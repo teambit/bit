@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.12] - 2018-06-17
+
 - fix - handle bit diff for local components without specifying scope
 - fix - show component on bit list even when there is duplicate entries in bitmap file
 - fix - remove alias t from bit test command (conflicts with tag command)
