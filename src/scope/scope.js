@@ -198,8 +198,6 @@ export default class Scope {
     loader.start(BEFORE_MIGRATION);
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
-    // backup scope objects
-    this.objects.backup(scopeVersion);
     // Add the new / updated objects
     this.objects.addMany(resultObjects.newObjects);
     // Remove old objects
