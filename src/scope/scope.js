@@ -20,7 +20,8 @@ import {
   BITS_DIRNAME,
   BIT_VERSION,
   DEFAULT_BIT_VERSION,
-  SCOPE_JSON
+  SCOPE_JSON,
+  COMPONENT_ORIGINS
 } from '../constants';
 import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
@@ -320,6 +321,28 @@ export default class Scope {
   }
 
   /**
+   * when custom-module-resolution is used, the test process needs to set the custom module
+   * directory to the dist directory
+   */
+  injectNodePathIfNeeded(consumer: Consumer, components: Component[]) {
+    const nodePathDirDist = Dists.getNodePathDir(consumer);
+    // only author components need this injection. for imported the links are built on node_modules
+    const isNodePathNeeded =
+      nodePathDirDist &&
+      components.some(
+        component =>
+          (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
+          (component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) &&
+          !component.dists.isEmpty()
+      );
+    if (isNodePathNeeded) {
+      process.env.NODE_PATH = nodePathDirDist;
+      // $FlowFixMe
+      require('module').Module._initPaths(); // eslint-disable-line
+    }
+  }
+
+  /**
    * Test multiple components sequentially, not in parallel.
    *
    * See the reason not to run them in parallel at @buildMultiple()
@@ -338,6 +361,7 @@ export default class Scope {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     loader.start(BEFORE_RUNNING_SPECS);
+    this.injectNodePathIfNeeded(consumer, components);
     const test = async (component: Component) => {
       if (!component.tester) {
         return { componentId: component.id.toStringWithoutScope(), missingTester: true };
