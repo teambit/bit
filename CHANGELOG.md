@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix - remove alias t from bit test command (conflicts with tag command)
 - fix - operation aborted error when aborting username/pass authentication
 - fix handle tsx files when detectiveOption is empty
+- change - do not override existing bit.json on bit init
 - backward compatibility for components with environments with latest version
 - change no-launch-browser to suppress-browser-launch in bit login flag
 

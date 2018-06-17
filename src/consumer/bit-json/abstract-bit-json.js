@@ -238,10 +238,21 @@ export default class AbstractBitJson {
     );
   }
 
-  async write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
+  async write({
+    bitDir,
+    override = true,
+    throws = true
+  }: {
+    bitDir: string,
+    override?: boolean,
+    throws?: boolean
+  }): Promise<boolean> {
     const isExisting = await AbstractBitJson.hasExisting(bitDir);
     if (!override && isExisting) {
-      throw new BitJsonAlreadyExists();
+      if (throws) {
+        throw new BitJsonAlreadyExists();
+      }
+      return false;
     }
 
     return fs.writeFile(AbstractBitJson.composePath(bitDir), this.toJson());
