@@ -1126,16 +1126,16 @@ export default class Scope {
       await env.create();
       try {
         const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
+        if (!dontPrintEnvMsg) {
+          console.log(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`));
+        }
+        return isolatedComponent;
       } catch (e) {
         if (e instanceof ComponentNotFound) {
           e.dependentId = dependentId;
         }
         throw e;
       }
-      if (!dontPrintEnvMsg) {
-        console.log(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`));
-      }
-      return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
   }
