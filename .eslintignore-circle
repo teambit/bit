@@ -77,7 +77,6 @@ src/consumer/specs-results/specs-results.js
 src/driver/driver.js
 src/extensions/core-extensions/ext-docs-parser.js
 src/logger/logger.js
-src/migration/migration-helper.js
 src/scope/objects/ref.js
 src/scope/version-dependencies.js
 e2e/commands/show.e2e.js

@@ -1,5 +1,5 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
 import path from 'path';
 import BitObject from './object';
 import BitRawObject from './raw-object';
@@ -10,6 +10,8 @@ import { resolveGroupId, mkdirp, writeFile, removeFile, readFile, glob } from '.
 import { Scope } from '../../scope';
 import { Component, Symlink, ScopeMeta } from '../models';
 import logger from '../../logger/logger';
+
+const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
   objects: BitObject[] = [];
@@ -34,6 +36,11 @@ export default class Repository {
 
   getPath() {
     return path.join(this.scope.getPath(), OBJECTS_DIR);
+  }
+
+  getBackupPath(dirName?: string): string {
+    const backupPath = path.join(this.scope.getPath(), OBJECTS_BACKUP_DIR);
+    return dirName ? path.join(backupPath, dirName) : backupPath;
   }
 
   getLicense(): Promise<string> {
@@ -158,6 +165,14 @@ export default class Repository {
 
   removeFromCache(ref: Ref) {
     delete this._cache[ref.toString()];
+  }
+
+  backup(dirName?: string) {
+    const backupDir = this.getBackupPath(dirName);
+    const objectsDir = this.getPath();
+    logger.debug(`making a backup of all objects from ${objectsDir} to ${backupDir}`);
+    fs.emptyDirSync(backupDir);
+    fs.copySync(objectsDir, backupDir);
   }
 
   add(object: ?BitObject): Repository {
