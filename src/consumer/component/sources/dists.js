@@ -2,14 +2,15 @@
 import path from 'path';
 import Dist from '.';
 import Consumer from '../../consumer';
-import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS } from '../../../constants';
+import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import ComponentMap from '../../bit-map/component-map';
 import logger from '../../../logger/logger';
 import { writeLinksInDist } from '../../../links';
-import { searchFilesIgnoreExt } from '../../../utils';
+import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
 import { BitId } from '../../../bit-id';
 import Component from '../consumer-component';
+import { pathNormalizeToLinux } from '../../../utils/path';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -175,5 +176,32 @@ export default class Dists {
     if (!distMainFile) return componentMainFile;
     const distTarget = consumer.bitJson.distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, distMainFile);
+  }
+
+  /**
+   * the formula is distTarget + (customModuleDir - distEntry).
+   * e.g. distTarget = 'dist', customDir = 'src', distEntry = 'src'.
+   * node_path will be 'dist' + 'src' - 'src' = 'dist'.
+   * another example, distTarget = 'dist', customDir = 'src/custom', distEntry = 'src'. result: "dist/custom"
+   */
+  static getNodePathDir(consumer: Consumer): ?string {
+    const resolveModules = consumer.bitJson.resolveModules;
+    if (!resolveModules || !resolveModules.modulesDirectories || !resolveModules.modulesDirectories.length) return null;
+    const distTarget = consumer.bitJson.distTarget || DEFAULT_DIST_DIRNAME;
+    const distEntry = consumer.bitJson.distEntry;
+    const nodePaths: PathOsBased[] = resolveModules.modulesDirectories.map((moduleDir) => {
+      const isRelative = str => str.startsWith('./') || str.startsWith('../');
+      if (!distEntry) return path.join(distTarget, moduleDir);
+      const distEntryRelativeToModuleDir = pathRelativeLinux(distEntry, moduleDir);
+      if (isRelative(distEntryRelativeToModuleDir)) {
+        // moduleDir is outside the distEntry, ignore the distEntry
+        return path.join(distTarget, moduleDir);
+      }
+      return path.join(distTarget, distEntryRelativeToModuleDir);
+    });
+    return nodePaths
+      .map(nodePath => consumer.toAbsolutePath(nodePath))
+      .map(pathNormalizeToLinux)
+      .join(NODE_PATH_SEPARATOR);
   }
 }

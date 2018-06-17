@@ -166,7 +166,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const diffOutput = helper.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
-        helper.tagAllWithoutMessage('--force');
+        helper.tagAllWithoutMessage();
         originalScopeWithCustomResolveBeforeExport = helper.cloneLocalScope();
         helper.exportAllComponents();
         originalScopeWithCustomResolve = helper.cloneLocalScope();

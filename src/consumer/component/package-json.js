@@ -12,7 +12,7 @@ import {
   DEFAULT_SEPARATOR,
   ASTERISK,
   COMPONENTES_DEPENDECIES_REGEX,
-  NODE_PATH_SEPARATOR
+  NODE_PATH_COMPONENT_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
@@ -143,7 +143,7 @@ function getRegistryPrefix(): string {
 
 function convertIdToNpmName(id: BitId, withVersion = false): string {
   const registryPrefix = getRegistryPrefix();
-  const npmName = `${registryPrefix}/${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_SEPARATOR)}`;
+  const npmName = `${registryPrefix}/${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
   return withVersion ? `${npmName}@${id.version}` : npmName;
 }
 
