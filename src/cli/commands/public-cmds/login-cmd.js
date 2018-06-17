@@ -9,7 +9,7 @@ export default class Login extends Command {
   alias = '';
   opts = [
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
-    ['', 'no-launch-browser', 'do not open a browser for authentication'],
+    ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
     ['', 'npmrc-path <path>', 'path to npmrc file to configure bitsrc registry'],
     ['', 'skip-registry-config [boolean]', 'dont configure bitsrc registry']
   ];
@@ -18,12 +18,12 @@ export default class Login extends Command {
     [nothing]: [string[]],
     {
       port,
-      noLaunchBrowser = false,
+      suppressBrowserLaunch = false,
       npmrcPath,
       skipRegistryConfig = false
-    }: { port: string, noLaunchBrowser?: boolean, npmrcPath: string, skipRegistryConfig: boolean }
+    }: { port: string, suppressBrowserLaunch?: boolean, npmrcPath: string, skipRegistryConfig: boolean }
   ): Promise<any> {
-    return login(port, noLaunchBrowser, npmrcPath, skipRegistryConfig).then(
+    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig).then(
       ({ isAlreadyLoggedIn, username, npmrcPath, writeToNpmrcError }) => ({
         isAlreadyLoggedIn,
         username,

@@ -2,7 +2,8 @@
 import R from 'ramda';
 import { BitObject, BitRawObject, Ref } from '../objects';
 import { BIT_VERSION } from '../../constants';
-import getMigrationVersions, { MigrationDeclaration } from '../../migration/migration-helper';
+import getMigrationVersions from '../../migration/migration-helper';
+import type { MigrationDeclaration } from '../../migration/migration-helper';
 import logger from '../../logger/logger';
 
 export type ScopeMigrationResult = {
@@ -23,8 +24,7 @@ type VersionMigrationsDeclarations = {
 };
 
 type VersionMigrations = {
-  version: string,
-  migrations: VersionMigrationsDeclarations
+  [version: string]: VersionMigrationsDeclarations
 };
 
 let globalVerbose: boolean = false;
@@ -45,14 +45,14 @@ export default (async function migrate(
 ): Promise<ScopeMigrationResult> {
   globalVerbose = verbose;
   const migrations: VersionMigrations[] = getMigrationVersions(BIT_VERSION, scopeVersion, migratonManifest, verbose);
-  // We loop over the objects and not over the migration because we want to run the process even if there is no migrations at all
-  // The reason is that we might change the id calculation of an object without change the model itself.
-  // This will cause a change in the hash, so we need to delete the old object and persist the new one
-  // We also need to change all the refrences to this object (for example if we change the id of a version model)
-  R.forEach(_runAllMigrationsForObject(migrations), objects);
-
   const result = { newObjects: {}, refsToRemove: [] };
-
+  if (R.isEmpty(migrations)) {
+    const noMigrationMsg = 'there are no migrations to run, leaving the scope as is with no changes';
+    logger.debug(noMigrationMsg);
+    if (verbose) console.log(noMigrationMsg); // eslint-disable-line
+    return result;
+  }
+  R.forEach(_runAllMigrationsForObject(migrations), objects);
   R.forEach(_getRealObjectWithUpdatedRefs(result, refsIndex), objects);
   result.newObjects = R.values(result.newObjects);
   return result;
@@ -151,7 +151,7 @@ const _updateRefsForObjects = (index: { [string]: BitRawObject }, oldRef: string
 const _getRealObjectWithUpdatedRefs = (
   result: ScopeMigrationResultCache,
   index: { [string]: BitRawObject }
-): Funcion => (object: BitRawObject) => {
+): Function => (object: BitRawObject) => {
   // Make sure we got a rawObject (we might get a null object in case of corrupted object)
   if (!object) {
     return null;

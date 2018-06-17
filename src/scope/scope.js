@@ -48,7 +48,8 @@ import { index } from '../search/indexer';
 import loader from '../cli/loader';
 import { MigrationResult } from '../migration/migration-helper';
 import migratonManifest from './migrations/scope-migrator-manifest';
-import migrate, { ScopeMigrationResult } from './migrations/scope-migrator';
+import migrate from './migrations/scope-migrator';
+import type { ScopeMigrationResult } from './migrations/scope-migrator';
 import {
   BEFORE_PERSISTING_PUT_ON_SCOPE,
   BEFORE_IMPORT_PUT_ON_SCOPE,
@@ -179,15 +180,17 @@ export default class Scope {
    * @returns {Object} - wether the process run and wether it successeded
    * @memberof Consumer
    */
-  async migrate(verbose): MigrationResult {
+  async migrate(verbose: boolean): Promise<MigrationResult> {
     logger.debug('running migration process for scope');
     Analytics.addBreadCrumb('migrate', 'running migration process for scope');
     if (verbose) console.log('running migration process for scope'); // eslint-disable-line
     // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
     const scopeVersion = this.scopeJson.get('version') || '0.10.9';
     if (semver.gte(scopeVersion, BIT_VERSION)) {
-      logger.debug('scope version is up to date');
-      Analytics.addBreadCrumb('migrate', 'scope version is up to date');
+      const upToDateMsg = 'scope version is up to date';
+      if (verbose) console.log(upToDateMsg); // eslint-disable-line
+      logger.debug(upToDateMsg);
+      Analytics.addBreadCrumb('migrate', upToDateMsg);
       return {
         run: false
       };

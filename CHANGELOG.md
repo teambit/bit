@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix handle tsx files when detectiveOption is empty
 - backward compatibility for components with environments with latest version
 - fix unhandled rejection on bit test
+- change no-launch-browser to suppress-browser-launch in bit login flag
 
 ## [13.0.0-dev.11] - 2018-06-13
 
