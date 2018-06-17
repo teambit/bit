@@ -1074,10 +1074,12 @@ export default class Scope {
   // TODO: Change name since it also used to install extension
   async installEnvironment({
     ids,
+    dependentId,
     verbose,
     dontPrintEnvMsg
   }: {
     ids: [{ componentId: BitId, type?: string }],
+    dependentId: BitId,
     verbose?: boolean,
     dontPrintEnvMsg?: boolean
   }): Promise<ComponentWithDependencies[]> {
@@ -1122,11 +1124,18 @@ export default class Scope {
       // Destroying environment to make sure there is no left over
       env.destroyIfExist();
       await env.create();
-      const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
-      if (!dontPrintEnvMsg) {
-        console.log(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`));
+      try {
+        const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
+        if (!dontPrintEnvMsg) {
+          console.log(chalk.bold.green(`successfully installed the ${concreteId.toString()} ${id.type}`));
+        }
+        return isolatedComponent;
+      } catch (e) {
+        if (e instanceof ComponentNotFound) {
+          e.dependentId = dependentId;
+        }
+        throw e;
       }
-      return isolatedComponent;
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
   }
