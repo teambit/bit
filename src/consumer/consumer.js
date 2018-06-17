@@ -204,8 +204,11 @@ export default class Consumer {
     };
   }
 
-  async write(): Promise<Consumer> {
-    await Promise.all([this.bitJson.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
+  async write({ overrideBitJson = false }: { overrideBitJson: boolean }): Promise<Consumer> {
+    await Promise.all([
+      this.bitJson.write({ bitDir: this.projectPath, throws: false, override: overrideBitJson }),
+      this.scope.ensureDir()
+    ]);
     this.bitMap.markAsChanged();
     await this.bitMap.write();
     return this;
