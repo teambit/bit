@@ -127,6 +127,12 @@ export default class Dependencies {
     return importSourceMap;
   }
 
+  isCustomResolvedUsed(): boolean {
+    return this.dependencies.some((dependency: Dependency) => {
+      return dependency.relativePaths.some((relativePath: RelativePath) => relativePath.isCustomResolveUsed);
+    });
+  }
+
   validate(): void {
     let message = 'failed validating the dependencies.';
     validateType(message, this.dependencies, 'dependencies', 'array');

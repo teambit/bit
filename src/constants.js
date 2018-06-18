@@ -92,7 +92,7 @@ export const DEFAULT_LANGUAGE = 'javascript';
 
 export const DEFAULT_BINDINGS_PREFIX = '@bit';
 
-export const NODE_PATH_SEPARATOR = '.';
+export const NODE_PATH_COMPONENT_SEPARATOR = '.';
 
 export const DEFAULT_COMPONENTES_DIR_PATH = `${BITS_DIRNAME}/{namespace}/{name}`;
 
@@ -350,3 +350,5 @@ export const SKIP_UPDATE_FLAG = '--skip-update';
 export const LICENSE_FILENAME = 'LICENSE';
 
 export const ISOLATED_ENV_ROOT = 'environment';
+
+export const NODE_PATH_SEPARATOR = process.platform === 'win32' ? ';' : ':'; // see here https://nodejs.org/api/modules.html#modules_loading_from_the_global_folders

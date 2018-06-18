@@ -44,6 +44,7 @@ export default class AbstractError extends Error {
   }
 
   hashValue(value: any): string {
+    if (!value) return value;
     const type = typeof value;
     switch (type) {
       case 'object':
