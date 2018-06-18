@@ -48,8 +48,8 @@ const baseTemplate = (extensionsTemplate) => {
   )}       test any set of components with configured tester (component tester or as defined in bit.json)
 
   ${chalk.underline('general commands')}
-    ${chalk.cyan('login')}      log the CLI into Bit
-    ${chalk.cyan('logout')}     log the CLI out of Bit
+    ${chalk.cyan('login')}      log the CLI into bitsrc.io
+    ${chalk.cyan('logout')}     log the CLI out of bitsrc.io
     ${chalk.cyan('config')}     global config management
     ${chalk.cyan('cc')}         clears Bit's cache from current working machine
   ${extensionsTemplate}

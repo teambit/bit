@@ -263,7 +263,7 @@ describe('bit status command', function () {
       it('should indicate that running "bit import" should solve the issue', () => {
         output = helper.runCmd('bit status');
         expect(output).to.have.string(
-          'your workspace has outdated objects, please use "bit import" to pull the latest object from the remote scope'
+          'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope.\n'
         );
       });
     });

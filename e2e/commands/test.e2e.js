@@ -113,7 +113,9 @@ describe('bit test command', function () {
         }
       });
       it('should show a general message saying the specs does not pass', () => {
-        expect(output).to.have.string("component's tests has failed, please fix them before tagging\n");
+        expect(output).to.have.string(
+          'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
+        );
       });
     });
     describe('tagging the component without --force flag and with --verbose flag', () => {
