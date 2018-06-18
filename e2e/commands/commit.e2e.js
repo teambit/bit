@@ -295,7 +295,9 @@ describe('bit tag command', function () {
         }
       });
       it('should throw a general error saying the tests failed', () => {
-        expect(output).to.have.string("component's tests has failed, please fix them before tagging");
+        expect(output).to.have.string(
+          'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
+        );
       });
       it('should not display the tests results', () => {
         expect(output).to.not.have.string('failing test should fail');
@@ -322,7 +324,9 @@ describe('bit tag command', function () {
         expect(output).to.have.string('file: bar/foo.spec.js');
       });
       it('should also display a general error saying the tests failed', () => {
-        expect(output).to.have.string("component's tests has failed, please fix them before tagging");
+        expect(output).to.have.string(
+          'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
+        );
       });
     });
     describe('tagging with --force flag', () => {

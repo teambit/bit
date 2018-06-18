@@ -147,7 +147,9 @@ describe('auto tagging functionality', function () {
           }
         });
         it('should not auto-tag the dependents', () => {
-          expect(commitOutput).to.have.string("component's tests has failed, please fix them before tagging");
+          expect(commitOutput).to.have.string(
+            'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
+          );
         });
       });
       describe('tagging with --verbose flag', () => {
@@ -159,7 +161,9 @@ describe('auto tagging functionality', function () {
           }
         });
         it('should not auto-tag the dependents', () => {
-          expect(commitOutput).to.have.string("component's tests has failed, please fix them before tagging");
+          expect(commitOutput).to.have.string(
+            'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
+          );
         });
         it('should display the failing tests results', () => {
           expect(commitOutput).to.have.string('tests failed');
