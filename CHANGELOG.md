@@ -5,25 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [v13 - 18.6.2018](GILAD- link to release)
+## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
 
 ### Summary
 
-With over 35 new features, changes and bug fixes, Bit's v13 is focused on increased **stability** with over 20 bug fixes and **support for common workflows** including [webpack resolve](https://webpack.js.org/configuration/resolve/), [tsconfig resolving](https://www.typescriptlang.org/docs/handbook/module-resolution.html), Vue relative path( GILAD-link), [Babel module resolver](https://github.com/tleunen/babel-plugin-module-resolver) etc. Here are some of v13's highlights.
+With over 35 new features, changes and bug fixes, Bit's v13 is focused on increased **stability** with over 20 bug fixes and **support for common workflows** including [webpack resolve](https://webpack.js.org/configuration/resolve/), [tsconfig resolving](https://www.typescriptlang.org/docs/handbook/module-resolution.html), Vue resolve alias ([Vue Webpack template](https://github.com/vuejs-templates/webpack/blob/f21376d6c3165a4cf6e5ae33f71b16dd47d213e3/template/build/webpack.base.conf.js#L36)) , [Babel module resolver](https://github.com/tleunen/babel-plugin-module-resolver) etc. Here are some of v13's highlights.
 
-- add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, Vue alias etc. (GILAD- link to issues + PR)
+- add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, Vue alias etc. [PR-#980](https://github.com/teambit/bit/pull/980), [#852](https://github.com/teambit/bit/issues/852), [#865](https://github.com/teambit/bit/issues/865), [#869](https://github.com/teambit/bit/issues/869)
 - over 20 bug fixes including max call stack, import of binary files and more.
-- environments transformed and refactored to act as native Bit extensions (GILAD- LINK TO PR/ISSUES).
-- support "export X from Y" syntax of ES6 without importing X first (GILAD- LINK TO PR/ISSUES).
-- support mixed mode of common-js and ES6 (GILAD- LINK TO PR/ISSUES).
-- support Installing Bit using NPM using `sudo` (GILAD- LINK TO PR/ISSUES).
-- introducing new flags for `bit init` including `--reset` and `--reset-hard` (GILAD- LINK TO PR/ISSUES).
+- environments transformed and refactored to act as native Bit extensions. [PR-#931](https://github.com/teambit/bit/pull/931)
+- support "export X from Y" syntax of ES6 without importing X first. [PR-#981](https://github.com/teambit/bit/pull/981)
+- support mixed mode of common-js and ES6. [PR-#1036](https://github.com/teambit/bit/pull/1036)
+- support Installing Bit using NPM using `sudo`. [commit](https://github.com/teambit/bit/commit/b23a78d3fd8ba07507785d97a224775126c2b150).
+- introducing new flags for `bit init` including `--reset` and `--reset-hard`. [PR-#1012](https://github.com/teambit/bit/pull/1012)
 
 As a reminder, we're switching to major versions to indicate that we, like many others, have been using Bit in production for a long time. v13 follows the previous v0.12 and looking forward we'll continue to follow semver like we've done since 2016.  
-
-For any questions please see [this open communication thread](https://github.com/teambit/bit/issues/1059) for v13, or [ping us](https://gitter.im/bit-src/Bit) on Gitter.
-
-GILAD-TODO: link to all relevant PR's / Issues
 
 ### New
 
@@ -58,7 +54,7 @@ GILAD-TODO: link to all relevant PR's / Issues
 - support for running bit log on local components without specifying scope name
 - handle adding the same file with different letter cases (uppercase/lowercase)
 - improve environments error handling
-- `bit move` and `bit import --path` when running from an inner directory
+- support `bit move` and `bit import --path` when running from an inner directory
 - `bit init` now recreates the scope.json if it does not exist
 
 ## [0.12.13] - 2018-05-09
