@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.0-dev.13] - 2018-06-18
+
 - inject dist dir to node_path variable during test process in order for author to tag and test custom-resolved components
 
 ## [13.0.0-dev.12] - 2018-06-17
