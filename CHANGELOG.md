@@ -5,93 +5,54 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
 
-## [13.0.0-dev.13] - 2018-06-18
+### Summary
 
-- inject dist dir to node_path variable during test process in order for author to tag and test custom-resolved components
+With over 35 new features, changes and bug fixes, Bit's v13 is focused on increased **stability** with over 20 bug fixes and **support for common workflows** including [webpack resolve](https://webpack.js.org/configuration/resolve/), [tsconfig resolving](https://www.typescriptlang.org/docs/handbook/module-resolution.html), Vue resolve alias ([Vue Webpack template](https://github.com/vuejs-templates/webpack/blob/f21376d6c3165a4cf6e5ae33f71b16dd47d213e3/template/build/webpack.base.conf.js#L36)) , [Babel module resolver](https://github.com/tleunen/babel-plugin-module-resolver) etc. Here are some of v13's highlights.
 
-## [13.0.0-dev.12] - 2018-06-17
+- add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, Vue alias etc. [PR-#980](https://github.com/teambit/bit/pull/980), [#852](https://github.com/teambit/bit/issues/852), [#865](https://github.com/teambit/bit/issues/865), [#869](https://github.com/teambit/bit/issues/869)
+- over 20 bug fixes including max call stack, import of binary files and more.
+- environments transformed and refactored to act as native Bit extensions. [PR-#931](https://github.com/teambit/bit/pull/931)
+- support "export X from Y" syntax of ES6 without importing X first. [PR-#981](https://github.com/teambit/bit/pull/981)
+- support mixed mode of common-js and ES6. [PR-#1036](https://github.com/teambit/bit/pull/1036)
+- support Installing Bit using NPM using `sudo`. [commit](https://github.com/teambit/bit/commit/b23a78d3fd8ba07507785d97a224775126c2b150).
+- introducing new flags for `bit init` including `--reset` and `--reset-hard`. [PR-#1012](https://github.com/teambit/bit/pull/1012)
 
-- fix - handle bit diff for local components without specifying scope
-- fix - show component on bit list even when there is duplicate entries in bitmap file
-- fix - remove alias t from bit test command (conflicts with tag command)
-- fix - operation aborted error when aborting username/pass authentication
-- fix handle tsx files when detectiveOption is empty
-- change - do not override existing bit.json on bit init
-- backward compatibility for components with environments with latest version
-- fix unhandled rejection on bit test
-- show dependent component id when trying to install missing environment
-- change no-launch-browser to suppress-browser-launch in bit login flag
+As a reminder, we're switching to major versions to indicate that we, like many others, have been using Bit in production for a long time. v13 follows the previous v0.12 and looking forward we'll continue to follow semver like we've done since 2016.  
 
-## [13.0.0-dev.11] - 2018-06-13
-
-- fix 'component not found' error when importing a component with a specific version while having a local tag
-- prevent overriding local tags from remote components upon import
-- fix bit import -e flag
-- fix - init deletes resolve modules from bit.json
-- throw an error when auto tag components has a newer version
-- fix output when running bit diff after tagging component
-- fix - after auto-tagging a component with a pending update - it became modified
-- added missing programmatic flags for bit isolate cmd
-- fix - running bit log on local components with scope
-
-## [13.0.0-dev.10] - 2018-06-08
-
-- fix custom module resolutions to work with components installed by a package manager
-
-## [13.0.0-dev.9] - 2018-06-06
-
-- support mixed mode of common-js and ES6 ("require" and "import" together)
-- fix adding the same file with different letter cases (uppercase/lowercase)
-
-## [13.0.0-dev.8] - 2018-05-30
-
-- support bit-diff for envs files and configurations
-- fix import of binary files
-- recognize packages required from d.ts files
-- change default fork level to one
-- bit.json backward compatibility
-- envs error handling
-
-## [13.0.0-dev.7] - 2018-05-30
-
-- fix eol for windows for envs files
-- fix storing specs results on tag
-- store envs as strings in case there is no config / files
-- version validation during bit tag
-
-## [13.0.0-dev.6] - 2018-05-27
-
-- bump bit-js version
-
-## [13.0.0-dev.5] - 2018-05-27
-
-- introduce a new flag `bit init --reset-hard` to delete Bit files in order to start from a clean workspace
+### New
+- add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, etc.
+- support "export X from Y" syntax of ES6 without importing X first.
+- environments transformed and refactored to act as native Bit extensions
+- introduce a new flag `bit init --reset-hard` to delete Bit files in order to start with a clean workspace
 - introduce a new flag `bit init --reset` to recreate bit.json and .bitmap files in case they are corrupted
-- fix `bit move` and `bit import --path` when running from an inner directory
-- display a descriptive error-message when the added main-file is a directory
-- support custom module resolution
-- prevent deleting non-empty directories when running `bit import` unless `--override` is used
+- add fork level to the `bit test` command
+- inject dist dir to node_path variable during test process in order for the author to tag and test custom-resolved components
+- added missing programmatic flags for bit isolate cmd
+- support mixed mode of common-js and ES6 ("require" and "import" together)
+- recognize packages required from d.ts files
 
-## [13.0.0-dev.4] - 2018-05-16
+### Changes
+- remove alias t from bit test command (conflicts with tag command)
+- do not override existing bit.json on bit init
+- rename `no-launch-browser` to `suppress-browser-launch` in bit login flag
+- version validation during `bit tag`
 
-- bump bit-js version
-
-## [13.0.0-dev.3] - 2018-05-16
-
--  fix bit test with fork-level one
-
-## [13.0.0-dev.2] - 2018-05-15
-
-- envs fixes
-- support "export X from Y" syntax of ES6 without importing X first
-
-## [13.0.0-dev.1] - 2018-05-10
-
-- new environments architecture!
-- fix `bit init` to recreate scope.json if not exists
+### Bug fixes
+- fix import of binary files
 - fix error "Maximum call stack size exceeded" when tagging or building a large file
+- handle bit diff for local components without specifying a scope
+- backward compatibility for components with environments with latest version
+- show dependent component id when trying to install missing environment
+- prevent overriding local tags from remote components upon import
+- throw an error when auto tag components have a newer version
+- after auto-tagging a component with a pending update it no longer becomes `modified`
+- support for running bit log on local components without specifying scope name
+- handle adding the same file with different letter cases (uppercase/lowercase)
+- improve environments error handling
+- support `bit move` and `bit import --path` when running from an inner directory
+- `bit init` now recreates the scope.json if it does not exist
 
 ## [0.12.13] - 2018-05-09
 
@@ -840,5 +801,3 @@ fix a bug with import many ones function
 ## [0.1.0]
 
 initial version
-
-
