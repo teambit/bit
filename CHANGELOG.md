@@ -7,33 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [0.10.17-dev.10] - 2018-06-15
-
-- fix handle tsx files when detectiveOption is empty
-
-## [0.10.17-dev.9] - 2018-06-05
-
-- support mixed mode of common-js and ES6 ("require" and "import" together)
-
-## [0.10.17-dev.7] - 2018-05-30
-
-- bug fix - packages on d.ts files were not recognized
-
-## [0.10.17-dev.5] - 2018-05-27
-
-- lock stylable version since the new version no longer support node 6
-
-## [0.10.17-dev.4] - 2018-05-17
+## [1.0.0] - 2018-06-18
 
 - support custom module resolution
-
-## [0.10.17-dev.2] - 2018-05-15
-
-- fix issue with load package deps when main file not in the root of the package
-
-## [0.10.17-dev.1] - 2018-05-14
-
+- support mixed mode of common-js and ES6 ("require" and "import" together)
 - support "export X from Y" syntax of ES6 without importing X first
+- fix handle tsx files when detectiveOption is empty
+- bug fix - packages on d.ts files were not recognized
+- lock stylable version since the new version no longer support node 6
+- fix issue with load package dependencies when main file not in the root of the package
 
 ## [0.10.16] - 2018-05-09
 
