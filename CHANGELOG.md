@@ -5,7 +5,61 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [v13 - 18.6.2018](GILAD- link to release)
+
+### Summary
+
+With over 35 new features, changes and bug fixes, Bit's v13 is focused on increased **stability** with over 20 bug fixes and **support for common workflows** including [webpack resolve](https://webpack.js.org/configuration/resolve/), [tsconfig resolving](https://www.typescriptlang.org/docs/handbook/module-resolution.html), Vue relative path( GILAD-link), [Babel module resolver](https://github.com/tleunen/babel-plugin-module-resolver) etc. Here are some of v13's highlights.
+
+- add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, Vue alias etc. (GILAD- link to issues + PR)
+- over 20 bug fixes including max call stack, import of binary files and more.
+- environments transformed and refactored to act as native Bit extensions (GILAD- LINK TO PR/ISSUES).
+- support "export X from Y" syntax of ES6 without importing X first (GILAD- LINK TO PR/ISSUES).
+- support mixed mode of common-js and ES6 (GILAD- LINK TO PR/ISSUES).
+- support Installing Bit using NPM using `sudo` (GILAD- LINK TO PR/ISSUES).
+- introducing new flags for `bit init` including `--reset` and `--reset-hard` (GILAD- LINK TO PR/ISSUES).
+
+As a reminder, we're switching to major versions to indicate that we, like many others, have been using Bit in production for a long time. v13 follows the previous v0.12 and looking forward we'll continue to follow semver like we've done since 2016.  
+
+For any questions please see [this open communication thread](https://github.com/teambit/bit/issues/1059) for v13, or [ping us](https://gitter.im/bit-src/Bit) on Gitter.
+
+GILAD-TODO: link to all relevant PR's / Issues
+
+### New
+
+- add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, etc.
+- support "export X from Y" syntax of ES6 without importing X first.
+- environments transformed and refactored to act as native Bit extensions
+- introduce a new flag `bit init --reset-hard` to delete Bit files in order to start with a clean workspace
+- introduce a new flag `bit init --reset` to recreate bit.json and .bitmap files in case they are corrupted
+- add fork level to the `bit test` command
+- inject dist dir to node_path variable during test process in order for the author to tag and test custom-resolved components
+- added missing programmatic flags for bit isolate cmd
+- support mixed mode of common-js and ES6 ("require" and "import" together)
+- recognize packages required from d.ts files
+
+### Changes
+
+- remove alias t from bit test command (conflicts with tag command)
+- do not override existing bit.json on bit init
+- rename `no-launch-browser` to `suppress-browser-launch` in bit login flag
+- version validation during `bit tag`
+
+### Bug fixes
+
+- fix import of binary files
+- fix error "Maximum call stack size exceeded" when tagging or building a large file
+- handle bit diff for local components without specifying a scope
+- backward compatibility for components with environments with latest version
+- show dependent component id when trying to install missing environment
+- prevent overriding local tags from remote components upon import
+- throw an error when auto tag components have a newer version
+- after auto-tagging a component with a pending update it no longer becomes `modified`
+- support for running bit log on local components without specifying scope name
+- handle adding the same file with different letter cases (uppercase/lowercase)
+- improve environments error handling
+- `bit move` and `bit import --path` when running from an inner directory
+- `bit init` now recreates the scope.json if it does not exist
 
 ## [13.0.0-dev.13] - 2018-06-18
 
