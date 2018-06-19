@@ -21,9 +21,9 @@ However, the overhead around it can be massive: refactoring code, splitting repo
 
 Bit works with **Git and NPM** to create a faster and more collaborative workflow for code sharing.
 
-With Bit, any component or modules from any repository can be instantly shared and made available to use and even develop from any other project. 0 refactoring, 0 configurations.
+With Bit, components and modules from any repository can be instantly shared and made available to use and even develop from other projects. 0 refactoring, 0 configurations.
 
-Teams can collaborate to share their components, develop them from different projects, suggest updates, merge changes and stay in sync.
+Teams can collaborate to share their code, develop it from different projects, suggest updates, merge changes and stay in sync.
 Popular use cases are UI components (React, Vue etc), Node.js modules, plain Javascript and more. Feel free to jump in and give it a try.
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team. Bit is adopted by more organizations and communities every day.*
@@ -50,6 +50,7 @@ To share components you don’t need to refactor or configure anything. Instead,
 
 This environment enables you to to use and develop components from other projects.
 For example, components written in typescript can be used and developed in a project written in flow-typed. It also lets Bit test and build your components in isolation, so you can know the exact state of every component.
+
 
 ### Development from different repositories
 
