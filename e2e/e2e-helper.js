@@ -750,6 +750,10 @@ export default class Helper {
     return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`, cwd);
   }
 
+  checkout(values: string) {
+    return this.runCmd(`bit checkout ${values}`);
+  }
+
   mergeVersion(version: string, ids: string, flags?: string) {
     return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
   }

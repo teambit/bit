@@ -399,7 +399,7 @@ describe('bit checkout command', function () {
         expect(fileContent).to.have.string('<<<<<<< 0.0.1');
         expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
       });
-      it('should update bitmap with the used version', () => {
+      it('should update bitmap with the specified version', () => {
         const bitMap = helper.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
@@ -628,6 +628,69 @@ describe('bit checkout command', function () {
       const diffOutput = helper.runWithTryCatch('bit diff bar/foo');
       expect(diffOutput).to.have.string('no diff for');
       expect(diffOutput).to.not.have.string('foo.js');
+    });
+  });
+  describe('multiple components with different versions', () => {
+    let localScope;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+
+      helper.createFile('bar', 'foo2.js');
+      helper.addComponent('bar/foo2.js');
+
+      helper.commitAllComponents('v1', '-s 0.0.1');
+      helper.commitAllComponents('v2', '-s 0.0.2');
+      helper.commitComponent('bar/foo2', 'v3', '0.0.3 -f');
+      localScope = helper.cloneLocalScope();
+    });
+    describe('checkout all to a specific version', () => {
+      let output;
+      before(() => {
+        output = helper.checkout('0.0.1 --all');
+      });
+      it('should show a successful message', () => {
+        expect(output).to.have.string(successOutput);
+      });
+      it('should show both components in the output', () => {
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('bar/foo2');
+      });
+      it('should show the version in the output', () => {
+        expect(output).to.have.string('0.0.1');
+      });
+      it('should update bitmap with the specified version for all components', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.have.property('bar/foo2@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+        expect(bitMap).to.not.have.property('bar/foo2@0.0.3');
+      });
+      describe('checkout all to their latest version', () => {
+        before(() => {
+          output = helper.checkout('latest --all');
+        });
+        it('should show a successful message', () => {
+          expect(output).to.have.string(successOutput);
+        });
+        it('should show both components in the output with the corresponding versions', () => {
+          expect(output).to.have.string('bar/foo@0.0.2');
+          expect(output).to.have.string('bar/foo2@0.0.3');
+        });
+        it('should update bitmap with each component to its latest', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('bar/foo@0.0.2');
+          expect(bitMap).to.have.property('bar/foo2@0.0.3');
+          expect(bitMap).to.not.have.property('bar/foo@0.0.1');
+          expect(bitMap).to.not.have.property('bar/foo2@0.0.1');
+        });
+        it('should show a failure message when trying to checkout again to the latest versions', () => {
+          output = helper.checkout('latest --all');
+          expect(output).to.have.string('component bar/foo2 is already at the latest version, which is 0.0.3');
+          expect(output).to.have.string('component bar/foo is already at the latest version, which is 0.0.2');
+        });
+      });
     });
   });
 });

@@ -224,7 +224,7 @@ export default class ComponentsList {
   }
 
   async idsFromBitMap(withScopeName: boolean = true, origin?: string): Promise<string[]> {
-    const fromBitMap = await this.getFromBitMap(origin);
+    const fromBitMap = this.getFromBitMap(origin);
     const ids = Object.keys(fromBitMap);
     if (withScopeName) return ids;
     return ids.map(id => BitId.parse(id).toStringWithoutScopeAndVersion());
@@ -261,7 +261,7 @@ export default class ComponentsList {
     return this._deletedComponents;
   }
 
-  async getFromBitMap(origin?: string): Object {
+  getFromBitMap(origin?: string): Object {
     const cacheKeyName = origin || 'all';
     if (!this._fromBitMap[cacheKeyName]) {
       this._fromBitMap[cacheKeyName] = this.bitMap.getAllComponents(origin);

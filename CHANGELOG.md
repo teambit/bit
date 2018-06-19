@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [unreleased]
+
+- add `--reset` flag to `bit checkout` command for removing local modifications
+- add `--all` flag to `bit checkout` command for executing the checkout on all components
+
 ## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
 
 ### Summary
@@ -19,7 +24,7 @@ With over 35 new features, changes and bug fixes, Bit's v13 is focused on increa
 - support Installing Bit using NPM using `sudo`. [commit](https://github.com/teambit/bit/commit/b23a78d3fd8ba07507785d97a224775126c2b150).
 - introducing new flags for `bit init` including `--reset` and `--reset-hard`. [PR-#1012](https://github.com/teambit/bit/pull/1012)
 
-As a reminder, we're switching to major versions to indicate that we, like many others, have been using Bit in production for a long time. v13 follows the previous v0.12 and looking forward we'll continue to follow semver like we've done since 2016.  
+As a reminder, we're switching to major versions to indicate that we, like many others, have been using Bit in production for a long time. v13 follows the previous v0.12 and looking forward we'll continue to follow semver like we've done since 2016.
 
 ### New
 - add ability to configure custom module resolution in Bit (paths and aliases), to support absolute import statements for projects that use similar features using Webpack, Typescript, Babel, etc.
