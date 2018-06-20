@@ -6,11 +6,15 @@ import type { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
 import { BitId } from '../../../bit-id';
 
-export const applyVersionReport = (components: ApplyVersionResult[], addName: boolean = true): string => {
+export const applyVersionReport = (
+  components: ApplyVersionResult[],
+  addName: boolean = true,
+  showVersion: boolean = false
+): string => {
   const tab = addName ? '\t' : '';
   return components
     .map((component: ApplyVersionResult) => {
-      const name = addName ? component.id.toStringWithoutVersion() : '';
+      const name = showVersion ? component.id.toString() : component.id.toStringWithoutVersion();
       const files = Object.keys(component.filesStatus)
         .map((file) => {
           const note =
@@ -20,7 +24,7 @@ export const applyVersionReport = (components: ApplyVersionResult[], addName: bo
           return `${tab}${component.filesStatus[file]} ${chalk.bold(file)} ${note}`;
         })
         .join('\n');
-      return `${name}\n${chalk.cyan(files)}`;
+      return `${addName ? name : ''}\n${chalk.cyan(files)}`;
     })
     .join('\n\n');
 };
@@ -54,7 +58,9 @@ export default class Merge extends Command {
   }
 
   report({ components, version }: ApplyVersionResults): string {
+    // $FlowFixMe version is set in case of merge command
     const title = `successfully merged components from version ${chalk.bold(version)}\n`;
+    // $FlowFixMe components is set in case of merge command
     const componentsStr = applyVersionReport(components);
     return chalk.underline(title) + chalk.green(componentsStr);
   }

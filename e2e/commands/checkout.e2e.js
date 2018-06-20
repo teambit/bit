@@ -399,7 +399,7 @@ describe('bit checkout command', function () {
         expect(fileContent).to.have.string('<<<<<<< 0.0.1');
         expect(fileContent).to.have.string('>>>>>>> 0.0.2 modified');
       });
-      it('should update bitmap with the used version', () => {
+      it('should update bitmap with the specified version', () => {
         const bitMap = helper.readBitMap();
         expect(bitMap).to.have.property('bar/foo@0.0.1');
         expect(bitMap).to.not.have.property('bar/foo');
@@ -628,6 +628,182 @@ describe('bit checkout command', function () {
       const diffOutput = helper.runWithTryCatch('bit diff bar/foo');
       expect(diffOutput).to.have.string('no diff for');
       expect(diffOutput).to.not.have.string('foo.js');
+    });
+  });
+  describe('multiple components with different versions', () => {
+    let localScope;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+
+      helper.createFile('bar', 'foo2.js');
+      helper.addComponent('bar/foo2.js');
+
+      helper.commitAllComponents('v1', '-s 0.0.1');
+      helper.commitAllComponents('v2', '-s 0.0.2');
+      helper.commitComponent('bar/foo2', 'v3', '0.0.3 -f');
+      localScope = helper.cloneLocalScope();
+    });
+    describe('checkout all to a specific version', () => {
+      let output;
+      before(() => {
+        output = helper.checkout('0.0.1 --all');
+      });
+      it('should show a successful message', () => {
+        expect(output).to.have.string(successOutput);
+      });
+      it('should show both components in the output', () => {
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('bar/foo2');
+      });
+      it('should show the version in the output', () => {
+        expect(output).to.have.string('0.0.1');
+      });
+      it('should update bitmap with the specified version for all components', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap).to.have.property('bar/foo@0.0.1');
+        expect(bitMap).to.have.property('bar/foo2@0.0.1');
+        expect(bitMap).to.not.have.property('bar/foo@0.0.2');
+        expect(bitMap).to.not.have.property('bar/foo2@0.0.3');
+      });
+      describe('checkout all to their latest version', () => {
+        before(() => {
+          output = helper.checkout('latest --all');
+        });
+        it('should show a successful message', () => {
+          expect(output).to.have.string(successOutput);
+        });
+        it('should show both components in the output with the corresponding versions', () => {
+          expect(output).to.have.string('bar/foo@0.0.2');
+          expect(output).to.have.string('bar/foo2@0.0.3');
+        });
+        it('should update bitmap with each component to its latest', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('bar/foo@0.0.2');
+          expect(bitMap).to.have.property('bar/foo2@0.0.3');
+          expect(bitMap).to.not.have.property('bar/foo@0.0.1');
+          expect(bitMap).to.not.have.property('bar/foo2@0.0.1');
+        });
+        it('should show a failure message when trying to checkout again to the latest versions', () => {
+          output = helper.checkout('latest --all');
+          expect(output).to.have.string('component bar/foo2 is already at the latest version, which is 0.0.3');
+          expect(output).to.have.string('component bar/foo is already at the latest version, which is 0.0.2');
+        });
+      });
+    });
+    describe('reset local changes from all modified components', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('bar', 'foo.js', 'modified');
+        helper.createFile('bar', 'foo2.js', 'modified');
+        // intermediate step, make sure it's shows as modified
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified');
+        output = helper.checkout('--all --reset');
+      });
+      it('should show a successful message with the corresponding versions', () => {
+        expect(output).to.have.string('successfully reset');
+        expect(output).to.have.string('bar/foo@0.0.2');
+        expect(output).to.have.string('bar/foo2@0.0.3');
+      });
+      it('should remove local changes from all components', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.not.have.string('modified');
+      });
+    });
+    describe('reset local changes from one modified component', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('bar', 'foo.js', 'modified');
+        helper.createFile('bar', 'foo2.js', 'modified');
+        // intermediate step, make sure it's shows as modified
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified');
+        output = helper.checkout('bar/foo --reset');
+      });
+      it('should show a successful message with the corresponding versions', () => {
+        expect(output).to.have.string('successfully reset');
+        expect(output).to.have.string('bar/foo@0.0.2');
+        expect(output).to.not.have.string('bar/foo2');
+      });
+      it('should remove local changes from the specified component', () => {
+        const diffOutput = helper.runCmd('bit diff bar/foo');
+        expect(diffOutput).to.have.string('no diff');
+      });
+      it('should not remove local changes from the other components', () => {
+        const diffOutput = helper.runCmd('bit diff bar/foo2');
+        expect(diffOutput).to.have.string('showing diff');
+      });
+    });
+    describe('reset local changes from all components when only one is modified', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(localScope);
+        helper.createFile('bar', 'foo.js', 'modified');
+        // intermediate step, make sure it's shows as modified
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.string('modified');
+        output = helper.checkout('--all --reset');
+      });
+      it('should show a successful message for the modified component', () => {
+        expect(output).to.have.string('successfully reset');
+        expect(output).to.have.string('bar/foo@0.0.2');
+      });
+      it('should show a failure message for the unmodified component', () => {
+        expect(output).to.have.string('component bar/foo2 is not modified');
+      });
+      it('should remove local changes from the modified component', () => {
+        const diffOutput = helper.runCmd('bit diff bar/foo');
+        expect(diffOutput).to.have.string('no diff');
+      });
+    });
+  });
+  describe('using a combination of values and flags that are not making sense', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+    });
+    describe('using --reset flag and entering a version', () => {
+      let output;
+      before(() => {
+        output = helper.runWithTryCatch('bit checkout 0.0.1 --reset');
+      });
+      it('should show a descriptive error', () => {
+        expect(output).to.have.string(
+          'the first argument "0.0.1" seems to be a version. however, --reset flag doesn\'t support a version'
+        );
+      });
+    });
+    describe('bit checkout with no values and no flags', () => {
+      let output;
+      before(() => {
+        output = helper.runWithTryCatch('bit checkout');
+      });
+      it('should show a descriptive error', () => {
+        expect(output).to.have.string('please enter [values...] or use --reset --all flags');
+      });
+    });
+    describe('bit checkout with id without version', () => {
+      let output;
+      before(() => {
+        output = helper.runWithTryCatch('bit checkout bar/foo');
+      });
+      it('should show a descriptive error', () => {
+        expect(output).to.have.string('the specified version "bar/foo" is not a valid version');
+      });
+    });
+    describe('bit checkout with id and --all flag', () => {
+      let output;
+      before(() => {
+        output = helper.runWithTryCatch('bit checkout 0.0.1 bar/foo --all');
+      });
+      it('should show a descriptive error', () => {
+        expect(output).to.have.string('please specify either [ids...] or --all, not both');
+      });
     });
   });
 });

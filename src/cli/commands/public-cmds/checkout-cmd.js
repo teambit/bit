@@ -1,16 +1,19 @@
 /** @flow */
 import chalk from 'chalk';
 import Command from '../../command';
-import { BitId } from '../../../bit-id';
 import { checkout } from '../../../api/consumer';
 import { applyVersionReport } from './merge-cmd';
 import { getMergeStrategy } from '../../../consumer/versions-ops/merge-version';
 import type { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
+import { LATEST } from '../../../constants';
 import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';
 
 export default class Checkout extends Command {
-  name = 'checkout <version> <ids...>';
-  description = 'switch between component versions';
+  name = 'checkout [values...]';
+  description = `switch between component versions
+  bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
+  bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
+  bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)`;
   alias = 'U';
   opts = [
     [
@@ -21,6 +24,8 @@ export default class Checkout extends Command {
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],
     ['t', 'theirs', 'in case of a conflict, override the current modification with the specified version'],
     ['m', 'manual', 'in case of a conflict, leave the files with a conflict state to resolve them manually later'],
+    ['r', 'reset', 'remove local changes'],
+    ['a', 'all', 'all components'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'skip-npm-install', 'do not install packages of the imported components'],
     ['', 'ignore-dist', 'do not write dist files (when exist)']
@@ -28,12 +33,14 @@ export default class Checkout extends Command {
   loader = true;
 
   action(
-    [version, ids]: [string, string[]],
+    [values]: [string[]],
     {
       interactiveMerge = false,
       ours = false,
       theirs = false,
       manual = false,
+      reset = false,
+      all = false,
       verbose = false,
       skipNpmInstall = false,
       ignoreDist = false
@@ -42,33 +49,65 @@ export default class Checkout extends Command {
       ours?: boolean,
       theirs?: boolean,
       manual?: boolean,
+      reset?: boolean,
+      all?: boolean,
       verbose?: boolean,
       skipNpmInstall?: boolean,
       ignoreDist?: boolean
     }
   ): Promise<ApplyVersionResults> {
-    const bitIds = ids.map(id => BitId.parse(id));
     const checkoutProps: CheckoutProps = {
-      version,
-      ids: bitIds,
       promptMergeOptions: interactiveMerge,
       mergeStrategy: getMergeStrategy(ours, theirs, manual),
+      reset,
+      all,
       verbose,
       skipNpmInstall,
       ignoreDist
     };
-    return checkout(checkoutProps);
+    return checkout(values, checkoutProps);
   }
 
-  report({ components, version }: ApplyVersionResults): string {
-    if (components.length === 1) {
-      const componentName = components[0].id.toStringWithoutVersion();
-      const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(version)}\n`;
-      return `${title} ${applyVersionReport(components, false)}`;
-    }
-
-    const title = `successfully switched the selected component(s) to version ${chalk.bold(version)}\n\n`;
-    const componentsStr = applyVersionReport(components);
-    return `${title} ${componentsStr}`;
+  report({ components, version, failedComponents }: ApplyVersionResults): string {
+    const isLatest = Boolean(version && version === LATEST);
+    const isReset = !version;
+    const getFailureOutput = () => {
+      if (!failedComponents || !failedComponents.length) return '';
+      const title = 'the checkout has been canceled on the following component(s)';
+      const body = failedComponents
+        .map(
+          failedComponent =>
+            `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
+        )
+        .join('\n');
+      return `${title}\n${body}\n\n`;
+    };
+    const getSuccessfulOutput = () => {
+      if (!components || !components.length) return '';
+      if (components.length === 1) {
+        const component = components[0];
+        const componentName = isReset ? component.id.toString() : component.id.toStringWithoutVersion();
+        if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
+        const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
+          // $FlowFixMe version is defined when !isReset
+          isLatest ? component.id.version : version
+        )}\n`;
+        return `${title} ${applyVersionReport(components, false)}`;
+      }
+      if (isReset) {
+        const title = 'successfully reset the following components\n\n';
+        const body = components.map(component => chalk.bold(component.id.toString())).join('\n');
+        return title + body;
+      }
+      // $FlowFixMe version is defined when !isReset
+      const versionOutput = isLatest ? 'their latest version' : `version ${chalk.bold(version)}`;
+      const title = `successfully switched the following components to ${versionOutput}\n\n`;
+      const showVersion = isLatest || isReset;
+      const componentsStr = applyVersionReport(components, true, showVersion);
+      return title + componentsStr;
+    };
+    const failedOutput = getFailureOutput();
+    const successOutput = getSuccessfulOutput();
+    return failedOutput + successOutput;
   }
 }

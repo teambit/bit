@@ -1,5 +1,4 @@
 // @flow
-import semver from 'semver';
 import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
 import ComponentsList from '../../../consumer/component/components-list';
@@ -21,7 +20,6 @@ async function parseValues(
   consumer: Consumer,
   values: string[]
 ): Promise<{ bitIds: BitId[], version?: string, toVersion?: string }> {
-  const isVersion = str => semver.valid(str);
   // option #1: bit diff
   // no arguments
   if (!values.length) {
@@ -32,8 +30,8 @@ async function parseValues(
   const firstValue = values[0];
   const lastValue = values[values.length - 1];
   const oneBeforeLastValue = values[values.length - 2];
-  const isLastItemVersion = isVersion(lastValue);
-  const isOneBeforeLastItemVersion = isVersion(oneBeforeLastValue);
+  const isLastItemVersion = BitId.isValidVersion(lastValue);
+  const isOneBeforeLastItemVersion = BitId.isValidVersion(oneBeforeLastValue);
   // option #2: bit diff [ids...]
   // all arguments are ids
   if (!isLastItemVersion) {
