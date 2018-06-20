@@ -1,5 +1,4 @@
 // @flow
-import * as RA from 'ramda-adjunct';
 import R from 'ramda';
 import type { CheckoutProps } from '../../../consumer/versions-ops/checkout-version';
 import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-version';

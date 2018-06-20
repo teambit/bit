@@ -9,4 +9,4 @@ export {
   MergeOptions,
   filesStatusWithoutSharedDir
 } from './merge-version';
-export type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
+export type { MergeStrategy, ApplyVersionResults, ApplyVersionResult, FailedComponents } from './merge-version';

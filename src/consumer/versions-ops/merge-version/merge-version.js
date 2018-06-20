@@ -29,7 +29,7 @@ export const FileStatus = {
 };
 export type FilesStatus = { [fileName: PathLinux]: $Values<typeof FileStatus> };
 export type ApplyVersionResult = { id: BitId, filesStatus: FilesStatus };
-type FailedComponents = { id: BitId, failureMessage: string };
+export type FailedComponents = { id: BitId, failureMessage: string };
 export type ApplyVersionResults = {
   components?: ApplyVersionResult[],
   version?: string,

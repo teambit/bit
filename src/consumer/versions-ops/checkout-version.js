@@ -16,7 +16,7 @@ import {
   threeWayMerge,
   filesStatusWithoutSharedDir
 } from './merge-version';
-import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
+import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult, FailedComponents } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 import writeComponents from '../component-ops/write-components';
@@ -62,8 +62,8 @@ export default (async function checkoutVersion(
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
-  const failedComponents = allComponents
-    .filter(componentStatus => componentStatus.failureMessage)
+  const failedComponents: FailedComponents[] = allComponents
+    .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
   const componentsResultsP = allComponents
     .filter(componentStatus => !componentStatus.failureMessage)
@@ -82,8 +82,8 @@ async function getComponentStatus(
 ): Promise<ComponentStatus> {
   const { version, latestVersion, reset } = checkoutProps;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
-  const componentStatus = { id: component.id };
-  const returnFailure = (msg) => {
+  const componentStatus: ComponentStatus = { id: component.id };
+  const returnFailure = (msg: string) => {
     componentStatus.failureMessage = msg;
     return componentStatus;
   };

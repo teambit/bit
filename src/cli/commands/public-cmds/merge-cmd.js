@@ -58,7 +58,9 @@ export default class Merge extends Command {
   }
 
   report({ components, version }: ApplyVersionResults): string {
+    // $FlowFixMe version is set in case of merge command
     const title = `successfully merged components from version ${chalk.bold(version)}\n`;
+    // $FlowFixMe components is set in case of merge command
     const componentsStr = applyVersionReport(components);
     return chalk.underline(title) + chalk.green(componentsStr);
   }
