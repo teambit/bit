@@ -19,7 +19,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     else loader.start(BEFORE_EXPORT);
     return exportPendingComponents;
   }
-  const componentsFromBitMap = await componentsList.getFromBitMap();
+  const componentsFromBitMap = componentsList.getFromBitMap();
   const idsFromBitMap = Object.keys(componentsFromBitMap);
   // the ids received from the CLI may be missing the scope-name, try to get the complete ids from bit.map
   const idsToExport = ids.map(async (id) => {

@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
 import Version from '../version';
@@ -185,5 +186,9 @@ export default class BitId {
     };
 
     return new BitId({ name: getValidIdChunk(name), box: getValidIdChunk(box) });
+  }
+
+  static isValidVersion(version: string): boolean {
+    return semver.valid(version);
   }
 }

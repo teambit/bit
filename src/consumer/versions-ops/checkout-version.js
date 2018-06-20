@@ -16,25 +16,29 @@ import {
   threeWayMerge,
   filesStatusWithoutSharedDir
 } from './merge-version';
-import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult } from './merge-version';
+import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult, FailedComponents } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 import writeComponents from '../component-ops/write-components';
 
 export type CheckoutProps = {
-  version: string,
-  ids: BitId[],
+  version?: string, // if reset is true, the version is undefined
+  ids?: BitId[],
+  latestVersion?: boolean,
   promptMergeOptions: boolean,
   mergeStrategy: ?MergeStrategy,
   verbose: boolean,
   skipNpmInstall: boolean,
+  reset: boolean, // remove local changes. if set, the version is undefined.
+  all: boolean, // checkout all ids
   ignoreDist: boolean
 };
 type ComponentStatus = {
-  componentFromFS: Component,
-  componentFromModel: Component,
+  componentFromFS?: Component,
+  componentFromModel?: Component,
   id: BitId,
-  mergeResults: ?MergeResultsThreeWay
+  failureMessage?: string,
+  mergeResults?: ?MergeResultsThreeWay
 };
 
 export default (async function checkoutVersion(
@@ -44,9 +48,9 @@ export default (async function checkoutVersion(
   const { version, ids, promptMergeOptions } = checkoutProps;
   const { components } = await consumer.loadComponents(ids);
   const allComponentsP = components.map((component: Component) => {
-    return getComponentStatus(consumer, component, version);
+    return getComponentStatus(consumer, component, checkoutProps);
   });
-  const allComponents = await Promise.all(allComponentsP);
+  const allComponents: ComponentStatus[] = await Promise.all(allComponentsP);
   const componentWithConflict = allComponents.find(
     component => component.mergeResults && component.mergeResults.hasConflicts
   );
@@ -58,45 +62,75 @@ export default (async function checkoutVersion(
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
-  const componentsResultsP = allComponents.map(({ id, componentFromFS, mergeResults }) => {
-    return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
-  });
+  const failedComponents: FailedComponents[] = allComponents
+    .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
+    .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
+  const componentsResultsP = allComponents
+    .filter(componentStatus => !componentStatus.failureMessage)
+    .map(({ id, componentFromFS, mergeResults }) => {
+      return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
+    });
   const componentsResults = await Promise.all(componentsResultsP);
 
-  return { components: componentsResults, version };
+  return { components: componentsResults, version, failedComponents };
 });
 
-async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
+async function getComponentStatus(
+  consumer: Consumer,
+  component: Component,
+  checkoutProps: CheckoutProps
+): Promise<ComponentStatus> {
+  const { version, latestVersion, reset } = checkoutProps;
   const componentModel = await consumer.scope.getModelComponentIfExist(component.id);
+  const componentStatus: ComponentStatus = { id: component.id };
+  const returnFailure = (msg: string) => {
+    componentStatus.failureMessage = msg;
+    return componentStatus;
+  };
   if (!componentModel) {
-    throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
+    return returnFailure(`component ${component.id.toString()} doesn't have any version yet`);
   }
-  if (!componentModel.hasVersion(version)) {
-    throw new GeneralError(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
+  const getNewVersion = (): string => {
+    if (reset) return component.id.version;
+    // $FlowFixMe if !reset the version is defined
+    return latestVersion ? componentModel.latest() : version;
+  };
+  const newVersion = getNewVersion();
+  if (version && !latestVersion && !componentModel.hasVersion(version)) {
+    return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
   const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
   const currentlyUsedVersion = BitId.parse(existingBitMapId).version;
-  if (currentlyUsedVersion === version) {
-    throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
+  if (version && currentlyUsedVersion === version) {
+    // it won't be relevant for 'reset' as it doesn't have a version
+    return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
+  }
+  if (latestVersion && currentlyUsedVersion === newVersion) {
+    return returnFailure(
+      `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`
+    );
   }
   const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
   const isModified = await consumer.isComponentModified(baseComponent, component);
+  if (!isModified && reset) {
+    return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
+  }
   let mergeResults: ?MergeResultsThreeWay;
-  if (isModified) {
-    const currentComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
+  if (isModified && version) {
+    const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
       otherVersion: currentlyUsedVersion,
       currentComponent,
-      currentVersion: version,
+      currentVersion: newVersion,
       baseComponent
     });
   }
-  const versionRef = componentModel.versions[version];
+  const versionRef = componentModel.versions[newVersion];
   const componentVersion = await consumer.scope.getObject(versionRef.hash);
   const newId = component.id.clone();
-  newId.version = version;
+  newId.version = newVersion;
   return { componentFromFS: component, componentFromModel: componentVersion, id: newId, mergeResults };
 }
 
@@ -110,6 +144,8 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
  * 3) when files are modified with no conflict or files are modified with conflicts and the
  * strategy is manual, load the component according to id.version and update component.files.
  * applyModifiedVersion() docs explains what files are updated/added.
+ *
+ * 4) when --reset flag is used, write the component according to the bitmap version
  *
  * Side note:
  * Deleted file => if files are in used version but not in the modified one, no need to delete it. (similar to git).
