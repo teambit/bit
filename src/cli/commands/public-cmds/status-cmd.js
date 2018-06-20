@@ -11,6 +11,9 @@ import { missingDependenciesLabels } from '../../templates/missing-dependencies-
 import { Analytics } from '../../../analytics/analytics';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
+const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
+  `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/troubleshooting-isolating.html`
+)}`;
 export default class Status extends Command {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
@@ -33,6 +36,10 @@ export default class Status extends Command {
     deletedComponents,
     outdatedComponents
   }: StatusResult): string {
+    // If there is problem with at least one component we want to show a link to the
+    // troubleshooting doc
+    let showTroubleshootingLink = false;
+
     function formatMissing(missingComponent: Component) {
       function formatMissingStr(key, array, label) {
         if (!array || R.isEmpty(array)) return '';
@@ -52,7 +59,6 @@ export default class Status extends Command {
           return formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]);
         })
         .join('');
-
       return `       ${missingStr}\n`;
     }
 
@@ -70,6 +76,7 @@ export default class Status extends Command {
       }
       bitFormatted += ' ... ';
       if (!missing) return `${bitFormatted}${chalk.green('ok')}`;
+      showTroubleshootingLink = true;
       return `${bitFormatted} ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
     }
 
@@ -132,6 +139,8 @@ export default class Status extends Command {
       stagedComponents.length ? chalk.underline.white('staged components') + stagedDesc : ''
     ).join('\n');
 
+    const troubleshootingStr = showTroubleshootingLink ? `\n${TROUBLESHOOTING_MESSAGE}` : '';
+
     return (
       importPendingWarning +
         [
@@ -143,7 +152,8 @@ export default class Status extends Command {
           deletedComponentOutput
         ]
           .filter(x => x)
-          .join(chalk.underline('\n                         \n') + chalk.white('\n')) ||
+          .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
+        troubleshootingStr ||
       chalk.yellow('nothing to tag or export (use "bit add <file...>" to track files or directories as components)')
     );
   }
