@@ -70,32 +70,41 @@ export default class Checkout extends Command {
 
   report({ components, version, failedComponents }: ApplyVersionResults): string {
     const isLatest = Boolean(version && version === LATEST);
+    const isReset = !version;
     const getFailureOutput = () => {
       if (!failedComponents || !failedComponents.length) return '';
-      const title = 'the operation has been canceled on the following components';
+      const title = 'the checkout has been canceled on the following component(s)';
       const body = failedComponents
         .map(
           failedComponent =>
             `${chalk.bold(failedComponent.id.toString())} - ${chalk.red(failedComponent.failureMessage)}`
         )
         .join('\n');
-      return `${title}\n${body}\n`;
+      return `${title}\n${body}\n\n`;
     };
     const getSuccessfulOutput = () => {
       if (!components || !components.length) return '';
       if (components.length === 1) {
         const component = components[0];
-        const componentName = component.id.toStringWithoutVersion();
+        const componentName = isReset ? component.id.toString() : component.id.toStringWithoutVersion();
+        if (isReset) return `successfully reset ${chalk.bold(componentName)}\n`;
         const title = `successfully switched ${chalk.bold(componentName)} to version ${chalk.bold(
+          // $FlowFixMe version is defined when !isReset
           isLatest ? component.id.version : version
         )}\n`;
         return `${title} ${applyVersionReport(components, false)}`;
       }
+      if (isReset) {
+        const title = 'successfully reset the following components\n\n';
+        const body = components.map(component => chalk.bold(component.id.toString())).join('\n');
+        return title + body;
+      }
+      // $FlowFixMe version is defined when !isReset
       const versionOutput = isLatest ? 'their latest version' : `version ${chalk.bold(version)}`;
       const title = `successfully switched the following components to ${versionOutput}\n\n`;
-      const showVersion = isLatest;
+      const showVersion = isLatest || isReset;
       const componentsStr = applyVersionReport(components, true, showVersion);
-      return `${title} ${componentsStr}`;
+      return title + componentsStr;
     };
     const failedOutput = getFailureOutput();
     const successOutput = getSuccessfulOutput();

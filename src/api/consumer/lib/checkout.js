@@ -36,6 +36,9 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     firstValue && (BitId.isValidVersion(firstValue) || firstValue === LATEST) ? firstValue : undefined;
   const ids = checkoutProps.version ? R.tail(values) : values; // if first value is a version, the rest are ids
   checkoutProps.latestVersion = Boolean(checkoutProps.version && checkoutProps.version === LATEST);
+  if (!firstValue && !checkoutProps.reset && !checkoutProps.all) {
+    throw new GeneralError('please enter [values...] or use --reset --all flags');
+  }
   if (checkoutProps.reset && checkoutProps.version) {
     throw new GeneralError(
       `the first argument "${
