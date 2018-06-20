@@ -1603,7 +1603,7 @@ console.log(barFoo.default());`;
         output = err.toString();
       }
     });
-    it.only('should not allow tagging the component', () => {
+    it('should not allow tagging the component', () => {
       expect(output).to.have.string(
         'components with relative import statements (please use absolute paths for imported components)'
       );
