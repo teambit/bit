@@ -32,7 +32,7 @@ export default class Diff extends Command {
           const fields = diffResult.fieldsDiff ? diffResult.fieldsDiff.map(field => field.diffOutput).join('\n') : '';
           return `${title}\n${files}\n${fields}`;
         }
-        return chalk.red(`no diff for ${chalk.bold(diffResult.id.toString())}`);
+        return `no diff for ${chalk.bold(diffResult.id.toString())}`;
       })
       .join('\n\n');
   }
