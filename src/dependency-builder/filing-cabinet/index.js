@@ -47,6 +47,7 @@ module.exports = function cabinet(options) {
   var resolveConfig = options.resolveConfig;
   const isScript = options.isScript;
   const content = options.content;
+  debug(`working on a dependency "${partial}" of a file "${filename}"`);
 
   var resolver = defaultLookups[ext];
 
@@ -69,8 +70,16 @@ module.exports = function cabinet(options) {
   if (!result && partialExt && partialExt !== ext) {
     resolver = defaultLookups[partialExt];
     if (resolver) {
+      // todo: this strategy probably fails often. if, for example, a dependency A.js inside B.ts
+      // was not found using the ts resolve, it tries the js resolver, however, parsing the ts file
+      // with js parser, won't work most of the time. A better approach would be to fix the
+      // original resolver.
       debug('dependency has a different extension (' + partialExt + ') than the original file (' + ext + '), trying to use its resolver instead');
+      try {
       result = resolver(partial, filename, directory, config, webpackConfig, configPath, ast, isScript, content, resolveConfig);
+      } catch (err) {
+        debug(`unable to use the resolver of ${partialExt} for ${filename}. got an error ${err.message}`);
+      }
     }
   }
   debug('resolved path for ' + partial + ': ' + result);
