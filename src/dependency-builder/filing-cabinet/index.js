@@ -252,7 +252,7 @@ function commonJSLookup(partial, filename, directory, resolveConfig) {
 
   try {
     result = resolve.sync(partial, {
-      extensions: ['.js', '.jsx', '.vue', '.ts', '.d.ts', '.tsx'], // for some reason, .ts is not sufficient, .d.ts is needed as well
+      extensions: ['.js', '.jsx', '.vue', '.ts', '.d.ts', '.tsx', '.json'], // for some reason, .ts is not sufficient, .d.ts is needed as well
       basedir: directory,
       // Add fileDir to resolve index.js files in that dir
       moduleDirectory: ['node_modules', directory]
