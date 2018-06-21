@@ -1018,7 +1018,7 @@ export default class Component {
     });
   }
 
-  static fromObject(object: Object): Component {
+  static async fromObject(object: Object): Component {
     const {
       name,
       box,
@@ -1049,8 +1049,8 @@ export default class Component {
       scope,
       lang,
       bindingPrefix,
-      compiler: compiler ? CompilerExtension.loadFromModelObject(compiler) : null,
-      tester: tester ? TesterExtension.loadFromModelObject(tester) : null,
+      compiler: compiler ? await CompilerExtension.loadFromModelObject(compiler) : null,
+      tester: tester ? await TesterExtension.loadFromModelObject(tester) : null,
       dependencies,
       devDependencies,
       packageDependencies,
@@ -1067,7 +1067,7 @@ export default class Component {
     });
   }
 
-  static fromString(str: string): Component {
+  static async fromString(str: string): Component {
     const object = JSON.parse(str);
     object.files = SourceFile.loadFromParsedStringArray(object.files);
 
