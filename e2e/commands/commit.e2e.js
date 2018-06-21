@@ -243,6 +243,7 @@ describe('bit tag command', function () {
     });
   });
   describe('tag one component with failing tests', () => {
+    let scopeBeforeTagging;
     before(() => {
       helper.importTester('bit.envs/testers/mocha@0.0.12');
       const failingTest = `const expect = require('chai').expect;
@@ -256,6 +257,7 @@ describe('bit tag command', function () {
       helper.createFile('bar', 'foo.spec.js', failingTest);
       helper.installNpmPackage('chai', '4.1.2');
       helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
+      scopeBeforeTagging = helper.cloneLocalScope();
     });
     it('should throw error if the bit id does not exists', () => {
       let output;
@@ -332,7 +334,36 @@ describe('bit tag command', function () {
     describe('tagging with --force flag', () => {
       let output;
       before(() => {
+        helper.getClonedLocalScope(scopeBeforeTagging);
         output = helper.tagWithoutMessage('bar/foo --force');
+      });
+      it('should tag successfully although the tests failed', () => {
+        expect(output).to.have.string('1 components tagged');
+      });
+      it('should not display any data about the tests', () => {
+        expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
+        expect(output).to.not.have.string('failing test should fail');
+      });
+    });
+    describe('tagging with --skip-tests flag', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeTagging);
+        output = helper.tagWithoutMessage('bar/foo --skip-tests');
+      });
+      it('should tag successfully although the tests failed', () => {
+        expect(output).to.have.string('1 components tagged');
+      });
+      it('should not display any data about the tests', () => {
+        expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
+        expect(output).to.not.have.string('failing test should fail');
+      });
+    });
+    describe('tagging all with --skip-tests flag', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeTagging);
+        output = helper.tagAllWithoutMessage('--skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
         expect(output).to.have.string('1 components tagged');
@@ -657,7 +688,7 @@ describe('bit tag command', function () {
         }
       });
 
-      it('Should print that the component is commited', () => {
+      it('Should print that the component is committed', () => {
         expect(output).to.have.string('1 components tagged');
       });
     });

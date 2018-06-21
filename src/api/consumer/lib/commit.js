@@ -19,7 +19,8 @@ export async function commitAction(args: {
   force: ?boolean,
   verbose?: boolean,
   ignoreMissingDependencies?: boolean,
-  ignoreNewestVersion: boolean
+  ignoreNewestVersion: boolean,
+  skipTests: boolean
 }) {
   const {
     id,
@@ -29,7 +30,8 @@ export async function commitAction(args: {
     force,
     verbose,
     ignoreMissingDependencies,
-    ignoreNewestVersion
+    ignoreNewestVersion,
+    skipTests
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_HOOK, args);
@@ -48,7 +50,8 @@ export async function commitAction(args: {
     force,
     verbose,
     ignoreMissingDependencies,
-    ignoreNewestVersion
+    ignoreNewestVersion,
+    skipTests
   );
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
@@ -79,6 +82,7 @@ export async function commitAllAction(args: {
   verbose?: boolean,
   ignoreMissingDependencies?: boolean,
   ignoreNewestVersion: boolean,
+  skipTests: boolean,
   scope?: boolean,
   includeImported?: boolean
 }) {
@@ -90,6 +94,7 @@ export async function commitAllAction(args: {
     verbose,
     ignoreMissingDependencies,
     ignoreNewestVersion,
+    skipTests,
     scope,
     includeImported
   } = args;
@@ -113,7 +118,8 @@ export async function commitAllAction(args: {
     force,
     verbose,
     ignoreMissingDependencies,
-    ignoreNewestVersion
+    ignoreNewestVersion,
+    skipTests
   );
   commitResults.warnings = warnings;
 
