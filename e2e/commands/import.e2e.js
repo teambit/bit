@@ -1582,6 +1582,10 @@ console.log(barFoo.default());`;
     });
   });
 
+  /**
+   * requiring an imported component with relative paths may lead to bigger and bigger dependencies
+   * paths. It's better to avoid them and use absolute path instead
+   */
   describe('after adding another component requiring the imported component with relative syntax', () => {
     let output;
     before(() => {
