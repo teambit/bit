@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix support of .json dependencies
+- fix "SyntaxError: Unexpected token" when parsing .ts files with .js dependencies
 - support `bit checkout latest` for checkout to the latest version
 - add `--reset` flag to `bit checkout` command for removing local modifications
 - add `--all` flag to `bit checkout` command for executing the checkout on all components
