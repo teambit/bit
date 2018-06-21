@@ -366,7 +366,7 @@ describe('bit tag command', function () {
         output = helper.tagAllWithoutMessage('--skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('5 components tagged');
       });
       it('should not display any data about the tests', () => {
         expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
