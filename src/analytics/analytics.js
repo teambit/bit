@@ -7,7 +7,6 @@ import yn from 'yn';
 import R from 'ramda';
 import os from 'os';
 import omitBy from 'lodash.omitby';
-import isNil from 'lodash.isnil';
 import { fork } from 'child_process';
 import { setSync, getSync } from '../api/consumer/lib/global-config';
 import { analyticsPrompt, errorReportingPrompt } from '../prompts';
@@ -95,7 +94,8 @@ class Analytics {
   }
   static _hashFlags(flags: Object) {
     const hashedFlags = {};
-    const filteredFlags = omitBy(flags, isNil);
+    const nilOrFalse = val => R.isNil(val) || val === false;
+    const filteredFlags = omitBy(flags, nilOrFalse);
     if (this.anonymous && !R.isEmpty(filteredFlags)) {
       Object.keys(filteredFlags).forEach((key) => {
         if (typeof flags[key] === 'boolean') {

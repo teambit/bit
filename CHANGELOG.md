@@ -7,11 +7,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix .tsx parsing issue when the tsx dependency is required from a non .tsx file
+- fix support of .json dependencies
+- fix "SyntaxError: Unexpected token" when parsing .ts files with .js dependencies
 - support `bit checkout latest` for checkout to the latest version
 - add `--reset` flag to `bit checkout` command for removing local modifications
 - add `--all` flag to `bit checkout` command for executing the checkout on all components
 - show environments when running bit show on remote component
 - add troubleshooting-isolating link to bit status
+- add new flag `--skip-tests` to bit tag command
 
 ## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
 

@@ -156,6 +156,7 @@ export default (async function tagModelComponent({
   force,
   consumer,
   ignoreNewestVersion = false,
+  skipTests = false,
   verbose = false
 }: {
   consumerComponents: Component[],
@@ -166,6 +167,7 @@ export default (async function tagModelComponent({
   force: ?boolean,
   consumer: Consumer,
   ignoreNewestVersion: boolean,
+  skipTests: boolean,
   verbose?: boolean
 }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
@@ -218,21 +220,24 @@ export default (async function tagModelComponent({
 
   logger.debug('scope.putMany: sequentially test all components');
   let testsResults = [];
-  const testsResultsP = scope.testMultiple({
-    components: componentsToBuildAndTest,
-    consumer,
-    verbose,
-    rejectOnFailure: !force
-  });
-  try {
-    testsResults = await testsResultsP;
-  } catch (err) {
-    // if force is true, ignore the tests and continue
-    if (!force) {
-      if (!verbose) throw new ComponentSpecsFailed();
-      throw err;
+  if (!skipTests) {
+    const testsResultsP = scope.testMultiple({
+      components: componentsToBuildAndTest,
+      consumer,
+      verbose,
+      rejectOnFailure: !force
+    });
+    try {
+      testsResults = await testsResultsP;
+    } catch (err) {
+      // if force is true, ignore the tests and continue
+      if (!force) {
+        if (!verbose) throw new ComponentSpecsFailed();
+        throw err;
+      }
     }
   }
+
   logger.debug('scope.putMany: sequentially persist all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');
 
@@ -261,6 +266,7 @@ export default (async function tagModelComponent({
         : withSharedDir;
       return pathNormalizeToLinux(withDistEntry);
     };
+
     const dists =
       !consumerComponent.dists.isEmpty() && consumerComponent.compiler
         ? consumerComponent.dists.get().map((dist) => {
@@ -272,13 +278,16 @@ export default (async function tagModelComponent({
           };
         })
         : null;
-    const testResult = testsResults.find((result) => {
-      const idWithoutScopeAndVersion = BitId.parse(result.componentId).toStringWithoutScopeAndVersion();
-      const consumerComponentIdWithoutScopeAndVersion = BitId.parse(
-        consumerComponentId
-      ).toStringWithoutScopeAndVersion();
-      return idWithoutScopeAndVersion === consumerComponentIdWithoutScopeAndVersion;
-    });
+    let testResult;
+    if (!skipTests) {
+      testResult = testsResults.find((result) => {
+        const idWithoutScopeAndVersion = BitId.parse(result.componentId).toStringWithoutScopeAndVersion();
+        const consumerComponentIdWithoutScopeAndVersion = BitId.parse(
+          consumerComponentId
+        ).toStringWithoutScopeAndVersion();
+        return idWithoutScopeAndVersion === consumerComponentIdWithoutScopeAndVersion;
+      });
+    }
     const flattenedDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,

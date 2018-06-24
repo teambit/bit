@@ -511,7 +511,8 @@ export default class Consumer {
     force: ?boolean,
     verbose: ?boolean,
     ignoreMissingDependencies: ?boolean,
-    ignoreNewestVersion: boolean
+    ignoreNewestVersion: boolean,
+    skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
@@ -535,6 +536,7 @@ export default class Consumer {
       force,
       consumer: this,
       ignoreNewestVersion,
+      skipTests,
       verbose
     });
 

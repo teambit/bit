@@ -20,10 +20,11 @@ export default class Export extends Command {
     ['p', 'patch', 'increment the patch version number'],
     ['mi', 'minor', 'increment the minor version number'],
     ['ma', 'major', 'increment the major version number'],
-    ['f', 'force', 'forcely tag even if tests are failing and even when component has not changed'],
+    ['f', 'force', 'force-tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
     ['i', 'ignore-missing-dependencies', 'ignore missing dependencies (default = false)'],
-    ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)']
+    ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
+    ['S', 'skip-tests', 'do not run tests before tagging']
   ];
   loader = true;
   migration = true;
@@ -40,6 +41,7 @@ export default class Export extends Command {
       verbose,
       ignoreMissingDependencies = false,
       ignoreNewestVersion = false,
+      skipTests = false,
       scope
     }: {
       message: string,
@@ -51,6 +53,7 @@ export default class Export extends Command {
       verbose: ?boolean,
       ignoreMissingDependencies?: boolean,
       ignoreNewestVersion?: boolean,
+      skipTests?: boolean,
       scope: ?string
     }
   ): Promise<any> {
@@ -91,6 +94,7 @@ export default class Export extends Command {
         verbose,
         ignoreMissingDependencies,
         ignoreNewestVersion,
+        skipTests,
         scope,
         includeImported
       });
@@ -103,7 +107,8 @@ export default class Export extends Command {
       force,
       verbose,
       ignoreMissingDependencies,
-      ignoreNewestVersion
+      ignoreNewestVersion,
+      skipTests
     });
   }
 

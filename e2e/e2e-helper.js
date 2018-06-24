@@ -46,38 +46,7 @@ export default class Helper {
     this.keepEnvs = !!process.env.npm_config_keep_envs; // default = false
   }
 
-  setLocalScope(localScope?: string) {
-    this.localScope = localScope || `${generateRandomStr()}-local`;
-    this.localScopePath = path.join(this.e2eDir, this.localScope);
-    if (!fs.existsSync(this.localScopePath)) {
-      fs.ensureDirSync(this.localScopePath);
-    }
-  }
-
   // #region General
-  // #endregion
-
-  // #region scopes utils (init, remote etc')
-  // #endregion
-
-  // #region file system utils (create / delete / modify files etc')
-  // #endregion
-
-  // #region Bit commands
-  // #endregion
-
-  // #region bit.json manipulation
-  // #endregion
-
-  // #region .bitmap manipulation
-  // #endregion
-
-  // #region Packages/package.json maniplulation
-  // #endregion
-
-  // #region fixtures utils
-  // #endregion
-
   runCmd(cmd: string, cwd: string = this.localScopePath) {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
@@ -118,11 +87,425 @@ export default class Helper {
     const errorString = defaultErrorHandler(error);
     expect(alignOutput(output)).to.have.string(alignOutput(errorString));
   }
+  cleanEnv() {
+    fs.emptyDirSync(this.localScopePath);
+    fs.emptyDirSync(this.remoteScopePath);
+  }
 
+  destroyEnv() {
+    if (this.keepEnvs) return;
+    fs.removeSync(this.localScopePath);
+    fs.removeSync(this.remoteScopePath);
+    if (this.cache) {
+      fs.removeSync(this.cache.localScopePath);
+      fs.removeSync(this.cache.remoteScopePath);
+    }
+    if (this.clonedScopes && this.clonedScopes.length) {
+      this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
+    }
+  }
+
+  getRequireBitPath(box: string, name: string) {
+    return `@bit/${this.remoteScope}.${box}.${name}`;
+  }
+
+  getBitVersion() {
+    return BIT_VERSION;
+  }
+  // #endregion
+
+  // #region scopes utils (init, remote etc')
+  setLocalScope(localScope?: string) {
+    this.localScope = localScope || `${generateRandomStr()}-local`;
+    this.localScopePath = path.join(this.e2eDir, this.localScope);
+    if (!fs.existsSync(this.localScopePath)) {
+      fs.ensureDirSync(this.localScopePath);
+    }
+  }
+  cleanLocalScope() {
+    fs.emptyDirSync(this.localScopePath);
+  }
+
+  reInitLocalScope() {
+    this.cleanLocalScope();
+    this.initLocalScope();
+  }
+
+  initLocalScope() {
+    return this.runCmd('bit init');
+  }
+
+  initLocalScopeWithOptions(options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit init ${value}`);
+  }
+  setNewLocalAndRemoteScopes() {
+    if (!this.cache) {
+      this.reInitLocalScope();
+      this.reInitRemoteScope();
+      this.addRemoteScope();
+      this.cache = {
+        localScopePath: path.join(this.e2eDir, generateRandomStr()),
+        remoteScopePath: path.join(this.e2eDir, generateRandomStr())
+      };
+      if (this.debugMode) {
+        console.log(
+          chalk.green(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`)
+        );
+      }
+      fs.copySync(this.localScopePath, this.cache.localScopePath);
+      fs.copySync(this.remoteScopePath, this.cache.remoteScopePath);
+    } else {
+      if (this.debugMode) {
+        console.log(chalk.green(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`));
+      }
+      fs.removeSync(this.localScopePath);
+      fs.removeSync(this.remoteScopePath);
+      fs.copySync(this.cache.localScopePath, this.localScopePath);
+      fs.copySync(this.cache.remoteScopePath, this.remoteScopePath);
+    }
+  }
+
+  initNewLocalScope(deleteCurrentScope: boolean = true) {
+    if (deleteCurrentScope) {
+      fs.removeSync(this.localScopePath);
+    }
+    this.setLocalScope();
+    fs.ensureDirSync(this.localScopePath);
+    return this.runCmd('bit init');
+  }
+  addRemoteScope(remoteScopePath: string = this.remoteScopePath, localScopePath: string = this.localScopePath) {
+    if (process.env.npm_config_with_ssh) {
+      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
+    }
+    return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
+  }
+
+  addRemoteEnvironment() {
+    return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
+  }
+
+  reInitRemoteScope() {
+    fs.emptyDirSync(this.remoteScopePath);
+    return this.runCmd('bit init --bare', this.remoteScopePath);
+  }
+
+  reInitEnvsScope() {
+    fs.emptyDirSync(this.envScopePath);
+    return this.runCmd('bit init --bare', this.envScopePath);
+  }
+
+  listRemoteScope(bare: boolean = true) {
+    return this.runCmd(`bit list ${this.remoteScope} ${bare ? '--bare' : ''}`);
+  }
+  listLocalScope(options: string = '') {
+    return this.runCmd(`bit list ${options}`);
+  }
+  listLocalScopeParsed(options: string = '') {
+    const output = this.runCmd(`bit list --json ${options}`);
+    return JSON.parse(output);
+  }
+
+  getNewBareScope(scopeNameSuffix?: string = '-remote2') {
+    const scopeName = generateRandomStr() + scopeNameSuffix;
+    const scopePath = path.join(this.e2eDir, scopeName);
+    fs.emptyDirSync(scopePath);
+    this.runCmd('bit init --bare', scopePath);
+    this.addRemoteScope(this.remoteScopePath, scopePath);
+    return { scopeName, scopePath };
+  }
+  /**
+   * Sometimes many tests need to do the exact same steps to init the local-scope, such as importing compiler/tester.
+   * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
+   * cloned scope.
+   */
+  cloneLocalScope() {
+    const clonedScope = `${generateRandomStr()}-clone`;
+    const clonedScopePath = path.join(this.e2eDir, clonedScope);
+    if (this.debugMode) console.log(`cloning a scope from ${this.localScopePath} to ${clonedScopePath}`);
+    fs.copySync(this.localScopePath, clonedScopePath);
+    this.clonedScopes.push(clonedScopePath);
+    return clonedScopePath;
+  }
+
+  getClonedLocalScope(clonedScopePath: string) {
+    fs.removeSync(this.localScopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
+    fs.copySync(clonedScopePath, this.localScopePath);
+  }
+
+  cloneRemoteScope() {
+    const clonedScope = generateRandomStr();
+    const clonedScopePath = path.join(this.e2eDir, clonedScope);
+    if (this.debugMode) console.log(`cloning a scope from ${this.remoteScopePath} to ${clonedScopePath}`);
+    fs.copySync(this.remoteScopePath, clonedScopePath);
+    this.clonedScopes.push(clonedScopePath);
+    return clonedScopePath;
+  }
+
+  getClonedRemoteScope(clonedScopePath: string) {
+    fs.removeSync(this.remoteScopePath);
+    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.remoteScopePath}`);
+    fs.copySync(clonedScopePath, this.remoteScopePath);
+  }
+  // #endregion
+
+  // #region file system utils (create / delete / modify files etc')
+  getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
+    return glob
+      .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
+      .map(x => path.normalize(x));
+  }
+  createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, folder, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  readFile(filePath: string): string {
+    return fs.readFileSync(path.join(this.localScopePath, filePath)).toString();
+  }
+
+  /**
+   * adds "\n" at the beginning of the file to make it modified.
+   */
+  modifyFile(filePath: string) {
+    const content = fs.readFileSync(filePath);
+    fs.outputFileSync(filePath, `\n${content}`);
+  }
+
+  deleteFile(relativePathToLocalScope: string) {
+    return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
+  }
+  // #endregion
+
+  // #region Bit commands
+  catScope() {
+    const result = this.runCmd('bit cat-scope --json');
+    return JSON.parse(result);
+  }
+
+  catObject(hash: string, parse: boolean = false) {
+    const result = this.runCmd(`bit cat-object ${hash}`);
+    if (!parse) return result;
+    return JSON.parse(result);
+  }
+
+  catComponent(id: string, cwd?: string): Object {
+    const result = this.runCmd(`bit cat-component ${id}`, cwd);
+    return JSON.parse(result);
+  }
+  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd: string = this.localScopePath) {
+    return this.runCmd(`bit add ${filePaths}`, cwd);
+  }
+
+  untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
+    return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
+  }
+  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
+    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
+  }
+  tagWithoutMessage(id: string, version: string = '', options: string = '') {
+    return this.runCmd(`bit tag ${id} ${version} ${options}`);
+  }
+  removeComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit remove ${id} ${flags}`);
+  }
+  deprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit deprecate ${id} ${flags}`);
+  }
+
+  commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
+    return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
+  }
+  tagAllWithoutMessage(options: string = '', version: string = '') {
+    return this.runCmd(`bit tag -a ${version} ${options} `);
+  }
+
+  tagScope(version: string, message: string = 'commit-message', options: string = '') {
+    return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
+  }
+
+  exportComponent(id: string, scope: string = this.remoteScope) {
+    return this.runCmd(`bit export ${scope} ${id}`);
+  }
+
+  exportAllComponents(scope: string = this.remoteScope) {
+    return this.runCmd(`bit export ${scope}`);
+  }
+
+  importComponent(id: string) {
+    return this.runCmd(`bit import ${this.remoteScope}/${id}`);
+  }
+
+  importComponentWithOptions(id: string = 'bar/foo.js', options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit import ${this.remoteScope}/${id} ${value}`);
+  }
+
+  importAllComponents(writeToFileSystem: boolean = false) {
+    return this.runCmd(`bit import ${writeToFileSystem ? '--merge' : ''}`);
+  }
+
+  isolateComponent(id: string, flags: string): string {
+    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.remoteScope}/${id} ${this.remoteScopePath} ${flags}`);
+    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter(str => str);
+    return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
+  }
+  importCompiler(id?) {
+    if (!id) {
+      id = `${this.envScope}/compilers/babel`;
+      this.createCompiler();
+    }
+    // Temporary - for checking new serializaion against the stage env
+    // this.setHubDomain('hub-stg.bitsrc.io');
+    return this.runCmd(`bit import ${id} --compiler`);
+  }
+
+  importTester(id) {
+    // Temporary - for checking new serializaion against the stage env
+    // this.setHubDomain('hub-stg.bitsrc.io');
+    this.runCmd(`bit import ${id} --tester`);
+  }
+
+  build(id?: string = '') {
+    return this.runCmd(`bit build ${id}`);
+  }
+
+  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd: string = this.localScopePath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
+  }
+
+  testComponent(id: string = '') {
+    return this.runCmd(`bit test ${id}`);
+  }
+
+  testComponentWithOptions(id: string = '', options: ?Object, cwd: string = this.localScopePath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit test ${id} ${value}`, cwd);
+  }
+
+  searchComponent(args) {
+    return this.runCmd(`bit search ${args}`);
+  }
+
+  status() {
+    return this.runCmd('bit status');
+  }
+
+  showComponent(id: string = 'bar/foo') {
+    return this.runCmd(`bit show ${id}`);
+  }
+
+  showComponentParsed(id: string = 'bar/foo') {
+    const output = this.runCmd(`bit show ${id} --json`);
+    return JSON.parse(output);
+  }
+
+  showComponentWithOptions(id: string = 'bar/foo', options: ?Object) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit show ${id} ${value}`);
+  }
+
+  checkoutVersion(version: string, ids: string, flags?: string, cwd?: string) {
+    return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`, cwd);
+  }
+
+  checkout(values: string) {
+    return this.runCmd(`bit checkout ${values}`);
+  }
+
+  mergeVersion(version: string, ids: string, flags?: string) {
+    return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
+  }
+
+  diff(id?: string = '') {
+    const output = this.runCmd(`bit diff ${id}`);
+    return Helper.removeChalkCharacters(output);
+  }
+
+  move(from: string, to: string) {
+    return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
+  }
   setHubDomain(domain: string = 'hub.bitsrc.io') {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
+  // #endregion
 
+  // #region bit commands on templates (like add BarFoo / create compiler)
+  createComponentBarFoo(impl?: string) {
+    this.createFile(undefined, undefined, impl);
+  }
+
+  addComponentBarFoo() {
+    return this.addComponent();
+  }
+
+  commitComponentBarFoo() {
+    return this.commitComponent('bar/foo');
+  }
+
+  createCompiler() {
+    if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
+    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
+
+    const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
+    const babelPluginTransformObjectRestSpreadPackageJson = {
+      name: 'babel-plugin-transform-object-rest-spread',
+      version: '6.23.0'
+    };
+    const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
+    const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
+
+    const nodeModulesDir = path.join(tempScopePath, 'node_modules');
+
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
+    ensureAndWriteJson(
+      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
+      babelPluginTransformObjectRestSpreadPackageJson
+    );
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
+    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
+
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
+
+    this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
+    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.compilerCreated = true;
+    return true;
+  }
+  // #endregion
+
+  // #region bit.json manipulation
   addBitJsonDependencies(bitJsonPath: string, dependencies: Object, packageDependencies: Object) {
     const bitJson = this.readBitJson(bitJsonPath);
     bitJson.dependencies = bitJson.dependencies || {};
@@ -188,16 +571,6 @@ export default class Helper {
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'rawConfig', key, val, envType);
   }
-
-  createPackageJson(data: Object, location: string = this.localScopePath) {
-    const packageJsonPath = path.join(location, 'package.json');
-    fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
-  }
-
-  initNpm(initPath: string = path.join(this.localScopePath)) {
-    this.runCmd('npm init -y', initPath);
-  }
-
   manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson(bitJsonPath);
     bitJson.packageManager = 'yarn';
@@ -205,40 +578,27 @@ export default class Helper {
     bitJson.useWorkspaces = withWorkspaces;
     this.writeBitJson(bitJson);
   }
-  addKeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
-    const pkgJson = this.readPackageJson(pkgJsonPath);
-    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
-  }
-  readPackageJson(packageJsonFolder: string = this.localScopePath) {
-    const packageJsonPath = path.join(packageJsonFolder, 'package.json');
-    return fs.readJSONSync(packageJsonPath) || {};
-  }
-
-  readComponentPackageJson(id: string) {
-    const packageJsonFolderPath = path.join(this.localScopePath, 'components', id);
-    return this.readPackageJson(packageJsonFolderPath);
-  }
-
-  catScope() {
-    const result = this.runCmd('bit cat-scope --json');
-    return JSON.parse(result);
-  }
-
-  catObject(hash: string, parse: boolean = false) {
-    const result = this.runCmd(`bit cat-object ${hash}`);
-    if (!parse) return result;
-    return JSON.parse(result);
-  }
-
-  catComponent(id: string, cwd?: string): Object {
-    const result = this.runCmd(`bit cat-component ${id}`, cwd);
-    return JSON.parse(result);
-  }
-
   writeBitJson(bitJson: Object, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
+  setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson(bitJsonPath);
+    bitJson.componentsDefaultDirectory = content;
+    this.writeBitJson(bitJson);
+  }
+  corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson();
+    bitJson.corrupt = '"corrupted';
+    fs.writeFileSync(bitJsonPath, bitJson.toString());
+  }
+  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+    const bitJson = this.readBitJson();
+    bitJson[key] = value;
+    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
+  }
+  // #endregion
 
+  // #region .bitmap manipulation
   readBitMap(bitMapPath: string = path.join(this.localScopePath, BIT_MAP), withoutComment: boolean = true) {
     const map = fs.readFileSync(bitMapPath) || {};
     return json.parse(map.toString('utf8'), null, withoutComment);
@@ -254,58 +614,6 @@ export default class Helper {
     const bitMapPath = path.join(this.localScopePath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
-  setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
-    bitJson.componentsDefaultDirectory = content;
-    this.writeBitJson(bitJson);
-  }
-  writeGitIgnore(list: string[]) {
-    const gitIgnorePath = path.join(this.localScopePath, '.gitignore');
-    return fs.writeFileSync(gitIgnorePath, list.join('\n'));
-  }
-  writeToGitHook(hookName: string, content: string) {
-    const hookPath = path.join(this.localScopePath, '.git', 'hooks', hookName);
-    return fs.outputFileSync(hookPath, content);
-  }
-
-  cleanEnv() {
-    fs.emptyDirSync(this.localScopePath);
-    fs.emptyDirSync(this.remoteScopePath);
-  }
-
-  destroyEnv() {
-    if (this.keepEnvs) return;
-    fs.removeSync(this.localScopePath);
-    fs.removeSync(this.remoteScopePath);
-    if (this.cache) {
-      fs.removeSync(this.cache.localScopePath);
-      fs.removeSync(this.cache.remoteScopePath);
-    }
-    if (this.clonedScopes && this.clonedScopes.length) {
-      this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
-    }
-  }
-
-  cleanLocalScope() {
-    fs.emptyDirSync(this.localScopePath);
-  }
-
-  reInitLocalScope() {
-    this.cleanLocalScope();
-    this.initLocalScope();
-  }
-
-  initLocalScope() {
-    return this.runCmd('bit init');
-  }
-
-  initLocalScopeWithOptions(options: ?Object) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit init ${value}`);
-  }
-
   createBitMap(
     cwd: string = this.localScopePath,
     componentObject = {
@@ -332,42 +640,67 @@ export default class Helper {
     fs.ensureFileSync(bitmapFile);
     return fs.writeJsonSync(bitmapFile, bitmap, { spaces: 2 });
   }
-  setNewLocalAndRemoteScopes() {
-    if (!this.cache) {
-      this.reInitLocalScope();
-      this.reInitRemoteScope();
-      this.addRemoteScope();
-      this.cache = {
-        localScopePath: path.join(this.e2eDir, generateRandomStr()),
-        remoteScopePath: path.join(this.e2eDir, generateRandomStr())
-      };
-      if (this.debugMode) {
-        console.log(
-          chalk.green(`not in the cache. cloning a scope from ${this.localScopePath} to ${this.cache.localScopePath}`)
-        );
-      }
-      fs.copySync(this.localScopePath, this.cache.localScopePath);
-      fs.copySync(this.remoteScopePath, this.cache.remoteScopePath);
-    } else {
-      if (this.debugMode) {
-        console.log(chalk.green(`cloning a scope from ${this.cache.localScopePath} to ${this.localScopePath}`));
-      }
-      fs.removeSync(this.localScopePath);
-      fs.removeSync(this.remoteScopePath);
-      fs.copySync(this.cache.localScopePath, this.localScopePath);
-      fs.copySync(this.cache.remoteScopePath, this.remoteScopePath);
-    }
+  printBitMapFilesInCaseOfError(files: Object[]): string {
+    const filesStr = files.map(f => f.name).join(', ');
+    return `Files in bitmap file: ${filesStr}`;
+  }
+  // #endregion
+
+  // #region Packages/package.json manipulation (npm install / modify / create package.json)
+  createPackageJson(data: Object, location: string = this.localScopePath) {
+    const packageJsonPath = path.join(location, 'package.json');
+    fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
   }
 
-  initNewLocalScope(deleteCurrentScope: boolean = true) {
-    if (deleteCurrentScope) {
-      fs.removeSync(this.localScopePath);
-    }
-    this.setLocalScope();
-    fs.ensureDirSync(this.localScopePath);
-    return this.runCmd('bit init');
+  initNpm(initPath: string = path.join(this.localScopePath)) {
+    this.runCmd('npm init -y', initPath);
+  }
+  /**
+   * install package, if you don't really need the package code and can use mock
+   * just run addNpmPackage which will be faster
+   * @param {*} name
+   * @param {*} version
+   */
+  installNpmPackage(name: string, version: ?string, cwd: string = this.localScopePath) {
+    const versionWithDelimiter = version ? `@${version}` : '';
+    const cmd = `npm i --save ${name}${versionWithDelimiter}`;
+    return this.runCmd(cmd, cwd);
+  }
+  /**
+   * Add a fake package, don't really install it. if you need the real package
+   * use installNpmPackage below
+   * @param {*} name
+   * @param {*} version
+   */
+  addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
+    const packageJsonFixture = JSON.stringify({ name, version });
+    this.createFile(`node_modules/${name}`, 'index.js');
+    this.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
+  }
+  addKeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
+    const pkgJson = this.readPackageJson(pkgJsonPath);
+    fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
+  }
+  readPackageJson(packageJsonFolder: string = this.localScopePath) {
+    const packageJsonPath = path.join(packageJsonFolder, 'package.json');
+    return fs.readJSONSync(packageJsonPath) || {};
   }
 
+  readComponentPackageJson(id: string) {
+    const packageJsonFolderPath = path.join(this.localScopePath, 'components', id);
+    return this.readPackageJson(packageJsonFolderPath);
+  }
+  // #endregion
+
+  // #region Git utils
+  writeGitIgnore(list: string[]) {
+    const gitIgnorePath = path.join(this.localScopePath, '.gitignore');
+    return fs.writeFileSync(gitIgnorePath, list.join('\n'));
+  }
+  writeToGitHook(hookName: string, content: string) {
+    const hookPath = path.join(this.localScopePath, '.git', 'hooks', hookName);
+    return fs.outputFileSync(hookPath, content);
+  }
   initNewGitRepo() {
     return this.runCmd('git init');
   }
@@ -379,48 +712,6 @@ export default class Helper {
   unsetGitConfig(key, location = 'local') {
     return this.runCmd(`git config --unset --${location} ${key}`);
   }
-
-  addRemoteScope(remoteScopePath: string = this.remoteScopePath, localScopePath: string = this.localScopePath) {
-    if (process.env.npm_config_with_ssh) {
-      return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
-    }
-    return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
-  }
-
-  addRemoteEnvironment() {
-    return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
-  }
-
-  reInitRemoteScope() {
-    fs.emptyDirSync(this.remoteScopePath);
-    return this.runCmd('bit init --bare', this.remoteScopePath);
-  }
-
-  reInitEnvsScope() {
-    fs.emptyDirSync(this.envScopePath);
-    return this.runCmd('bit init --bare', this.envScopePath);
-  }
-
-  listRemoteScope(bare: boolean = true) {
-    return this.runCmd(`bit list ${this.remoteScope} ${bare ? '--bare' : ''}`);
-  }
-  listLocalScope(options: string = '') {
-    return this.runCmd(`bit list ${options}`);
-  }
-  listLocalScopeParsed(options: string = '') {
-    const output = this.runCmd(`bit list --json ${options}`);
-    return JSON.parse(output);
-  }
-
-  getNewBareScope(scopeNameSuffix?: string = '-remote2') {
-    const scopeName = generateRandomStr() + scopeNameSuffix;
-    const scopePath = path.join(this.e2eDir, scopeName);
-    fs.emptyDirSync(scopePath);
-    this.runCmd('bit init --bare', scopePath);
-    this.addRemoteScope(this.remoteScopePath, scopePath);
-    return { scopeName, scopePath };
-  }
-
   mimicGitCloneLocalProject(cloneWithComponentsFiles: boolean = true) {
     fs.removeSync(path.join(this.localScopePath, '.bit'));
     if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.localScopePath, 'components'));
@@ -433,214 +724,9 @@ export default class Helper {
     });
     this.runCmd('bit init');
   }
+  // #endregion
 
-  getConsumerFiles(ext: string = '*.{js,ts}', includeDot: boolean = true) {
-    return glob
-      .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
-      .map(x => path.normalize(x));
-  }
-
-  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
-  }
-  tagWithoutMessage(id: string, version: string = '', options: string = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options}`);
-  }
-  removeComponent(id: string, flags: string = '') {
-    return this.runCmd(`bit remove ${id} ${flags}`);
-  }
-  deprecateComponent(id: string, flags: string = '') {
-    return this.runCmd(`bit deprecate ${id} ${flags}`);
-  }
-
-  commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
-    return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
-  }
-  tagAllWithoutMessage(options: string = '', version: string = '') {
-    return this.runCmd(`bit tag -a ${version} ${options} `);
-  }
-
-  tagScope(version: string, message: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
-  }
-
-  exportComponent(id: string, scope: string = this.remoteScope) {
-    return this.runCmd(`bit export ${scope} ${id}`);
-  }
-
-  exportAllComponents(scope: string = this.remoteScope) {
-    return this.runCmd(`bit export ${scope}`);
-  }
-
-  importComponent(id: string) {
-    return this.runCmd(`bit import ${this.remoteScope}/${id}`);
-  }
-
-  importComponentWithOptions(id: string = 'bar/foo.js', options: ?Object) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit import ${this.remoteScope}/${id} ${value}`);
-  }
-
-  importAllComponents(writeToFileSystem: boolean = false) {
-    return this.runCmd(`bit import ${writeToFileSystem ? '--merge' : ''}`);
-  }
-
-  isolateComponent(id: string, flags: string): string {
-    const isolatedEnvOutput = this.runCmd(`bit isolate ${this.remoteScope}/${id} ${this.remoteScopePath} ${flags}`);
-    const isolatedEnvOutputArray = isolatedEnvOutput.split('\n').filter(str => str);
-    return isolatedEnvOutputArray[isolatedEnvOutputArray.length - 1];
-  }
-
-  createCompiler() {
-    if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
-
-    const tempScope = `${generateRandomStr()}-temp`;
-    const tempScopePath = path.join(this.e2eDir, tempScope);
-    fs.emptyDirSync(tempScopePath);
-
-    this.runCmd('bit init', tempScopePath);
-
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
-    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
-    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
-
-    const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
-    const babelPluginTransformObjectRestSpreadPackageJson = {
-      name: 'babel-plugin-transform-object-rest-spread',
-      version: '6.23.0'
-    };
-    const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
-    const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
-
-    const nodeModulesDir = path.join(tempScopePath, 'node_modules');
-
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
-    ensureAndWriteJson(
-      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
-      babelPluginTransformObjectRestSpreadPackageJson
-    );
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
-    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
-
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
-
-    this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
-    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
-
-    fs.emptyDirSync(this.envScopePath);
-    this.runCmd('bit init --bare', this.envScopePath);
-    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
-    this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
-    this.addRemoteScope(this.envScopePath);
-    this.compilerCreated = true;
-    return true;
-  }
-
-  importCompiler(id?) {
-    if (!id) {
-      id = `${this.envScope}/compilers/babel`;
-      this.createCompiler();
-    }
-    // Temporary - for checking new serializaion against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
-    return this.runCmd(`bit import ${id} --compiler`);
-  }
-
-  importTester(id) {
-    // Temporary - for checking new serializaion against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
-    this.runCmd(`bit import ${id} --tester`);
-  }
-
-  build(id?: string = '') {
-    return this.runCmd(`bit build ${id}`);
-  }
-
-  createComponentBarFoo(impl?: string) {
-    this.createFile(undefined, undefined, impl);
-  }
-
-  pack(component: string, output: string = this.localScopePath) {
-    return this.runCmd(`bit pack ${this.remoteScope}/${component}  -d ${output} -l -w -o`, this.remoteScopePath);
-  }
-  addComponentBarFoo() {
-    return this.addComponent();
-  }
-
-  commitComponentBarFoo() {
-    return this.commitComponent('bar/foo');
-  }
-
-  corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson();
-    bitJson.corrupt = '"corrupted';
-    fs.writeFileSync(bitJsonPath, bitJson.toString());
-  }
-  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson();
-    bitJson[key] = value;
-    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-
-  /**
-   * Add a fake package, don't really install it. if you need the real package
-   * use installNpmPackage below
-   * @param {*} name
-   * @param {*} version
-   */
-  addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
-    const packageJsonFixture = JSON.stringify({ name, version });
-    this.createFile(`node_modules/${name}`, 'index.js');
-    this.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
-  }
-
-  /**
-   * install package, if you don't really need the package code and can use mock
-   * just run addNpmPackage which will be faster
-   * @param {*} name
-   * @param {*} version
-   */
-  installNpmPackage(name: string, version: ?string, cwd: string = this.localScopePath) {
-    const versionWithDelimiter = version ? `@${version}` : '';
-    const cmd = `npm i --save ${name}${versionWithDelimiter}`;
-    return this.runCmd(cmd, cwd);
-  }
-
-  createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {
-    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
-    const filePath = path.join(this.localScopePath, folder, name);
-    fs.outputFileSync(filePath, fixture);
-  }
-
-  readFile(filePath: string): string {
-    return fs.readFileSync(path.join(this.localScopePath, filePath)).toString();
-  }
-
-  /**
-   * adds "\n" at the beginning of the file to make it modified.
-   */
-  modifyFile(filePath: string) {
-    const content = fs.readFileSync(filePath);
-    fs.outputFileSync(filePath, `\n${content}`);
-  }
-
-  deleteFile(relativePathToLocalScope: string) {
-    return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
-  }
-
-  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd: string = this.localScopePath) {
-    return this.runCmd(`bit add ${filePaths}`, cwd);
-  }
-
-  untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
-    return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
-  }
-
+  // #region fixtures utils
   getFixturesDir() {
     return path.join(__dirname, 'fixtures');
   }
@@ -660,121 +746,7 @@ export default class Helper {
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
   }
-
-  addFixtureComponents() {}
-
-  createRemoteScopeWithComponentsFixture() {}
-
-  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd: string = this.localScopePath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
-  }
-
-  testComponent(id: string = '') {
-    return this.runCmd(`bit test ${id}`);
-  }
-
-  testComponentWithOptions(id: string = '', options: ?Object, cwd: string = this.localScopePath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit test ${id} ${value}`, cwd);
-  }
-
-  searchComponent(args) {
-    return this.runCmd(`bit search ${args}`);
-  }
-
-  status() {
-    return this.runCmd('bit status');
-  }
-
-  showComponent(id: string = 'bar/foo') {
-    return this.runCmd(`bit show ${id}`);
-  }
-
-  showComponentParsed(id: string = 'bar/foo') {
-    const output = this.runCmd(`bit show ${id} --json`);
-    return JSON.parse(output);
-  }
-
-  showComponentWithOptions(id: string = 'bar/foo', options: ?Object) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit show ${id} ${value}`);
-  }
-
-  /**
-   * Sometimes many tests need to do the exact same steps to init the local-scope, such as importing compiler/tester.
-   * To make it faster, use this method before all tests, and then use getClonedLocalScope method to restore from the
-   * cloned scope.
-   */
-  cloneLocalScope() {
-    const clonedScope = `${generateRandomStr()}-clone`;
-    const clonedScopePath = path.join(this.e2eDir, clonedScope);
-    if (this.debugMode) console.log(`cloning a scope from ${this.localScopePath} to ${clonedScopePath}`);
-    fs.copySync(this.localScopePath, clonedScopePath);
-    this.clonedScopes.push(clonedScopePath);
-    return clonedScopePath;
-  }
-
-  getClonedLocalScope(clonedScopePath: string) {
-    fs.removeSync(this.localScopePath);
-    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
-    fs.copySync(clonedScopePath, this.localScopePath);
-  }
-
-  cloneRemoteScope() {
-    const clonedScope = generateRandomStr();
-    const clonedScopePath = path.join(this.e2eDir, clonedScope);
-    if (this.debugMode) console.log(`cloning a scope from ${this.remoteScopePath} to ${clonedScopePath}`);
-    fs.copySync(this.remoteScopePath, clonedScopePath);
-    this.clonedScopes.push(clonedScopePath);
-    return clonedScopePath;
-  }
-
-  getClonedRemoteScope(clonedScopePath: string) {
-    fs.removeSync(this.remoteScopePath);
-    if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.remoteScopePath}`);
-    fs.copySync(clonedScopePath, this.remoteScopePath);
-  }
-
-  getRequireBitPath(box: string, name: string) {
-    return `@bit/${this.remoteScope}.${box}.${name}`;
-  }
-
-  checkoutVersion(version: string, ids: string, flags?: string, cwd?: string) {
-    return this.runCmd(`bit checkout ${version} ${ids} ${flags || ''}`, cwd);
-  }
-
-  checkout(values: string) {
-    return this.runCmd(`bit checkout ${values}`);
-  }
-
-  mergeVersion(version: string, ids: string, flags?: string) {
-    return this.runCmd(`bit merge ${version} ${ids} ${flags || ''}`);
-  }
-
-  diff(id?: string = '') {
-    const output = this.runCmd(`bit diff ${id}`);
-    return Helper.removeChalkCharacters(output);
-  }
-
-  move(from: string, to: string) {
-    return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
-  }
-
-  getBitVersion() {
-    return BIT_VERSION;
-  }
-
-  printBitMapFilesInCaseOfError(files: Object[]): string {
-    const filesStr = files.map(f => f.name).join(', ');
-    return `Files in bitmap file: ${filesStr}`;
-  }
+  // #endregion
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
