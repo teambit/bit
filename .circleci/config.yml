@@ -162,7 +162,7 @@ jobs:
       - store_artifacts:
           path: bit/junit
 
-    unit_test-bit-javascript:
+    unit_test_bit_javascript:
         docker:
         - image: circleci/node:6.10.3
         working_directory: ~/bit
@@ -287,6 +287,9 @@ workflows:
       - unit_test:
           requires:
             - build
+      - unit_test_bit_javascript:
+          requires:
+            - build_bit_javascript
       - lint:
           requires:
             - install_npm_deps
