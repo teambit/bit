@@ -108,18 +108,6 @@ function convertTree(depTree, tree, pathCache, baseDir) {
   return tree;
 }
 
-function getDetectiveOption(file, existingDetectiveOption) {
-  const detectiveOption = existingDetectiveOption || {};
-  const extension = path.extname(file);
-  if (extension === '.tsx') {
-    if (!detectiveOption.ts) {
-      detectiveOption.ts = {};
-    }
-    detectiveOption.ts.ecmaFeatures = { jsx: true };
-  }
-  return detectiveOption;
-}
-
 function addRelativePathsToPathMap(pathMap, pathCache, baseDir) {
   pathMap.forEach((file) => {
     file.relativePath = processPath(file.file, pathCache, baseDir);
@@ -148,7 +136,7 @@ export default function generateTree(files, config) {
       return;
     }
 
-    const detective = getDetectiveOption(file, config.detectiveOptions);
+    const detective = config.detectiveOptions;
     const dependencyTreeResult = dependencyTree({
       filename: file,
       directory: config.baseDir,

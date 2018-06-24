@@ -150,6 +150,8 @@ precinct.paperwork = function(filename, options) {
     type = 'stylus';
   } else if (ext === '.tsx') {
     type = 'ts';
+    if (!options.ts) options.ts = {};
+    options.ts.ecmaFeatures = { jsx: true };
   } else if (ext === '.css') {
     type = 'scss'; // there is no detective for CSS at the moment, however, the import syntax of scss supports css
   } else if (ext === '.vue') {
