@@ -162,6 +162,28 @@ jobs:
       - store_artifacts:
           path: bit/junit
 
+    unit_test-bit-javascript:
+        docker:
+        - image: circleci/node:6.10.3
+        working_directory: ~/bit
+        steps:
+        - run:
+            name: save SHA to a file
+            command: echo $CIRCLE_SHA1 > .circle-sha
+        - attach_workspace:
+            at: ./
+        - run: cd bit-javascript && mkdir junit
+        - run:
+            name: Run unit tests
+            command: cd bit-javascript && npm run test-circle
+            environment:
+                MOCHA_FILE: junit/unit-test-results.xml
+            when: always
+        - store_test_results:
+            path: bit-javascript/junit
+        - store_artifacts:
+            path: bit-javascript/junit
+
   lint:
     docker:
       - image: circleci/node:6.10.3
