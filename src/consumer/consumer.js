@@ -427,15 +427,19 @@ export default class Consumer {
       componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
 
       version.packageDependencies = sortObject(version.packageDependencies);
+      version.devPackageDependencies = sortObject(version.devPackageDependencies);
+      version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
-      // uncomment to easily understand why two components are considered as modified
-      // if (componentFromModel.hash().hash !== version.hash().hash) {
-      //   console.log('-------------------componentFromModel------------------------');
-      //   console.log(componentFromModel.id());
-      //   console.log('------------------------version------------------------------');
-      //   console.log(version.id());
-      //   console.log('-------------------------END---------------------------------');
-      // }
+      componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
+      componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
+      // prefix your command with "BIT_LOG=*" to see the actual id changes
+      if (process.env.BIT_LOG && componentFromModel.hash().hash !== version.hash().hash) {
+        console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
+        console.log(componentFromModel.id()); // eslint-disable-line no-console
+        console.log('------------------------componentFromFileSystem (version)----'); // eslint-disable-line no-console
+        console.log(version.id()); // eslint-disable-line no-console
+        console.log('-------------------------END---------------------------------'); // eslint-disable-line no-console
+      }
       componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
     }
     return componentFromFileSystem._isModified;
