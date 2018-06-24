@@ -12,7 +12,7 @@ export default class Build extends Command {
   alias = '';
   opts = [
     ['v', 'verbose [boolean]', 'showing npm verbose output for inspection'],
-    ['s', 'no-cache', "do not take dist files from bit's cache"]
+    ['c', 'no-cache', "do not take dist files from bit's cache"]
   ];
   loader = true;
   migration = true;
