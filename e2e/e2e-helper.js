@@ -104,6 +104,14 @@ export default class Helper {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
     }
   }
+
+  getRequireBitPath(box: string, name: string) {
+    return `@bit/${this.remoteScope}.${box}.${name}`;
+  }
+
+  getBitVersion() {
+    return BIT_VERSION;
+  }
   // #endregion
 
   // #region scopes utils (init, remote etc')
@@ -430,6 +438,71 @@ export default class Helper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
+  setHubDomain(domain: string = 'hub.bitsrc.io') {
+    this.runCmd(`bit config set hub_domain ${domain}`);
+  }
+  // #endregion
+
+  // #region bit commands on templates (like add BarFoo / create compiler)
+  createComponentBarFoo(impl?: string) {
+    this.createFile(undefined, undefined, impl);
+  }
+
+  addComponentBarFoo() {
+    return this.addComponent();
+  }
+
+  commitComponentBarFoo() {
+    return this.commitComponent('bar/foo');
+  }
+
+  createCompiler() {
+    if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
+    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
+
+    const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
+    const babelPluginTransformObjectRestSpreadPackageJson = {
+      name: 'babel-plugin-transform-object-rest-spread',
+      version: '6.23.0'
+    };
+    const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
+    const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
+
+    const nodeModulesDir = path.join(tempScopePath, 'node_modules');
+
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
+    ensureAndWriteJson(
+      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
+      babelPluginTransformObjectRestSpreadPackageJson
+    );
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
+    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
+
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
+    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
+
+    this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
+    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.compilerCreated = true;
+    return true;
+  }
   // #endregion
 
   // #region bit.json manipulation
@@ -593,6 +666,17 @@ export default class Helper {
     const cmd = `npm i --save ${name}${versionWithDelimiter}`;
     return this.runCmd(cmd, cwd);
   }
+  /**
+   * Add a fake package, don't really install it. if you need the real package
+   * use installNpmPackage below
+   * @param {*} name
+   * @param {*} version
+   */
+  addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
+    const packageJsonFixture = JSON.stringify({ name, version });
+    this.createFile(`node_modules/${name}`, 'index.js');
+    this.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
+  }
   addKeyValueToPackageJson(data: Object, pkgJsonPath: string = path.join(this.localScopePath)) {
     const pkgJson = this.readPackageJson(pkgJsonPath);
     fs.writeJSONSync(path.join(pkgJsonPath, 'package.json'), Object.assign(pkgJson, data), { spaces: 2 });
@@ -628,6 +712,18 @@ export default class Helper {
   unsetGitConfig(key, location = 'local') {
     return this.runCmd(`git config --unset --${location} ${key}`);
   }
+  mimicGitCloneLocalProject(cloneWithComponentsFiles: boolean = true) {
+    fs.removeSync(path.join(this.localScopePath, '.bit'));
+    if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.localScopePath, 'components'));
+    // delete all node-modules from all directories
+    const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
+    directories.forEach((dir) => {
+      if (dir.includes('node_modules')) {
+        fs.removeSync(path.join(this.localScopePath, dir));
+      }
+    });
+    this.runCmd('bit init');
+  }
   // #endregion
 
   // #region fixtures utils
@@ -651,106 +747,6 @@ export default class Helper {
     fs.copySync(sourceFile, distFile);
   }
   // #endregion
-
-  setHubDomain(domain: string = 'hub.bitsrc.io') {
-    this.runCmd(`bit config set hub_domain ${domain}`);
-  }
-
-  mimicGitCloneLocalProject(cloneWithComponentsFiles: boolean = true) {
-    fs.removeSync(path.join(this.localScopePath, '.bit'));
-    if (!cloneWithComponentsFiles) fs.removeSync(path.join(this.localScopePath, 'components'));
-    // delete all node-modules from all directories
-    const directories = glob.sync(path.normalize('**/'), { cwd: this.localScopePath, dot: true });
-    directories.forEach((dir) => {
-      if (dir.includes('node_modules')) {
-        fs.removeSync(path.join(this.localScopePath, dir));
-      }
-    });
-    this.runCmd('bit init');
-  }
-
-  createCompiler() {
-    if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
-
-    const tempScope = `${generateRandomStr()}-temp`;
-    const tempScopePath = path.join(this.e2eDir, tempScope);
-    fs.emptyDirSync(tempScopePath);
-
-    this.runCmd('bit init', tempScopePath);
-
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'babel');
-    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
-    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
-
-    const babelCorePackageJson = { name: 'babel-core', version: '6.25.0' };
-    const babelPluginTransformObjectRestSpreadPackageJson = {
-      name: 'babel-plugin-transform-object-rest-spread',
-      version: '6.23.0'
-    };
-    const babelPresetLatestPackageJson = { name: 'babel-preset-latest', version: '6.24.1' };
-    const vinylPackageJson = { name: 'vinyl', version: '2.1.0' };
-
-    const nodeModulesDir = path.join(tempScopePath, 'node_modules');
-
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'package.json'), babelCorePackageJson);
-    ensureAndWriteJson(
-      path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'package.json'),
-      babelPluginTransformObjectRestSpreadPackageJson
-    );
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'package.json'), babelPresetLatestPackageJson);
-    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'package.json'), vinylPackageJson);
-
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-core', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-plugin-transform-object-rest-spread', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'babel-preset-latest', 'index.js'), '');
-    ensureAndWriteJson(path.join(nodeModulesDir, 'vinyl', 'index.js'), '');
-
-    this.runCmd('bit add compiler.js -i compilers/babel', tempScopePath);
-    this.runCmd('bit tag compilers/babel -m msg', tempScopePath);
-
-    fs.emptyDirSync(this.envScopePath);
-    this.runCmd('bit init --bare', this.envScopePath);
-    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
-    this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
-    this.addRemoteScope(this.envScopePath);
-    this.compilerCreated = true;
-    return true;
-  }
-
-  createComponentBarFoo(impl?: string) {
-    this.createFile(undefined, undefined, impl);
-  }
-
-  pack(component: string, output: string = this.localScopePath) {
-    return this.runCmd(`bit pack ${this.remoteScope}/${component}  -d ${output} -l -w -o`, this.remoteScopePath);
-  }
-  addComponentBarFoo() {
-    return this.addComponent();
-  }
-
-  commitComponentBarFoo() {
-    return this.commitComponent('bar/foo');
-  }
-
-  /**
-   * Add a fake package, don't really install it. if you need the real package
-   * use installNpmPackage below
-   * @param {*} name
-   * @param {*} version
-   */
-  addNpmPackage(name: string = 'lodash.get', version: string = '4.4.2') {
-    const packageJsonFixture = JSON.stringify({ name, version });
-    this.createFile(`node_modules/${name}`, 'index.js');
-    this.createFile(`node_modules/${name}`, 'package.json', packageJsonFixture);
-  }
-
-  getRequireBitPath(box: string, name: string) {
-    return `@bit/${this.remoteScope}.${box}.${name}`;
-  }
-
-  getBitVersion() {
-    return BIT_VERSION;
-  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
