@@ -376,6 +376,13 @@ export default class Helper {
     return this.runCmd(`bit build ${id}`);
   }
 
+  buildComponentWithOptions(id: string = '', options: ?Object, cwd: string = this.localScopePath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit build ${id} ${value}`, cwd);
+  }
+
   addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd: string = this.localScopePath) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)

@@ -7,11 +7,11 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
-export async function build(id: string, skipCache: boolean, verbose: boolean): Promise<?Array<string>> {
+export async function build(id: string, noCache: boolean, verbose: boolean): Promise<?Array<string>> {
   const bitId = BitId.parse(id);
   const consumer = await loadConsumer();
   const component: Component = await consumer.loadComponent(bitId);
-  const result = await component.build({ scope: consumer.scope, skipCache, consumer, verbose });
+  const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
   if (result === null) return null;
   const distFilePaths = await component.dists.writeDists(component, consumer);
   consumer.bitMap.addMainDistFileToComponent(component.id, distFilePaths);
