@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.1] - 2018-06-24
+
+- fix .tsx parsing issue when the tsx dependency is required from a non .tsx file
+- fix support of .json dependencies
+- fix "SyntaxError: Unexpected token" when parsing .ts files with .js dependencies
+
 ## [1.0.0] - 2018-06-18
 
 - support custom module resolution
