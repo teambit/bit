@@ -219,15 +219,18 @@ export default class SSH implements Network {
       });
   }
 
-  list() {
-    return this.exec('_list').then((str: string) => {
+  async list() {
+    return this.exec('_list').then(async (str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
-      return rejectNils(
-        payload.map((c) => {
-          return c ? ConsumerComponent.fromString(c) : null;
-        })
-      );
+      const componentsP = [];
+      payload.forEach((c) => {
+        if (c) {
+          componentsP.push(ConsumerComponent.fromString(c));
+        }
+      });
+      const components = await Promise.all(componentsP);
+      return components;
     });
   }
 
