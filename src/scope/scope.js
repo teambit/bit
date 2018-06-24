@@ -308,13 +308,14 @@ export default class Scope {
   async buildMultiple(
     components: Component[],
     consumer: Consumer,
+    noCache: boolean,
     verbose: boolean
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     Analytics.addBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     loader.start(BEFORE_RUNNING_BUILD);
     const build = async (component: Component) => {
-      await component.build({ scope: this, consumer, verbose });
+      await component.build({ scope: this, consumer, noCache, verbose });
       const buildResults = await component.dists.writeDists(component, consumer);
       return { component: component.id.toString(), buildResults };
     };
