@@ -1582,6 +1582,38 @@ console.log(barFoo.default());`;
     });
   });
 
+  /**
+   * requiring an imported component with relative paths may lead to bigger and bigger dependencies
+   * paths. It's better to avoid them and use absolute path instead
+   */
+  describe('after adding another component requiring the imported component with relative syntax', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.addComponent('utils/is-type.js');
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-type');
+      const isStringWithDepsFixture =
+        "const isType = require('../components/utils/is-type/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('utils', 'is-string.js', isStringWithDepsFixture);
+      helper.addComponent('utils/is-string.js');
+      try {
+        output = helper.commitAllComponents();
+      } catch (err) {
+        output = err.toString();
+      }
+    });
+    it('should not allow tagging the component', () => {
+      expect(output).to.have.string(
+        'components with relative import statements (please use absolute paths for imported components)'
+      );
+    });
+  });
+
   describe('import the same component ("is-type") as an indirect dependency (of "is-string") and as a direct dependency', () => {
     let localConsumerFiles;
     before(() => {
