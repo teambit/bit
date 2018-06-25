@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - show environments when running bit show on remote component
 - add troubleshooting-isolating link to bit status
 - add new flag `--skip-tests` to bit tag command
+- add `--no-cache` flag to `bit build` command
 
 ## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
 

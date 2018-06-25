@@ -827,12 +827,14 @@ export default class Component {
     scope,
     save,
     consumer,
+    noCache,
     verbose,
     keep
   }: {
     scope: Scope,
     save?: boolean,
     consumer?: Consumer,
+    noCache?: boolean,
     verbose?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
@@ -853,6 +855,8 @@ export default class Component {
     // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
     // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
     const isNeededToReBuild = async () => {
+      // Forcly rebuild
+      if (noCache) return true;
       if (!consumer) return false;
       const componentStatus = await consumer.getComponentStatusById(this.id);
       return componentStatus.modified;

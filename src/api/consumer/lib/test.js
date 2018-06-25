@@ -59,6 +59,6 @@ const _getComponents = async (consumer: Consumer, id?: string, verbose: ?boolean
   const componentsList = new ComponentsList(consumer);
   loader.start(BEFORE_LOADING_COMPONENTS);
   const components = await componentsList.newAndModifiedComponents();
-  await consumer.scope.buildMultiple(components, consumer, verbose);
+  await consumer.scope.buildMultiple(components, consumer, false, verbose);
   return components;
 };

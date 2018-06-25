@@ -7,11 +7,11 @@ import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
-export async function build(id: string, verbose: boolean): Promise<?Array<string>> {
+export async function build(id: string, noCache: boolean, verbose: boolean): Promise<?Array<string>> {
   const bitId = BitId.parse(id);
   const consumer = await loadConsumer();
   const component: Component = await consumer.loadComponent(bitId);
-  const result = await component.build({ scope: consumer.scope, consumer, verbose });
+  const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
   if (result === null) return null;
   const distFilePaths = await component.dists.writeDists(component, consumer);
   consumer.bitMap.addMainDistFileToComponent(component.id, distFilePaths);
@@ -19,7 +19,7 @@ export async function build(id: string, verbose: boolean): Promise<?Array<string
   return distFilePaths;
 }
 
-export async function buildAll(verbose: boolean): Promise<Object> {
+export async function buildAll(noCache: boolean, verbose: boolean): Promise<Object> {
   const consumer: Consumer = await loadConsumer();
   const authoredAndImported = consumer.bitMap.getAllComponents([
     COMPONENT_ORIGINS.IMPORTED,
@@ -30,7 +30,7 @@ export async function buildAll(verbose: boolean): Promise<Object> {
   const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
   loader.start(BEFORE_LOADING_COMPONENTS);
   const { components } = await consumer.loadComponents(authoredAndImportedIds);
-  const buildAllP = await consumer.scope.buildMultiple(components, consumer, verbose);
+  const buildAllP = await consumer.scope.buildMultiple(components, consumer, noCache, verbose);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
   allComponents.forEach((component) => {

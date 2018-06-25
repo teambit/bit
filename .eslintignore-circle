@@ -51,7 +51,6 @@ src/cli/cli-utils.js
 src/cli/command.js
 src/cli/commands/private-cmds/_fetch-cmd.js
 src/cli/commands/private-cmds/scope-config-cmd.js
-src/cli/commands/public-cmds/build-cmd.js
 src/cli/commands/public-cmds/commit-cmd.js
 src/cli/commands/public-cmds/config-cmd.js
 src/cli/commands/public-cmds/list-cmd.js
