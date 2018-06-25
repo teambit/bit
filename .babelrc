@@ -10,7 +10,12 @@
   "plugins": [
     ["transform-flow-strip-types"],
     ["babel-plugin-transform-builtin-extend", {
-      "globals": ["Error", "Array"]
+      "globals": ["Error", "Array", "Map"]
+    }],
+    ["transform-runtime", {
+      "helpers": false,
+      "polyfill": false,
+      "regenerator": true
     }],
     ["syntax-async-functions"]
   ]

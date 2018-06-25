@@ -2,22 +2,22 @@ import assert from 'assert';
 import sinon from 'sinon';
 import mockfs from 'mock-fs';
 import path from 'path';
-import precinct from '../../precinct';
+import precinct from '../precinct';
 import rewire from 'rewire';
-import Config from '../Config';
+import Config from './Config';
 
 // Bootstrap lazy requires
 import resolve from 'resolve';
 import typescript from 'typescript';
 import moduleDefinition from 'module-definition';
 
-const dependencyTree = rewire('../');
+const dependencyTree = rewire('./');
 
 describe('dependencyTree', function() {
   this.timeout(8000);
   function testTreesForFormat(format, ext = '.js') {
     it('returns an object form of the dependency tree for a file', function() {
-      const root = `${__dirname}/example/${format}`;
+      const root = `${__dirname}/../../../../fixtures/dependency-tree/${format}`;
       const filename = `${root}/a${ext}`;
 
       const tree = dependencyTree({filename, root});

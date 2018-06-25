@@ -4,7 +4,7 @@ var rewire = require('rewire');
 var mock = require('mock-fs');
 var path = require('path');
 
-var cabinet = rewire('../');
+var cabinet = rewire('./');
 //manually add dynamic imports to rewired app
 cabinet.__set__('resolveDependencyPath', require('resolve-dependency-path'));
 cabinet.__set__('resolve', require('resolve'));
@@ -13,8 +13,9 @@ cabinet.__set__('ts', require('typescript'));
 cabinet.__set__('amdLookup', require('module-lookup-amd'));
 cabinet.__set__('webpackResolve', require('enhanced-resolve'));
 
-var mockedFiles = require('./mockedJSFiles');
-var mockAST = require('./ast');
+const fixtures = `${__dirname}/../../../fixtures/filing-cabinet`;
+var mockedFiles = require(`${fixtures}/mockedJSFiles`);
+var mockAST = require(`${fixtures}/ast`);
 
 describe('filing-cabinet', function() {
   describe('JavaScript', function() {

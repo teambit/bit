@@ -3,8 +3,9 @@ var fs = require('fs');
 var path = require('path');
 var rewire = require('rewire');
 var sinon = require('sinon');
-var ast = require('./exampleAST');
-var precinct = rewire('../');
+const fixtures = `${__dirname}/../../../fixtures/precinct`;
+var ast = require(`${fixtures}/exampleAST`);
+var precinct = rewire('./');
 
 function read(filename) {
   return fs.readFileSync(path.join(__dirname, filename), 'utf8');
