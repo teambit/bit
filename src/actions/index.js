@@ -4,5 +4,5 @@ import getDependenciesAction from './get-dependencies';
 export {
   // bindAction,
   // bindSpecificComponentsAction,
-  getDependenciesAction,
+  getDependenciesAction
 };

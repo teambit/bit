@@ -14,8 +14,8 @@ export type ComponentMap = {
   rootDir?: string,
   origin: ComponentOrigin,
   dependencies: string[],
-  mainDistFile?: string,
-}
+  mainDistFile?: string
+};
 
 export default class BitMap {
   projectRoot: string;

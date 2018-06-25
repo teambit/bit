@@ -22,7 +22,19 @@ function convertComponentsToValidPackageNames(registryPrefix: string, bitDepende
   return obj;
 }
 
-const PackageJsonPropsNames = ['name', 'version', 'homepage', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'scripts', 'workspaces', 'private'];
+const PackageJsonPropsNames = [
+  'name',
+  'version',
+  'homepage',
+  'main',
+  'dependencies',
+  'devDependencies',
+  'peerDependencies',
+  'license',
+  'scripts',
+  'workspaces',
+  'private'
+];
 
 export type PackageJsonProps = {
   name?: string,
@@ -34,7 +46,7 @@ export type PackageJsonProps = {
   peerDependencies?: Object,
   license?: string,
   scripts?: Object,
-  workspaces: string[];
+  workspaces: string[],
   private?: boolean
 };
 
@@ -51,7 +63,21 @@ export default class PackageJson {
   scripts: Object;
   workspaces: string[];
 
-  constructor(componentRootFolder: string, { name, version, homepage, main, dependencies, devDependencies, peerDependencies, license, scripts, workspaces }: PackageJsonProps) {
+  constructor(
+    componentRootFolder: string,
+    {
+      name,
+      version,
+      homepage,
+      main,
+      dependencies,
+      devDependencies,
+      peerDependencies,
+      license,
+      scripts,
+      workspaces
+    }: PackageJsonProps
+  ) {
     this.name = name;
     this.version = version;
     this.homepage = homepage;
@@ -83,18 +109,26 @@ export default class PackageJson {
   }
 
   addDependencies(bitDependencies: Object, registryPrefix: string) {
-    this.dependencies = Object.assign({}, this.dependencies, convertComponentsToValidPackageNames(registryPrefix, bitDependencies));
+    this.dependencies = Object.assign(
+      {},
+      this.dependencies,
+      convertComponentsToValidPackageNames(registryPrefix, bitDependencies)
+    );
   }
 
   addDevDependencies(bitDevDependencies: Object, registryPrefix: string) {
-    this.devDependencies = Object.assign({}, this.devDependencies, convertComponentsToValidPackageNames(registryPrefix, bitDevDependencies));
+    this.devDependencies = Object.assign(
+      {},
+      this.devDependencies,
+      convertComponentsToValidPackageNames(registryPrefix, bitDevDependencies)
+    );
   }
 
   static hasExisting(componentRootFolder: string, throws?: boolean = false): boolean {
     const packageJsonPath = composePath(componentRootFolder);
     const exists = fs.pathExistsSync(packageJsonPath);
     if (!exists && throws) {
-      throw (new PackageJsonNotFound(packageJsonPath));
+      throw new PackageJsonNotFound(packageJsonPath);
     }
     return exists;
   }
@@ -165,7 +199,7 @@ export default class PackageJson {
     if (configJSON && addPaths) {
       configJSON.paths = {
         relative: path.relative(dir, pathToConfig),
-        absolute: pathToConfig,
+        absolute: pathToConfig
       };
     } else if (configJSON !== null) {
       delete configJSON.paths;
@@ -174,21 +208,20 @@ export default class PackageJson {
     return configJSON;
   }
 
-/*
+  /*
  * load package.json from path
  */
   static getPackageJson(path: string) {
     const getRawObject = () => fs.readJson(composePath(path));
     const exist = PackageJson.hasExisting(path);
-    if(exist) return getRawObject();
+    if (exist) return getRawObject();
   }
-
 
   /*
    * save package.json in path
    */
-  static saveRawObject(path: string, obj: Object){
-    return fs.outputJSON(composePath(path), obj, {spaces: 2});
+  static saveRawObject(path: string, obj: Object) {
+    return fs.outputJSON(composePath(path), obj, { spaces: 2 });
   }
 
   /*
@@ -199,8 +232,12 @@ export default class PackageJson {
    * attribute. Nothing more, nothing less.
    */
   static async addComponentsIntoExistingPackageJson(rootDir: string, components: Array, registryPrefix: string) {
-    const packageJson = (await PackageJson.getPackageJson(rootDir)) || { dependencies: {} } ;
-    packageJson.dependencies = Object.assign({}, packageJson.dependencies, convertComponentsToValidPackageNames(registryPrefix, components));
+    const packageJson = (await PackageJson.getPackageJson(rootDir)) || { dependencies: {} };
+    packageJson.dependencies = Object.assign(
+      {},
+      packageJson.dependencies,
+      convertComponentsToValidPackageNames(registryPrefix, components)
+    );
     await PackageJson.saveRawObject(rootDir, packageJson);
   }
   /*
@@ -210,35 +247,40 @@ export default class PackageJson {
    * Also, in case there is no package.json file in this project, it generates a new one with only the 'dependencies'
    * adds workspaces with private flag if dosent exist.
    */
-  static async addWorkspacesToPackageJson(rootDir: string, componentsDefaultDirectory: string, dependenciesDirectory: string, customImportPath: ?string ) {
-    const pkg = (await PackageJson.getPackageJson(rootDir)) || {} ;
+  static async addWorkspacesToPackageJson(
+    rootDir: string,
+    componentsDefaultDirectory: string,
+    dependenciesDirectory: string,
+    customImportPath: ?string
+  ) {
+    const pkg = (await PackageJson.getPackageJson(rootDir)) || {};
     const workSpaces = pkg.workspaces || [];
     workSpaces.push(dependenciesDirectory);
     workSpaces.push(componentsDefaultDirectory);
-    if(customImportPath) workSpaces.push(customImportPath);
+    if (customImportPath) workSpaces.push(customImportPath);
     pkg.workspaces = R.uniq(workSpaces);
-    pkg.private = pkg.workspaces ? true : false;
+    pkg.private = !!pkg.workspaces;
     await PackageJson.saveRawObject(rootDir, pkg);
   }
 
   /*
    * remove workspaces dir from workspace in package.json with changing other fields in package.json
    */
-  static async removeComponentsFromWorkspaces(rootDir: string, pathsTOoRemove: string[] ) {
+  static async removeComponentsFromWorkspaces(rootDir: string, pathsTOoRemove: string[]) {
     const pkg = (await PackageJson.getPackageJson(rootDir)) || {};
-    let workSpaces = pkg.workspaces || [];
-    pkg.workspaces = workSpaces.filter(folder => !pathsTOoRemove.includes(folder))
+    const workSpaces = pkg.workspaces || [];
+    pkg.workspaces = workSpaces.filter(folder => !pathsTOoRemove.includes(folder));
     await PackageJson.saveRawObject(rootDir, pkg);
   }
 
   /*
    * remove components from package.json dependencies
    */
-  static async removeComponentsFromDependencies(rootDir: string, registryPrefix, componentIds: string[] ) {
+  static async removeComponentsFromDependencies(rootDir: string, registryPrefix, componentIds: string[]) {
     const pkg = await PackageJson.getPackageJson(rootDir);
     if (pkg && pkg.dependencies) {
-      componentIds.forEach(id => {
-        delete pkg.dependencies[convertComponentsIdToValidPackageName(registryPrefix, id)]
+      componentIds.forEach((id) => {
+        delete pkg.dependencies[convertComponentsIdToValidPackageName(registryPrefix, id)];
       });
       await PackageJson.saveRawObject(rootDir, pkg);
     }

@@ -9,7 +9,7 @@ import dependencyTree from './dependency-tree';
  * Check if running on Windows.
  * @type {Boolean}
  */
-const isWin = (os.platform() === 'win32');
+const isWin = os.platform() === 'win32';
 
 /**
  * Check if path is from NPM folder
@@ -26,8 +26,7 @@ function isNpmPathFunc(path) {
  * @return {Object}
  */
 function sort(tree) {
-  return Object
-    .keys(tree)
+  return Object.keys(tree)
     .sort()
     .reduce((acc, id) => {
       acc[id] = tree[id].sort();
@@ -42,21 +41,19 @@ function sort(tree) {
  * @return {Object}
  */
 function exclude(tree, excludeRegExp) {
-  const regExpList = excludeRegExp.map((re) => new RegExp(re));
+  const regExpList = excludeRegExp.map(re => new RegExp(re));
 
   function regExpFilter(id) {
-    return regExpList.findIndex((regexp) => regexp.test(id)) < 0;
+    return regExpList.findIndex(regexp => regexp.test(id)) < 0;
   }
 
-  return Object
-    .keys(tree)
+  return Object.keys(tree)
     .filter(regExpFilter)
     .reduce((acc, id) => {
       acc[id] = tree[id].filter(regExpFilter);
       return acc;
     }, {});
 }
-
 
 /**
  * Process absolute path and return a shorter one.
@@ -160,7 +157,7 @@ export default function generateTree(files, config) {
       },
       detective,
       nonExistent,
-      pathMap,
+      pathMap
     });
     Object.assign(depTree, dependencyTreeResult);
   });
@@ -183,6 +180,6 @@ export default function generateTree(files, config) {
   return {
     tree: sort(tree),
     skipped: nonExistent,
-    pathMap,
+    pathMap
   };
 }

@@ -11,5 +11,5 @@ export {
   NoConsumerFoundException,
   MultipleScopesNoDefException,
   PackageJsonNotFound,
-  PackageJsonAlreadyExists,
+  PackageJsonAlreadyExists
 };

@@ -7,9 +7,10 @@ import commands from './commands/command-list';
 
 function bitError(message) {
   return chalk.red(
-    message.split('\n') // eslint-disable-line
-    .map(m => `bitjs ERR! ${m}`)
-    .join('\n') + '\n',
+    `${message
+      .split('\n') // eslint-disable-line
+      .map(m => `bitjs ERR! ${m}`)
+      .join('\n')}\n`
   );
 }
 
@@ -32,9 +33,7 @@ function logAndExit(str) {
 }
 
 function start() {
-  const program = prog
-  .version(pkg.version)
-  .description('bit driver for javascript');
+  const program = prog.version(pkg.version).description('bit driver for javascript');
 
   commands.forEach((c) => {
     const currentCommand = program.command(c.name, c.description);
@@ -47,9 +46,9 @@ function start() {
       if (c.loader === true) loader.on();
       loader.start(c.loaderText || `performing ${c.name} command`);
       c.action(args, options)
-      .then(c.report)
-      .then(logAndExit)
-      .catch(c.handleError || errorHandler);
+        .then(c.report)
+        .then(logAndExit)
+        .catch(c.handleError || errorHandler);
     });
   });
 

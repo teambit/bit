@@ -9,7 +9,13 @@ import lset from 'lodash.set';
 import generateTree from './generate-tree-madge';
 import PackageJson from '../package-json/package-json';
 import { DEFAULT_BINDINGS_PREFIX } from '../constants';
-import type { Tree, FileObject, ImportSpecifier, DependencyTreeParams, ResolveModulesConfig } from './types/dependency-tree-type';
+import type {
+  Tree,
+  FileObject,
+  ImportSpecifier,
+  DependencyTreeParams,
+  ResolveModulesConfig
+} from './types/dependency-tree-type';
 
 export type LinkFile = {
   file: string,
@@ -24,7 +30,7 @@ export type PathMapDependency = {
   importSpecifiers?: ImportSpecifier[], // relevant for ES6 and TS
   linkFile?: boolean,
   realDependencies?: LinkFile[] // in case it's a link-file
-}
+};
 
 /**
  * PathMap is used to get the ImportSpecifiers from dependency-tree library
@@ -33,7 +39,7 @@ export type PathMapItem = {
   file: string,
   dependencies: PathMapDependency[],
   relativePath: string // added by generate-tree-madge.addRelativePathsToPathMap()
-}
+};
 
 /**
  * Group dependencies by types (files, bits, packages)
@@ -42,7 +48,9 @@ export type PathMapItem = {
  */
 const byType = (list, bindingPrefix) => {
   const grouped = R.groupBy((item) => {
-    if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) return 'bits';
+    if (item.includes(`node_modules/${bindingPrefix}`) || item.includes(`node_modules/${DEFAULT_BINDINGS_PREFIX}`)) {
+      return 'bits';
+    }
     return item.includes('node_modules') ? 'packages' : 'files';
   });
   return grouped(list);
@@ -65,13 +73,17 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
   const packageJsonInfo = PackageJson.findPackage(cwd);
   if (packageJsonInfo) {
     // The +1 is for the / after the node_modules, we didn't enter it into the NODE_MODULES const because it makes problems on windows
-    const packageRelativePath = packageFullPath.substring(packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1, packageFullPath.length);
+    const packageRelativePath = packageFullPath.substring(
+      packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1,
+      packageFullPath.length
+    );
 
     const packageName = resolvePackageNameByPath(packageRelativePath);
     const packageNameNormalized = packageName.replace('\\', '/');
-    const packageVersion = R.path(['dependencies', packageNameNormalized], packageJsonInfo) ||
-                           R.path(['devDependencies', packageNameNormalized], packageJsonInfo) ||
-                           R.path(['peerDependencies', packageNameNormalized], packageJsonInfo);
+    const packageVersion =
+      R.path(['dependencies', packageNameNormalized], packageJsonInfo) ||
+      R.path(['devDependencies', packageNameNormalized], packageJsonInfo) ||
+      R.path(['peerDependencies', packageNameNormalized], packageJsonInfo);
     if (packageVersion) {
       result[packageNameNormalized] = packageVersion;
       return result;
@@ -196,7 +208,7 @@ function findPackagesInPackageJson(packageJson: Object, packagesNames: string[])
   const mergedDependencies = Object.assign({}, dependencies, devDependencies, peerDependencies);
   if (packagesNames && packagesNames.length && !R.isNil(mergedDependencies)) {
     const [foundPackagesPartition, missingPackages] = partition(packagesNames, item => item in mergedDependencies);
-    foundPackagesPartition.forEach(pack => foundPackages[pack] = mergedDependencies[pack]);
+    foundPackagesPartition.forEach(pack => (foundPackages[pack] = mergedDependencies[pack]));
     return { foundPackages, missingPackages };
   }
   return { foundPackages: {}, missingPackages: packagesNames };
@@ -224,7 +236,9 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
     if (item.startsWith(`${bindingPrefix}/`) || item.startsWith(`${DEFAULT_BINDINGS_PREFIX}/`)) return 'bits';
     return item.startsWith('.') ? 'files' : 'packages';
   });
-  const groups = Object.keys(missing).map(key => Object.assign({ originFile: path.relative(cwd, key) }, byPathType(missing[key], bindingPrefix)));
+  const groups = Object.keys(missing).map(key =>
+    Object.assign({ originFile: path.relative(cwd, key) }, byPathType(missing[key], bindingPrefix))
+  );
   groups.forEach((group) => {
     if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
   });
@@ -237,7 +251,7 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
     const missingPackages = [];
     if (group.packages) {
       group.packages.forEach((packageName) => {
-      // Don't add the same package twice
+        // Don't add the same package twice
         if (R.contains(packageName, missingPackages)) return;
         const resolvedPath = resolveModulePath(packageName, cwd, consumerPath);
         if (!resolvedPath) {
@@ -245,8 +259,9 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
         }
         const packageWithVersion = resolveNodePackage(cwd, resolvedPath);
 
-        return packageWithVersion ? Object.assign(foundPackages, packageWithVersion) :
-        missingPackages.push(packageWithVersion);
+        return packageWithVersion
+          ? Object.assign(foundPackages, packageWithVersion)
+          : missingPackages.push(packageWithVersion);
       });
     }
     if (packageJson) {
@@ -260,17 +275,19 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
   // https://github.com/teambit/bit/issues/635
   // https://github.com/teambit/bit/issues/690
 
-
   return { groups, foundPackages };
 }
 
 /**
  * if a dependency file is in fact a link file, get its real dependencies.
  */
-function getDependenciesFromLinkFileIfExists(dependency: PathMapDependency, dependencyPathMap: PathMapItem): LinkFile[] {
+function getDependenciesFromLinkFileIfExists(
+  dependency: PathMapDependency,
+  dependencyPathMap: PathMapItem
+): LinkFile[] {
   const dependencies = [];
   if (!dependency.importSpecifiers) return dependencies;
-  for (let specifier of dependency.importSpecifiers) {
+  for (const specifier of dependency.importSpecifiers) {
     const realDep = dependencyPathMap.dependencies.find((dep) => {
       if (!dep.importSpecifiers) return false;
       return dep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
@@ -310,7 +327,8 @@ function updatePathMapWithLinkFilesData(pathMap: PathMapItem[]): void {
       const dependencyPathMap = pathMap.find(file => file.file === dependency.resolvedDep);
       if (!dependencyPathMap || !dependencyPathMap.dependencies || !dependencyPathMap.dependencies.length) return;
       const dependenciesFromLinkFiles = getDependenciesFromLinkFileIfExists(dependency, dependencyPathMap);
-      if (dependenciesFromLinkFiles.length) { // it is a link file
+      if (dependenciesFromLinkFiles.length) {
+        // it is a link file
         dependency.linkFile = true;
         dependency.realDependencies = dependenciesFromLinkFiles;
       }
@@ -333,9 +351,8 @@ function updateTreeWithPathMap(tree: Tree, pathMap: PathMapItem[]): void {
       if (!dependencyPathMap) throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${dependency}`);
       const fileObject: FileObject = {
         file: dependency,
-        importSource:
-        dependencyPathMap.importSource,
-        isCustomResolveUsed: dependencyPathMap.isCustomResolveUsed,
+        importSource: dependencyPathMap.importSource,
+        isCustomResolveUsed: dependencyPathMap.isCustomResolveUsed
       };
       if (dependencyPathMap.linkFile) {
         fileObject.isLink = true;
@@ -345,7 +362,7 @@ function updateTreeWithPathMap(tree: Tree, pathMap: PathMapItem[]): void {
       if (dependencyPathMap.importSpecifiers && dependencyPathMap.importSpecifiers.length) {
         const depImportSpecifiers = dependencyPathMap.importSpecifiers.map((importSpecifier) => {
           return {
-            mainFile: importSpecifier,
+            mainFile: importSpecifier
           };
         });
         fileObject.importSpecifiers = depImportSpecifiers;
@@ -364,9 +381,7 @@ function getResolveConfigAbsolute(consumerPath: string, resolveConfig: ?ResolveM
   const resolveConfigAbsolute = R.clone(resolveConfig);
   if (resolveConfig.modulesDirectories) {
     resolveConfigAbsolute.modulesDirectories = resolveConfig.modulesDirectories.map((moduleDirectory) => {
-      return path.isAbsolute(moduleDirectory)
-        ? moduleDirectory
-        : path.join(consumerPath, moduleDirectory);
+      return path.isAbsolute(moduleDirectory) ? moduleDirectory : path.join(consumerPath, moduleDirectory);
     });
   }
   if (resolveConfigAbsolute.aliases) {
@@ -387,9 +402,23 @@ function getResolveConfigAbsolute(consumerPath: string, resolveConfig: ?ResolveM
  * @param bindingPrefix
  * @return {Promise<{missing, tree}>}
  */
-export async function getDependencyTree({ baseDir, consumerPath, filePaths, bindingPrefix, resolveModulesConfig }: DependencyTreeParams): Promise<{ missing: Object[], tree: Tree}> {
+export async function getDependencyTree({
+  baseDir,
+  consumerPath,
+  filePaths,
+  bindingPrefix,
+  resolveModulesConfig
+}: DependencyTreeParams): Promise<{ missing: Object[], tree: Tree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(consumerPath, resolveModulesConfig);
-  const config = { baseDir, includeNpm: true, requireConfig: null, webpackConfig: null, visited: {}, nonExistent: [], resolveConfig: resolveConfigAbsolute };
+  const config = {
+    baseDir,
+    includeNpm: true,
+    requireConfig: null,
+    webpackConfig: null,
+    visited: {},
+    nonExistent: [],
+    resolveConfig: resolveConfigAbsolute
+  };
   const result = generateTree(filePaths, config);
   const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath, bindingPrefix);
   const tree: Tree = groupDependencyTree(result.tree, baseDir, bindingPrefix);
@@ -401,7 +430,7 @@ export async function getDependencyTree({ baseDir, consumerPath, filePaths, bind
       groups.forEach((fileDep) => {
         if (fileDep.packages && fileDep.packages.includes(pkg)) {
           fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
-          lset(tree[fileDep['originFile']], ['packages', pkg], foundPackages[pkg]);
+          lset(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
         }
       });
     });

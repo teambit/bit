@@ -24,7 +24,7 @@ function mergeOrCreateConfig(token: string, url: string, config: Array<Object> =
   if (!iniReg) {
     config.push({
       path: [`${DEFAULT_BINDINGS_PREFIX}:registry`],
-      value: url,
+      value: url
     });
   } else {
     iniReg.value = url;
@@ -32,7 +32,7 @@ function mergeOrCreateConfig(token: string, url: string, config: Array<Object> =
   if (!iniToken) {
     config.push({
       path: [`//${strippedUrl}/:_authToken`],
-      value: token,
+      value: token
     });
   } else {
     iniToken.value = token;
@@ -42,7 +42,9 @@ function mergeOrCreateConfig(token: string, url: string, config: Array<Object> =
 
 export default function npmLogin(token: string, pathToNpmrc: string, url: string): string {
   const npmrcPath = findrc(pathToNpmrc);
-  const npmrcConfig = (fs.existsSync(npmrcPath)) ? mergeOrCreateConfig(token, url, iniBuilder.parse(fs.readFileSync(npmrcPath, 'utf-8'))) : mergeOrCreateConfig(token, url);
+  const npmrcConfig = fs.existsSync(npmrcPath)
+    ? mergeOrCreateConfig(token, url, iniBuilder.parse(fs.readFileSync(npmrcPath, 'utf-8')))
+    : mergeOrCreateConfig(token, url);
   try {
     fs.writeFileSync(npmrcPath, iniBuilder.serialize(npmrcConfig));
   } catch (err) {

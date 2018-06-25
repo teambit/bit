@@ -5,11 +5,4 @@ import isValidIdChunk from './is-valid-id-chunk';
 import isValidScopeName from './is-valid-scope-name';
 import isRelativeImport from './is-relative-import';
 
-export {
-  writeFileP,
-  removeDirP,
-  readFileP,
-  isValidIdChunk,
-  isValidScopeName,
-  isRelativeImport,
-};
+export { writeFileP, removeDirP, readFileP, isValidIdChunk, isValidScopeName, isRelativeImport };

@@ -15,8 +15,7 @@ const stripNonRelevantDataFromLinks = (allLinks, projectRoot) => {
   return links;
 };
 
-export default async function bindAction({ projectRoot = process.cwd() }: { projectRoot?: string}):
-Promise<any> {
+export default (async function bindAction({ projectRoot = process.cwd() }: { projectRoot?: string }): Promise<any> {
   const bitModuleDirectory = new BitModuleDirectory(projectRoot);
   const componentsDirectory = new ComponentsDirectory(projectRoot);
 
@@ -31,10 +30,7 @@ Promise<any> {
   await bitModuleDirectory.persist();
   await componentsDirectory.persist();
 
-  const allLinks = R.mergeAll([
-    bitModuleDirectory.links,
-    componentsDirectory.links,
-  ]);
+  const allLinks = R.mergeAll([bitModuleDirectory.links, componentsDirectory.links]);
 
   return stripNonRelevantDataFromLinks(allLinks, projectRoot);
-}
+});

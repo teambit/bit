@@ -11,5 +11,5 @@
  * End quote.
  */
 export default function isRelativeImport(str: string): boolean {
-  return (str.startsWith('./') || str.startsWith('../') || str.startsWith('/'));
+  return str.startsWith('./') || str.startsWith('../') || str.startsWith('/');
 }

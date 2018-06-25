@@ -1,19 +1,31 @@
 {
-  "extends": ["plugin:flowtype/recommended", "airbnb-base"],
-  "parser": "babel-eslint",
+  "extends": ["airbnb", "plugin:flowtype/recommended"],
   "plugins": [
     "flowtype",
-    "jest"
+    "flowtype-errors"
   ],
-   "settings": {
-    "flowtype": {
-      "onlyFilesWithFlowAnnotation": true
-    }
-  },
   "rules": {
-    "jest/no-disabled-tests": "warn",
-    "jest/no-focused-tests": "error",
-    "jest/no-identical-title": "error",
+    "arrow-body-style": [0, "as-needed"],
+    "camelcase": [0],
+    "no-trailing-spaces": [0],
+    "import/no-unresolved": [0],
+    "radix": [0],
+    "no-underscore-dangle": [0],
+    "no-param-reassign": [0],
+    "no-return-assign": [0, "except-parens"],
+    "array-bracket-spacing": [0],
+    "class-methods-use-this": [0],
+    "import/no-dynamic-require": [0],
+    "global-require": [0],
+    "function-paren-newline": [0],
+    "object-curly-newline": [0],
+    "prefer-arrow-callback": [0],
+    "prefer-destructuring": [0],
+    "import/no-extraneous-dependencies": [0],
+    "comma-dangle": [0, "never"],
+    "no-use-before-define": [0],
+    "flowtype-errors/show-errors": [2, 70],
+    "no-restricted-syntax": [2, "ForInStatement", "LabeledStatement", "WithStatement"],
     "max-len": [2, 120, 2, {
       "ignoreUrls": true,
       "ignoreComments": true,
@@ -21,9 +33,10 @@
       "ignoreStrings": true,
       "ignoreTemplateLiterals": true
     }],
-    "no-underscore-dangle": [0]
+    "max-lines": [2, 1000],
+    "func-names": [0]
   },
   "env": {
-    "jest/globals": true
+    "node": true
   }
 }

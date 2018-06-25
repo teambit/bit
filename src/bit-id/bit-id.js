@@ -9,15 +9,15 @@ import {
   VERSION_DELIMITER,
   LOCAL_SCOPE_NOTATION,
   NO_PLUGIN_TYPE,
-  REMOTE_ALIAS_SIGN,
+  REMOTE_ALIAS_SIGN
 } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
 
 export type BitIdProps = {
-  scope?: string;
-  box?: string;
-  name: string;
-  version: string;
+  scope?: string,
+  box?: string,
+  name: string,
+  version: string
 };
 
 export default class BitId {
@@ -73,7 +73,9 @@ export default class BitId {
   }
 
   static parse(id: ?string, realScopeName: ?string, version: string = LATEST_VERSION): ?BitId {
-    if (!id || id === NO_PLUGIN_TYPE) { return null; }
+    if (!id || id === NO_PLUGIN_TYPE) {
+      return null;
+    }
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
