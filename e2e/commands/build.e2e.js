@@ -53,9 +53,7 @@ describe('bit build', function () {
         const distFolderFullPath = path.join(helper.localScopePath, 'dist');
         const compilerFolder = path.join('.bit', 'components', 'compilers');
         const compilerFolderFullPath = path.join(helper.localScopePath, '.bit', 'components', 'compilers');
-        const distFile = path.join(distFolder, 'bar', 'foo.js');
         const distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
-        let localConsumerFiles;
         before(() => {
           helper.tagAllWithoutMessage();
           const output = helper.status();
