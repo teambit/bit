@@ -1,5 +1,5 @@
 /**
-* this file had been forked from https://github.com/dependents/node-detective-es6
+* this file had been forked (and changed since then) from https://github.com/dependents/node-detective-es6
 */
 
 var Walker = require('node-source-walk');

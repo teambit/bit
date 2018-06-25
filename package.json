@@ -4,8 +4,8 @@
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
-    "test": "jest",
-    "test-watch": "jest --watch",
+    "test": "mocha --require babel-core/register './src/**/*.spec.js'",
+    "test-circle": "mocha --require babel-core/register --reporter mocha-circleci-reporter './src/**/*.spec.js'",
     "clean": "rm -rf dist",
     "build": "babel src -d dist  --source-maps",
     "watch": "babel --watch src -d dist --source-maps",
@@ -70,7 +70,6 @@
   "devDependencies": {
     "babel-cli": "^6.24.0",
     "babel-eslint": "^7.2.1",
-    "babel-jest": "^20.0.3",
     "babel-plugin-syntax-async-functions": "^6.13.0",
     "babel-plugin-transform-builtin-extend": "^1.1.2",
     "babel-plugin-transform-flow-strip-types": "^6.22.0",
@@ -80,12 +79,13 @@
     "eslint-config-airbnb-base": "^11.1.3",
     "eslint-plugin-flowtype": "^2.30.4",
     "eslint-plugin-import": "^2.2.0",
-    "eslint-plugin-jest": "^19.0.1",
     "flow-bin": "^0.43.0",
-    "jest-cli": "^20.0.3",
-    "mock-fs": "^4.2.0"
-  },
-  "jest": {
-    "testEnvironment": "node"
+    "mocha": "^5.1.1",
+    "mocha-appveyor-reporter": "^0.4.0",
+    "mocha-circleci-reporter": "0.0.3",
+    "mocha-junit-reporter": "^1.13.0",
+    "mock-fs": "^4.5.0",
+    "rewire": "^4.0.1",
+    "sinon": "^6.0.1"
   }
 }

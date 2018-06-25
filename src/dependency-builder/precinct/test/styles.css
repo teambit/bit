@@ -1,0 +1,4 @@
+@import "foo.css";
+@import url("baz.css");
+@value a from 'bla.css';
+@value a, b as x from url(another.css);
