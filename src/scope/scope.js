@@ -313,7 +313,10 @@ export default class Scope {
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debug('scope.buildMultiple: sequentially build multiple components');
     Analytics.addBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
-    loader.start(BEFORE_RUNNING_BUILD);
+    // Make sure to not start the loader if there are no components to build
+    if (components && components.length) {
+      loader.start(BEFORE_RUNNING_BUILD);
+    }
     const build = async (component: Component) => {
       await component.build({ scope: this, consumer, noCache, verbose });
       const buildResults = await component.dists.writeDists(component, consumer);
@@ -368,7 +371,10 @@ export default class Scope {
   }): Promise<SpecsResultsWithComponentId> {
     logger.debug('scope.testMultiple: sequentially test multiple components');
     Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
-    loader.start(BEFORE_RUNNING_SPECS);
+    // Make sure not starting the loader when there is nothing to test
+    if (components && components.length) {
+      loader.start(BEFORE_RUNNING_SPECS);
+    }
     this.injectNodePathIfNeeded(consumer, components);
     const test = async (component: Component) => {
       if (!component.tester) {

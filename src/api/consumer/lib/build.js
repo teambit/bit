@@ -30,6 +30,7 @@ export async function buildAll(noCache: boolean, verbose: boolean): Promise<Obje
   const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
   loader.start(BEFORE_LOADING_COMPONENTS);
   const { components } = await consumer.loadComponents(authoredAndImportedIds);
+  loader.stop();
   const buildAllP = await consumer.scope.buildMultiple(components, consumer, noCache, verbose);
   const allComponents = await Promise.all(buildAllP);
   const componentsObj = {};
