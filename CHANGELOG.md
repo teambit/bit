@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "Cannot read property 'lang' of null" error when resolving Vue dependencies
 - fix .tsx parsing issue when the tsx dependency is required from a non .tsx file
 - fix support of .json dependencies
 - fix "SyntaxError: Unexpected token" when parsing .ts files with .js dependencies
