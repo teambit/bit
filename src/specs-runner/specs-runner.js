@@ -43,6 +43,7 @@ export default (async function run({
     logger.debug('specs-runner.run', 'running tests on one child process with ids');
     return runOnChildProcess({
       ids,
+      includeUnmodified: false, // no meaning to pass this when there is specific ids
       verbose
     });
   }
@@ -51,6 +52,7 @@ export default (async function run({
   const allRunnersP = ids.map(id =>
     runOnChildProcess({
       ids: [id],
+      includeUnmodified: false, // no meaning to pass this when there is specific ids
       verbose
     })
   );
