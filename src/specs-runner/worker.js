@@ -7,7 +7,7 @@ import loader from '../cli/loader';
 
 const testOneComponent = verbose => async (id: string) => {
   // $FlowFixMe
-  const res = await testInProcess(id, verbose);
+  const res = await testInProcess(id, false, verbose);
   return res[0];
 };
 
