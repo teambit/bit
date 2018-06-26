@@ -15,9 +15,11 @@ function run(): Promise<void> {
   // Start the loader to make sure we show it on forked process
   loader.on();
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
-  const verbose: boolean = process.env.__verbose__ === true;
+  const verbose: boolean = process.env.__verbose__ === true || process.env.__verbose__ === 'true';
+  const includeUnmodified: boolean =
+    process.env.__includeUnmodified__ === true || process.env.__includeUnmodified__ === 'true';
   if (!ids || !ids.length) {
-    return testInProcess(undefined, verbose)
+    return testInProcess(undefined, includeUnmodified, verbose)
       .then((results) => {
         const serializedResults = serializeResults(results);
         // $FlowFixMe

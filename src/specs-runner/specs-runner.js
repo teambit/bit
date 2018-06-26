@@ -22,16 +22,19 @@ export type Tester = {
 export default (async function run({
   ids,
   forkLevel,
+  includeUnmodified = false,
   verbose
 }: {
   ids: ?(string[]),
   forkLevel: ForkLevel,
+  includeUnmodified: boolean,
   verbose: ?boolean
 }): Promise<?SpecsResultsWithComponentId> {
   if (!ids || R.isEmpty(ids)) {
     Analytics.addBreadCrumb('specs-runner.run', 'running tests on one child process without ids');
     logger.debug('specs-runner.run', 'running tests on one child process without ids');
     return runOnChildProcess({
+      includeUnmodified,
       verbose
     });
   }
@@ -76,16 +79,19 @@ function getDebugPort(): ?number {
 
 function runOnChildProcess({
   ids,
+  includeUnmodified,
   verbose
 }: {
   ids?: ?(string[]),
+  includeUnmodified: ?boolean,
   verbose: ?boolean
 }): Promise<?SpecsResultsWithComponentId> {
   return new Promise((resolve, reject) => {
     const debugPort = getDebugPort();
     const openPort = debugPort ? debugPort + 1 : null;
     const baseEnv: Object = {
-      __verbose__: verbose
+      __verbose__: verbose,
+      __includeUnmodified__: includeUnmodified
     };
     // Don't use ternary condition since if we put it as undefined
     // It will pass to the fork as "undefined" (string) instad of not passing it at all

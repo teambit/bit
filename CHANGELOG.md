@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add troubleshooting-isolating link to bit status
 - add new flag `--skip-tests` to bit tag command
 - add `--no-cache` flag to `bit build` command
+- add `--include-unmodified` flag to `bit test` command
 
 ## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
 

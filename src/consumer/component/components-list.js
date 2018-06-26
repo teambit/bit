@@ -120,6 +120,10 @@ export default class ComponentsList {
     return Promise.all(components);
   }
 
+  async authoredAndImportedComponents(): Promise<Component[]> {
+    return this._getAuthoredAndImportedFromFS();
+  }
+
   async idsFromObjects(withScope: boolean = true): Promise<string[]> {
     const fromObjects = await this.getFromObjects();
     const ids = Object.keys(fromObjects);
