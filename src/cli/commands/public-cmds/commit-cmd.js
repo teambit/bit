@@ -24,7 +24,7 @@ export default class Export extends Command {
     ['v', 'verbose', 'show specs output on failure'],
     ['i', 'ignore-missing-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
-    ['S', 'skip-tests', 'do not run tests before tagging']
+    ['', 'skip-tests', 'skip running component tests during tag process']
   ];
   loader = true;
   migration = true;
