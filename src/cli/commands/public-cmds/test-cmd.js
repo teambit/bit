@@ -12,6 +12,7 @@ export default class Test extends Command {
   description = `test any set of components with configured tester (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html`;
   alias = '';
   opts = [
+    ['', 'include-unmodified', 'test all components in workspace. including unmodified'],
     ['v', 'verbose', 'showing npm verbose output for inspection'],
     ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running']
   ];
@@ -21,17 +22,24 @@ export default class Test extends Command {
   action(
     [id]: [string],
     {
+      includeUnmodified,
       verbose,
       forkLevel
     }: {
+      includeUnmodified: ?boolean,
       verbose: ?boolean,
       forkLevel: ?string
     }
   ): Promise<any> {
+    if (id && includeUnmodified) {
+      throw new GeneralError(
+        'use --include-unmodified to test all components or use a component ID to test a specific component. run tests to all new and modified components by removing all flags and parameters'
+      );
+    }
     if (forkLevel && !validForkLevels.includes(forkLevel)) {
       return Promise.reject(new GeneralError(`fork level must be one of: ${validForkLevels.join()}`));
     }
-    return test(id, forkLevel, verbose);
+    return test(id, forkLevel, includeUnmodified, verbose);
   }
 
   report(results: any): string {

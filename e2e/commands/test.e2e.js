@@ -212,7 +212,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
-        output = helper.testComponentWithOptions('utils/is-type', { '-verbose': '', '-fork-level': 'NONE' });
+        output = helper.testComponentWithOptions('utils/is-type', { '-verbose': '' });
       });
       it('should import the tester and run the tests successfully', () => {
         expect(output).to.have.string('tests passed');
@@ -220,8 +220,6 @@ describe('bit test command', function () {
       it('should show success message of installing the environment', () => {
         expect(output).to.have.string('successfully installed the bit.envs/testers/mocha');
       });
-      // TODO: Gilad - fix this (it fails because of this output printed throw the child process of a fork process)
-      // TODO: It doe's work as expected when using --fork-level NONE
       it('should show success message of installing npm-packages', () => {
         expect(output).to.have.string('successfully ran npm install at');
       });
@@ -285,24 +283,62 @@ describe('bit test command', function () {
       expect(output).to.have.string('tests passed');
     });
   });
-});
-describe('bit component with no tester', function () {
-  this.timeout(0);
-  const helper = new Helper();
-  before(() => {
-    helper.reInitLocalScope();
-    helper.createFile('bar', 'foo.js');
-    helper.addComponent(path.join('bar', 'foo.js'));
+  describe('bit component with no tester', function () {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'foo.js');
+      helper.addComponent(path.join('bar', 'foo.js'));
+    });
+    it('should return not tester message when running test on all components', () => {
+      const output = helper.testComponent();
+      expect(output).to.have.string('tester for component: bar/foo is not defined');
+    });
+    it('should return not tester message when running test on single component', () => {
+      const output = helper.testComponent('bar/foo');
+      expect(output).to.have.string('tester for component: bar/foo is not defined');
+    });
   });
-  after(() => {
-    helper.destroyEnv();
-  });
-  it('should return not tester message when running test on all components', () => {
-    const output = helper.testComponent();
-    expect(output).to.have.string('tester for component: bar/foo is not defined');
-  });
-  it('should return not tester message when running test on single component', () => {
-    const output = helper.testComponent('bar/foo');
-    expect(output).to.have.string('tester for component: bar/foo is not defined');
+  describe('when there is no new or modified component', function () {
+    before(() => {
+      // Set imported component
+      helper.getClonedLocalScope(clonedScopePath);
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
+      helper.addComponentWithOptions('utils/is-type.js', { t: 'utils/is-type.spec.js' });
+      helper.installNpmPackage('chai', '4.1.2');
+      helper.commitComponent('utils/is-type');
+
+      helper.reInitRemoteScope();
+      helper.addRemoteScope();
+      helper.exportComponent('utils/is-type');
+
+      helper.getClonedLocalScope(clonedScopePath);
+      helper.installNpmPackage('chai', '4.1.2');
+      helper.addRemoteScope();
+
+      helper.importComponent('utils/is-type');
+
+      // Set authored component
+      helper.createComponentBarFoo();
+      helper.createFile('bar', 'foo.spec.js', fixtures.passTest);
+      helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js' });
+      helper.commitComponentBarFoo();
+    });
+    it('should show there is nothing to test', () => {
+      const output = helper.testComponent();
+      expect(output).to.have.string('nothing to test');
+    });
+    describe('using --include-unmodified flag', () => {
+      let output;
+      before(() => {
+        output = helper.testComponentWithOptions('', { '-include-unmodified': '' });
+      });
+      it('should test authored component when using --include-unmodified', () => {
+        expect(output).to.have.string('bar/foo@0.0.1\ntests passed');
+      });
+      it('should test imported component when using --include-unmodified', () => {
+        expect(output).to.have.string('utils/is-type@0.0.1\ntests passed');
+      });
+    });
   });
 });
