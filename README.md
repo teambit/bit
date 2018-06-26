@@ -13,20 +13,15 @@
 
 ## About
 
-**Bit scales code sharing and reduces the overhead around it**.
+**Bit works with Git and NPM to easily share and sync code between projects**.
 
-Code sharing is vital for the development and maintenance of your software’s codebase.
+While code sharing speeds your development, it can also generate a lot of overhead when you have to split your repositories and work hard to make changes between them.
 
-However, the overhead around it can be massive: refactoring code, splitting repositories, configuring packages, maintaining wikis, ownership issues and so on.
+Bit eliminates this overhead by helping you easily isolate and share components from any repository, organize them for your team and sync changes across your projects.
 
-Bit works with **Git and NPM** to create a faster and more collaborative workflow for code sharing.
+Any team member can discover, use and develop components from any project so your team can collaborate, suggest updates, merge changes and stay in sync.
 
-With Bit, components and modules from any repository can be instantly shared and made available to use and even develop from other projects. 0 refactoring, 0 configurations.
-
-Teams can collaborate to share their code, develop it from different projects, suggest updates, merge changes and stay in sync.
-Popular use cases are UI components (React, Vue etc), Node.js modules, plain Javascript and more. Feel free to jump in and give it a try.
-
-*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team. Bit is adopted by more organizations and communities every day.*
+*Bit is a collaborative open source project, actively developed and maintained by a venture-backed tea and used by more teams and communities every day*.
 
 ## Contents
 
@@ -42,7 +37,7 @@ Popular use cases are UI components (React, Vue etc), Node.js modules, plain Jav
 
 ## How It Works
 
-### Effortless code sharing
+### Seamless code sharing
 
 Instead of having to split repositories and create new ones just to publish packages, Bit helps you seamlessly isolate components (sets of files) from any existing repository and share them to be used, developed and synced in other projects.
 
@@ -52,7 +47,7 @@ This environment enables you to to use and develop components from other project
 For example, components written in typescript can be used and developed in a project written in flow-typed. It also lets Bit test and build your components in isolation, so you can know the exact state of every component.
 
 
-### Development from different repositories
+### Importing with Bit / Installing with NPM
 
 You can use Bit to [import](https://docs.bitsrc.io/docs/importing-components.html) components into any project you’re working on. Importing a component means you can use it and also make changes and continue to develop it from your project. Bit will track your components across different projects to sync changes between them.
 
@@ -62,13 +57,13 @@ Once shared to Bit’s hub, components automatically become available to [instal
 Combining the two workflows also allows you to easily make changes to components installed as packages right from any project consuming them.
 
 
-### Syncing changes between projects
+### Updating and merging component changes
 
 Since Bit tracks components across different projects, you can [update](https://docs.bitsrc.io/docs/updating-sourced-components.html) components with new versions and suggest updates to components shared by your team. When a component is changed in your project, Bit leverages Git’s merge utility to let you [merge](https://docs.bitsrc.io/docs/merge-changes.html) component changes between your projects.
 
 This workflow also helps you learn exactly which components are used by who and where, so you can easily make changes to components in multiple projects with universal control over your dependency graph.
 
-### Discoverability and teamwork
+### Component discoverability
 
 While making code sharing easier, Bit helps you organize your components and make them discoverable for your team to find and choose from.
 
