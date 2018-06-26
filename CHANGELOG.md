@@ -5,21 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [13.0.0-dev.1] - 2018-06-26
+## [[13.0.1] - 2018-06-26](https://github.com/teambit/bit/releases/tag/v13.0.1)
 
-- fix .tsx parsing issue when the tsx dependency is required from a non .tsx file
-- fix support of .json dependencies
-- fix "SyntaxError: Unexpected token" when parsing .ts files with .js dependencies
+### New
 - support `bit checkout latest` for checkout to the latest version
 - add `--reset` flag to `bit checkout` command for removing local modifications
 - add `--all` flag to `bit checkout` command for executing the checkout on all components
-- show environments when running bit show on remote component
-- add troubleshooting-isolating link to bit status
 - add new flag `--skip-tests` to bit tag command
 - add `--no-cache` flag to `bit build` command
 - add `--include-unmodified` flag to `bit test` command
+- add troubleshooting-isolating link to bit status
 
-## [[13.0.0] - 18.6.2018](https://github.com/teambit/bit/releases/tag/v13.0.0)
+### Bug fixes
+- fix .tsx parsing issue when the tsx dependency is required from a non .tsx file
+- fix support of .json dependencies
+- fix "SyntaxError: Unexpected token" when parsing .ts files with .js dependencies
+- show environments when running bit show on remote component
+
+
+## [[13.0.0] - 2018-06-18](https://github.com/teambit/bit/releases/tag/v13.0.0)
 
 ### Summary
 
