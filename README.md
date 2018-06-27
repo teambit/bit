@@ -13,15 +13,15 @@
 
 ## About
 
-**Bit works with Git and NPM to easily share and sync code between projects**.
+**Bit is a platform for creating, sharing and collaborating on software components**, 
 
-While code sharing speeds your development, it can also generate a lot of overhead when you have to split your repositories and work hard to make changes between them.
+Today, much of the software we build is made of smaller components such as UI components, Node modules, Serverless functions, utility functions and more.
 
-Bit eliminates this overhead by helping you easily isolate and share components from any repository, organize them for your team and sync changes across your projects.
+Bit works with Git and NPM to turn these components into isolated and reusable pieces which can be created, used and developed from any project.
 
-Any team member can discover, use and develop components from any project so your team can collaborate, suggest updates, merge changes and stay in sync.
+Through Bit developers can collaborate, share components, sync changes and build new things without having to duplicate code or work hard to create and maintain packages.
 
-*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.
+*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*. 
 
 ## Contents
 
@@ -37,7 +37,7 @@ Any team member can discover, use and develop components from any project so you
 
 ## How It Works
 
-### Seamless code sharing
+### Component isolation
 
 Instead of having to split repositories and create new ones just to publish packages, Bit helps you seamlessly isolate components (sets of files) from any existing repository and share them to be used, developed and synced in other projects.
 
