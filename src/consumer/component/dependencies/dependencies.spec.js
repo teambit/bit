@@ -1,7 +1,7 @@
 import R from 'ramda';
 import { expect } from 'chai';
-import { Dependencies } from '../../../../src/consumer/component/dependencies';
-import dependenciesFixture from './fixtures/dependencies-fixture.json';
+import { Dependencies } from './';
+import dependenciesFixture from '../../../../fixtures/dependencies-fixture.json';
 
 describe('Dependencies', () => {
   describe('validate()', () => {

@@ -2,20 +2,19 @@
  * Adds two numbers.
  *
  * @name add
- * @static
- * @public
+ * @category Math
  * @param {number} a The first number in an addition.
  * @param {number} b The second number in an addition.
  * @returns {number} Returns the total.
  * @example
- * //-
- * // Adds two numbers
- * //-
- * add(2, 3);
- * //=>
- * // 5
- * //=>
+ *
+ * _.add(6, 4);
+ * // => 10
  */
-function add(a, b) {
-  return a+b;
-}
+const add = function (a, b) {
+  return a + b;
+};
+
+module.exports = {
+  add
+};

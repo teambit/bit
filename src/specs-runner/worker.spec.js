@@ -10,7 +10,7 @@ describe('worker', () => {
       env: {
         __impl__: '',
         __specs__: '',
-        __tester__: path.join(__dirname, 'fixtures', 'invalid-tester.js'),
+        __tester__: path.join(__dirname, '../../', 'fixtures', 'invalid-tester.js'),
         __testerId__: 'myScope/box/my-component'
       }
     });
