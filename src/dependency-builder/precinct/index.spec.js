@@ -79,7 +79,8 @@ describe('node-precinct', () => {
     assert(Object.keys(cjs).length === 0);
   });
 
-  // @todo: fix. it might be the postcss
+  // this is for supporting PostCSS dialect. The implementation is not merged to this project.
+  // see the following PR of node-precinct: https://github.com/dependents/node-precinct/pull/40
   it.skip('grabs dependencies of css files', () => {
     const css = precinct(read('styles.css'), 'css');
     expect(css).to.have.property('foo.css');

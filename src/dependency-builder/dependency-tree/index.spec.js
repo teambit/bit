@@ -544,7 +544,10 @@ describe('dependencyTree', function() {
     });
   });
 
-  // @todo fix.
+  // skipping the webpack unit tests for now as it's not easy to wire up all the files together.
+  // originally, in dependency-tree, the webpack.config.js is in the same directory of the index.js.
+  // doing the same here will be confusing. instead, we have already e2e-tests in bit-bin of custom
+  // module resolution, which takes advantage of the webpack config.
   describe.skip('webpack', () => {
     beforeEach(() => {
       // Note: not mocking because webpack's resolver needs a real project with dependencies;
@@ -750,7 +753,11 @@ describe('dependencyTree', function() {
     });
   });
 
-  describe('when given a CJS file with module property in package.json', () => {
+  // nodeModulesConfig is a feature added to dependency-tree and filing-cabinet to support
+  // "module" attribute of package.json, see here what this attribute is good for:
+  // https://github.com/rollup/rollup/wiki/pkg.module
+  // the commit of supporting it in filing-cabinet is here: https://github.com/dependents/node-filing-cabinet/commit/abef861a5a725b29c2342d01de94c6e2dd881aa0
+  describe.skip('when given a CJS file with module property in package.json', () => {
     beforeEach(() => {
       mockfs({
         [__dirname + '/es6']: {
@@ -766,8 +773,7 @@ describe('dependencyTree', function() {
       });
     });
 
-    // @todo: fix. why the main is module and not main?
-    it.skip('it includes the module entry as dependency', () => {
+    it('it includes the module entry as dependency', () => {
       const directory = __dirname + '/es6';
       const filename = directory + '/module.entry.js';
 
