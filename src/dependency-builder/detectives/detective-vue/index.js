@@ -1,22 +1,21 @@
-const compiler = require('vue-template-compiler');
-
-const finalDependencies = {};
-const addDependencies = (dependencies, isScript) => {
-  let objDependencies = {};
-  if (Array.isArray(dependencies)) {
-    dependencies.forEach((dependency) => {
-      objDependencies[dependency] = {};
+module.exports = function (src, options = {}) {
+  const compiler = require('vue-template-compiler');
+  const finalDependencies = {};
+  const addDependencies = (dependencies, isScript) => {
+    let objDependencies = {};
+    if (Array.isArray(dependencies)) {
+      dependencies.forEach((dependency) => {
+        objDependencies[dependency] = {};
+      });
+    } else {
+      objDependencies = dependencies;
+    }
+    Object.keys(objDependencies).forEach((dependency) => {
+      finalDependencies[dependency] = objDependencies[dependency];
+      finalDependencies[dependency].isScript = isScript;
     });
-  } else {
-    objDependencies = dependencies;
-  }
-  Object.keys(objDependencies).forEach((dependency) => {
-    finalDependencies[dependency] = objDependencies[dependency];
-    finalDependencies[dependency].isScript = isScript;
-  });
-};
+  };
 
-module.exports = function(src, options = {}) {
   options.useContent = true;
   const { script, styles } = compiler.parseComponent(src, { pad: 'line' });
   // it must be required here, otherwise, it'll be a cyclic dependency
@@ -26,7 +25,10 @@ module.exports = function(src, options = {}) {
     addDependencies(dependencies, true);
   }
   if (styles) {
-    styles.map(style => addDependencies(precinct(style.content, { type: style.lang || 'scss' }), false ));
+    styles.forEach((style) => {
+      const dependencies = precinct(style.content, { type: style.lang || 'scss' });
+      addDependencies(dependencies, false);
+    });
   }
 
   return finalDependencies;

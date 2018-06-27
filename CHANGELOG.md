@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "Cannot read property 'lang' of null" error when resolving Vue dependencies
+
 ## [1.0.2] - 2018-06-26
 
 - fix .tsx parsing issue when the tsx dependency is required from a non .tsx file
