@@ -13,13 +13,13 @@
 
 ## About
 
-**Bit is a platform for creating, sharing and collaborating on software components**, 
+**Bit is a platform for creating, sharing and collaborating on software components**.
 
-Today, much of the software we build is made of smaller components such as UI components, Node modules, Serverless functions, utility functions and more.
+Today, much of the software we build is made of [smaller components](https://addyosmani.com/first/) such as UI components, Node modules, Serverless functions, utility functions and more.
 
 Bit works with Git and NPM to turn these components into isolated and reusable pieces which can be created, used and developed from any project.
 
-Through Bit developers can collaborate, share components, sync changes and build new things without having to duplicate code or work hard to create and maintain packages.
+Through Bit developers can collaborate, share components, sync changes across projects and build new things without having to duplicate code or work hard to create and maintain packages.
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*. 
 
