@@ -21,19 +21,20 @@ export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 export default (async function test(
   id?: string,
   forkLevel: ForkLevel = TESTS_FORK_LEVEL.ONE,
+  includeUnmodified: boolean = false,
   verbose: ?boolean
 ): Promise<SpecsResultsWithComponentId> {
   if (forkLevel === TESTS_FORK_LEVEL.NONE) {
-    return testInProcess(id, verbose);
+    return testInProcess(id, includeUnmodified, verbose);
   }
   if (forkLevel === TESTS_FORK_LEVEL.ONE) {
     const ids = id ? [id] : undefined;
     // $FlowFixMe
-    return specsRunner({ ids, forkLevel, verbose });
+    return specsRunner({ ids, forkLevel, includeUnmodified, verbose });
   }
   if (forkLevel === TESTS_FORK_LEVEL.COMPONENT) {
     const consumer: Consumer = await loadConsumer();
-    const components = await _getComponents(consumer, id, verbose);
+    const components = await _getComponents(consumer, id, includeUnmodified, verbose);
     const ids = components.map(component => component.id.toString());
     // $FlowFixMe
     const results = await specsRunner({ ids, forkLevel, verbose });
@@ -42,15 +43,25 @@ export default (async function test(
   throw new GeneralError('unknown fork level, fork level must be one of: NONE, ONE, COMPONENT');
 });
 
-export const testInProcess = async (id?: string, verbose: ?boolean): Promise<SpecsResultsWithComponentId> => {
+export const testInProcess = async (
+  id?: string,
+  includeUnmodified: boolean = false,
+  verbose: ?boolean
+): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
-  const components = await _getComponents(consumer, id, verbose);
+  const components = await _getComponents(consumer, id, includeUnmodified, verbose);
   const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose });
+  loader.stop();
   await consumer.onDestroy();
   return testsResults;
 };
 
-const _getComponents = async (consumer: Consumer, id?: string, verbose: ?boolean) => {
+const _getComponents = async (
+  consumer: Consumer,
+  id?: string,
+  includeUnmodified: boolean = false,
+  verbose: ?boolean
+) => {
   if (id) {
     const idParsed = BitId.parse(id);
     const component = await consumer.loadComponent(idParsed);
@@ -58,7 +69,12 @@ const _getComponents = async (consumer: Consumer, id?: string, verbose: ?boolean
   }
   const componentsList = new ComponentsList(consumer);
   loader.start(BEFORE_LOADING_COMPONENTS);
-  const components = await componentsList.newAndModifiedComponents();
+  let components;
+  if (includeUnmodified) {
+    components = await componentsList.authoredAndImportedComponents();
+  } else {
+    components = await componentsList.newAndModifiedComponents();
+  }
   loader.stop();
   await consumer.scope.buildMultiple(components, consumer, false, verbose);
   return components;
