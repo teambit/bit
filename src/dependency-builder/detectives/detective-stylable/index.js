@@ -1,5 +1,6 @@
 const stylable = require('stylable');
-module.exports = function(src, options = {}) {
+
+module.exports = function (src, options = {}) {
   const css = stylable.safeParse(src);
   const dependencies = {};
   const addDependency = (dependency) => {

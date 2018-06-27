@@ -1,25 +1,25 @@
 /**
-* this file had been forked from https://github.com/dependents/node-precinct
-*/
+ * this file had been forked from https://github.com/dependents/node-precinct
+ */
 
-var getModuleType = require('module-definition');
-var debug = require('debug')('precinct');
-var Walker = require('node-source-walk');
+const getModuleType = require('module-definition');
+const debug = require('debug')('precinct');
+const Walker = require('node-source-walk');
 
-var detectiveAmd = require('detective-amd');
-var detectiveEs6 = require('../detectives/detective-es6');
-var detectiveLess = require('detective-less');
-var detectiveSass = require('detective-sass');
-var detectiveScss = require('detective-scss');
-var detectiveStylus = require('detective-stylus');
-var detectiveTypeScript = require('../detectives/detective-typescript');
-var detectiveStylable = require('../detectives/detective-stylable');
-var detectiveVue = require('../detectives/detective-vue');
+const detectiveAmd = require('detective-amd');
+const detectiveEs6 = require('../detectives/detective-es6');
+const detectiveLess = require('detective-less');
+const detectiveSass = require('detective-sass');
+const detectiveScss = require('detective-scss');
+const detectiveStylus = require('detective-stylus');
+const detectiveTypeScript = require('../detectives/detective-typescript');
+const detectiveStylable = require('../detectives/detective-stylable');
+const detectiveVue = require('../detectives/detective-vue');
 
-var fs = require('fs');
-var path = require('path');
+const fs = require('fs');
+const path = require('path');
 
-var natives = process.binding('natives');
+const natives = process.binding('natives');
 
 /**
  * Finds the list of dependencies for the given file
@@ -31,9 +31,9 @@ var natives = process.binding('natives');
  */
 function precinct(content, options) {
   options = options || {};
-  var dependencies = [];
-  var ast;
-  var type = options.type;
+  let dependencies = [];
+  let ast;
+  let type = options.type;
 
   // Legacy form backCompat where type was the second parameter
   if (typeof options === 'string') {
@@ -45,7 +45,7 @@ function precinct(content, options) {
 
   // We assume we're dealing with a JS file
   if (!type && typeof content !== 'object') {
-    var walker = new Walker();
+    const walker = new Walker();
 
     try {
       // Parse once and distribute the AST to all detectives
@@ -57,7 +57,7 @@ function precinct(content, options) {
       debug('could not parse content: %s', e.message);
       return dependencies;
     }
-  // SASS files shouldn't be parsed by Acorn
+    // SASS files shouldn't be parsed by Acorn
   } else {
     ast = content;
 
@@ -69,7 +69,7 @@ function precinct(content, options) {
   type = options.useContent ? getModuleType.fromSource(content) : type || getModuleType.fromSource(ast);
   debug('module type: ', type);
 
-  var theDetective;
+  let theDetective;
 
   switch (type) {
     case 'commonjs':
@@ -104,7 +104,7 @@ function precinct(content, options) {
   }
 
   if (theDetective) {
-    dependencies = (type === 'vue') ? theDetective(ast, options) : theDetective(ast, options[type] || {});
+    dependencies = type === 'vue' ? theDetective(ast, options) : theDetective(ast, options[type] || {});
   }
 
   // For non-JS files that we don't parse
@@ -113,10 +113,10 @@ function precinct(content, options) {
   }
 
   return dependencies;
-};
+}
 
 function assign(o1, o2) {
-  for (var key in o2) {
+  for (const key in o2) {
     if (o2.hasOwnProperty(key)) {
       o1[key] = o2[key];
     }
@@ -133,16 +133,19 @@ function assign(o1, o2) {
  * @param {Boolean} [options.includeCore=true] - Whether or not to include core modules in the dependency list
  * @return {String[]}
  */
-precinct.paperwork = function(filename, options) {
-  options = assign({
-    includeCore: true
-  }, options || {});
+precinct.paperwork = function (filename, options) {
+  options = assign(
+    {
+      includeCore: true
+    },
+    options || {}
+  );
 
-  var content = fs.readFileSync(filename, 'utf8');
-  var ext = path.extname(filename);
-  var type;
+  const content = fs.readFileSync(filename, 'utf8');
+  const ext = path.extname(filename);
+  let type;
 
-  if (ext === '.scss' || ext === '.sass' || ext === '.less' || ext === '.ts'|| ext === '.vue') {
+  if (ext === '.scss' || ext === '.sass' || ext === '.less' || ext === '.ts' || ext === '.vue') {
     type = ext.replace('.', '');
   } else if (filename.endsWith('.st.css')) {
     type = 'stylable';
@@ -160,11 +163,11 @@ precinct.paperwork = function(filename, options) {
 
   options.type = type;
 
-  var deps = precinct(content, options);
+  const deps = precinct(content, options);
 
   if (deps && !options.includeCore) {
     if (Array.isArray(deps)) {
-      return deps.filter(function(d) {
+      return deps.filter(function (d) {
         return !natives[d];
       });
     }

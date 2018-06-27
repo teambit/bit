@@ -1,6 +1,6 @@
 /**
-* this file had been forked from https://github.com/pahen/detective-typescript
-*/
+ * this file had been forked from https://github.com/pahen/detective-typescript
+ */
 
 const Parser = require('typescript-eslint-parser');
 const Walker = require('node-source-walk');
@@ -12,7 +12,7 @@ const Walker = require('node-source-walk');
  * @param  {Object} options - options to pass to the parser
  * @return {String[]}
  */
-module.exports = function(src, options = {}) {
+module.exports = function (src, options = {}) {
   options.parser = Parser;
 
   const walker = new Walker(options);
@@ -39,7 +39,7 @@ module.exports = function(src, options = {}) {
     return dependencies;
   }
 
-  walker.walk(src, function(node) {
+  walker.walk(src, function (node) {
     switch (node.type) {
       case 'ImportDeclaration':
         if (node.source && node.source.value) {

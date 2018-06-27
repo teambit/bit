@@ -1,15 +1,15 @@
 import R from 'ramda';
 import { isRelativeImport } from '../../utils';
 /**
-* this file had been forked from https://github.com/dependents/node-dependency-tree
-*/
+ * this file had been forked from https://github.com/dependents/node-dependency-tree
+ */
 
-var precinct = require('../precinct');
-var path = require('path');
-var fs = require('fs');
-var cabinet = require('../filing-cabinet');
-var debug = require('debug')('tree');
-var Config = require('./Config');
+const precinct = require('../precinct');
+const path = require('path');
+const fs = require('fs');
+const cabinet = require('../filing-cabinet');
+const debug = require('debug')('tree');
+const Config = require('./Config');
 
 /**
  * Recursively find all dependencies (avoiding circular) traversing the entire dependency tree
@@ -26,26 +26,25 @@ var Config = require('./Config');
  * @param {Boolean} [options.isListForm=false]
  * @return {Object}
  */
-module.exports = function(options) {
-  var config = new Config(options);
+module.exports = function (options) {
+  const config = new Config(options);
 
   if (!fs.existsSync(config.filename)) {
-    debug('file ' + config.filename + ' does not exist');
+    debug(`file ${config.filename} does not exist`);
     return config.isListForm ? [] : {};
   }
 
-  var results = traverse(config);
+  const results = traverse(config);
   debug('traversal complete', results);
 
   debug('deduped list of nonExistent partials: ', config.nonExistent);
 
-  var tree;
+  let tree;
   if (config.isListForm) {
     debug('list form of results requested');
 
     tree = removeDups(results);
     debug('removed dups from the resulting list');
-
   } else {
     debug('object form of results requested');
 
@@ -69,7 +68,7 @@ module.exports = function(options) {
  *
  * Params are those of module.exports
  */
-module.exports.toList = function(options) {
+module.exports.toList = function (options) {
   options.isListForm = true;
 
   return module.exports(options);
@@ -83,30 +82,29 @@ module.exports.toList = function(options) {
  * @param  {Config} config
  * @return {Array}
  */
-module.exports._getDependencies = function(config) {
+module.exports._getDependencies = function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
-  var dependencies; // always an array
-  var precinctOptions = config.detectiveConfig;
+  let dependencies; // always an array
+  const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
 
   try {
     dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);
-    dependencies = R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw)
-      ? Object.keys(dependenciesRaw)
-      : dependenciesRaw;
+    dependencies =
+      R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw) ? Object.keys(dependenciesRaw) : dependenciesRaw;
   } catch (e) {
-    debug('error getting dependencies: ' + e.message);
+    debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
     return [];
   }
   const isDependenciesArray = Array.isArray(dependenciesRaw);
-  debug('extracted ' + dependencies.length + ' dependencies: ', dependencies);
+  debug(`extracted ${dependencies.length} dependencies: `, dependencies);
 
-  var resolvedDependencies = [];
-  var pathMapDependencies = [];
-  var pathMapFile = { file: config.filename };
+  const resolvedDependencies = [];
+  const pathMapDependencies = [];
+  const pathMapFile = { file: config.filename };
 
-  for (var i = 0, l = dependencies.length; i < l; i++) {
+  for (let i = 0, l = dependencies.length; i < l; i++) {
     const dependency = dependencies[i];
     const cabinetParams = {
       partial: dependency,
@@ -115,14 +113,15 @@ module.exports._getDependencies = function(config) {
       ast: precinct.ast,
       config: config.requireConfig,
       webpackConfig: config.webpackConfig,
-      resolveConfig: config.resolveConfig,
+      resolveConfig: config.resolveConfig
     };
-    if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) { // used for vue
+    if (!isDependenciesArray && dependenciesRaw[dependency].isScript !== undefined) {
+      // used for vue
       cabinetParams.isScript = dependenciesRaw[dependency].isScript;
     }
     const result = cabinet(cabinetParams);
     if (!result) {
-      debug('skipping an empty filepath resolution for partial: ' + dependency);
+      debug(`skipping an empty filepath resolution for partial: ${dependency}`);
       if (config.nonExistent[config.filename]) {
         config.nonExistent[config.filename].push(dependency);
       } else {
@@ -131,7 +130,7 @@ module.exports._getDependencies = function(config) {
       continue;
     }
 
-    var exists = fs.existsSync(result);
+    const exists = fs.existsSync(result);
 
     if (!exists) {
       if (config.nonExistent[config.filename]) {
@@ -139,7 +138,7 @@ module.exports._getDependencies = function(config) {
       } else {
         config.nonExistent[config.filename] = [dependency];
       }
-      debug('skipping non-empty but non-existent resolution: ' + result + ' for partial: ' + dependency);
+      debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dependency}`);
       continue;
     }
     const pathMap = { importSource: dependency, resolvedDep: result };
@@ -167,16 +166,16 @@ module.exports._getDependencies = function(config) {
  * @return {Object|String[]}
  */
 function traverse(config) {
-  var subTree = config.isListForm ? [] : {};
+  let subTree = config.isListForm ? [] : {};
 
-  debug('traversing ' + config.filename);
+  debug(`traversing ${config.filename}`);
 
   if (config.visited[config.filename]) {
-    debug('already visited ' + config.filename);
+    debug(`already visited ${config.filename}`);
     return config.visited[config.filename];
   }
 
-  var dependencies = module.exports._getDependencies(config);
+  let dependencies = module.exports._getDependencies(config);
 
   debug('cabinet-resolved all dependencies: ', dependencies);
   // Prevents cycles by eagerly marking the current file as read
@@ -185,16 +184,16 @@ function traverse(config) {
 
   if (config.filter) {
     debug('using filter function to filter out dependencies');
-    debug('unfiltered number of dependencies: ' + dependencies.length);
-    dependencies = dependencies.filter(function(filePath) {
+    debug(`unfiltered number of dependencies: ${dependencies.length}`);
+    dependencies = dependencies.filter(function (filePath) {
       return config.filter(filePath, config.filename);
     });
-    debug('filtered number of dependencies: ' + dependencies.length);
+    debug(`filtered number of dependencies: ${dependencies.length}`);
   }
 
-  for (var i = 0, l = dependencies.length; i < l; i++) {
-    var d = dependencies[i];
-    var localConfig = config.clone();
+  for (let i = 0, l = dependencies.length; i < l; i++) {
+    const d = dependencies[i];
+    const localConfig = config.clone();
     localConfig.filename = d;
 
     if (localConfig.isListForm) {
@@ -209,7 +208,6 @@ function traverse(config) {
     subTree = removeDups(subTree);
     subTree.push(config.filename);
     config.visited[config.filename] = config.visited[config.filename].concat(subTree);
-
   } else {
     config.visited[config.filename] = subTree;
   }
@@ -224,10 +222,10 @@ function traverse(config) {
  * @return {String[]}
  */
 function removeDups(list) {
-  var cache = {};
-  var unique = [];
+  const cache = {};
+  const unique = [];
 
-  list.forEach(function(item) {
+  list.forEach(function (item) {
     if (!cache[item]) {
       unique.push(item);
       cache[item] = true;
@@ -236,4 +234,3 @@ function removeDups(list) {
 
   return unique;
 }
-

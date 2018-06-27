@@ -1,9 +1,9 @@
 /**
-* this file had been forked from https://github.com/dependents/node-dependency-tree
-*/
+ * this file had been forked from https://github.com/dependents/node-dependency-tree
+ */
 
-var path = require('path');
-var debug = require('debug')('tree');
+const path = require('path');
+const debug = require('debug')('tree');
 
 function Config(options) {
   this.filename = options.filename;
@@ -19,19 +19,25 @@ function Config(options) {
 
   this.filter = options.filter;
 
-  if (!this.filename) { throw new Error('filename not given'); }
-  if (!this.directory) { throw new Error('directory not given'); }
-  if (this.filter && typeof this.filter !== 'function') { throw new Error('filter must be a function'); }
+  if (!this.filename) {
+    throw new Error('filename not given');
+  }
+  if (!this.directory) {
+    throw new Error('directory not given');
+  }
+  if (this.filter && typeof this.filter !== 'function') {
+    throw new Error('filter must be a function');
+  }
 
-  debug('given filename: ' + this.filename);
+  debug(`given filename: ${this.filename}`);
 
   this.filename = path.resolve(process.cwd(), this.filename);
 
-  debug('resolved filename: ' + this.filename);
+  debug(`resolved filename: ${this.filename}`);
   debug('visited: ', this.visited);
 }
 
-Config.prototype.clone = function() {
+Config.prototype.clone = function () {
   return new Config(this);
 };
 

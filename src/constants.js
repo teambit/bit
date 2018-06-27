@@ -26,7 +26,7 @@ export const LOCAL_SCOPE_NOTATION = '@this';
 export const BIT_MAP = '.bit.map.json';
 
 export const COMPONENT_ORIGINS = {
-  "IMPORTED": "IMPORTED",
-  "AUTHORED": "AUTHORED",
-  "NESTED": "NESTED"
+  IMPORTED: 'IMPORTED',
+  AUTHORED: 'AUTHORED',
+  NESTED: 'NESTED'
 };
