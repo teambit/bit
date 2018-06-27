@@ -7,7 +7,6 @@ function invalidDescription() {
   // the description is not the first and it doesn't have the description tag.
 }
 
-
 /**
  * @name descriptionTag
  * @description Adds two numbers.
@@ -16,7 +15,6 @@ function invalidDescription() {
 function descriptionTag() {
   // the description is not the first and it doesn't have the description tag.
 }
-
 
 /**
  * @name descTag
