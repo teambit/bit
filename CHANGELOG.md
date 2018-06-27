@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [unreleased]
+
+- fix "Cannot read property 'lang' of null" error when resolving Vue dependencies
+
 ## [[13.0.1] - 2018-06-26](https://github.com/teambit/bit/releases/tag/v13.0.1)
 
 ### New
