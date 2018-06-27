@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix detection of "export * from" syntax of ES6
 - fix "Cannot read property 'lang' of null" error when resolving Vue dependencies
 
 ## [1.0.2] - 2018-06-26
