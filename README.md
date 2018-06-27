@@ -1,44 +1,13 @@
 # Bit driver for javascript
 
-For more information on Bit drivers, head over this Bit's wiki page [about this
-topic](https://github.com/teambit/bit/wiki/Bit-Drivers).
+For more information on Bit [see Bit's docs](https://docs.bitsrc.io/).
+
+No need to install this package individually anymore. By installing Bit, this driver is already installed.
 
 ## Installing bit-javascript
 
 ```sh
 npm install bit-javascript -g
-```
-
-## enabling autocompletions
-
-#### If you are using bash
-
-```bash
-# For bash
-source <(bitjs completion bash)
-
-# or add it to your .bashrc to make it persist
-echo "source <(bitjs completion bash)" >> ~/.bashrc
-```
-
-#### If you are using zsh
-
-```bash
-# For zsh
-source <(bitjs completion zsh)
-
-# or add it to your .zshrc to make it persist
-echo "source <(bitjs completion zsh)" >> ~/.zshrc
-```
-
-#### If you are using fish
-
-```bash
-# For fish
-source <(bitjs completion fish)
-
-# or add it to your config.fish to make it persist
-echo "source <(bitjs completion fish)" >> ~/.config/fish/config.fish
 ```
 
 ## Contributing to bit-javascript
