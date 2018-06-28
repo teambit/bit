@@ -9,7 +9,7 @@
  * @param {Function} functionType The function to attempt.
  * @param {string[]} arrayOfType
  * @param {Array<number|Object>} arrayOfUnion
- * 
+ *
  */
 function foo(anyType, arrayType, unionType, myCustomType, objectType, functionType, arrayOfType, arrayOfUnion) {
   // ...
@@ -18,6 +18,5 @@ function foo(anyType, arrayType, unionType, myCustomType, objectType, functionTy
 class CustomType {}
 
 module.exports = {
-  add,
+  add
 };
-

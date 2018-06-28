@@ -21,7 +21,7 @@ Bit eliminates this overhead by helping you easily isolate and share components 
 
 Any team member can discover, use and develop components from any project so your team can collaborate, suggest updates, merge changes and stay in sync.
 
-*Bit is a collaborative open source project, actively developed and maintained by a venture-backed tea and used by more teams and communities every day*.
+*Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.
 
 ## Contents
 

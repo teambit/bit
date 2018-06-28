@@ -26,6 +26,7 @@
     "no-use-before-define": [0],
     "flowtype-errors/show-errors": [2, 70],
     "no-restricted-syntax": [2, "ForInStatement", "LabeledStatement", "WithStatement"],
+    "no-unused-expressions": [0],
     "max-len": [2, 120, 2, {
       "ignoreUrls": true,
       "ignoreComments": true,
@@ -37,9 +38,7 @@
     "func-names": [0]
   },
   "env": {
-    "node": true
-  },
-  "globals": {
-    "__impl__": true
+    "node": true,
+    "mocha": true
   }
 }

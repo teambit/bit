@@ -3,12 +3,14 @@ import path from 'path';
 import { expect } from 'chai';
 import { parser } from '../../src/jsdoc';
 
+const fixtures = path.join(__dirname, '../..', 'fixtures', 'jsdoc');
+
 describe('JSDoc Parser', () => {
   describe('parse()', () => {
     describe('Function Declaration', () => {
       let doclet;
       before(() => {
-        const functionDeclarationFile = path.join(__dirname, 'fixtures', 'functionDeclaration.js');
+        const functionDeclarationFile = path.join(fixtures, 'functionDeclaration.js');
         const functionDeclaration = fs.readFileSync(functionDeclarationFile).toString();
         const doclets = parser(functionDeclaration);
         expect(doclets).to.be.a('array');
@@ -62,7 +64,7 @@ describe('JSDoc Parser', () => {
     describe('Method Declaration and Class Declaration', () => {
       let doclets;
       before(() => {
-        const methodDeclarationFile = path.join(__dirname, 'fixtures', 'methodDeclaration.js');
+        const methodDeclarationFile = path.join(fixtures, 'methodDeclaration.js');
         const methodDeclaration = fs.readFileSync(methodDeclarationFile).toString();
         doclets = parser(methodDeclaration);
       });
@@ -156,7 +158,7 @@ describe('JSDoc Parser', () => {
     describe('Variable Declaration', () => {
       let doclets;
       before(() => {
-        const variableDeclarationFile = path.join(__dirname, 'fixtures', 'variableDeclaration.js');
+        const variableDeclarationFile = path.join(fixtures, 'variableDeclaration.js');
         const variableDeclaration = fs.readFileSync(variableDeclarationFile).toString();
         doclets = parser(variableDeclaration);
       });
@@ -193,7 +195,7 @@ describe('JSDoc Parser', () => {
     describe('Various Param Types', () => {
       let args;
       before(() => {
-        const file = path.join(__dirname, 'fixtures', 'variousParamTypes.js');
+        const file = path.join(fixtures, 'variousParamTypes.js');
         const doclets = parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
@@ -240,7 +242,7 @@ describe('JSDoc Parser', () => {
 
     describe('Flow Type File', () => {
       it('should parse the file with no errors', () => {
-        const file = path.join(__dirname, 'fixtures', 'flowTypeFile.js');
+        const file = path.join(fixtures, 'flowTypeFile.js');
         const doclets = parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
@@ -272,7 +274,7 @@ describe('JSDoc Parser', () => {
     describe('Description Tag', () => {
       let doclets;
       before(() => {
-        const file = path.join(__dirname, 'fixtures', 'descriptionTag.js');
+        const file = path.join(fixtures, 'descriptionTag.js');
         doclets = parser(fs.readFileSync(file).toString());
         expect(doclets)
           .to.be.an('array')
@@ -300,7 +302,7 @@ describe('JSDoc Parser', () => {
     describe('Access property', () => {
       let doclets;
       before(() => {
-        const file = path.join(__dirname, 'fixtures', 'misc.js');
+        const file = path.join(fixtures, 'misc.js');
         doclets = parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
@@ -313,7 +315,7 @@ describe('JSDoc Parser', () => {
     describe('Properties property', () => {
       let doclets;
       before(() => {
-        const file = path.join(__dirname, 'fixtures', 'properties.js');
+        const file = path.join(fixtures, 'properties.js');
         doclets = parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });
@@ -332,7 +334,7 @@ describe('JSDoc Parser', () => {
     describe('Doc ending with more than one star', () => {
       let doclets;
       before(() => {
-        const file = path.join(__dirname, 'fixtures', 'endWithTwoStars.js');
+        const file = path.join(fixtures, 'endWithTwoStars.js');
         doclets = parser(fs.readFileSync(file).toString());
         expect(doclets).to.be.an('array');
       });

@@ -2,14 +2,10 @@
  * @name publicFunc
  * @public
  */
-function publicFunc() {
-
-}
+function publicFunc() {}
 
 /**
  * @name privateFunc
  * @private
  */
-function privateFunc() {
-
-}
+function privateFunc() {}
