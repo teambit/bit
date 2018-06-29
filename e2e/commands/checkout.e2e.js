@@ -89,7 +89,7 @@ describe('bit checkout command', function () {
           });
           describe('trying to tag when using an old version', () => {
             before(() => {
-              helper.createComponentBarFoo('modified barFoo');
+              helper.createComponentBarFoo('console.log("modified components");');
             });
             it('should throw an error NewerVersionFound', () => {
               const commitFunc = () => helper.commitComponent('bar/foo');
