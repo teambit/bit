@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- don't break `bit status` when mainFile was deleted, instead, reflect it to the user with a suggestion
 - present parsing errors by `bit status` and prevent tagging it until fixed
 - fix detection of "export * from" syntax of ES6
 - fix "Cannot read property 'lang' of null" error when resolving Vue dependencies

@@ -2,6 +2,7 @@
 import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
+import type { InvalidComponents } from '../../../consumer/component';
 import { Component as ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
@@ -14,7 +15,7 @@ export type StatusResult = {
   componentsWithMissingDeps: Component[],
   importPendingComponents: Component[],
   autoTagPendingComponents: string[],
-  deletedComponents: string[],
+  invalidComponents: InvalidComponents[],
   outdatedComponents: Component[]
 };
 
@@ -28,8 +29,7 @@ export default (async function status(): Promise<StatusResult> {
   const stagedComponents = await componentsList.listExportPendingComponents(true);
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
-  const deletedComponents = await componentsList.listDeletedComponents();
-  const deletedComponentsStr = deletedComponents.map(component => component.toString());
+  const invalidComponents = await componentsList.listInvalidComponents();
   const outdatedComponents = await componentsList.listOutdatedComponents();
 
   // Run over the components to check if there is missing dependencies
@@ -42,7 +42,7 @@ export default (async function status(): Promise<StatusResult> {
   Analytics.setExtraData('staged_components', stagedComponents.length);
   Analytics.setExtraData('num_components_with_missing_dependencies', componentsWithMissingDeps.length);
   Analytics.setExtraData('autoTagPendingComponents', autoTagPendingComponents.length);
-  Analytics.setExtraData('deleted', deletedComponents.length);
+  Analytics.setExtraData('deleted', invalidComponents.length);
   await consumer.onDestroy();
   return {
     newComponents: ComponentsList.sortComponentsByName(newComponents),
@@ -51,7 +51,7 @@ export default (async function status(): Promise<StatusResult> {
     componentsWithMissingDeps, // no need to sort, we don't print it as is
     importPendingComponents, // no need to sort, we use only its length
     autoTagPendingComponents: ComponentsList.sortComponentsByName(autoTagPendingComponentsStr),
-    deletedComponents: ComponentsList.sortComponentsByName(deletedComponentsStr),
+    invalidComponents,
     outdatedComponents
   };
 });

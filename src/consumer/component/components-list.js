@@ -20,7 +20,7 @@ export default class ComponentsList {
   _fromFileSystem: Promise<string[]> = [];
   _fromBitMap: Object = {};
   _fromObjects: ObjectsList;
-  _deletedComponents: string[];
+  _invalidComponents: string[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -238,7 +238,7 @@ export default class ComponentsList {
    * Finds all components that are saved in the file system.
    * Components might be stored in the default component directory and also might be outside
    * of that directory. The bit.map is used to find them all
-   * If they are on bit.map but not on the file-system, populate them to _deletedComponents property
+   * If they are on bit.map but not on the file-system, populate them to _invalidComponents property
    * @return {Promise<Component[]>}
    */
   async getFromFileSystem(origin?: string): Promise<Component[]> {
@@ -246,10 +246,10 @@ export default class ComponentsList {
     if (!this._fromFileSystem[cacheKeyName]) {
       const idsFromBitMap = await this.idsFromBitMap(true, origin);
       const parsedBitIds = idsFromBitMap.map(id => BitId.parse(id));
-      const { components, deletedComponents } = await this.consumer.loadComponents(parsedBitIds, false);
+      const { components, invalidComponents } = await this.consumer.loadComponents(parsedBitIds, false);
       this._fromFileSystem[cacheKeyName] = components;
-      if (!this._deletedComponents && !origin) {
-        this._deletedComponents = deletedComponents;
+      if (!this._invalidComponents && !origin) {
+        this._invalidComponents = invalidComponents;
       }
     }
     return this._fromFileSystem[cacheKeyName];
@@ -258,11 +258,11 @@ export default class ComponentsList {
   /**
    * components that are on bit.map but not on the file-system
    */
-  async listDeletedComponents(): Promise<BitId[]> {
-    if (!this._deletedComponents) {
+  async listInvalidComponents(): Promise<BitId[]> {
+    if (!this._invalidComponents) {
       await this.getFromFileSystem();
     }
-    return this._deletedComponents;
+    return this._invalidComponents;
   }
 
   getFromBitMap(origin?: string): Object {
