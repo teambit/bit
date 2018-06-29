@@ -74,9 +74,9 @@ describe('node-precinct', () => {
     assert(Object.keys(cjs).length === 1);
   });
 
-  it('does not grabs dependencies of es6 modules with syntax errors', () => {
-    const cjs = precinct(read('es6WithError.js'));
-    assert(Object.keys(cjs).length === 0);
+  it('throws errors of es6 modules with syntax errors', () => {
+    const precinctFunc = () => precinct(read('es6WithError.js'));
+    expect(precinctFunc).to.throw();
   });
 
   // this is for supporting PostCSS dialect. The implementation is not merged to this project.
@@ -120,9 +120,9 @@ describe('node-precinct', () => {
     assert.deepEqual(Object.keys(result), expected);
   });
 
-  it('does not grabs dependencies of typescript modules with syntax errors', () => {
-    const result = precinct(read('typescriptWithError.ts'));
-    assert(result.length === 0);
+  it('throws errors of typescript modules with syntax errors', () => {
+    const precinctFunc = () => precinct(read('typescriptWithError.ts'));
+    expect(precinctFunc).to.throw();
   });
 
   it('supports the object form of type configuration', () => {
@@ -142,15 +142,8 @@ describe('node-precinct', () => {
     assert.equal(Object.keys(none).length, 0);
   });
 
-  it('ignores unparsable .js files', () => {
-    const cjs = precinct(read('unparseable.js'));
-
-    assert(cjs.indexOf('lib') < 0);
-    assert.equal(cjs.length, 0);
-  });
-
-  it('does not throw on unparsable .js files', () => {
-    assert.doesNotThrow(() => {
+  it('throw on unparsable .js files', () => {
+    assert.throws(() => {
       precinct(read('unparseable.js'));
     }, SyntaxError);
   });

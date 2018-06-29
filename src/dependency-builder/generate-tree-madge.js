@@ -62,7 +62,7 @@ function exclude(tree, excludeRegExp) {
  * @param  {String} baseDir
  * @return {String}
  */
-function processPath(absPath, cache, baseDir) {
+export function processPath(absPath, cache, baseDir) {
   if (cache[absPath]) {
     return cache[absPath];
   }
@@ -120,13 +120,14 @@ function addRelativePathsToPathMap(pathMap, pathCache, baseDir) {
  * @param config
  * @return {Object}
  */
-export default function generateTree(files, config) {
+export default function generateTree(files = [], config) {
   const depTree = {};
   const visited = {};
   const nonExistent = {};
   const npmPaths = {};
   const pathCache = {};
   const pathMap = [];
+  const errors = {};
 
   files.forEach((file) => {
     if (visited[file]) {
@@ -134,32 +135,36 @@ export default function generateTree(files, config) {
     }
 
     const detective = config.detectiveOptions;
-    const dependencyTreeResult = dependencyTree({
-      filename: file,
-      directory: config.baseDir,
-      requireConfig: config.requireConfig,
-      webpackConfig: config.webpackConfig,
-      resolveConfig: config.resolveConfig,
-      visited,
-      filter: (dependencyFilePath, traversedFilePath) => {
-        let dependencyFilterRes = true;
-        const isNpmPath = isNpmPathFunc(dependencyFilePath);
+    try {
+      const dependencyTreeResult = dependencyTree({
+        filename: file,
+        directory: config.baseDir,
+        requireConfig: config.requireConfig,
+        webpackConfig: config.webpackConfig,
+        resolveConfig: config.resolveConfig,
+        visited,
+        filter: (dependencyFilePath, traversedFilePath) => {
+          let dependencyFilterRes = true;
+          const isNpmPath = isNpmPathFunc(dependencyFilePath);
 
-        if (config.dependencyFilter) {
-          dependencyFilterRes = config.dependencyFilter(dependencyFilePath, traversedFilePath, config.baseDir);
-        }
+          if (config.dependencyFilter) {
+            dependencyFilterRes = config.dependencyFilter(dependencyFilePath, traversedFilePath, config.baseDir);
+          }
 
-        if (config.includeNpm && isNpmPath) {
-          (npmPaths[traversedFilePath] = npmPaths[traversedFilePath] || []).push(dependencyFilePath);
-        }
+          if (config.includeNpm && isNpmPath) {
+            (npmPaths[traversedFilePath] = npmPaths[traversedFilePath] || []).push(dependencyFilePath);
+          }
 
-        return !isNpmPath && (dependencyFilterRes || dependencyFilterRes === undefined);
-      },
-      detective,
-      nonExistent,
-      pathMap
-    });
-    Object.assign(depTree, dependencyTreeResult);
+          return !isNpmPath && (dependencyFilterRes || dependencyFilterRes === undefined);
+        },
+        detective,
+        nonExistent,
+        pathMap
+      });
+      Object.assign(depTree, dependencyTreeResult);
+    } catch (err) {
+      errors[file] = err;
+    }
   });
 
   let tree = convertTree(depTree, {}, pathCache, config.baseDir);
@@ -178,8 +183,9 @@ export default function generateTree(files, config) {
   addRelativePathsToPathMap(pathMap, pathCache, config.baseDir);
 
   return {
-    tree: sort(tree),
+    madgeTree: sort(tree),
     skipped: nonExistent,
-    pathMap
+    pathMap,
+    errors
   };
 }

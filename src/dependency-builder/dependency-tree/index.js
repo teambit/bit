@@ -1,5 +1,6 @@
 import R from 'ramda';
 import { isRelativeImport } from '../../utils';
+
 /**
  * this file had been forked from https://github.com/dependents/node-dependency-tree
  */
@@ -95,7 +96,8 @@ module.exports._getDependencies = function (config) {
   } catch (e) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
-    return [];
+    e.code = 'PARSING_ERROR';
+    throw e;
   }
   const isDependenciesArray = Array.isArray(dependenciesRaw);
   debug(`extracted ${dependencies.length} dependencies: `, dependencies);
@@ -119,7 +121,16 @@ module.exports._getDependencies = function (config) {
       // used for vue
       cabinetParams.isScript = dependenciesRaw[dependency].isScript;
     }
-    const result = cabinet(cabinetParams);
+    let result;
+    try {
+      result = cabinet(cabinetParams);
+    } catch (err) {
+      debug(`error resolving dependencies: ${err.message}`);
+      debug(err.stack);
+      err.code = 'RESOLVE_ERROR';
+      throw err;
+    }
+
     if (!result) {
       debug(`skipping an empty filepath resolution for partial: ${dependency}`);
       if (config.nonExistent[config.filename]) {

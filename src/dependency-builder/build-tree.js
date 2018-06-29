@@ -6,9 +6,9 @@ import path from 'path';
 import R from 'ramda';
 import partition from 'lodash.partition';
 import lset from 'lodash.set';
-import generateTree from './generate-tree-madge';
+import generateTree, { processPath } from './generate-tree-madge';
 import PackageJson from '../package-json/package-json';
-import { DEFAULT_BINDINGS_PREFIX } from '../constants';
+import { DEFAULT_BINDINGS_PREFIX, SUPPORTED_EXTENSIONS } from '../constants';
 import type {
   Tree,
   FileObject,
@@ -237,7 +237,7 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
     return item.startsWith('.') ? 'files' : 'packages';
   });
   const groups = Object.keys(missing).map(key =>
-    Object.assign({ originFile: path.relative(cwd, key) }, byPathType(missing[key], bindingPrefix))
+    Object.assign({ originFile: processPath(key, {}, cwd) }, byPathType(missing[key], bindingPrefix))
   );
   groups.forEach((group) => {
     if (group.packages) group.packages = group.packages.map(resolvePackageNameByPath);
@@ -275,7 +275,7 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
   // https://github.com/teambit/bit/issues/635
   // https://github.com/teambit/bit/issues/690
 
-  return { groups, foundPackages };
+  return { missingGroups: groups, foundPackages };
 }
 
 /**
@@ -394,6 +394,53 @@ function getResolveConfigAbsolute(consumerPath: string, resolveConfig: ?ResolveM
   return resolveConfigAbsolute;
 }
 
+function mergeManuallyFoundPackagesToTree(foundPackages, groups, tree: Tree) {
+  if (R.isEmpty(foundPackages)) return;
+  // Merge manually found packages (by groupMissing()) with the packages found by Madge (generate-tree-madge)
+  Object.keys(foundPackages).forEach((pkg) => {
+    // locate package in groups(contains missing)
+    groups.forEach((fileDep) => {
+      if (fileDep.packages && fileDep.packages.includes(pkg)) {
+        fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
+        lset(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
+      }
+    });
+  });
+}
+
+function mergeMissingToTree(missingGroups, tree: Tree) {
+  if (R.isEmpty(missingGroups)) return;
+  missingGroups.forEach((missing) => {
+    const missingCloned = R.clone(missing);
+    if (!tree[missing.originFile]) throw new Error(`${missing.originFile} is missing from Tree`);
+    delete missingCloned.originFile;
+    tree[missing.originFile].missing = missingCloned;
+  });
+}
+
+function mergeErrorsToTree(baseDir, errors, tree: Tree) {
+  if (R.isEmpty(errors)) return;
+  Object.keys(errors).forEach((file) => {
+    const relativeFile = processPath(file, {}, baseDir);
+    if (tree[relativeFile]) tree[relativeFile].error = errors[file];
+    else tree[relativeFile] = { error: errors[file] };
+  });
+}
+
+function groupBySupportedFiles(filePaths: string[]) {
+  const supportCriteria = (file) => {
+    return SUPPORTED_EXTENSIONS.includes(path.extname(file)) ? 'supportedFiles' : 'unsupportedFiles';
+  };
+  return R.groupBy(supportCriteria, filePaths);
+}
+
+function mergeUnsupportedFilesToTree(baseDir, unsupportedFiles: string[], tree: Tree) {
+  unsupportedFiles.forEach((file) => {
+    const relativeFile = processPath(file, {}, baseDir);
+    tree[relativeFile] = {};
+  });
+}
+
 /**
  * Function for fetching dependency tree of file or dir
  * @param baseDir working directory
@@ -408,7 +455,7 @@ export async function getDependencyTree({
   filePaths,
   bindingPrefix,
   resolveModulesConfig
-}: DependencyTreeParams): Promise<{ missing: Object[], tree: Tree }> {
+}: DependencyTreeParams): Promise<{ tree: Tree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(consumerPath, resolveModulesConfig);
   const config = {
     baseDir,
@@ -419,23 +466,16 @@ export async function getDependencyTree({
     nonExistent: [],
     resolveConfig: resolveConfigAbsolute
   };
-  const result = generateTree(filePaths, config);
-  const { groups, foundPackages } = groupMissing(result.skipped, baseDir, consumerPath, bindingPrefix);
-  const tree: Tree = groupDependencyTree(result.tree, baseDir, bindingPrefix);
-  // Merge manually found packages with madge founded packages
-  if (foundPackages && !R.isEmpty(foundPackages)) {
-    // Madge found packages so we need to merge them with the manual
-    Object.keys(foundPackages).forEach((pkg) => {
-      // locate package in groups(contains missing)
-      groups.forEach((fileDep) => {
-        if (fileDep.packages && fileDep.packages.includes(pkg)) {
-          fileDep.packages = fileDep.packages.filter(packageName => packageName !== pkg);
-          lset(tree[fileDep.originFile], ['packages', pkg], foundPackages[pkg]);
-        }
-      });
-    });
-  }
+  const { supportedFiles, unsupportedFiles } = groupBySupportedFiles(filePaths);
+  const { madgeTree, skipped, pathMap, errors } = generateTree(supportedFiles, config);
+  const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);
+  const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, consumerPath, bindingPrefix);
 
-  updateTreeWithPathMap(tree, result.pathMap);
-  return { missing: groups, tree };
+  if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
+  if (missingGroups) mergeMissingToTree(missingGroups, tree);
+  if (errors) mergeErrorsToTree(baseDir, errors, tree);
+  if (unsupportedFiles) mergeUnsupportedFilesToTree(baseDir, unsupportedFiles, tree);
+
+  updateTreeWithPathMap(tree, pathMap);
+  return { tree };
 }

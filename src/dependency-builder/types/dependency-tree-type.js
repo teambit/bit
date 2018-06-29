@@ -34,15 +34,19 @@ export type LinkFile = {
   importSpecifiers: ImportSpecifier[]
 };
 
-export type FileDependencies = {
-  files: FileObject[],
-  packages?: Object,
+type MissingType = 'files' | 'packages' | 'bits';
+
+export type DependenciesResults = {
+  files?: FileObject[],
+  packages?: { [packageName: string]: string }, // pkgName: pkgVersion
   unidentifiedPackages?: string[],
-  bits?: Object
+  bits?: Object,
+  error?: Error, // error.code is either PARSING_ERROR or RESOLVE_ERROR
+  missing?: { [MissingType]: string[] }
 };
 
 export type Tree = {
-  [main_file: string]: FileDependencies
+  [filePath: string]: DependenciesResults
 };
 
 export type ResolveModulesConfig = {

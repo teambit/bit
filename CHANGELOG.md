@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.3-dev.3] - 2018-06-29
+
+- avoid passing unsupported files to the parser
+- add parsing and resolving errors to the dependency tree
+- add missing dependencies to the dependency tree
+
 ## [1.0.3-dev.2] - 2018-06-27
 
 - fix detection of "export * from" syntax of ES6
