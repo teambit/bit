@@ -36,7 +36,7 @@ export default (async function status(): Promise<StatusResult> {
   // If there is at least one we won't commit anything
   const newAndModified = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
-    return Boolean(component.missingDependencies);
+    return Boolean(component.issues);
   });
   Analytics.setExtraData('new_components', newComponents.length);
   Analytics.setExtraData('staged_components', stagedComponents.length);

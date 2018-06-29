@@ -526,7 +526,7 @@ export default class Consumer {
     // if there is at least one we won't commit anything
     if (!ignoreMissingDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
-        return Boolean(component.missingDependencies);
+        return Boolean(component.issues);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
     }

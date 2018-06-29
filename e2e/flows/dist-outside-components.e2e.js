@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -375,7 +376,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
     });
     it('should not indicate that missing dependencies', () => {
       const status = helper.runCmd('bit status');
-      expect(status).to.not.have.string('missing');
+      expect(status).to.not.have.string(statusFailureMsg);
       expect(status).to.not.have.string('modified');
     });
     describe('"bit build" after updating the imported component', () => {
