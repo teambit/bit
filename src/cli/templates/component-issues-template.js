@@ -2,7 +2,7 @@
 import chalk from 'chalk';
 import ConsumerComponent from '../../consumer/component/consumer-component';
 
-export const missingDependenciesLabels = {
+export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
     'missing packages dependencies (use your package manager to make sure all package dependencies are installed)',
   missingComponents:
@@ -11,10 +11,16 @@ export const missingDependenciesLabels = {
   missingDependenciesOnFs: 'non-existing dependency files (please make sure all files exists on your workspace)',
   missingLinks: 'missing links (use "bit link" to build missing component links)',
   missingCustomModuleResolutionLinks: 'missing links (use "bit link" to build missing component links)',
-  relativeComponents: 'components with relative import statements (please use absolute paths for imported components)'
+  relativeComponents: 'components with relative import statements (please use absolute paths for imported components)',
+  parseErrors: 'error found while parsing the file (please edit the file and fix the parsing error)',
+  resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
 };
 
-export default function missingDepsTemplate(components: ConsumerComponent[]) {
+export function componentIssueToString(value: string[] | string) {
+  return Array.isArray(value) ? value.join(', ') : value;
+}
+
+export default function componentIssuesTemplate(components: ConsumerComponent[]) {
   function format(missingComponent) {
     return `${chalk.underline(chalk.cyan(missingComponent.id.toString()))}\n${formatMissing(missingComponent)}`;
   }
@@ -24,20 +30,20 @@ export default function missingDepsTemplate(components: ConsumerComponent[]) {
 }
 
 function formatMissing(missingComponent: Object) {
-  function formatMissingStr(array, label) {
-    if (!array || array.length === 0) return '';
+  function formatMissingStr(value, label) {
+    if (!value || value.length === 0) return '';
     return (
       chalk.yellow(`${label}: \n`) +
       chalk.white(
-        Object.keys(array)
-          .map(key => `     ${key} -> ${array[key].join(', ')}`)
+        Object.keys(value)
+          .map(key => `     ${key} -> ${componentIssueToString(value[key])}`)
           .join('\n')
       )
     );
   }
 
-  const missingStr = Object.keys(missingDependenciesLabels)
-    .map(key => formatMissingStr(missingComponent.missingDependencies[key], missingDependenciesLabels[key]))
+  const missingStr = Object.keys(componentIssuesLabels)
+    .map(key => formatMissingStr(missingComponent.issues[key], componentIssuesLabels[key]))
     .join('');
 
   return `${missingStr}\n`;

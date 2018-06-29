@@ -7,13 +7,16 @@ import type { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
-import { missingDependenciesLabels } from '../../templates/missing-dependencies-template';
+import { componentIssuesLabels, componentIssueToString } from '../../templates/component-issues-template';
 import { Analytics } from '../../../analytics/analytics';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
   `see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/troubleshooting-isolating.html`
 )}`;
+
+export const statusFailureMsg = 'issues found';
+
 export default class Status extends Command {
   name = 'status';
   description = `show the working area component(s) status.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-status.html`;
@@ -41,22 +44,22 @@ export default class Status extends Command {
     let showTroubleshootingLink = false;
 
     function formatMissing(missingComponent: Component) {
-      function formatMissingStr(key, array, label) {
-        if (!array || R.isEmpty(array)) return '';
+      function formatMissingStr(key, value, label) {
+        if (!value || R.isEmpty(value)) return '';
         return (
           chalk.yellow(`\n       ${label}: \n`) +
           chalk.white(
-            Object.keys(array)
-              .map(key => `          ${key} -> ${array[key].join(', ')}`)
+            Object.keys(value)
+              .map(key => `          ${key} -> ${componentIssueToString(value[key])}`)
               .join('\n')
           )
         );
       }
 
-      const missingStr = Object.keys(missingDependenciesLabels)
+      const missingStr = Object.keys(componentIssuesLabels)
         .map((key) => {
-          if (missingComponent.missingDependencies[key]) Analytics.incExtraDataKey(key);
-          return formatMissingStr(key, missingComponent.missingDependencies[key], missingDependenciesLabels[key]);
+          if (missingComponent.issues[key]) Analytics.incExtraDataKey(key);
+          return formatMissingStr(key, missingComponent.issues[key], componentIssuesLabels[key]);
         })
         .join('');
       return `       ${missingStr}\n`;
@@ -77,7 +80,7 @@ export default class Status extends Command {
       bitFormatted += ' ... ';
       if (!missing) return `${bitFormatted}${chalk.green('ok')}`;
       showTroubleshootingLink = true;
-      return `${bitFormatted} ${chalk.red('missing dependencies')}${formatMissing(missing)}`;
+      return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatMissing(missing)}`;
     }
 
     const importPendingWarning = importPendingComponents.length
@@ -87,7 +90,7 @@ export default class Status extends Command {
       : '';
 
     const splitByMissing = R.groupBy((component) => {
-      return component.includes('missing dependencies') ? 'missing' : 'nonMissing';
+      return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';
     });
     const { missing, nonMissing } = splitByMissing(newComponents.map(c => format(c)));
 

@@ -50,6 +50,7 @@ import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
 import ConsumerComponent from '.';
 import type { PackageJsonInstance } from './package-json';
+import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -115,7 +116,7 @@ export default class Component {
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
-  missingDependencies: ?Object;
+  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | string } };
   deprecated: boolean;
   customResolvedPaths: customResolvedPath[];
   _driver: Driver;

@@ -50,7 +50,7 @@ import { MissingMainFile, MissingBitMapComponent, InvalidBitMap } from '../consu
 import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
-import missingDepsTemplate from './templates/missing-dependencies-template';
+import componentIssuesTemplate from './templates/component-issues-template';
 import newerVersionTemplate from './templates/newer-version-template';
 import {
   PathsNotExist,
@@ -216,7 +216,7 @@ once your changes are merged with the new remote version, please tag and export 
   [
     MissingDependencies,
     (err) => {
-      const missingDepsColored = missingDepsTemplate(err.components);
+      const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],

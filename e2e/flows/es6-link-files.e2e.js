@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 describe('es6 components with link files', function () {
   this.timeout(0);
@@ -41,7 +42,7 @@ describe('es6 components with link files', function () {
     it('should not consider that index file as a dependency', () => {
       output = helper.runCmd('bit status');
       expect(output).to.have.string('bar/foo ... ok');
-      expect(output).to.not.have.string('missing dependencies');
+      expect(output).to.not.have.string(statusFailureMsg);
     });
   });
 
@@ -70,7 +71,7 @@ describe('es6 components with link files', function () {
     it('should not consider both index files as a dependencies', () => {
       output = helper.runCmd('bit status');
       expect(output).to.have.string('bar/foo ... ok');
-      expect(output).to.not.have.string('missing dependencies');
+      expect(output).to.not.have.string(statusFailureMsg);
     });
   });
 

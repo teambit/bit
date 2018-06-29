@@ -129,8 +129,8 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
 }
 
 function writeMissingLinks(consumer: Consumer, component, componentMap: ComponentMap): LinkDetail[] {
-  const missingLinks = component.missingDependencies.missingLinks;
-  const result = Object.keys(component.missingDependencies.missingLinks).map((key) => {
+  const missingLinks = component.issues.missingLinks;
+  const result = Object.keys(component.issues.missingLinks).map((key) => {
     return missingLinks[key].map((dependencyIdStr) => {
       const dependencyId = consumer.bitMap.getExistingComponentId(dependencyIdStr);
       if (!dependencyId) return null;
@@ -151,7 +151,7 @@ async function writeMissingCustomResolvedLinks(consumer: Consumer, component: Co
   if (!component.componentFromModel) return [];
 
   const componentWithDependencies = await component.toComponentWithDependencies(consumer);
-  const missingLinks = component.missingDependencies.missingCustomModuleResolutionLinks;
+  const missingLinks = component.issues.missingCustomModuleResolutionLinks;
   const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
   component.copyDependenciesFromModel(dependenciesStr);
   await writeDependencyLinks([componentWithDependencies], consumer, false);
@@ -184,11 +184,9 @@ async function _linkImportedComponents(
     ? writeDependenciesLinks(component, componentMap, consumer)
     : [];
   const boundMissingDependencies =
-    component.missingDependencies && component.missingDependencies.missingLinks
-      ? writeMissingLinks(consumer, component, componentMap)
-      : [];
+    component.issues && component.issues.missingLinks ? writeMissingLinks(consumer, component, componentMap) : [];
   const boundMissingCustomResolvedLinks =
-    component.missingDependencies && component.missingDependencies.missingCustomModuleResolutionLinks
+    component.issues && component.issues.missingCustomModuleResolutionLinks
       ? await writeMissingCustomResolvedLinks(consumer, component)
       : [];
   const boundAll = bound.concat([
