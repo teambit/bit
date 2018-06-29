@@ -84,14 +84,10 @@ describe('track directories functionality', function () {
         const currentFile = path.join(helper.localScopePath, 'utils/bar/foo.js');
         const newFile = path.join(helper.localScopePath, 'utils/bar/foo2.js');
         fs.moveSync(currentFile, newFile);
-        try {
-          statusOutput = helper.runCmd('bit status');
-        } catch (err) {
-          statusOutput = err.message;
-        }
+        statusOutput = helper.runCmd('bit status');
       });
-      it('bit status should throw an error', () => {
-        expect(statusOutput).to.have.string('mainFile utils/bar/foo.js is not in the files list');
+      it('bit status should indicate the missing of the mainFile', () => {
+        expect(statusOutput).to.have.string('main-file was removed');
       });
       it('should not rename the file in bitmap file', () => {
         const bitMap = helper.readBitMap();

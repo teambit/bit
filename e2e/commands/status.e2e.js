@@ -491,7 +491,7 @@ describe('bit status command', function () {
         expect(output.includes('new components')).to.be.false;
       });
       it('should display that component as deleted component', () => {
-        expect(output.includes('deleted components')).to.be.true;
+        expect(output).to.have.string('component files were deleted');
       });
       describe('running bit diff', () => {
         it('should throw an exception MissingFilesFromComponent', () => {
