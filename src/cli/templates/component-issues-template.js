@@ -16,6 +16,18 @@ export const componentIssuesLabels = {
   resolveErrors: 'error found while resolving the file dependencies (see the log for the full error)'
 };
 
+export function getInvalidComponentLabel(error: Error) {
+  switch (error.name) {
+    case 'MainFileRemoved':
+      return 'main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)';
+    case 'MissingFilesFromComponent':
+    case 'ComponentNotFoundInPath':
+      return 'component files were deleted (use "bit remove [component_id]" to remove the component from your workspace)';
+    default:
+      return error.name;
+  }
+}
+
 export function componentIssueToString(value: string[] | string) {
   return Array.isArray(value) ? value.join(', ') : value;
 }

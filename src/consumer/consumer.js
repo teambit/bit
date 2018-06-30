@@ -52,6 +52,8 @@ import type { PathOsBased, PathRelative, PathAbsolute, PathOsBasedAbsolute, Path
 import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
+import type { InvalidComponent } from './component/consumer-component';
+import MainFileRemoved from './component/exceptions/main-file-removed';
 
 type ConsumerProps = {
   projectPath: string,
@@ -240,7 +242,7 @@ export default class Consumer {
   async loadComponents(
     ids: BitId[],
     throwOnFailure: boolean = true
-  ): Promise<{ components: Component[], deletedComponents: BitId[] }> {
+  ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb(
       'load components',
@@ -248,7 +250,7 @@ export default class Consumer {
     );
     const alreadyLoadedComponents = [];
     const idsToProcess = [];
-    const deletedComponents = [];
+    const invalidComponents: InvalidComponent[] = [];
     ids.forEach((id) => {
       if (this._componentsCache[id.toString()]) {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
@@ -261,7 +263,7 @@ export default class Consumer {
         idsToProcess.push(id);
       }
     });
-    if (!idsToProcess.length) return { components: alreadyLoadedComponents, deletedComponents };
+    if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
     const driverExists = this.warnForMissingDriver(
       'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
@@ -300,8 +302,12 @@ export default class Consumer {
           'load components',
           `failed loading ${Analytics.hashData(id.toString())} from the file-system`
         );
-        if (err instanceof MissingFilesFromComponent || err instanceof ComponentNotFoundInPath) {
-          deletedComponents.push(id);
+        if (
+          err instanceof MissingFilesFromComponent ||
+          err instanceof ComponentNotFoundInPath ||
+          err instanceof MainFileRemoved
+        ) {
+          invalidComponents.push({ id, error: err });
           return null;
         }
         throw err;
@@ -335,7 +341,7 @@ export default class Consumer {
       }
     }
 
-    return { components: allComponents.concat(alreadyLoadedComponents), deletedComponents };
+    return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
   importComponents(importOptions: ImportOptions): ImportResult {

@@ -7,7 +7,11 @@ import type { StatusResult } from '../../../api/consumer/lib/status';
 import Component from '../../../consumer/component';
 import { immutableUnshift, isString } from '../../../utils';
 import { formatBitString, formatNewBit } from '../../chalk-box';
-import { componentIssuesLabels, componentIssueToString } from '../../templates/component-issues-template';
+import {
+  componentIssuesLabels,
+  getInvalidComponentLabel,
+  componentIssueToString
+} from '../../templates/component-issues-template';
 import { Analytics } from '../../../analytics/analytics';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
@@ -36,7 +40,7 @@ export default class Status extends Command {
     componentsWithMissingDeps,
     importPendingComponents,
     autoTagPendingComponents,
-    deletedComponents,
+    invalidComponents,
     outdatedComponents
   }: StatusResult): string {
     // If there is problem with at least one component we want to show a link to the
@@ -65,20 +69,21 @@ export default class Status extends Command {
       return `       ${missingStr}\n`;
     }
 
-    function format(component: string | Component, showVersions: boolean = false): string {
+    function format(component: string | Component, showVersions: boolean = false, message?: string): string {
       const missing = componentsWithMissingDeps.find((missingComp: Component) => {
         const compId = component.id ? component.id.toString() : component;
         return missingComp.id.toString() === compId;
       });
+      const messageStatus = message ? chalk.yellow(message) : chalk.green('ok');
 
-      if (isString(component)) return `${formatBitString(component)} ... ${chalk.green('ok')}`;
+      if (isString(component)) return `${formatBitString(component)} ... ${messageStatus}`;
       let bitFormatted = `${formatNewBit(component)}`;
       if (showVersions) {
         const localVersions = component.getLocalVersions();
         bitFormatted += `. versions: ${localVersions.join(', ')}`;
       }
       bitFormatted += ' ... ';
-      if (!missing) return `${bitFormatted}${chalk.green('ok')}`;
+      if (!missing) return `${bitFormatted}${messageStatus}`;
       showTroubleshootingLink = true;
       return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatMissing(missing)}`;
     }
@@ -129,11 +134,10 @@ export default class Status extends Command {
         : ''
     ).join('\n');
 
-    const deletedDesc =
-      '\nthese components were deleted from your project.\nuse "bit remove [component_id]" to remove these component from your workspace\n';
-    const deletedComponentOutput = immutableUnshift(
-      deletedComponents.map(c => format(c)),
-      deletedComponents.length ? chalk.underline.white('deleted components') + deletedDesc : ''
+    const invalidDesc = '\nthese components were failed to load.\n';
+    const invalidComponentOutput = immutableUnshift(
+      invalidComponents.map(c => format(c.id.toString(), true, getInvalidComponentLabel(c.error))).sort(),
+      invalidComponents.length ? chalk.underline.white('invalid components') + invalidDesc : ''
     ).join('\n');
 
     const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
@@ -152,7 +156,7 @@ export default class Status extends Command {
           modifiedComponentOutput,
           stagedComponentsOutput,
           autoTagPendingOutput,
-          deletedComponentOutput
+          invalidComponentOutput
         ]
           .filter(x => x)
           .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
