@@ -178,22 +178,22 @@ describe('bit tag command', function () {
         expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1', currentVersion: '0.0.1' });
       });
       it('Should increment the patch version when no version type specified', () => {
-        helper.createFile('components', 'a.js', 'v0.0.2');
-        helper.createFile('components', 'b.js', 'v0.0.2');
+        helper.createFile('components', 'a.js', 'console.log("v0.0.2")');
+        helper.createFile('components', 'b.js', 'console.log("v0.0.2")');
         output = helper.commitAllComponents('message');
         expect(output).to.have.string('components/a@0.0.2');
         expect(output).to.have.string('components/b@0.0.2');
       });
       it('Should increment the patch version when --patch flag specified', () => {
-        helper.createFile('components', 'a.js', 'v0.0.3');
-        helper.createFile('components', 'b.js', 'v0.0.3');
+        helper.createFile('components', 'a.js', 'console.log("v0.0.3")');
+        helper.createFile('components', 'b.js', 'console.log("v0.0.3")');
         output = helper.commitAllComponents('message', '--patch');
         expect(output).to.have.string('components/a@0.0.3');
         expect(output).to.have.string('components/b@0.0.3');
       });
       it('Should increment the default version without the -m flag', () => {
-        helper.createFile('components', 'a.js', 'v0.0.4');
-        helper.createFile('components', 'b.js', 'v0.0.4');
+        helper.createFile('components', 'a.js', 'console.log("v0.0.4")');
+        helper.createFile('components', 'b.js', 'console.log("v0.0.4")');
         output = helper.tagAllWithoutMessage();
         expect(output).to.have.string('components/a@0.0.4');
         expect(output).to.have.string('components/b@0.0.4');
@@ -204,15 +204,15 @@ describe('bit tag command', function () {
         expect(tagWithoutChanges).to.have.string('nothing to tag');
       });
       it('Should increment the minor version when --minor flag specified', () => {
-        helper.createFile('components', 'a.js', 'v0.1.0');
-        helper.createFile('components', 'b.js', 'v0.1.0');
+        helper.createFile('components', 'a.js', 'console.log("v0.1.0")');
+        helper.createFile('components', 'b.js', 'console.log("v0.1.0")');
         output = helper.commitAllComponents('message', '-f --minor');
         expect(output).to.have.string('components/a@0.1.0');
         expect(output).to.have.string('components/b@0.1.0');
       });
       it('Should increment the major version when --major flag specified', () => {
-        helper.createFile('components', 'a.js', 'v1.0.0');
-        helper.createFile('components', 'b.js', 'v1.0.0');
+        helper.createFile('components', 'a.js', 'console.log("v1.0.0")');
+        helper.createFile('components', 'b.js', 'console.log("v1.0.0")');
         output = helper.commitAllComponents('message', '--major');
         expect(output).to.have.string('components/a@1.0.0');
         expect(output).to.have.string('components/b@1.0.0');
@@ -226,17 +226,17 @@ describe('bit tag command', function () {
         expect(output).to.have.string('components/d@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
-        helper.createFile('components', 'a.js', 'v3.3.3');
-        helper.createFile('components', 'b.js', 'v3.3.3');
+        helper.createFile('components', 'a.js', 'console.log("v3.3.3")');
+        helper.createFile('components', 'b.js', 'console.log("v3.3.3")');
         output = helper.commitAllComponents('message', '-f', '3.3.3');
         expect(output).to.have.string('components/a@3.3.3');
         expect(output).to.have.string('components/b@3.3.3');
       });
       it('Should throw error when the version already exists in one of the components', () => {
-        helper.createFile('components', 'a.js', 'v4.3.4');
-        helper.createFile('components', 'b.js', 'v4.3.4');
+        helper.createFile('components', 'a.js', 'console.log("v4.3.4")');
+        helper.createFile('components', 'b.js', 'console.log("v4.3.4")');
         helper.commitComponent('components/a 4.3.4', 'message');
-        helper.createFile('components', 'a.js', 'v4.3.4 sss');
+        helper.createFile('components', 'a.js', 'console.log("v4.3.4 ssss")');
         const tagWithExisting = () => helper.commitAllComponents('message', '', '4.3.4');
         expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
       });
@@ -359,6 +359,7 @@ describe('bit tag command', function () {
         expect(output).to.not.have.string('failing test should fail');
       });
     });
+    // @todo: fix this test to not rely on all the "it" of 'tag all components'
     describe('tagging all with --skip-tests flag', () => {
       let output;
       before(() => {

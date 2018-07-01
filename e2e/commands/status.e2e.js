@@ -450,10 +450,19 @@ describe('bit status command', function () {
         expect(output).to.have.string('non-existing dependency files');
         expect(output).to.have.string(`${path.normalize('bar/foo2.js')} -> ./foo1.js`);
       });
-      it.skip('should show an error indicating the mainFile was deleting when deleting the mainFile', () => {
-        helper.deleteFile('bar/index.js');
-        const output = helper.runCmd('bit status');
-        expect(output).to.have.string(''); // @todo: implement
+      describe('when mainFile is deleted', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createFile('bar', 'index.js');
+          helper.createFile('bar', 'foo.js');
+          helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+          helper.deleteFile('bar/index.js');
+        });
+        it('should show an error indicating the mainFile was deleting', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.have.string('invalid components');
+          expect(output).to.have.string('main-file was removed');
+        });
       });
     });
     describe('when all of the files were deleted', () => {
@@ -482,7 +491,7 @@ describe('bit status command', function () {
         expect(output.includes('new components')).to.be.false;
       });
       it('should display that component as deleted component', () => {
-        expect(output.includes('deleted components')).to.be.true;
+        expect(output).to.have.string('component files were deleted');
       });
       describe('running bit diff', () => {
         it('should throw an exception MissingFilesFromComponent', () => {

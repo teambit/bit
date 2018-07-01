@@ -12,16 +12,16 @@
         "mainFile": "src/plugins/wix/stylable.js",
         "origin": "AUTHORED"
     },
-    "david.bit-javascript/dependency-tree/types@0.0.1": {
+    "david.bit-javascript/dependency-tree/types@0.0.2": {
         "files": [
             {
+                "name": "dependency-tree-type.js",
                 "relativePath": "src/consumer/component/dependencies/dependency-resolver/types/dependency-tree-type.js",
-                "test": false,
-                "name": "dependency-tree-type.js"
+                "test": false
             }
         ],
         "mainFile": "src/consumer/component/dependencies/dependency-resolver/types/dependency-tree-type.js",
         "origin": "AUTHORED"
     },
-    "version": "13.0.0-dev.1"
+    "version": "13.0.1"
 }

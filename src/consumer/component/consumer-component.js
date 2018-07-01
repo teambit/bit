@@ -50,8 +50,12 @@ import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
 import ConsumerComponent from '.';
 import type { PackageJsonInstance } from './package-json';
+import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
+import MainFileRemoved from './exceptions/main-file-removed';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
+
+export type InvalidComponent = { id: BitId, error: Error };
 
 export type ComponentProps = {
   name: string,
@@ -115,7 +119,7 @@ export default class Component {
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
-  missingDependencies: ?Object;
+  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | string } };
   deprecated: boolean;
   customResolvedPaths: customResolvedPath[];
   _driver: Driver;
@@ -1123,10 +1127,13 @@ export default class Component {
           filesToDelete.push(file);
         }
       });
-      if (filesToDelete.length && !sourceFiles.length) {
-        throw new MissingFilesFromComponent(id.toString());
-      }
       if (filesToDelete.length) {
+        if (!sourceFiles.length) throw new MissingFilesFromComponent(id.toString());
+        filesToDelete.forEach((fileToDelete) => {
+          if (fileToDelete.relativePath === componentMap.mainFile) {
+            throw new MainFileRemoved(componentMap.mainFile, id.toString());
+          }
+        });
         componentMap.removeFiles(filesToDelete);
         bitMap.hasChanged = true;
       }

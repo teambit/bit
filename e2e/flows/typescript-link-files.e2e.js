@@ -2,6 +2,7 @@ import { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 describe('typescript components with link files', function () {
   this.timeout(0);
@@ -41,7 +42,7 @@ describe('typescript components with link files', function () {
     it('should not consider that index file as a dependency', () => {
       output = helper.runCmd('bit status');
       expect(output.includes('bar/foo ... ok')).to.be.true;
-      expect(output.includes('missing dependencies')).to.be.false;
+      expect(output.includes(statusFailureMsg)).to.be.false;
     });
   });
 

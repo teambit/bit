@@ -50,7 +50,7 @@ import { MissingMainFile, MissingBitMapComponent, InvalidBitMap } from '../consu
 import logger from '../logger/logger';
 import RemoteUndefined from './commands/exceptions/remote-undefined';
 import AddTestsWithoutId from './commands/exceptions/add-tests-without-id';
-import missingDepsTemplate from './templates/missing-dependencies-template';
+import componentIssuesTemplate from './templates/component-issues-template';
 import newerVersionTemplate from './templates/newer-version-template';
 import {
   PathsNotExist,
@@ -77,6 +77,7 @@ import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/except
 import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
 import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension-get-dynamic-packages-error';
 import ExtensionInitError from '../extensions/exceptions/extension-init-error';
+import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -216,7 +217,7 @@ once your changes are merged with the new remote version, please tag and export 
   [
     MissingDependencies,
     (err) => {
-      const missingDepsColored = missingDepsTemplate(err.components);
+      const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
@@ -260,6 +261,11 @@ once your changes are merged with the new remote version, please tag and export 
       consider running ${chalk.bold('bit init --reset')} to recreate the file`
   ],
   [ExcludedMainFile, err => `error: main file ${chalk.bold(err.mainFile)} was excluded from file list`],
+  [
+    MainFileRemoved,
+    err => `error: main file ${chalk.bold(err.mainFile)} was removed from ${chalk.bold(err.id)}.
+please use "bit remove" to delete the component or "bit add" with "--main" and "--id" flags to add a new mainFile`
+  ],
   [
     VersionShouldBeRemoved,
     err => `please remove the version part from the specified id ${chalk.bold(err.id)} and try again`

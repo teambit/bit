@@ -114,8 +114,7 @@ describe('basic flow with dependencies', function () {
             output = helper.runCmd('bit status');
           });
           it('should show all of them under deleted components', () => {
-            expect(output).to.not.have.string('no deleted components');
-            expect(output).to.have.string('deleted components');
+            expect(output).to.have.string('component files were deleted');
           });
           it('should show deleted components sorted alphabetically', () => {
             expectComponentsToBeSortedAlphabetically(output);

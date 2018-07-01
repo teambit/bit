@@ -222,9 +222,24 @@ describe('bit merge command', function () {
           it('should indicate that there are conflicts', () => {
             expect(output).to.have.string(FileStatusWithoutChalk.manual);
           });
+          it('bit status should indicate that there are issues with the file', () => {
+            const statusOutput = helper.runCmd('bit status');
+            expect(statusOutput).to.have.string('error found while parsing the file');
+            expect(statusOutput).to.have.string('bar/foo.js');
+            expect(statusOutput).to.have.string('Unexpected token');
+          });
           it('should not be able to run the app because of the conflicts', () => {
             const result = helper.runWithTryCatch('node app.js');
             expect(result).to.have.string('SyntaxError: Unexpected token <<');
+          });
+          it('bit tag should not tag the component', () => {
+            const tagOutput = helper.runWithTryCatch('bit tag -a');
+            expect(tagOutput).to.have.string('error: issues found with the following component dependencies');
+            expect(tagOutput).to.have.string('error found while parsing the file');
+          });
+          it('bit tag should tag the component when --ignore-missing-dependencies flag is used', () => {
+            const tagOutput = helper.tagAllWithoutMessage('--ignore-missing-dependencies');
+            expect(tagOutput).to.have.string('1 components tagged');
           });
         });
         describe('when using --ours flag', () => {
