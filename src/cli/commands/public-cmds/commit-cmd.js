@@ -128,7 +128,11 @@ export default class Export extends Command {
     function joinComponents(comps) {
       return comps
         .map((comp) => {
-          if (comp instanceof ModelComponent) return comp.id();
+          if (comp instanceof ModelComponent) {
+            const bitId = comp.toBitId();
+            bitId.version = comp.latest();
+            return bitId.toString();
+          }
           return comp.id.toString();
         })
         .join(', ');

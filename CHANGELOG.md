@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - don't break `bit status` when mainFile was deleted, instead, reflect it to the user with a suggestion
 - present parsing errors by `bit status` and prevent tagging it until fixed
 - fix detection of "export * from" syntax of ES6
-- fix "Cannot read property 'lang' of null" error when resolving Vue dependencies
+- show the newly tagged version for auto tagged components
 
 ## [[13.0.1] - 2018-06-26](https://github.com/teambit/bit/releases/tag/v13.0.1)
 
