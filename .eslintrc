@@ -37,10 +37,7 @@
     "func-names": [0]
   },
   "env": {
-    "node": true
-  },
-  "globals": {
-    "describe": true,
-    "it": true
+    "node": true,
+    "mocha": true
   }
 }

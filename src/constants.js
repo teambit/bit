@@ -25,19 +25,7 @@ export const LOCAL_SCOPE_NOTATION = '@this';
 
 export const BIT_MAP = '.bit.map.json';
 
-export const SUPPORTED_EXTENSIONS = [
-  '.js',
-  '.ts',
-  '.jsx',
-  '.tsx',
-  '.css',
-  '.scss',
-  '.less',
-  '.sass',
-  '.json',
-  '.vue',
-  '.styl'
-];
+export const SUPPORTED_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.css', '.scss', '.less', '.sass', '.vue', '.styl'];
 
 export const COMPONENT_ORIGINS = {
   IMPORTED: 'IMPORTED',

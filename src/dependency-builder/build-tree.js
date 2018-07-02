@@ -412,9 +412,9 @@ function mergeMissingToTree(missingGroups, tree: Tree) {
   if (R.isEmpty(missingGroups)) return;
   missingGroups.forEach((missing) => {
     const missingCloned = R.clone(missing);
-    if (!tree[missing.originFile]) throw new Error(`${missing.originFile} is missing from Tree`);
     delete missingCloned.originFile;
-    tree[missing.originFile].missing = missingCloned;
+    if (tree[missing.originFile]) tree[missing.originFile].missing = missingCloned;
+    else tree[missing.originFile] = { missing: missingCloned };
   });
 }
 
@@ -472,8 +472,8 @@ export async function getDependencyTree({
   const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, consumerPath, bindingPrefix);
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
-  if (missingGroups) mergeMissingToTree(missingGroups, tree);
   if (errors) mergeErrorsToTree(baseDir, errors, tree);
+  if (missingGroups) mergeMissingToTree(missingGroups, tree);
   if (unsupportedFiles) mergeUnsupportedFilesToTree(baseDir, unsupportedFiles, tree);
 
   updateTreeWithPathMap(tree, pathMap);

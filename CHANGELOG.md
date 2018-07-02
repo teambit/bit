@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- remove .json extension from the supported-files list as it doesn't have dependencies
+
 ## [1.0.3-dev.3] - 2018-06-29
 
 - avoid passing unsupported files to the parser
