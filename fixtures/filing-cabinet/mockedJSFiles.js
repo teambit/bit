@@ -7,7 +7,9 @@ module.exports = {
     },
     'cjs': {
       'foo.js': 'module.exports = 1;',
-      'bar.jsx': 'var React = require("react"); module.exports = function() { return (<div></div>); };'
+      'bar.jsx': 'var React = require("react"); module.exports = function() { return (<div></div>); };',
+      'baz.scss': '.main: {}',
+      'pkg.json': ''
     },
     'ts': {
       'index.ts': 'import foo from "./foo";',

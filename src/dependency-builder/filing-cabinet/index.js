@@ -35,6 +35,12 @@ const defaultLookups = {
   '.vue': vueLookUp
 };
 
+// for some reason, .ts is not sufficient, .d.ts is needed as well
+// these extensions are used with commonJs and nonRelative lookups. When a partial doesn't have an
+// extension it will look for files with these extensions in order.
+// for example, `const a = require('.a')`, it'll look for a.js, a.jsx, a.ts and so on.
+const resolveExtensions = Object.keys(defaultLookups).concat(['.d.ts', '.json', '.css']);
+
 module.exports = function cabinet(options) {
   let partial = options.partial;
   const filename = options.filename;
@@ -267,7 +273,7 @@ function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
   const webpackResolveConfig = {};
   if (resolveConfig.modulesDirectories) webpackResolveConfig.modules = resolveConfig.modulesDirectories;
   if (resolveConfig.aliases) webpackResolveConfig.alias = resolveConfig.aliases;
-  webpackResolveConfig.extensions = Object.keys(defaultLookups).concat(['.json']);
+  webpackResolveConfig.extensions = resolveExtensions;
   try {
     const resolver = webpackResolve.create.sync(webpackResolveConfig);
     const lookupPath = isRelative(partial) ? path.dirname(filename) : directory;
@@ -308,7 +314,7 @@ function commonJSLookup(partial, filename, directory, resolveConfig) {
 
   try {
     result = resolve.sync(partial, {
-      extensions: ['.js', '.jsx', '.vue', '.ts', '.d.ts', '.tsx', '.json'], // for some reason, .ts is not sufficient, .d.ts is needed as well
+      extensions: resolveExtensions,
       basedir: directory,
       // Add fileDir to resolve index.js files in that dir
       moduleDirectory: ['node_modules', directory]

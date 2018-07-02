@@ -333,6 +333,26 @@ describe('filing-cabinet', () => {
 
         assert.equal(result, `${path.join(mockRootDir, 'js/cjs/bar.jsx')}`);
       });
+
+      it('resolves implicit .scss requires', () => {
+        const result = cabinet({
+          partial: './baz',
+          filename: 'js/cjs/foo.js',
+          directory: 'js/cjs/'
+        });
+
+        assert.equal(result, `${path.join(mockRootDir, 'js/cjs/baz.scss')}`);
+      });
+
+      it('resolves implicit .json requires', () => {
+        const result = cabinet({
+          partial: './pkg',
+          filename: 'js/cjs/foo.js',
+          directory: 'js/cjs/'
+        });
+
+        assert.equal(result, `${path.join(mockRootDir, 'js/cjs/pkg.json')}`);
+      });
     });
 
     describe('typescript', () => {
