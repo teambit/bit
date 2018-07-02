@@ -520,7 +520,7 @@ export default class Consumer {
     releaseType: string,
     force: ?boolean,
     verbose: ?boolean,
-    ignoreMissingDependencies: ?boolean,
+    ignoreUnresolvedDependencies: ?boolean,
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
@@ -530,7 +530,7 @@ export default class Consumer {
     const { components } = await this.loadComponents(componentsIds);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't commit anything
-    if (!ignoreMissingDependencies) {
+    if (!ignoreUnresolvedDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.issues);
       });
