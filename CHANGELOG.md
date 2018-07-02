@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.3-dev.4] - 2018-07-02
+
 - fix resolution of style files (.scss, .css, .sass, .less) when required with no extension
 - remove .json extension from the supported-files list as it doesn't have dependencies
 
