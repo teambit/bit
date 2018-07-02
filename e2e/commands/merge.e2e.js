@@ -237,8 +237,8 @@ describe('bit merge command', function () {
             expect(tagOutput).to.have.string('error: issues found with the following component dependencies');
             expect(tagOutput).to.have.string('error found while parsing the file');
           });
-          it('bit tag should tag the component when --ignore-missing-dependencies flag is used', () => {
-            const tagOutput = helper.tagAllWithoutMessage('--ignore-missing-dependencies');
+          it('bit tag should tag the component when --ignore-unresolved-dependencies flag is used', () => {
+            const tagOutput = helper.tagAllWithoutMessage('--ignore-unresolved-dependencies');
             expect(tagOutput).to.have.string('1 components tagged');
           });
         });

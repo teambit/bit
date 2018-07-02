@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- rename `--ignore-missing-dependencies` flag of `bit tag` to `--ignore-unresolved-dependencies`
 - fix detection of .scss files when required with no extension
 - prevent dependency-resolver from parsing json files as they do not contain any dependency
 - don't break `bit status` when mainFile was deleted, instead, reflect it to the user with a suggestion

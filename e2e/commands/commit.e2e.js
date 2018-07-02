@@ -662,7 +662,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('commit component with missing dependencies with --ignore-missing-dependencies', () => {
+    describe('commit component with missing dependencies with --ignore-unresolved-dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -681,7 +681,7 @@ describe('bit tag command', function () {
         helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js');
 
-        const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore-missing-dependencies');
+        const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore-unresolved-dependencies');
         try {
           output = commitOne();
         } catch (err) {
@@ -693,7 +693,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 components tagged');
       });
     });
-    describe('commit all components with missing dependencies with --ignore-missing-dependencies', () => {
+    describe('commit all components with missing dependencies with --ignore-unresolved-dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -712,7 +712,7 @@ describe('bit tag command', function () {
         helper.addComponentWithOptions('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js');
 
-        const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore-missing-dependencies');
+        const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore-unresolved-dependencies');
         try {
           output = commitAll();
         } catch (err) {

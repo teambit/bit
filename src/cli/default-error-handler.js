@@ -145,7 +145,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err =>
       `error: dependency "${chalk.bold(
         err.id
-      )}" was not found. please track this component or use --ignore-missing-dependencies flag (not recommended)`
+      )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`
   ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
   [

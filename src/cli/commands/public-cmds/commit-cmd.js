@@ -22,7 +22,8 @@ export default class Export extends Command {
     ['ma', 'major', 'increment the major version number'],
     ['f', 'force', 'force-tag even if tests are failing and even when component has not changed'],
     ['v', 'verbose', 'show specs output on failure'],
-    ['i', 'ignore-missing-dependencies', 'ignore missing dependencies (default = false)'],
+    ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
+    ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
     ['', 'skip-tests', 'skip running component tests during tag process']
   ];
@@ -40,6 +41,7 @@ export default class Export extends Command {
       force,
       verbose,
       ignoreMissingDependencies = false,
+      ignoreUnresolvedDependencies = false,
       ignoreNewestVersion = false,
       skipTests = false,
       scope
@@ -52,6 +54,7 @@ export default class Export extends Command {
       force: ?boolean,
       verbose: ?boolean,
       ignoreMissingDependencies?: boolean,
+      ignoreUnresolvedDependencies?: boolean,
       ignoreNewestVersion?: boolean,
       skipTests?: boolean,
       scope: ?string
@@ -85,6 +88,8 @@ export default class Export extends Command {
     else if (minor) releaseType = 'minor';
     else if (patch) releaseType = 'patch';
 
+    if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
+
     if (all || scope) {
       return commitAllAction({
         message: message || '',
@@ -92,7 +97,7 @@ export default class Export extends Command {
         releaseType,
         force,
         verbose,
-        ignoreMissingDependencies,
+        ignoreUnresolvedDependencies,
         ignoreNewestVersion,
         skipTests,
         scope,
@@ -106,7 +111,7 @@ export default class Export extends Command {
       releaseType,
       force,
       verbose,
-      ignoreMissingDependencies,
+      ignoreUnresolvedDependencies,
       ignoreNewestVersion,
       skipTests
     });

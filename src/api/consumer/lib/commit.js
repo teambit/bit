@@ -18,7 +18,7 @@ export async function commitAction(args: {
   releaseType: string,
   force: ?boolean,
   verbose?: boolean,
-  ignoreMissingDependencies?: boolean,
+  ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,
   skipTests: boolean
 }) {
@@ -29,7 +29,7 @@ export async function commitAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies,
+    ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests
   } = args;
@@ -49,7 +49,7 @@ export async function commitAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies,
+    ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests
   );
@@ -80,7 +80,7 @@ export async function commitAllAction(args: {
   releaseType: string,
   force: ?boolean,
   verbose?: boolean,
-  ignoreMissingDependencies?: boolean,
+  ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,
   skipTests: boolean,
   scope?: boolean,
@@ -92,7 +92,7 @@ export async function commitAllAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies,
+    ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests,
     scope,
@@ -117,7 +117,7 @@ export async function commitAllAction(args: {
     releaseType,
     force,
     verbose,
-    ignoreMissingDependencies,
+    ignoreUnresolvedDependencies,
     ignoreNewestVersion,
     skipTests
   );
