@@ -11,6 +11,7 @@ pids
 
 # Dependency directories
 node_modules
+!fixtures/filing-cabinet/node_modules
 
 # Optional npm cache directory
 .npm

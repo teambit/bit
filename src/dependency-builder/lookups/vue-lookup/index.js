@@ -9,18 +9,8 @@ const languageMap = {
   css: 'scss',
   stylus: 'styl'
 };
-module.exports = function (
-  partial,
-  filename,
-  directory,
-  config,
-  webpackConfig,
-  configPath,
-  ast,
-  isScript,
-  content,
-  resolveConfig
-) {
+module.exports = function (options) {
+  const { partial, filename, isScript, resolveConfig } = options;
   const cabinet = require('../../filing-cabinet');
 
   const fileContent = fs.readFileSync(filename);

@@ -561,6 +561,18 @@ describe('filing-cabinet', () => {
     });
   });
 
+  describe('.scss with a dependency prefix with a tilda', () => {
+    it('should resolve the dependency to a node_module package (using webpack under the hood)', () => {
+      const result = cabinet({
+        partial: '~bootstrap/index',
+        filename: `${fixtures}/foo.scss`,
+        directory: fixtures
+      });
+
+      assert.equal(result, path.resolve(`${fixtures}/node_modules/bootstrap/index.scss`));
+    });
+  });
+
   // @todo: fix.
   describe.skip('webpack', () => {
     let directory;

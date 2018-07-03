@@ -1,3 +1,5 @@
+// @flow
+
 /**
  * this file had been forked from https://github.com/dependents/node-filing-cabinet
  */
@@ -27,11 +29,10 @@ const defaultLookups = {
   '.jsx': jsLookup,
   '.ts': tsLookup,
   '.tsx': tsLookup,
-  '.scss': sassLookup,
-  '.sass': sassLookup,
+  '.scss': cssPreprocessorLookup,
+  '.sass': cssPreprocessorLookup,
   '.styl': stylusLookup,
-  // Less and Sass imports are very similar
-  '.less': sassLookup,
+  '.less': cssPreprocessorLookup,
   '.vue': vueLookUp
 };
 
@@ -41,48 +42,49 @@ const defaultLookups = {
 // for example, `const a = require('.a')`, it'll look for a.js, a.jsx, a.ts and so on.
 const resolveExtensions = Object.keys(defaultLookups).concat(['.d.ts', '.json', '.css']);
 
-module.exports = function cabinet(options) {
-  let partial = options.partial;
+// when webpack resolves dependencies from a style file, such as .scss file, look for style extensions only
+const styleExtensions = ['.scss', '.sass', '.less', '.css'];
+
+type Options = {
+  partial: string,
+  filename: string,
+  directory: string,
+  config: Object,
+  webpackConfig?: Object,
+  configPath?: string,
+  resolveConfig?: Object,
+  isScript?: boolean, // relevant for Vue files
+  ast?: string,
+  ext?: string,
+  content?: string
+};
+
+module.exports = function cabinet(options: Options) {
+  const partial = options.partial;
   const filename = options.filename;
   const directory = options.directory;
-  const config = options.config;
-  const webpackConfig = options.webpackConfig;
-  const configPath = options.configPath;
-  const ast = options.ast;
   const ext = options.ext || path.extname(filename);
-  const resolveConfig = options.resolveConfig;
-  const isScript = options.isScript;
-  const content = options.content;
   debug(`working on a dependency "${partial}" of a file "${filename}"`);
 
   let resolver = defaultLookups[ext];
-
-  if ((ext === '.css' || ext === '.sass' || ext === '.scss' || ext === '.less') && partial.startsWith('~')) {
-    // webpack syntax for resolving a module
-    partial = partial.replace('~', '');
-    resolver = jsLookup;
-  }
 
   if (!resolver) {
     debug('using generic resolver');
     resolver = resolveDependencyPath;
   }
+  if (ext === '.css' && partial.startsWith('~')) resolver = cssPreprocessorLookup;
 
-  debug(`found a resolver for ${ext}`);
+  debug(`found a resolver ${resolver.name} for ${ext}`);
 
-  // TODO: Change all resolvers to accept an options argument
-  let result = resolver(
-    partial,
-    filename,
-    directory,
-    config,
-    webpackConfig,
-    configPath,
-    ast,
-    isScript,
-    content,
-    resolveConfig
-  );
+  const getResolverResults = () => {
+    // old resolver are not getting an object parameter
+    if (resolver.name === 'resolveDependencyPath' || ext === '.styl') {
+      // $FlowFixMe
+      return resolver(partial, filename, directory);
+    }
+    return resolver(options);
+  };
+  let result = getResolverResults();
   const partialExt = path.extname(partial);
   if (!result && partialExt && partialExt !== ext) {
     resolver = defaultLookups[partialExt];
@@ -95,18 +97,7 @@ module.exports = function cabinet(options) {
         `dependency has a different extension (${partialExt}) than the original file (${ext}), trying to use its resolver instead`
       );
       try {
-        result = resolver(
-          partial,
-          filename,
-          directory,
-          config,
-          webpackConfig,
-          configPath,
-          ast,
-          isScript,
-          content,
-          resolveConfig
-        );
+        result = getResolverResults();
       } catch (err) {
         debug(`unable to use the resolver of ${partialExt} for ${filename}. got an error ${err.message}`);
       }
@@ -153,14 +144,10 @@ module.exports._getJSType = function (options) {
     return 'webpack';
   }
 
-  if (options.ast) {
-    debug('reusing the given ast');
-    return getModuleType.fromSource(options.ast);
-  }
-
-  if (options.content) {
-    debug('reusing the given ast');
-    return getModuleType.fromSource(options.content);
+  const ast = options.ast || options.content;
+  if (ast) {
+    debug('reusing the given ast or content');
+    return getModuleType.fromSource(ast);
   }
 
   debug('using the filename to find the module type');
@@ -178,18 +165,19 @@ module.exports._getJSType = function (options) {
  * @param  {Object} [ast]
  * @return {String}
  */
-function jsLookup(
-  partial,
-  filename,
-  directory,
-  config,
-  webpackConfig,
-  configPath,
-  ast,
-  isScript,
-  content,
-  resolveConfig
-) {
+function jsLookup(options: Options) {
+  const {
+    configPath,
+    partial,
+    directory,
+    config,
+    webpackConfig,
+    filename,
+    ast,
+    isScript,
+    content,
+    resolveConfig
+  } = options;
   const type = module.exports._getJSType({
     config,
     webpackConfig,
@@ -211,51 +199,69 @@ function jsLookup(
         filename
       });
 
-    case 'commonjs':
-      debug('using commonjs resolver');
-      return commonJSLookup(partial, filename, directory, resolveConfig);
-
     case 'webpack':
       debug('using webpack resolver for es6');
       return resolveWebpackPath(partial, filename, directory, webpackConfig);
 
+    case 'commonjs':
     case 'es6':
     default:
-      debug('using commonjs resolver for es6');
+      debug(`using commonjs resolver ${type}`);
       return commonJSLookup(partial, filename, directory, resolveConfig);
   }
 }
 
-function tsLookup(
-  partial,
-  filename,
-  directory,
-  config,
-  webpackConfig,
-  configPath,
-  ast,
-  isScript,
-  content,
-  resolveConfig
-) {
+/**
+ * from https://github.com/webpack-contrib/sass-loader
+   webpack provides an [advanced mechanism to resolve files](https://webpack.js.org/concepts/module-resolution/).
+   The sass-loader uses node-sass' custom importer feature to pass all queries to the webpack resolving engine.
+   Thus you can import your Sass modules from `node_modules`. Just prepend them with a `~` to tell webpack that
+   this is not a relative import:
+    ```css
+    @import "~bootstrap/dist/css/bootstrap";
+      ```
+    It's important to only prepend it with `~`, because `~/` resolves to the home directory.
+    webpack needs to distinguish between `bootstrap` and `~bootstrap` because CSS and Sass files have no special
+    syntax for importing relative files. Writing `@import "file"` is the same as `@import "./file";
+ */
+function cssPreprocessorLookup(options: Options) {
+  const { filename, partial, directory, resolveConfig } = options;
+
+  if (partial.startsWith('~') && !partial.startsWith('~/')) {
+    // webpack syntax for resolving a module from node_modules
+    debug('changing the resolver of css preprocessor to resolveWebpackPath as it has a ~ prefix');
+    const partialWithNoTilda = partial.replace('~', '');
+    return resolveWebpack(partialWithNoTilda, filename, directory, { extensions: styleExtensions });
+  }
+  if (resolveConfig && !isRelativeImport(partial)) {
+    const result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+    if (result) return result;
+  }
+
+  // Less and Sass imports are very similar
+  return sassLookup(partial, filename, directory);
+}
+
+function tsLookup(options: Options) {
+  const { partial, filename, directory, resolveConfig } = options;
   if (partial[0] !== '.') {
     // when a path is not relative, use the standard commonJS lookup
     return commonJSLookup(partial, filename, directory, resolveConfig);
   }
   debug('performing a typescript lookup');
 
-  const options = {
+  const tsOptions = {
     module: ts.ModuleKind.CommonJS
   };
 
   const host = ts.createCompilerHost({});
-  debug('with options: ', options);
-  let resolvedModule = ts.resolveModuleName(partial, filename, options, host).resolvedModule;
+  debug('with options: ', tsOptions);
+  let resolvedModule = ts.resolveModuleName(partial, filename, tsOptions, host).resolvedModule;
   if (!resolvedModule) {
     // for some reason, on Windows, ts.resolveModuleName method tries to find the module in the
     // root directory. For example, it searches for module './bar', in 'c:\bar.ts'.
     const fallbackModule = path.resolve(path.dirname(filename), partial);
-    resolvedModule = ts.resolveModuleName(fallbackModule, filename, options, host).resolvedModule;
+    resolvedModule = ts.resolveModuleName(fallbackModule, filename, tsOptions, host).resolvedModule;
   }
   if (!resolvedModule) {
     // ts.resolveModuleName doesn't always work, fallback to commonJSLookup
@@ -274,16 +280,7 @@ function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
   if (resolveConfig.modulesDirectories) webpackResolveConfig.modules = resolveConfig.modulesDirectories;
   if (resolveConfig.aliases) webpackResolveConfig.alias = resolveConfig.aliases;
   webpackResolveConfig.extensions = resolveExtensions;
-  try {
-    const resolver = webpackResolve.create.sync(webpackResolveConfig);
-    const lookupPath = isRelative(partial) ? path.dirname(filename) : directory;
-    return resolver(lookupPath, partial);
-  } catch (e) {
-    debug(`error when resolving ${partial}`);
-    debug(e.message);
-    debug(e.stack);
-    return '';
-  }
+  return resolveWebpack(partial, filename, directory, webpackResolveConfig);
 }
 
 /**
@@ -362,11 +359,15 @@ function resolveWebpackPath(partial, filename, directory, webpackConfig) {
     }
   }
 
+  return resolveWebpack(partial, filename, directory, resolveConfig);
+}
+
+function resolveWebpack(partial, filename, directory, resolveConfig) {
   try {
     const resolver = webpackResolve.create.sync(resolveConfig);
 
     // We don't care about what the loader resolves the partial to
-    // we only wnat the path of the resolved file
+    // we only want the path of the resolved file
     partial = stripLoader(partial);
 
     const lookupPath = isRelative(partial) ? path.dirname(filename) : directory;
