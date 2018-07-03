@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.3-dev.5] - 2018-07-03
+
 - fix parsing error when a Vue file has a dependency prefix with a Tilda inside a style section
 
 ## [1.0.3-dev.4] - 2018-07-02
