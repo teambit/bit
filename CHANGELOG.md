@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.2-dev.1] - 2018-07-04]
+
 - fix parsing error when a Vue file has a dependency prefix with a Tilda inside a style section
 - rename `--ignore-missing-dependencies` flag of `bit tag` to `--ignore-unresolved-dependencies`
 - fix detection of .scss files when required with no extension
