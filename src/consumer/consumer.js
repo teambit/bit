@@ -501,6 +501,9 @@ export default class Consumer {
            Maybe the component was interrupted during the export and as a result the bitmap file wasn't updated with the new version
            `);
       }
+      // TODO: instead of doing that like this we should use:
+      // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.scope.objects);
+      // it looks like it's exactly the same code but it's not working from some reason
       const versionRef = componentFromModel.versions[versionFromFs];
       if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${id}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);

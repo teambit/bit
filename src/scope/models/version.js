@@ -5,13 +5,13 @@ import packageNameValidate from 'validate-npm-package-name';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath, sha1 } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import type { customResolvedPath } from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
-import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX } from '../../constants';
+import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
 import type { PathLinux } from '../../utils/path';
@@ -53,6 +53,8 @@ export type VersionProps = {
   dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtensionModel,
   tester?: ?TesterExtensionModel,
+  detachedCompiler?: ?boolean,
+  detachedTester?: ?boolean,
   log: Log,
   ci?: CiProps,
   specsResults?: ?Results,
@@ -78,6 +80,8 @@ export default class Version extends BitObject {
   dists: ?Array<DistFileModel>;
   compiler: ?CompilerExtensionModel;
   tester: ?TesterExtensionModel;
+  detachedCompiler: ?boolean;
+  detachedTester: ?boolean;
   log: Log;
   ci: CiProps | {};
   specsResults: ?Results;
@@ -99,6 +103,8 @@ export default class Version extends BitObject {
     dists,
     compiler,
     tester,
+    detachedCompiler,
+    detachedTester,
     log,
     dependencies,
     devDependencies,
@@ -134,6 +140,8 @@ export default class Version extends BitObject {
     this.envsPackageDependencies = envsPackageDependencies || {};
     this.bindingPrefix = bindingPrefix;
     this.customResolvedPaths = customResolvedPaths;
+    this.detachedCompiler = detachedCompiler;
+    this.detachedTester = detachedTester;
     this.validateVersion();
   }
 
@@ -192,6 +200,8 @@ export default class Version extends BitObject {
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
           envsPackageDependencies: obj.envsPackageDependencies,
+          detachedCompiler: obj.detachedCompiler,
+          detachedTester: obj.detachedTester,
           bindingPrefix: obj.bindingPrefix
         },
         filterFunction
@@ -264,6 +274,8 @@ export default class Version extends BitObject {
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
+        detachedCompiler: this.detachedCompiler,
+        detachedTester: this.detachedTester,
         log: {
           message: this.log.message,
           date: this.log.date,
@@ -312,6 +324,8 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix,
       tester,
+      detachedCompiler,
+      detachedTester,
       log,
       docs,
       ci,
@@ -372,6 +386,8 @@ export default class Version extends BitObject {
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
       tester: tester ? parseEnv(tester) : null,
+      detachedCompiler,
+      detachedTester,
       log: {
         message: log.message,
         date: log.date,
@@ -409,6 +425,7 @@ export default class Version extends BitObject {
    */
   static fromComponent({
     component,
+    versionFromModel,
     files,
     dists,
     flattenedDependencies,
@@ -419,6 +436,7 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent,
+    versionFromModel: Version,
     files: ?Array<SourceFileModel>,
     flattenedDependencies: BitId[],
     flattenedDevDependencies: BitId[],
@@ -437,6 +455,31 @@ export default class Version extends BitObject {
       };
     };
 
+    /**
+     * Get to envs models and check if they are different
+     * @param {*} envModelFromFs
+     * @param {*} envModelFromModel
+     */
+    const areEnvsDifferent = (envModelFromFs, envModelFromModel) => {
+      return sha1(envModelFromFs) !== sha1(envModelFromModel);
+    };
+
+    /**
+     * Calculate the detach status based on the component origin, the component detach status from bitmap and comparison
+     * between the env in fs and the env in models
+     * @param {*} origin
+     * @param {*} detachFromFs
+     * @param {*} envModelFromFs
+     * @param {*} envModelFromModel
+     */
+    const calculateDetach = (origin: ComponentOrigin, detachFromFs: ?boolean, envModelFromFs, envModelFromModel) => {
+      // In case it's already detached keep the state as is
+      if (detachFromFs) return detachFromFs;
+      // In case i'm the author and it's not already detached it can't be changed here
+      if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
+      return areEnvsDifferent(envModelFromFs, envModelFromModel);
+    };
+
     const mergePackageDependencies = (
       envsPackageDependencies = {},
       compilerDynamicPakageDependencies = {},
@@ -444,19 +487,43 @@ export default class Version extends BitObject {
     ) => {
       return { ...envsPackageDependencies, ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies };
     };
+    const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
+    const tester = component.tester ? component.tester.toModelObject() : undefined;
 
     const compilerDynamicPakageDependencies = component.compiler
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
+    let detachedCompiler;
+    let detachedTester;
+    const compilerFromModel = R.path(['compiler'], versionFromModel);
+    const testerFromModel = R.path(['tester'], versionFromModel);
+    if (compiler) {
+      detachedCompiler = calculateDetach(
+        component.origin,
+        component.detachedCompiler,
+        getEnvModelOrName(compiler),
+        compilerFromModel
+      );
+    }
+    if (tester) {
+      detachedTester = calculateDetach(
+        component.origin,
+        component.detachedTester,
+        getEnvModelOrName(tester),
+        testerFromModel
+      );
+    }
 
     return new Version({
       mainFile: component.mainFile,
       files: files ? files.map(parseFile) : null,
       dists: dists ? dists.map(parseFile) : null,
-      compiler: component.compiler ? component.compiler.toModelObject() : undefined,
+      compiler,
       bindingPrefix: component.bindingPrefix,
-      tester: component.tester ? component.tester.toModelObject() : undefined,
+      tester,
+      detachedCompiler,
+      detachedTester,
       log: {
         message,
         username,
@@ -592,6 +659,12 @@ export default class Version extends BitObject {
     if (!foundMainFile) {
       throw new VersionInvalid(`${message}, unable to find the mainFile ${this.mainFile} in the files list`);
     }
+    if (this.detachedCompiler !== undefined) {
+      validateType(message, this.detachedCompiler, 'detachedCompiler', 'boolean');
+    }
+    if (this.detachedTester !== undefined) {
+      validateType(message, this.detachedTester, 'detachedCompiler', 'boolean');
+    }
     const duplicateFiles = filesPaths.filter(
       file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
     );
@@ -672,4 +745,15 @@ const envNameOnly = (env) => {
     return true;
   }
   return false;
+};
+
+const getEnvModelOrName = (env) => {
+  if (typeof env === 'string') {
+    return env;
+  }
+  // Store the env as string in case there is no config and files (for backward compatibility)
+  if (envNameOnly(env)) {
+    return env.name;
+  }
+  return env;
 };

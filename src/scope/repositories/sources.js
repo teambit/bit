@@ -4,20 +4,13 @@ import { bufferFrom, eol } from '../../utils';
 import { BitObject } from '../objects';
 import ComponentObjects from '../component-objects';
 import Scope from '../scope';
-import {
-  CFG_USER_NAME_KEY,
-  CFG_USER_EMAIL_KEY,
-  DEFAULT_BIT_RELEASE_TYPE,
-  COMPONENT_ORIGINS,
-  LATEST_BIT_VERSION
-} from '../../constants';
-import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
+import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
+import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
 import { BitId } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
-import { Consumer } from '../../consumer';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
@@ -157,6 +150,7 @@ export default class SourceRepository {
    */
   async consumerComponentToVersion({
     consumerComponent,
+    versionFromModel,
     message,
     flattenedDependencies,
     flattenedDevDependencies,
@@ -164,6 +158,7 @@ export default class SourceRepository {
     specsResults
   }: {
     consumerComponent: ConsumerComponent,
+    versionFromModel?: Version,
     message?: string,
     flattenedDependencies?: Object,
     flattenedDevDependencies?: Object,
@@ -208,6 +203,7 @@ export default class SourceRepository {
     });
     const version = Version.fromComponent({
       component: consumerComponent,
+      versionFromModel,
       files,
       dists,
       flattenedDependencies,
@@ -245,8 +241,17 @@ export default class SourceRepository {
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     const component = await this.findOrAddComponent(source);
+    // TODO: instead of doing that like this we should use:
+    // const versionFromModel = await component.loadVersion(source.id.version, this.scope.objects);
+    // it looks like it's exactly the same code but it's not working from some reason
+    const versionRef = component.versions[source.id.version];
+    let versionFromModel;
+    if (versionRef) {
+      versionFromModel = await this.scope.getObject(versionRef.hash);
+    }
     const { version, files, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
+      versionFromModel,
       message,
       flattenedDependencies,
       flattenedDevDependencies,

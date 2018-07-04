@@ -21,6 +21,7 @@ import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
+import type { ComponentOrigin, DetachState } from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension from '../../extensions/compiler-extension';
@@ -83,6 +84,9 @@ export type ComponentProps = {
   specsResults?: ?SpecsResults,
   license?: ?License,
   deprecated: ?boolean,
+  origin: ComponentOrigin,
+  detachedCompiler?: ?boolean,
+  detachedTester?: ?boolean,
   log?: ?Log
 };
 
@@ -121,6 +125,9 @@ export default class Component {
   isolatedEnvironment: IsolatedEnvironment;
   issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | string } };
   deprecated: boolean;
+  origin: ComponentOrigin;
+  detachedCompiler: ?boolean;
+  detachedTester: ?boolean;
   customResolvedPaths: customResolvedPath[];
   _driver: Driver;
   _isModified: boolean;
@@ -193,6 +200,9 @@ export default class Component {
     license,
     log,
     deprecated,
+    origin,
+    detachedCompiler,
+    detachedTester,
     customResolvedPaths
   }: ComponentProps) {
     this.name = name;
@@ -220,6 +230,9 @@ export default class Component {
     this.license = license;
     this.log = log;
     this.deprecated = deprecated || false;
+    this.origin = origin;
+    this.detachedCompiler = detachedCompiler;
+    this.detachedTester = detachedTester;
     this.customResolvedPaths = customResolvedPaths || [];
     this.validateComponent();
   }
@@ -937,6 +950,8 @@ export default class Component {
       bindingPrefix: this.bindingPrefix,
       compiler: this.compiler ? this.compiler.toObject() : null,
       tester: this.tester ? this.tester.toObject() : null,
+      detachedCompiler: this.detachedCompiler,
+      detachedTester: this.detachedTester,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
       packageDependencies: this.packageDependencies,
@@ -1036,6 +1051,8 @@ export default class Component {
       bindingPrefix,
       compiler,
       tester,
+      detachedCompiler,
+      detachedTester,
       dependencies,
       devDependencies,
       packageDependencies,
@@ -1059,6 +1076,8 @@ export default class Component {
       bindingPrefix,
       compiler: compiler ? await CompilerExtension.loadFromModelObject(compiler) : null,
       tester: tester ? await TesterExtension.loadFromModelObject(tester) : null,
+      detachedCompiler,
+      detachedTester,
       dependencies,
       devDependencies,
       packageDependencies,
@@ -1222,7 +1241,10 @@ export default class Component {
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,
-      deprecated
+      deprecated,
+      origin: componentMap.origin,
+      detachedCompiler: componentMap.detachedCompiler,
+      detachedTester: componentMap.detachedTester
     });
   }
 }
