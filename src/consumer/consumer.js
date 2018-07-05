@@ -35,7 +35,7 @@ import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathNormalizeToLinux } from '../utils';
+import { getLatestVersionNumber, pathNormalizeToLinux, sortObject } from '../utils';
 import { loadDependenciesForComponent, updateDependenciesVersions } from './component/dependencies/dependency-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
@@ -393,7 +393,8 @@ export default class Consumer {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
       const { version } = await this.scope.sources.consumerComponentToVersion({
-        consumerComponent: componentFromFileSystem
+        consumerComponent: componentFromFileSystem,
+        versionFromModel: componentFromModel
       });
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
@@ -414,18 +415,6 @@ export default class Consumer {
       };
       copyDependenciesVersionsFromModelToFS();
       copyDependenciesVersionsFromModelToFS(true);
-
-      /*
-       sort packageDependencies for comparing
-       */
-      const sortObject = (obj) => {
-        return Object.keys(obj)
-          .sort()
-          .reduce(function (result, key) {
-            result[key] = obj[key];
-            return result;
-          }, {});
-      };
 
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.

@@ -242,9 +242,10 @@ export default class SourceRepository {
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
     const component = await this.findOrAddComponent(source);
     // TODO: instead of doing that like this we should use:
-    // const versionFromModel = await component.loadVersion(source.id.version, this.scope.objects);
+    // const versionFromModel = await component.loadVersion(source.usedVersion, this.scope.objects);
     // it looks like it's exactly the same code but it's not working from some reason
-    const versionRef = component.versions[source.id.version];
+    const versionRef = component.versions[source.usedVersion];
+
     let versionFromModel;
     if (versionRef) {
       versionFromModel = await this.scope.getObject(versionRef.hash);

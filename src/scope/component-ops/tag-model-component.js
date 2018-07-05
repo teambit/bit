@@ -93,6 +93,7 @@ async function setFutureVersions(
     componentsToTag.map(async (componentToTag) => {
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+      componentToTag.usedVersion = componentToTag.version;
       componentToTag.version = version;
     })
   );

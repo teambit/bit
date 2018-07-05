@@ -5,7 +5,7 @@ import packageNameValidate from 'validate-npm-package-name';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath, sha1 } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath, sha1, sortObject } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import type { customResolvedPath } from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
@@ -461,7 +461,15 @@ export default class Version extends BitObject {
      * @param {*} envModelFromModel
      */
     const areEnvsDifferent = (envModelFromFs, envModelFromModel) => {
-      return sha1(envModelFromFs) !== sha1(envModelFromModel);
+      const sortEnv = (env) => {
+        env.files = R.sortBy(R.prop('name'), env.files);
+        env.config = sortObject(env.config);
+        const result = sortObject(env);
+        return result;
+      };
+      const envModelFromFsString = envModelFromFs ? JSON.stringify(sortEnv(envModelFromFs)) : '';
+      const envModelFromModelString = envModelFromModel ? JSON.stringify(sortEnv(envModelFromModel)) : '';
+      return sha1(envModelFromFsString) !== sha1(envModelFromModelString);
     };
 
     /**
