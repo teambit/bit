@@ -24,6 +24,7 @@
     "import/no-extraneous-dependencies": [0],
     "comma-dangle": [0, "never"],
     "no-use-before-define": [0],
+    "no-unused-expressions": [0],
     "flowtype-errors/show-errors": [2, 70],
     "no-restricted-syntax": [2, "ForInStatement", "LabeledStatement", "WithStatement"],
     "max-len": [2, 120, 2, {

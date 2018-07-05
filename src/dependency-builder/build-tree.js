@@ -9,6 +9,8 @@ import lset from 'lodash.set';
 import generateTree, { processPath } from './generate-tree-madge';
 import PackageJson from '../package-json/package-json';
 import { DEFAULT_BINDINGS_PREFIX, SUPPORTED_EXTENSIONS } from '../constants';
+import { getPathMapWithLinkFilesData, convertPathMapToRelativePaths } from './path-map';
+import type { PathMapItem } from './path-map';
 import type {
   Tree,
   FileObject,
@@ -20,25 +22,6 @@ import type {
 export type LinkFile = {
   file: string,
   importSpecifiers: ImportSpecifier[]
-};
-
-export type PathMapDependency = {
-  importSource: string, // dependency path as it has been received from dependency-tree lib
-  isCustomResolveUsed?: boolean, // whether a custom resolver, such as an alias "@" for "src" dir, is used
-  resolvedDep: string, // absolute path
-  relativePath: string, // path relative to consumer root
-  importSpecifiers?: ImportSpecifier[], // relevant for ES6 and TS
-  linkFile?: boolean,
-  realDependencies?: LinkFile[] // in case it's a link-file
-};
-
-/**
- * PathMap is used to get the ImportSpecifiers from dependency-tree library
- */
-export type PathMapItem = {
-  file: string,
-  dependencies: PathMapDependency[],
-  relativePath: string // added by generate-tree-madge.addRelativePathsToPathMap()
 };
 
 /**
@@ -279,75 +262,19 @@ function groupMissing(missing, cwd, consumerPath, bindingPrefix) {
 }
 
 /**
- * if a dependency file is in fact a link file, get its real dependencies.
+ * add extra data such as custom-resolve and link-files from pathMap
  */
-function getDependenciesFromLinkFileIfExists(
-  dependency: PathMapDependency,
-  dependencyPathMap: PathMapItem
-): LinkFile[] {
-  const dependencies = [];
-  if (!dependency.importSpecifiers) return dependencies;
-  for (const specifier of dependency.importSpecifiers) {
-    const realDep = dependencyPathMap.dependencies.find((dep) => {
-      if (!dep.importSpecifiers) return false;
-      return dep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
-    });
-    if (!realDep) {
-      // this is not a link file as it doesn't import at least one specifier.
-      break;
-    }
-    const depImportSpecifier = realDep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
-    const importSpecifier: ImportSpecifier = {
-      mainFile: specifier,
-      linkFile: depImportSpecifier
-    };
-    // add to dependencies array
-    const file = realDep.relativePath;
-    const existingFile = dependencies.find(oneDependency => oneDependency.file === file);
-    if (existingFile) {
-      existingFile.importSpecifiers.push(importSpecifier);
-    } else {
-      dependencies.push({ file, importSpecifiers: [importSpecifier] });
-    }
-  }
-  return dependencies;
-}
-
-/**
- * mark dependencies that are link-files as such. Also, add the data of the real dependencies
- */
-function updatePathMapWithLinkFilesData(pathMap: PathMapItem[]): void {
-  pathMap.forEach((file: PathMapItem) => {
-    if (!file.dependencies || !file.dependencies.length) return;
-    file.dependencies.forEach((dependency: PathMapDependency) => {
-      if (!dependency.importSpecifiers || !dependency.importSpecifiers.length) {
-        // importSpecifiers was not implemented for this language
-        return;
-      }
-      const dependencyPathMap = pathMap.find(file => file.file === dependency.resolvedDep);
-      if (!dependencyPathMap || !dependencyPathMap.dependencies || !dependencyPathMap.dependencies.length) return;
-      const dependenciesFromLinkFiles = getDependenciesFromLinkFileIfExists(dependency, dependencyPathMap);
-      if (dependenciesFromLinkFiles.length) {
-        // it is a link file
-        dependency.linkFile = true;
-        dependency.realDependencies = dependenciesFromLinkFiles;
-      }
-    });
-  });
-}
-
-/**
- * remove link-files from the files array and add a new attribute 'linkFiles' to the tree
- */
-function updateTreeWithPathMap(tree: Tree, pathMap: PathMapItem[]): void {
-  if (!pathMap || !pathMap.length) return; // tree is empty
-  updatePathMapWithLinkFilesData(pathMap);
-  Object.keys(tree).forEach((mainFile) => {
-    if (!tree[mainFile].files || !tree[mainFile].files.length) return; // file has no dependency
-    const mainFilePathMap = pathMap.find(file => file.relativePath === mainFile);
-    if (!mainFilePathMap) throw new Error(`updateTreeWithPathMap: PathMap is missing for ${mainFile}`);
-    const files: FileObject[] = tree[mainFile].files.map((dependency: string) => {
-      const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.relativePath === dependency);
+function updateTreeWithPathMap(tree: Tree, pathMapAbsolute: PathMapItem[], baseDir: string): void {
+  if (!pathMapAbsolute.length) return;
+  const pathMapRelative = convertPathMapToRelativePaths(pathMapAbsolute, baseDir);
+  const pathMap = getPathMapWithLinkFilesData(pathMapRelative);
+  Object.keys(tree).forEach((filePath: string) => {
+    const treeFiles = tree[filePath].files;
+    if (!treeFiles || !treeFiles.length) return; // file has no dependency
+    const mainFilePathMap = pathMap.find(file => file.file === filePath);
+    if (!mainFilePathMap) throw new Error(`updateTreeWithPathMap: PathMap is missing for ${filePath}`);
+    const files: FileObject[] = treeFiles.map((dependency: string) => {
+      const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.resolvedDep === dependency);
       if (!dependencyPathMap) throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${dependency}`);
       const fileObject: FileObject = {
         file: dependency,
@@ -369,7 +296,7 @@ function updateTreeWithPathMap(tree: Tree, pathMap: PathMapItem[]): void {
       }
       return fileObject;
     });
-    tree[mainFile].files = files; // eslint-disable-line no-param-reassign
+    tree[filePath].files = files; // eslint-disable-line no-param-reassign
   });
 }
 
@@ -475,7 +402,7 @@ export async function getDependencyTree({
   if (errors) mergeErrorsToTree(baseDir, errors, tree);
   if (missingGroups) mergeMissingToTree(missingGroups, tree);
   if (unsupportedFiles) mergeUnsupportedFilesToTree(baseDir, unsupportedFiles, tree);
+  if (pathMap) updateTreeWithPathMap(tree, pathMap, baseDir);
 
-  updateTreeWithPathMap(tree, pathMap);
   return { tree };
 }

@@ -105,15 +105,6 @@ function convertTree(depTree, tree, pathCache, baseDir) {
   return tree;
 }
 
-function addRelativePathsToPathMap(pathMap, pathCache, baseDir) {
-  pathMap.forEach((file) => {
-    file.relativePath = processPath(file.file, pathCache, baseDir);
-    file.dependencies.forEach((dependency) => {
-      dependency.relativePath = processPath(dependency.resolvedDep, pathCache, baseDir);
-    });
-  });
-}
-
 /**
  * Generate the tree from the given files
  * @param  {Array} files
@@ -179,8 +170,6 @@ export default function generateTree(files = [], config) {
   if (config.excludeRegExp) {
     tree = exclude(tree, config.excludeRegExp);
   }
-
-  addRelativePathsToPathMap(pathMap, pathCache, config.baseDir);
 
   return {
     madgeTree: sort(tree),
