@@ -46,18 +46,17 @@ describe('es6 components with link files', function () {
     });
   });
 
-  // @todo: support this scenario
   // the bar/foo.js requires an index file => utils/index.js,
   // which requires another index file: utils/is-string/index.js,
   // which requires a real file utils/is-string/is-string.js
-  // bit-javascript should do the heavy lifting and provides with a final 'linkFile',
+  // bit-javascript does the heavy lifting and provides with a final 'linkFile',
   // which will be possible to conclude the sourceRelativePath: "utils/index.js"
   // and the destinationRelativePath: "utils/is-string/is-string.js", all the rest index files are irrelevant.
   // in this case, the utils/is-string/index.js is not important and can be ignored altogether.
-  describe.skip('multiple link files', () => {
+  describe('multiple link files', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
       helper.createFile('utils/is-string', 'index.js', "export { default as isString } from './is-string';");
@@ -72,6 +71,22 @@ describe('es6 components with link files', function () {
       output = helper.runCmd('bit status');
       expect(output).to.have.string('bar/foo ... ok');
       expect(output).to.not.have.string(statusFailureMsg);
+    });
+    describe('when importing the component', () => {
+      before(() => {
+        helper.importCompiler();
+        helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+      });
+      it('should rewrite the relevant part of the link file', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-string and got foo');
+      });
     });
   });
 
