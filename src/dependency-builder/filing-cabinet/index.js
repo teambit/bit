@@ -313,8 +313,7 @@ function commonJSLookup(partial, filename, directory, resolveConfig) {
     result = resolve.sync(partial, {
       extensions: resolveExtensions,
       basedir: directory,
-      // Add fileDir to resolve index.js files in that dir
-      moduleDirectory: ['node_modules', directory]
+      moduleDirectory: ['node_modules']
     });
     debug(`resolved path: ${result}`);
   } catch (e) {
