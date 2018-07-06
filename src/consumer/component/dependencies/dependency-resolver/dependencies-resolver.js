@@ -11,7 +11,7 @@ import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../..
 import logger from '../../../../logger/logger';
 import { Consumer } from '../../../../consumer';
 import type { ImportSpecifier, FileObject, Tree, DependenciesResults } from './types/dependency-tree-type';
-import type { PathLinux } from '../../../../utils/path';
+import type { PathLinux, PathLinuxRelative } from '../../../../utils/path';
 import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import type { RelativePath } from '../dependency';
@@ -162,7 +162,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
   };
 
   const processDepFile = (
-    originFile: string,
+    originFile: PathLinuxRelative,
     depFile: string,
     importSpecifiers?: ImportSpecifier[],
     linkFile?: string,
@@ -249,7 +249,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     }
   };
 
-  const processLinkFile = (originFile: string, linkFile: FileObject, isTestFile: boolean = false) => {
+  const processLinkFile = (originFile: PathLinuxRelative, linkFile: FileObject, isTestFile: boolean = false) => {
     if (!linkFile.linkDependencies || R.isEmpty(linkFile.linkDependencies)) return;
     const nonLinkImportSpecifiers = [];
     linkFile.linkDependencies.forEach((dependency) => {
@@ -271,7 +271,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     }
   };
 
-  const processDepFiles = (originFile: string, allDepsFiles?: FileObject[], isTestFile: boolean = false) => {
+  const processDepFiles = (originFile: PathLinuxRelative, allDepsFiles?: FileObject[], isTestFile: boolean = false) => {
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
       if (depFile.isLink) processLinkFile(originFile, depFile, isTestFile);
@@ -279,7 +279,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     });
   };
 
-  const processBits = (originFile: string, bits, isTestFile: boolean = false) => {
+  const processBits = (originFile: PathLinuxRelative, bits, isTestFile: boolean = false) => {
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
       const componentId = Consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
@@ -418,11 +418,11 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     return R.isEmpty(foundPackages) ? undefined : foundPackages;
   };
 
-  const processMissing = (originFile: string, missing: $ElementType<DependenciesResults, 'missing'>) => {
+  const processMissing = (originFile: PathLinuxRelative, missing: $ElementType<DependenciesResults, 'missing'>) => {
     if (!missing) return;
     const componentFiles = consumerComponent.files;
     const doesFileExistInComponent = !R.isEmpty(
-      componentFiles.filter(componentFile => componentFile.relative === originFile)
+      componentFiles.filter(componentFile => pathNormalizeToLinux(componentFile.relative) === originFile)
     );
     if (doesFileExistInComponent) {
       if (missing.files && !R.isEmpty(missing.files)) {
@@ -465,7 +465,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     }
   };
 
-  const processErrors = (originFile: string, error?: Error) => {
+  const processErrors = (originFile: PathLinuxRelative, error?: Error) => {
     if (!error) return;
     logger.error('got an error from the driver while resolving dependencies');
     logger.error(error);
