@@ -92,29 +92,6 @@ module.exports = function (src) {
         ) {
           const depValue = node.object.arguments[0].value;
           addDependency(depValue);
-          if (node.property && node.property.type === 'Identifier' && node.parent.type === 'VariableDeclarator') {
-            const specifierValue = {
-              isDefault: node.property.name === 'default', // e.g. const isString = require('../utils').default
-              name: node.parent.id.name
-            };
-            addImportSpecifier(depValue, specifierValue);
-          }
-          if (
-            node.property &&
-            node.property.type === 'Identifier' &&
-            node.parent.type === 'AssignmentExpression' &&
-            node.parent.left === 'MemberExpression' &&
-            node.parent.left.object === 'MemberExpression' &&
-            node.parent.left.object.object.type === 'Identifier' &&
-            node.parent.left.object.object.name === 'module' &&
-            node.parent.left.property.type === 'Identifier'
-          ) {
-            const specifierValue = {
-              isDefault: node.property.name === 'default', // e.g. module.exports.DraggableCore = require('./lib/DraggableCore').default;
-              name: node.parent.left.property.name
-            };
-            addImportSpecifier(depValue, specifierValue);
-          }
         }
         break;
       default:

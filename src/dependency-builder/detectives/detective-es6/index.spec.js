@@ -2,6 +2,8 @@
  * this file had been forked (and changed since then) from https://github.com/dependents/node-detective-es6
  */
 
+import { expect } from 'chai';
+
 const assert = require('assert');
 const detective = require('./');
 
@@ -111,6 +113,38 @@ describe('detective-es6', () => {
   it('does not throw on an async ES7 function', function () {
     assert.doesNotThrow(function () {
       detective("import foo from 'foo'; export default async function foo() {}");
+    });
+  });
+
+  describe('import-specifiers detection (for tree shaking)', () => {
+    it('should recognize default imports as default', () => {
+      const deps = detective('import foo from "foo";');
+      expect(deps).to.have.property('foo');
+      expect(deps.foo).to.have.property('importSpecifiers');
+      const importSpecifier = deps.foo.importSpecifiers[0];
+      expect(importSpecifier.name).to.equal('foo');
+      expect(importSpecifier.isDefault).to.be.true;
+    });
+    it('should recognize non-default imports as non-default', () => {
+      const deps = detective('import { foo } from "foo";');
+      expect(deps).to.have.property('foo');
+      expect(deps.foo).to.have.property('importSpecifiers');
+      const importSpecifier = deps.foo.importSpecifiers[0];
+      expect(importSpecifier.name).to.equal('foo');
+      expect(importSpecifier.isDefault).to.be.false;
+    });
+    it('should support export-default-as syntax', () => {
+      const deps = detective('export { default as foo } from "foo";');
+      expect(deps).to.have.property('foo');
+      expect(deps.foo).to.have.property('importSpecifiers');
+      const importSpecifier = deps.foo.importSpecifiers[0];
+      expect(importSpecifier.name).to.equal('foo');
+      expect(importSpecifier.isDefault).to.be.true;
+    });
+    it('should not be supported for CommonJS', () => {
+      const deps = detective('const foo = require("foo");');
+      expect(deps).to.have.property('foo');
+      expect(deps.foo).to.not.have.property('importSpecifiers');
     });
   });
 });
