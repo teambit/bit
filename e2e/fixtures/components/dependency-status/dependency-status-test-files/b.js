@@ -1,2 +1,2 @@
-require('a.js');
-require('c.js');
+require('./a.js');
+require('./c.js');
