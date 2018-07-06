@@ -195,7 +195,7 @@ export default class PackageJson {
   static findPackage(dir, addPaths) {
     const pathToConfig = this.findPath(dir);
     let configJSON = null;
-    if (pathToConfig !== null) configJSON = require(pathToConfig);
+    if (pathToConfig !== null) configJSON = require(path.resolve(pathToConfig));
     if (configJSON && addPaths) {
       configJSON.paths = {
         relative: path.relative(dir, pathToConfig),

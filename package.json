@@ -8,6 +8,7 @@
     "format": "prettier-eslint src/**/*.js --write",
     "test": "mocha --require babel-core/register './src/**/*.spec.js'",
     "test-circle": "mocha --require babel-core/register --reporter mocha-circleci-reporter './src/**/*.spec.js'",
+    "test-appveyor": "mocha --require babel-core/register --reporter mocha-appveyor-reporter \"./src/**/*.spec.js\"",
     "clean": "rm -rf dist",
     "build": "babel src -d dist  --source-maps",
     "watch": "babel --watch src -d dist --source-maps",

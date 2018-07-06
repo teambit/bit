@@ -137,7 +137,7 @@ describe('filing-cabinet', () => {
         });
 
         assert.ok(spy.called);
-        assert.equal(result, 'js/es6/bar.js');
+        assert.equal(result, path.normalize('js/es6/bar.js'));
         spy.restore();
       });
     });
@@ -233,7 +233,7 @@ describe('filing-cabinet', () => {
 
         assert.ok(
           require.main.paths.some(function (p) {
-            return p.indexOf(directory) !== -1;
+            return p.indexOf(path.normalize(directory)) !== -1;
           })
         );
       });
@@ -321,7 +321,7 @@ describe('filing-cabinet', () => {
           directory
         });
 
-        assert.equal(result, `${path.resolve(directory)}/subdir/index.js`);
+        assert.equal(result, path.normalize(`${path.resolve(directory)}/subdir/index.js`));
       });
 
       it('resolves implicit .jsx requires', () => {
@@ -421,7 +421,7 @@ describe('filing-cabinet', () => {
           directory: 'sass/'
         });
 
-        assert.equal(result, `${mockRootDir}/sass/bar.scss`);
+        assert.equal(result, path.normalize(`${mockRootDir}/sass/bar.scss`));
       });
 
       it('uses the sass resolver for .sass files', () => {
@@ -431,7 +431,7 @@ describe('filing-cabinet', () => {
           directory: 'sass/'
         });
 
-        assert.equal(result, `${mockRootDir}/sass/bar.sass`);
+        assert.equal(result, path.normalize(`${mockRootDir}/sass/bar.sass`));
       });
     });
 
@@ -443,7 +443,7 @@ describe('filing-cabinet', () => {
           directory: 'stylus/'
         });
 
-        assert.equal(result, `${mockRootDir}/stylus/bar.styl`);
+        assert.equal(result, path.normalize(`${mockRootDir}/stylus/bar.styl`));
       });
     });
 
@@ -455,7 +455,7 @@ describe('filing-cabinet', () => {
           directory: 'less/'
         });
 
-        assert.equal(result, `${mockRootDir}/less/bar.less`);
+        assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
       });
 
       it('resolves partials with a less extension', () => {
@@ -465,7 +465,7 @@ describe('filing-cabinet', () => {
           directory: 'less/'
         });
 
-        assert.equal(result, `${mockRootDir}/less/bar.less`);
+        assert.equal(result, path.normalize(`${mockRootDir}/less/bar.less`));
       });
 
       it('resolves partials with a css extension', () => {
@@ -475,7 +475,7 @@ describe('filing-cabinet', () => {
           directory: 'less/'
         });
 
-        assert.equal(result, `${mockRootDir}/less/bar.css`);
+        assert.equal(result, path.normalize(`${mockRootDir}/less/bar.css`));
       });
     });
   });
@@ -589,7 +589,7 @@ describe('filing-cabinet', () => {
         webpackConfig: `${fixtures}/webpack.config.js`
       });
 
-      assert.equal(resolved, expected);
+      assert.equal(resolved, path.normalize(expected));
     }
 
     it('resolves an aliased path', () => {
