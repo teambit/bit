@@ -87,7 +87,7 @@ describe('bit status command', function () {
     it('Should show missing package dependencies', () => {
       output = helper.runCmd('bit status');
       expect(output).to.have.string('missing packages dependencies');
-      expect(output).to.have.string(`${path.normalize('bar/foo.js')} -> react`);
+      expect(output).to.have.string('bar/foo.js -> react');
     });
   });
   describe('when a component is created, added and committed', () => {
@@ -448,7 +448,7 @@ describe('bit status command', function () {
         helper.deleteFile('bar/foo1.js');
         const output = helper.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
-        expect(output).to.have.string(`${path.normalize('bar/foo2.js')} -> ./foo1.js`);
+        expect(output).to.have.string('bar/foo2.js -> ./foo1.js');
       });
       describe('when mainFile is deleted', () => {
         before(() => {
@@ -513,7 +513,7 @@ describe('bit status command', function () {
     });
     it('should show the missing component as missing', () => {
       expect(output).to.have.string('missing components');
-      expect(output).to.have.string(`${path.normalize('bar/foo.js')} -> scope/bar/baz`);
+      expect(output).to.have.string('bar/foo.js -> scope/bar/baz');
     });
   });
 });
