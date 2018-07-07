@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.3-dev.9] - 2018-07-06
+
+bug fix - on Linux module path (require('a.js')) is resolved as relative path (require('./a.js'))
+
 ## [1.0.3-dev.8] - 2018-07-05
 
 - improve the tree shaking mechanism to work with unlimited number of intermediate (link) files
