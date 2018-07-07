@@ -373,7 +373,8 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
     });
   });
 
-  describe('when the link file uses default-import and specific-import together and using ES6 and ES5 together', () => {
+  // skipped for now. tree shaking is not possible for ES5.
+  describe.skip('when the link file uses default-import and specific-import together and using ES6 and ES5 together', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
