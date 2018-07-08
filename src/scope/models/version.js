@@ -513,6 +513,10 @@ export default class Version extends BitObject {
         getEnvModelOrName(compiler),
         compilerFromModel
       );
+      if (detachedCompiler) {
+        // Save it on the component for future use
+        component.detachedCompiler = detachedCompiler;
+      }
     }
     if (tester) {
       detachedTester = calculateDetach(
@@ -521,6 +525,10 @@ export default class Version extends BitObject {
         getEnvModelOrName(tester),
         testerFromModel
       );
+      if (detachedTester) {
+        // Save it on the component for future use
+        component.detachedTester = detachedTester;
+      }
     }
 
     return new Version({

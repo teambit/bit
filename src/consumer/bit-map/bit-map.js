@@ -72,6 +72,22 @@ export default class BitMap {
     this.markAsChanged();
   }
 
+  setComponentProp(id: string | BitId, propName: $Keys<ComponentMap>, val: any) {
+    const componentMap = this.getComponent(id);
+    // $FlowFixMe
+    componentMap[propName] = val;
+    this.markAsChanged();
+    return componentMap;
+  }
+
+  removeComponentProp(id: string | BitId, propName: $Keys<ComponentMap>) {
+    const componentMap = this.getComponent(id);
+    // $FlowFixMe
+    delete componentMap[propName];
+    this.markAsChanged();
+    return componentMap;
+  }
+
   static load(dirPath: PathOsBasedAbsolute): BitMap {
     const standardLocation = path.join(dirPath, BIT_MAP);
     const oldLocation = path.join(dirPath, OLD_BIT_MAP);
@@ -427,6 +443,27 @@ export default class BitMap {
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
     this.markAsChanged();
+  }
+
+  setDetachedCompiler(id: string | BitId, val: ?boolean) {
+    if (val === null || val === undefined) {
+      return this.removeComponentProp(id, 'detachedCompiler');
+    }
+    return this.setComponentProp(id, 'detachedCompiler', val);
+  }
+  setDetachedTestser(id: string | BitId, val: ?boolean) {
+    if (val === null || val === undefined) {
+      return this.removeComponentProp(id, 'detachedTester');
+    }
+    return this.setComponentProp(id, 'detachedTester', val);
+  }
+
+  setDetachedCompilerAndTester(
+    id: string | BitId,
+    { detachedCompiler, detachedTester }: { detachedCompiler: ?boolean, detachedTester: ?boolean }
+  ) {
+    this.setDetachedCompiler(id, detachedCompiler);
+    return this.setDetachedTestser(id, detachedTester);
   }
 
   isExistWithSameVersion(id: BitId) {
