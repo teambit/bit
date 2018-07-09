@@ -78,7 +78,8 @@ module.exports = function cabinet(options: Options) {
 
   const getResolverResults = () => {
     // old resolver are not getting an object parameter
-    if (resolver.name === 'resolveDependencyPath' || ext === '.styl') {
+    if (resolver.length > 1) {
+      // check whether the 'resolver' function gets more than one parameter
       // $FlowFixMe
       return resolver(partial, filename, directory);
     }

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.3-dev.10] - 2018-07-09
+
+- fix error "Cannot read property push of undefined" when a resolver throws an exception
+- fix the resolver for an unknown extension
+
 ## [1.0.3-dev.9] - 2018-07-06
 
 - bug fix - on Linux module path (require('a.js')) is resolved as relative path (require('./a.js'))

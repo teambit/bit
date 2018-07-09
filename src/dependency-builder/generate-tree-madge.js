@@ -111,7 +111,7 @@ function convertTree(depTree, tree, pathCache, baseDir) {
  * @param config
  * @return {Object}
  */
-export default function generateTree(files = [], config) {
+export default function generateTree(files = [], unsupportedFiles = [], config) {
   const depTree = {};
   const visited = {};
   const nonExistent = {};
@@ -159,13 +159,28 @@ export default function generateTree(files = [], config) {
   });
 
   let tree = convertTree(depTree, {}, pathCache, config.baseDir);
-  for (const npmKey in npmPaths) {
-    const id = processPath(npmKey, pathCache, config.baseDir);
 
+  unsupportedFiles.forEach((file) => {
+    const relativeFile = processPath(file, pathCache, config.baseDir);
+    if (!tree[relativeFile]) tree[relativeFile] = [];
+  });
+
+  // rename errors keys from absolute paths to relative paths
+  Object.keys(errors).forEach((file) => {
+    const relativeFile = processPath(file, pathCache, config.baseDir);
+    if (relativeFile !== file) {
+      errors[relativeFile] = errors[file];
+      delete errors[file];
+    }
+  });
+
+  Object.keys(npmPaths).forEach((npmKey) => {
+    const id = processPath(npmKey, pathCache, config.baseDir);
+    if (!tree[id] && errors[id]) return; // if a file has errors, it won't be in the tree object but in the errors object
     npmPaths[npmKey].forEach((npmPath) => {
       tree[id].push(processPath(npmPath, pathCache, config.baseDir));
     });
-  }
+  });
 
   if (config.excludeRegExp) {
     tree = exclude(tree, config.excludeRegExp);

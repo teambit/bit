@@ -480,6 +480,18 @@ describe('filing-cabinet', () => {
     });
   });
 
+  describe('unrecognized extension', () => {
+    it('uses a generic resolve for unsupported file extensions', () => {
+      const result = cabinet({
+        partial: './bar',
+        filename: 'barbazim/foo.baz',
+        directory: 'barbazim/'
+      });
+
+      assert.equal(result, path.normalize(`${mockRootDir}/barbazim/bar.baz`));
+    });
+  });
+
   describe('.register', () => {
     it('registers a custom resolver for a given extension', () => {
       const stub = sinon.stub().returns('foo.foobar');

@@ -348,9 +348,8 @@ function mergeMissingToTree(missingGroups, tree: Tree) {
 function mergeErrorsToTree(baseDir, errors, tree: Tree) {
   if (R.isEmpty(errors)) return;
   Object.keys(errors).forEach((file) => {
-    const relativeFile = processPath(file, {}, baseDir);
-    if (tree[relativeFile]) tree[relativeFile].error = errors[file];
-    else tree[relativeFile] = { error: errors[file] };
+    if (tree[file]) tree[file].error = errors[file];
+    else tree[file] = { error: errors[file] };
   });
 }
 
@@ -359,13 +358,6 @@ function groupBySupportedFiles(filePaths: string[]) {
     return SUPPORTED_EXTENSIONS.includes(path.extname(file)) ? 'supportedFiles' : 'unsupportedFiles';
   };
   return R.groupBy(supportCriteria, filePaths);
-}
-
-function mergeUnsupportedFilesToTree(baseDir, unsupportedFiles: string[], tree: Tree) {
-  unsupportedFiles.forEach((file) => {
-    const relativeFile = processPath(file, {}, baseDir);
-    tree[relativeFile] = {};
-  });
 }
 
 /**
@@ -394,14 +386,13 @@ export async function getDependencyTree({
     resolveConfig: resolveConfigAbsolute
   };
   const { supportedFiles, unsupportedFiles } = groupBySupportedFiles(filePaths);
-  const { madgeTree, skipped, pathMap, errors } = generateTree(supportedFiles, config);
+  const { madgeTree, skipped, pathMap, errors } = generateTree(supportedFiles, unsupportedFiles, config);
   const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);
   const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, consumerPath, bindingPrefix);
 
   if (foundPackages) mergeManuallyFoundPackagesToTree(foundPackages, missingGroups, tree);
   if (errors) mergeErrorsToTree(baseDir, errors, tree);
   if (missingGroups) mergeMissingToTree(missingGroups, tree);
-  if (unsupportedFiles) mergeUnsupportedFilesToTree(baseDir, unsupportedFiles, tree);
   if (pathMap) updateTreeWithPathMap(tree, pathMap, baseDir);
 
   return { tree };
