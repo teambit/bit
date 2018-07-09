@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
+import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 
 const assertArrays = require('chai-arrays');
 
@@ -497,6 +498,41 @@ describe('bit status command', function () {
         it('should throw an exception MissingFilesFromComponent', () => {
           const diffFunc = () => helper.diff('bar/foo');
           const error = new MissingFilesFromComponent('bar/foo');
+          helper.expectToThrow(diffFunc, error);
+        });
+      });
+    });
+    describe('when the trackDir was deleted for author', () => {
+      let output;
+      before(() => {
+        helper.initNewLocalScope();
+        helper.createComponentBarFoo();
+        helper.createFile('bar', 'index.js');
+        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.deleteFile('bar');
+        output = helper.runCmd('bit status');
+      });
+      it('should not delete the files from bit.map', () => {
+        const beforeRemoveBitMap = helper.readBitMap();
+        const beforeRemoveBitMapfiles = beforeRemoveBitMap['bar/foo'].files;
+        expect(beforeRemoveBitMapfiles).to.be.ofSize(2);
+      });
+      it('should not display that component as a modified component', () => {
+        expect(output.includes('modified components')).to.be.false;
+      });
+      it('should not display that component as a staged component', () => {
+        expect(output.includes('staged components')).to.be.false;
+      });
+      it('should not display that component as new', () => {
+        expect(output.includes('new components')).to.be.false;
+      });
+      it('should display that component as deleted component', () => {
+        expect(output).to.have.string('component files were deleted');
+      });
+      describe('running bit diff', () => {
+        it('should throw an exception ComponentNotFoundInPath', () => {
+          const diffFunc = () => helper.diff('bar/foo');
+          const error = new ComponentNotFoundInPath('bar');
           helper.expectToThrow(diffFunc, error);
         });
       });
