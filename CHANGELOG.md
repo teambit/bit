@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.2-dev.2] - 2018-07-09]
+
 - avoid trying tree shaking on CommonJS code
 - improve the tree shaking mechanism to work with unlimited number of intermediate files
 
