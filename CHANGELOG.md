@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [1.0.3-dev.9] - 2018-07-06
 
-bug fix - on Linux module path (require('a.js')) is resolved as relative path (require('./a.js'))
+- bug fix - on Linux module path (require('a.js')) is resolved as relative path (require('./a.js'))
 
 ## [1.0.3-dev.8] - 2018-07-05
 
@@ -17,7 +17,7 @@ bug fix - on Linux module path (require('a.js')) is resolved as relative path (r
 
 ## [1.0.3-dev.6] - 2018-07-04
 
-- fix parsing error when a Vue file has a dependency prefix with a Tilda inside a style section
+- fix parsing error when a Vue file has a dependency prefix with a Tilde inside a style section
 
 ## [1.0.3-dev.4] - 2018-07-02
 
