@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit status` to show a component as deleted when track-dir was deleted for authored
+
 ## [13.0.2-dev.2] - 2018-07-09]
 
 - avoid trying tree shaking on CommonJS code
