@@ -494,6 +494,8 @@ export default class Component {
       files: filesForBitMap,
       mainFile: this.mainFile,
       rootDir,
+      detachedCompiler: this.detachedCompiler,
+      detachedTester: this.detachedTester,
       origin,
       parent,
       originallySharedDir: this.originallySharedDir

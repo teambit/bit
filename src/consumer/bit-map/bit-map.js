@@ -310,6 +310,8 @@ export default class BitMap {
     rootDir,
     trackDir,
     override,
+    detachedCompiler,
+    detachedTester,
     originallySharedDir
   }: {
     componentId: BitId,
@@ -320,6 +322,8 @@ export default class BitMap {
     rootDir?: string,
     trackDir?: PathOsBased,
     override: boolean,
+    detachedCompiler: ?boolean,
+    detachedTester: ?boolean,
     originallySharedDir?: PathLinux
   }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
@@ -374,6 +378,12 @@ export default class BitMap {
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
+    }
+    if (detachedCompiler) {
+      this.components[componentIdStr].detachedCompiler = detachedCompiler;
+    }
+    if (detachedTester) {
+      this.components[componentIdStr].detachedTester = detachedTester;
     }
     this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {

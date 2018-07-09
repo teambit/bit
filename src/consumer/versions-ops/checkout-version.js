@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
-import Component from '../component';
+import ConsumerComponent from '../component';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathOsBased } from '../../utils/path';
@@ -34,8 +34,8 @@ export type CheckoutProps = {
   ignoreDist: boolean
 };
 type ComponentStatus = {
-  componentFromFS?: Component,
-  componentFromModel?: Component,
+  componentFromFS?: ConsumerComponent,
+  componentFromModel?: Version,
   id: BitId,
   failureMessage?: string,
   mergeResults?: ?MergeResultsThreeWay
@@ -47,7 +47,7 @@ export default (async function checkoutVersion(
 ): Promise<ApplyVersionResults> {
   const { version, ids, promptMergeOptions } = checkoutProps;
   const { components } = await consumer.loadComponents(ids);
-  const allComponentsP = components.map((component: Component) => {
+  const allComponentsP = components.map((component: ConsumerComponent) => {
     return getComponentStatus(consumer, component, checkoutProps);
   });
   const allComponents: ComponentStatus[] = await Promise.all(allComponentsP);
@@ -67,8 +67,8 @@ export default (async function checkoutVersion(
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
   const componentsResultsP = allComponents
     .filter(componentStatus => !componentStatus.failureMessage)
-    .map(({ id, componentFromFS, mergeResults }) => {
-      return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
+    .map(({ id, componentFromFS, componentFromModel, mergeResults }) => {
+      return applyVersion(consumer, id, componentFromFS, componentFromModel, mergeResults, checkoutProps);
     });
   const componentsResults = await Promise.all(componentsResultsP);
 
@@ -77,7 +77,7 @@ export default (async function checkoutVersion(
 
 async function getComponentStatus(
   consumer: Consumer,
-  component: Component,
+  component: ConsumerComponent,
   checkoutProps: CheckoutProps
 ): Promise<ComponentStatus> {
   const { version, latestVersion, reset } = checkoutProps;
@@ -116,6 +116,7 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
   let mergeResults: ?MergeResultsThreeWay;
+  console.log('123');
   if (isModified && version) {
     const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
     mergeResults = await threeWayMerge({
@@ -154,7 +155,8 @@ async function getComponentStatus(
 async function applyVersion(
   consumer: Consumer,
   id: BitId,
-  componentFromFS: Component,
+  componentFromFS: ConsumerComponent,
+  componentFromModel: Version,
   mergeResults: ?MergeResultsThreeWay,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResult> {
@@ -165,7 +167,6 @@ async function applyVersion(
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
-    consumer.bitMap.hasChanged = true;
     return { id, filesStatus };
   }
   const componentsWithDependencies = await consumer.scope.getMany([id]);
@@ -199,6 +200,7 @@ async function applyVersion(
     // update files according to the merge results
     modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
+  console.log('a');
 
   await writeComponents({
     consumer,
@@ -210,6 +212,8 @@ async function applyVersion(
     writeDists: !ignoreDist,
     writePackageJson
   });
+
+  console.log('aad');
 
   const filesStatusNoSharedDir = filesStatusWithoutSharedDir(
     filesStatus,
