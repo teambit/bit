@@ -116,7 +116,6 @@ async function getComponentStatus(
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
   let mergeResults: ?MergeResultsThreeWay;
-  console.log('123');
   if (isModified && version) {
     const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
     mergeResults = await threeWayMerge({
@@ -200,7 +199,6 @@ async function applyVersion(
     // update files according to the merge results
     modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
-  console.log('a');
 
   await writeComponents({
     consumer,
@@ -212,8 +210,6 @@ async function applyVersion(
     writeDists: !ignoreDist,
     writePackageJson
   });
-
-  console.log('aad');
 
   const filesStatusNoSharedDir = filesStatusWithoutSharedDir(
     filesStatus,
