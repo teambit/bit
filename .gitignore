@@ -19,6 +19,9 @@ node_modules
 # vscode
 .vscode/
 
+# vscode history
+.history
+
 # idea
 .idea/
 
