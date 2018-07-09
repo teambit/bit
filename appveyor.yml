@@ -2,7 +2,24 @@ version: 1.0.{build}
 image: Visual Studio 2015
 
 skip_branch_with_pr: true
+configuration:
+  - Group1
+  - Group2
 
+for:
+  -
+    matrix:
+      only:
+        - configuration: Group1
+    test_script:
+      - ps: "npm run e2e-test:appveyor1"
+  -
+    matrix:
+      only:
+        - configuration: Group2
+    test_script:
+      - ps: "npm run e2e-test:appveyor2"
+ 
 # build cache to preserve files/folders between builds
 cache:
   - node_modules                    # local npm modules
