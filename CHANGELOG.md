@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+fix error "Cannot read property push of undefined" when the bit-javascript resolver is unknown
+
 ## [13.0.2-dev.2] - 2018-07-09]
 
 - avoid trying tree shaking on CommonJS code
