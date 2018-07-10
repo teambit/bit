@@ -19,12 +19,6 @@ for:
   -
     matrix:
       only:
-        - configuration: e2e.default
-    test_script:
-      - ps: "npm run e2e-test:appveyor:default"
-  -
-    matrix:
-      only:
         - configuration: e2e.1
     test_script:
       - ps: "npm run e2e-test:appveyor1"
