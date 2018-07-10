@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username } from '../bitsrc-tester';
-import { FileStatusWithoutChalk } from '../commands/merge.e2e';
+import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 
 chai.use(require('chai-fs'));
 
