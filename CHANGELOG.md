@@ -7,40 +7,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [1.0.3-dev.10] - 2018-07-09
+## [1.0.3] - 2018-07-10
 
 - fix error "Cannot read property push of undefined" when a resolver throws an exception
 - fix the resolver for an unknown extension
-
-## [1.0.3-dev.9] - 2018-07-06
-
 - bug fix - on Linux module path (require('a.js')) is resolved as relative path (require('./a.js'))
-
-## [1.0.3-dev.8] - 2018-07-05
-
 - improve the tree shaking mechanism to work with unlimited number of intermediate (link) files
-
-## [1.0.3-dev.6] - 2018-07-04
-
 - fix parsing error when a Vue file has a dependency prefix with a Tilde inside a style section
-
-## [1.0.3-dev.4] - 2018-07-02
-
 - fix resolution of style files (.scss, .css, .sass, .less) when required with no extension
 - remove .json extension from the supported-files list as it doesn't have dependencies
-
-## [1.0.3-dev.3] - 2018-06-29
-
 - avoid passing unsupported files to the parser
 - add parsing and resolving errors to the dependency tree
 - add missing dependencies to the dependency tree
-
-## [1.0.3-dev.2] - 2018-06-27
-
 - fix detection of "export * from" syntax of ES6
-
-## [1.0.3-dev.1] - 2018-06-27
-
 - fix "Cannot read property 'lang' of null" error when resolving Vue dependencies
 
 ## [1.0.2] - 2018-06-26
