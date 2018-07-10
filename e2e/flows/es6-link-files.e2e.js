@@ -90,6 +90,45 @@ describe('es6 components with link files', function () {
     });
   });
 
+  // the recent babel compiler includes the 'add-module-exports' plugin which previously
+  // broke the link-files.
+  describe('multiple link files, different "default" import situation and recent babel compiler', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const isStringFixture = "export default function isString() { return 'got is-string'; };";
+      helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
+      helper.createFile('utils/is-string', 'index.js', "import isString from './is-string'; export { isString }; ");
+      helper.createFile('utils', 'index.js', "import { isString } from './is-string'; export { isString }; ");
+      helper.addComponent('utils/is-string/is-string.js');
+      const fooBarFixture =
+        "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createComponentBarFoo(fooBarFixture);
+      helper.addComponentBarFoo();
+    });
+    it('should not consider both index files as a dependencies', () => {
+      output = helper.runCmd('bit status');
+      expect(output).to.have.string('bar/foo ... ok');
+      expect(output).to.not.have.string(statusFailureMsg);
+    });
+    describe('when importing the component', () => {
+      before(() => {
+        helper.importCompiler('bit.envs/compilers/babel');
+        helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+      });
+      it('should rewrite the relevant part of the link file', () => {
+        const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-string and got foo');
+      });
+    });
+  });
+
   describe('when a component uses link file to import multiple members', () => {
     let utilIndexFixture;
     before(() => {

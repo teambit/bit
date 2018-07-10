@@ -90,15 +90,18 @@ function getLinkContent(
             } else {
               exportPart += `.${importSpecifier.mainFile.name}`;
             }
-            let pathPart = "require('{filePath}')";
-
+            const linkVariable = `_${importSpecifier.linkFile.name}`;
+            const linkRequire = `var ${linkVariable} = require('{filePath}');`;
+            let pathPart = linkVariable;
             if (importSpecifier.linkFile.isDefault) {
-              pathPart += '.default';
+              // when add-module-export babel plugin is used, there is no .default
+              // the link-file should support both cases, with and without that plugin
+              pathPart += `.default || ${linkVariable}`;
             } else {
               pathPart += `.${importSpecifier.mainFile.name}`;
             }
 
-            return `${exportPart} = ${pathPart};`;
+            return `${linkRequire}\n${exportPart} = ${pathPart};`;
           })
           .join('\n');
       } else if (fileExt === 'ts' || fileExt === 'tsx') {
