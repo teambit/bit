@@ -9,8 +9,8 @@ e2e/fixtures
 
 # temporarily, until we fix the errors in these paths
 src/analytics/analytics.js
-e2e/commands/extentsion.e2e.js
-e2e/commands/init.e2e.js
+e2e/commands/extentsion.e2e.1.js
+e2e/commands/init.e2e.1.js
 specs/scope/migrations/objectsFixtures/simple-component.js
 specs/specs-runner/fixtures/invalid-tester.js
 src/api/consumer/lib/isolate.js
@@ -78,7 +78,7 @@ src/extensions/core-extensions/ext-docs-parser.js
 src/logger/logger.js
 src/scope/objects/ref.js
 src/scope/version-dependencies.js
-e2e/commands/show.e2e.js
+e2e/commands/show.e2e.2.js
 src/api/consumer/lib/commit.js
 src/api/consumer/lib/reset.js
 src/cli/commands/public-cmds/init-cmd.js
@@ -125,4 +125,4 @@ e2e/e2e-helper.js
 src/consumer/component/consumer-component.js
 src/scope/scope.js
 src/api/consumer/lib/global-config.js
-e2e/flows/dependencies-versions-resolution.e2e.js
+e2e/flows/dependencies-versions-resolution.e2e.2.js
