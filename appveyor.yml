@@ -3,22 +3,46 @@ image: Visual Studio 2015
 
 skip_branch_with_pr: true
 configuration:
-  - Group1
-  - Group2
+  - Unit
+  - e2e.default
+  - e2e.1
+  - e2e.2
+  - e2e.3
 
 for:
   -
     matrix:
       only:
-        - configuration: Group1
+        - configuration: Unit
+    test_script:
+      - ps: "npm run test:appveyor"
+  -
+    matrix:
+      only:
+        - configuration: e2e.default
+    test_script:
+      - ps: "npm run e2e-test:appveyor:default"
+  -
+    matrix:
+      only:
+        - configuration: e2e.1
     test_script:
       - ps: "npm run e2e-test:appveyor1"
   -
     matrix:
       only:
-        - configuration: Group2
+        - configuration: e2e.2
     test_script:
       - ps: "npm run e2e-test:appveyor2"
+  -
+    matrix:
+      only:
+        - configuration: e2e.3
+    test_script:
+      - ps: "npm run e2e-test:appveyor3"
+
+  
+
  
 # build cache to preserve files/folders between builds
 cache:
