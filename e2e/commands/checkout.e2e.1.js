@@ -5,7 +5,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
 import { ComponentNotFound } from '../../src/scope/exceptions';
-import { FileStatusWithoutChalk } from './merge.e2e';
+import { FileStatusWithoutChalk } from './merge.e2e.2';
 
 chai.use(require('chai-fs'));
 
