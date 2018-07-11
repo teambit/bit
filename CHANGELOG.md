@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.4-dev.1] - 2018-07-11
+
+- fix error "Cannot read property push of undefined" when a dependent has parsing error
 - avoid parsing unsupported dependencies files
 
 ## [1.0.3] - 2018-07-10
