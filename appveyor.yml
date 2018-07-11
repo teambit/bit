@@ -2,7 +2,41 @@ version: 1.0.{build}
 image: Visual Studio 2015
 
 skip_branch_with_pr: true
+configuration:
+  - Unit
+  - e2e.1
+  - e2e.2
+  - e2e.3
 
+for:
+  -
+    matrix:
+      only:
+        - configuration: Unit
+    test_script:
+      - ps: "npm run test:appveyor"
+  -
+    matrix:
+      only:
+        - configuration: e2e.1
+    test_script:
+      - ps: "npm run e2e-test:appveyor1"
+  -
+    matrix:
+      only:
+        - configuration: e2e.2
+    test_script:
+      - ps: "npm run e2e-test:appveyor2"
+  -
+    matrix:
+      only:
+        - configuration: e2e.3
+    test_script:
+      - ps: "npm run e2e-test:appveyor3"
+
+  
+
+ 
 # build cache to preserve files/folders between builds
 cache:
   - node_modules                    # local npm modules
@@ -75,30 +109,30 @@ test_script:
   - npm run test:appveyor
   - npm run e2e-test:appveyor
 
-after_test:
-- ps: >-
-    .\scripts\node-installer.ps1
+#after_test:
+#- ps: >-
+#    .\scripts\node-installer.ps1
 
-    .\scripts\build-dist.ps1
+#    .\scripts\build-dist.ps1
 
-    .\scripts\build-windows-installer.bat
+#    .\scripts\build-windows-installer.bat
 
-    .\scripts\copyArtifacts.ps1
+#    .\scripts\copyArtifacts.ps1
 
-artifacts:
-- path: '%APPDATA%\Local\Bit\logs\debug.log'
-  name: bitLogs
-- path: artifacts\*.msi
-  name: Installer
-- path: artifacts\bit.${VERSION}.nupkg
-  name: nupkg
-deploy_script:
-- ps: >-
-    $VERSION= $(node -p -e "require('./package.json').version")
+#artifacts:
+#- path: '%APPDATA%\Local\Bit\logs\debug.log'
+#  name: bitLogs
+#- path: artifacts\*.msi
+#  name: Installer
+#- path: artifacts\bit.${VERSION}.nupkg
+#  name: nupkg
+#deploy_script:
+#- ps: >-
+#    $VERSION= $(node -p -e "require('./package.json').version")
 
-    .\scripts\deploy-windows.ps1 -Repo bit-msi -File bit-${VERSION}-unsigned.msi -Source artifacts\bit-${VERSION}-unsigned.msi -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method msi
+#    .\scripts\deploy-windows.ps1 -Repo bit-msi -File bit-${VERSION}-unsigned.msi -Source artifacts\bit-${VERSION}-unsigned.msi -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method msi
 
-    .\scripts\build-chocolatey.ps1
+#    .\scripts\build-chocolatey.ps1
 
-    .\scripts\deploy-windows.ps1 -Repo bit-nuget -File bit.${VERSION}.nupkg -Source artifacts\bit.${VERSION}.nupkg -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method nupkg
+#    .\scripts\deploy-windows.ps1 -Repo bit-nuget -File bit.${VERSION}.nupkg -Source artifacts\bit.${VERSION}.nupkg -ENVIRONMENT development -ReleaseServer $env:ReleaseServerDevelopment -Method nupkg
 
