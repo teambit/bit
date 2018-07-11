@@ -752,6 +752,30 @@ describe('dependencyTree', function () {
     });
   });
 
+  describe('when a dependency of the main file is not supported', () => {
+    beforeEach(() => {
+      mockfs({
+        [`${__dirname}/baz`]: {
+          'foo.js': 'require("./bar.json");',
+          'bar.json': '{ "main": "I\'m a simple JSON object" }'
+        }
+      });
+    });
+
+    it('should include it as a dependency and not throw an error', () => {
+      const directory = path.normalize(`${__dirname}/baz`);
+      const filename = path.normalize(`${directory}/foo.js`);
+
+      const tree = dependencyTree({
+        filename,
+        directory
+      });
+
+      const subTree = tree[filename];
+      assert.ok(`${directory}/bar.json` in subTree);
+    });
+  });
+
   // nodeModulesConfig is a feature added to dependency-tree and filing-cabinet to support
   // "module" attribute of package.json, see here what this attribute is good for:
   // https://github.com/rollup/rollup/wiki/pkg.module

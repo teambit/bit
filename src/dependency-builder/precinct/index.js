@@ -1,6 +1,7 @@
 /**
  * this file had been forked from https://github.com/dependents/node-precinct
  */
+import { SUPPORTED_EXTENSIONS } from '../../constants';
 
 const getModuleType = require('module-definition');
 const debug = require('debug')('precinct');
@@ -101,6 +102,8 @@ function precinct(content, options) {
     case 'vue':
       theDetective = detectiveVue;
       break;
+    default:
+      break;
   }
 
   if (theDetective) {
@@ -143,27 +146,43 @@ precinct.paperwork = function (filename, options) {
 
   const content = fs.readFileSync(filename, 'utf8');
   const ext = path.extname(filename);
-  let type;
 
-  if (ext === '.scss' || ext === '.sass' || ext === '.less' || ext === '.ts' || ext === '.vue') {
-    type = ext.replace('.', '');
-  } else if (filename.endsWith('.st.css')) {
-    type = 'stylable';
-  } else if (ext === '.styl') {
-    type = 'stylus';
-  } else if (ext === '.tsx') {
-    type = 'ts';
-    if (!options.ts) options.ts = {};
-    options.ts.ecmaFeatures = { jsx: true };
-  } else if (ext === '.css') {
-    type = 'scss'; // there is no detective for CSS at the moment, however, the import syntax of scss supports css
-  } else if (ext === '.vue') {
-    type = 'vue'; // there is no detective for CSS at the moment, however, the import syntax of scss supports css
-  }
+  const getType = () => {
+    if (filename.endsWith('.st.css')) {
+      return 'stylable';
+    }
+    switch (ext) {
+      case '.scss':
+      case '.sass':
+      case '.less':
+      case '.ts':
+      case '.vue':
+        return ext.replace('.', '');
+      case '.styl':
+        return 'stylus';
+      case '.tsx':
+        if (!options.ts) options.ts = {};
+        options.ts.ecmaFeatures = { jsx: true };
+        return 'ts';
+      case '.jsx':
+        return 'es6';
+      case '.css':
+        return 'scss'; // there is no detective for CSS at the moment, however, the import syntax of scss supports css
+      default:
+        return null;
+    }
+  };
 
+  const getDeps = () => {
+    if (SUPPORTED_EXTENSIONS.includes(ext)) return precinct(content, options);
+    debug(`skipping unsupported file ${filename}`);
+    return [];
+  };
+
+  const type = getType();
   options.type = type;
 
-  const deps = precinct(content, options);
+  const deps = getDeps();
 
   if (deps && !options.includeCore) {
     if (Array.isArray(deps)) {

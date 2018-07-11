@@ -353,13 +353,6 @@ function mergeErrorsToTree(baseDir, errors, tree: Tree) {
   });
 }
 
-function groupBySupportedFiles(filePaths: string[]) {
-  const supportCriteria = (file) => {
-    return SUPPORTED_EXTENSIONS.includes(path.extname(file)) ? 'supportedFiles' : 'unsupportedFiles';
-  };
-  return R.groupBy(supportCriteria, filePaths);
-}
-
 /**
  * Function for fetching dependency tree of file or dir
  * @param baseDir working directory
@@ -385,8 +378,7 @@ export async function getDependencyTree({
     nonExistent: [],
     resolveConfig: resolveConfigAbsolute
   };
-  const { supportedFiles, unsupportedFiles } = groupBySupportedFiles(filePaths);
-  const { madgeTree, skipped, pathMap, errors } = generateTree(supportedFiles, unsupportedFiles, config);
+  const { madgeTree, skipped, pathMap, errors } = generateTree(filePaths, config);
   const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);
   const { missingGroups, foundPackages } = groupMissing(skipped, baseDir, consumerPath, bindingPrefix);
 

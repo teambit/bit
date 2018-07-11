@@ -111,7 +111,7 @@ function convertTree(depTree, tree, pathCache, baseDir) {
  * @param config
  * @return {Object}
  */
-export default function generateTree(files = [], unsupportedFiles = [], config) {
+export default function generateTree(files = [], config) {
   const depTree = {};
   const visited = {};
   const nonExistent = {};
@@ -160,11 +160,6 @@ export default function generateTree(files = [], unsupportedFiles = [], config) 
 
   let tree = convertTree(depTree, {}, pathCache, config.baseDir);
 
-  unsupportedFiles.forEach((file) => {
-    const relativeFile = processPath(file, pathCache, config.baseDir);
-    if (!tree[relativeFile]) tree[relativeFile] = [];
-  });
-
   // rename errors keys from absolute paths to relative paths
   Object.keys(errors).forEach((file) => {
     const relativeFile = processPath(file, pathCache, config.baseDir);
@@ -176,7 +171,8 @@ export default function generateTree(files = [], unsupportedFiles = [], config) 
 
   Object.keys(npmPaths).forEach((npmKey) => {
     const id = processPath(npmKey, pathCache, config.baseDir);
-    if (!tree[id] && errors[id]) return; // if a file has errors, it won't be in the tree object but in the errors object
+    // a file might not be in the tree if it has errors or errors found with its parents
+    if (!tree[id]) return;
     npmPaths[npmKey].forEach((npmPath) => {
       tree[id].push(processPath(npmPath, pathCache, config.baseDir));
     });
