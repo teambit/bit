@@ -222,12 +222,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               // we must add NODE_PATH=dist for the author to workaround its environment as if it
               // has custom-module-resolution set. In the real world, the author has babel or
               // webpack configured to have "src" as the module resolved directory
-              let output;
-              if (process.platform === 'win32') {
-                output = helper.runCmd('set "NODE_PATH=dist" && bit test string/pad-left');
-              } else {
-                output = helper.runCmd('NODE_PATH=dist bit test string/pad-left');
-              }
+              const output = helper.runCmd('NODE_PATH=dist bit test string/pad-left');
               expect(output).to.have.string('tests passed');
             });
           });
