@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import fs from 'fs-extra';
 import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
@@ -11,6 +12,7 @@ import AddComponents from '../component-ops/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
+import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -212,6 +214,7 @@ export default class ComponentMap {
     if (trackDir) {
       const trackDirAbsolute = path.join(consumer.getPath(), trackDir);
       const trackDirRelative = path.relative(process.cwd(), trackDirAbsolute);
+      if (!fs.existsSync(trackDirAbsolute)) throw new ComponentNotFoundInPath(trackDirRelative);
       const addParams = {
         componentPaths: [trackDirRelative || '.'],
         id: id.toString(),

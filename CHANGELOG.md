@@ -7,13 +7,26 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- rename `--ignore-missing-dependencies` flag of `bit tag` to `--ignore-unresolved-dependencies`
-- fix detection of .scss files when required with no extension
-- prevent dependency-resolver from parsing json files as they do not contain any dependency
-- don't break `bit status` when mainFile was deleted, instead, reflect it to the user with a suggestion
+- fix link files generation to support the plugin "add-module-export" of babel compiler
+
+## [[13.0.2] - 2018-07-10](https://github.com/teambit/bit/releases/tag/v13.0.2)
+
+### New
+- improve the tree shaking mechanism to work with unlimited number of intermediate files
 - present parsing errors by `bit status` and prevent tagging it until fixed
+- show the newly tagged version for auto-tagged components
+
+### Changes
+- rename `--ignore-missing-dependencies` flag of `bit tag` to `--ignore-unresolved-dependencies`
+- avoid trying tree shaking on CommonJS code
+- prevent dependency-resolver from parsing json files as they do not contain any dependency
+
+### Bug fixes
+- fix `bit status` to show a component as deleted when track-dir was deleted for authored
+- fix parsing error when a Vue file has a dependency prefix with a Tilde inside a style section
+- fix detection of .scss files when required with no extension
+- don't break `bit status` when mainFile was deleted, instead, reflect it to the user with a suggestion
 - fix detection of "export * from" syntax of ES6
-- show the newly tagged version for auto tagged components
 
 ## [[13.0.1] - 2018-06-26](https://github.com/teambit/bit/releases/tag/v13.0.1)
 
