@@ -92,14 +92,11 @@ function getLinkContent(
             }
             const linkVariable = `_${importSpecifier.linkFile.name}`;
             const linkRequire = `var ${linkVariable} = require('{filePath}');`;
-            let pathPart = linkVariable;
-            if (importSpecifier.linkFile.isDefault) {
-              // when add-module-export babel plugin is used, there is no .default
-              // the link-file should support both cases, with and without that plugin
-              pathPart += `.default || ${linkVariable}`;
-            } else {
-              pathPart += `.${importSpecifier.mainFile.name}`;
-            }
+            // when add-module-export babel plugin is used, there is no .default
+            // the link-file should support both cases, with and without that plugin
+            const pathPart = importSpecifier.linkFile.isDefault
+              ? `${linkVariable} && ${linkVariable}.hasOwnProperty('default') ? ${linkVariable}.default : ${linkVariable}`
+              : `${linkVariable}.${importSpecifier.mainFile.name}`;
 
             return `${linkRequire}\n${exportPart} = ${pathPart};`;
           })
