@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix link files generation to support the plugin "add-module-export" of babel compiler
+- fix error "Cannot read property push of undefined" when a dependent has parsing error (bit-javascript)
+- avoid parsing unsupported dependencies files (bit-javascript)
 
 ## [[13.0.2] - 2018-07-10](https://github.com/teambit/bit/releases/tag/v13.0.2)
 
