@@ -73,7 +73,7 @@ const _getComponents = async (
   if (includeUnmodified) {
     components = await componentsList.authoredAndImportedComponents();
   } else {
-    components = await componentsList.newAndModifiedComponents();
+    components = await componentsList.newModifiedAndAutoTaggedComponents();
   }
   loader.stop();
   await consumer.scope.buildMultiple(components, consumer, false, verbose);

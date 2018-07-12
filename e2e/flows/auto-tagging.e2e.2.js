@@ -122,10 +122,10 @@ describe('auto tagging functionality', function () {
         helper.createFile('utils', 'is-type.js', fixtures.isType);
         helper.addComponent('utils/is-type.js');
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(false));
+        helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
         helper.addComponentWithOptions('utils/is-string.js', { t: 'utils/is-string.spec.js' });
-        helper.tagAllWithoutMessage('--force'); // is-string tests are failing so it must uses 'force'
+        helper.tagAllWithoutMessage(); // tests are passing at this point
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -133,10 +133,22 @@ describe('auto tagging functionality', function () {
         helper.importComponent('utils/is-string');
         helper.importComponent('utils/is-type');
 
-        const isTypeFixtureChanged = "module.exports = function isType() { return 'got is-type'; }";
+        const isTypeFixtureChanged = "module.exports = function isType() { return 'got is-type!'; }"; // notice the addition of "!" which will break the the tests.
         helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureChanged); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
+      });
+      describe('running all tests', () => {
+        let testResults;
+        before(() => {
+          testResults = helper.runWithTryCatch('bit test');
+        });
+        it('should test also the auto tag pending components', () => {
+          expect(testResults).to.have.string('utils/is-string');
+        });
+        it('should fail the tests because of the auto tag', () => {
+          expect(testResults).to.have.string('tests failed');
+        });
       });
       describe('tagging without --verbose flag', () => {
         before(() => {
@@ -168,7 +180,7 @@ describe('auto tagging functionality', function () {
         it('should display the failing tests results', () => {
           expect(commitOutput).to.have.string('tests failed');
           expect(commitOutput).to.have.string(
-            "expected 'got is-type and got is-string' to not equal 'got is-type and got is-string'"
+            "expected 'got is-type! and got is-string' to equal 'got is-type and got is-string'"
           );
         });
       });

@@ -17,10 +17,11 @@ export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
   bitMap: BitMap;
-  _fromFileSystem: Promise<string[]> = [];
+  _fromFileSystem: string[] = [];
   _fromBitMap: Object = {};
   _fromObjects: ObjectsList;
   _invalidComponents: string[];
+  _modifiedComponents: Component[];
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.scope = consumer.scope;
@@ -86,12 +87,14 @@ export default class ComponentsList {
    * @return {Promise<string[]>}
    */
   async listModifiedComponents(load: boolean = false): Promise<Array<BitId | Component>> {
-    const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
-    const modifiedComponents = await filterAsync(fileSystemComponents, (component) => {
-      return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
-    });
-    if (load) return modifiedComponents;
-    return modifiedComponents.map(component => component.id);
+    if (!this._modifiedComponents) {
+      const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
+      this._modifiedComponents = await filterAsync(fileSystemComponents, (component) => {
+        return this.consumer.getComponentStatusById(component.id).then(status => status.modified);
+      });
+    }
+    if (load) return this._modifiedComponents;
+    return this._modifiedComponents.map(component => component.id);
   }
 
   async listOutdatedComponents(): Promise<Component[]> {
@@ -109,13 +112,16 @@ export default class ComponentsList {
     });
   }
 
-  async newAndModifiedComponents(): Promise<Component[]> {
+  async newModifiedAndAutoTaggedComponents(): Promise<Component[]> {
     const [newComponents, modifiedComponents] = await Promise.all([
       this.listNewComponents(true),
       this.listModifiedComponents(true)
     ]);
 
-    const components = [...newComponents, ...modifiedComponents];
+    const autoTagPendingModel: ModelComponent[] = await this.listAutoTagPendingComponents();
+    const autoTagPending: Component[] = await this.scope.toConsumerComponents(autoTagPendingModel);
+
+    const components: Component[] = [...newComponents, ...modifiedComponents, ...autoTagPending];
 
     return Promise.all(components);
   }
