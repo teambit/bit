@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.5-dev.1] - 2018-07-12
+
+- fix vulnerabilities reported by npm audit
+
 ## [1.0.4] - 2018-07-12
 
 - fix error "Cannot read property push of undefined" when a dependent has parsing error
