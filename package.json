@@ -100,7 +100,7 @@
     "table": "^4.0.3",
     "tty-table": "^2.5.5",
     "typescript": "2.7.2",
-    "uniqid": "^4.1.1",
+    "uniqid": "^5.0.3",
     "user-home": "^2.0.0",
     "uuid": "^3.0.1",
     "validate-npm-package-name": "^3.0.0",
