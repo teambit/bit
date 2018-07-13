@@ -8,8 +8,9 @@ import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 
 export async function build(id: string, noCache: boolean, verbose: boolean): Promise<?Array<string>> {
-  const bitId = BitId.parse(id);
   const consumer = await loadConsumer();
+  const idHasScope = await consumer.scope.isIdHasScope(id);
+  const bitId = BitId.parse(id, idHasScope);
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
   if (result === null) return null;

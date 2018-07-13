@@ -48,4 +48,24 @@ describe('Bit-id', () => {
       expect(bitId.toString()).to.equal('bit.envs/mocha/react');
     });
   });
+  describe('parse', () => {
+    it('should parse id with scope correctly', () => {
+      const bitId = BitId.parse('scope/my/long/comp/id', true);
+      expect(bitId.scope).to.equal('scope');
+      expect(bitId.name).to.equal('my/long/comp/id');
+      expect(bitId.box).to.be.null;
+      expect(bitId.version).to.equal('latest');
+    });
+    it('should parse id without scope correctly', () => {
+      const bitId = BitId.parse('scope/my/long/comp/id', false);
+      expect(bitId.scope).to.be.null;
+      expect(bitId.name).to.equal('scope/my/long/comp/id');
+      expect(bitId.box).to.be.null;
+      expect(bitId.version).to.equal('latest');
+    });
+    it('should throw for an invalid id', () => {
+      const bitId = () => BitId.parse('scope/my/long/co*mp/id', false);
+      expect(bitId).to.throw();
+    });
+  });
 });

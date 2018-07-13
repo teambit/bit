@@ -13,7 +13,7 @@ export default class Dependencies {
   dependencies: Dependency[];
 
   constructor(dependencies: Dependency[] = []) {
-    this.dependencies = this.deserialize(dependencies);
+    this.dependencies = dependencies;
   }
 
   serialize(): Object[] {
@@ -32,15 +32,22 @@ export default class Dependencies {
     this.dependencies.push(dependency);
   }
 
-  deserialize(dependencies: Dependency[]): Dependency[] {
-    return dependencies.map(dependency => ({
-      id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-      relativePaths: dependency.relativePaths || [
-        // backward compatibility. (previously, it was "relativePath" without the ending 's' and was not an array.
-        { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
-      ]
+  static fromString(dependencies: Object[]): Dependencies {
+    const deps = dependencies.map(dependency => ({
+      id: R.is(String, dependency.id)
+        ? BitId.parseObsolete(dependency.id) // backward compatibility
+        : new BitId(dependency.id),
+      relativePaths: dependency.relativePaths
     }));
+    return new Dependencies(deps);
   }
+
+  // deserialize(dependencies: Dependency[]): Dependency[] {
+  //   return dependencies.map(dependency => ({
+  //     id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
+  //     relativePaths: dependency.relativePaths
+  //   }));
+  // }
 
   toStringOfIds(): string[] {
     return this.dependencies.map(dep => dep.id.toString());

@@ -155,7 +155,7 @@ export default class ComponentsList {
     });
     if (!load || !newComponents.length) return newComponents;
 
-    const componentsIds = newComponents.map(id => BitId.parse(id));
+    const componentsIds = newComponents.map(id => BitId.parse(id, false));
     const { components } = await this.consumer.loadComponents(componentsIds, false);
     return components;
   }

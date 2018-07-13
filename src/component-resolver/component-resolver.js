@@ -24,7 +24,7 @@ function componentResolver(
   mainFilePath: ?string,
   projectRoot: PathOsBased = process.cwd()
 ): PathOsBased {
-  const bitId = BitId.parse(componentId);
+  const bitId = BitId.parse(componentId, true); // used for envs. components, all have a scope
   const componentsDir = path.join(projectRoot, BITS_DIRNAME);
   const version = getLatestVersion(bitId, componentsDir);
   bitId.version = version.toString();

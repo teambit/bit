@@ -23,6 +23,7 @@ export type ComponentMapFile = {
 };
 
 export type ComponentMapData = {
+  id: BitId,
   files: ComponentMapFile[],
   mainFile: PathLinux,
   rootDir?: PathLinux,

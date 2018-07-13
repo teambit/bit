@@ -7,7 +7,8 @@ import GeneralError from '../../../error/general-error';
 
 export default (async function catComponent(id: string) {
   const scope: Scope = await loadScope();
-  const bitId = BitId.parse(id);
+  const idHasScope = await scope.isIdHasScope(id);
+  const bitId = BitId.parse(id, idHasScope);
   const component = await scope.sources.get(bitId);
   if (!component) throw new GeneralError('component was not found');
   if (bitId.hasVersion()) {

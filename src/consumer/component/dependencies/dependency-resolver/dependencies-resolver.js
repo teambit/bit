@@ -295,7 +295,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
           const packageJson = driver.driver.PackageJson.findPackage(depPath);
           if (packageJson) {
             const depVersion = packageJson.version;
-            existingId = BitId.parse(componentId, depVersion);
+            // @todo: check what happens with author and node-modules
+            existingId = BitId.parse(componentId, true, depVersion);
             return existingId.toString();
           }
         }

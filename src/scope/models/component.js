@@ -57,7 +57,7 @@ export type ComponentProps = {
 export default class Component extends BitObject {
   scope: ?string;
   name: string;
-  box: string;
+  box: ?string;
   versions: Versions;
   lang: string;
   deprecated: boolean;
@@ -68,8 +68,8 @@ export default class Component extends BitObject {
   constructor(props: ComponentProps) {
     super();
     this.scope = props.scope || null;
-    this.name = props.name;
-    this.box = props.box || DEFAULT_BOX_NAME;
+    this.name = props.box ? `${props.box}/${props.name}` : props.name;
+    this.box = null;
     this.versions = props.versions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
@@ -195,11 +195,11 @@ export default class Component extends BitObject {
   }
 
   id(): string {
-    return this.scope ? [this.scope, this.box, this.name].join('/') : [this.box, this.name].join('/');
+    return this.scope ? [this.scope, this.name].join('/') : this.name;
   }
 
   toBitId(): BitId {
-    return new BitId({ scope: this.scope, box: this.box, name: this.name });
+    return new BitId({ scope: this.scope, name: this.name });
   }
 
   toObject() {

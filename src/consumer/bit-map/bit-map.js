@@ -50,8 +50,8 @@ export default class BitMap {
     this._invalidateCache();
   }
 
-  setComponent(id: string, componentMap: ComponentMap) {
-    const bitId = BitId.parse(id);
+  setComponent(bitId: BitId, componentMap: ComponentMap) {
+    const id = bitId.toString();
     if (!bitId.hasVersion() && bitId.scope) {
       throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
@@ -98,6 +98,13 @@ export default class BitMap {
     // Don't treat version like component
     delete componentsJson.version;
     Object.keys(componentsJson).forEach((componentId) => {
+      const componentFromJson = componentsJson[componentId];
+      if (componentFromJson.id) {
+        componentFromJson.id = new BitId(componentFromJson.id);
+      } else {
+        // backward compatibility
+        componentFromJson.id = BitId.parseObsolete(componentId);
+      }
       components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
     });
 
@@ -342,7 +349,7 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      this.setComponent(componentIdStr, new ComponentMap({ files, origin }));
+      this.setComponent(componentId, new ComponentMap({ files, origin }));
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
         this.components[componentIdStr]
@@ -460,7 +467,7 @@ export default class BitMap {
     logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
     const componentMap = this.components[olderComponentId];
     this._removeFromComponentsArray(olderComponentId);
-    this.setComponent(newIdString, componentMap);
+    this.setComponent(id, componentMap);
 
     // update the dependencies array if needed
     Object.keys(this.components).forEach((componentId) => {

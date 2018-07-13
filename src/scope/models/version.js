@@ -329,7 +329,7 @@ export default class Version extends BitObject {
     const _getDependencies = (deps = []) => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
-        return deps.map(dependency => ({ id: BitId.parse(dependency) }));
+        return deps.map(dependency => ({ id: BitId.parseObsolete(dependency) }));
       }
 
       const getRelativePath = (relativePath) => {
@@ -348,7 +348,7 @@ export default class Version extends BitObject {
 
       return deps.map((dependency) => {
         return {
-          id: BitId.parse(dependency.id),
+          id: BitId.parseBackwardCompatible(dependency.id),
           relativePaths: Array.isArray(dependency.relativePaths)
             ? dependency.relativePaths.map(getRelativePath)
             : dependency.relativePaths

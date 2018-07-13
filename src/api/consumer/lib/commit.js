@@ -39,7 +39,9 @@ export async function commitAction(args: {
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
   if (!force) {
-    const componentStatus = await consumer.getComponentStatusById(BitId.parse(id));
+    const idHasScope = await consumer.scope.isIdHasScope(id);
+    const bitId = BitId.parse(id, idHasScope);
+    const componentStatus = await consumer.getComponentStatusById(bitId);
     if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.tag(

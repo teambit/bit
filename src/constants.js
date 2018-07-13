@@ -328,8 +328,6 @@ export const LATEST_TESTED_MARK = '*';
 
 export const ASTERISK = '*';
 
-export const COMPONENTES_DEPENDECIES_REGEX = '/*/*/*/*';
-
 export const SCOPE_JSON = 'scope.json';
 
 export const DEFAULT_RESOLVER = () => '';

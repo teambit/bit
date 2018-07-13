@@ -430,7 +430,7 @@ export default class Scope {
 
   /**
    * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
-   * as result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
+   * a result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
    * to the bare-scope name.
    * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
    */
@@ -1057,7 +1057,7 @@ export default class Scope {
     }
     await Promise.all(componentIds.map(id => this.clean(id)));
     componentIds.map(id => this.createSymlink(id, remoteName));
-    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id));
+    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
     await Promise.all(componentsAndObjects.map(componentObject => this.sources.merge(componentObject)));
     await this.objects.persist();
     return idsWithRemoteScope;
@@ -1302,6 +1302,21 @@ export default class Scope {
       directory,
       keep
     });
+  }
+
+  async loadModelComponentByIdStr(id: string): Promise<Component> {
+    logger.debug(`scope.loadModelComponentByIdStr, id: ${id}`);
+    const ref = Ref.from(BitObject.makeHash(id));
+    // $FlowFixMe
+    return this.objects.load(ref);
+  }
+
+  /**
+   * if it's not in the scope, it's probably new, we assume it doesn't have scope.
+   */
+  async isIdHasScope(id: string): Promise<boolean> {
+    const component = await this.loadModelComponentByIdStr(id);
+    return Boolean(component && component.scope);
   }
 
   /**

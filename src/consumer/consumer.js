@@ -514,7 +514,7 @@ export default class Consumer {
   }
 
   async tag(
-    ids: BitId[],
+    ids: string[],
     message: string,
     exactVersion: ?string,
     releaseType: string,
@@ -819,7 +819,7 @@ export default class Consumer {
    * if component is imported then cant remove version only component
    * @param {BitIds} bitIds - list of remote component ids to delete
    */
-  resolveLocalComponentIds(bitIds: BitIds) {
+  resolveLocalComponentIds(bitIds: BitIds): BitId[] {
     return bitIds.map((id) => {
       const realName = this.bitMap.getExistingComponentId(id.toStringWithoutVersion());
       if (!realName) return id;

@@ -62,7 +62,7 @@ export default class Remotes extends Map<string, Remote> {
     });
     const components = await Promise.all(promises);
     const flattenComponents = flatten(components);
-    return flattenComponents.map(componentId => BitId.parse(componentId));
+    return flattenComponents.map(componentId => BitId.parse(componentId, true));
   }
 
   toPlainObject() {
