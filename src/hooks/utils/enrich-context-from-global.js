@@ -25,7 +25,9 @@ export default function enrichContextFromGlobal(context: Object = {}) {
   const token = globalConfig.getSync(CFG_USER_TOKEN_KEY);
   const pubSshKeyFile = sshKeyFile ? `${sshKeyFile}.pub` : undefined;
   const pubSshKey = _getSshPubKey(pubSshKeyFile);
-  const repo = yn(globalConfig.getSync(CFG_REPOSITORY_REPORTING_KEY), { default: true }) ? gitconfig.getRepoUrl() : '';
+  const repo = yn(globalConfig.getSync(CFG_REPOSITORY_REPORTING_KEY), { default: true })
+    ? gitconfig.getRepoUrl()
+    : undefined;
   Object.assign(context, { username, email, pubSshKey, token, repo });
 }
 
