@@ -1,12 +1,15 @@
 /** @flow */
 import fs from 'fs-extra';
+import gitconfig from '@teambit/gitconfig';
+import yn from 'yn';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import {
   CFG_USER_NAME_KEY,
   CFG_USER_EMAIL_KEY,
   CFG_SSH_KEY_FILE_KEY,
   DEFAULT_SSH_KEY_FILE,
-  CFG_USER_TOKEN_KEY
+  CFG_USER_TOKEN_KEY,
+  CFG_REPOSITORY_REPORTING_KEY
 } from '../../constants';
 import logger from '../../logger/logger';
 
@@ -22,7 +25,8 @@ export default function enrichContextFromGlobal(context: Object = {}) {
   const token = globalConfig.getSync(CFG_USER_TOKEN_KEY);
   const pubSshKeyFile = sshKeyFile ? `${sshKeyFile}.pub` : undefined;
   const pubSshKey = _getSshPubKey(pubSshKeyFile);
-  Object.assign(context, { username, email, pubSshKey, token });
+  const repo = yn(globalConfig.getSync(CFG_REPOSITORY_REPORTING_KEY), { default: true }) ? gitconfig.getRepoUrl() : '';
+  Object.assign(context, { username, email, pubSshKey, token, repo });
 }
 
 function _getSshPubKey(pubSshKeyFile: string = `${DEFAULT_SSH_KEY_FILE}.pub`) {
