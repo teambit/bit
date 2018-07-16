@@ -9,6 +9,7 @@ function Config(options) {
   this.filename = options.filename;
   this.directory = options.directory || options.root;
   this.visited = options.visited || {};
+  this.errors = options.errors || {};
   this.nonExistent = options.nonExistent || [];
   this.isListForm = options.isListForm;
   this.requireConfig = options.config || options.requireConfig;

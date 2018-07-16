@@ -91,14 +91,15 @@ module.exports._getDependencies = function (config) {
 
   try {
     dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);
-    dependencies =
-      R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw) ? Object.keys(dependenciesRaw) : dependenciesRaw;
   } catch (e) {
     debug(`error getting dependencies: ${e.message}`);
     debug(e.stack);
     e.code = 'PARSING_ERROR';
-    throw e;
+    config.errors[config.filename] = e;
+    dependenciesRaw = [];
   }
+  dependencies =
+    R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw) ? Object.keys(dependenciesRaw) : dependenciesRaw;
   const isDependenciesArray = Array.isArray(dependenciesRaw);
   debug(`extracted ${dependencies.length} dependencies: `, dependencies);
 

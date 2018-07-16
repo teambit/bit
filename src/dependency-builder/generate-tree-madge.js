@@ -134,6 +134,7 @@ export default function generateTree(files = [], config) {
         webpackConfig: config.webpackConfig,
         resolveConfig: config.resolveConfig,
         visited,
+        errors,
         filter: (dependencyFilePath, traversedFilePath) => {
           let dependencyFilterRes = true;
           const isNpmPath = isNpmPathFunc(dependencyFilePath);

@@ -4,6 +4,7 @@ import * as buildTree from './build-tree';
 
 const fixtures = `${__dirname}/../../fixtures`;
 const precinctFixtures = path.join(fixtures, 'precinct');
+const buildTreeFixtures = path.join(fixtures, 'build-tree');
 
 describe('buildTree', () => {
   describe('getDependencyTree', () => {
@@ -36,6 +37,26 @@ describe('buildTree', () => {
       expect(results.tree).to.have.property(unParsedFile);
       expect(results.tree[unParsedFile]).to.have.property('error');
       expect(results.tree[unParsedFile].error).to.be.instanceof(Error);
+    });
+    describe('when a dependency of dependency has parsing error', () => {
+      let results;
+      before(async () => {
+        dependencyTreeParams.filePaths = [`${buildTreeFixtures}/a.js`, `${buildTreeFixtures}/b.js`];
+        results = await buildTree.getDependencyTree(dependencyTreeParams);
+      });
+      it('should add all the files to the tree', async () => {
+        expect(results.tree).to.have.property('fixtures/build-tree/a.js');
+        expect(results.tree).to.have.property('fixtures/build-tree/b.js');
+        expect(results.tree).to.have.property('fixtures/build-tree/unparsed.js');
+      });
+      it('should not add the error to the files without parsing error', () => {
+        expect(results.tree['fixtures/build-tree/a.js']).to.not.have.property('error');
+        expect(results.tree['fixtures/build-tree/b.js']).to.not.have.property('error');
+      });
+      it('should add the parsing error to the un-parsed file', () => {
+        expect(results.tree['fixtures/build-tree/unparsed.js']).to.have.property('error');
+        expect(results.tree['fixtures/build-tree/unparsed.js'].error).to.be.instanceof(Error);
+      });
     });
     describe('missing dependencies', () => {
       let results;

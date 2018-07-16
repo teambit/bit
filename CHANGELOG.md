@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.5-dev.2] - 2018-07-16
+
+- fix error "Cannot read property 'missing' of undefined" when a dependency of dependency has parsing errors
+
 ## [1.0.5-dev.1] - 2018-07-12
 
 - fix vulnerabilities reported by npm audit
