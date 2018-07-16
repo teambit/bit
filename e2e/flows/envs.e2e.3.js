@@ -22,6 +22,7 @@ describe('envs', function () {
   const compilerId = 'compilers/new-babel';
   const testerId = 'testers/new-mocha';
   let authorScopeBeforeChanges;
+  let remoteScopeBeforeChanges;
   before(() => {
     helper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
@@ -67,6 +68,7 @@ describe('envs', function () {
     helper.tagAllWithoutMessage();
     helper.exportAllComponents();
     authorScopeBeforeChanges = helper.cloneLocalScope();
+    remoteScopeBeforeChanges = helper.cloneRemoteScope();
   });
 
   after(() => {
@@ -167,7 +169,84 @@ describe('envs', function () {
         'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"b"};var y={c:"c"};var z=_extends({},x,y);'
       );
     });
+    describe('attach - detach envs', () => {
+      let fullComponentFolder;
+      let bitJsonPath;
+      let componentMap;
+
+      before(() => {
+        // Change the component envs in imported environment to make sure they are detached
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.addRemoteEnvironment();
+        helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
+        fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
+        bitJsonPath = path.join(fullComponentFolder, 'bit.json');
+        helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', 'compiler');
+        helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', 'tester');
+        helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
+        helper.getClonedLocalScope(authorScopeBeforeChanges);
+        helper.importComponent('comp/my-comp');
+        const bitmap = helper.readBitMap();
+        const compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+        componentMap = bitmap[compId];
+        componentModel = helper.showComponentParsed('comp/my-comp');
+        compilerModel = componentModel.compiler;
+        testerModel = componentModel.tester;
+      });
+      it('should mark the compiler as detached in .bitmap if the compiler is detached', () => {
+        expect(componentMap.detachedCompiler).to.be.true;
+      });
+      it('should mark the tester as detached in .bitmap if the tester is detached', () => {
+        expect(componentMap.detachedTester).to.be.true;
+      });
+      it('should load the compiler from models if the compiler is detached', () => {
+        expect(compilerModel.config).to.include({
+          a: 'compiler',
+          valToDynamic: 'dyanamicValue'
+        });
+      });
+      it('should load the tester from models if the compiler is detached', () => {
+        expect(testerModel.config).to.include({
+          a: 'tester',
+          valToDynamic: 'dyanamicValue'
+        });
+      });
+      describe('attach back', () => {
+        let output;
+        before(() => {
+          output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
+          componentModel = helper.showComponentParsed('comp/my-comp');
+          compilerModel = componentModel.compiler;
+          testerModel = componentModel.tester;
+        });
+        it('should print to output the attached components', () => {
+          expect(output).to.have.string('the following components has been attached to the workspace environments');
+          expect(output).to.have.string('comp/my-comp');
+        });
+        it('should load the compiler from workspace bit.json after attach compiler back', () => {
+          expect(compilerModel.config).to.include({
+            a: 'b',
+            valToDynamic: 'dyanamicValue'
+          });
+        });
+        it('should load the tester from workspace bit.json after attach tester back', () => {
+          expect(testerModel.config).to.include({
+            a: 'b',
+            valToDynamic: 'dyanamicValue'
+          });
+        });
+      });
+
+      after(() => {
+        helper.getClonedRemoteScope(remoteScopeBeforeChanges);
+      });
+    });
     describe('testing components', () => {
+      before(() => {
+        helper.getClonedLocalScope(authorScopeBeforeChanges);
+      });
       describe('with success tests', () => {
         it('should show tests passed', () => {
           const output = helper.testComponent('comp/my-comp');
@@ -455,6 +534,7 @@ describe('envs', function () {
           helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
           importedScopeBeforeChanges = helper.cloneLocalScope();
           fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
+          bitJsonPath = path.join(fullComponentFolder, 'bit.json');
         });
         it('should store the files under DEFAULT_EJECTED_ENVS_DIR_PATH', () => {
           const envFilesGlob = path.join(envFilesFolder, '**', '*');
@@ -527,7 +607,6 @@ describe('envs', function () {
           let bitJson;
           before(() => {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
-            bitJsonPath = path.join(fullComponentFolder, 'bit.json');
             bitJson = helper.readBitJson(bitJsonPath);
           });
           it('should write the compiler dynamic config as raw config', () => {
@@ -552,6 +631,90 @@ describe('envs', function () {
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('nothing to tag or export');
           expect(statusOutput).to.not.have.string('modified');
+        });
+        describe('attach - detach envs', () => {
+          const compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+          let componentModel;
+          let componentMap;
+          before(() => {
+            helper.getClonedLocalScope(importedScopeBeforeChanges);
+          });
+          describe('changing envs of imported component', () => {
+            before(() => {
+              helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', 'compiler');
+              helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', 'tester');
+              helper.tagAllWithoutMessage();
+              componentModel = helper.catComponent(compId);
+              const bitmap = helper.readBitMap();
+              componentMap = bitmap[compId];
+            });
+            it('should mark the compiler as detached in the models', () => {
+              expect(componentModel.detachedCompiler).to.be.true;
+            });
+            it('should mark the tester as detached in the models', () => {
+              expect(componentModel.detachedTester).to.be.true;
+            });
+            it('should mark the compiler as detached in .bitmap if the compiler is detached', () => {
+              expect(componentMap.detachedCompiler).to.be.true;
+            });
+            it('should mark the tester as detached in .bitmap if the tester is detached', () => {
+              expect(componentMap.detachedTester).to.be.true;
+            });
+          });
+          describe('attach imported component', () => {
+            let output;
+            let compilerModel;
+            let testerModel;
+            before(() => {
+              output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
+              const mockEnvs = {
+                compiler: {
+                  [`${helper.envScope}/compilers/mock-babel@0.0.1`]: {
+                    rawConfig: {
+                      a: 'my-compiler',
+                      valToDynamic: 'dyanamicValue'
+                    }
+                  }
+                },
+                tester: {
+                  [`${helper.envScope}/testers/mock-mocha@0.0.1`]: {
+                    rawConfig: {
+                      a: 'my-tester',
+                      valToDynamic: 'dyanamicValue'
+                    }
+                  }
+                }
+              };
+              helper.addKeyValToBitJson(undefined, 'env', mockEnvs);
+              componentModel = helper.showComponentParsed('comp/my-comp');
+              compilerModel = componentModel.compiler;
+              testerModel = componentModel.tester;
+              const bitmap = helper.readBitMap();
+              componentMap = bitmap[compId];
+            });
+            it('should print to output the attached components', () => {
+              expect(output).to.have.string('the following components has been attached to the workspace environments');
+              expect(output).to.have.string('comp/my-comp');
+            });
+            it('should load the compiler from workspace bit.json after attach compiler back', () => {
+              expect(compilerModel.config).to.include({
+                a: 'my-compiler',
+                valToDynamic: 'dyanamicValue'
+              });
+            });
+            it('should load the tester from workspace bit.json after attach tester back', () => {
+              expect(testerModel.config).to.include({
+                a: 'my-tester',
+                valToDynamic: 'dyanamicValue'
+              });
+            });
+            it('should mark the compiler as not detached in .bitmap if the compiler is attached', () => {
+              expect(componentMap.detachedCompiler).to.be.false;
+            });
+            it('should mark the tester as not detached in .bitmap if the tester is attached', () => {
+              expect(componentMap.detachedTester).to.be.false;
+            });
+          });
         });
         describe('change envs files/config', () => {
           before(() => {
