@@ -68,9 +68,9 @@ environment:
   ReleaseServerStable:
     secure: y7mz8E9mkcwCaCVvFs9WX+5k8jg+t8HwFpZhMYlYEfZhdnFH1U7gWCJTi+zVLiT9
   registryProdToken:
-    secure: /hQECyuDPlps8FDi5+wSvCMB2wbekR4SrP3EG9c3kkEpV2yqPU8t+PJlu9E0gxcN
+    secure: PRt6cU+74aoYU+qZrdbRnQn62vTYP786tovlgwUkoA6mMQCypTcXxBubEFiZqFRE
   registryStgToken:
-    secure: BAjtVkI84M4C0MjnVMCqptJAxPPagZqbQsEEhumgZ6B6bqi5+R28ngeXb5u2c+zq
+    secure: O1bUEJWHnT41EkRUdUW2ePxNPO1bCbXkYPMMGJdB7OR8OOHnQYvtssp8cFbLIfAY
   testerBitsrcPassword:
     secure: tR01IIjMw35fBOFhTQd9jw==
   matrix:
