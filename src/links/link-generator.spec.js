@@ -10,7 +10,7 @@ describe('link-generator', () => {
     describe('es6 with link files', () => {
       const exportDefaultForm = 'exports.default =';
       const exportNonDefaultForm = 'exports.isString =';
-      const importDefaultForm = '= _isString.default || _isString';
+      const importDefaultForm = "= _isString && _isString.hasOwnProperty('default') ? _isString.default : _isString;";
       const importNonDefaultForm = '= _isString.isString';
       describe('mainFile is not default and linkFile is default', () => {
         let linkContent;
