@@ -16,12 +16,19 @@ import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json'
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
+import { COMPILER_ENV_TYPE } from './compiler-extension';
+import { TESTER_ENV_TYPE } from './tester-extension';
+import { COMPONENT_ORIGINS } from '../constants';
+import type { ComponentOrigin } from '../consumer/bit-map/component-map';
+import ConsumerComponent from '../consumer/component';
+import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
+import ComponentBitJson from '../consumer/bit-json';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
 // I would expect something like:
 // type EnvType = CompilerEnvType | TesterEnvType would work
-export type EnvType = 'Compiler' | 'Tester';
+export type EnvType = 'compiler' | 'tester';
 
 type EnvExtensionExtraProps = {
   envType: EnvType,
@@ -225,4 +232,97 @@ export default class EnvExtension extends BaseExtension {
     const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, files, ...baseExtensionProps };
     return envExtensionProps;
   }
+
+  /**
+   * Load the compiler / tester from the correct place
+   * This take into account the component origin (authored / imported)
+   * And the detach status of the env
+   * If a component has a bit.json with compiler defined take it
+   * Else if a component is not authored take if from the models
+   * Else, for authored component check if the compiler has been changed
+   *
+   */
+  static async loadFromCorrectSource({
+    consumerPath,
+    scopePath,
+    componentOrigin,
+    componentFromModel,
+    consumerBitJson,
+    componentBitJson,
+    detached,
+    envType,
+    context
+  }: {
+    consumerPath: string,
+    scopePath: string,
+    componentOrigin: ComponentOrigin,
+    componentFromModel: ConsumerComponent,
+    consumerBitJson: ConsumerBitJson,
+    componentBitJson: ?ComponentBitJson,
+    detached: ?boolean,
+    envType: EnvType,
+    context?: Object
+  }): Promise<?EnvExtension> {
+    Analytics.addBreadCrumb('env-extension', 'loadFromCorrectSource');
+
+    // Authored component
+    if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
+      // The component is not detached - load from the consumer bit.json
+      if (!detached) {
+        return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
+      }
+      // The component is detached - load from the component bit.json or from the models
+      return loadFromComponentBitJsonOrFromModel({
+        models: componentFromModel,
+        componentBitJson,
+        envType,
+        consumerPath,
+        scopePath,
+        context
+      });
+    }
+
+    // Not authored components
+    // The component is attached - load from the consumer bit.json
+    // This is in purpose checking false not a falsy. since by default is undefined which is different from false.
+    if (detached === false) {
+      return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
+    }
+    return loadFromComponentBitJsonOrFromModel({
+      models: componentFromModel,
+      componentBitJson,
+      envType,
+      consumerPath,
+      scopePath,
+      context
+    });
+  }
 }
+
+const loadFromBitJson = ({ bitJson, envType, consumerPath, scopePath, context }) => {
+  if (envType === COMPILER_ENV_TYPE) {
+    return bitJson.loadCompiler(consumerPath, scopePath, context);
+  }
+  return bitJson.loadTester(consumerPath, scopePath, context);
+};
+
+const loadFromComponentBitJsonOrFromModel = ({
+  models,
+  componentBitJson,
+  envType,
+  consumerPath,
+  scopePath,
+  context
+}) => {
+  if (componentBitJson) {
+    return loadFromBitJson({ bitJson: componentBitJson, envType, consumerPath, scopePath, context });
+  }
+  if (envType === COMPILER_ENV_TYPE) {
+    return models ? models.compiler : undefined;
+  }
+  if (envType === TESTER_ENV_TYPE) {
+    return models ? models.tester : undefined;
+  }
+
+  return undefined;
+};

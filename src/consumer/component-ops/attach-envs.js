@@ -11,9 +11,17 @@ import type { PathChangeResult } from '../bit-map/bit-map';
 import Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
 
-export type AttachResult = { id: BitId, attached: boolean };
+export type AttachResult = { id: string, attached: boolean };
 export type AttachResults = Array<AttachResult>;
 
-export default (async function attachEnvs(consumer: Consumer, ids: string[]): Promise<AttachResults> {
-  return Promise.resolve([{ id: 'sss', attached: true }, { id: 'ssaaas', attached: false }]);
+export default (function attachEnvs(
+  consumer: Consumer,
+  ids: string[],
+  { compiler, tester }: { compiler: boolean, tester: boolean }
+): Promise<AttachResults> {
+  const results = ids.map((id) => {
+    const attachRes = consumer.bitMap.attachEnv(id, { compiler, tester });
+    return { id, attached: attachRes };
+  });
+  return results;
 });

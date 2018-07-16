@@ -73,7 +73,7 @@ export default class BitMap {
   }
 
   setComponentProp(id: string | BitId, propName: $Keys<ComponentMap>, val: any) {
-    const componentMap = this.getComponent(id);
+    const componentMap = this.getComponent(id, true, true);
     // $FlowFixMe
     componentMap[propName] = val;
     this.markAsChanged();
@@ -81,11 +81,33 @@ export default class BitMap {
   }
 
   removeComponentProp(id: string | BitId, propName: $Keys<ComponentMap>) {
-    const componentMap = this.getComponent(id);
+    const componentMap = this.getComponent(id, true, true);
     // $FlowFixMe
     delete componentMap[propName];
     this.markAsChanged();
     return componentMap;
+  }
+
+  attachEnv(id: string | BitId, { compiler, tester }: { compiler: boolean, tester: boolean }) {
+    const componentMap = this.getComponent(id, true, true);
+    // For authored component just make sure to remove the detached
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      if (compiler) {
+        this.removeComponentProp(id, 'detachedCompiler');
+      }
+      if (tester) {
+        this.removeComponentProp(id, 'detachedTester');
+      }
+      return true;
+    }
+    // For imported components we want to set the detached to false (which will cause the env loading from the workspace bit.json)
+    if (compiler) {
+      this.setComponentProp(id, 'detachedCompiler', false);
+    }
+    if (tester) {
+      this.setComponentProp(id, 'detachedTester', false);
+    }
+    return true;
   }
 
   static load(dirPath: PathOsBasedAbsolute): BitMap {

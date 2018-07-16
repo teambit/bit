@@ -6,8 +6,8 @@ import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
-import CompilerExtension, { CompilerEnvType } from '../../extensions/compiler-extension';
-import TesterExtension, { TesterEnvType } from '../../extensions/tester-extension';
+import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
+import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
 import type { PathOsBased } from '../../utils/path';
 import { BitJsonAlreadyExists } from './exceptions';
@@ -148,7 +148,7 @@ export default class AbstractBitJson {
   }
 
   getEnvsByType(type: EnvType): ?Compilers | ?Testers {
-    if (type === CompilerEnvType) {
+    if (type === COMPILER_ENV_TYPE) {
       return this.compiler;
     }
     return this.tester;
@@ -159,7 +159,7 @@ export default class AbstractBitJson {
       return null;
     }
 
-    const compilerP = this.loadEnv(CompilerEnvType, consumerPath, scopePath, CompilerExtension.load, context);
+    const compilerP = this.loadEnv(COMPILER_ENV_TYPE, consumerPath, scopePath, CompilerExtension.load, context);
     const compiler: CompilerExtension = ((await compilerP: any): CompilerExtension);
     return compiler;
   }
@@ -168,7 +168,7 @@ export default class AbstractBitJson {
     if (!this.hasTester()) {
       return null;
     }
-    const testerP = this.loadEnv(TesterEnvType, consumerPath, scopePath, TesterExtension.load, context);
+    const testerP = this.loadEnv(TESTER_ENV_TYPE, consumerPath, scopePath, TesterExtension.load, context);
 
     const tester: ?TesterExtension = ((await testerP: any): TesterExtension);
     return tester;
@@ -228,8 +228,8 @@ export default class AbstractBitJson {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
         env: {
-          compiler: this.getBackwardCompatibleEnv(CompilerEnvType),
-          tester: this.getBackwardCompatibleEnv(TesterEnvType)
+          compiler: this.getBackwardCompatibleEnv(COMPILER_ENV_TYPE),
+          tester: this.getBackwardCompatibleEnv(TESTER_ENV_TYPE)
         },
         dependencies: this.dependencies,
         extensions: this.extensions

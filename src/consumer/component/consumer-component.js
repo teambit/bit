@@ -24,8 +24,8 @@ import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin, DetachState } from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
-import CompilerExtension from '../../extensions/compiler-extension';
-import TesterExtension from '../../extensions/tester-extension';
+import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
+import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -53,6 +53,7 @@ import ConsumerComponent from '.';
 import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
+import EnvExtension from '../../extensions/env-extension';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -1199,16 +1200,20 @@ export default class Component {
 
     const propsToLoadEnvs = {
       consumerPath,
+      envType: COMPILER_ENV_TYPE,
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitJson,
       componentBitJson: rawComponentBitJson,
-      context: envsContext
+      context: envsContext,
+      detached: componentMap.detachedCompiler
     };
 
-    const compilerP = CompilerExtension.loadFromCorrectSource(propsToLoadEnvs);
-    const testerP = TesterExtension.loadFromCorrectSource(propsToLoadEnvs);
+    const compilerP = EnvExtension.loadFromCorrectSource(propsToLoadEnvs);
+    propsToLoadEnvs.detached = componentMap.detachedTester;
+    propsToLoadEnvs.envType = TESTER_ENV_TYPE;
+    const testerP = EnvExtension.loadFromCorrectSource(propsToLoadEnvs);
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
 

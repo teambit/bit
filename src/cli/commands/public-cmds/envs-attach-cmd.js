@@ -14,8 +14,11 @@ export default class EnvsAttach extends Command {
   ];
   loader = true;
 
-  action([ids]: [string[]]): Promise<AttachResults> {
-    return attachEnvs(ids);
+  action(
+    [ids]: [string[]],
+    { compiler = false, tester = false }: { compiler: boolean, tester: boolean }
+  ): Promise<AttachResults> {
+    return attachEnvs(ids, { compiler, tester });
   }
 
   report(attachResults: AttachResults): string {

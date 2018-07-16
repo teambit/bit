@@ -445,8 +445,8 @@ describe('envs', function () {
 
       describe('with default ejectedEnvsDirectory', () => {
         const envFilesFolder = path.join(componentFolder, DEFAULT_EJECTED_DIR_ENVS);
-        const compilerFilesFolder = path.join(envFilesFolder, 'Compiler');
-        const testerFilesFolder = path.join(envFilesFolder, 'Tester');
+        const compilerFilesFolder = path.join(envFilesFolder, 'compiler');
+        const testerFilesFolder = path.join(envFilesFolder, 'tester');
         let importedScopeBeforeChanges;
         before(() => {
           helper.reInitLocalScope();
@@ -459,9 +459,9 @@ describe('envs', function () {
         it('should store the files under DEFAULT_EJECTED_ENVS_DIR_PATH', () => {
           const envFilesGlob = path.join(envFilesFolder, '**', '*');
           const envFiles = helper.getConsumerFiles(envFilesGlob);
-          const babelrcPath = path.join(envFilesFolder, 'Compiler', '.babelrc');
+          const babelrcPath = path.join(envFilesFolder, 'compiler', '.babelrc');
           expect(envFiles).to.include(babelrcPath);
-          const mochaConfig = path.join(envFilesFolder, 'Tester', 'config');
+          const mochaConfig = path.join(envFilesFolder, 'tester', 'config');
           expect(envFiles).to.include(mochaConfig);
         });
         it('should build the component successfully', () => {
@@ -598,17 +598,17 @@ describe('envs', function () {
           const envFilesGlob = path.join(newEnvFilesFolder, '**', '*');
           helper.move(componentFolder, newComponentfolder);
           const envFiles = helper.getConsumerFiles(envFilesGlob);
-          const babelrcPath = path.join(newEnvFilesFolder, 'Compiler', '.babelrc');
+          const babelrcPath = path.join(newEnvFilesFolder, 'compiler', '.babelrc');
           expect(envFiles).to.include(babelrcPath);
-          const mochaConfig = path.join(newEnvFilesFolder, 'Tester', 'config');
+          const mochaConfig = path.join(newEnvFilesFolder, 'tester', 'config');
           expect(envFiles).to.include(mochaConfig);
         });
       });
       describe('with custom ejectedEnvsDirectory', () => {
         const ejectedEnvsDirectory = 'custom-envs-config';
         const envFilesFolder = path.join(componentFolder, ejectedEnvsDirectory);
-        const compilerFilesFolder = path.join(envFilesFolder, 'Compiler');
-        const testerFilesFolder = path.join(envFilesFolder, 'Tester');
+        const compilerFilesFolder = path.join(envFilesFolder, 'compiler');
+        const testerFilesFolder = path.join(envFilesFolder, 'tester');
         let importedScopeBeforeChanges;
 
         before(() => {
@@ -625,9 +625,9 @@ describe('envs', function () {
         it('should store the files under the custom directory', () => {
           const envFilesGlob = path.join(envFilesFolder, '**', '*');
           const envFiles = helper.getConsumerFiles(envFilesGlob);
-          const babelrcPath = path.join(envFilesFolder, 'Compiler', '.babelrc');
+          const babelrcPath = path.join(envFilesFolder, 'compiler', '.babelrc');
           expect(envFiles).to.include(babelrcPath);
-          const mochaConfig = path.join(envFilesFolder, 'Tester', 'config');
+          const mochaConfig = path.join(envFilesFolder, 'tester', 'config');
           expect(envFiles).to.include(mochaConfig);
         });
         it('should not show the component as modified if a file added to ejectedEnvsDirectory', () => {
@@ -671,9 +671,9 @@ describe('envs', function () {
           const envFilesGlob = path.join(newEnvFilesFolder, '**', '*');
           helper.move(componentFolder, newComponentfolder);
           const envFiles = helper.getConsumerFiles(envFilesGlob);
-          const babelrcPath = path.join(newEnvFilesFolder, 'Compiler', '.babelrc');
+          const babelrcPath = path.join(newEnvFilesFolder, 'compiler', '.babelrc');
           expect(envFiles).to.include(babelrcPath);
-          const mochaConfig = path.join(newEnvFilesFolder, 'Tester', 'config');
+          const mochaConfig = path.join(newEnvFilesFolder, 'tester', 'config');
           expect(envFiles).to.include(mochaConfig);
         });
         it('should build the component successfully', () => {
