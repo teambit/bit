@@ -163,6 +163,13 @@ describe('bit add command', function () {
       const output = helper.addComponentWithOptions('components/bar/foo', { i: `${helper.remoteScope}/bar/foo@0.0.1` });
       expect(output).to.have.string('added');
     });
+    it('should not throw an error when specifying a mainFile with path relative to consumer', () => {
+      const output = helper.addComponentWithOptions('components/bar/foo', {
+        i: 'bar/foo',
+        m: 'components/bar/foo/foo.js'
+      });
+      expect(output).to.have.string('added');
+    });
   });
   describe('add one component', () => {
     let output;
