@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- generate npm links for Vue packages correctly without adding .vue extension to the package
 - improve `bit test` to run tests not only on new and modified components but also on auto-tag pending components
 - fix error "Cannot read property 'missing' of undefined" when a dependency of dependency has parsing errors (bit-javascript)
 
