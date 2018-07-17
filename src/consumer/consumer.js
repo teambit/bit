@@ -137,6 +137,10 @@ export default class Consumer {
     return this._dirStructure;
   }
 
+  get bitmapIds(): BitIds {
+    return this.bitMap.getBitIds();
+  }
+
   /**
    * Check if the driver installed and print message if not
    *
@@ -598,7 +602,7 @@ export default class Consumer {
     return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_COMPONENT_SEPARATOR));
   }
 
-  static getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): string {
+  getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     requirePath = pathNormalizeToLinux(requirePath);
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
@@ -608,12 +612,20 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_COMPONENT_SEPARATOR);
-    if (pathSplit.length < 3) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
+    if (pathSplit.length < 1) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
+    // since the dynamic namespaces feature introduced, the require statement doesn't have a fixed
+    // number of separators.
+    // also, a scope name may or may not include a dot. depends whether it's on bitHub or self hosted.
+    // we must check against BitMap to get the correct scope and name of the id.
+    const mightBeScope = R.head(pathSplit);
+    const mightBeName = R.tail(pathSplit);
+    const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
+    const allBitIds = this.bitMap.getBitIds();
+    if (allBitIds.findWithoutVersion(mightBeId)) return mightBeId;
 
-    const name = pathSplit[pathSplit.length - 1];
-    const box = pathSplit[pathSplit.length - 2];
-    const scope = pathSplit.length === 3 ? pathSplit[0] : `${pathSplit[0]}.${pathSplit[1]}`;
-    return new BitId({ scope, box, name }).toString();
+    const scope = pathSplit.splice(0, 2).join('.');
+    const name = pathSplit.splice(2).join('/');
+    return new BitId({ scope, name });
   }
 
   composeRelativeBitPath(bitId: BitId): string {

@@ -25,7 +25,7 @@ import GeneralError from '../../error/general-error';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
-export type PathChangeResult = { id: string, changes: PathChange[] };
+export type PathChangeResult = { id: BitId, changes: PathChange[] };
 
 export default class BitMap {
   projectRoot: string;
@@ -33,8 +33,9 @@ export default class BitMap {
   components: BitMapComponents;
   hasChanged: boolean;
   version: string;
-  paths: { [path: string]: string }; // path => componentId
-  pathsLowerCase: { [path: string]: string }; // path => componentId
+  paths: { [path: string]: BitId }; // path => componentId
+  pathsLowerCase: { [path: string]: BitId }; // path => componentId
+  _cacheIds: BitIds;
 
   constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
     this.projectRoot = projectRoot;
@@ -146,10 +147,15 @@ export default class BitMap {
     return R.filter(filter, this.components);
   }
 
-  getBitIds(origin?: ComponentOrigin[]): BitId[] {
+  getBitIds(origin?: ComponentOrigin[]): BitIds {
     const allComponents = R.values(this.components);
-    const ids = (componentMaps: ComponentMap[]) => componentMaps.map(c => c.id);
-    if (!origin) return ids(allComponents);
+    const ids = (componentMaps: ComponentMap[]) => new BitIds(...componentMaps.map(c => c.id.clone()));
+    if (!origin) {
+      if (!this._cacheIds) {
+        this._cacheIds = ids(allComponents);
+      }
+      return this._cacheIds;
+    }
     // $FlowFixMe we know origin is an array in that case
     const components = allComponents.filter(c => origin.includes(c.origin));
     return ids(components);
@@ -278,7 +284,7 @@ export default class BitMap {
     const componentWithScope = components.find((componentMap: ComponentMap) => {
       return idHasVersion ? componentMap.id.toString() === id : componentMap.id.toStringWithoutVersion() === id;
     });
-    if (componentWithScope) return componentWithScope.id;
+    if (componentWithScope) return componentWithScope.id.clone();
 
     // continue with searching without the scope name
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
@@ -287,7 +293,7 @@ export default class BitMap {
         ? componentMap.id.toStringWithoutScope() === id
         : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
     });
-    if (componentWithoutScope) return componentWithoutScope.id;
+    if (componentWithoutScope) return componentWithoutScope.id.clone();
     if (shouldThrow) {
       throw new MissingBitMapComponent(id);
     }
@@ -444,6 +450,7 @@ export default class BitMap {
   _invalidateCache = () => {
     this.paths = {};
     this.pathsLowerCase = {};
+    delete this._cacheIds;
   };
 
   _removeFromComponentsArray(componentId: BitIdStr) {
@@ -569,10 +576,10 @@ export default class BitMap {
    * by a path exist in the files object
    *
    * @param {string} componentPath relative to consumer - as stored in bit.map files object
-   * @returns {string} component id
+   * @returns {BitId} component id
    * @memberof BitMap
    */
-  getComponentIdByPath(componentPath: string, caseSensitive: boolean = true): string {
+  getComponentIdByPath(componentPath: string, caseSensitive: boolean = true): BitId {
     this._populateAllPaths();
     return caseSensitive ? this.paths[componentPath] : this.pathsLowerCase[componentPath.toLowerCase()];
   }
@@ -585,8 +592,8 @@ export default class BitMap {
           const relativeToConsumer = component.rootDir
             ? pathJoinLinux(component.rootDir, file.relativePath)
             : file.relativePath;
-          this.paths[relativeToConsumer] = componentId;
-          this.pathsLowerCase[relativeToConsumer.toLowerCase()] = componentId;
+          this.paths[relativeToConsumer] = component.id;
+          this.pathsLowerCase[relativeToConsumer.toLowerCase()] = component.id;
         });
       });
     }
@@ -602,7 +609,7 @@ export default class BitMap {
     Object.keys(this.components).forEach((componentId) => {
       const componentMap: ComponentMap = this.components[componentId];
       const changes = isPathDir ? componentMap.updateDirLocation(from, to) : componentMap.updateFileLocation(from, to);
-      if (changes && changes.length) allChanges.push({ id: componentId, changes });
+      if (changes && changes.length) allChanges.push({ id: componentMap.id.clone(), changes });
     });
     if (R.isEmpty(allChanges)) {
       const errorMsg = isPathDir

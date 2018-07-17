@@ -67,7 +67,7 @@ function findComponentsOfDepsFiles(
   const rootDir: PathLinux = entryComponentMap.rootDir;
   const processedFiles = [];
 
-  const traverseTreeForComponentId = (depFile: PathLinux) => {
+  const traverseTreeForComponentId = (depFile: PathLinux): BitId => {
     if (!tree[depFile] || (!tree[depFile].files && !tree[depFile].bits)) return;
     const rootDirFullPath = path.join(consumerPath, rootDir);
     if (tree[depFile].files && tree[depFile].files.length) {
@@ -80,7 +80,7 @@ function findComponentsOfDepsFiles(
     }
     if (tree[depFile].bits && tree[depFile].bits.length) {
       for (const bit of tree[depFile].bits) {
-        const componentId = Consumer.getComponentIdFromNodeModulesPath(bit, bindingPrefix);
+        const componentId = consumer.getComponentIdFromNodeModulesPath(bit, bindingPrefix);
         if (componentId) return componentId; // eslint-disable-line consistent-return
       }
     }
@@ -282,9 +282,9 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
   const processBits = (originFile: PathLinuxRelative, bits, isTestFile: boolean = false) => {
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
-      const componentId = Consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
-      const getExistingId = () => {
-        let existingId = consumer.bitMap.getExistingComponentId(componentId);
+      const componentId = consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
+      const getExistingId = (): BitId => {
+        let existingId = consumer.bitmapIds.findWithoutVersion(componentId);
         if (existingId) return existingId;
 
         // maybe the dependencies were imported as npm packages
@@ -295,9 +295,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
           const packageJson = driver.driver.PackageJson.findPackage(depPath);
           if (packageJson) {
             const depVersion = packageJson.version;
-            // @todo: check what happens with author and node-modules
-            existingId = BitId.parse(componentId, true, depVersion);
-            return existingId.toString();
+            existingId = new BitId({ scope: componentId, version: depVersion });
+            return existingId;
           }
         }
         if (componentFromModel) {
@@ -454,7 +453,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
 
       if (missing.bits && !R.isEmpty(missing.bits)) {
         missing.bits.forEach((missingBit) => {
-          const componentId = Consumer.getComponentIdFromNodeModulesPath(missingBit, consumerComponent.bindingPrefix);
+          const componentId = consumer.getComponentIdFromNodeModulesPath(missingBit, consumerComponent.bindingPrefix);
           // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
           if (consumer.bitMap.getExistingComponentId(componentId)) {
             if (missingLinks[originFile]) missingLinks[originFile].push(componentId);

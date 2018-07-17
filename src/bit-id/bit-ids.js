@@ -25,11 +25,15 @@ export default class BitIds extends Array<BitId> {
     return getLatestVersionNumber(this, idWithLatest);
   }
 
-  includes(bitId: BitId): BitId {
+  find(bitId: BitId): BitId {
     return this.find(id => id.toString() === bitId.toString());
   }
 
-  includesWithoutScopeAndVersion(bitId: BitId): BitId {
+  findWithoutVersion(bitId: BitId): BitId {
+    return this.find(id => id.toStringWithoutVersion() === bitId.toStringWithoutVersion());
+  }
+
+  findWithoutScopeAndVersion(bitId: BitId): BitId {
     return this.find(id => id.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion());
   }
 

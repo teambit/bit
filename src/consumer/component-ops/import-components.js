@@ -73,7 +73,7 @@ export default class ImportComponents {
     // $FlowFixMe - we make sure the ids are populated before.
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
-    const bitIds = this.options.ids.map(raw => BitId.parse(raw));
+    const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._warnForModifiedOrNewComponents(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
@@ -208,8 +208,7 @@ export default class ImportComponents {
     if (!componentModel) {
       throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
     }
-    const existingBitMapId = this.consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
-    const existingBitMapBitId = BitId.parse(existingBitMapId);
+    const existingBitMapBitId = this.consumer.bitMap.getExistingBitId(component.id.toStringWithoutVersion());
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);

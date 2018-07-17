@@ -32,23 +32,6 @@ export default class Dependencies {
     this.dependencies.push(dependency);
   }
 
-  static fromString(dependencies: Object[]): Dependencies {
-    const deps = dependencies.map(dependency => ({
-      id: R.is(String, dependency.id)
-        ? BitId.parseObsolete(dependency.id) // backward compatibility
-        : new BitId(dependency.id),
-      relativePaths: dependency.relativePaths
-    }));
-    return new Dependencies(deps);
-  }
-
-  // deserialize(dependencies: Dependency[]): Dependency[] {
-  //   return dependencies.map(dependency => ({
-  //     id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-  //     relativePaths: dependency.relativePaths
-  //   }));
-  // }
-
   toStringOfIds(): string[] {
     return this.dependencies.map(dep => dep.id.toString());
   }

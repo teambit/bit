@@ -74,7 +74,11 @@ export default class BitId {
     return this.toString(true, true);
   }
 
-  compareWithoutScopeAndVersion(bitId: BitId): boolean {
+  isEqual(bitId: BitId): boolean {
+    return this.toString() === bitId.toString();
+  }
+
+  isEqualWithoutScopeAndVersion(bitId: BitId): boolean {
     return this.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion();
   }
 

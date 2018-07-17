@@ -33,7 +33,7 @@ export async function movePaths(
     moveSync(fromAbsolute, toAbsolute);
   }
   if (!R.isEmpty(changes)) {
-    const componentsIds = changes.map(c => BitId.parse(c.id));
+    const componentsIds = changes.map(c => c.id);
     await packageJson.addComponentsToRoot(consumer, componentsIds);
     const { components } = await consumer.loadComponents(componentsIds);
     await linkComponentsToNodeModules(components, consumer);

@@ -17,8 +17,8 @@ export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
   bitMap: BitMap;
-  _fromFileSystem: string[] = [];
-  _fromBitMap: Object = {};
+  _fromFileSystem: { [cacheKey: string]: Component[] } = {};
+  _fromBitMap: { [cacheKey: string]: BitId[] } = {};
   _fromObjects: BitId[];
   _invalidComponents: string[];
   _modifiedComponents: Component[];
@@ -143,17 +143,16 @@ export default class ComponentsList {
    * @memberof ComponentsList
    */
   async listNewComponents(load: boolean = false): Promise<BitIds | Component[]> {
-    const idsFromBitMap = this.bitMap.getBitIds();
+    const idsFromBitMap = this.idsFromBitMap();
     const idsFromObjects = await this.idsFromObjects();
     const newComponents: BitId = [];
     idsFromBitMap.forEach((id: BitId) => {
-      if (!idsFromObjects.includesWithoutScopeAndVersion(id)) {
+      if (!idsFromObjects.findWithoutScopeAndVersion(id)) {
         newComponents.push(id);
       }
     });
     if (!load || !newComponents.length) return new BitIds(...newComponents);
 
-    // const componentsIds = newComponents.map(id => BitId.parse(id, false));
     const { components } = await this.consumer.loadComponents(newComponents, false);
     return components;
   }
@@ -178,13 +177,12 @@ export default class ComponentsList {
 
   async listCommitPendingOfAllScope(version: string, includeImported: boolean = false) {
     let commitPendingComponents;
-    commitPendingComponents = await this.idsFromBitMap(true, COMPONENT_ORIGINS.AUTHORED);
+    commitPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
     if (includeImported) {
-      const importedComponents = await this.idsFromBitMap(true, COMPONENT_ORIGINS.IMPORTED);
+      const importedComponents = this.idsFromBitMap(COMPONENT_ORIGINS.IMPORTED);
       commitPendingComponents = commitPendingComponents.concat(importedComponents);
     }
-    const commitPendingComponentsIds = commitPendingComponents.map(componentId => BitId.parse(componentId));
-    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponentsIds, false);
+    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponents, false);
     const warnings = [];
     commitPendingComponentsLatest.forEach((componentId) => {
       if (semver.gt(componentId.version, version)) {
@@ -230,11 +228,9 @@ export default class ComponentsList {
     return this.consumer.listComponentsForAutoTagging(modifiedComponentsLatestVersions);
   }
 
-  async idsFromBitMap(withScopeName: boolean = true, origin?: string): Promise<string[]> {
+  idsFromBitMap(origin?: string): BitId[] {
     const fromBitMap = this.getFromBitMap(origin);
-    const ids = Object.keys(fromBitMap);
-    if (withScopeName) return ids;
-    return ids.map(id => BitId.parse(id).toStringWithoutScopeAndVersion());
+    return fromBitMap;
   }
 
   /**
@@ -242,14 +238,12 @@ export default class ComponentsList {
    * Components might be stored in the default component directory and also might be outside
    * of that directory. The bit.map is used to find them all
    * If they are on bit.map but not on the file-system, populate them to _invalidComponents property
-   * @return {Promise<Component[]>}
    */
   async getFromFileSystem(origin?: string): Promise<Component[]> {
     const cacheKeyName = origin || 'all';
     if (!this._fromFileSystem[cacheKeyName]) {
-      const idsFromBitMap = await this.idsFromBitMap(true, origin);
-      const parsedBitIds = idsFromBitMap.map(id => BitId.parse(id));
-      const { components, invalidComponents } = await this.consumer.loadComponents(parsedBitIds, false);
+      const idsFromBitMap = this.idsFromBitMap(origin);
+      const { components, invalidComponents } = await this.consumer.loadComponents(idsFromBitMap, false);
       this._fromFileSystem[cacheKeyName] = components;
       if (!this._invalidComponents && !origin) {
         this._invalidComponents = invalidComponents;
@@ -268,10 +262,11 @@ export default class ComponentsList {
     return this._invalidComponents;
   }
 
-  getFromBitMap(origin?: string): Object {
+  getFromBitMap(origin?: string): BitId[] {
     const cacheKeyName = origin || 'all';
     if (!this._fromBitMap[cacheKeyName]) {
-      this._fromBitMap[cacheKeyName] = this.bitMap.getAllComponents(origin);
+      const originParam = origin ? [origin] : undefined;
+      this._fromBitMap[cacheKeyName] = this.bitMap.getBitIds(originParam);
     }
     return this._fromBitMap[cacheKeyName];
   }
