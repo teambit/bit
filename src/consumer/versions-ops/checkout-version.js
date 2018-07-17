@@ -67,8 +67,8 @@ export default (async function checkoutVersion(
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
   const componentsResultsP = allComponents
     .filter(componentStatus => !componentStatus.failureMessage)
-    .map(({ id, componentFromFS, componentFromModel, mergeResults }) => {
-      return applyVersion(consumer, id, componentFromFS, componentFromModel, mergeResults, checkoutProps);
+    .map(({ id, componentFromFS, mergeResults }) => {
+      return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
     });
   const componentsResults = await Promise.all(componentsResultsP);
 
@@ -155,7 +155,6 @@ async function applyVersion(
   consumer: Consumer,
   id: BitId,
   componentFromFS: ConsumerComponent,
-  componentFromModel: Version,
   mergeResults: ?MergeResultsThreeWay,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResult> {

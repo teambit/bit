@@ -16,8 +16,8 @@ import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json'
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import { COMPILER_ENV_TYPE } from './compiler-extension';
-import { TESTER_ENV_TYPE } from './tester-extension';
+import CompilerExtension, { COMPILER_ENV_TYPE } from './compiler-extension';
+import TesterExtension, { TESTER_ENV_TYPE } from './tester-extension';
 import { COMPONENT_ORIGINS } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
@@ -262,7 +262,7 @@ export default class EnvExtension extends BaseExtension {
     detached: ?boolean,
     envType: EnvType,
     context?: Object
-  }): Promise<?EnvExtension> {
+  }): Promise<?CompilerExtension | ?TesterExtension> {
     Analytics.addBreadCrumb('env-extension', 'loadFromCorrectSource');
 
     // Authored component
@@ -299,21 +299,27 @@ export default class EnvExtension extends BaseExtension {
   }
 }
 
-const loadFromBitJson = ({ bitJson, envType, consumerPath, scopePath, context }) => {
+const loadFromBitJson = ({
+  bitJson,
+  envType,
+  consumerPath,
+  scopePath,
+  context
+}): Promise<?CompilerExtension | ?TesterExtension> => {
   if (envType === COMPILER_ENV_TYPE) {
     return bitJson.loadCompiler(consumerPath, scopePath, context);
   }
   return bitJson.loadTester(consumerPath, scopePath, context);
 };
 
-const loadFromComponentBitJsonOrFromModel = ({
+const loadFromComponentBitJsonOrFromModel = async ({
   models,
   componentBitJson,
   envType,
   consumerPath,
   scopePath,
   context
-}) => {
+}): Promise<?CompilerExtension | ?TesterExtension> => {
   if (componentBitJson) {
     return loadFromBitJson({ bitJson: componentBitJson, envType, consumerPath, scopePath, context });
   }

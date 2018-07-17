@@ -3,7 +3,7 @@
 /**
  * Sort an object.
  */
-export default function sortObject(obj) {
+export default function sortObject(obj: Object) {
   return Object.keys(obj)
     .sort()
     .reduce(function (result, key) {

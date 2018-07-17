@@ -1,5 +1,4 @@
 /** @flow */
-import chalk from 'chalk';
 import Command from '../../command';
 import { attachEnvs } from '../../../api/consumer';
 import type { AttachResults } from '../../../consumer/component-ops/attach-envs';
