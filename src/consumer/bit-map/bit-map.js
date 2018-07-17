@@ -11,7 +11,8 @@ import {
   COMPONENT_ORIGINS,
   DEFAULT_SEPARATOR,
   DEFAULT_INDEX_EXTS,
-  BIT_VERSION
+  BIT_VERSION,
+  VERSION_DELIMITER
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
@@ -145,6 +146,15 @@ export default class BitMap {
     return R.filter(filter, this.components);
   }
 
+  getBitIds(origin?: ComponentOrigin[]): BitId[] {
+    const allComponents = R.values(this.components);
+    const ids = (componentMaps: ComponentMap[]) => componentMaps.map(c => c.id);
+    if (!origin) return ids(allComponents);
+    // $FlowFixMe we know origin is an array in that case
+    const components = allComponents.filter(c => origin.includes(c.origin));
+    return ids(components);
+  }
+
   getAuthoredExportedComponents(): BitId[] {
     const componentsIds = [];
     Object.keys(this.components).forEach((componentId) => {
@@ -250,6 +260,34 @@ export default class BitMap {
     return Object.keys(components).find((component) => {
       return BitId.parse(component).toStringWithoutScopeAndVersion() === componentIdStr;
     });
+  }
+
+  /**
+   * id entered by the user may or may not include scope-name
+   * search for a similar id in the bitmap and return the full BitId
+   */
+  getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): BitId {
+    const components: ComponentMap[] = R.values(this.components);
+    const idHasVersion = id.includes(VERSION_DELIMITER);
+
+    // start with a more strict comparison. assume the id from the user has a scope name
+    const componentWithScope = components.find((componentMap: ComponentMap) => {
+      return idHasVersion ? componentMap.id.toString() === id : componentMap.id.toStringWithoutVersion() === id;
+    });
+    if (componentWithScope) return componentWithScope.id;
+
+    // continue with searching without the scope name
+    const idWithoutVersion = BitId.getStringWithoutVersion(id);
+    const componentWithoutScope = components.find((componentMap: ComponentMap) => {
+      return idHasVersion
+        ? componentMap.id.toStringWithoutScope() === id
+        : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
+    });
+    if (componentWithoutScope) return componentWithoutScope.id;
+    if (shouldThrow) {
+      throw new MissingBitMapComponent(id);
+    }
+    return null;
   }
 
   /**

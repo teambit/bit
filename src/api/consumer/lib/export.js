@@ -10,7 +10,7 @@ import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 
-async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<string[]> {
+async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitId[]> {
   const componentsList = new ComponentsList(consumer);
   if (!ids || !ids.length) {
     // export all
@@ -19,25 +19,16 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     else loader.start(BEFORE_EXPORT);
     return exportPendingComponents;
   }
-  const componentsFromBitMap = componentsList.getFromBitMap();
-  const idsFromBitMap = Object.keys(componentsFromBitMap);
   // the ids received from the CLI may be missing the scope-name, try to get the complete ids from bit.map
   const idsToExport = ids.map(async (id) => {
-    const parsedId = BitId.parse(id);
-    if (parsedId.scope) return id;
-    const match = idsFromBitMap.find((idStr) => {
-      return parsedId.toString() === BitId.parse(idStr).toStringWithoutScopeAndVersion();
-    });
-    if (match) {
-      const matchParsed = BitId.parse(match);
-      const status = await consumer.getComponentStatusById(matchParsed);
-      // don't allow to re-export an exported component unless it's being exported to another scope
-      if (!status.staged && matchParsed.scope === remote) {
-        throw new IdExportedAlready(match, remote);
-      }
-      return matchParsed.toStringWithoutVersion();
+    const parsedId = consumer.getBitId(id);
+    if (parsedId.scope) return parsedId;
+    const status = await consumer.getComponentStatusById(parsedId);
+    // don't allow to re-export an exported component unless it's being exported to another scope
+    if (!status.staged && parsedId.scope === remote) {
+      throw new IdExportedAlready(parsedId, remote);
     }
-    return id;
+    return parsedId;
   });
   loader.start(BEFORE_EXPORT); // show single export
   return Promise.all(idsToExport);

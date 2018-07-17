@@ -74,6 +74,10 @@ export default class BitId {
     return this.toString(true, true);
   }
 
+  compareWithoutScopeAndVersion(bitId: BitId): boolean {
+    return this.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion();
+  }
+
   toObject() {
     const key = this.scope ? [this.scope, this.name].join('/') : this.name;
     const value = this.version;

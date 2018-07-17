@@ -52,9 +52,8 @@ export default class Merge extends Command {
       manual?: boolean
     }
   ): Promise<ApplyVersionResults> {
-    const bitIds = ids.map(id => BitId.parse(id));
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
-    return merge(version, bitIds, mergeStrategy);
+    return merge(version, ids, mergeStrategy);
   }
 
   report({ components, version }: ApplyVersionResults): string {

@@ -1,6 +1,5 @@
 /** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
-import { BitId } from '../../../bit-id';
 import loader from '../../../cli/loader';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
@@ -63,7 +62,7 @@ const _getComponents = async (
   verbose: ?boolean
 ) => {
   if (id) {
-    const idParsed = BitId.parse(id);
+    const idParsed = consumer.getBitId(id);
     const component = await consumer.loadComponent(idParsed);
     return [component];
   }

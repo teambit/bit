@@ -2,15 +2,14 @@
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import Component from '../../../consumer/component';
-import { BitId } from '../../../bit-id';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import loader from '../../../cli/loader';
 import { BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
+import GeneralError from '../../../error/general-error';
 
 export async function build(id: string, noCache: boolean, verbose: boolean): Promise<?Array<string>> {
   const consumer = await loadConsumer();
-  const idHasScope = await consumer.scope.isIdHasScope(id);
-  const bitId = BitId.parse(id, idHasScope);
+  const bitId = consumer.getBitId(id);
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
   if (result === null) return null;
@@ -22,13 +21,9 @@ export async function build(id: string, noCache: boolean, verbose: boolean): Pro
 
 export async function buildAll(noCache: boolean, verbose: boolean): Promise<Object> {
   const consumer: Consumer = await loadConsumer();
-  const authoredAndImported = consumer.bitMap.getAllComponents([
-    COMPONENT_ORIGINS.IMPORTED,
-    COMPONENT_ORIGINS.AUTHORED
-  ]);
-  // eslint-disable-next-line prefer-promise-reject-errors
-  if (R.isEmpty(authoredAndImported)) return Promise.reject('nothing to build');
-  const authoredAndImportedIds = Object.keys(authoredAndImported).map(id => BitId.parse(id));
+  const authoredAndImportedIds = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+  if (R.isEmpty(authoredAndImportedIds)) throw new GeneralError('nothing to build');
+
   loader.start(BEFORE_LOADING_COMPONENTS);
   const { components } = await consumer.loadComponents(authoredAndImportedIds);
   loader.stop();

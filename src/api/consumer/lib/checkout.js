@@ -17,13 +17,9 @@ async function populateIds(consumer: Consumer, checkoutProps: CheckoutProps) {
   if (!checkoutProps.all) {
     throw new GeneralError('please specify [ids...] or use --all flag');
   }
-  const allComponentsFromBitMap = consumer.bitMap.getAllComponents([
-    COMPONENT_ORIGINS.AUTHORED,
-    COMPONENT_ORIGINS.IMPORTED
-  ]);
-  const idsStr = Object.keys(allComponentsFromBitMap);
-  checkoutProps.ids = idsStr.map((idStr) => {
-    const id = BitId.parse(idStr);
+  const idsFromBitMap = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  checkoutProps.ids = idsFromBitMap.map((bitId) => {
+    const id = bitId.clone();
     if (checkoutProps.latestVersion) id.version = LATEST;
     return id;
   });
@@ -53,7 +49,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     throw new GeneralError('please specify either [ids...] or --all, not both');
   }
   if (!ids.length) await populateIds(consumer, checkoutProps);
-  else checkoutProps.ids = ids.map(id => BitId.parse(id));
+  else checkoutProps.ids = ids.map(id => consumer.getBitId(id));
 }
 
 export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {

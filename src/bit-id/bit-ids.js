@@ -25,6 +25,14 @@ export default class BitIds extends Array<BitId> {
     return getLatestVersionNumber(this, idWithLatest);
   }
 
+  includes(bitId: BitId): BitId {
+    return this.find(id => id.toString() === bitId.toString());
+  }
+
+  includesWithoutScopeAndVersion(bitId: BitId): BitId {
+    return this.find(id => id.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion());
+  }
+
   /**
    * Get array of bitIds strings and transfer them to BitIds object
    * This function support also checking if the array contain strings or BitIds

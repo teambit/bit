@@ -54,6 +54,7 @@ import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 import type { InvalidComponent } from './component/consumer-component';
 import MainFileRemoved from './component/exceptions/main-file-removed';
+import type { BitIdStr } from '../bit-id/bit-id';
 
 type ConsumerProps = {
   projectPath: string,
@@ -232,6 +233,18 @@ export default class Consumer {
   getPathRelativeToConsumer(pathToCheck: PathRelative | PathAbsolute): PathOsBasedRelative {
     const absolutePath = path.resolve(pathToCheck); // if pathToCheck was absolute, it returns it back
     return path.relative(this.getPath(), absolutePath);
+  }
+
+  getBitId(id: BitIdStr, keepOriginalVersion: boolean = true, shouldThrow: boolean = true): BitId {
+    const bitId = this.bitMap.getExistingBitId(id, shouldThrow).clone();
+    if (keepOriginalVersion) {
+      bitId.version = BitId.getVersionOnlyFromString(id);
+    }
+    return bitId;
+  }
+
+  getBitIdIfExist(id: BitIdStr, keepOriginalVersion: boolean = true) {
+    return this.getBitId(id, keepOriginalVersion, false);
   }
 
   async loadComponent(id: BitId): Promise<Component> {

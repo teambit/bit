@@ -1,5 +1,4 @@
 /** @flow */
-import includes from 'lodash.includes';
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
@@ -19,13 +18,16 @@ export default (async function untrack(componentIds: string[], all: ?boolean): P
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
-    // added this in order to get global auto complete in case the user on write the component name without default namespace
-    const bitId = BitId.parse(componentId).toString();
-    if (includes(newComponents, bitId)) {
+    const bitId = consumer.getBitIdIfExist(componentId);
+    if (!bitId) {
+      missing.push(bitId);
+      return;
+    }
+    if (newComponents.includes(bitId)) {
       untrackedComponents.push(bitId);
       consumer.bitMap.removeComponent(bitId);
     } else {
-      consumer.bitMap.getComponent(bitId, false) ? unRemovableComponents.push(bitId) : missing.push(bitId);
+      unRemovableComponents.push(bitId);
     }
   });
   await consumer.onDestroy();

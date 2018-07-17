@@ -37,6 +37,7 @@ export type ComponentMapData = {
 export type PathChange = { from: PathLinux, to: PathLinux };
 
 export default class ComponentMap {
+  id: BitId;
   files: ComponentMapFile[];
   mainFile: PathLinux;
   rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
@@ -50,6 +51,7 @@ export default class ComponentMap {
   mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
   constructor({
+    id,
     files,
     mainFile,
     rootDir,
@@ -59,6 +61,7 @@ export default class ComponentMap {
     mainDistFile,
     originallySharedDir
   }: ComponentMapData) {
+    this.id = id;
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;

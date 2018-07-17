@@ -216,6 +216,7 @@ export default class BaseExtension {
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     Analytics.addBreadCrumb('base-extension', 'load extension');
+    logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
       let absPath = options.file;
@@ -422,7 +423,7 @@ const _getExtensionVersionFromComponentPath = (componentPath: string): ?string =
 const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string): string => {
   let bitId: BitId;
   try {
-    bitId = BitId.parse(name);
+    bitId = BitId.parseObsolete(name); // @todo: fix
   } catch (err) {
     throw new ExtensionNameNotValid(name);
   }
