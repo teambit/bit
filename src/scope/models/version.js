@@ -474,7 +474,7 @@ export default class Version extends BitObject {
         if (typeof env === 'string') {
           return env;
         }
-        return sortEnv(env);
+        return JSON.stringify(sortEnv(env));
       };
       const envModelFromFsString = stringifyEnv(envModelFromFs);
       const envModelFromModelString = stringifyEnv(envModelFromModel);
