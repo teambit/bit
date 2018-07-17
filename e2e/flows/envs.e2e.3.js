@@ -173,6 +173,7 @@ describe('envs', function () {
       let fullComponentFolder;
       let bitJsonPath;
       let componentMap;
+      let compId;
 
       before(() => {
         // Change the component envs in imported environment to make sure they are detached
@@ -189,7 +190,7 @@ describe('envs', function () {
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         helper.importComponent('comp/my-comp');
         const bitmap = helper.readBitMap();
-        const compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+        compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
         componentMap = bitmap[compId];
         componentModel = helper.showComponentParsed('comp/my-comp');
         compilerModel = componentModel.compiler;
@@ -211,6 +212,21 @@ describe('envs', function () {
         expect(testerModel.config).to.include({
           a: 'tester',
           valToDynamic: 'dyanamicValue'
+        });
+      });
+      describe('tagging detached component', () => {
+        before(() => {
+          // Change the component
+          helper.createFile('', 'objRestSpread.js', 'const a = 3');
+          helper.tagAllWithoutMessage();
+          compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
+          componentModel = helper.catComponent(compId);
+        });
+        it('should mark the compiler as detached in models when tagging again', () => {
+          expect(componentModel.detachedCompiler).to.be.true;
+        });
+        it('should mark the tester as detached in models when tagging again', () => {
+          expect(componentModel.detachedTester).to.be.true;
         });
       });
       describe('attach back', () => {
@@ -235,6 +251,19 @@ describe('envs', function () {
           expect(testerModel.config).to.include({
             a: 'b',
             valToDynamic: 'dyanamicValue'
+          });
+        });
+        describe('tagging re-attached component', () => {
+          before(() => {
+            helper.tagAllWithoutMessage();
+            compId = `${helper.remoteScope}/comp/my-comp@0.0.4`;
+            componentModel = helper.catComponent(compId);
+          });
+          it('should not mark the compiler as detached in models when tagging again', () => {
+            expect(componentModel.detachedCompiler).to.be.undefined;
+          });
+          it('should not mark the tester as detached in models when tagging again', () => {
+            expect(componentModel.detachedTester).to.be.undefined;
           });
         });
       });
@@ -633,7 +662,7 @@ describe('envs', function () {
           expect(statusOutput).to.not.have.string('modified');
         });
         describe('attach - detach envs', () => {
-          const compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+          let compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
           let componentModel;
           let componentMap;
           before(() => {
@@ -660,16 +689,31 @@ describe('envs', function () {
             it('should mark the tester as detached in .bitmap if the tester is detached', () => {
               expect(componentMap.detachedTester).to.be.true;
             });
+            describe('tagging already detached component (without new envs changes)', () => {
+              before(() => {
+                helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
+                helper.tagAllWithoutMessage();
+                compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
+                componentModel = helper.catComponent(compId);
+              });
+              it('should mark the compiler as detached in the models', () => {
+                expect(componentModel.detachedCompiler).to.be.true;
+              });
+              it('should mark the tester as detached in the models', () => {
+                expect(componentModel.detachedTester).to.be.true;
+              });
+            });
           });
           describe('attach imported component', () => {
             let output;
             let compilerModel;
             let testerModel;
             before(() => {
+              helper.getClonedLocalScope(importedScopeBeforeChanges);
               output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
               const mockEnvs = {
                 compiler: {
-                  [`${helper.envScope}/compilers/mock-babel@0.0.1`]: {
+                  [`${helper.envScope}/compilers/new-babel@0.0.1`]: {
                     rawConfig: {
                       a: 'my-compiler',
                       valToDynamic: 'dyanamicValue'
@@ -677,7 +721,7 @@ describe('envs', function () {
                   }
                 },
                 tester: {
-                  [`${helper.envScope}/testers/mock-mocha@0.0.1`]: {
+                  [`${helper.envScope}/testers/new-mocha@0.0.1`]: {
                     rawConfig: {
                       a: 'my-tester',
                       valToDynamic: 'dyanamicValue'
@@ -689,6 +733,7 @@ describe('envs', function () {
               componentModel = helper.showComponentParsed('comp/my-comp');
               compilerModel = componentModel.compiler;
               testerModel = componentModel.tester;
+              compId = `${helper.remoteScope}/comp/my-comp@0.0.1`;
               const bitmap = helper.readBitMap();
               componentMap = bitmap[compId];
             });
@@ -713,6 +758,21 @@ describe('envs', function () {
             });
             it('should mark the tester as not detached in .bitmap if the tester is attached', () => {
               expect(componentMap.detachedTester).to.be.false;
+            });
+            describe('tagging attached imported component', () => {
+              before(() => {
+                helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
+                helper.addRemoteEnvironment();
+                helper.tagAllWithoutMessage();
+                compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+                componentModel = helper.catComponent(compId);
+              });
+              it('should mark the compiler as detached in the models since it was changed', () => {
+                expect(componentModel.detachedCompiler).to.be.true;
+              });
+              it('should mark the tester as detached in the models since it was changed', () => {
+                expect(componentModel.detachedTester).to.be.true;
+              });
             });
           });
         });
