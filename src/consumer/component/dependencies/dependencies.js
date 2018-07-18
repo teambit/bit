@@ -74,8 +74,8 @@ export default class Dependencies {
     );
   }
 
-  getById(id: string): Dependency {
-    return this.dependencies.find(dep => dep.id.toString() === id);
+  getById(id: BitId): Dependency {
+    return this.dependencies.find(dep => dep.id.isEqual(id));
   }
 
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {

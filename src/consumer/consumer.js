@@ -287,11 +287,7 @@ export default class Consumer {
     );
 
     const components = idsToProcess.map(async (id: BitId) => {
-      const idWithConcreteVersionString: string = getLatestVersionNumber(
-        Object.keys(this.bitMap.getAllComponents()),
-        id.toString()
-      );
-      const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
+      const idWithConcreteVersion: BitId = getLatestVersionNumber(Object.keys(this.bitMap.getAllComponents()), id);
 
       const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
       let bitDir = this.getPath();
@@ -341,7 +337,7 @@ export default class Consumer {
         return component;
       }
       // @todo: check if the files were changed, and if so, skip the next line.
-      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
+      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersion);
       await updateDependenciesVersions(this, component);
       return component;
     });
