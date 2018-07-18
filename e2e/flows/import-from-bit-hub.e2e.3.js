@@ -15,6 +15,7 @@ describe('importing bit components from bitsrc.io', function () {
   let scopeName;
   let scopeId;
   let componentTestId;
+  let scopeAfterExport;
   before(() => {
     return bitsrcTester
       .loginToBitSrc()
@@ -31,6 +32,7 @@ describe('importing bit components from bitsrc.io', function () {
         helper.addComponentBarFoo();
         helper.commitAllComponents();
         helper.exportAllComponents(scopeId);
+        scopeAfterExport = helper.cloneLocalScope();
 
         helper.reInitLocalScope();
         helper.importCompiler('bit.envs/compilers/babel');
@@ -274,6 +276,26 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
       expect(packageJsonAfterImport.dependencies[`@bit/${scopeId}.utils.is-type`]).to.equal(
         'file:./components/utils/is-type'
       );
+    });
+  });
+  describe('importing a component when its dependency is authored', () => {
+    let output;
+    before(() => {
+      helper.getClonedLocalScope(scopeAfterExport);
+
+      let removeOutput = helper.removeComponent('bar/foo', '--delete-files --silent');
+      expect(removeOutput).to.have.string('successfully removed');
+      removeOutput = helper.removeComponent('utils/is-string', '--delete-files --silent');
+      expect(removeOutput).to.have.string('successfully removed');
+
+      output = helper.runCmd(`bit import ${scopeId}/utils/is-string`);
+    });
+    it('should not throw an error when importing', () => {
+      expect(output).to.have.string('successfully imported one component');
+    });
+    it('should generate the links to the authored component successfully', () => {
+      const run = () => helper.runCmd(`node ${path.normalize('components/utils/is-string/is-string.js')}`);
+      expect(run).not.to.throw();
     });
   });
 });
