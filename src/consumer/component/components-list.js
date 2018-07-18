@@ -175,7 +175,10 @@ export default class ComponentsList {
     return { newComponents, importPendingComponents };
   }
 
-  async listCommitPendingOfAllScope(version: string, includeImported: boolean = false) {
+  async listCommitPendingOfAllScope(
+    version: string,
+    includeImported: boolean = false
+  ): Promise<{ commitPendingComponents: BitId[], warnings: string[] }> {
     let commitPendingComponents;
     commitPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
     if (includeImported) {
@@ -197,15 +200,20 @@ export default class ComponentsList {
    *
    * @return {Promise<string[]>}
    */
-  async listCommitPendingComponents(): Promise<string[]> {
+  async listCommitPendingComponents(): Promise<BitIds> {
     const [newComponents, modifiedComponents] = await Promise.all([
       this.listNewComponents(),
       this.listModifiedComponents()
     ]);
-    const modifiedComponentsWithoutScopeAndVersion = modifiedComponents.map(componentId =>
-      componentId.toStringWithoutScopeAndVersion()
-    );
-    return [...newComponents, ...modifiedComponentsWithoutScopeAndVersion];
+
+    // @todo: do we need to remove the scope and version from modified?
+
+    // const modifiedComponentsWithoutScopeAndVersion = modifiedComponents.map(componentId =>
+    //   componentId.toStringWithoutScopeAndVersion()
+    // );
+    // return [...newComponents, ...modifiedComponentsWithoutScopeAndVersion];
+
+    return BitIds.fromArray([...newComponents, ...modifiedComponents]);
   }
 
   /**

@@ -53,6 +53,10 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...array);
   }
 
+  toString() {
+    return this.map(id => id.toString()).join(', ');
+  }
+
   /**
    * Get array of bitIds strings and transfer them to BitIds object
    * This function support also checking if the array contain strings or BitIds
@@ -73,6 +77,10 @@ export default class BitIds extends Array<BitId> {
     });
 
     return new BitIds(...array);
+  }
+
+  static fromArray(bitIds: BitId[]) {
+    return new BitIds(...bitIds);
   }
 
   static clone(bitIds?: ?BitIds = []): BitIds {

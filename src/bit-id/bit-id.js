@@ -40,6 +40,10 @@ export default class BitId {
     return new BitId({ scope: newScope, name: this.name, version: this.version });
   }
 
+  changeVersion(newVersion: ?string): BitId {
+    return new BitId({ scope: this.scope, name: this.name, version: newVersion });
+  }
+
   isLocal(scopeName: string) {
     return !this.scope || scopeName === this.scope;
   }

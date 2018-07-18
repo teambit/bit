@@ -3,7 +3,7 @@ import semver from 'semver';
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 import InvalidVersion from './exceptions/invalid-version';
@@ -44,7 +44,7 @@ export async function commitAction(args: {
     if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.tag(
-    [id],
+    new BitIds(id),
     message,
     validExactVersion,
     releaseType,
@@ -65,7 +65,7 @@ async function getCommitPendingComponents(
   isAllScope: boolean,
   exactVersion: string,
   includeImported: boolean
-): Promise<{ commitPendingComponents: string[], warnings: string[] }> {
+): Promise<{ commitPendingComponents: BitId[], warnings: string[] }> {
   const componentsList = new ComponentsList(consumer);
   if (isAllScope) {
     return componentsList.listCommitPendingOfAllScope(exactVersion, includeImported);

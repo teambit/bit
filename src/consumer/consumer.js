@@ -362,8 +362,7 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: string, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
-    const bitId = BitId.parse(rawId);
+  importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
 
@@ -375,16 +374,15 @@ export default class Consumer {
     return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
-  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
-    const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<?(BitId[])> {
+    const candidateComponents = this.bitMap.getBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
     );
-    const candidateComponentsIds = Object.keys(candidateComponents).map(id => BitId.parse(id));
     // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
     // correct version
-    return candidateComponentsIds.filter(
+    return candidateComponents.filter(
       component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
   }
@@ -482,7 +480,7 @@ export default class Consumer {
       const componentFromModel: ModelComponent = await this.scope.sources.get(id);
       let componentFromFileSystem;
       try {
-        componentFromFileSystem = await this.loadComponent(BitId.parse(id.toStringWithoutVersion()));
+        componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
       } catch (err) {
         if (
           err instanceof MissingFilesFromComponent ||
@@ -527,7 +525,7 @@ export default class Consumer {
   }
 
   async tag(
-    ids: string[],
+    ids: BitIds,
     message: string,
     exactVersion: ?string,
     releaseType: string,
@@ -537,10 +535,9 @@ export default class Consumer {
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
-    logger.debug(`committing the following components: ${ids.join(', ')}`);
+    logger.debug(`committing the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
-    const componentsIds = ids.map(componentId => BitId.parse(componentId));
-    const { components } = await this.loadComponents(componentsIds);
+    const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't commit anything
     if (!ignoreUnresolvedDependencies) {
@@ -742,8 +739,7 @@ export default class Consumer {
   async deprecateLocal(bitIds: Array<BitId>) {
     return this.scope.deprecateMany(bitIds);
   }
-  async deprecate(ids: string[], remote: boolean) {
-    const bitIds = ids.map(bitId => BitId.parse(bitId));
+  async deprecate(bitIds: BitId[], remote: boolean) {
     return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
   }
 
@@ -763,19 +759,19 @@ export default class Consumer {
     track,
     deleteFiles
   }: {
-    ids: string[],
+    ids: BitIds,
     force: boolean,
     remote: boolean,
     track: boolean,
     deleteFiles: boolean
   }) {
-    logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
+    logger.debug(`consumer.remove: ${ids.toString()}. force: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'remove',
       `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
     );
     // added this to remove support for remove version
-    const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
+    const bitIds = ids.map((id) => {
       id.version = LATEST_BIT_VERSION;
       return id;
     });
@@ -842,18 +838,17 @@ export default class Consumer {
    */
   resolveLocalComponentIds(bitIds: BitIds): BitId[] {
     return bitIds.map((id) => {
-      const realName = this.bitMap.getExistingComponentId(id.toStringWithoutVersion());
-      if (!realName) return id;
-      const component = this.bitMap.getComponent(realName);
+      const realBitId = this.getBitIdIfExist(id.toStringWithoutVersion());
+      if (!realBitId) return id;
+      const component = this.bitMap.getComponent(realBitId);
       if (
         component &&
         (component.origin === COMPONENT_ORIGINS.IMPORTED || component.origin === COMPONENT_ORIGINS.NESTED)
       ) {
-        const realId = BitId.parse(realName);
-        realId.version = LATEST_BIT_VERSION;
-        return realId;
+        realBitId.version = LATEST_BIT_VERSION;
+        return realBitId;
       }
-      if (component) return BitId.parse(realName);
+      if (component) return realBitId;
       return id;
     });
   }
