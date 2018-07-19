@@ -101,12 +101,15 @@ export default class BitMap {
     delete componentsJson.version;
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
-      if (componentFromJson.id) {
-        componentFromJson.id = new BitId(componentFromJson.id);
-      } else {
+      const idHasScope = (): boolean => {
+        if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
+        if ('exported' in componentFromJson) {
+          return componentFromJson.exported;
+        }
         // backward compatibility
-        componentFromJson.id = BitId.parseObsolete(componentId);
-      }
+        return BitId.parseObsolete(componentId).hasScope();
+      };
+      componentFromJson.id = BitId.parse(componentId, idHasScope());
       components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
     });
 
@@ -623,6 +626,21 @@ export default class BitMap {
   }
 
   /**
+   * remove the id property before saving the components to the file as they are redundant with the keys
+   */
+  toObjects() {
+    const components = {};
+    Object.keys(this.components).forEach((id) => {
+      const componentMap = R.clone(this.components[id]);
+      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+        componentMap.exported = componentMap.id.hasScope();
+      }
+      delete componentMap.id;
+      components[id] = componentMap;
+    });
+  }
+
+  /**
    * do not call this function directly, let consumer.onDestroy() call it.
    * consumer.onDestroy() is being called (manually) at the end of the command process.
    * the risk of calling this method in other places is a parallel writing of this file, which
@@ -631,7 +649,7 @@ export default class BitMap {
   async write(): Promise<any> {
     if (!this.hasChanged) return null;
     logger.debug('writing to bit.map');
-    const bitMapContent = Object.assign({}, this.components, { version: this.version });
+    const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
   }
 }

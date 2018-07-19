@@ -52,8 +52,12 @@ export default class BitId {
     return Version.parse(this.version);
   }
 
-  hasVersion() {
-    return this.version && this.version !== LATEST_BIT_VERSION;
+  hasVersion(): boolean {
+    return Boolean(this.version && this.version !== LATEST_BIT_VERSION);
+  }
+
+  hasScope(): boolean {
+    return Boolean(this.scope);
   }
 
   toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): BitIdStr {
