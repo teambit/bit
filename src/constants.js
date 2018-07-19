@@ -55,13 +55,9 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT'
 };
 
-export const DEFAULT_IMPL_NAME = 'impl.js';
-
 export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
 
 export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']; // todo: move to bit-javascript
-
-export const DEFAULT_SPECS_NAME = 'spec.js';
 
 export const NO_PLUGIN_TYPE = 'none';
 
