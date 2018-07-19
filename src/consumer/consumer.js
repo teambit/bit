@@ -287,7 +287,7 @@ export default class Consumer {
     );
 
     const components = idsToProcess.map(async (id: BitId) => {
-      const idWithConcreteVersion: BitId = getLatestVersionNumber(Object.keys(this.bitMap.getAllComponents()), id);
+      const idWithConcreteVersion: BitId = getLatestVersionNumber(this.bitmapIds, id);
 
       const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
       let bitDir = this.getPath();
