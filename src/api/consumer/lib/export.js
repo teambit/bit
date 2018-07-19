@@ -4,13 +4,13 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 
-async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitId[]> {
+async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
   const componentsList = new ComponentsList(consumer);
   if (!ids || !ids.length) {
     // export all
@@ -20,7 +20,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     return exportPendingComponents;
   }
   // the ids received from the CLI may be missing the scope-name, try to get the complete ids from bit.map
-  const idsToExport = ids.map(async (id) => {
+  const idsToExportP = ids.map(async (id) => {
     const parsedId = consumer.getBitId(id);
     if (parsedId.scope) return parsedId;
     const status = await consumer.getComponentStatusById(parsedId);
@@ -31,7 +31,8 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     return parsedId;
   });
   loader.start(BEFORE_EXPORT); // show single export
-  return Promise.all(idsToExport);
+  const idsToExport = Promise.all(idsToExportP);
+  return BitIds.fromArray(idsToExport);
 }
 
 async function addToBitJson(ids: BitId[], consumer: Consumer) {

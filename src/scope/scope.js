@@ -1009,7 +1009,7 @@ export default class Scope {
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
    */
-  createSymlink(id, remote) {
+  createSymlink(id: BitId, remote: string) {
     const symlink = new Symlink({
       scope: id.scope,
       name: id.name,
@@ -1019,17 +1019,16 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
-    logger.debug(`exportMany, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.join(', '))}`);
+  async exportMany(ids: BitIds, remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
+    logger.debug(`exportMany, ids: ${ids.toString()}`);
+    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.toString())}`);
 
     const remotes = await this.remotes();
     if (eject && !remotes.isHub(remoteName)) {
       return Promise.reject('--eject flag is relevant only when the remote is a hub');
     }
     const remote = await remotes.resolve(remoteName, this);
-    const componentIds = ids.map(id => BitId.parse(id));
-    const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
+    const componentObjectsP = ids.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
     const componentsAndObjects = [];
     enrichContextFromGlobal(context);
@@ -1055,8 +1054,8 @@ export default class Scope {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
-    await Promise.all(componentIds.map(id => this.clean(id)));
-    componentIds.map(id => this.createSymlink(id, remoteName));
+    await Promise.all(ids.map(id => this.clean(id)));
+    ids.map(id => this.createSymlink(id, remoteName));
     const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
     await Promise.all(componentsAndObjects.map(componentObject => this.sources.merge(componentObject)));
     await this.objects.persist();
@@ -1319,17 +1318,21 @@ export default class Scope {
     return Boolean(component && component.scope);
   }
 
+  async getBitId(id: string): Promise<BitId> {
+    const idHasScope = await this.isIdHasScope(id);
+    return BitId.parse(id, idHasScope);
+  }
+
   /**
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
    *
-   * @param {string} bitId - the component id to isolate
+   * @param {BitId} bitId - the component id to isolate
    * @param {IsolateOptions} opts
    * @return {Promise.<string>} - the path to the isolated component
    */
-  async isolateComponent(bitId: string, opts: IsolateOptions): Promise<string> {
-    const parsedId = BitId.parse(bitId);
-    const component = await this.loadComponent(parsedId);
+  async isolateComponent(bitId: BitId, opts: IsolateOptions): Promise<string> {
+    const component = await this.loadComponent(bitId);
     return component.isolate(this, opts);
   }
 

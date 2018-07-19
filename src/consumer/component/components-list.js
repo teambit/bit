@@ -220,12 +220,12 @@ export default class ComponentsList {
    * Components from the model where the scope is local are pending for export
    * Also, components that their model version is higher than their bit.map version.
    */
-  async listExportPendingComponents(load: boolean = false): Promise<BitId[] | ModelComponent[]> {
+  async listExportPendingComponents(load: boolean = false): Promise<BitIds | ModelComponent[]> {
     const idsFromObjects = await this.idsFromObjects();
     const ids = await filterAsync(idsFromObjects, (componentId) => {
       return this.consumer.getComponentStatusById(componentId).then(status => status.staged);
     });
-    if (!load) return ids;
+    if (!load) return BitIds.fromArray(ids);
     return Promise.all(ids.map(id => this.scope.sources.get(id)));
   }
 
