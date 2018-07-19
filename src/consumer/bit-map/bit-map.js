@@ -57,19 +57,15 @@ export default class BitMap {
     if (!bitId.hasVersion() && bitId.scope) {
       throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
-    const idWithoutScopeAndVersion = bitId.toStringWithoutScopeAndVersion();
     if (componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
       // make sure there are no duplications (same namespace+name)
-      Object.keys(this.components).forEach((compId) => {
-        if (
-          BitId.parse(compId).toStringWithoutScopeAndVersion() === idWithoutScopeAndVersion &&
-          this.components[compId].origin !== COMPONENT_ORIGINS.NESTED
-        ) {
-          throw new GeneralError(`your id ${id} is duplicated with ${compId}`);
-        }
-      });
+      const similarIds = this.findSimilarIds(bitId, true);
+      if (similarIds.length) {
+        throw new GeneralError(`your id ${id} is duplicated with ${similarIds.toString()}`);
+      }
     }
 
+    componentMap.id = bitId;
     this.components[id] = componentMap;
     this.markAsChanged();
   }
@@ -165,14 +161,8 @@ export default class BitMap {
   }
 
   getAuthoredExportedComponents(): BitId[] {
-    const componentsIds = [];
-    Object.keys(this.components).forEach((componentId) => {
-      if (this.components[componentId].origin === COMPONENT_ORIGINS.AUTHORED) {
-        const idParsed = BitId.parse(componentId);
-        if (idParsed.scope) componentsIds.push(idParsed);
-      }
-    });
-    return componentsIds;
+    const authoredIds = this.getBitIds[COMPONENT_ORIGINS.AUTHORED];
+    return authoredIds.filter(id => id.hasScope());
   }
 
   _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {
@@ -246,15 +236,27 @@ export default class BitMap {
     this.markAsChanged();
   }
 
+  /**
+   * find ids that have the same name but different version
+   * if compareWithoutScope is false, the scope should be identical in addition to the name
+   */
+  findSimilarIds(id: BitId, compareWithoutScope: boolean = false): BitIds {
+    const allIds = this.getBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const similarIds = allIds.filter((existingId: BitId) => {
+      const isSimilar = compareWithoutScope
+        ? existingId.isEqualWithoutScopeAndVersion(id)
+        : existingId.isEqualWithoutVersion(id);
+      return isSimilar && !existingId.isEqual(id);
+    });
+    return BitIds.fromArray(similarIds);
+  }
+
   deleteOlderVersionsOfComponent(componentId: BitId): void {
-    const allVersions = Object.keys(this.components).filter(
-      id => BitId.parse(id).toStringWithoutVersion() === componentId.toStringWithoutVersion()
-    );
-    allVersions.forEach((version) => {
-      if (version !== componentId.toString() && this.components[version].origin !== COMPONENT_ORIGINS.NESTED) {
-        logger.debug(`BitMap: deleting an older version ${version} of an existing component ${componentId.toString()}`);
-        this._removeFromComponentsArray(version);
-      }
+    const similarIds = this.findSimilarIds(componentId);
+    similarIds.forEach((id) => {
+      const idStr = id.toString();
+      logger.debug(`BitMap: deleting an older version ${idStr} of an existing component ${componentId.toString()}`);
+      this._removeFromComponentsArray(id);
     });
   }
 
@@ -456,14 +458,14 @@ export default class BitMap {
     delete this._cacheIds;
   };
 
-  _removeFromComponentsArray(componentId: BitIdStr) {
-    delete this.components[componentId];
+  _removeFromComponentsArray(componentId: BitId) {
+    delete this.components[componentId.toString()];
     this.markAsChanged();
   }
 
   removeComponent(id: string | BitId) {
     const bitId = id instanceof BitId ? id : BitId.parse(id);
-    const bitmapComponent = this.getExistingComponentId(bitId.toStringWithoutScopeAndVersion());
+    const bitmapComponent = this.getExistingBitId(bitId.toStringWithoutScopeAndVersion());
     if (bitmapComponent) this._removeFromComponentsArray(bitmapComponent);
     return bitmapComponent;
   }
@@ -499,25 +501,19 @@ export default class BitMap {
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
   updateComponentId(id: BitId): void {
-    const newIdString = id.toString();
-    const olderComponentsIds = Object.keys(this.components).filter(
-      componentId =>
-        BitId.parse(componentId).toStringWithoutScopeAndVersion() === id.toStringWithoutScopeAndVersion() &&
-        componentId !== newIdString &&
-        this.components[componentId].origin !== COMPONENT_ORIGINS.NESTED
-    );
-
-    if (!olderComponentsIds.length) {
+    const similarIds = this.findSimilarIds(id, true);
+    if (!similarIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);
       return;
     }
-    if (olderComponentsIds.length > 1) {
+    if (similarIds.length > 1) {
       throw new GeneralError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
       are authored or imported. This scenario is not supported`);
     }
-    const olderComponentId = olderComponentsIds[0];
-    logger.debug(`BitMap: updating an older component ${olderComponentId} with a newer component ${newIdString}`);
-    const componentMap = this.components[olderComponentId];
+    const olderComponentId: BitId = similarIds[0];
+    const olderIdStr = olderComponentId.toString();
+    logger.debug(`BitMap: updating an older component ${olderIdStr} with a newer component ${newIdString}`);
+    const componentMap = this.components[olderIdStr];
     this._removeFromComponentsArray(olderComponentId);
     this.setComponent(id, componentMap);
 
@@ -628,16 +624,18 @@ export default class BitMap {
   /**
    * remove the id property before saving the components to the file as they are redundant with the keys
    */
-  toObjects() {
+  toObjects(): Object {
     const components = {};
     Object.keys(this.components).forEach((id) => {
-      const componentMap = R.clone(this.components[id]);
+      const componentMap = this.components[id].clone();
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
         componentMap.exported = componentMap.id.hasScope();
       }
       delete componentMap.id;
       components[id] = componentMap;
     });
+
+    return components;
   }
 
   /**

@@ -86,6 +86,10 @@ export default class BitId {
     return this.toString() === bitId.toString();
   }
 
+  isEqualWithoutVersion(bitId: BitId): boolean {
+    return this.toStringWithoutVersion() === bitId.toStringWithoutVersion();
+  }
+
   isEqualWithoutScopeAndVersion(bitId: BitId): boolean {
     return this.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion();
   }

@@ -252,6 +252,10 @@ export default class ComponentMap {
     this.files = R.sortBy(R.prop('relativePath'), this.files);
   }
 
+  clone() {
+    return new ComponentMap(this);
+  }
+
   validate(): void {
     const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
     if (!this.mainFile) throw new ValidationError(`${errorMessage} mainFile attribute is missing`);
