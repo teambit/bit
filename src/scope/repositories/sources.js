@@ -72,7 +72,7 @@ export default class SourceRepository {
     const component = Component.fromBitId(bitId);
     let foundComponent = await this.findComponent(component);
     if (foundComponent instanceof Symlink) {
-      const realComponentId = BitId.parse(foundComponent.getRealComponentId());
+      const realComponentId = foundComponent.getRealComponentId();
       foundComponent = await this.findComponent(Component.fromBitId(realComponentId));
     }
 

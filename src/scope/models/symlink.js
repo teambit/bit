@@ -2,6 +2,7 @@
 import { BitObject } from '../objects';
 import { DEFAULT_BOX_NAME } from '../../constants';
 import { getStringifyArgs } from '../../utils';
+import { BitId } from '../../bit-id';
 
 export type SymlinkProp = {
   scope: string,
@@ -28,8 +29,8 @@ export default class Symlink extends BitObject {
     return [this.box, this.name].join('/');
   }
 
-  getRealComponentId() {
-    return [this.realScope, this.box, this.name].join('/');
+  getRealComponentId(): BitId {
+    return new BitId({ scope: this.realScope, box: this.box, name: this.name });
   }
 
   static parse(contents: string): Symlink {

@@ -118,7 +118,7 @@ export default class Scope {
     this.objects = scopeProps.objects || new Repository(this, types());
   }
 
-  async getDependencyGraph(): DependencyGraph {
+  async getDependencyGraph(): Promise<DependencyGraph> {
     if (!this._dependencyGraph) {
       this._dependencyGraph = await DependencyGraph.load(this.objects);
     }
@@ -272,10 +272,10 @@ export default class Scope {
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure: boolean = true): Promise<BitId[]> {
-    componentIds = componentIds.map(componentId => BitId.parse(componentId.toStringWithoutVersion()));
+    componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
     return components.map((component) => {
-      const componentId = BitId.parse(component.id.toString());
+      const componentId = component.id;
       if (component.component) {
         componentId.version = component.component.latest();
       } else {
@@ -863,12 +863,12 @@ export default class Scope {
   async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Object> {
     const allComponents = await this.objects.listComponents(false);
     const allComponentVersions = await Promise.all(
-      allComponents.map(async (component) => {
+      allComponents.map(async (component: ComponentModel) => {
         const loadedVersions = await Promise.all(
           Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, this.objects);
             if (!componentVersion) return;
-            componentVersion.id = BitId.parse(component.id());
+            componentVersion.id = component.toBitId();
             return componentVersion;
           })
         );
