@@ -2244,6 +2244,33 @@ console.log(barFoo.default());`;
       });
     });
   });
+  describe('importing a component when its dependency is authored', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.addComponent('utils/is-type.js');
+      helper.addComponent('utils/is-string.js');
+      helper.tagAllWithoutMessage();
+      const exportOutput = helper.exportAllComponents();
+
+      // intermediate step to make sure all are exported
+      expect(exportOutput).to.have.string('exported 2 components');
+
+      const removeOutput = helper.removeComponent('utils/is-string', '--delete-files --silent');
+      expect(removeOutput).to.have.string('successfully removed');
+
+      output = helper.importComponent('utils/is-string');
+    });
+    it('should not throw an error when importing', () => {
+      expect(output).to.have.string('successfully imported one component');
+    });
+    it('should generate the links to the authored component successfully', () => {
+      const run = () => helper.runCmd(`node ${path.normalize('components/utils/is-string/is-string.js')}`);
+      expect(run).not.to.throw();
+    });
+  });
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();

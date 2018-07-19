@@ -244,11 +244,13 @@ async function writeDependencyLinks(
       ? consumer.bitMap.getComponent(depId, true)
       : undefined;
 
-    const depRootDir: ?PathOsBased = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+    const depRootDir: ?PathOsBased =
+      depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
     const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
-    const depRootDirDist = depComponentMap
-      ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
-      : undefined;
+    const depRootDirDist =
+      depComponentMap && depComponentMap.rootDir
+        ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
+        : undefined;
 
     if (hasDist) {
       if (relativePath.isCustomResolveUsed) {
