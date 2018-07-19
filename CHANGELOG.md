@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit import` of a component with authored dependencies
+- generate npm links for Vue packages correctly without adding .vue extension to the package
+- fix `bit add` to not throw an error for imported components when mainFile is a relative path to consumer
 - new envs-attach command to attach component's envs to workspace envs
 - automatically detach envs of component when changed from imported workspace
 - improve `bit test` to run tests not only on new and modified components but also on auto-tag pending components

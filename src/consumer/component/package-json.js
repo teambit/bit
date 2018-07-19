@@ -74,14 +74,19 @@ function convertToValidPathForPackageManager(pathStr: PathLinux): string {
 /**
  * Only imported components should be saved with relative path in package.json
  * If a component is nested or imported as a package dependency, it should be saved with the version
+ * If a component is authored, no need to save it as a dependency of the imported component because
+ * the root package.json takes care of it already.
  */
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
   dependencyComponentMap?: ComponentMap
-) {
+): ?string {
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
+  }
+  if (dependencyComponentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+    return null;
   }
   const dependencyRootDir = dependencyComponentMap.rootDir;
   if (!dependencyRootDir) {
@@ -92,7 +97,7 @@ function getPackageDependencyValue(
   return convertToValidPathForPackageManager(rootDirRelative);
 }
 
-async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId) {
+async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): Promise<?string> {
   const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
   const parentComponentMap = consumer.bitMap.getComponent(parentId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
@@ -122,8 +127,8 @@ async function changeDependenciesToRelativeSyntax(
           const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
           // $FlowFixMe dependencyComponent must be found (two line earlier there is a check for that)
           const dependencyComponentMap = dependencyComponent.getComponentMap(consumer.bitMap);
-          const dependencyLocation = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
-          return [dependencyId, dependencyLocation];
+          const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
+          return dependencyPackageValue ? [dependencyId, dependencyPackageValue] : [];
         }
         return [];
       });
@@ -155,6 +160,7 @@ async function write(
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
 ): Promise<PackageJsonInstance> {
+  logger.debug(`package-json.write. bitDir ${bitDir}. override ${override.toString()}`);
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = async (dev: boolean = false) => {
     if (!writeBitDependencies) return {};

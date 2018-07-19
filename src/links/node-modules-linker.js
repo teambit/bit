@@ -94,7 +94,7 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
       writeDependencyLink(
         consumer.toAbsolutePath(parentRootDir),
         dependency.id,
-        consumer.toAbsolutePath(dependencyComponentMap.rootDir),
+        consumer.toAbsolutePath(dependencyComponentMap.rootDir || '.'),
         component.bindingPrefix
       )
     );
