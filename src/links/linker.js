@@ -15,9 +15,8 @@ import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
-  const componentsMaps = consumer.bitMap.getAllComponents();
-  if (R.isEmpty(componentsMaps)) throw new GeneralError('nothing to link');
-  const componentsIds = Object.keys(componentsMaps).map(componentId => BitId.parse(componentId));
+  const componentsIds = consumer.bitmapIds;
+  if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
   return linkComponentsToNodeModules(components, consumer);
 }
@@ -33,10 +32,9 @@ export async function writeLinksInDist(component: Component, componentMap: Compo
 }
 
 function findDirectDependentComponents(potentialDependencies: Component[], consumer: Consumer): Promise<Component[]> {
-  const fsComponents = consumer.bitMap.getAllComponents([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-  const fsComponentsIds = Object.keys(fsComponents).map(component => BitId.parse(component));
+  const fsComponents = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
   const potentialDependenciesIds = potentialDependencies.map(c => c.id);
-  return consumer.scope.findDirectDependentComponents(fsComponentsIds, potentialDependenciesIds);
+  return consumer.scope.findDirectDependentComponents(fsComponents, potentialDependenciesIds);
 }
 
 async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {

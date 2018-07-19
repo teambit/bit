@@ -132,13 +132,13 @@ function writeMissingLinks(consumer: Consumer, component, componentMap: Componen
   const missingLinks = component.issues.missingLinks;
   const result = Object.keys(component.issues.missingLinks).map((key) => {
     return missingLinks[key].map((dependencyIdStr) => {
-      const dependencyId = consumer.bitMap.getExistingComponentId(dependencyIdStr);
+      const dependencyId: ?BitId = consumer.getBitIdIfExist(dependencyIdStr);
       if (!dependencyId) return null;
 
       const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
       return writeDependencyLink(
         consumer.toAbsolutePath(componentMap.rootDir),
-        BitId.parse(dependencyId),
+        dependencyId,
         consumer.toAbsolutePath(dependencyComponentMap.rootDir),
         component.bindingPrefix
       );

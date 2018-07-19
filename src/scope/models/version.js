@@ -511,7 +511,7 @@ export default class Version extends BitObject {
       validateType(message, bitIdStr, field, 'string');
       let bitId;
       try {
-        bitId = BitId.parse(bitIdStr);
+        bitId = BitId.parse(bitIdStr, true);
       } catch (err) {
         throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
       }

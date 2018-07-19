@@ -378,7 +378,7 @@ export default class Scope {
     this.injectNodePathIfNeeded(consumer, components);
     const test = async (component: Component) => {
       if (!component.tester) {
-        return { componentId: component.id.toStringWithoutScope(), missingTester: true };
+        return { componentId: component.id, missingTester: true };
       }
       const specs = await component.runSpecs({
         scope: this,
@@ -386,7 +386,7 @@ export default class Scope {
         consumer,
         verbose
       });
-      return { componentId: component.id.toStringWithoutScope(), specs };
+      return { componentId: component.id, specs };
     };
     return pMapSeries(components, test);
   }
