@@ -125,6 +125,7 @@ export default class Component {
   _driver: Driver;
   _isModified: boolean;
   packageJsonInstance: PackageJsonInstance;
+  _currentlyUsedVersion: BitId; // used by listScope functionality
 
   set files(val: SourceFile[]) {
     this._files = val;
@@ -467,10 +468,6 @@ export default class Component {
     return this;
   }
 
-  getComponentMap(bitMap: BitMap): ComponentMap {
-    return bitMap.getComponent(this.id);
-  }
-
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
@@ -563,7 +560,7 @@ export default class Component {
     consumer?: Consumer,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
-    componentMap: ComponentMap,
+    componentMap?: ComponentMap,
     excludeRegistryPrefix?: boolean
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
@@ -867,7 +864,7 @@ export default class Component {
     };
     const bitMap = consumer ? consumer.bitMap : undefined;
     const consumerPath = consumer ? consumer.getPath() : '';
-    const componentMap = bitMap && bitMap.getComponent(this.id);
+    const componentMap = bitMap && bitMap.getComponentIfExist(this.id);
     let componentDir = consumerPath;
     if (componentMap) {
       componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;

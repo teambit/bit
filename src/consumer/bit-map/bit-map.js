@@ -534,16 +534,16 @@ export default class BitMap {
   getComponent(
     bitId: BitId,
     {
-      shouldThrow = false,
       ignoreVersion = false,
       ignoreScopeAndVersion = false
     }: {
-      shouldThrow?: boolean,
       ignoreVersion?: boolean,
       ignoreScopeAndVersion?: boolean
     } = {}
-  ): ?ComponentMap {
-    if (!(bitId instanceof BitId)) { throw TypeError(`BitMap.getComponent expects bitId to be an instance of BitId, instead, got ${bitId}`); }
+  ): ComponentMap {
+    if (!(bitId instanceof BitId)) {
+      throw TypeError(`BitMap.getComponent expects bitId to be an instance of BitId, instead, got ${bitId}`);
+    }
     const allIds = this.getBitIds();
     const componentMap = (id: BitId) => this.components[id.toString()];
     const exactMatch = allIds.find(bitId);
@@ -556,10 +556,29 @@ export default class BitMap {
       const matchWithoutScopeAndVersion = allIds.findWithoutScopeAndVersion(bitId);
       if (matchWithoutScopeAndVersion) return componentMap(matchWithoutScopeAndVersion);
     }
-    if (shouldThrow) {
-      throw new MissingBitMapComponent(bitId.toString());
+    throw new MissingBitMapComponent(bitId.toString());
+  }
+
+  /**
+   * Get componentMap from bitmap by id
+   */
+  getComponentIfExist(
+    bitId: BitId,
+    {
+      ignoreVersion = false,
+      ignoreScopeAndVersion = false
+    }: {
+      ignoreVersion?: boolean,
+      ignoreScopeAndVersion?: boolean
+    } = {}
+  ): ?ComponentMap {
+    try {
+      const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      return componentMap;
+    } catch (err) {
+      if (err instanceof MissingBitMapComponent) return null;
+      throw err;
     }
-    return null;
   }
 
   /**

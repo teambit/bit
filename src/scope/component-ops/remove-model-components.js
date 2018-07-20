@@ -88,7 +88,7 @@ export default class RemoveModelComponents {
       );
       let isNested = true;
       if (this.consumer) {
-        const componentMap = this.consumer.bitMap.getComponent(dependencyId);
+        const componentMap = this.consumer.bitMap.getComponentIfExist(dependencyId);
         if (componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
           isNested = false;
         }

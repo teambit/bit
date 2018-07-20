@@ -86,7 +86,7 @@ function symlinkPackages(from: string, to: string, consumer, component: Componen
 
 function writeDependenciesLinks(component: Component, componentMap: ComponentMap, consumer: Consumer): LinkDetail[] {
   return component.getAllDependencies().map((dependency: Dependency) => {
-    const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
+    const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependency.id);
     const writtenLinks = [];
     if (!dependencyComponentMap) return writtenLinks;
     const parentRootDir = componentMap.rootDir || '.'; // compilers/testers don't have rootDir
@@ -236,7 +236,7 @@ export default (async function linkComponents(components: Component[], consumer:
     components.map((component) => {
       const componentId = component.id;
       logger.debug(`linking component to node_modules: ${componentId}`);
-      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, { shouldThrow: true });
+      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId);
       switch (componentMap.origin) {
         case COMPONENT_ORIGINS.IMPORTED:
           return _linkImportedComponents(consumer, component, componentMap);

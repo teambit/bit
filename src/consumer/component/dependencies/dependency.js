@@ -28,7 +28,7 @@ export default class Dependency {
       const partToRemove = `${sharedDir}/`;
       return pathStr.replace(partToRemove, '');
     };
-    const depFromBitMap = bitMap.getComponent(dependency.id);
+    const depFromBitMap = bitMap.getComponentIfExist(dependency.id);
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
       relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
       if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {

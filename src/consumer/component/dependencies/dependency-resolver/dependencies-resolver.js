@@ -197,7 +197,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
       return;
     }
 
-    const componentMap = consumer.bitMap.getComponent(componentId);
+    const componentMap = consumer.bitMap.getComponentIfExist(componentId);
     // found a dependency component. Add it to componentsDeps
     const depRootDir = componentMap ? componentMap.rootDir : undefined;
     const destinationRelativePath =

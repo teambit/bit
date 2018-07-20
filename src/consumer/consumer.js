@@ -289,7 +289,7 @@ export default class Consumer {
     const components = idsToProcess.map(async (id: BitId) => {
       const idWithConcreteVersion: BitId = getLatestVersionNumber(this.bitmapIds, id);
 
-      const componentMap = this.bitMap.getComponent(idWithConcreteVersion, { shouldThrow: true });
+      const componentMap = this.bitMap.getComponent(idWithConcreteVersion);
       let bitDir = this.getPath();
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
@@ -329,7 +329,7 @@ export default class Consumer {
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
       // reload component map as it may be changed after calling Component.loadFromFileSystem()
-      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, { shouldThrow: true });
+      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion);
       component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -399,7 +399,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     if (typeof componentFromFileSystem._isModified === 'undefined') {
-      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id, { shouldThrow: true });
+      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id);
       if (componentMap.originallySharedDir) {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
@@ -575,7 +575,7 @@ export default class Consumer {
     // update package.json with the new version
     const allComponentIds = taggedComponentIds.concat(autoTaggedComponentIds);
     const updatePackageJsonP = allComponentIds.map((componentId: BitId) => {
-      const componentMap = this.bitMap.getComponent(componentId, { shouldThrow: true });
+      const componentMap = this.bitMap.getComponent(componentId);
       if (componentMap.rootDir) {
         return packageJson.updateAttribute(this, componentMap.rootDir, 'version', componentId.version);
       }
@@ -814,7 +814,7 @@ export default class Consumer {
     return Promise.all(
       bitIds.map(async (id) => {
         const ignoreVersion = id.isLocal();
-        const componentMap = this.bitMap.getComponent(id, { ignoreVersion });
+        const componentMap = this.bitMap.getComponentIfExist(id, { ignoreVersion });
         if (!componentMap) return null;
         if (
           (componentMap.origin && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
@@ -839,16 +839,12 @@ export default class Consumer {
     return bitIds.map((id) => {
       const realBitId = this.getBitIdIfExist(id.toStringWithoutVersion());
       if (!realBitId) return id;
-      const component = this.bitMap.getComponent(realBitId);
-      if (
-        component &&
-        (component.origin === COMPONENT_ORIGINS.IMPORTED || component.origin === COMPONENT_ORIGINS.NESTED)
-      ) {
+      const componentMap = this.bitMap.getComponent(realBitId);
+      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         realBitId.version = LATEST_BIT_VERSION;
         return realBitId;
       }
-      if (component) return realBitId;
-      return id;
+      return realBitId;
     });
   }
 

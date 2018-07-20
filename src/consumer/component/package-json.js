@@ -80,7 +80,7 @@ function convertToValidPathForPackageManager(pathStr: PathLinux): string {
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap
+  dependencyComponentMap?: ?ComponentMap
 ): ?string {
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
@@ -98,8 +98,8 @@ function getPackageDependencyValue(
 }
 
 async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): Promise<?string> {
-  const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
   const parentComponentMap = consumer.bitMap.getComponent(parentId);
+  const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }
 
@@ -126,7 +126,7 @@ async function changeDependenciesToRelativeSyntax(
         if (dependenciesIds.includes(dependencyId)) {
           const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
           // $FlowFixMe dependencyComponent must be found (two line earlier there is a check for that)
-          const dependencyComponentMap = dependencyComponent.getComponentMap(consumer.bitMap);
+          const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
           const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
           return dependencyPackageValue ? [dependencyId, dependencyPackageValue] : [];
         }
