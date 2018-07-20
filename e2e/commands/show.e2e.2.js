@@ -132,10 +132,6 @@ describe('bit show command', function () {
         expect(output).to.include({ name: 'comp' });
       });
 
-      it('should include the namespace correctly', () => {
-        expect(output).to.include({ box: 'comp' });
-      });
-
       // TODO: Check again after this commit merged: 6ee69fab36f5b9f31fa576216c6bf22808d0d459
       it.skip('should include the version correctly', () => {
         expect(output).to.include({ version: 1 });
@@ -580,8 +576,7 @@ function add(a, b) {
       const parsedOutput = JSON.parse(output);
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({
-        name: 'foo',
-        box: 'bar',
+        name: 'bar/foo',
         version: '0.0.1'
       });
     });

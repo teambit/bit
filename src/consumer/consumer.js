@@ -592,7 +592,7 @@ export default class Consumer {
     }
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_COMPONENT_SEPARATOR));
+    return path.join('node_modules', bindingPrefix, [id.scope, id.name].join(NODE_PATH_COMPONENT_SEPARATOR));
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
@@ -623,7 +623,7 @@ export default class Consumer {
 
   composeRelativeBitPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
-    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope, namespace: bitId.box });
+    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
   composeComponentPath(bitId: BitId): PathOsBased {

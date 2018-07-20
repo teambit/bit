@@ -8,7 +8,6 @@ import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
 import {
-  DEFAULT_BOX_NAME,
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
@@ -41,7 +40,6 @@ type Versions = { [string]: Ref };
 
 export type ComponentProps = {
   scope?: string,
-  box?: string,
   name: string,
   versions?: Versions,
   lang?: string,
@@ -57,7 +55,6 @@ export type ComponentProps = {
 export default class Component extends BitObject {
   scope: ?string;
   name: string;
-  box: ?string;
   versions: Versions;
   lang: string;
   deprecated: boolean;
@@ -68,8 +65,7 @@ export default class Component extends BitObject {
   constructor(props: ComponentProps) {
     super();
     this.scope = props.scope || null;
-    this.name = props.box ? `${props.box}/${props.name}` : props.name;
-    this.box = null;
+    this.name = props.name;
     this.versions = props.versions || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.deprecated = props.deprecated || false;
@@ -212,7 +208,6 @@ export default class Component extends BitObject {
     }
 
     const componentObject = {
-      box: this.box,
       name: this.name,
       scope: this.scope,
       versions: versions(this.versions),
@@ -312,7 +307,6 @@ export default class Component extends BitObject {
     // is retrieved, it'll be different than the first time.
     return new ConsumerComponent({
       name: this.name,
-      box: this.box,
       version: componentVersion.version,
       scope: this.scope,
       lang: this.lang,
@@ -403,8 +397,7 @@ export default class Component extends BitObject {
   static parse(contents: string): Component {
     const rawComponent = JSON.parse(contents);
     return Component.from({
-      name: rawComponent.name,
-      box: rawComponent.box,
+      name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
       scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
       lang: rawComponent.lang,
@@ -420,9 +413,9 @@ export default class Component extends BitObject {
   }
 
   static fromBitId(bitId: BitId): Component {
+    if (bitId.box) throw new Error('component.fromBitId, bitId should not have the "box" property populated');
     return new Component({
       name: bitId.name,
-      box: bitId.box,
       scope: bitId.scope
     });
   }
@@ -430,6 +423,5 @@ export default class Component extends BitObject {
   validate(): void {
     const message = 'unable to save Component object';
     if (!this.name) throw new GeneralError(`${message} the name is missing`);
-    if (!this.box) throw new GeneralError(`${message} the box is missing`);
   }
 }

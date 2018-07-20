@@ -28,7 +28,7 @@ export default (async function componentsDiff(
   // try to resolve ids scope of by components array
   ids.forEach(function (id) {
     if (!id.scope && components) {
-      const foundComponent = components.find(o => o.box === id.box && o.name === id.name);
+      const foundComponent = components.find(o => o.name === id.name);
       if (foundComponent) id.scope = foundComponent.scope;
     }
   });

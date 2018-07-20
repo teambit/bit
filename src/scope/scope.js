@@ -143,7 +143,7 @@ export default class Scope {
   }
 
   /**
-   * Get the releative components path inside the scope
+   * Get the relative components path inside the scope
    * (components such as compilers / testers / extensions)
    * currently components
    */
@@ -157,18 +157,18 @@ export default class Scope {
    * @param {BitId} id
    */
   static getComponentRelativePath(id: BitId, scopePath?: string): string {
-    const realtivePath = pathLib.join(id.box, id.name, id.scope);
+    const relativePath = pathLib.join(id.name, id.scope);
     if (!id.getVersion().latest) {
-      return pathLib.join(realtivePath, id.version);
+      return pathLib.join(relativePath, id.version);
     }
     if (!scopePath) {
       throw new Error(`could not find the latest version of ${id} without the scope path`);
     }
-    const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), realtivePath);
+    const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
     const versions = fs.readdirSync(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*');
-    return pathLib.join(realtivePath, latestVersion);
+    return pathLib.join(relativePath, latestVersion);
   }
 
   getBitPathInComponentsDir(id: BitId): string {
@@ -1013,7 +1013,6 @@ export default class Scope {
     const symlink = new Symlink({
       scope: id.scope,
       name: id.name,
-      box: id.box,
       realScope: remote
     });
     return this.objects.add(symlink);

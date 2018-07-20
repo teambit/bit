@@ -497,10 +497,11 @@ export default class BitMap {
   /**
    * needed after exporting or tagging a component.
    * We don't support export/tag of nested components, only authored or imported. For authored/imported components, could be
-   * in the file-system only one instance with the same box-name and component-name. As a result, we can strip the
+   * in the file-system only one instance with the same component-name. As a result, we can strip the
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
   updateComponentId(id: BitId): void {
+    const newIdString = id.toString();
     const similarIds = this.findSimilarIds(id, true);
     if (!similarIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);

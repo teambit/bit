@@ -28,13 +28,7 @@ import TesterExtension from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
-import {
-  DEFAULT_BOX_NAME,
-  DEFAULT_LANGUAGE,
-  DEFAULT_BINDINGS_PREFIX,
-  COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME
-} from '../../constants';
+import { DEFAULT_LANGUAGE, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
@@ -59,7 +53,6 @@ export type InvalidComponent = { id: BitId, error: Error };
 
 export type ComponentProps = {
   name: string,
-  box: string,
   version?: ?string,
   scope?: ?string,
   lang?: string,
@@ -88,7 +81,6 @@ export type ComponentProps = {
 
 export default class Component {
   name: string;
-  box: string;
   version: ?string;
   scope: ?string;
   lang: string;
@@ -146,7 +138,6 @@ export default class Component {
   get id(): BitId {
     return new BitId({
       scope: this.scope,
-      box: this.box,
       name: this.name,
       version: this.version
     });
@@ -170,7 +161,6 @@ export default class Component {
 
   constructor({
     name,
-    box,
     version,
     scope,
     lang,
@@ -197,7 +187,6 @@ export default class Component {
     customResolvedPaths
   }: ComponentProps) {
     this.name = name;
-    this.box = box || DEFAULT_BOX_NAME;
     this.version = version;
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
@@ -226,7 +215,7 @@ export default class Component {
   }
 
   validateComponent() {
-    const nonEmptyFields = ['name', 'box', 'mainFile'];
+    const nonEmptyFields = ['name', 'mainFile'];
     nonEmptyFields.forEach((field) => {
       if (!this[field]) {
         throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
@@ -256,9 +245,7 @@ export default class Component {
 
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
-    const homepage = this.scope
-      ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.box}/${this.name}`
-      : undefined;
+    const homepage = this.scope ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.name}` : undefined;
     return homepage;
   }
 
@@ -298,7 +285,7 @@ export default class Component {
   }
 
   getPackageNameAndPath(): Promise<any> {
-    const packagePath = `${this.bindingPrefix}/${this.id.box}/${this.id.name}`;
+    const packagePath = `${this.bindingPrefix}/${this.id.name}`;
     const packageName = this.id.toStringWithoutVersion();
     return { packageName, packagePath };
   }
@@ -926,7 +913,6 @@ export default class Component {
   toObject(): Object {
     return {
       name: this.name,
-      box: this.box,
       version: this.version,
       mainFile: this.mainFile,
       scope: this.scope,
@@ -1048,8 +1034,7 @@ export default class Component {
       deprecated
     } = object;
     return new Component({
-      name,
-      box,
+      name: box ? `${box}/${name}` : name,
       version,
       scope,
       lang,
@@ -1204,7 +1189,6 @@ export default class Component {
 
     return new Component({
       name: id.name,
-      box: id.box,
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,

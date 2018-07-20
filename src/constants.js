@@ -90,7 +90,7 @@ export const DEFAULT_BINDINGS_PREFIX = '@bit';
 
 export const NODE_PATH_COMPONENT_SEPARATOR = '.';
 
-export const DEFAULT_COMPONENTES_DIR_PATH = `${BITS_DIRNAME}/{namespace}/{name}`;
+export const DEFAULT_COMPONENTS_DIR_PATH = `${BITS_DIRNAME}/{name}`;
 
 export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
 
@@ -109,8 +109,6 @@ export const OBJECTS_DIR = 'objects';
 export const NULL_BYTE = '\u0000';
 
 export const SPACE_DELIMITER = ' ';
-
-export const DEFAULT_BOX_NAME = 'global';
 
 export const VERSION_DELIMITER = '@';
 

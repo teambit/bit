@@ -41,7 +41,6 @@ export default class ComponentsList {
         // const latestVersionRef = componentObjects.versions[componentObjects.latest()];
         return new BitId({
           scope: componentObjects.scope,
-          box: componentObjects.box,
           name: componentObjects.name,
           version: componentObjects.scope ? componentObjects.latest() : null
         });

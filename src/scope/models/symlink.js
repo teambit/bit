@@ -1,12 +1,10 @@
 /** @flow */
 import { BitObject } from '../objects';
-import { DEFAULT_BOX_NAME } from '../../constants';
 import { getStringifyArgs } from '../../utils';
 import { BitId } from '../../bit-id';
 
 export type SymlinkProp = {
   scope: string,
-  box?: string,
   name: string,
   realScope: string
 };
@@ -14,34 +12,32 @@ export type SymlinkProp = {
 export default class Symlink extends BitObject {
   scope: string;
   name: string;
-  box: string;
   realScope: string;
 
   constructor(props: SymlinkProp) {
     super();
     this.scope = props.scope;
     this.name = props.name;
-    this.box = props.box || DEFAULT_BOX_NAME;
     this.realScope = props.realScope;
   }
 
   id(): string {
-    return [this.box, this.name].join('/');
+    return this.name;
   }
 
   getRealComponentId(): BitId {
-    return new BitId({ scope: this.realScope, box: this.box, name: this.name });
+    return new BitId({ scope: this.realScope, name: this.name });
   }
 
   static parse(contents: string): Symlink {
     const rawContent = JSON.parse(contents);
+    if (rawContent.box) rawContent.name = `${rawContent.box}/${rawContent.name}`;
     return Symlink.from(rawContent);
   }
 
   toObject() {
     return {
       scope: this.scope,
-      box: this.box,
       name: this.name,
       realScope: this.realScope
     };

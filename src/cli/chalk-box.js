@@ -6,14 +6,14 @@ import Component from '../consumer/component/consumer-component';
 import type { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 
-export const formatNewBit = ({ box, name }: any): string => c.white('     > ') + c.cyan(`${box}/${name}`);
+export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
-export const formatBit = ({ scope, box, name, version }: any): string =>
-  c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${box}/${name} - ${version ? version.toString() : 'latest'}`);
+export const formatBit = ({ scope, name, version }: any): string =>
+  c.white('     > ') + c.cyan(`${scope ? `${scope}/` : ''}${name} - ${version ? version.toString() : 'latest'}`);
 
-export const formatPlainComponentItem = ({ scope, box, name, version, deprecated }: any): string =>
+export const formatPlainComponentItem = ({ scope, name, version, deprecated }: any): string =>
   c.cyan(
-    `- ${scope ? `${scope}/` : ''}${box}/${name}@${version ? version.toString() : 'latest'}  ${
+    `- ${scope ? `${scope}/` : ''}${name}@${version ? version.toString() : 'latest'}  ${
       deprecated ? c.yellow('[deprecated]') : ''
     }`
   );

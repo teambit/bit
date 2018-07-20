@@ -400,7 +400,6 @@ describe('bit add command', function () {
       );
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
-    it.skip('should not allow adding a component with an existing box-name and component-name', () => {});
   });
   describe('adding file to existing tagged component', () => {
     let bitMap;
