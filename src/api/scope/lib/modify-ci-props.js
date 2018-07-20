@@ -1,13 +1,11 @@
 /** @flow */
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 import ConsumerComponent from '../../../consumer/component';
 
-export default function modifyCIProps(path: string, id: string, ciProps: Object): Promise<any> {
-  return loadScope(path).then((scope) => {
-    const bitId = BitId.parse(id);
-    return scope
-      .loadComponent(bitId)
-      .then((c: ConsumerComponent) => scope.sources.modifyCIProps({ source: c, ciProps }));
-  });
-}
+export default (async function modifyCIProps(path: string, id: string, ciProps: Object): Promise<any> {
+  const scope: Scope = await loadScope(path);
+  const bitId: BitId = await scope.getBitId(id);
+  const component: ConsumerComponent = await scope.loadComponent(bitId);
+  return scope.sources.modifyCIProps({ source: component, ciProps });
+});

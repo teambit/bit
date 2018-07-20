@@ -1,7 +1,7 @@
 /** @flow */
 import { loadConsumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
 import SpecsResults from '../../../consumer/specs-results';
@@ -22,26 +22,30 @@ export default function testInScope({
   keep?: boolean
 }): Promise<?SpecsResults> {
   logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
-  function loadFromScope(initialError: ?Error) {
-    return loadScope(scopePath || process.cwd())
-      .catch(newErr => Promise.reject(initialError || newErr))
-      .then((scope) => {
-        const bitId = BitId.parse(id);
-        return scope.runComponentSpecs({
-          bitId,
-          save,
-          verbose,
-          isolated: true,
-          directory,
-          keep
-        });
-      })
-      .catch(e => Promise.reject(e));
+  async function loadFromScope(initialError: ?Error) {
+    const getScope = async () => {
+      try {
+        const scope = await loadScope(scopePath || process.cwd());
+        return scope;
+      } catch (err) {
+        throw new Error(initialError || err);
+      }
+    };
+    const scope: Scope = await getScope();
+    const bitId = await scope.getBitId(id);
+    return scope.runComponentSpecs({
+      bitId,
+      save,
+      verbose,
+      isolated: true,
+      directory,
+      keep
+    });
   }
 
   function loadFromConsumer() {
     return loadConsumer().then((consumer) => {
-      const bitId = BitId.parse(id);
+      const bitId = consumer.getBitId(id);
       return consumer.scope.runComponentSpecs({
         consumer,
         bitId,
