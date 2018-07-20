@@ -121,7 +121,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
-  [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/[namespace]/<name>'],
+  [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/<name>'],
   [
     ComponentNotFound,
     (err) => {

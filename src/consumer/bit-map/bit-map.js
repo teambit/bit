@@ -58,7 +58,7 @@ export default class BitMap {
       throw new GeneralError(`invalid bitmap id ${id}, a component must have a version when a scope-name is included`);
     }
     if (componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
-      // make sure there are no duplications (same namespace+name)
+      // make sure there are no duplications (same name)
       const similarIds = this.findSimilarIds(bitId, true);
       if (similarIds.length) {
         throw new GeneralError(`your id ${id} is duplicated with ${similarIds.toString()}`);
