@@ -146,7 +146,7 @@ export default class ComponentsList {
     const idsFromObjects = await this.idsFromObjects();
     const newComponents: BitId = [];
     idsFromBitMap.forEach((id: BitId) => {
-      if (!idsFromObjects.findWithoutScopeAndVersion(id)) {
+      if (!idsFromObjects.searchWithoutScopeAndVersion(id)) {
         newComponents.push(id);
       }
     });

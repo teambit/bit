@@ -291,7 +291,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     bits.forEach((bitDep) => {
       const componentId = consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
       const getExistingId = (): BitId => {
-        let existingId = consumer.bitmapIds.findWithoutVersion(componentId);
+        let existingId = consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
 
         // maybe the dependencies were imported as npm packages
@@ -404,7 +404,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     // const devComponentsOnlyNames = R.difference(R.keys(devComponentsDeps), R.keys(componentsDeps));
     // devComponentsDeps = R.pick(devComponentsOnlyNames, devComponentsDeps);
     const componentDepsIds = new BitIds(...componentsDeps.map(c => c.id));
-    devComponentsDeps = devComponentsDeps.filter(d => !componentDepsIds.includes(d.id));
+    devComponentsDeps = devComponentsDeps.filter(d => !componentDepsIds.has(d.id));
   };
 
   /**

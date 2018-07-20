@@ -547,14 +547,14 @@ export default class BitMap {
     }
     const allIds = this.getBitIds();
     const componentMap = (id: BitId) => this.components[id.toString()];
-    const exactMatch = allIds.find(bitId);
+    const exactMatch = allIds.search(bitId);
     if (exactMatch) return componentMap(exactMatch);
     if (ignoreVersion) {
-      const matchWithoutVersion = allIds.findWithoutVersion(bitId);
+      const matchWithoutVersion = allIds.searchWithoutVersion(bitId);
       if (matchWithoutVersion) return componentMap(matchWithoutVersion);
     }
     if (ignoreScopeAndVersion) {
-      const matchWithoutScopeAndVersion = allIds.findWithoutScopeAndVersion(bitId);
+      const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
       if (matchWithoutScopeAndVersion) return componentMap(matchWithoutScopeAndVersion);
     }
     throw new MissingBitMapComponent(bitId.toString());

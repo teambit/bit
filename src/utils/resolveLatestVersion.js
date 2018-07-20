@@ -17,11 +17,10 @@ export default function getLatestVersionNumber(bitIds: BitId[], bitId: BitId): B
   // because we commit with a name without scope but the bitmap contain it with the scope name since it was exported
   // without this, we will always just return the first component in the bitmap which is really bad
   const ignoreScopeAlways = !bitId.scope;
-
   if (!bitId.getVersion().latest) return bitId;
 
   const allVersionsForId = [];
-  bitIds.map((id: BitId) => {
+  bitIds.forEach((id: BitId) => {
     if (getString(bitId, ignoreScopeAlways) === getString(id, ignoreScopeAlways)) {
       const version = id.getVersion().versionNum;
       if (version) allVersionsForId.push(version);

@@ -614,7 +614,7 @@ export default class Consumer {
     const mightBeName = R.tail(pathSplit);
     const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
     const allBitIds = this.bitMap.getBitIds();
-    if (allBitIds.findWithoutVersion(mightBeId)) return mightBeId;
+    if (allBitIds.searchWithoutVersion(mightBeId)) return mightBeId;
 
     const scope = pathSplit.splice(0, 2).join('.');
     const name = pathSplit.splice(2).join('/');

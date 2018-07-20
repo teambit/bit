@@ -245,8 +245,7 @@ async function addWorkspacesToPackageJson(
   ) {
     const formatedComponentsPath = format(componentsDefaultDirectory, {
       name: ASTERISK,
-      scope: ASTERISK,
-      namespace: ASTERISK
+      scope: ASTERISK
     });
     const formatedRegexPath = formatedComponentsPath
       .split(DEFAULT_SEPARATOR)
