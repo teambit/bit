@@ -289,7 +289,7 @@ export default class Consumer {
     const components = idsToProcess.map(async (id: BitId) => {
       const idWithConcreteVersion: BitId = getLatestVersionNumber(this.bitmapIds, id);
 
-      const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
+      const componentMap = this.bitMap.getComponent(idWithConcreteVersion, { shouldThrow: true });
       let bitDir = this.getPath();
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
@@ -329,7 +329,7 @@ export default class Consumer {
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
       // reload component map as it may be changed after calling Component.loadFromFileSystem()
-      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
+      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, { shouldThrow: true });
       component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -399,7 +399,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     if (typeof componentFromFileSystem._isModified === 'undefined') {
-      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id, true);
+      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id, { shouldThrow: true });
       if (componentMap.originallySharedDir) {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
@@ -575,7 +575,7 @@ export default class Consumer {
     // update package.json with the new version
     const allComponentIds = taggedComponentIds.concat(autoTaggedComponentIds);
     const updatePackageJsonP = allComponentIds.map((componentId: BitId) => {
-      const componentMap = this.bitMap.getComponent(componentId, true);
+      const componentMap = this.bitMap.getComponent(componentId, { shouldThrow: true });
       if (componentMap.rootDir) {
         return packageJson.updateAttribute(this, componentMap.rootDir, 'version', componentId.version);
       }
@@ -813,17 +813,16 @@ export default class Consumer {
   async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
     return Promise.all(
       bitIds.map(async (id) => {
-        const component = id.isLocal()
-          ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
-          : this.bitMap.getComponent(id);
-        if (!component) return null;
+        const ignoreVersion = id.isLocal();
+        const componentMap = this.bitMap.getComponent(id, { ignoreVersion });
+        if (!componentMap) return null;
         if (
-          (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
-          component.origin === COMPONENT_ORIGINS.NESTED
+          (componentMap.origin && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
+          componentMap.origin === COMPONENT_ORIGINS.NESTED
         ) {
-          return fs.remove(path.join(this.getPath(), component.rootDir));
-        } else if (component.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(component.files.map(file => fs.remove(file.relativePath)));
+          return fs.remove(path.join(this.getPath(), componentMap.rootDir));
+        } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
+          return Promise.all(componentMap.files.map(file => fs.remove(file.relativePath)));
         }
         return null;
       })

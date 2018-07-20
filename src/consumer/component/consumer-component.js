@@ -867,7 +867,7 @@ export default class Component {
     };
     const bitMap = consumer ? consumer.bitMap : undefined;
     const consumerPath = consumer ? consumer.getPath() : '';
-    const componentMap = bitMap && bitMap.getComponent(this.id.toString());
+    const componentMap = bitMap && bitMap.getComponent(this.id);
     let componentDir = consumerPath;
     if (componentMap) {
       componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;

@@ -96,7 +96,7 @@ export default (async function writeToComponentsDir({
       saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
     // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
     // find the component in bit.map
-    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id.toStringWithoutVersion(), false);
+    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id, { ignoreVersion: true });
     const origin =
       componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
         ? COMPONENT_ORIGINS.AUTHORED
@@ -129,7 +129,7 @@ export default (async function writeToComponentsDir({
   const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
     const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
       const dependencyId = dep.id.toString();
-      const depFromBitMap = consumer.bitMap.getComponent(dependencyId, false);
+      const depFromBitMap = consumer.bitMap.getComponent(dep.id);
       if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
         // when depFromBitMap is true, it means that this component was imported as a component already before
         // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
@@ -183,7 +183,7 @@ export default (async function writeToComponentsDir({
       dependenciesIdsCache[dependencyId] = depBitPath;
       // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
       // and namespace can co-exist with different versions.
-      const componentMap = consumer.bitMap.getComponent(dep.id.toString(), false);
+      const componentMap = consumer.bitMap.getComponent(dep.id);
       return dep.write({
         bitDir: depBitPath,
         override: true,

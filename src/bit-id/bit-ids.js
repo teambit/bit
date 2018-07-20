@@ -30,7 +30,7 @@ export default class BitIds extends Array<BitId> {
   }
 
   find(bitId: BitId): BitId {
-    return this.find(id => id.toString() === bitId.toString());
+    return super.find(id => id.toString() === bitId.toString());
   }
 
   findWithoutVersion(bitId: BitId): BitId {

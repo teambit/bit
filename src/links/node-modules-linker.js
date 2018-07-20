@@ -236,7 +236,7 @@ export default (async function linkComponents(components: Component[], consumer:
     components.map((component) => {
       const componentId = component.id;
       logger.debug(`linking component to node_modules: ${componentId}`);
-      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
+      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, { shouldThrow: true });
       switch (componentMap.origin) {
         case COMPONENT_ORIGINS.IMPORTED:
           return _linkImportedComponents(consumer, component, componentMap);

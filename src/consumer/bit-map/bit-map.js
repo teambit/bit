@@ -529,33 +529,37 @@ export default class BitMap {
   }
 
   /**
-   * Get component from bitmap by id if exists
-   *
-   * @param {string | BitId} id - component id
-   * @param {Boolean} shouldThrow - should throw error in case of missing
-   * @param {Boolean} includeSearchByBoxAndNameOnly - should compare with box and name of component (without scope or verison)
-   * @returns {ComponentMap} componentMap
+   * Get componentMap from bitmap by id
    */
   getComponent(
-    id: string | BitId,
-    shouldThrow: boolean = false,
-    includeSearchByBoxAndNameOnly: boolean = false,
-    ignoreVersion: boolean = false
-  ): ComponentMap {
-    const bitId: BitId = R.is(String, id) ? BitId.parse(id) : id;
-    if (!ignoreVersion && bitId.hasVersion()) {
-      if (!this.components[bitId] && shouldThrow) throw new MissingBitMapComponent(bitId.toString());
-      return this.components[bitId];
+    bitId: BitId,
+    {
+      shouldThrow = false,
+      ignoreVersion = false,
+      ignoreScopeAndVersion = false
+    }: {
+      shouldThrow?: boolean,
+      ignoreVersion?: boolean,
+      ignoreScopeAndVersion?: boolean
+    } = {}
+  ): ?ComponentMap {
+    if (!(bitId instanceof BitId)) { throw TypeError(`BitMap.getComponent expects bitId to be an instance of BitId, instead, got ${bitId}`); }
+    const allIds = this.getBitIds();
+    const componentMap = (id: BitId) => this.components[id.toString()];
+    const exactMatch = allIds.find(bitId);
+    if (exactMatch) return componentMap(exactMatch);
+    if (ignoreVersion) {
+      const matchWithoutVersion = allIds.findWithoutVersion(bitId);
+      if (matchWithoutVersion) return componentMap(matchWithoutVersion);
     }
-    const idWithVersion = Object.keys(this.components).find(
-      componentId =>
-        BitId.parse(componentId).toStringWithoutVersion() === bitId.toStringWithoutVersion() ||
-        (includeSearchByBoxAndNameOnly &&
-          BitId.parse(componentId).toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion())
-    );
-    if (!idWithVersion && shouldThrow) throw new MissingBitMapComponent(bitId.toString());
-    // $FlowFixMe
-    return this.components[idWithVersion];
+    if (ignoreScopeAndVersion) {
+      const matchWithoutScopeAndVersion = allIds.findWithoutScopeAndVersion(bitId);
+      if (matchWithoutScopeAndVersion) return componentMap(matchWithoutScopeAndVersion);
+    }
+    if (shouldThrow) {
+      throw new MissingBitMapComponent(bitId.toString());
+    }
+    return null;
   }
 
   /**
