@@ -9,8 +9,6 @@ import type { PathOsBased } from '../../utils/path';
 import Component from '../component';
 
 export type BitJsonProps = {
-  impl?: string,
-  spec?: string,
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
@@ -28,8 +26,6 @@ export default class ComponentBitJson extends AbstractBitJson {
   peerPackageDependencies: ?Object;
 
   constructor({
-    impl,
-    spec,
     compiler,
     tester,
     dependencies,
@@ -41,7 +37,7 @@ export default class ComponentBitJson extends AbstractBitJson {
     bindingPrefix,
     extensions
   }: BitJsonProps) {
-    super({ impl, spec, compiler, tester, dependencies, devDependencies, lang, bindingPrefix, extensions });
+    super({ compiler, tester, dependencies, devDependencies, lang, bindingPrefix, extensions });
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
@@ -65,7 +61,6 @@ export default class ComponentBitJson extends AbstractBitJson {
 
   validate(bitJsonPath: string) {
     if (
-      typeof this.getImplBasename() !== 'string' ||
       typeof this.compiler !== 'object' ||
       typeof this.tester !== 'object' ||
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
@@ -76,11 +71,9 @@ export default class ComponentBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object): ComponentBitJson {
-    const { sources = {}, env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
+    const { env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
 
     return new ComponentBitJson({
-      impl: R.prop('impl', sources),
-      spec: R.prop('spec', sources),
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
