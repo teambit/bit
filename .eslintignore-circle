@@ -36,7 +36,6 @@ src/jsdoc/formater.js
 src/prompts/exceptions/index.js
 src/remotes/remote-resolver/remote-resolver.js
 src/scope/component-objects.js
-src/scope/dependency-maps/sources-map.js
 src/scope/models/source.js
 src/scope/repositories/source.js
 src/search/indexer.js
@@ -64,7 +63,6 @@ src/consumer/dir-structure/dir-structure.js
 src/remotes/remotes.js
 src/scope/component-version.js
 src/scope/migrations/component-version/remove-latest-from-compiler.js
-src/scope/sources-map.js
 src/search/serverless-index.js
 src/utils/array/filter-async.js
 src/utils/buffer/from.js

@@ -55,13 +55,9 @@ export const TESTS_FORK_LEVEL = {
   COMPONENT: 'COMPONENT'
 };
 
-export const DEFAULT_IMPL_NAME = 'impl.js';
-
 export const DEFAULT_INDEX_NAME = 'index'; // todo: move to bit-javascript
 
 export const DEFAULT_INDEX_EXTS = ['js', 'ts', 'jsx', 'tsx', 'css', 'scss', 'less', 'sass']; // todo: move to bit-javascript
-
-export const DEFAULT_SPECS_NAME = 'spec.js';
 
 export const NO_PLUGIN_TYPE = 'none';
 
@@ -118,11 +114,7 @@ export const DEFAULT_BOX_NAME = 'global';
 
 export const VERSION_DELIMITER = '@';
 
-export const DEPENDENCY_MAP_FILENAME = 'dependencies.json';
-
 export const DEPENDENCIES_DIR = 'dependencies';
-
-export const BIT_EXTERNAL_DIRNAME = 'external';
 
 export const DEFAULT_REMOTES = {};
 
@@ -289,12 +281,6 @@ export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
 export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
 
 export const GLOBAL_CONFIG_FILE = 'config.json';
-
-export const SOURCES_JSON = 'sources.json';
-
-export const EXTERNAL_MAP = 'externals.json';
-
-export const SOURCES_MAP = 'sources.json';
 
 export const GLOBAL_REMOTES = 'global-remotes.json';
 

@@ -13,8 +13,6 @@ import type { PathOsBased } from '../../utils/path';
 import { BitJsonAlreadyExists } from './exceptions';
 import {
   BIT_JSON,
-  DEFAULT_IMPL_NAME,
-  DEFAULT_SPECS_NAME,
   DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
   DEFAULT_LANGUAGE,
@@ -43,8 +41,6 @@ export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
 
 export type AbstractBitJsonProps = {
-  impl?: string,
-  spec?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
   dependencies?: Object,
@@ -55,10 +51,6 @@ export type AbstractBitJsonProps = {
 };
 
 export default class AbstractBitJson {
-  /** @deprecated * */
-  impl: string;
-  /** @deprecated * */
-  spec: string;
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
@@ -69,8 +61,6 @@ export default class AbstractBitJson {
   extensions: Extensions;
 
   constructor({
-    impl,
-    spec,
     compiler,
     tester,
     dependencies,
@@ -79,8 +69,6 @@ export default class AbstractBitJson {
     bindingPrefix,
     extensions
   }: AbstractBitJsonProps) {
-    this.impl = impl || DEFAULT_IMPL_NAME;
-    this.spec = spec || DEFAULT_SPECS_NAME;
     this._compiler = compiler || {};
     this._tester = tester || {};
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
@@ -118,24 +106,6 @@ export default class AbstractBitJson {
 
   addDependency(bitId: BitId): this {
     this.dependencies = R.merge(this.dependencies, bitId.toObject());
-    return this;
-  }
-
-  getImplBasename(): string {
-    return this.impl;
-  }
-
-  setImplBasename(name: string) {
-    this.impl = name;
-    return this;
-  }
-
-  getSpecBasename(): string {
-    return this.spec;
-  }
-
-  setSpecBasename(name: string) {
-    this.spec = name;
     return this;
   }
 
