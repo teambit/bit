@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.4-dev.3 - 2018-07-22]
+
 - send component origin repo in headers
 
 ## [13.0.4-dev.2 - 2018-07-22]
