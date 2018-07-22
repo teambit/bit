@@ -20,8 +20,6 @@ const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
 type consumerBitJsonProps = {
-  impl?: string,
-  spec?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
   dependencies?: { [string]: string },
@@ -59,8 +57,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
   resolveModules: ?ResolveModulesConfig;
 
   constructor({
-    impl,
-    spec,
     compiler,
     tester,
     dependencies,
@@ -80,7 +76,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules
   }: consumerBitJsonProps) {
-    super({ impl, spec, compiler, tester, dependencies, lang, bindingPrefix, extensions });
+    super({ compiler, tester, dependencies, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory;
@@ -173,8 +169,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
     } = object;
 
     return new ConsumerBitJson({
-      impl: R.propOr(undefined, 'impl', sources),
-      spec: R.propOr(undefined, 'spec', sources),
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,

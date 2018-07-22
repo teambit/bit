@@ -44,7 +44,7 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
   sass: "@import '~{filePath}';",
   less: "@import '~{filePath}';",
   'st.css': ':import { -st-from: "{filePath}";}',
-  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>"
+  vue: "<script>\nmodule.exports = require('{filePath}');\n</script>"
 };
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
@@ -244,11 +244,13 @@ async function writeDependencyLinks(
       ? consumer.bitMap.getComponent(depId, true)
       : undefined;
 
-    const depRootDir: ?PathOsBased = depComponentMap ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+    const depRootDir: ?PathOsBased =
+      depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
     const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
-    const depRootDirDist = depComponentMap
-      ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
-      : undefined;
+    const depRootDirDist =
+      depComponentMap && depComponentMap.rootDir
+        ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
+        : undefined;
 
     if (hasDist) {
       if (relativePath.isCustomResolveUsed) {

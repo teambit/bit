@@ -7,6 +7,16 @@ describe('link-generator', () => {
       const result = linkGenerator.getLinkContent('my-path.js');
       expect(result).to.equal("module.exports = require('./my-path');");
     });
+    it('should generate correct content for npm vue package without .vue extension', () => {
+      const result = linkGenerator.getLinkContent(
+        '../../../src/pages/my-page.vue',
+        undefined,
+        true,
+        '@bit/david.scope.components.vue-page'
+      );
+      expect(result).to.have.string("module.exports = require('@bit/david.scope.components.vue-page');");
+      expect(result).to.not.have.string("module.exports = require('@bit/david.scope.components.vue-page.vue');");
+    });
     describe('es6 with link files', () => {
       const exportDefaultForm = 'exports.default =';
       const exportNonDefaultForm = 'exports.isString =';

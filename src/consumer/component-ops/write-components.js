@@ -144,6 +144,16 @@ export default (async function writeToComponentsDir({
         );
         return Promise.resolve(null);
       }
+      if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+        dep.writtenPath = consumer.getPath();
+        logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
+        Analytics.addBreadCrumb(
+          'writeToComponentsDir',
+          `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in bit map`
+        );
+        consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
+        return Promise.resolve(dep);
+      }
       if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
         dep.writtenPath = depFromBitMap.rootDir;
         logger.debug(
