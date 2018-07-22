@@ -29,15 +29,9 @@ export default class TesterExtension extends EnvExtension {
    * used for ejecting env for imported component
    * @param {*} param0
    */
-  async writeFilesToFs({
-    bitDir,
-    ejectedEnvsDirectory
-  }: {
-    bitDir: string,
-    ejectedEnvsDirectory: string
-  }): Promise<string> {
+  async writeFilesToFs({ configDir }: { configDir: string }): Promise<string> {
     Analytics.addBreadCrumb('tester-extension', 'writeFilesToFs');
-    return super.writeFilesToFs({ bitDir, ejectedEnvsDirectory, envType: this.envType });
+    return super.writeFilesToFs({ configDir, envType: this.envType });
   }
 
   /**

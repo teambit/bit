@@ -938,6 +938,33 @@ export default class Consumer {
     return componentsIds;
   }
 
+  async ejectConf(componentId: BitId[], { ejectPath }: { ejectPath: ?string }) {
+    const componentMap = this.bitMap.getComponent(componentId, false, true, true);
+    if (!componentMap) {
+      throw new GeneralError(
+        'could not eject config for new components, they are bound to the workspace configuration'
+      );
+    }
+    // Nothing is detached.. no reason to eject
+    if (
+      componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
+      !componentMap.detachedCompiler &&
+      !componentMap.detachedTester
+    ) {
+      throw new GeneralError(
+        'could not eject config for authored component which are bound to the workspace configuration'
+      );
+    }
+    const rootPath = ejectPath || componentMap.rootDir || componentMap.trackDir;
+    if (!rootPath) {
+      throw new GeneralError(`could not eject config for ${componentId.toString()}, please provide path to eject`);
+    }
+    const ejectedEnvsDirStructure = this.dirStructure.ejectedEnvsDirStructure;
+    const resolvedPath = path.join(this.getPath(), rootPath, ejectedEnvsDirStructure);
+    const component = this.loadComponent(componentId);
+    component.writeConfig(resolvedPath);
+  }
+
   async onDestroy() {
     return this.bitMap.write();
   }

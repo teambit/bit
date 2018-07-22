@@ -1,6 +1,7 @@
 // @flow
 import path from 'path';
 import fs from 'fs-extra';
+import format from 'string-format';
 import R from 'ramda';
 import c from 'chalk';
 import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
@@ -275,22 +276,19 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(bitDir: string, ejectedEnvsDirectory: string, override?: boolean = true): Promise<void> {
-    const ejectedCompilerDirectoryP = this.compiler
-      ? await this.compiler.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
-      : '';
-    const ejectedTesterDirectoryP = this.tester
-      ? await this.tester.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
-      : '';
+  async writeConfig(configDir: string, override?: boolean = true): Promise<void> {
+    const ejectedCompilerDirectoryP = this.compiler ? await this.compiler.writeFilesToFs({ configDir }) : '';
+    const ejectedTesterDirectoryP = this.tester ? await this.tester.writeFilesToFs({ configDir }) : '';
     const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
       ejectedCompilerDirectoryP,
       ejectedTesterDirectoryP
     ]);
-    return this.writeBitJson(bitDir, ejectedCompilerDirectory, ejectedTesterDirectory, override);
+    const bitJsonDir = format(configDir, { envType: '.' });
+    return this.writeBitJson(bitJsonDir, ejectedCompilerDirectory, ejectedTesterDirectory, override);
   }
 
   writeBitJson(
-    bitDir: string,
+    bitJsonDir: string,
     ejectedCompilerDirectory: string,
     ejectedTesterDirectory: string,
     override?: boolean = true
@@ -307,7 +305,7 @@ export default class Component {
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies
-    }).write({ bitDir, override });
+    }).write({ bitJsonDir, override });
   }
 
   getPackageNameAndPath(): Promise<any> {

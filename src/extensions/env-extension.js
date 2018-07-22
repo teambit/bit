@@ -146,20 +146,11 @@ export default class EnvExtension extends BaseExtension {
    * used for ejecting env for imported component
    * @param {*} param0
    */
-  async writeFilesToFs({
-    bitDir,
-    ejectedEnvsDirectory,
-    envType
-  }: {
-    bitDir: string,
-    ejectedEnvsDirectory: string,
-    envType: EnvType
-  }): Promise<string> {
+  async writeFilesToFs({ configDir, envType }: { configDir: string, envType: EnvType }): Promise<string> {
     Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
-    const resolvedEjectedEnvsDirectory = format(ejectedEnvsDirectory, { envType });
-    const newBase = path.join(bitDir, resolvedEjectedEnvsDirectory);
+    const resolvedEjectedEnvsDirectory = format(configDir, { envType });
     const writeP = this.files.map((file) => {
-      file.updatePaths({ newBase, newRelative: file.name });
+      file.updatePaths({ resolvedEjectedEnvsDirectory, newRelative: file.name });
       return file.write();
     });
     await Promise.all(writeP);
