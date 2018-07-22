@@ -185,12 +185,15 @@ export default class ComponentMap {
    * if one of the added files is outside of the trackDir, remove the trackDir attribute
    */
   removeTrackDirIfNeeded(): void {
-    if (this.trackDir) {
-      for (const file of this.files) {
-        if (!file.relativePath.startsWith(this.trackDir)) {
-          this.trackDir = undefined;
-          return;
-        }
+    if (!this.trackDir) return;
+    if (this.origin !== COMPONENT_ORIGINS.AUTHORED) {
+      this.trackDir = undefined;
+      return;
+    }
+    for (const file of this.files) {
+      if (!file.relativePath.startsWith(this.trackDir)) {
+        this.trackDir = undefined;
+        return;
       }
     }
   }

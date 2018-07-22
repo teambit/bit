@@ -192,10 +192,14 @@ export default class BitMap {
     return path.relative(this.projectRoot, absolutePath);
   }
 
-  _searchMainFile(baseMainFile: string, files: ComponentMapFile[]): ?PathLinux {
+  _searchMainFile(baseMainFile: string, files: ComponentMapFile[], rootDir: ?PathLinux): ?PathLinux {
     // search for an exact relative-path
     let mainFileFromFiles = files.find(file => file.relativePath === baseMainFile);
     if (mainFileFromFiles) return baseMainFile;
+    if (rootDir) {
+      const mainFileUsingRootDir = files.find(file => pathJoinLinux(rootDir, file.relativePath) === baseMainFile);
+      if (mainFileUsingRootDir) return mainFileUsingRootDir.relativePath;
+    }
     // search for a file-name
     const potentialMainFiles = files.filter(file => file.name === baseMainFile);
     if (!potentialMainFiles.length) return null;
@@ -211,7 +215,7 @@ export default class BitMap {
     const files = componentMap.files.filter(file => !file.test);
     // scenario 1) user entered mainFile => search the mainFile in the files array
     if (mainFile) {
-      const foundMainFile = this._searchMainFile(mainFile, files);
+      const foundMainFile = this._searchMainFile(mainFile, files, componentMap.rootDir);
       if (foundMainFile) return foundMainFile;
       throw new MissingMainFile(mainFile, files.map(file => path.normalize(file.relativePath)));
     }
@@ -223,7 +227,7 @@ export default class BitMap {
       // TODO: can be improved - stop loop if finding main file
       if (!searchResult) {
         const mainFileNameToSearch = `${DEFAULT_INDEX_NAME}.${ext}`;
-        searchResult = this._searchMainFile(mainFileNameToSearch, files);
+        searchResult = this._searchMainFile(mainFileNameToSearch, files, componentMap.rootDir);
       }
     });
     if (searchResult) return searchResult;

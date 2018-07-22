@@ -1,5 +1,5 @@
 /** @flow */
-import Source from './source';
 import Tmp from './tmp';
+import SourceRepository from './sources';
 
-export { Source, Tmp };
+export { Tmp, SourceRepository };
