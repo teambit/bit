@@ -150,7 +150,7 @@ export default class EnvExtension extends BaseExtension {
     Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
     const resolvedEjectedEnvsDirectory = format(configDir, { envType });
     const writeP = this.files.map((file) => {
-      file.updatePaths({ resolvedEjectedEnvsDirectory, newRelative: file.name });
+      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.name });
       return file.write();
     });
     await Promise.all(writeP);

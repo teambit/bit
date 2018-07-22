@@ -1,7 +1,6 @@
 // @flow
 import path from 'path';
 import fs from 'fs-extra';
-import format from 'string-format';
 import R from 'ramda';
 import c from 'chalk';
 import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
@@ -12,9 +11,10 @@ import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
-import docsParser, { Doclet } from '../../jsdoc/parser';
-import specsRunner from '../../specs-runner';
+import docsParser from '../../jsdoc/parser';
+import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
+import ejectConf, { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -276,36 +276,8 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(configDir: string, override?: boolean = true): Promise<void> {
-    const ejectedCompilerDirectoryP = this.compiler ? await this.compiler.writeFilesToFs({ configDir }) : '';
-    const ejectedTesterDirectoryP = this.tester ? await this.tester.writeFilesToFs({ configDir }) : '';
-    const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
-      ejectedCompilerDirectoryP,
-      ejectedTesterDirectoryP
-    ]);
-    const bitJsonDir = format(configDir, { envType: '.' });
-    return this.writeBitJson(bitJsonDir, ejectedCompilerDirectory, ejectedTesterDirectory, override);
-  }
-
-  writeBitJson(
-    bitJsonDir: string,
-    ejectedCompilerDirectory: string,
-    ejectedTesterDirectory: string,
-    override?: boolean = true
-  ): Promise<ComponentBitJson> {
-    return new ComponentBitJson({
-      version: this.version,
-      scope: this.scope,
-      lang: this.lang,
-      bindingPrefix: this.bindingPrefix,
-      compiler: this.compiler ? this.compiler.toBitJsonObject(ejectedCompilerDirectory) : {},
-      tester: this.tester ? this.tester.toBitJsonObject(ejectedTesterDirectory) : {},
-      dependencies: this.dependencies.asWritableObject(),
-      devDependencies: this.devDependencies.asWritableObject(),
-      packageDependencies: this.packageDependencies,
-      devPackageDependencies: this.devPackageDependencies,
-      peerPackageDependencies: this.peerPackageDependencies
-    }).write({ bitJsonDir, override });
+  async writeConfig(configDir: string, override?: boolean = true): Promise<EjectConfResult> {
+    return ejectConf(this, configDir, override);
   }
 
   getPackageNameAndPath(): Promise<any> {

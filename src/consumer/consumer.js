@@ -961,8 +961,8 @@ export default class Consumer {
     }
     const ejectedEnvsDirStructure = this.dirStructure.ejectedEnvsDirStructure;
     const resolvedPath = path.join(this.getPath(), rootPath, ejectedEnvsDirStructure);
-    const component = this.loadComponent(componentId);
-    component.writeConfig(resolvedPath);
+    const component = await this.loadComponent(componentId);
+    return component.writeConfig(resolvedPath);
   }
 
   async onDestroy() {
