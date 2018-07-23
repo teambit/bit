@@ -30,15 +30,15 @@ export default class BitIds extends Array<BitId> {
   }
 
   search(bitId: BitId): BitId {
-    return this.find(id => id.toString() === bitId.toString());
+    return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
 
   searchWithoutVersion(bitId: BitId): BitId {
-    return this.find(id => id.toStringWithoutVersion() === bitId.toStringWithoutVersion());
+    return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
   searchWithoutScopeAndVersion(bitId: BitId): BitId {
-    return this.find(id => id.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion());
+    return this.find(id => id.hasSameName(bitId));
   }
 
   /**

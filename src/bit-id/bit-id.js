@@ -60,6 +60,22 @@ export default class BitId {
     return Boolean(this.scope);
   }
 
+  hasSameName(id: BitId): boolean {
+    return this.name === id.name;
+  }
+
+  hasSameScope(id: BitId): boolean {
+    if (this.hasScope() && id.hasScope()) return this.scope === id.scope;
+    if (!this.hasScope() && !id.hasScope()) return true;
+    return false; // one has scope but not the other
+  }
+
+  hasSameVersion(id: BitId): boolean {
+    if (this.hasVersion() && id.hasVersion()) return this.version === id.version;
+    if (!this.hasVersion() && !id.hasVersion()) return true;
+    return false; // one has version but not the other
+  }
+
   toString(ignoreScope: boolean = false, ignoreVersion: boolean = false): BitIdStr {
     const { name, version } = this;
     const scope = this.scope;
