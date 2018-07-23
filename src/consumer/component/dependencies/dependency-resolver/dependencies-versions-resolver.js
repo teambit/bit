@@ -141,7 +141,7 @@ export default (async function updateDependenciesVersions(consumer: Consumer, co
       for (const strategy of strategies) {
         const strategyId = strategy();
         if (strategyId) {
-          dependency.id.version = strategyId.version;
+          dependency.id = dependency.id.changeVersion(strategyId.version);
           logger.debug(`found dependency version ${dependency.id.toString()} in strategy ${strategy.name}`);
           return;
         }

@@ -429,8 +429,7 @@ const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string)
   }
   if (bitId.getVersion().latest) {
     const version = _getExtensionVersionFromComponentPath(componentPath);
-    bitId.version = version;
-    return bitId.toString();
+    return bitId.changeVersion(version).toString();
   }
   return name;
 };

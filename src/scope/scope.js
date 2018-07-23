@@ -275,14 +275,15 @@ export default class Scope {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
     return components.map((component) => {
-      const componentId = component.id;
-      if (component.component) {
-        componentId.version = component.component.latest();
-      } else {
+      const getVersion = () => {
+        if (component.component) {
+          return component.component.latest();
+        }
         if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
-        componentId.version = DEFAULT_BIT_VERSION;
-      }
-      return componentId;
+        return DEFAULT_BIT_VERSION;
+      };
+      const version = getVersion();
+      return component.id.changeVersion(version);
     });
   }
 

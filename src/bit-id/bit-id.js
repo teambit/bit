@@ -30,6 +30,7 @@ export default class BitId {
     this.box = null;
     this.name = box ? `${box}/${name}` : name;
     this.version = version || null;
+    Object.freeze(this);
   }
 
   clone(): BitId {

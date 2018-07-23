@@ -35,7 +35,6 @@ export default class BitMap {
   version: string;
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
-  _cacheIds: BitIds;
 
   constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
     this.projectRoot = projectRoot;
@@ -148,13 +147,8 @@ export default class BitMap {
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {
     const allComponents = R.values(this.components);
-    const ids = (componentMaps: ComponentMap[]) => new BitIds(...componentMaps.map(c => c.id.clone()));
-    if (!origin) {
-      if (!this._cacheIds) {
-        this._cacheIds = ids(allComponents);
-      }
-      return this._cacheIds;
-    }
+    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id.clone()));
+    if (!origin) return ids(allComponents);
     // $FlowFixMe we know origin is an array in that case
     const components = allComponents.filter(c => origin.includes(c.origin));
     return ids(components);

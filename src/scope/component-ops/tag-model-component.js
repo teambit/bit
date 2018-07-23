@@ -22,6 +22,7 @@ import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
+import { Dependency } from '../../consumer/component/dependencies';
 
 function buildComponentsGraph(components: Component[]) {
   const graphDeps = new Graph();
@@ -71,11 +72,11 @@ async function getFlattenedDependencies(
 }
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency) => {
+  const updateDependencyVersion = (dependency: Dependency) => {
     const foundDependency = componentsToTag.find(
       component => component.id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
     );
-    if (foundDependency) dependency.id.version = foundDependency.version;
+    if (foundDependency) dependency.id = dependency.id.changeVersion(foundDependency.version);
   };
   componentsToTag.forEach((componentToTag) => {
     componentToTag.dependencies.get().forEach(dependency => updateDependencyVersion(dependency));
