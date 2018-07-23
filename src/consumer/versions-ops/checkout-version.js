@@ -99,8 +99,8 @@ async function getComponentStatus(
   if (version && !latestVersion && !componentModel.hasVersion(version)) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
-  const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
-  const currentlyUsedVersion = BitId.parse(existingBitMapId).version;
+  const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
+  const currentlyUsedVersion = existingBitMapId.version;
   if (version && currentlyUsedVersion === version) {
     // it won't be relevant for 'reset' as it doesn't have a version
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);

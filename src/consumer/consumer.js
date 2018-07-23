@@ -138,7 +138,7 @@ export default class Consumer {
   }
 
   get bitmapIds(): BitIds {
-    return this.bitMap.getBitIds();
+    return this.bitMap.getAllBitIds();
   }
 
   /**
@@ -375,7 +375,7 @@ export default class Consumer {
   }
 
   async candidateComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<?(BitId[])> {
-    const candidateComponents = this.bitMap.getBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const candidateComponents = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
@@ -613,7 +613,7 @@ export default class Consumer {
     const mightBeScope = R.head(pathSplit);
     const mightBeName = R.tail(pathSplit);
     const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
-    const allBitIds = this.bitMap.getBitIds();
+    const allBitIds = this.bitMap.getAllBitIds();
     if (allBitIds.searchWithoutVersion(mightBeId)) return mightBeId;
 
     const scope = pathSplit.splice(0, 2).join('.');

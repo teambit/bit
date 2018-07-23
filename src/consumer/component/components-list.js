@@ -273,7 +273,7 @@ export default class ComponentsList {
     const cacheKeyName = origin || 'all';
     if (!this._fromBitMap[cacheKeyName]) {
       const originParam = origin ? [origin] : undefined;
-      this._fromBitMap[cacheKeyName] = this.bitMap.getBitIds(originParam);
+      this._fromBitMap[cacheKeyName] = this.bitMap.getAllBitIds(originParam);
     }
     return this._fromBitMap[cacheKeyName];
   }

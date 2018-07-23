@@ -469,7 +469,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
         missing.bits.forEach((missingBit) => {
           const componentId = consumer.getComponentIdFromNodeModulesPath(missingBit, consumerComponent.bindingPrefix);
           // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-          if (consumer.bitMap.getExistingComponentId(componentId)) {
+          if (consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
             if (missingLinks[originFile]) missingLinks[originFile].push(componentId);
             else missingLinks[originFile] = [componentId];
           } else if (missingComponents[originFile]) missingComponents[originFile].push(componentId);

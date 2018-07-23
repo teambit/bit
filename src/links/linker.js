@@ -32,7 +32,7 @@ export async function writeLinksInDist(component: Component, componentMap: Compo
 }
 
 function findDirectDependentComponents(potentialDependencies: Component[], consumer: Consumer): Promise<Component[]> {
-  const fsComponents = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+  const fsComponents = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
   const potentialDependenciesIds = potentialDependencies.map(c => c.id);
   return consumer.scope.findDirectDependentComponents(fsComponents, potentialDependenciesIds);
 }

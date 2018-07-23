@@ -146,7 +146,7 @@ export default class BitMap {
     return R.filter(filter, this.components);
   }
 
-  getBitIds(origin?: ComponentOrigin[]): BitIds {
+  getAllBitIds(origin?: ComponentOrigin[]): BitIds {
     const allComponents = R.values(this.components);
     const ids = (componentMaps: ComponentMap[]) => new BitIds(...componentMaps.map(c => c.id.clone()));
     if (!origin) {
@@ -160,8 +160,107 @@ export default class BitMap {
     return ids(components);
   }
 
+  /**
+   * get existing bitmap bit-id by bit-id.
+   * throw an exception if not found
+   * @see also getBitIdIfExist
+   */
+  getBitId(
+    bitId: BitId,
+    {
+      ignoreVersion = false,
+      ignoreScopeAndVersion = false
+    }: {
+      ignoreVersion?: boolean,
+      ignoreScopeAndVersion?: boolean
+    } = {}
+  ): BitId {
+    if (!(bitId instanceof BitId)) {
+      throw TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
+    }
+    const allIds = this.getAllBitIds();
+    const exactMatch = allIds.search(bitId);
+    if (exactMatch) return exactMatch;
+    if (ignoreVersion) {
+      const matchWithoutVersion = allIds.searchWithoutVersion(bitId);
+      if (matchWithoutVersion) return matchWithoutVersion;
+    }
+    if (ignoreScopeAndVersion) {
+      const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
+      if (matchWithoutScopeAndVersion) return matchWithoutScopeAndVersion;
+    }
+    throw new MissingBitMapComponent(bitId.toString());
+  }
+
+  /**
+   * get existing bitmap bit-id by bit-id
+   * don't throw an exception if not found
+   * @see also getBitId
+   */
+  getBitIdIfExist(
+    bitId: BitId,
+    {
+      ignoreVersion = false,
+      ignoreScopeAndVersion = false
+    }: {
+      ignoreVersion?: boolean,
+      ignoreScopeAndVersion?: boolean
+    } = {}
+  ): ?BitId {
+    try {
+      const existingBitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      return existingBitId;
+    } catch (err) {
+      if (err instanceof MissingBitMapComponent) return null;
+      throw err;
+    }
+  }
+
+  /**
+   * get componentMap from bitmap by bit-id.
+   * throw an exception if not found.
+   * @see also getComponentIfExist
+   */
+  getComponent(
+    bitId: BitId,
+    {
+      ignoreVersion = false,
+      ignoreScopeAndVersion = false
+    }: {
+      ignoreVersion?: boolean,
+      ignoreScopeAndVersion?: boolean
+    } = {}
+  ): ComponentMap {
+    const existingBitId: BitId = this.getBitId(bitId, { ignoreVersion, ignoreScopeAndVersion });
+    return this.components[existingBitId.toString()];
+  }
+
+  /**
+   * get componentMap from bitmap by bit-id
+   * don't throw an exception if not found
+   * @see also getComponent
+   */
+  getComponentIfExist(
+    bitId: BitId,
+    {
+      ignoreVersion = false,
+      ignoreScopeAndVersion = false
+    }: {
+      ignoreVersion?: boolean,
+      ignoreScopeAndVersion?: boolean
+    } = {}
+  ): ?ComponentMap {
+    try {
+      const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
+      return componentMap;
+    } catch (err) {
+      if (err instanceof MissingBitMapComponent) return null;
+      throw err;
+    }
+  }
+
   getAuthoredExportedComponents(): BitId[] {
-    const authoredIds = this.getBitIds[COMPONENT_ORIGINS.AUTHORED];
+    const authoredIds = this.getAllBitIds[COMPONENT_ORIGINS.AUTHORED];
     return authoredIds.filter(id => id.hasScope());
   }
 
@@ -241,7 +340,7 @@ export default class BitMap {
    * if compareWithoutScope is false, the scope should be identical in addition to the name
    */
   findSimilarIds(id: BitId, compareWithoutScope: boolean = false): BitIds {
-    const allIds = this.getBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const allIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
     const similarIds = allIds.filter((existingId: BitId) => {
       const isSimilar = compareWithoutScope
         ? existingId.isEqualWithoutScopeAndVersion(id)
@@ -261,23 +360,8 @@ export default class BitMap {
   }
 
   /**
-   * When the given id doesn't include scope-name, there might be a similar component in bit.map with scope-name
-   */
-  getExistingComponentId(componentIdStr: BitIdStr, origin?: ComponentOrigin | ComponentOrigin[]): ?BitIdStr {
-    const components = this.getAllComponents(origin);
-    if (components[componentIdStr]) return componentIdStr;
-    const parsedId = BitId.parse(componentIdStr);
-    if (parsedId.scope && !parsedId.hasVersion()) {
-      return Object.keys(components).find((component) => {
-        return BitId.parse(component).toStringWithoutVersion() === componentIdStr;
-      });
-    }
-    return Object.keys(components).find((component) => {
-      return BitId.parse(component).toStringWithoutScopeAndVersion() === componentIdStr;
-    });
-  }
-
-  /**
+   * --- Don't use this function when you have the ID parsed. Use this.getBitId() instead ---
+   *
    * id entered by the user may or may not include scope-name
    * search for a similar id in the bitmap and return the full BitId
    */
@@ -527,59 +611,6 @@ export default class BitMap {
       }
     });
     this.markAsChanged();
-  }
-
-  /**
-   * Get componentMap from bitmap by id
-   */
-  getComponent(
-    bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false
-    }: {
-      ignoreVersion?: boolean,
-      ignoreScopeAndVersion?: boolean
-    } = {}
-  ): ComponentMap {
-    if (!(bitId instanceof BitId)) {
-      throw TypeError(`BitMap.getComponent expects bitId to be an instance of BitId, instead, got ${bitId}`);
-    }
-    const allIds = this.getBitIds();
-    const componentMap = (id: BitId) => this.components[id.toString()];
-    const exactMatch = allIds.search(bitId);
-    if (exactMatch) return componentMap(exactMatch);
-    if (ignoreVersion) {
-      const matchWithoutVersion = allIds.searchWithoutVersion(bitId);
-      if (matchWithoutVersion) return componentMap(matchWithoutVersion);
-    }
-    if (ignoreScopeAndVersion) {
-      const matchWithoutScopeAndVersion = allIds.searchWithoutScopeAndVersion(bitId);
-      if (matchWithoutScopeAndVersion) return componentMap(matchWithoutScopeAndVersion);
-    }
-    throw new MissingBitMapComponent(bitId.toString());
-  }
-
-  /**
-   * Get componentMap from bitmap by id
-   */
-  getComponentIfExist(
-    bitId: BitId,
-    {
-      ignoreVersion = false,
-      ignoreScopeAndVersion = false
-    }: {
-      ignoreVersion?: boolean,
-      ignoreScopeAndVersion?: boolean
-    } = {}
-  ): ?ComponentMap {
-    try {
-      const componentMap = this.getComponent(bitId, { ignoreVersion, ignoreScopeAndVersion });
-      return componentMap;
-    } catch (err) {
-      if (err instanceof MissingBitMapComponent) return null;
-      throw err;
-    }
   }
 
   /**
