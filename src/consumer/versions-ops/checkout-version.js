@@ -129,8 +129,7 @@ async function getComponentStatus(
   }
   const versionRef = componentModel.versions[newVersion];
   const componentVersion = await consumer.scope.getObject(versionRef.hash);
-  const newId = component.id.clone();
-  newId.version = newVersion;
+  const newId = component.id.changeVersion(newVersion);
   return { componentFromFS: component, componentFromModel: componentVersion, id: newId, mergeResults };
 }
 

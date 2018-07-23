@@ -76,8 +76,7 @@ export async function removeLocalVersionsForAllComponents(
     const dependencyGraph = await scope.getDependencyGraph();
     const candidateComponentsIds = candidateComponents.map((component) => {
       const bitId = component.toBitId();
-      bitId.version = version;
-      return bitId;
+      return bitId.changeVersion(version);
     });
     const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
 

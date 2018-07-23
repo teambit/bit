@@ -135,8 +135,7 @@ export default class Export extends Command {
         .map((comp) => {
           if (comp instanceof ModelComponent) {
             const bitId = comp.toBitId();
-            bitId.version = comp.latest();
-            return bitId.toString();
+            return bitId.changeVersion(comp.latest()).toString();
           }
           return comp.id.toString();
         })

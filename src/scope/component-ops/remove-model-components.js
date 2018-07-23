@@ -68,9 +68,9 @@ export default class RemoveModelComponents {
     );
 
     await this._removeComponent(bitId, componentList, false);
-    if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
+    const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
 
-    return { bitId, removedDependencies };
+    return { bitId: bitId.changeVersion(version), removedDependencies };
   }
 
   async _removeComponentsDependencies(

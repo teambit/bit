@@ -19,9 +19,8 @@ async function populateIds(consumer: Consumer, checkoutProps: CheckoutProps) {
   }
   const idsFromBitMap = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   checkoutProps.ids = idsFromBitMap.map((bitId) => {
-    const id = bitId.clone();
-    if (checkoutProps.latestVersion) id.version = LATEST;
-    return id;
+    const version = checkoutProps.latestVersion ? LATEST : bitId.version;
+    return bitId.changeVersion(version);
   });
 }
 

@@ -240,11 +240,9 @@ export default class Consumer {
   }
 
   getBitId(id: BitIdStr, keepOriginalVersion: boolean = true, shouldThrow: boolean = true): BitId {
-    const bitId = this.bitMap.getExistingBitId(id, shouldThrow).clone();
-    if (keepOriginalVersion) {
-      bitId.version = BitId.getVersionOnlyFromString(id);
-    }
-    return bitId;
+    const bitId = this.bitMap.getExistingBitId(id, shouldThrow);
+    const version = keepOriginalVersion ? BitId.getVersionOnlyFromString(id) : bitId.version;
+    return bitId.changeVersion(version);
   }
 
   getBitIdIfExist(id: BitIdStr, keepOriginalVersion: boolean = true) {
@@ -567,9 +565,9 @@ export default class Consumer {
     });
     const autoTaggedComponentIds = autoTaggedComponents.map((component) => {
       const id = component.toBitId();
-      id.version = component.latest();
-      this.bitMap.updateComponentId(id);
-      return id;
+      const newId = id.changeVersion(component.latest());
+      this.bitMap.updateComponentId(newId);
+      return newId;
     });
 
     // update package.json with the new version
@@ -772,8 +770,7 @@ export default class Consumer {
     );
     // added this to remove support for remove version
     const bitIds = ids.map((id) => {
-      id.version = LATEST_BIT_VERSION;
-      return id;
+      return id.changeVersion(LATEST_BIT_VERSION);
     });
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     if (remote && localIds.length) {
@@ -841,8 +838,7 @@ export default class Consumer {
       if (!realBitId) return id;
       const componentMap = this.bitMap.getComponent(realBitId);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        realBitId.version = LATEST_BIT_VERSION;
-        return realBitId;
+        return realBitId.changeVersion(LATEST_BIT_VERSION);
       }
       return realBitId;
     });

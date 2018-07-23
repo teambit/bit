@@ -34,8 +34,7 @@ function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?BitI
   };
   const version = getVersion();
   if (!version) return null;
-  componentId.version = version;
-  return componentId;
+  return componentId.changeVersion(version);
 }
 
 /**
@@ -58,8 +57,8 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   const packageId = Object.keys(packageObject)[0];
   const version = packageObject[packageId];
   if (!semver.valid(version)) return null; // it's probably a relative path to the component
-  componentId.version = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
-  return componentId;
+  const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
+  return componentId.changeVersion(validVersion);
 }
 
 function getIdFromBitMap(consumer: Consumer, component: Component, componentId: BitId): ?BitId {
@@ -69,8 +68,8 @@ function getIdFromBitMap(consumer: Consumer, component: Component, componentId: 
       dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
     );
     if (dependencyId) {
-      componentId.version = BitId.getVersionOnlyFromString(dependencyId);
-      return componentId;
+      const version = BitId.getVersionOnlyFromString(dependencyId);
+      return componentId.changeVersion(version);
     }
   }
   return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });

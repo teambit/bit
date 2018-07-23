@@ -820,8 +820,7 @@ export default class Scope {
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
-        versionId.version = version;
-        return versionId;
+        return versionId.changeVersion(version);
       });
       return this.importManyOnes(idsWithAllVersions);
     });
@@ -1198,7 +1197,7 @@ export default class Scope {
 
         if (!committedComponentId) return;
         if (semver.gt(committedComponentId.version, dependency.id.version)) {
-          dependency.id.version = committedComponentId.version;
+          dependency.id = dependency.id.changeVersion(committedComponentId.version);
           const flattenDependencyToUpdate = loadedVersion.flattenedDependencies.find(
             flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
           );
