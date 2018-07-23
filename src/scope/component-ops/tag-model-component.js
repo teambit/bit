@@ -25,16 +25,22 @@ import GeneralError from '../../error/general-error';
 import { Dependency } from '../../consumer/component/dependencies';
 
 function buildComponentsGraph(components: Component[]) {
+  const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
+    const id = component.id.toString();
+    dependencies.get().forEach((dependency) => {
+      const depId = dependency.id.toString();
+      // save the full BitId of a string id to be able to retrieve it laster with no confusion
+      if (!graphDeps.hasNode(id)) graphDeps.setNode(id, component.id);
+      if (!graphDeps.hasNode(depId)) graphDeps.setNode(depId, dependency.id);
+      graph.setEdge(id, depId);
+    });
+  };
+
   const graphDeps = new Graph();
   const graphDevDeps = new Graph();
   components.forEach((component) => {
-    const id = component.id.toString();
-    component.dependencies.get().forEach((dependency) => {
-      graphDeps.setEdge(id, dependency.id.toString());
-    });
-    component.devDependencies.get().forEach((dependency) => {
-      graphDevDeps.setEdge(id, dependency.id.toString());
-    });
+    setGraphEdges(component, component.dependencies, graphDeps);
+    setGraphEdges(component, component.devDependencies, graphDevDeps);
   });
   return { graphDeps, graphDevDeps };
 }
@@ -52,7 +58,7 @@ async function getFlattenedDependencies(
   if (!dependencies.length) return [];
   const flattenedP = dependencies.map(async (dependency) => {
     if (cache[dependency]) return cache[dependency];
-    const dependencyBitId = BitId.parse(dependency);
+    const dependencyBitId: BitId = graph.node(dependency);
     let versionDependencies;
     try {
       versionDependencies = await scope.importDependencies([dependencyBitId]);
