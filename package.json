@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "13.0.4-dev.2",
+  "version": "13.0.4",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -39,11 +39,11 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
-    "@teambit/gitconfig": "^2.0.5",
+    "@teambit/gitconfig": "^2.0.6",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^1.0.5-dev.3",
+    "bit-javascript": "^1.0.5",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.3",
     "cli-spinners": "^1.0.0",
