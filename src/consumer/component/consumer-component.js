@@ -406,7 +406,7 @@ export default class Component {
         installPackages: true,
         noPackageJson: false
       };
-      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
       const component = componentWithDependencies.component;
       const result = await runBuild(component.writtenPath);
       if (!keep) await isolatedEnvironment.destroy();
@@ -608,7 +608,7 @@ export default class Component {
         `deleting the old directory of a component at ${oldLocation}, the new directory is ${calculatedBitDir}`
       );
       fs.removeSync(oldLocation);
-      bitMap.removeComponent(this.id.toString());
+      bitMap.removeComponent(this.id);
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
@@ -789,7 +789,7 @@ export default class Component {
         noPackageJson: false
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
-      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
 
       createSymlinkOrCopy(testerFilePath, localTesterPath);
       const component = componentWithDependencies.component;
@@ -902,7 +902,7 @@ export default class Component {
     const isolatedEnvironment = new IsolatedEnvironment(scope, opts.writeToPath);
     try {
       await isolatedEnvironment.create();
-      await isolatedEnvironment.isolateComponent(this.id.toString(), opts);
+      await isolatedEnvironment.isolateComponent(this.id, opts);
       return isolatedEnvironment.path;
     } catch (err) {
       await isolatedEnvironment.destroy();

@@ -1,5 +1,5 @@
 /** @flow */
-import { mergeAll } from 'ramda';
+import R from 'ramda';
 import { BitId } from '../bit-id';
 import { forEach, getLatestVersionNumber } from '../utils';
 
@@ -10,7 +10,7 @@ export default class BitIds extends Array<BitId> {
   }
 
   toObject(): Object {
-    return mergeAll(this.map(bitId => bitId.toObject()));
+    return R.mergeAll(this.map(bitId => bitId.toObject()));
   }
 
   /**
@@ -39,6 +39,10 @@ export default class BitIds extends Array<BitId> {
 
   searchWithoutScopeAndVersion(bitId: BitId): BitId {
     return this.find(id => id.hasSameName(bitId));
+  }
+
+  getUniq() {
+    return R.uniqBy(JSON.stringify, this);
   }
 
   /**

@@ -50,12 +50,11 @@ export default class Environment {
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
    *
-   * @param {string | BitId} rawId - the component id to isolate
+   * @param {BitId} bitId - the component id to isolate
    * @param {IsolateOptions} opts
    * @return {Promise.<Component>}
    */
-  async isolateComponent(rawId: string | BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
-    const bitId = typeof rawId === 'string' ? BitId.parse(rawId) : rawId;
+  async isolateComponent(bitId: BitId, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     const componentsWithDependencies = await this.scope.getMany([bitId]);
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {

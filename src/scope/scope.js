@@ -860,7 +860,10 @@ export default class Scope {
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
-  async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Object> {
+  async findDependentBits(
+    bitIds: Array<BitId>,
+    returnResultsWithVersion: boolean = false
+  ): Promise<{ [string]: BitId[] }> {
     const allComponents = await this.objects.listComponents(false);
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ComponentModel) => {
@@ -883,13 +886,13 @@ export default class Scope {
         scopeComponents.flattenedDependencies.forEach((flattenedDependence) => {
           if (flattenedDependence.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
             returnResultsWithVersion
-              ? dependencies.push(scopeComponents.id.toString())
-              : dependencies.push(scopeComponents.id.toStringWithoutVersion());
+              ? dependencies.push(scopeComponents.id)
+              : dependencies.push(scopeComponents.id.changeVersion(null));
           }
         });
       });
 
-      if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = R.uniq(dependencies);
+      if (!R.isEmpty(dependencies)) { dependentBits[bitId.toStringWithoutVersion()] = BitIds.fromArray(dependencies).getUniq(); }
     });
     return Promise.resolve(dependentBits);
   }

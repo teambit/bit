@@ -80,11 +80,10 @@ export default class RemoveModelComponents {
     bitId: BitId
   ): Promise<BitIds> {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
-      const dependentsIdsStr: BitIdStr[] = dependentBits[dependencyId.toStringWithoutVersion()];
-      const bitIdStr = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
+      const dependentsIds: BitId[] = dependentBits[dependencyId.toStringWithoutVersion()];
       const relevantDependents = R.reject(
-        dependent => dependent === bitIdStr || BitId.parse(dependent).scope !== dependencyId.scope,
-        dependentsIdsStr
+        dependent => dependent.isEqual(bitId) || dependent.scope !== dependencyId.scope,
+        dependentsIds
       );
       let isNested = true;
       if (this.consumer) {
