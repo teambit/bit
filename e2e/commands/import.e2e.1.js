@@ -29,8 +29,8 @@ describe('bit import', function () {
       // export a new simple component
       helper.createFile('global', 'simple.js');
       helper.addComponent(path.normalize('global/simple.js'));
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -272,7 +272,7 @@ describe('bit import', function () {
       let output;
       before(() => {
         helper.reInitLocalScope();
-        helper.setComponentsDirInBitJson('{scope}/{namespace}-{name}');
+        helper.setComponentsDirInBitJson('{scope}/-{name}-');
         helper.addRemoteScope();
         helper.importComponent('global/simple');
         output = helper.importComponent('global/simple');
@@ -281,7 +281,7 @@ describe('bit import', function () {
         expect(output).to.have.string('successfully imported one component');
       });
       it('should import the component into new dir structure according to dsl', () => {
-        expect(path.join(helper.localScopePath, helper.remoteScope, 'global-simple')).to.be.a.directory(
+        expect(path.join(helper.localScopePath, helper.remoteScope, '-global/simple-')).to.be.a.directory(
           'should not be empty'
         ).and.not.empty;
       });
@@ -289,7 +289,7 @@ describe('bit import', function () {
         const bitMap = helper.readBitMap();
         const cmponentId = `${helper.remoteScope}/global/simple@0.0.1`;
         expect(bitMap).to.have.property(cmponentId);
-        expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/global-simple`);
+        expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/-global/simple-`);
       });
     });
   });

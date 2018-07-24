@@ -1,7 +1,10 @@
+import path from 'path';
 import { expect } from 'chai';
 import BitMap from './bit-map';
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
+
+const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 
 const addComponentParamsFixture = {
   componentId: new BitId({ name: 'is-string' }),
@@ -40,6 +43,14 @@ describe('BitMap', () => {
       const allComponents = bitMap.toObjects();
       const componentMapImported = allComponents['my-scope/is-string-imported@0.0.1'];
       expect(componentMapImported).to.not.have.property('exported');
+    });
+  });
+  describe('getAuthoredExportedComponents', () => {
+    it('should return an empty array when there are no authored components', () => {
+      const bitMap = BitMap.load(path.join(bitMapFixtureDir, 'only-imported'));
+      const results = bitMap.getAuthoredExportedComponents();
+      expect(results).to.be.an('array');
+      expect(results).to.have.lengthOf(0);
     });
   });
 });

@@ -254,7 +254,7 @@ export default class BitMap {
   }
 
   getAuthoredExportedComponents(): BitId[] {
-    const authoredIds = this.getAllBitIds[COMPONENT_ORIGINS.AUTHORED];
+    const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter(id => id.hasScope());
   }
 
