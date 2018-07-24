@@ -34,6 +34,7 @@ export default class BitId {
   }
 
   clone(): BitId {
+    // $FlowFixMe
     return new BitId(this);
   }
 
@@ -126,6 +127,7 @@ export default class BitId {
   }
 
   toFullPath(): PathOsBased {
+    if (!this.scope || !this.version) { throw new Error('BitId.toFullPath is unable to generate a path without a scope or a version'); }
     return path.join(this.name, this.scope, this.version);
   }
 
