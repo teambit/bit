@@ -21,7 +21,7 @@ export async function build(id: string, noCache: boolean, verbose: boolean): Pro
 
 export async function buildAll(noCache: boolean, verbose: boolean): Promise<Object> {
   const consumer: Consumer = await loadConsumer();
-  const authoredAndImportedIds = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+  const authoredAndImportedIds = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
   if (R.isEmpty(authoredAndImportedIds)) throw new GeneralError('nothing to build');
 
   loader.start(BEFORE_LOADING_COMPONENTS);

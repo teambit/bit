@@ -31,7 +31,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     return parsedId;
   });
   loader.start(BEFORE_EXPORT); // show single export
-  const idsToExport = Promise.all(idsToExportP);
+  const idsToExport = await Promise.all(idsToExportP);
   return BitIds.fromArray(idsToExport);
 }
 

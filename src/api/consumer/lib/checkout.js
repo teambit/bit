@@ -17,7 +17,7 @@ async function populateIds(consumer: Consumer, checkoutProps: CheckoutProps) {
   if (!checkoutProps.all) {
     throw new GeneralError('please specify [ids...] or use --all flag');
   }
-  const idsFromBitMap = consumer.bitMap.getBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  const idsFromBitMap = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
   checkoutProps.ids = idsFromBitMap.map((bitId) => {
     const version = checkoutProps.latestVersion ? LATEST : bitId.version;
     return bitId.changeVersion(version);

@@ -301,7 +301,7 @@ export default class BaseExtension {
     options = {},
     throws = false
   }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
-    logger.info(`loading extension ${name} from ${filePath}`);
+    logger.debug(`loading extension ${name} from ${filePath}`);
     Analytics.addBreadCrumb('base-extension', 'load extension from file');
     const extensionProps: StaticProps = {
       name,

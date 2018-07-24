@@ -27,7 +27,7 @@ export default function list({
     loader.start(BEFORE_LOCAL_LIST);
     const components = cache ? await scope.list(showRemoteVersion) : await scope.listStage();
     if (consumer) {
-      const authoredAndImportedIds = consumer.bitMap.getBitIds([
+      const authoredAndImportedIds = consumer.bitMap.getAllBitIds([
         COMPONENT_ORIGINS.AUTHORED,
         COMPONENT_ORIGINS.IMPORTED
       ]);
