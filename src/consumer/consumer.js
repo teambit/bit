@@ -264,9 +264,10 @@ export default class Consumer {
       `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
     );
     const alreadyLoadedComponents = [];
-    const idsToProcess = [];
+    const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
     ids.forEach((id) => {
+      if (!(id instanceof BitId)) { throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`); }
       if (this._componentsCache[id.toString()]) {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
         Analytics.addBreadCrumb(

@@ -38,13 +38,13 @@ export async function commitAction(args: {
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
+  const bitId = consumer.getBitId(id);
   if (!force) {
-    const bitId = consumer.getBitId(id);
     const componentStatus = await consumer.getComponentStatusById(bitId);
     if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.tag(
-    new BitIds(id),
+    new BitIds(bitId),
     message,
     validExactVersion,
     releaseType,
