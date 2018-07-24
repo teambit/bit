@@ -111,6 +111,13 @@ export default class BitId {
     return this.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion();
   }
 
+  serialize() {
+    const obj = { scope: this.scope, name: this.name, version: this.version };
+    if (!this.hasVersion()) delete obj.version;
+    if (!this.hasScope()) delete obj.scope;
+    return obj;
+  }
+
   toObject() {
     const key = this.scope ? [this.scope, this.name].join('/') : this.name;
     const value = this.version;

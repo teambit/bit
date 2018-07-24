@@ -150,9 +150,8 @@ export default class Version extends BitObject {
     const obj = this.toObject();
 
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
-    const getDependencies = (deps) => {
-      const clonedDependencies = R.clone(deps);
-      if (!clonedDependencies) return clonedDependencies;
+    const getDependencies = (deps: Dependencies) => {
+      const clonedDependencies = deps.cloneAsString();
       return clonedDependencies.map((dependency: Dependency) => {
         return {
           id: dependency.id,
@@ -186,8 +185,8 @@ export default class Version extends BitObject {
           compiler: obj.compiler,
           tester: obj.tester,
           log: obj.log,
-          dependencies: getDependencies(obj.dependencies),
-          devDependencies: getDependencies(obj.devDependencies),
+          dependencies: getDependencies(this.dependencies),
+          devDependencies: getDependencies(this.devDependencies),
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
@@ -273,10 +272,10 @@ export default class Version extends BitObject {
         ci: this.ci,
         specsResults: this.specsResults,
         docs: this.docs,
-        dependencies: this.dependencies.cloneAsString(),
-        devDependencies: this.devDependencies.cloneAsString(),
-        flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
-        flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
+        dependencies: this.dependencies.cloneAsObject(),
+        devDependencies: this.devDependencies.cloneAsObject(),
+        flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
+        flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
@@ -356,6 +355,10 @@ export default class Version extends BitObject {
       });
     };
 
+    const _getFlattenedDependencies = (deps = []) => {
+      return deps.map(dep => BitId.parseBackwardCompatible(dep));
+    };
+
     const parseFile = (file) => {
       return {
         file: Ref.from(file.file),
@@ -382,9 +385,9 @@ export default class Version extends BitObject {
       specsResults,
       docs,
       dependencies: _getDependencies(dependencies),
-      flattenedDependencies: BitIds.deserialize(flattenedDependencies),
+      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       devDependencies: _getDependencies(devDependencies),
-      flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
+      flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,

@@ -52,6 +52,14 @@ export default class Dependencies {
     });
   }
 
+  cloneAsObject(): Object[] {
+    return this.dependencies.map((dependency) => {
+      const dependencyClone = R.clone(dependency);
+      dependencyClone.id = dependency.id.serialize();
+      return dependencyClone;
+    });
+  }
+
   stripOriginallySharedDir(bitMap: BitMap, originallySharedDir: string): void {
     this.dependencies.forEach((dependency) => {
       Dependency.stripOriginallySharedDir(dependency, bitMap, originallySharedDir);
