@@ -11,8 +11,8 @@ import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
 
 export type BitIdProps = {
-  scope?: string,
-  box?: string,
+  scope?: ?string,
+  box?: ?string,
   name: string,
   version?: ?string
 };
@@ -20,10 +20,10 @@ export type BitIdProps = {
 export type BitIdStr = string;
 
 export default class BitId {
-  scope: ?string;
-  box: ?string;
-  name: string;
-  version: ?string;
+  +scope: ?string;
+  +box: ?string;
+  +name: string;
+  +version: ?string;
 
   constructor({ scope, box, name, version }: BitIdProps) {
     this.scope = scope || null;
