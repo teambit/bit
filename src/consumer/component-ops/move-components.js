@@ -1,7 +1,6 @@
 // @flow
 import fs from 'fs-extra';
 import R from 'ramda';
-import { BitId } from '../../bit-id';
 import { linkComponentsToNodeModules, reLinkDependents } from '../../links';
 import * as packageJson from '../component/package-json';
 import GeneralError from '../../error/general-error';

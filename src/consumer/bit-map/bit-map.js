@@ -533,7 +533,6 @@ export default class BitMap {
   _invalidateCache = () => {
     this.paths = {};
     this.pathsLowerCase = {};
-    delete this._cacheIds;
   };
 
   _removeFromComponentsArray(componentId: BitId) {

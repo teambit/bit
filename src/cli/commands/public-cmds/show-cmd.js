@@ -4,7 +4,6 @@ import Command from '../../command';
 import { getConsumerComponent, getScopeComponent } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component';
-import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 

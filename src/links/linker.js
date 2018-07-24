@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import { BitId } from '../bit-id';
 import Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import logger from '../logger/logger';

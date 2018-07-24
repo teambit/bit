@@ -11,7 +11,7 @@ import {
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_SEPARATOR,
   ASTERISK,
-  COMPONENTES_DEPENDECIES_REGEX,
+  COMPONENTS_DEPENDENCIES_REGEX,
   NODE_PATH_COMPONENT_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
@@ -257,7 +257,7 @@ async function addWorkspacesToPackageJson(
     await PackageJson.addWorkspacesToPackageJson(
       rootDir,
       formatedRegexPath,
-      dependenciesDirectory + COMPONENTES_DEPENDECIES_REGEX,
+      dependenciesDirectory + COMPONENTS_DEPENDENCIES_REGEX,
       customImportPath ? consumer.getPathRelativeToConsumer(customImportPath) : customImportPath
     );
   }

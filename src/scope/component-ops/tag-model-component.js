@@ -22,7 +22,7 @@ import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
-import { Dependency } from '../../consumer/component/dependencies';
+import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
@@ -257,7 +257,6 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent: Component) => {
-    const consumerComponentId = consumerComponent.id.toStringWithoutVersion();
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
     // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
