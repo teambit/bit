@@ -287,6 +287,9 @@ export default class Component {
     if (!componentMap) {
       throw new GeneralError('could not find component in the .bitmap file');
     }
+    if (configDir === '.' || configDir === './') {
+      throw new GeneralError('could not eject config to the workspace root please provide a valid path');
+    }
     // Nothing is detached.. no reason to eject
     if (
       componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
@@ -300,7 +303,7 @@ export default class Component {
 
     const res = await ejectConf(this, consumerPath, configDir, override);
     if (this.componentMap) {
-      this.componentMap.setConfigDir(configDir);
+      this.componentMap.setConfigDir(res.ejectedPath);
     }
     return res;
   }

@@ -27,6 +27,11 @@ export default (async function ejectConf(
       `could not eject config for ${component.id.toString()}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
     );
   }
+  // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
+  // (To better support bit move for example)
+  if (trackDir && configDir.startsWith(trackDir)) {
+    configDir = configDir.replace(trackDir, `{${COMPONENT_DIR}}`);
+  }
   const deleteOldFiles = componentMap.configDir && componentMap.configDir !== configDir;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
@@ -55,7 +60,7 @@ export default (async function ejectConf(
       await removeEmptyDir(oldBitJsonDirFullPath);
     }
   }
-  return { id: component.id.toString(), ejectedPath: bitJsonDir };
+  return { id: component.id.toString(), ejectedPath: configDir, ejectedFullPath: bitJsonDir };
 });
 
 const writeBitJson = async (
