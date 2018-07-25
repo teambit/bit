@@ -64,6 +64,7 @@ export default class Component extends BitObject {
 
   constructor(props: ComponentProps) {
     super();
+    if (!props.name) throw new TypeError('Model Component constructor expects to get a name parameter');
     this.scope = props.scope || null;
     this.name = props.name;
     this.versions = props.versions || {};

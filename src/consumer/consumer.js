@@ -731,7 +731,8 @@ export default class Consumer {
     enrichContextFromGlobal(context);
     const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
       const resolvedRemote = await remotes.resolve(scopeName, this.scope);
-      const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[scopeName], context);
+      const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
+      const deprecateResult = await resolvedRemote.deprecateMany(idsStr, context);
       return deprecateResult;
     });
     const deprecatedComponentsResult = await Promise.all(deprecateP);
@@ -800,7 +801,8 @@ export default class Consumer {
     enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, this.scope);
-      return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
+      const idsStr = groupedBitsByScope[key].map(id => id.toStringWithoutVersion());
+      return resolvedRemote.deleteMany(idsStr, force, context);
     });
 
     return Promise.all(removeP);

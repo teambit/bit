@@ -24,6 +24,7 @@ const addComponentParamsImportedFixture = {
 
 describe('BitMap', () => {
   logger.debug = () => {};
+  logger.info = () => {};
   describe('toObject', () => {
     let bitMap;
     let componentMap;

@@ -147,6 +147,7 @@ export default class BitId {
   }
 
   static parse(id: string, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
+    if (!R.is(String, id)) throw TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     // if (!id || id === NO_PLUGIN_TYPE) {
     //   return null;
     // }

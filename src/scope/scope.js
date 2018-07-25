@@ -439,28 +439,30 @@ export default class Scope {
     componentsObjects: { component: BitObject, objects: BitObject[] },
     remoteScope: string
   ): void {
-    const changeScopeIfNeeded = (dependencyId) => {
-      if (!dependencyId.scope) {
-        const depId = ComponentModel.fromBitId(dependencyId);
-        // todo: use 'load' for async and switch the foreach with map.
-        const dependencyObject = this.objects.loadSync(depId.hash());
-        if (dependencyObject instanceof Symlink) {
-          dependencyId.scope = dependencyObject.realScope;
-        } else {
-          dependencyId.scope = remoteScope;
-        }
+    const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
+      if (dependencyId.scope) return dependencyId;
+      const depId = ComponentModel.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = this.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
       }
+      return dependencyId.changeScope(remoteScope);
+    };
+
+    const getBitIdsWithUpdatedScope = (bitIds: BitIds): BitIds => {
+      const updatedIds = bitIds.map(id => getIdWithUpdatedScope(id));
+      return BitIds.fromArray(updatedIds);
     };
 
     componentsObjects.objects.forEach((object: Version) => {
       if (object instanceof Version) {
         const hashBefore = object.hash().toString();
         object.getAllDependencies().forEach((dependency) => {
-          changeScopeIfNeeded(dependency.id);
+          dependency.id = getIdWithUpdatedScope(dependency.id);
         });
-        object.getAllFlattenedDependencies().forEach((dependency) => {
-          changeScopeIfNeeded(dependency);
-        });
+        object.flattenedDependencies = getBitIdsWithUpdatedScope(object.flattenedDependencies);
+        object.flattenedDevDependencies = getBitIdsWithUpdatedScope(object.flattenedDevDependencies);
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
           logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);

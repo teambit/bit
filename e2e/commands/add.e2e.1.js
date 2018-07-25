@@ -544,13 +544,13 @@ describe('bit add command', function () {
 
       expect(errorMessage).to.have.string('error: "Bar/Foo" is invalid, component IDs can only contain');
     });
-    it('Should add component with global namespace if used parcial ID', () => {
+    it('should add component with id contains only one level', () => {
       helper.createFile('bar', 'foo.js');
       helper.addComponentWithOptions('bar', {
         i: 'foo'
       });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('global/foo');
+      expect(bitMap).to.have.property('foo');
     });
     it('Should add dir files with spec from multiple dsls when test files are placed in same structure', () => {
       helper.createFile('bar', 'foo.js');

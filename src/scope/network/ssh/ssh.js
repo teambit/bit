@@ -178,11 +178,11 @@ export default class SSH implements Network {
     });
   }
 
-  deleteMany(bitIds: Array<BitId>, force: boolean, context: ?Object): Promise<ComponentObjects[]> {
+  deleteMany(ids: string[], force: boolean, context: ?Object): Promise<ComponentObjects[]> {
     return this.exec(
       '_delete',
       {
-        bitIds: bitIds.map(id => id.toStringWithoutVersion()),
+        bitIds: ids,
         force
       },
       context
@@ -261,9 +261,9 @@ export default class SSH implements Network {
 
   fetch(ids: BitIds, noDeps: boolean = false, context: ?Object): Promise<ComponentObjects[]> {
     let options = '';
-    ids = ids.map(bitId => bitId.toString());
+    const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';
-    return this.exec(`_fetch ${options}`, ids, context).then((str: string) => {
+    return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
       const { payload, headers } = JSON.parse(str);
       checkVersionCompatibility(headers.version);
       const componentObjects = ComponentObjects.manyFromString(payload);

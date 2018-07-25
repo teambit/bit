@@ -37,8 +37,8 @@ export default (async function componentsDiff(
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
-        // $FlowFixMe - version, toVersion are string here, the error is unclear
         return Promise.all(
+          // $FlowFixMe - version, toVersion are string here, the error is unclear
           idsWithScope.map(id => getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion))
         );
       }
