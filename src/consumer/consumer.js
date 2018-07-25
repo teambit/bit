@@ -937,23 +937,6 @@ export default class Consumer {
   }
 
   async ejectConf(componentId: BitId[], { ejectPath }: { ejectPath: ?string }) {
-    const componentMap = this.bitMap.getComponent(componentId, false, true, true);
-    if (!componentMap) {
-      throw new GeneralError(
-        'could not eject config for new components, they are bound to the workspace configuration'
-      );
-    }
-    // Nothing is detached.. no reason to eject
-    if (
-      componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
-      !componentMap.detachedCompiler &&
-      !componentMap.detachedTester
-    ) {
-      throw new GeneralError(
-        'could not eject config for authored component which are bound to the workspace configuration'
-      );
-    }
-
     const component = await this.loadComponent(componentId);
     return component.writeConfig(this.getPath(), ejectPath || this.dirStructure.ejectedEnvsDirStructure);
   }

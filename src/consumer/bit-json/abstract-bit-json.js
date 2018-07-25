@@ -244,6 +244,13 @@ export default class AbstractBitJson {
   static async hasExisting(bitPath: string): Promise<boolean> {
     return fs.exists(this.composePath(bitPath));
   }
+
+  static async removeIfExist(bitPath: string): Promise<boolean> {
+    if (fs.exists(this.composePath(bitPath))) {
+      return fs.remove(this.composePath(bitPath));
+    }
+    return false;
+  }
 }
 
 const transformEnvToObject = (env): Envs => {

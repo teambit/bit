@@ -28,6 +28,7 @@ import parseSSHUrl from './ssh/parse-url';
 import listDirectories from './fs/list-directories';
 import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './fs/is-dir-empty';
+import removeEmptyDir from './fs/remove-empty-dir';
 import isDir from './is-dir';
 import writeFile from './fs-write-file';
 import readFile from './fs-read-file';
@@ -132,6 +133,7 @@ export {
   bufferToReadStream,
   listDirectories,
   isDirEmpty,
+  removeEmptyDir,
   removeFile,
   createSymlinkOrCopy,
   isDirEmptySync,

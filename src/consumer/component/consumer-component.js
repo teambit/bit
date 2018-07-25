@@ -283,16 +283,22 @@ export default class Component {
     configDir: PathOsBased,
     override?: boolean = true
   ): Promise<EjectConfResult> {
-    const trackDir = this.componentMap ? this.componentMap.getTrackDir() : null;
-    if (!trackDir && configDir.includes(`{${COMPONENT_DIR}}`)) {
+    const componentMap = this.componentMap;
+    if (!componentMap) {
+      throw new GeneralError('could not find component in the .bitmap file');
+    }
+    // Nothing is detached.. no reason to eject
+    if (
+      componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
+      !componentMap.detachedCompiler &&
+      !componentMap.detachedTester
+    ) {
       throw new GeneralError(
-        `could not eject config for ${this.id.toString()}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
+        'could not eject config for authored component which are bound to the workspace configuration'
       );
     }
-    // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
-    const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
-    const resolvedConfigDirFullPath = path.join(consumerPath, resolvedConfigDir);
-    const res = await ejectConf(this, resolvedConfigDirFullPath, override);
+
+    const res = await ejectConf(this, consumerPath, configDir, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(configDir);
     }
