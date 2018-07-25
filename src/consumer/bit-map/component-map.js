@@ -1,9 +1,10 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
+import format from 'string-format';
 import path from 'path';
 import logger from '../../logger/logger';
-import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
+import { COMPONENT_ORIGINS, BIT_MAP, COMPONENT_DIR } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/path';
 import { Consumer } from '..';
@@ -27,6 +28,7 @@ export type ComponentMapData = {
   mainFile: PathLinux,
   rootDir?: PathLinux,
   trackDir?: PathLinux,
+  configDir?: PathLinux,
   origin: ComponentOrigin,
   dependencies?: string[],
   mainDistFile?: PathLinux,
@@ -46,6 +48,7 @@ export default class ComponentMap {
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
   // dependencies paths won't work).
   trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
+  configDir: ?PathLinux;
   origin: ComponentOrigin;
   dependencies: ?(string[]); // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
@@ -53,11 +56,14 @@ export default class ComponentMap {
   // wether the compiler / tester are detached from the workspace global configuration
   detachedCompiler: ?boolean;
   detachedTester: ?boolean;
+  markBitMapChangedCb: Function;
+
   constructor({
     files,
     mainFile,
     rootDir,
     trackDir,
+    configDir,
     origin,
     dependencies,
     mainDistFile,
@@ -69,6 +75,7 @@ export default class ComponentMap {
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
+    this.configDir = configDir;
     this.origin = origin;
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
@@ -101,6 +108,10 @@ export default class ComponentMap {
       file.relativePath = newPath;
     });
     return changes;
+  }
+
+  setMarkAsChangedCb(markAsChangedBinded: Function) {
+    this.markBitMapChangedCb = markAsChangedBinded;
   }
 
   _findFile(fileName: PathLinux): ?ComponentMapFile {
@@ -206,6 +217,26 @@ export default class ComponentMap {
     if (this.origin === COMPONENT_ORIGINS.IMPORTED) return this.rootDir;
     // DO NOT track nested components!
     return null;
+  }
+
+  setConfigDir(val: ?PathLinux) {
+    if (val === null || val === undefined) {
+      delete this.configDir;
+      this.markBitMapChangedCb();
+      return;
+    }
+    this.markBitMapChangedCb();
+    this.configDir = val;
+  }
+
+  /**
+   * Get resolved base config dir (the dir where the bit.json is) after resolving the DSL
+   */
+  getBaseConfigDir(): ?PathLinux {
+    if (!this.configDir) return null;
+    const trackDir = this.getTrackDir();
+    const configDir = format(this.configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '' });
+    return configDir;
   }
 
   /**

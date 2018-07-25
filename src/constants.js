@@ -96,9 +96,9 @@ export const DEFAULT_DIR_DEPENDENCIES = '.dependencies';
 
 export const DEFAULT_DEPENDENCIES_DIR_PATH = `${BITS_DIRNAME}/${DEFAULT_DIR_DEPENDENCIES}`;
 
-export const DEFAULT_EJECTED_DIR_ENVS = '@bit-envs';
+export const COMPONENT_DIR = 'COMPONENT_DIR';
 
-export const DEFAULT_EJECTED_ENVS_DIR_PATH = `${DEFAULT_EJECTED_DIR_ENVS}/{envType}`;
+export const DEFAULT_EJECTED_ENVS_DIR_PATH = `{${COMPONENT_DIR}}/{ENV_TYPE}`;
 
 export const DEFAULT_SEPARATOR = '/';
 
@@ -149,7 +149,6 @@ export const IGNORE_LIST = [
   '**/bit.json',
   '**/bitBindings.js',
   '**/node_modules/**',
-  `**/${DEFAULT_EJECTED_DIR_ENVS}/**`,
   '**/package.json',
   '**/package-lock.json',
   '**/yarn.lock',

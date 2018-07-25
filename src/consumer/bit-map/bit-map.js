@@ -34,15 +34,17 @@ export default class BitMap {
   version: string;
   paths: { [path: string]: string }; // path => componentId
   pathsLowerCase: { [path: string]: string }; // path => componentId
+  markAsChangedBinded: Function;
 
-  constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
+  constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
-    this.components = components;
+    this.components = [];
     this.hasChanged = false;
     this.version = version;
     this.paths = {};
     this.pathsLowerCase = {};
+    this.markAsChangedBinded = this.markAsChanged.bind(this);
   }
 
   markAsChanged() {
@@ -119,10 +121,9 @@ export default class BitMap {
       return null;
     };
     const bitMapLocation = getBitMapLocation();
-    const components = {};
     if (!bitMapLocation) {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
-      return new BitMap(dirPath, standardLocation, components, BIT_VERSION);
+      return new BitMap(dirPath, standardLocation, BIT_VERSION);
     }
     const mapFileContent = fs.readFileSync(bitMapLocation);
     let componentsJson;
@@ -135,11 +136,10 @@ export default class BitMap {
     const version = componentsJson.version;
     // Don't treat version like component
     delete componentsJson.version;
-    Object.keys(componentsJson).forEach((componentId) => {
-      components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
-    });
 
-    return new BitMap(dirPath, bitMapLocation, components, version);
+    const bitMap = new BitMap(dirPath, bitMapLocation, version);
+    bitMap.loadComponents(componentsJson);
+    return bitMap;
   }
 
   /**
@@ -165,6 +165,14 @@ export default class BitMap {
       }
       throw err;
     }
+  }
+
+  loadComponents(componentsJson: Object) {
+    Object.keys(componentsJson).forEach((componentId) => {
+      const componentMap = ComponentMap.fromJson(componentsJson[componentId]);
+      componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
+      this.components[componentId] = componentMap;
+    });
   }
 
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {

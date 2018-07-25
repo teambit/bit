@@ -1,9 +1,10 @@
 // @flow
 import path from 'path';
 import fs from 'fs-extra';
+import format from 'string-format';
 import R from 'ramda';
 import c from 'chalk';
-import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy, sharedStartOfArray } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -35,7 +36,8 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME
+  DEFAULT_DIST_DIRNAME,
+  COMPONENT_DIR
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -276,8 +278,25 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(configDir: string, override?: boolean = true): Promise<EjectConfResult> {
-    return ejectConf(this, configDir, override);
+  async writeConfig(
+    consumerPath: PathOsBased,
+    configDir: PathOsBased,
+    override?: boolean = true
+  ): Promise<EjectConfResult> {
+    const trackDir = this.componentMap ? this.componentMap.getTrackDir() : null;
+    if (!trackDir && configDir.includes(`{${COMPONENT_DIR}}`)) {
+      throw new GeneralError(
+        `could not eject config for ${this.id.toString()}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
+      );
+    }
+    // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
+    const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
+    const resolvedConfigDirFullPath = path.join(consumerPath, resolvedConfigDir);
+    const res = await ejectConf(this, resolvedConfigDirFullPath, override);
+    if (this.componentMap) {
+      this.componentMap.setConfigDir(configDir);
+    }
+    return res;
   }
 
   getPackageNameAndPath(): Promise<any> {
@@ -955,16 +974,6 @@ export default class Component {
    */
   setOriginallySharedDir(): void {
     if (this.originallySharedDir !== undefined) return;
-    // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
-    // It sorts the array, and then looks just at the first and last items
-    const sharedStartOfArray = (array) => {
-      const sortedArray = array.concat().sort();
-      const firstItem = sortedArray[0];
-      const lastItem = sortedArray[sortedArray.length - 1];
-      let i = 0;
-      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i += 1;
-      return firstItem.substring(0, i);
-    };
     const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
     const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
     const dependenciesPaths = this.dependencies.getSourcesPaths();
@@ -1098,6 +1107,7 @@ export default class Component {
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
+    let configDir = bitDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
@@ -1133,6 +1143,10 @@ export default class Component {
     };
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
+    if (componentMap.configDir) {
+      const resolvedBaseConfigDir = componentMap.getBaseConfigDir();
+      configDir = path.join(consumerPath, resolvedBaseConfigDir);
+    }
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
@@ -1140,14 +1154,14 @@ export default class Component {
     let componentBitJson: ComponentBitJson | typeof undefined;
     let componentBitJsonFileExist = false;
     let rawComponentBitJson;
-    if (bitDir !== consumerPath) {
-      componentBitJson = ComponentBitJson.loadSync(bitDir, consumerBitJson);
+    if (configDir !== consumerPath) {
+      componentBitJson = ComponentBitJson.loadSync(configDir, consumerBitJson);
       packageDependencies = componentBitJson.packageDependencies;
       devPackageDependencies = componentBitJson.devPackageDependencies;
       peerPackageDependencies = componentBitJson.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitJsonFileExist = await AbstractBitJson.hasExisting(bitDir);
+      componentBitJsonFileExist = await AbstractBitJson.hasExisting(configDir);
       if (componentBitJsonFileExist) {
         rawComponentBitJson = componentBitJson;
       }

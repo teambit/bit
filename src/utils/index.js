@@ -53,6 +53,7 @@ import isString from './string/is-string';
 import getStringifyArgs from './string/get-stringify-args';
 import isNumeric from './number/is-numeric';
 import diff from './array/diff';
+import sharedStartOfArray from './array/shared-start';
 import filterObject from './filter-object';
 import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
 import isValidIdChunk from './is-valid-id-chunk';
@@ -96,6 +97,7 @@ export {
   isNumeric,
   inflate,
   diff,
+  sharedStartOfArray,
   filterAsync,
   deflate,
   values,

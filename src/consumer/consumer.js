@@ -277,10 +277,8 @@ export default class Consumer {
       const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
       const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
-      let bitDir = this.getPath();
-      if (componentMap.rootDir) {
-        bitDir = path.join(bitDir, componentMap.rootDir);
-      }
+      let bitDir = componentMap.getTrackDir();
+      bitDir = bitDir ? path.join(this.getPath(), bitDir) : this.getPath();
       const componentWithDependenciesFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
       const componentFromModel = componentWithDependenciesFromModel
         ? componentWithDependenciesFromModel.component
@@ -955,14 +953,9 @@ export default class Consumer {
         'could not eject config for authored component which are bound to the workspace configuration'
       );
     }
-    const rootPath = ejectPath || componentMap.rootDir || componentMap.trackDir;
-    if (!rootPath) {
-      throw new GeneralError(`could not eject config for ${componentId.toString()}, please provide path to eject`);
-    }
-    const ejectedEnvsDirStructure = this.dirStructure.ejectedEnvsDirStructure;
-    const resolvedPath = path.join(this.getPath(), rootPath, ejectedEnvsDirStructure);
+
     const component = await this.loadComponent(componentId);
-    return component.writeConfig(resolvedPath);
+    return component.writeConfig(this.getPath(), ejectPath || this.dirStructure.ejectedEnvsDirStructure);
   }
 
   async onDestroy() {

@@ -229,7 +229,7 @@ export default class AbstractBitJson {
       return false;
     }
 
-    return fs.outputJson(AbstractBitJson.composePath(bitDir), this.toJson());
+    return fs.outputJson(AbstractBitJson.composePath(bitDir), this.toPlainObject(), { spaces: 4 });
   }
 
   toJson(readable: boolean = true) {
