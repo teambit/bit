@@ -317,7 +317,9 @@ export default class BitMap {
     } else if (this.components[parentWithoutScope]) {
       parentId = parentWithoutScope;
     } else {
-      throw new GeneralError(`Unable to add indirect dependency ${dependency}, as its parent ${parent} does not exist`);
+      throw new GeneralError(
+        `Unable to add indirect dependency ${dependency}, as its parent ${parent.toString()} does not exist`
+      );
     }
     if (!this.components[parentId].dependencies) {
       this.components[parentId].dependencies = [dependency];
@@ -359,7 +361,7 @@ export default class BitMap {
    * id entered by the user may or may not include scope-name
    * search for a similar id in the bitmap and return the full BitId
    */
-  getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): BitId {
+  getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): ?BitId {
     const components: ComponentMap[] = R.values(this.components);
     const idHasVersion = id.includes(VERSION_DELIMITER);
 

@@ -36,6 +36,7 @@ export default function getLatestVersionNumber(bitIds: BitId[], bitId: BitId): B
   const result = bitIds.find((id: BitId) => {
     return getString(id, ignoreScopeAlways, false) === getString(bitIdWithMaxVersion, ignoreScopeAlways, false);
   });
+  if (!result) throw new Error('getLatestVersionNumber failed to find the id within bitIds');
 
   return result;
 }

@@ -8,7 +8,8 @@ import logger from '../logger/logger';
 import type { PathOsBased } from '../utils/path';
 
 function getLatestVersion(bitId: BitId, componentsDir: string): number {
-  if (bitId.version !== LATEST_BIT_VERSION) return bitId.version;
+  // $FlowFixMe
+  if (bitId.hasVersion()) return bitId.version;
   const regexRemoveLatestVersion = new RegExp(`${LATEST_BIT_VERSION}$`);
   const relativePathWithoutVersion = bitId.toFullPath().replace(regexRemoveLatestVersion, '');
   const pathWithoutVersion: PathOsBased = path.join(componentsDir, relativePathWithoutVersion);

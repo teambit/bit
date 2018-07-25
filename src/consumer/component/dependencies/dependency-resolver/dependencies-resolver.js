@@ -50,8 +50,8 @@ function findComponentsOfDepsFiles(
   const componentsDeps: Dependency[] = [];
   let devComponentsDeps: Dependency[] = [];
 
-  const getExistingDependency = (id: BitId): ?BitId => componentsDeps.find(d => d.id.isEqual(id));
-  const getExistingDevDependency = (id: BitId): ?BitId => devComponentsDeps.find(d => d.id.isEqual(id));
+  const getExistingDependency = (id: BitId): ?Dependency => componentsDeps.find(d => d.id.isEqual(id));
+  const getExistingDevDependency = (id: BitId): ?Dependency => devComponentsDeps.find(d => d.id.isEqual(id));
 
   // issues
   const missingDependenciesOnFs = {};
@@ -71,7 +71,7 @@ function findComponentsOfDepsFiles(
   const rootDir: PathLinux = entryComponentMap.rootDir;
   const processedFiles = [];
 
-  const traverseTreeForComponentId = (depFile: PathLinux): BitId => {
+  const traverseTreeForComponentId = (depFile: PathLinux): ?BitId => {
     if (!tree[depFile] || (!tree[depFile].files && !tree[depFile].bits)) return;
     const rootDirFullPath = path.join(consumerPath, rootDir);
     if (tree[depFile].files && tree[depFile].files.length) {
@@ -103,9 +103,9 @@ function findComponentsOfDepsFiles(
 
   const getComponentIdByDepFile = (
     depFile: PathLinux
-  ): { componentId: BitId, depFileRelative: PathLinux, destination: ?string } => {
+  ): { componentId: ?BitId, depFileRelative: PathLinux, destination: ?string } => {
     let depFileRelative: PathLinux = depFile; // dependency file path relative to consumer root
-    let componentId: BitId;
+    let componentId: ?BitId;
     let destination: ?string;
 
     if (rootDir) {
@@ -131,14 +131,14 @@ function findComponentsOfDepsFiles(
         // dependencies array this component with the relativePaths array. Find the relativePath of this dep-file
         // to get the correct destinationRelativePath. There is no other way to obtain this info.
         if (!componentFromModel) {
-          throw new GeneralError(`Failed to resolve ${componentId} dependencies because the component is not in the model.
+          throw new GeneralError(`Failed to resolve ${componentId.toString()} dependencies because the component is not in the model.
 Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the component saved in the model`);
         }
         const dependency = componentFromModel
-          .getAllDependencies()
+          .getAllDependencies() // $FlowFixMe
           .find(dep => dep.id.toStringWithoutVersion() === componentId.toStringWithoutVersion());
         if (!dependency) {
-          throw new GeneralError(
+          throw new GeneralError( // $FlowFixMe
             `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
               componentFromModel.id
             }`
@@ -289,8 +289,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
   const processBits = (originFile: PathLinuxRelative, bits, isTestFile: boolean = false) => {
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
-      const componentId = consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
-      const getExistingId = (): BitId => {
+      const componentId: BitId = consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
+      const getExistingId = (): ?BitId => {
         let existingId = consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
 
@@ -302,7 +302,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
           const packageJson = driver.driver.PackageJson.findPackage(depPath);
           if (packageJson) {
             const depVersion = packageJson.version;
-            existingId = new BitId({ scope: componentId, version: depVersion });
+            existingId = componentId.changeVersion(depVersion);
             return existingId;
           }
         }
@@ -310,7 +310,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
           const modelDep = componentFromModel
             .getAllDependencies()
             .find(dep => dep.id.toStringWithoutVersion() === componentId);
-          if (modelDep) return modelDep.id.toString();
+          if (modelDep) return modelDep.id;
         }
         return null;
       };
@@ -620,13 +620,7 @@ export default (async function loadDependenciesForComponent(
     component
   );
   const { componentsDeps, devComponentsDeps, issues } = traversedDeps;
-  // const dependencies = Object.keys(componentsDeps).map((depId) => {
-  //   return { id: BitId.parse(depId), relativePaths: componentsDeps[depId] };
-  // });
   component.setDependencies(componentsDeps);
-  // const devDependencies = Object.keys(devComponentsDeps).map((depId) => {
-  //   return { id: BitId.parse(depId), relativePaths: devComponentsDeps[depId] };
-  // });
   component.setDevDependencies(devComponentsDeps);
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;

@@ -254,6 +254,7 @@ export default class AddComponents {
         !existingComponentId || // this id is new, it shouldn't have a version
         !existingComponentId.hasVersion() || // this component is new, it shouldn't have a version
         // user shouldn't add files to a an existing component with different version
+        // $FlowFixMe this function gets called only when this.id is set
         existingComponentId.version !== BitId.getVersionOnlyFromString(this.id)
       ) {
         // $FlowFixMe this.id is defined here
@@ -413,6 +414,7 @@ export default class AddComponents {
     const componentId = finalBitId;
     componentsWithFiles = componentsWithFiles.filter(componentWithFiles => componentWithFiles.files.length);
 
+    // $FlowFixMe
     if (componentsWithFiles.length === 0) return { componentId, files: [] };
     if (componentsWithFiles.length === 1) return componentsWithFiles[0];
 
@@ -423,6 +425,7 @@ export default class AddComponents {
     const uniqComponents = Object.keys(groupedComponents).map(key =>
       assignwith({}, ...groupedComponents[key], (val1, val2) => val1 || val2)
     );
+    // $FlowFixMe
     return {
       componentId,
       files: uniqComponents,

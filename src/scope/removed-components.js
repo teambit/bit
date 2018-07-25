@@ -59,7 +59,7 @@ export class RemovedLocalObjects extends RemovedObjects {
   constructor(
     removedComponentIds?: BitIds,
     missingComponents?: BitIds,
-    modifiedComponents?: BitIds,
+    modifiedComponents: BitIds,
     removedDependencies?: BitIds,
     dependentBits?: Object
   ) {

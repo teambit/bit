@@ -71,6 +71,7 @@ export default function getScopeComponent({
     .catch((err) => {
       if (err instanceof ScopeNotFound) {
         const bitId = BitId.parse(id, true);
+        // $FlowFixMe the scope must be there
         return Remotes.getScopeRemote(bitId.scope)
           .then(remote => remoteShow(remote, bitId))
           .catch(e => Promise.reject(e));

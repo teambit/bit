@@ -326,7 +326,7 @@ async function writeDependencyLinks(
       // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
       // Actual version number, because on the bitmap we have only specific versions
       if (dep.id.getVersion().latest) {
-        resolveDepVersion = flattenedDependencies.resolveVersion(dep.id).toString();
+        resolveDepVersion = flattenedDependencies.resolveVersion(dep.id);
       }
 
       // Helper function to look for the component object

@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import BitMap from './bit-map';
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
+import logger from '../../logger/logger';
 
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 
@@ -22,6 +23,7 @@ const addComponentParamsImportedFixture = {
 };
 
 describe('BitMap', () => {
+  logger.debug = () => {};
   describe('toObject', () => {
     let bitMap;
     let componentMap;

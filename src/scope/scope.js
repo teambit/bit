@@ -674,7 +674,7 @@ export default class Scope {
     });
   }
 
-  async getObjects(ids: BitId[], withDevDependencies?: boolean): Promise<ComponentObjects[]> {
+  async getObjects(ids: BitIds, withDevDependencies?: boolean): Promise<ComponentObjects[]> {
     const versions = await this.importMany(ids, withDevDependencies);
     return Promise.all(versions.map(version => version.toObjects(this.objects)));
   }
@@ -746,7 +746,7 @@ export default class Scope {
     return componentVersionArr.concat(externalDeps);
   }
 
-  manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
+  manyOneObjects(ids: BitIds): Promise<ComponentObjects[]> {
     return this.importManyOnes(ids, false).then(componentVersions =>
       Promise.all(
         componentVersions.map((version) => {
@@ -860,10 +860,7 @@ export default class Scope {
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
-  async findDependentBits(
-    bitIds: Array<BitId>,
-    returnResultsWithVersion: boolean = false
-  ): Promise<{ [string]: BitId[] }> {
+  async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
     const allComponents = await this.objects.listComponents(false);
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ComponentModel) => {
@@ -892,7 +889,9 @@ export default class Scope {
         });
       });
 
-      if (!R.isEmpty(dependencies)) { dependentBits[bitId.toStringWithoutVersion()] = BitIds.fromArray(dependencies).getUniq(); }
+      if (!R.isEmpty(dependencies)) {
+        dependentBits[bitId.toStringWithoutVersion()] = BitIds.fromArray(dependencies).getUniq();
+      }
     });
     return Promise.resolve(dependentBits);
   }
@@ -901,7 +900,7 @@ export default class Scope {
    * split bit array to found and missing components (incase user misspelled id)
    */
   async filterFoundAndMissingComponents(
-    bitIds: Array<BitId>
+    bitIds: BitIds
   ): Promise<{ missingComponents: BitIds, foundComponents: BitIds }> {
     const missingComponents = new BitIds();
     const foundComponents = new BitIds();
@@ -1229,7 +1228,7 @@ export default class Scope {
   /**
    * find the components in componentsPool which one of their dependencies include in potentialDependencies
    */
-  async findDirectDependentComponents(componentsPool: BitId[], potentialDependencies: BitId[]): Promise<Component[]> {
+  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitId[]): Promise<Component[]> {
     const componentsVersions = await this.loadLocalComponents(componentsPool);
     const potentialDependenciesWithoutVersions = potentialDependencies.map(id => id.toStringWithoutVersion());
     const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {

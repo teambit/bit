@@ -250,12 +250,12 @@ export default class Consumer {
   }
 
   async loadComponent(id: BitId): Promise<Component> {
-    const { components } = await this.loadComponents([id]);
+    const { components } = await this.loadComponents(BitIds.fromArray([id]));
     return components[0];
   }
 
   async loadComponents(
-    ids: BitId[],
+    ids: BitIds,
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
@@ -267,7 +267,9 @@ export default class Consumer {
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
     ids.forEach((id) => {
-      if (!(id instanceof BitId)) { throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`); }
+      if (!(id instanceof BitId)) {
+        throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
+      }
       if (this._componentsCache[id.toString()]) {
         logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
         Analytics.addBreadCrumb(

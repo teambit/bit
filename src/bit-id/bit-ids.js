@@ -29,19 +29,19 @@ export default class BitIds extends Array<BitId> {
     return Boolean(this.search(bitId));
   }
 
-  search(bitId: BitId): BitId {
+  search(bitId: BitId): ?BitId {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
 
-  searchWithoutVersion(bitId: BitId): BitId {
+  searchWithoutVersion(bitId: BitId): ?BitId {
     return this.find(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
   }
 
-  searchWithoutScopeAndVersion(bitId: BitId): BitId {
+  searchWithoutScopeAndVersion(bitId: BitId): ?BitId {
     return this.find(id => id.hasSameName(bitId));
   }
 
-  getUniq() {
+  getUniq(): BitId[] {
     return R.uniqBy(JSON.stringify, this);
   }
 
@@ -50,11 +50,15 @@ export default class BitIds extends Array<BitId> {
    * This function support also checking if the array contain strings or BitIds
    * @param {string | BitId} array - array of bit ids
    */
-  static deserialize(array: string[] | BitId[] = []) {
-    if (array && array.length && typeof array[0] === 'string') {
-      return new BitIds(...array.map(id => BitId.parse(id)));
-    }
-    return new BitIds(...array);
+  // static deserialize(array: string[] | BitId[] = []): BitIds {
+  //   if (array && array.length && typeof array[0] === 'string') {
+  //     return new BitIds(...array.map(id => BitId.parse(id)));
+  //   }
+  //   return new BitIds(...array);
+  // }
+
+  static deserialize(array: string[] = []): BitIds {
+    return new BitIds(...array.map(id => BitId.parse(id)));
   }
 
   toString() {

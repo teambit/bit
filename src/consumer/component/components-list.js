@@ -144,7 +144,7 @@ export default class ComponentsList {
   async listNewComponents(load: boolean = false): Promise<BitIds | Component[]> {
     const idsFromBitMap = this.idsFromBitMap();
     const idsFromObjects = await this.idsFromObjects();
-    const newComponents: BitId = [];
+    const newComponents: BitId[] = [];
     idsFromBitMap.forEach((id: BitId) => {
       if (!idsFromObjects.searchWithoutScopeAndVersion(id)) {
         newComponents.push(id);

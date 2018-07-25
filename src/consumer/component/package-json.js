@@ -42,7 +42,9 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
   const componentsToAdd = R.fromPairs(
     importedComponents.map((componentId) => {
       const componentMap = consumer.bitMap.getComponent(componentId);
-      if (!componentMap.rootDir) throw new GeneralError(`rootDir is missing from an imported component ${componentId}`);
+      if (!componentMap.rootDir) {
+        throw new GeneralError(`rootDir is missing from an imported component ${componentId.toString()}`);
+      }
       const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
       return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
@@ -149,6 +151,7 @@ function getRegistryPrefix(): string {
 function convertIdToNpmName(id: BitId, withVersion = false): string {
   const registryPrefix = getRegistryPrefix();
   const npmName = `${registryPrefix}/${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
+  // $FlowFixMe the id here has a version
   return withVersion ? `${npmName}@${id.version}` : npmName;
 }
 

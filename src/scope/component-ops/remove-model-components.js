@@ -105,7 +105,7 @@ export default class RemoveModelComponents {
     });
     let removedDependencies = await Promise.all(removedComponents);
     removedDependencies = removedDependencies.filter(x => !R.isNil(x));
-    return new BitIds(removedDependencies);
+    return BitIds.fromArray(removedDependencies);
   }
 
   async _removeComponent(id: BitId, componentList: Array<ConsumerComponent | Symlink>, removeRefs: boolean = false) {

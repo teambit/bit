@@ -5,7 +5,7 @@ import decamelize from 'decamelize';
 import R from 'ramda';
 import Version from '../version';
 import { InvalidBitId, InvalidIdChunk } from './exceptions';
-import { LATEST_BIT_VERSION, VERSION_DELIMITER, NO_PLUGIN_TYPE } from '../constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
@@ -38,7 +38,7 @@ export default class BitId {
     return new BitId(this);
   }
 
-  changeScope(newScope: string): BitId {
+  changeScope(newScope?: ?string): BitId {
     return new BitId({ scope: newScope, name: this.name, version: this.version });
   }
 
@@ -127,7 +127,9 @@ export default class BitId {
   }
 
   toFullPath(): PathOsBased {
-    if (!this.scope || !this.version) { throw new Error('BitId.toFullPath is unable to generate a path without a scope or a version'); }
+    if (!this.scope || !this.version) {
+      throw new Error('BitId.toFullPath is unable to generate a path without a scope or a version');
+    }
     return path.join(this.name, this.scope, this.version);
   }
 
@@ -144,10 +146,10 @@ export default class BitId {
     return id.split(VERSION_DELIMITER)[1];
   }
 
-  static parse(id: ?string, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): ?BitId {
-    if (!id || id === NO_PLUGIN_TYPE) {
-      return null;
-    }
+  static parse(id: string, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
+    // if (!id || id === NO_PLUGIN_TYPE) {
+    //   return null;
+    // }
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
@@ -176,10 +178,10 @@ export default class BitId {
     });
   }
 
-  static parseObsolete(id: ?string, version: string = LATEST_BIT_VERSION): ?BitId {
-    if (!id || id === NO_PLUGIN_TYPE) {
-      return null;
-    }
+  static parseObsolete(id: string, version: string = LATEST_BIT_VERSION): BitId {
+    // if (!id || id === NO_PLUGIN_TYPE) {
+    //   return null;
+    // }
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
