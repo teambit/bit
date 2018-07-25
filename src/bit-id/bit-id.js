@@ -26,6 +26,7 @@ export default class BitId {
   +version: ?string;
 
   constructor({ scope, box, name, version }: BitIdProps) {
+    if (!name || !R.is(String, name)) throw new TypeError('BitId: "name" property must be set and be a string');
     this.scope = scope || null;
     this.box = null;
     this.name = box ? `${box}/${name}` : name;
@@ -46,8 +47,8 @@ export default class BitId {
     return new BitId({ scope: this.scope, name: this.name, version: newVersion });
   }
 
-  isLocal(scopeName: string) {
-    return !this.scope || scopeName === this.scope;
+  isLocal(scopeName?: string): boolean {
+    return !this.scope || Boolean(scopeName && scopeName === this.scope);
   }
 
   getVersion() {
@@ -147,7 +148,7 @@ export default class BitId {
   }
 
   static parse(id: string, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
-    if (!R.is(String, id)) throw TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
+    if (!R.is(String, id)) { throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`); }
     // if (!id || id === NO_PLUGIN_TYPE) {
     //   return null;
     // }

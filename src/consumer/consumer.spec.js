@@ -4,8 +4,8 @@ import Consumer from '../../src/consumer/consumer';
 import ConsumerComponent from '../../src/consumer/component/consumer-component';
 
 // Skipping this, should be deleted after writing appropriate tests for the virtualizaion
-describe.skip('Consumer', () => {
-  describe('runAllInlineSpecs', () => {
+describe('Consumer', () => {
+  describe.skip('runAllInlineSpecs', () => {
     let sandbox;
     beforeEach(() => {
       sandbox = sinon.createSandbox();
@@ -35,6 +35,42 @@ describe.skip('Consumer', () => {
         expect(data.length).to.be.equal(2);
         data.map(resultData => expect(resultData).to.have.all.keys('specs', 'component'));
       });
+    });
+  });
+  describe('getComponentIdFromNodeModulesPath', () => {
+    let sandbox;
+    let consumer;
+    before(() => {
+      sandbox = sinon.createSandbox();
+      sandbox.stub(Consumer.prototype, 'warnForMissingDriver').returns();
+      consumer = new Consumer({ projectPath: '', bitJson: {} });
+    });
+    after(() => {
+      sandbox.restore();
+    });
+    it('should parse the path correctly when a component is not in bitMap and has one dot', () => {
+      const result = consumer.getComponentIdFromNodeModulesPath(
+        '../../../node_modules/@bit/q207wrk9-remote.comp/file2.js',
+        '@bit'
+      );
+      expect(result.scope).to.equal('q207wrk9-remote');
+      expect(result.name).to.equal('comp');
+    });
+    it('should parse the path correctly when a component is not in bitMap and has two dots', () => {
+      const result = consumer.getComponentIdFromNodeModulesPath(
+        '../../../node_modules/@bit/q207wrk9-remote.comp.comp2/file2.js',
+        '@bit'
+      );
+      expect(result.scope).to.equal('q207wrk9-remote.comp');
+      expect(result.name).to.equal('comp2');
+    });
+    it('should parse the path correctly when a component is not in bitMap and has three dots', () => {
+      const result = consumer.getComponentIdFromNodeModulesPath(
+        '../../../node_modules/@bit/q207wrk9-remote.comp.comp2.comp3/file2.js',
+        '@bit'
+      );
+      expect(result.scope).to.equal('q207wrk9-remote.comp');
+      expect(result.name).to.equal('comp2/comp3');
     });
   });
 });

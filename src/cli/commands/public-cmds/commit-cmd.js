@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
 import { commitAction, commitAllAction } from '../../../api/consumer';
-import Component from '../../../consumer/component';
+import type { TagResults } from '../../../api/consumer/lib/commit';
 import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
@@ -77,7 +77,7 @@ export default class Export extends Command {
 
     const releaseFlags = [patch, minor, major].filter(x => x);
     if (releaseFlags.length > 1) {
-      return Promise.reject('you can use only one of the following - patch, minor, major');
+      throw new GeneralError('you can use only one of the following - patch, minor, major');
     }
 
     // const releaseType = major ? 'major' : (minor ? 'minor' : (patch ? 'patch' : DEFAULT_BIT_RELEASE_TYPE));
@@ -117,19 +117,9 @@ export default class Export extends Command {
     });
   }
 
-  report(results): string {
+  report(results: TagResults): string {
     if (!results) return chalk.yellow('nothing to tag');
-    const {
-      taggedComponents,
-      autoTaggedComponents,
-      warnings,
-      newComponents
-    }: {
-      taggedComponents: Component[],
-      autoTaggedComponents: ModelComponent[],
-      warnings: string[],
-      newComponents: string[]
-    } = results;
+    const { taggedComponents, autoTaggedComponents, warnings, newComponents }: TagResults = results;
     function joinComponents(comps) {
       return comps
         .map((comp) => {
@@ -154,12 +144,8 @@ export default class Export extends Command {
     }
 
     // send only non new components to changed components compare
-    const changedComponents = taggedComponents.filter(
-      component => !newComponents.includes(component.id.toStringWithoutVersion())
-    );
-    const addedComponents = taggedComponents.filter(component =>
-      newComponents.includes(component.id.toStringWithoutVersion())
-    );
+    const changedComponents = taggedComponents.filter(component => !newComponents.searchWithoutVersion(component.id));
+    const addedComponents = taggedComponents.filter(component => newComponents.searchWithoutVersion(component.id));
     const autoTaggedCount = autoTaggedComponents ? autoTaggedComponents.length : 0;
 
     const warningsOutput = warnings && warnings.length ? `${chalk.yellow(warnings.join('\n'))}\n\n` : '';

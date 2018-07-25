@@ -170,7 +170,7 @@ export default class BitMap {
     } = {}
   ): BitId {
     if (!(bitId instanceof BitId)) {
-      throw TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
+      throw new TypeError(`BitMap.getBitId expects bitId to be an instance of BitId, instead, got ${bitId}`);
     }
     const allIds = this.getAllBitIds();
     const exactMatch = allIds.search(bitId);

@@ -8,8 +8,17 @@ import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 import InvalidVersion from './exceptions/invalid-version';
 import { Analytics } from '../../../analytics/analytics';
+import Component from '../../../consumer/component';
+import ModelComponent from '../../../scope/models/component';
 
 const HooksManagerInstance = HooksManager.getInstance();
+
+export type TagResults = {
+  taggedComponents: Component[],
+  autoTaggedComponents: ModelComponent[],
+  warnings: string[],
+  newComponents: BitIds
+};
 
 export async function commitAction(args: {
   id: string,
@@ -21,7 +30,7 @@ export async function commitAction(args: {
   ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,
   skipTests: boolean
-}) {
+}): Promise<TagResults> {
   const {
     id,
     message,
@@ -86,7 +95,7 @@ export async function commitAllAction(args: {
   skipTests: boolean,
   scope?: boolean,
   includeImported?: boolean
-}) {
+}): Promise<TagResults> {
   const {
     message,
     exactVersion,

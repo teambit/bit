@@ -149,7 +149,7 @@ export default class Consumer {
    * @returns {boolean} true if the driver exists, false otherwise
    * @memberof Consumer
    */
-  warnForMissingDriver(msg: string): boolean {
+  warnForMissingDriver(msg?: string): boolean {
     try {
       this.driver.getDriver(false);
       return true;
@@ -610,19 +610,24 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_COMPONENT_SEPARATOR);
-    if (pathSplit.length < 1) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
+    if (pathSplit.length < 2) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
     // since the dynamic namespaces feature introduced, the require statement doesn't have a fixed
     // number of separators.
     // also, a scope name may or may not include a dot. depends whether it's on bitHub or self hosted.
     // we must check against BitMap to get the correct scope and name of the id.
+    if (pathSplit.length === 2) {
+      return new BitId({ scope: pathSplit[0], name: pathSplit[1] });
+    }
     const mightBeScope = R.head(pathSplit);
-    const mightBeName = R.tail(pathSplit);
+    const mightBeName = R.tail(pathSplit).join('/');
     const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
     const allBitIds = this.bitMap.getAllBitIds();
     if (allBitIds.searchWithoutVersion(mightBeId)) return mightBeId;
 
+    // pathSplit has 3 or more items. the first two are the scope, the rest is the name.
+    // for example "user.scopeName.utils.is-string" => scope: user.scopeName, name: utils/is-string
     const scope = pathSplit.splice(0, 2).join('.');
-    const name = pathSplit.splice(2).join('/');
+    const name = pathSplit.join('/');
     return new BitId({ scope, name });
   }
 
@@ -777,9 +782,11 @@ export default class Consumer {
       `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
     );
     // added this to remove support for remove version
-    const bitIds = ids.map((id) => {
-      return id.changeVersion(LATEST_BIT_VERSION);
-    });
+    const bitIds = BitIds.fromArray(
+      ids.map((id) => {
+        return id.changeVersion(LATEST_BIT_VERSION);
+      })
+    );
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     if (remote && localIds.length) {
       throw new GeneralError(
@@ -817,18 +824,26 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
   async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
+    logger.debug(`consumer.removeComponentFromFs, ids: ${bitIds.toString()}`);
+    const deletePath = async (pathToDelete) => {
+      logger.debug(`consumer.removeComponentFromFs deleting the following path: ${pathToDelete}`);
+      return fs.remove(pathToDelete);
+    };
     return Promise.all(
       bitIds.map(async (id) => {
-        const ignoreVersion = id.isLocal();
+        const ignoreVersion = id.isLocal() || !id.hasVersion();
         const componentMap = this.bitMap.getComponentIfExist(id, { ignoreVersion });
-        if (!componentMap) return null;
-        if (
-          (componentMap.origin && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
-          componentMap.origin === COMPONENT_ORIGINS.NESTED
-        ) {
-          return fs.remove(path.join(this.getPath(), componentMap.rootDir));
+        if (!componentMap) {
+          logger.warn(
+            `removeComponentFromFs wasn't able to delete ${id.toString()} because the id is missing from bitmap`
+          );
+          return null;
+        }
+        if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+          // $FlowFixMe rootDir is set for non authored
+          return deletePath(path.join(this.getPath(), componentMap.rootDir));
         } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(componentMap.files.map(file => fs.remove(file.relativePath)));
+          return Promise.all(componentMap.files.map(file => deletePath(file.relativePath)));
         }
         return null;
       })
@@ -843,7 +858,7 @@ export default class Consumer {
    */
   resolveLocalComponentIds(bitIds: BitIds): BitId[] {
     return bitIds.map((id) => {
-      const realBitId = this.getBitIdIfExist(id.toStringWithoutVersion());
+      const realBitId = this.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
       if (!realBitId) return id;
       const componentMap = this.bitMap.getComponent(realBitId);
       if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -898,7 +913,9 @@ export default class Consumer {
       this
     );
 
-    const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
+    const componentsToRemoveFromFs = BitIds.fromArray(
+      removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION)
+    );
     if (!R.isEmpty(removedComponentIds)) {
       await this.removeComponentFromFs(componentsToRemoveFromFs, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);
