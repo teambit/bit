@@ -32,7 +32,7 @@ export default function list({
         COMPONENT_ORIGINS.IMPORTED
       ]);
       components.forEach((component) => {
-        const existingBitMapId = authoredAndImportedIds.findWithoutVersion(component.id);
+        const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(component.id);
         if (existingBitMapId) {
           component._currentlyUsedVersion = existingBitMapId;
           component.componentMap = consumer.bitMap.getComponent(existingBitMapId);

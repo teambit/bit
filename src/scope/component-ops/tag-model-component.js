@@ -192,7 +192,7 @@ export default (async function tagModelComponent({
   const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
   const autoTagComponents = await scope.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
-  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.id()));
+  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
 

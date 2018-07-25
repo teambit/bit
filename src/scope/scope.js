@@ -1195,17 +1195,16 @@ export default class Scope {
       );
       let pendingUpdate = false;
       loadedVersion.getAllDependencies().forEach((dependency) => {
-        const committedComponentId = committedComponents.find(
-          committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
+        const committedComponentId = committedComponents.find(committedComponent =>
+          committedComponent.isEqualWithoutVersion(dependency.id)
         );
-
         if (!committedComponentId) return;
         if (semver.gt(committedComponentId.version, dependency.id.version)) {
           dependency.id = dependency.id.changeVersion(committedComponentId.version);
-          const flattenDependencyToUpdate = loadedVersion.flattenedDependencies.find(
-            flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
-          );
-          flattenDependencyToUpdate.version = committedComponentId.version;
+          loadedVersion.flattenedDependencies = loadedVersion.flattenedDependencies.map((flattenDependency) => {
+            if (flattenDependency.isEqualWithoutVersion(dependency.id)) { return flattenDependency.changeVersion(committedComponentId.version); }
+            return flattenDependency;
+          });
           pendingUpdate = true;
           // if !persist, we only check whether a modified component may cause auto-tagging
           // since it's only modified on the file-system, its version might be the same as the version stored in its

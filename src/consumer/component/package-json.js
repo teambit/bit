@@ -114,7 +114,7 @@ async function changeDependenciesToRelativeSyntax(
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const updateComponent = async (component) => {
-    const componentMap = component.getComponentMap(consumer.bitMap);
+    const componentMap = consumer.bitMap.getComponent(component.id);
     let packageJson;
     try {
       packageJson = await PackageJson.load(componentMap.rootDir);

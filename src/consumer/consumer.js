@@ -589,11 +589,15 @@ export default class Consumer {
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
     if (!id.scope) {
-      throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+      throw new GeneralError(
+        `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
+      );
     }
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    return path.join('node_modules', bindingPrefix, [id.scope, id.name].join(NODE_PATH_COMPONENT_SEPARATOR));
+    const allSlashes = new RegExp('/', 'g');
+    const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
+    return path.join('node_modules', bindingPrefix, [id.scope, name].join(NODE_PATH_COMPONENT_SEPARATOR));
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {

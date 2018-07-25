@@ -676,8 +676,8 @@ describe('bit import', function () {
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
 
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
@@ -2109,8 +2109,8 @@ console.log(barFoo.default());`;
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
