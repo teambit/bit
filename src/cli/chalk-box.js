@@ -5,6 +5,7 @@ import SpecsResults from '../consumer/specs-results/specs-results';
 import Component from '../consumer/component/consumer-component';
 import type { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
+import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
 export const formatNewBit = ({ name }: any): string => c.white('     > ') + c.cyan(name);
 
@@ -126,19 +127,20 @@ export const paintSpecsResults = (results?: SpecsResults[]): string[] => {
   });
 };
 
-export const paintAllSpecsResults = (results: Array<*>): string => {
+export const paintAllSpecsResults = (results: SpecsResultsWithComponentId): string => {
   if (results.length === 0) return c.yellow('nothing to test');
   return results
     .map((result) => {
-      if (result.missingTester) return paintMissingTester(result.componentId);
-      const componentId = c.bold(result.componentId);
+      const idStr = result.componentId.toString();
+      if (result.missingTester) return paintMissingTester(idStr);
+      const componentId = c.bold(idStr);
       if (result.specs) return componentId + paintSpecsResults(result.specs);
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
     .join('\n');
 };
 
-export const paintSummarySpecsResults = (results: Array<*>): string => {
+export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): string => {
   if (results.length <= 1) return ''; // it there are no results or only one result, no need for summary
   const summaryHeader = [];
   summaryHeader.push({ value: 'Component ID', width: 80, headerColor: 'cyan' });
@@ -149,7 +151,7 @@ export const paintSummarySpecsResults = (results: Array<*>): string => {
     return areAllPassed ? c.green('passed') : c.red('failed');
   };
   const summaryRows = results.map((result) => {
-    const componentId = c.bold(result.componentId);
+    const componentId = c.bold(result.componentId.toString());
     if (result.missingTester) return [componentId, c.bold.red('tester is not defined')];
     if (result.specs) return [componentId, specsSummary(result.specs)];
     return [componentId, c.yellow('tests are not defined')];

@@ -5,6 +5,7 @@ import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import type { SpecsResultsWithComponentId } from '../../../consumer/specs-results/specs-results';
 
 const validForkLevels = R.values(TESTS_FORK_LEVEL);
 export default class Test extends Command {
@@ -30,7 +31,7 @@ export default class Test extends Command {
       verbose: ?boolean,
       forkLevel: ?string
     }
-  ): Promise<any> {
+  ): Promise<SpecsResultsWithComponentId> {
     if (id && includeUnmodified) {
       throw new GeneralError(
         'use --include-unmodified to test all components or use a component ID to test a specific component. run tests to all new and modified components by removing all flags and parameters'
@@ -42,7 +43,7 @@ export default class Test extends Command {
     return test(id, forkLevel, includeUnmodified, verbose);
   }
 
-  report(results: any): string {
+  report(results: SpecsResultsWithComponentId): string {
     if (Array.isArray(results)) return paintAllSpecsResults(results) + paintSummarySpecsResults(results);
     return "couldn't get test results...";
   }

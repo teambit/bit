@@ -55,7 +55,7 @@ export type RawTestsResults = {
   specPath: PathOsBased
 };
 
-export type SpecsResultsWithComponentId = Array<{ componentId: BitId, specs: SpecsResults }>;
+export type SpecsResultsWithComponentId = Array<{ componentId: BitId, specs: SpecsResults, missingTester?: boolean }>;
 
 export default class SpecsResults {
   tests: Test[];

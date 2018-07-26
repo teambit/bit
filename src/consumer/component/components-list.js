@@ -150,9 +150,10 @@ export default class ComponentsList {
         newComponents.push(id);
       }
     });
-    if (!load || !newComponents.length) return new BitIds(...newComponents);
+    const newComponentsIds = new BitIds(...newComponents);
+    if (!load || !newComponents.length) return newComponentsIds;
 
-    const { components } = await this.consumer.loadComponents(newComponents, false);
+    const { components } = await this.consumer.loadComponents(newComponentsIds, false);
     return components;
   }
 
