@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import format from 'string-format';
 import fs from 'fs-extra';
 import R from 'ramda';
 import json from 'comment-json';
@@ -21,6 +22,7 @@ import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
+import InvalidConfigDir from './exceptions/invalid-config-dir';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -193,6 +195,24 @@ export default class BitMap {
       }
     });
     return componentsIds;
+  }
+
+  validateConfigDir(configDir: PathLinux): boolean {
+    const components = this.getAllComponents();
+    const comps = R.pickBy((component) => {
+      if (pathIsInside(configDir, component.getTrackDir())) {
+        return true;
+      }
+      const compConfigDir = component.configDir ? format(component.configDir, { ENV_TYPE: '' }) : null;
+      if (compConfigDir && pathIsInside(configDir, compConfigDir)) {
+        return true;
+      }
+      return false;
+    }, components);
+    if (!R.isEmpty(comps)) {
+      throw new InvalidConfigDir(R.keys(comps)[0]);
+    }
+    return true;
   }
 
   _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {

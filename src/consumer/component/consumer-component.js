@@ -280,6 +280,7 @@ export default class Component {
 
   async writeConfig(
     consumerPath: PathOsBased,
+    bitMap: BitMap,
     configDir: PathOsBased,
     override?: boolean = true
   ): Promise<EjectConfResult> {
@@ -301,7 +302,7 @@ export default class Component {
       );
     }
 
-    const res = await ejectConf(this, consumerPath, configDir, override);
+    const res = await ejectConf(this, consumerPath, bitMap, configDir, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }

@@ -78,6 +78,7 @@ import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
 import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension-get-dynamic-packages-error';
 import ExtensionInitError from '../extensions/exceptions/extension-init-error';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
+import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -122,6 +123,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/[namespace]/<name>'],
+  [InvalidConfigDir, err => `error: the eject path is already part of "${chalk.bold(err.compId)}" path`],
   [
     ComponentNotFound,
     (err) => {

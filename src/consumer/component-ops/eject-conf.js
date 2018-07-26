@@ -7,12 +7,14 @@ import ComponentBitJson from '../bit-json';
 import { sharedStartOfArray, removeEmptyDir } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { COMPONENT_DIR } from '../../constants';
+import BitMap from '../bit-map';
 
 export type EjectConfResult = { id: string, ejectedPath: string };
 
 export default (async function ejectConf(
   component: ConsumerComponent,
   consumerPath: string,
+  bitMap: BitMap,
   configDir: string,
   override?: boolean = true
 ): Promise<EjectConfResult> {
@@ -32,7 +34,9 @@ export default (async function ejectConf(
   if (trackDir && configDir.startsWith(trackDir)) {
     configDir = configDir.replace(trackDir, `{${COMPONENT_DIR}}`);
   }
-  const deleteOldFiles = componentMap.configDir && componentMap.configDir !== configDir;
+  const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
+  bitMap.validateConfigDir(configDirToValidate);
+  const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
   const resolvedConfigDirFullPath = path.join(consumerPath, resolvedConfigDir);
@@ -93,4 +97,18 @@ const _getRelativeDir = (bitJsonDir, envDir) => {
   }
 
   return res;
+};
+
+/**
+ * get the config dir which needed to be searched in other components to validate there is no conflicts
+ * That's means check that the dir is not inside the comp dir
+ * and get the dir without the dynamic parts
+ * @param {*} configDir
+ */
+const _getDirToValidateAgainsetOtherComps = (configDir) => {
+  // In case it's inside the component dir it can't conflicts with other comps
+  if (configDir.startsWith(`{${COMPONENT_DIR}}`)) {
+    return null;
+  }
+  return format(configDir, { ENV_TYPE: '' });
 };
