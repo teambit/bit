@@ -102,7 +102,7 @@ export default class CompilerExtension extends EnvExtension {
     componentFromModel: ConsumerComponent,
     consumerBitJson: ConsumerBitJson,
     componentBitJson: ?ComponentBitJson,
-    context?: Object
+    context: Object
   }): Promise<?CompilerExtension> {
     Analytics.addBreadCrumb('compiler-extension', 'loadFromCorrectSource');
     if (componentBitJson) {
