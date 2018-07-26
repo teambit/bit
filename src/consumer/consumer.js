@@ -270,17 +270,18 @@ export default class Consumer {
     const alreadyLoadedComponents = [];
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
-    ids.forEach((id) => {
+    ids.forEach((id: BitId) => {
       if (!(id instanceof BitId)) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      if (this._componentsCache[id.toString()]) {
-        logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
+      const idWithoutVersion = id.toStringWithoutVersion();
+      if (this._componentsCache[idWithoutVersion]) {
+        logger.debug(`the component ${idWithoutVersion} has been already loaded, use the cached component`);
         Analytics.addBreadCrumb(
           'load components',
-          `the component ${Analytics.hashData(id.toString())} has been already loaded, use the cached component`
+          `the component ${Analytics.hashData(idWithoutVersion)} has been already loaded, use the cached component`
         );
-        alreadyLoadedComponents.push(this._componentsCache[id.toString()]);
+        alreadyLoadedComponents.push(this._componentsCache[idWithoutVersion]);
       } else {
         idsToProcess.push(id);
       }
@@ -352,7 +353,7 @@ export default class Consumer {
       // load the components one after another (not in parallel).
       const component = await componentP; // eslint-disable-line no-await-in-loop
       if (component) {
-        this._componentsCache[component.id.toString()] = component;
+        this._componentsCache[component.id.toStringWithoutVersion()] = component;
         logger.debug(`Finished loading the component, ${component.id.toString()}`);
         Analytics.addBreadCrumb(`Finished loading the component, ${Analytics.hashData(component.id.toString())}`);
         allComponents.push(component);
