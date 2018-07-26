@@ -422,7 +422,7 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent,
-    files: ?Array<SourceFileModel>,
+    files: Array<SourceFileModel>,
     flattenedDependencies: BitId[],
     flattenedDevDependencies: BitId[],
     message: string,
@@ -455,7 +455,7 @@ export default class Version extends BitObject {
 
     return new Version({
       mainFile: component.mainFile,
-      files: files ? files.map(parseFile) : null,
+      files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
       compiler: component.compiler ? component.compiler.toModelObject() : undefined,
       bindingPrefix: component.bindingPrefix,

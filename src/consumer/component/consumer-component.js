@@ -223,6 +223,10 @@ export default class Component {
     });
   }
 
+  clone() {
+    return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+  }
+
   setDependencies(dependencies?: Dependency[]) {
     this.dependencies = new Dependencies(dependencies);
   }
