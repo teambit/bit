@@ -39,7 +39,7 @@ export default class BitMap {
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
-    this.components = [];
+    this.components = {};
     this.hasChanged = false;
     this.version = version;
     this.paths = {};
