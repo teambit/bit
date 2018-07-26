@@ -57,7 +57,7 @@ export default (async function writeToComponentsDir({
   writeToPath,
   override = true, // override files
   writePackageJson = true,
-  writeBitJson = true,
+  writeBitJson = false,
   writeBitDependencies = false,
   createNpmLinkFiles = false,
   writeDists = true,

@@ -416,7 +416,9 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      this.setComponent(componentIdStr, new ComponentMap({ files, origin }));
+      const componentMap = new ComponentMap({ files, origin });
+      componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
+      this.setComponent(componentIdStr, componentMap);
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
         this.components[componentIdStr]
