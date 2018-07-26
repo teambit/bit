@@ -15,7 +15,6 @@ specs/scope/migrations/objectsFixtures/simple-component.js
 specs/specs-runner/fixtures/invalid-tester.js
 src/api/consumer/lib/isolate.js
 src/api/consumer/lib/migrate.js
-src/api/consumer/lib/untrack.js
 src/api/scope/lib/deprecate.js
 src/api/scope/lib/modify-ci-props.js
 src/cli/command-registrar-builder.js

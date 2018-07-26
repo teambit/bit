@@ -239,14 +239,18 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
-  getBitId(id: BitIdStr, keepOriginalVersion: boolean = true, shouldThrow: boolean = true): BitId {
-    const bitId = this.bitMap.getExistingBitId(id, shouldThrow);
+  getBitId(id: BitIdStr, keepOriginalVersion: boolean = true): BitId {
+    // $FlowFixMe, bitId is always defined as shouldThrow is true
+    const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = keepOriginalVersion ? BitId.getVersionOnlyFromString(id) : bitId.version;
     return bitId.changeVersion(version);
   }
 
-  getBitIdIfExist(id: BitIdStr, keepOriginalVersion: boolean = true) {
-    return this.getBitId(id, keepOriginalVersion, false);
+  getBitIdIfExist(id: BitIdStr, keepOriginalVersion: boolean = true): ?BitId {
+    const bitId: ?BitId = this.bitMap.getExistingBitId(id, false);
+    if (!bitId) return null;
+    const version = keepOriginalVersion ? BitId.getVersionOnlyFromString(id) : bitId.version;
+    return bitId.changeVersion(version);
   }
 
   async loadComponent(id: BitId): Promise<Component> {
