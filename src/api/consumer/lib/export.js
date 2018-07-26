@@ -20,10 +20,8 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     else loader.start(BEFORE_EXPORT);
     return exportPendingComponents;
   }
-  // the ids received from the CLI may be missing the scope-name, try to get the complete ids from bit.map
   const idsToExportP = ids.map(async (id) => {
     const parsedId = consumer.getBitId(id);
-    if (parsedId.scope) return parsedId;
     const status = await consumer.getComponentStatusById(parsedId);
     // don't allow to re-export an exported component unless it's being exported to another scope
     if (!status.staged && parsedId.scope === remote) {

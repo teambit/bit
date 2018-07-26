@@ -2,7 +2,7 @@ import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
-import BitsrcTester, { username } from '../bitsrc-tester';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 
 chai.use(require('chai-fs'));
@@ -19,7 +19,8 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     let scopeBeforeExport;
     let scopeAfterImport;
     let remoteScope;
-    before(() => {
+    before(function () {
+      if (!supportTestingOnBitsrc) this.skip();
       helper.setNewLocalAndRemoteScopes();
       const sourceDir = path.join(helper.getFixturesDir(), 'components');
       const destination = path.join(helper.localScopePath, 'src');

@@ -2,7 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import BitsrcTester, { username } from '../bitsrc-tester';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
@@ -138,7 +138,8 @@ describe('foo', () => {
         let scopeName;
         let scopeId;
         let bitsrcTester;
-        before(() => {
+        before(function () {
+          if (!supportTestingOnBitsrc) this.skip();
           bitsrcTester = new BitsrcTester();
           helper.getClonedLocalScope(localScope);
           return bitsrcTester

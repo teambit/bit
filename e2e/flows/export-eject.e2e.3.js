@@ -1,7 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import BitsrcTester, { username } from '../bitsrc-tester';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
@@ -10,7 +10,8 @@ describe('export --eject functionality using bitsrc.io', function () {
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
   let scopeName;
-  before(() => {
+  before(function () {
+    if (!supportTestingOnBitsrc) this.skip();
     return bitsrcTester
       .loginToBitSrc()
       .then(() => bitsrcTester.createScope())

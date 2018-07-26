@@ -262,12 +262,12 @@ describe('bit export command', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
 
-      helper.commitComponentBarFoo(); // v3
+      helper.commitComponent('bar/foo -f'); // v3
       helper.exportComponent(`${helper.remoteScope}/bar/foo`);
     });
     it('should export it with no errors', () => {
       const output = helper.listRemoteScope();
-      expect(output.includes(`${helper.remoteScope}/bar/foo@0.0.3`)).to.be.true;
+      expect(output).to.have.string(`${helper.remoteScope}/bar/foo@0.0.3`);
     });
   });
 
@@ -337,7 +337,7 @@ describe('bit export command', function () {
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo');
       try {
-        output = helper.exportComponent('bar/foo');
+        output = helper.exportComponent('bar/foo', undefined, false);
       } catch (err) {
         errorOutput = err.message;
       }
@@ -346,7 +346,7 @@ describe('bit export command', function () {
       expect(output).to.be.undefined;
     });
     it('should throw an error saying the component was already exported', () => {
-      expect(errorOutput.includes('has been already exported')).to.be.true;
+      expect(errorOutput).to.have.string('has been already exported');
     });
   });
 
