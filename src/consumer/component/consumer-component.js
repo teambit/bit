@@ -1,7 +1,6 @@
 // @flow
 import path from 'path';
 import fs from 'fs-extra';
-import format from 'string-format';
 import R from 'ramda';
 import c from 'chalk';
 import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy, sharedStartOfArray } from '../../utils';
@@ -15,7 +14,8 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
-import ejectConf, { EjectConfResult } from '../component-ops/eject-conf';
+import ejectConf from '../component-ops/eject-conf';
+import type { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -23,13 +23,13 @@ import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
-import type { ComponentOrigin, DetachState } from '../bit-map/component-map';
+import type { ComponentOrigin } from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
-import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
+import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
 import {
   DEFAULT_BOX_NAME,
@@ -474,7 +474,7 @@ export default class Component {
         consumer.bitMap,
         consumer.dirStructure.ejectedEnvsDirStructure,
         override
-      ); 
+      );
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
