@@ -30,8 +30,8 @@ function buildComponentsGraph(components: Component[]) {
     dependencies.get().forEach((dependency) => {
       const depId = dependency.id.toString();
       // save the full BitId of a string id to be able to retrieve it laster with no confusion
-      if (!graphDeps.hasNode(id)) graphDeps.setNode(id, component.id);
-      if (!graphDeps.hasNode(depId)) graphDeps.setNode(depId, dependency.id);
+      if (!graph.hasNode(id)) graph.setNode(id, component.id);
+      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
       graph.setEdge(id, depId);
     });
   };

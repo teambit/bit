@@ -55,11 +55,12 @@ describe('dev-dependencies functionality', function () {
         expect(barFoo.dependencies)
           .to.be.an('array')
           .that.have.lengthOf(1);
-        expect(barFoo.dependencies[0].id).to.equal('utils/is-string@0.0.1');
+        expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
+        expect(barFoo.dependencies[0].id.version).to.equal('0.0.1');
       });
       it('should leave the flattened-dependencies intact', () => {
-        expect(barFoo.flattenedDependencies).to.include('utils/is-type@0.0.1');
-        expect(barFoo.flattenedDependencies).to.include('utils/is-string@0.0.1');
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
     });
     describe('without dependencies and with dev-dependencies', () => {
