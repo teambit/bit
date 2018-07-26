@@ -50,7 +50,7 @@ describe('bit untag command', function () {
       });
       it('bit show should work', () => {
         const showOutput = helper.showComponentParsed('bar/foo');
-        expect(showOutput.name).to.equal('foo');
+        expect(showOutput.name).to.equal('bar/foo');
       });
       it('bit status should show the component as staged', () => {
         const output = helper.runCmd('bit status');
@@ -112,7 +112,9 @@ describe('bit untag command', function () {
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string('unable to untag bar/foo, the version 0.0.1 was exported already');
+          expect(output).to.have.string(
+            `unable to untag ${helper.remoteScope}/bar/foo, the version 0.0.1 was exported already`
+          );
         });
       });
       describe('untagging without version', () => {
