@@ -34,8 +34,10 @@ export default (async function ejectConf(
   if (trackDir && configDir.startsWith(trackDir)) {
     configDir = configDir.replace(trackDir, `{${COMPONENT_DIR}}`);
   }
-  const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
-  bitMap.validateConfigDir(configDirToValidate);
+  if (!configDir.startsWith(`{${COMPONENT_DIR}}`)) {
+    const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
+    bitMap.validateConfigDir(configDirToValidate);
+  }
   const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });

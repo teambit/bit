@@ -468,7 +468,14 @@ export default class Component {
     }
     if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson) await this.writeConfig(bitDir, consumer.dirStructure.ejectedEnvsDirStructure, override);
+    if (writeBitJson && consumer) {
+      await this.writeConfig(
+        consumer.getPath(),
+        consumer.bitMap,
+        consumer.dirStructure.ejectedEnvsDirStructure,
+        override
+      ); 
+    }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
