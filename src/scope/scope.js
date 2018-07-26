@@ -918,10 +918,11 @@ export default class Scope {
   /**
    * deprecate components from scope
    */
-  async deprecateMany(bitIds: Array<BitId>): Promise<any> {
+  async deprecateMany(bitIds: BitIds): Promise<any> {
+    logger.debug(`scope.deprecateMany, ids: ${bitIds.toString()}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
-    const deprecatedComponents = await Promise.all(deprecateComponents());
+    const deprecatedComponentsP = foundComponents.map(bitId => this.deprecateSingle(bitId));
+    const deprecatedComponents = await Promise.all(deprecatedComponentsP);
     const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
     return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
@@ -1202,7 +1203,9 @@ export default class Scope {
         if (semver.gt(committedComponentId.version, dependency.id.version)) {
           dependency.id = dependency.id.changeVersion(committedComponentId.version);
           loadedVersion.flattenedDependencies = loadedVersion.flattenedDependencies.map((flattenDependency) => {
-            if (flattenDependency.isEqualWithoutVersion(dependency.id)) { return flattenDependency.changeVersion(committedComponentId.version); }
+            if (flattenDependency.isEqualWithoutVersion(dependency.id)) {
+              return flattenDependency.changeVersion(committedComponentId.version);
+            }
             return flattenDependency;
           });
           pendingUpdate = true;

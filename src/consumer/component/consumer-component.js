@@ -111,7 +111,7 @@ export default class Component {
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
-  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | string } };
+  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
   customResolvedPaths: customResolvedPath[];
   _driver: Driver;

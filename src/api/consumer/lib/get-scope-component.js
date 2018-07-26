@@ -17,7 +17,7 @@ export default function getScopeComponent({
 }: {
   id: string,
   allVersions: ?boolean,
-  scopePath: ?string,
+  scopePath: ?string, // used by the api (see /src/api.js)
   showRemoteVersions: ?boolean
 }) {
   function loadFromScope() {

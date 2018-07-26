@@ -362,6 +362,9 @@ export default class BitMap {
    * search for a similar id in the bitmap and return the full BitId
    */
   getExistingBitId(id: BitIdStr, shouldThrow: boolean = true): ?BitId {
+    if (!R.is(String, id)) {
+      throw new TypeError(`BitMap.getExistingBitId expects id to be a string, instead, got ${typeof id}`);
+    }
     const components: ComponentMap[] = R.values(this.components);
     const idHasVersion = id.includes(VERSION_DELIMITER);
 
