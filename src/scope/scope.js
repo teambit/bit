@@ -1129,7 +1129,7 @@ export default class Scope {
       installPackages: true,
       noPackageJson: false,
       dist: true,
-      conf: true,
+      conf: false,
       override: false,
       verbose,
       silentPackageManagerResult: true
