@@ -41,8 +41,8 @@ export default class BitIds extends Array<BitId> {
     return this.find(id => id.hasSameName(bitId));
   }
 
-  getUniq(): BitId[] {
-    return R.uniqBy(JSON.stringify, this);
+  getUniq(): BitIds {
+    return BitIds.fromArray(R.uniqBy(JSON.stringify, this));
   }
 
   /**

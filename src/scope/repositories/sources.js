@@ -13,7 +13,7 @@ import {
 } from '../../constants';
 import { MergeConflict, MergeConflictOnRemote, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
@@ -238,8 +238,8 @@ export default class SourceRepository {
     specsResults
   }: {
     source: ConsumerComponent,
-    flattenedDependencies: BitId[],
-    flattenedDevDependencies: BitId[],
+    flattenedDependencies: BitIds,
+    flattenedDevDependencies: BitIds,
     message: string,
     exactVersion: ?string,
     releaseType: string,

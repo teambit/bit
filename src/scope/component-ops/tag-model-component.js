@@ -16,7 +16,7 @@ import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptio
 import { pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import Source from '../models/source';
 import { DependencyNotFound } from '../exceptions';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { flattenDependencyIds } from '../flatten-dependencies';
 import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -50,12 +50,12 @@ async function getFlattenedDependencies(
   component: Component,
   graph: Object,
   cache: Object
-): Promise<BitId[]> {
+): Promise<BitIds> {
   const id = component.id.toString();
-  if (!graph.hasNode(id)) return [];
+  if (!graph.hasNode(id)) return new BitIds();
   const edges = graphlib.alg.preorder(graph, id);
   const dependencies = R.tail(edges); // the first item is the component itself
-  if (!dependencies.length) return [];
+  if (!dependencies.length) return new BitIds();
   const flattenedP = dependencies.map(async (dependency) => {
     if (cache[dependency]) return cache[dependency];
     const dependencyBitId: BitId = graph.node(dependency);
@@ -74,7 +74,7 @@ async function getFlattenedDependencies(
     return flattenedDependencies;
   });
   const flattened = await Promise.all(flattenedP);
-  return R.uniq(R.flatten(flattened));
+  return BitIds.fromArray(R.flatten(flattened)).getUniq();
 }
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {

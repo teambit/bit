@@ -355,8 +355,8 @@ export default class Version extends BitObject {
       });
     };
 
-    const _getFlattenedDependencies = (deps = []) => {
-      return deps.map(dep => BitId.parseBackwardCompatible(dep));
+    const _getFlattenedDependencies = (deps = []): BitIds => {
+      return BitIds.fromArray(deps.map(dep => BitId.parseBackwardCompatible(dep)));
     };
 
     const parseFile = (file) => {
