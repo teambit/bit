@@ -147,13 +147,10 @@ export default class BitId {
     return id.split(VERSION_DELIMITER)[1];
   }
 
-  static parse(id: string, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
+  static parse(id: BitIdStr, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
     if (!R.is(String, id)) {
       throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
     }
-    // if (!id || id === NO_PLUGIN_TYPE) {
-    //   return null;
-    // }
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;
@@ -182,7 +179,7 @@ export default class BitId {
     });
   }
 
-  static parseObsolete(id: string, version: string = LATEST_BIT_VERSION): BitId {
+  static parseObsolete(id: BitIdStr, version: string = LATEST_BIT_VERSION): BitId {
     // if (!id || id === NO_PLUGIN_TYPE) {
     //   return null;
     // }
@@ -242,7 +239,7 @@ export default class BitId {
    * before version 13.0.3 bitmap and component-dependencies ids were written as strings (e.g. scope/box/name@version)
    * since that version the ids are written as objects ({ scope: scopeName, name: compName, version: 0.0.1 })
    */
-  static parseBackwardCompatible(id: string | Object) {
+  static parseBackwardCompatible(id: string | Object): BitId {
     return typeof id === 'string' ? BitId.parseObsolete(id) : new BitId(id);
   }
 
