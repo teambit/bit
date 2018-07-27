@@ -223,8 +223,16 @@ export default class Component {
     });
   }
 
+  /**
+   * Warning: this method does not return a deep copy for objects properties except dependencies and devDependencies
+   * Implement deep copy of other properties if needed
+   */
   clone() {
-    return Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    // $FlowFixMe
+    const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    newInstance.setDependencies(this.dependencies.getClone());
+    newInstance.setDevDependencies(this.devDependencies.getClone());
+    return newInstance;
   }
 
   setDependencies(dependencies?: Dependency[]) {

@@ -245,7 +245,7 @@ describe('bit untag command', function () {
           }
         });
         it('should show an error', () => {
-          expect(output).to.have.string('unable to untag utils/is-type');
+          expect(output).to.have.string(`unable to untag ${helper.remoteScope}/utils/is-type`);
         });
       });
     });
