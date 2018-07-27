@@ -42,7 +42,7 @@ export default function getScopeComponent({
   return loadConsumer()
     .then(async (consumer) => {
       const localScopeName = consumer.scope.name;
-      const bitId = consumer.getBitId(id);
+      const bitId = consumer.getParsedId(id);
       if (!bitId.isLocal(localScopeName)) {
         if (allVersions) {
           return Promise.reject(new Error('cant list all versions of a remote scope'));

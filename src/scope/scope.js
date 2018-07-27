@@ -73,6 +73,7 @@ import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import type { PathOsBasedAbsolute } from '../utils/path';
+import type { BitIdStr } from '../bit-id/bit-id';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -1318,12 +1319,12 @@ export default class Scope {
   /**
    * if it's not in the scope, it's probably new, we assume it doesn't have scope.
    */
-  async isIdHasScope(id: string): Promise<boolean> {
+  async isIdHasScope(id: BitIdStr): Promise<boolean> {
     const component = await this.loadModelComponentByIdStr(id);
     return Boolean(component && component.scope);
   }
 
-  async getBitId(id: string): Promise<BitId> {
+  async getParsedId(id: BitIdStr): Promise<BitId> {
     const idHasScope = await this.isIdHasScope(id);
     return BitId.parse(id, idHasScope);
   }

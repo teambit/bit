@@ -239,17 +239,17 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
-  getBitId(id: BitIdStr, keepOriginalVersion: boolean = true): BitId {
+  getParsedId(id: BitIdStr): BitId {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
     const bitId: BitId = this.bitMap.getExistingBitId(id);
-    const version = keepOriginalVersion ? BitId.getVersionOnlyFromString(id) : bitId.version;
+    const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version);
   }
 
-  getBitIdIfExist(id: BitIdStr, keepOriginalVersion: boolean = true): ?BitId {
+  getParsedIdIfExist(id: BitIdStr): ?BitId {
     const bitId: ?BitId = this.bitMap.getExistingBitId(id, false);
     if (!bitId) return null;
-    const version = keepOriginalVersion ? BitId.getVersionOnlyFromString(id) : bitId.version;
+    const version = BitId.getVersionOnlyFromString(id);
     return bitId.changeVersion(version);
   }
 

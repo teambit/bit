@@ -24,7 +24,7 @@ export default (async function unTagAction(version?: string, force: boolean, id?
   const consumer: Consumer = await loadConsumer();
   const untag = async (): Promise<untagResult[]> => {
     if (id) {
-      const bitId = consumer.getBitId(id);
+      const bitId = consumer.getParsedId(id);
       // a user might run the command `bit untag id@version` instead of `bit untag id version`
       if (bitId.hasVersion() && !version) version = bitId.version;
       const result = await removeLocalVersion(consumer.scope, bitId, version, force);

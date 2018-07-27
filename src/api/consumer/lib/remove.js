@@ -20,7 +20,7 @@ export default (async function remove({
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer = await loadConsumer();
   const bitIds = ids.map((id) => {
-    return remote ? BitId.parse(id, true) : consumer.getBitId(id);
+    return remote ? BitId.parse(id, true) : consumer.getParsedId(id);
   });
   const removeResults = await consumer.remove({ ids: BitIds.fromArray(bitIds), force, remote, track, deleteFiles });
   await consumer.onDestroy();

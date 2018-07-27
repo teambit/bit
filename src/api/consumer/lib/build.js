@@ -9,7 +9,7 @@ import GeneralError from '../../../error/general-error';
 
 export async function build(id: string, noCache: boolean, verbose: boolean): Promise<?Array<string>> {
   const consumer = await loadConsumer();
-  const bitId = consumer.getBitId(id);
+  const bitId = consumer.getParsedId(id);
   const component: Component = await consumer.loadComponent(bitId);
   const result = await component.build({ scope: consumer.scope, noCache, consumer, verbose });
   if (result === null) return null;

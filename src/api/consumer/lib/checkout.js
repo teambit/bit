@@ -48,7 +48,7 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
     throw new GeneralError('please specify either [ids...] or --all, not both');
   }
   if (!ids.length) await populateIds(consumer, checkoutProps);
-  else checkoutProps.ids = ids.map(id => consumer.getBitId(id));
+  else checkoutProps.ids = ids.map(id => consumer.getParsedId(id));
 }
 
 export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {

@@ -30,13 +30,13 @@ export default function buildInScope({
       }
     };
     const scope: Scope = await getScope();
-    const bitId = await scope.getBitId(id);
+    const bitId = await scope.getParsedId(id);
     return scope.build({ bitId, save, verbose, directory, keep });
   }
 
   function loadFromConsumer() {
     return loadConsumer().then((consumer: Consumer) => {
-      const bitId = consumer.getBitId(id);
+      const bitId = consumer.getParsedId(id);
       return consumer.scope.build({ bitId, save, consumer, verbose });
     });
   }

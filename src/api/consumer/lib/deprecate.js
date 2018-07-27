@@ -8,7 +8,7 @@ export default (async function deprecate({ ids, remote }: { ids: string[], remot
   if (remote) loader.start(BEFORE_REMOTE_DEPRECATE);
   const consumer = await loadConsumer();
   const bitIds = ids.map((id) => {
-    return remote ? BitId.parse(id, true) : consumer.getBitId(id);
+    return remote ? BitId.parse(id, true) : consumer.getParsedId(id);
   });
   return consumer.deprecate(bitIds, remote);
 });

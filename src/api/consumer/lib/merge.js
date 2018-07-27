@@ -9,7 +9,7 @@ export default (async function merge(
   mergeStrategy: MergeStrategy
 ): Promise<ApplyVersionResults> {
   const consumer: Consumer = await loadConsumer();
-  const bitIds = ids.map(id => consumer.getBitId(id));
+  const bitIds = ids.map(id => consumer.getParsedId(id));
   const mergeResults = await mergeVersion(consumer, version, bitIds, mergeStrategy);
   await consumer.onDestroy();
   return mergeResults;

@@ -18,7 +18,7 @@ export default (async function untrack(componentIds: string[], all: ?boolean): P
     return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
-    const bitId = consumer.getBitIdIfExist(componentId);
+    const bitId = consumer.getParsedIdIfExist(componentId);
     if (!bitId) {
       missing.push(componentId);
       return;

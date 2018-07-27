@@ -23,12 +23,12 @@ export default (async function isolate(componentId: string, scopePath: string, o
   // If a scope path provided we will take the component from that scope
   if (scopePath) {
     scope = await loadScope(scopePath);
-    const bitId = await scope.getBitId(componentId);
+    const bitId = await scope.getParsedId(componentId);
     return scope.isolateComponent(bitId, opts);
   }
   // If a scope path was not provided we will get the consumer's scope
   const consumer = await loadConsumer();
   scope = consumer.scope;
-  const bitId = consumer.getBitId(componentId);
+  const bitId = consumer.getParsedId(componentId);
   return scope.isolateComponent(bitId, opts);
 });

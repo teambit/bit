@@ -62,7 +62,7 @@ const _getComponents = async (
   verbose: ?boolean
 ) => {
   if (id) {
-    const idParsed = consumer.getBitId(id);
+    const idParsed = consumer.getParsedId(id);
     const component = await consumer.loadComponent(idParsed);
     return [component];
   }

@@ -47,7 +47,7 @@ export async function commitAction(args: {
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
-  const bitId = consumer.getBitId(id);
+  const bitId = consumer.getParsedId(id);
   if (!force) {
     const componentStatus = await consumer.getComponentStatusById(bitId);
     if (componentStatus.modified === false) return null;

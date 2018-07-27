@@ -31,7 +31,7 @@ export default function testInScope({
       }
     };
     const scope: Scope = await getScope();
-    const bitId = await scope.getBitId(id);
+    const bitId = await scope.getParsedId(id);
     return scope.runComponentSpecs({
       bitId,
       save,
@@ -44,7 +44,7 @@ export default function testInScope({
 
   function loadFromConsumer() {
     return loadConsumer().then((consumer) => {
-      const bitId = consumer.getBitId(id);
+      const bitId = consumer.getParsedId(id);
       return consumer.scope.runComponentSpecs({
         consumer,
         bitId,

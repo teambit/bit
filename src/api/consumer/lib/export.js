@@ -21,7 +21,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     return exportPendingComponents;
   }
   const idsToExportP = ids.map(async (id) => {
-    const parsedId = consumer.getBitId(id);
+    const parsedId = consumer.getParsedId(id);
     const status = await consumer.getComponentStatusById(parsedId);
     // don't allow to re-export an exported component unless it's being exported to another scope
     if (!status.staged && parsedId.scope === remote) {
