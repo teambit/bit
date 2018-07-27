@@ -4,7 +4,6 @@ import { BitId } from '../bit-id';
 import { forEach, getLatestVersionNumber } from '../utils';
 
 export default class BitIds extends Array<BitId> {
-  // TODO: use the static toStrings below
   serialize(): string[] {
     return this.map(bitId => bitId.toString());
   }
@@ -22,6 +21,7 @@ export default class BitIds extends Array<BitId> {
    * @memberof BitIds
    */
   resolveVersion(idWithLatest: BitId) {
+    // $FlowFixMe
     return getLatestVersionNumber(this, idWithLatest);
   }
 
@@ -46,35 +46,15 @@ export default class BitIds extends Array<BitId> {
   }
 
   /**
-   * Get array of bitIds strings and transfer them to BitIds object
-   * This function support also checking if the array contain strings or BitIds
-   * @param {string | BitId} array - array of bit ids
+   * make sure to pass only bit ids you know they have scope, otherwise, you'll get invalid bit ids.
+   * this is mainly useful for remote commands where it is impossible to have a component without scope.
    */
-  // static deserialize(array: string[] | BitId[] = []): BitIds {
-  //   if (array && array.length && typeof array[0] === 'string') {
-  //     return new BitIds(...array.map(id => BitId.parse(id)));
-  //   }
-  //   return new BitIds(...array);
-  // }
-
   static deserialize(array: string[] = []): BitIds {
-    return new BitIds(...array.map(id => BitId.parse(id)));
+    return new BitIds(...array.map(id => BitId.parse(id, true)));
   }
 
-  toString() {
+  toString(): string {
     return this.map(id => id.toString()).join(', ');
-  }
-
-  /**
-   * Get array of bitIds strings and transfer them to BitIds object
-   * This function support also checking if the array contain strings or BitIds
-   * @param {string | BitId} array - array of bit ids
-   */
-  static toStrings(array: string[] | BitId[] = []) {
-    if (array && array.length && typeof array[0] === 'string') {
-      return array;
-    }
-    return array.map(bitId => bitId.toString());
   }
 
   static fromObject(dependencies: { [string]: string }) {
@@ -87,12 +67,12 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...array);
   }
 
-  static fromArray(bitIds: BitId[]) {
+  static fromArray(bitIds: BitId[]): BitIds {
     return new BitIds(...bitIds);
   }
 
-  static clone(bitIds?: ?BitIds = []): BitIds {
-    const cloneIds = bitIds.map(bitId => bitId.clone());
+  clone(): BitIds {
+    const cloneIds = this.map(id => id.clone());
     return new BitIds(...cloneIds);
   }
 }

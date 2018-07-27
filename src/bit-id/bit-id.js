@@ -102,15 +102,15 @@ export default class BitId {
   }
 
   isEqual(bitId: BitId): boolean {
-    return this.toString() === bitId.toString();
+    return this.hasSameName(bitId) && this.hasSameScope(bitId) && this.hasSameVersion(bitId);
   }
 
   isEqualWithoutVersion(bitId: BitId): boolean {
-    return this.toStringWithoutVersion() === bitId.toStringWithoutVersion();
+    return this.hasSameName(bitId) && this.hasSameScope(bitId);
   }
 
   isEqualWithoutScopeAndVersion(bitId: BitId): boolean {
-    return this.toStringWithoutScopeAndVersion() === bitId.toStringWithoutScopeAndVersion();
+    return this.hasSameName(bitId);
   }
 
   serialize() {
@@ -148,7 +148,9 @@ export default class BitId {
   }
 
   static parse(id: string, hasScope: boolean = true, version: string = LATEST_BIT_VERSION): BitId {
-    if (!R.is(String, id)) { throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`); }
+    if (!R.is(String, id)) {
+      throw new TypeError(`BitId.parse expects to get "id" as a string, instead, got ${typeof id}`);
+    }
     // if (!id || id === NO_PLUGIN_TYPE) {
     //   return null;
     // }

@@ -5,9 +5,9 @@
  */
 import R from 'ramda';
 import semver from 'semver';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 
-export default function getLatestVersionNumber(bitIds: BitId[], bitId: BitId): BitId {
+export default function getLatestVersionNumber(bitIds: BitIds, bitId: BitId): BitId {
   const getString = (id, ignoreScope = false, ignoreVersion = true) => {
     return id.toString(ignoreScope, ignoreVersion);
   };
