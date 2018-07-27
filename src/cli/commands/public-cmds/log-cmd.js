@@ -5,7 +5,7 @@ import { getComponentLogs } from '../../../api/consumer';
 import { paintLog } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 
-export default class Show extends Command {
+export default class Log extends Command {
   name = 'log <id>';
   description = `show components(s) commit history.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-log.html`;
   alias = '';
