@@ -7,7 +7,7 @@ import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe('importing bit components from bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe : describe.skip)('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
@@ -16,8 +16,7 @@ describe('importing bit components from bitsrc.io', function () {
   let scopeId;
   let componentTestId;
   let scopeAfterExport;
-  before(function () {
-    if (!supportTestingOnBitsrc) this.skip();
+  before(() => {
     return bitsrcTester
       .loginToBitSrc()
       .then(() => bitsrcTester.createScope())
@@ -59,7 +58,7 @@ describe('importing bit components from bitsrc.io', function () {
   });
   after(() => {
     helper.destroyEnv();
-    return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
+    return bitsrcTester.deleteScope(scopeName);
   });
   describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
     before(() => {

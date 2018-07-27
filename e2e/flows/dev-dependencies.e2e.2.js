@@ -135,12 +135,11 @@ describe('foo', () => {
           expect(output).to.have.string('tests passed');
         });
       });
-      describe('export and import dependencies as packages', () => {
+      (supportTestingOnBitsrc ? describe : describe.skip)('export and import dependencies as packages', () => {
         let scopeName;
         let scopeId;
         let bitsrcTester;
-        before(function () {
-          if (!supportTestingOnBitsrc) this.skip();
+        before(() => {
           bitsrcTester = new BitsrcTester();
           helper.getClonedLocalScope(localScope);
           return bitsrcTester
@@ -155,7 +154,7 @@ describe('foo', () => {
             });
         });
         after(() => {
-          return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
+          return bitsrcTester.deleteScope(scopeName);
         });
         it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
           const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));

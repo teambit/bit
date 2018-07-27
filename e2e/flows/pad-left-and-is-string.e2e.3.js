@@ -19,8 +19,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     let scopeBeforeExport;
     let scopeAfterImport;
     let remoteScope;
-    before(function () {
-      if (!supportTestingOnBitsrc) this.skip();
+    before(() => {
       helper.setNewLocalAndRemoteScopes();
       const sourceDir = path.join(helper.getFixturesDir(), 'components');
       const destination = path.join(helper.localScopePath, 'src');
@@ -97,7 +96,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      describe('exporting with --eject option', () => {
+      (supportTestingOnBitsrc ? describe : describe.skip)('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
         let isStringId;
@@ -120,7 +119,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             });
         });
         after(() => {
-          return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
+          return bitsrcTester.deleteScope(scopeName);
         });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
@@ -260,7 +259,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             });
         });
         after(() => {
-          return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
+          return bitsrcTester.deleteScope(scopeName);
         });
         it('should have the component files as a package (in node_modules)', () => {
           const nodeModulesDir = path.join(helper.localScopePath, 'node_modules', '@bit');

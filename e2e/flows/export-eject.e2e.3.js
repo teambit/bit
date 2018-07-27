@@ -5,13 +5,12 @@ import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester
 
 chai.use(require('chai-fs'));
 
-describe('export --eject functionality using bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe : describe.skip)('export --eject functionality using bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
   let scopeName;
-  before(function () {
-    if (!supportTestingOnBitsrc) this.skip();
+  before(() => {
     return bitsrcTester
       .loginToBitSrc()
       .then(() => bitsrcTester.createScope())
@@ -21,7 +20,7 @@ describe('export --eject functionality using bitsrc.io', function () {
   });
   after(() => {
     helper.destroyEnv();
-    return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
+    return bitsrcTester.deleteScope(scopeName);
   });
   describe('as author', () => {
     before(() => {
