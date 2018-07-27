@@ -59,7 +59,7 @@ describe('importing bit components from bitsrc.io', function () {
   });
   after(() => {
     helper.destroyEnv();
-    return bitsrcTester.deleteScope(scopeName);
+    return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
   });
   describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
     before(() => {

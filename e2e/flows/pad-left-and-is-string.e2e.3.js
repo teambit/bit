@@ -120,7 +120,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             });
         });
         after(() => {
-          return bitsrcTester.deleteScope(scopeName);
+          return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
         });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
@@ -260,7 +260,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
             });
         });
         after(() => {
-          return bitsrcTester.deleteScope(scopeName);
+          return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
         });
         it('should have the component files as a package (in node_modules)', () => {
           const nodeModulesDir = path.join(helper.localScopePath, 'node_modules', '@bit');

@@ -21,7 +21,7 @@ describe('export --eject functionality using bitsrc.io', function () {
   });
   after(() => {
     helper.destroyEnv();
-    return bitsrcTester.deleteScope(scopeName);
+    return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
   });
   describe('as author', () => {
     before(() => {

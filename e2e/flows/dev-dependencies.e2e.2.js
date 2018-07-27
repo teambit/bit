@@ -99,11 +99,11 @@ describe('foo', () => {
         expect(barFoo.devDependencies)
           .to.be.an('array')
           .that.have.lengthOf(1);
-        expect(barFoo.devDependencies[0].id).to.equal('utils/is-string@0.0.1');
+        expect(barFoo.devDependencies[0].id).to.deep.equal({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save the flattened-dev-dependencies', () => {
-        expect(barFoo.flattenedDevDependencies).to.include('utils/is-type@0.0.1');
-        expect(barFoo.flattenedDevDependencies).to.include('utils/is-string@0.0.1');
+        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save "chai" in the dev-packages', () => {
         expect(barFoo.devPackageDependencies)
@@ -155,7 +155,7 @@ describe('foo', () => {
             });
         });
         after(() => {
-          return bitsrcTester.deleteScope(scopeName);
+          return supportTestingOnBitsrc ? bitsrcTester.deleteScope(scopeName) : Promise.resolve();
         });
         it('should save the bit-dev-dependencies component as devDependencies packages in package.json', () => {
           const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
