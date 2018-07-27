@@ -15,7 +15,15 @@ import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 export default (async function loadExtensions(): Promise<Extension[]> {
   try {
     logger.debug('start loading extensions');
-    const consumer: Consumer = await loadConsumer(null, false);
+    const getConsumer = async (): Promise<?Consumer> => {
+      try {
+        const consumer = await loadConsumer();
+        return consumer;
+      } catch (err) {
+        return null;
+      }
+    };
+    const consumer: ?Consumer = await getConsumer();
     let consumerPath = null;
     let scopePath = null;
 

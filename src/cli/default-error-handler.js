@@ -2,7 +2,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
-import { InvalidBitId, InvalidIdChunk } from '../bit-id/exceptions';
+import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import {
   ConsumerAlreadyExists,
   NothingToImport,
@@ -234,6 +234,20 @@ once your changes are merged with the new remote version, please tag and export 
       `error: "${chalk.bold(
         err.id
       )}" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
+  ],
+  [
+    InvalidName,
+    err =>
+      `error: "${chalk.bold(
+        err.componentName
+      )}" is invalid, component names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!", "/"]`
+  ],
+  [
+    InvalidScopeName,
+    err =>
+      `error: "${chalk.bold(
+        err.scopeName
+      )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [
     InvalidBitJson,

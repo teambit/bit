@@ -29,41 +29,18 @@ export default class ComponentsList {
   }
 
   /**
-   * List all objects where the id is the object-id and the value is the Version object
-   * It is useful when checking for modified components where the most important data is the Ref.
+   * List all bit ids stored in the model
    */
   async getFromObjects(): Promise<BitId[]> {
     if (!this._fromObjects) {
       const componentsObjects: ModelComponent[] = await this.scope.objects.listComponents(false);
-      // const componentsVersionsP = {};
-      // const componentsVersions = {};
       this._fromObjects = componentsObjects.map((componentObjects) => {
-        // const latestVersionRef = componentObjects.versions[componentObjects.latest()];
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
           version: componentObjects.scope ? componentObjects.latest() : null
         });
-        // componentsVersionsP[ObjId.toString()] = this.scope.getObject(latestVersionRef.hash);
       });
-
-      // const allVersions = await Promise.all(R.values(componentsVersionsP));
-
-      // Object.keys(componentsVersionsP).forEach((key, i) => {
-      //   if (!allVersions[i]) {
-      //     // the component has a REF of its latest version, however, the object of the latest version is missing
-      //     const bitId = BitId.parse(key);
-      //     logger.warn(
-      //       `the model representation of ${bitId.toStringWithoutVersion()} is missing ${
-      //         bitId.version
-      //       } version, if this component is nested, this is a normal behavior, otherwise, the component is corrupted`
-      //     );
-      //     // throw new CorruptedComponent(bitId.toStringWithoutVersion(), bitId.version);
-      //   }
-      //   componentsVersions[key] = allVersions[i];
-      // });
-
-      // this._fromObjects = componentsVersions;
     }
     return this._fromObjects;
   }

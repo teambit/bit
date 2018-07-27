@@ -4,7 +4,7 @@ import semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
 import Version from '../version';
-import { InvalidBitId, InvalidIdChunk } from './exceptions';
+import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
 import { isValidIdChunk, isValidScopeName } from '../utils';
 import type { PathOsBased } from '../utils/path';
@@ -26,7 +26,9 @@ export default class BitId {
   +version: ?string;
 
   constructor({ scope, box, name, version }: BitIdProps) {
-    if (!name || !R.is(String, name)) throw new TypeError('BitId: "name" property must be set and be a string');
+    if (!isValidIdChunk(name)) throw new InvalidName(name);
+    if (scope && !isValidScopeName(scope)) throw new InvalidScopeName(scope);
+
     this.scope = scope || null;
     this.box = null;
     this.name = box ? `${box}/${name}` : name;
@@ -162,8 +164,6 @@ export default class BitId {
       if (delimiterIndex < 0) throw new InvalidBitId();
       const scope = id.substring(0, delimiterIndex);
       const name = id.substring(delimiterIndex + 1);
-      if (!isValidScopeName(scope)) throw new InvalidIdChunk(scope);
-      if (!isValidIdChunk(name)) throw new InvalidIdChunk(name);
       return new BitId({
         scope,
         name,
@@ -172,7 +172,6 @@ export default class BitId {
     }
 
     const name = id;
-    if (!isValidIdChunk(name)) throw new InvalidIdChunk(name);
     return new BitId({
       name,
       version
@@ -180,9 +179,6 @@ export default class BitId {
   }
 
   static parseObsolete(id: BitIdStr, version: string = LATEST_BIT_VERSION): BitId {
-    // if (!id || id === NO_PLUGIN_TYPE) {
-    //   return null;
-    // }
     if (id.includes(VERSION_DELIMITER)) {
       const [newId, newVersion] = id.split(VERSION_DELIMITER);
       id = newId;

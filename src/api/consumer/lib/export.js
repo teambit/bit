@@ -24,7 +24,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     const status = await consumer.getComponentStatusById(parsedId);
     // don't allow to re-export an exported component unless it's being exported to another scope
     if (!status.staged && parsedId.scope === remote) {
-      throw new IdExportedAlready(parsedId, remote);
+      throw new IdExportedAlready(parsedId.toString(), remote);
     }
     return parsedId;
   });

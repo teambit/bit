@@ -718,11 +718,10 @@ export default class Consumer {
     }
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
   }
-  static async load(currentPath: PathOsBasedAbsolute, throws: boolean = true): Promise<?Consumer> {
+  static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) {
-      if (throws) return Promise.reject(new ConsumerNotFound());
-      return Promise.resolve(null);
+      return Promise.reject(new ConsumerNotFound());
     }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       const consumer = await Consumer.create(currentPath);
@@ -738,6 +737,7 @@ export default class Consumer {
       scope
     });
   }
+
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await this.scope.remotes();
