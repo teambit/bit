@@ -92,20 +92,22 @@ export default class TesterExtension extends EnvExtension {
     componentOrigin,
     componentFromModel,
     consumerBitJson,
-    componentBitJson
+    componentBitJson,
+    context
   }: {
     consumerPath: string,
     scopePath: string,
     componentOrigin: string,
     componentFromModel: ConsumerComponent,
     consumerBitJson: ConsumerBitJson,
-    componentBitJson: ?ComponentBitJson
+    componentBitJson: ?ComponentBitJson,
+    context: Object
   }): Promise<?TesterExtension> {
     Analytics.addBreadCrumb('tester-extension', 'loadFromCorrectSource');
     if (componentBitJson) {
       if (componentBitJson.hasTester()) {
         // $FlowFixMe
-        return componentBitJson.loadTester(consumerPath, scopePath);
+        return componentBitJson.loadTester(consumerPath, scopePath, context);
       }
       return undefined;
     }
@@ -121,7 +123,7 @@ export default class TesterExtension extends EnvExtension {
     // we want to load if from the models and not from the bit.json
     if (consumerBitJson.hasTester()) {
       // $FlowFixMe
-      return consumerBitJson.loadTester(consumerPath, scopePath);
+      return consumerBitJson.loadTester(consumerPath, scopePath, context);
     }
     return undefined;
   }
