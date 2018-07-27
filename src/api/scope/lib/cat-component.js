@@ -8,6 +8,7 @@ import GeneralError from '../../../error/general-error';
 export default (async function catComponent(id: string) {
   const scope: Scope = await loadScope();
   const bitId: BitId = await scope.getParsedId(id);
+  // $FlowFixMe unclear what's the issue here
   const component = await scope.sources.get(bitId);
   if (!component) throw new GeneralError('component was not found');
   if (bitId.hasVersion()) {

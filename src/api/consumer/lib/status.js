@@ -27,7 +27,7 @@ export default (async function status(): Promise<StatusResult> {
   const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
   const { newComponents, importPendingComponents } = newAndImportPendingComponents;
   const modifiedComponent = await componentsList.listModifiedComponents(true);
-  const stagedComponents = await componentsList.listExportPendingComponents(true);
+  const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const invalidComponents = await componentsList.listInvalidComponents();

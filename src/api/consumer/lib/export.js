@@ -14,8 +14,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   const componentsList = new ComponentsList(consumer);
   if (!ids || !ids.length) {
     // export all
-    // $FlowFixMe
-    const exportPendingComponents: BitIds = await componentsList.listExportPendingComponents();
+    const exportPendingComponents: BitIds = await componentsList.listExportPendingComponentsIds();
     if (exportPendingComponents.length > 1) loader.start(BEFORE_EXPORTS);
     else loader.start(BEFORE_EXPORT);
     return exportPendingComponents;

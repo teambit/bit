@@ -206,13 +206,6 @@ export default class ComponentsList {
       this.listModifiedComponents()
     ]);
 
-    // @todo: do we need to remove the scope and version from modified?
-
-    // const modifiedComponentsWithoutScopeAndVersion = modifiedComponents.map(componentId =>
-    //   componentId.toStringWithoutScopeAndVersion()
-    // );
-    // return [...newComponents, ...modifiedComponentsWithoutScopeAndVersion];
-
     return BitIds.fromArray([...newComponents, ...modifiedComponents]);
   }
 
@@ -220,13 +213,19 @@ export default class ComponentsList {
    * Components from the model where the scope is local are pending for export
    * Also, components that their model version is higher than their bit.map version.
    */
-  async listExportPendingComponents(load: boolean = false): Promise<BitIds | ModelComponent[]> {
+  async listExportPendingComponentsIds(): Promise<BitIds> {
     const idsFromObjects = await this.idsFromObjects();
+    // $FlowFixMe BitIds is an array type
     const ids = await filterAsync(idsFromObjects, (componentId) => {
       return this.consumer.getComponentStatusById(componentId).then(status => status.staged);
     });
-    if (!load) return BitIds.fromArray(ids);
-    return Promise.all(ids.map(id => this.scope.sources.get(id)));
+    return BitIds.fromArray(ids);
+  }
+
+  async listExportPendingComponents(): Promise<ModelComponent[]> {
+    const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
+    // $FlowFixMe
+    return Promise.all(exportPendingComponentsIds.map(id => this.scope.sources.get(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
@@ -279,7 +278,8 @@ export default class ComponentsList {
     return this._fromBitMap[cacheKeyName];
   }
 
-  static sortComponentsByName(components: Component[] | ModelComponent | string[]): Component[] | string[] {
+  // components can be one of the following: Component[] | ModelComponent[] | string[]
+  static sortComponentsByName<T>(components: T): T {
     const getName = (component) => {
       let name;
       if (R.is(ModelComponent, component)) name = component.id();
@@ -287,6 +287,7 @@ export default class ComponentsList {
       else name = component;
       return name.toUpperCase(); // ignore upper and lowercase
     };
+    // $FlowFixMe
     return components.sort((a, b) => {
       const nameA = getName(a);
       const nameB = getName(b);

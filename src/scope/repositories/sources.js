@@ -50,7 +50,7 @@ export default class SourceRepository {
     } catch (err) {
       logger.error(`findComponent got an error ${err}`);
     }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash()}`);
+    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
     return null;
   }
 
@@ -72,7 +72,7 @@ export default class SourceRepository {
     const component = Component.fromBitId(bitId);
     let foundComponent = await this.findComponent(component);
     if (foundComponent instanceof Symlink) {
-      const realComponentId = foundComponent.getRealComponentId();
+      const realComponentId: BitId = foundComponent.getRealComponentId();
       foundComponent = await this.findComponent(Component.fromBitId(realComponentId));
     }
 
