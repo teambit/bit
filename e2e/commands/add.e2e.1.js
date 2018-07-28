@@ -11,6 +11,7 @@ import {
   VersionShouldBeRemoved,
   MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
+import { InvalidName } from '../../src/bit-id/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -369,35 +370,16 @@ describe('bit add command', function () {
       expect(bitMap['bar/foo1'].origin).to.equal('AUTHORED');
     });
     it('Should prevent adding a file with invalid keys in namespace', () => {
-      let errMsg;
+      const error = new InvalidName('bar.f/foo');
       helper.createComponentBarFoo();
-      const normalizedPath = path.normalize('bar/foo.js');
-      try {
-        helper.addComponentWithOptions(normalizedPath, { i: 'bar.f/foo' });
-      } catch (err) {
-        errMsg = err.message;
-      }
-      expect(errMsg).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } add ${normalizedPath} -i bar.f/foo\nerror: "bar.f/foo" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
-      );
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar.f/foo' });
+      helper.expectToThrow(addFunc, error);
     });
     it('Should prevent adding a file with invalid keys in ID', () => {
-      let errMsg;
+      const error = new InvalidName('bar/fo.o');
       helper.createComponentBarFoo();
-      let normalizedPath;
-      try {
-        normalizedPath = path.normalize('bar/foo.js');
-        helper.addComponentWithOptions(normalizedPath, { i: 'bar/fo.o' });
-      } catch (err) {
-        errMsg = err.message;
-      }
-      expect(errMsg).to.have.string(
-        `Command failed: ${
-          helper.bitBin
-        } add ${normalizedPath} -i bar/fo.o\nerror: "bar/fo.o" is invalid, component IDs can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]\n`
-      );
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'bar/fo.o' });
+      helper.expectToThrow(addFunc, error);
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
   });
@@ -533,16 +515,9 @@ describe('bit add command', function () {
     });
     it('Should return error if used an invalid ID', () => {
       helper.createFile('bar', 'foo.js');
-      let errorMessage;
-      try {
-        helper.addComponentWithOptions('bar', {
-          i: 'Bar/Foo'
-        });
-      } catch (err) {
-        errorMessage = err.message;
-      }
-
-      expect(errorMessage).to.have.string('error: "Bar/Foo" is invalid, component IDs can only contain');
+      const addFunc = () => helper.addComponentWithOptions('bar/foo.js', { i: 'Bar/foo' });
+      const error = new InvalidName('Bar/foo');
+      helper.expectToThrow(addFunc, error);
     });
     it('should add component with id contains only one level', () => {
       helper.createFile('bar', 'foo.js');
