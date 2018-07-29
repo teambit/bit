@@ -452,6 +452,14 @@ export default class Helper {
       .join(' ');
     return this.runCmd(`bit envs-attach ${joinedIds} ${value}`);
   }
+  ejectConf(id: string = 'bar/foo', options: ?Object) {
+    const value = options
+      ? Object.keys(options)
+        .map(key => `-${key} ${options[key]}`)
+        .join(' ')
+      : '';
+    return this.runCmd(`bit eject-conf ${id} ${value}`);
+  }
   setHubDomain(domain: string = 'hub.bitsrc.io') {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
