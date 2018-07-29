@@ -717,7 +717,7 @@ export default class Component {
         contextPaths = this.tester.context;
       } else if (consumer && consumer.bitMap) {
         contextPaths = {
-          componentDir: consumer.bitMap.projectRoot
+          workspaceDir: consumer.bitMap.projectRoot
         };
       }
       try {
