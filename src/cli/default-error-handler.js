@@ -79,6 +79,10 @@ import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension
 import ExtensionInitError from '../extensions/exceptions/extension-init-error';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir';
+import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
+import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
+import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
+import { COMPONENT_DIR } from '../constants';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -124,6 +128,18 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/[namespace]/<name>'],
   [InvalidConfigDir, err => `error: the eject path is already part of "${chalk.bold(err.compId)}" path`],
+  [EjectToWorkspace, () => 'error: could not eject config to the workspace root please provide a valid path'],
+  [
+    EjectBoundToWorkspace,
+    () => 'error: could not eject config for authored component which are bound to the workspace configuration'
+  ],
+  [
+    EjectNoDir,
+    err =>
+      `error: could not eject config for ${chalk.bold(
+        err.compId
+      )}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
+  ],
   [
     ComponentNotFound,
     (err) => {

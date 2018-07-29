@@ -57,6 +57,8 @@ import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../extensions/env-extension';
+import EjectToWorkspace from './exceptions/eject-to-workspace';
+import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -290,7 +292,7 @@ export default class Component {
       throw new GeneralError('could not find component in the .bitmap file');
     }
     if (configDir === '.' || configDir === './') {
-      throw new GeneralError('could not eject config to the workspace root please provide a valid path');
+      throw new EjectToWorkspace();
     }
     // Nothing is detached.. no reason to eject
     if (
@@ -298,9 +300,7 @@ export default class Component {
       !componentMap.detachedCompiler &&
       !componentMap.detachedTester
     ) {
-      throw new GeneralError(
-        'could not eject config for authored component which are bound to the workspace configuration'
-      );
+      throw new EjectBoundToWorkspace();
     }
 
     const res = await ejectConf(this, consumerPath, bitMap, configDir, override);

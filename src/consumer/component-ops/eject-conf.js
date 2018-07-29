@@ -8,6 +8,7 @@ import { sharedStartOfArray, removeEmptyDir } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { COMPONENT_DIR } from '../../constants';
 import BitMap from '../bit-map';
+import EjectNoDir from './exceptions/eject-no-dir';
 
 export type EjectConfResult = { id: string, ejectedPath: string };
 
@@ -25,9 +26,7 @@ export default (async function ejectConf(
   }
   const trackDir = componentMap.getTrackDir();
   if (!trackDir && configDir.includes(`{${COMPONENT_DIR}}`)) {
-    throw new GeneralError(
-      `could not eject config for ${component.id.toString()}, please provide path which doesn't contain {${COMPONENT_DIR}} to eject`
-    );
+    throw new EjectNoDir(component.id.toString());
   }
   // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
   // (To better support bit move for example)
