@@ -133,3 +133,4 @@ The main players in the scope are: Component, Version and Source. All of them in
 
 By contributing to Bit, you agree that your contributions will be licensed
 under its [Apache2 license](LICENSE).
+
