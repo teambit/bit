@@ -3,7 +3,6 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import { DEFAULT_EJECTED_DIR_ENVS } from '../../src/constants';
 import { eol } from '../../src/utils';
 
 // TODO: backward compatibility
@@ -552,9 +551,9 @@ describe('envs', function () {
       let bitJsonPath;
 
       describe('with default ejectedEnvsDirectory', () => {
-        const envFilesFolder = path.join(componentFolder, DEFAULT_EJECTED_DIR_ENVS);
-        const compilerFilesFolder = path.join(envFilesFolder, 'compiler');
-        const testerFilesFolder = path.join(envFilesFolder, 'tester');
+        const envFilesFolder = componentFolder;
+        const compilerFilesFolder = envFilesFolder;
+        const testerFilesFolder = envFilesFolder;
         let importedScopeBeforeChanges;
         before(() => {
           helper.reInitLocalScope();
@@ -817,7 +816,7 @@ describe('envs', function () {
         });
         it('should move envs files during bit move command', () => {
           const newComponentfolder = path.join('components', 'new-path');
-          const newEnvFilesFolder = path.join(newComponentfolder, DEFAULT_EJECTED_DIR_ENVS);
+          const newEnvFilesFolder = newComponentfolder;
           const envFilesGlob = path.join(newEnvFilesFolder, '**', '*');
           helper.move(componentFolder, newComponentfolder);
           const envFiles = helper.getConsumerFiles(envFilesGlob);
