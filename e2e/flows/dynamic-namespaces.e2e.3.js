@@ -67,4 +67,29 @@ describe('dynamic namespaces', function () {
       });
     });
   });
+  describe('import a component with same id string as a local different component', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('', 'foo.js');
+      helper.addComponentWithOptions('foo.js', { i: 'foo' });
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.createFile('bar', 'foo.js');
+      helper.addComponentWithOptions('bar/foo.js', { i: `${helper.remoteScope}/foo` });
+    });
+    it('should throw an error and not allow the import', () => {
+      const output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/foo`);
+      expect(output).to.have.string('unable to import');
+      const bitMap = helper.readBitMapWithoutVersion();
+      expect(Object.keys(bitMap)).to.have.lengthOf(1);
+    });
+    it('should throw an error also after tagging', () => {
+      helper.tagAllWithoutMessage();
+      const output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/foo`);
+      expect(output).to.have.string('unable to import');
+    });
+  });
 });
