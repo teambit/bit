@@ -737,6 +737,14 @@ export default class Component {
 
       let specsResults: RawTestsResults[];
 
+      let contextPaths;
+      if (this.tester && this.tester.context) {
+        contextPaths = this.tester.context;
+      } else if (consumer && consumer.bitMap) {
+        contextPaths = {
+          workspaceDir: consumer.bitMap.projectRoot
+        };
+      }
       try {
         if (tester.action) {
           logger.debug('running tests using new format');
@@ -744,6 +752,9 @@ export default class Component {
           const context: Object = {
             componentObject: component.toObject()
           };
+
+          contextPaths && Object.assign(context, contextPaths);
+
           const actionParams = {
             testFiles: testFilesList,
             rawConfig: tester.rawConfig,
