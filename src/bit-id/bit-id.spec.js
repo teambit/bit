@@ -47,7 +47,7 @@ describe('Bit-id', () => {
         .to.have.property('version')
         .that.equal('0.0.1');
     });
-    it('should accept an empty parameter to remove the scope', () => {
+    it('should accept an empty parameter to remove the version', () => {
       const bitId = new BitId({ scope: 'my-scope', name: 'my-name', version: '0.0.1' });
       expect(bitId.changeVersion()).to.have.property('version').that.is.null;
     });
