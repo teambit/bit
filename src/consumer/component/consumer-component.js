@@ -296,9 +296,11 @@ export default class Component {
     }
     // Nothing is detached.. no reason to eject
     if (
-      componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
-      !componentMap.detachedCompiler &&
-      !componentMap.detachedTester
+      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
+        !componentMap.detachedCompiler &&
+        !componentMap.detachedTester) ||
+      // Need to be check for false and not falsy for imported components
+      (componentMap.detachedCompiler === false && componentMap.detachedTester === false)
     ) {
       throw new EjectBoundToWorkspace();
     }

@@ -26,7 +26,7 @@ export default (async function ejectConf(
   }
   const trackDir = componentMap.getTrackDir();
   if (!trackDir && configDir.includes(`{${COMPONENT_DIR}}`)) {
-    throw new EjectNoDir(component.id.toString());
+    throw new EjectNoDir(component.id.toStringWithoutVersion());
   }
   // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
   // (To better support bit move for example)
@@ -65,7 +65,7 @@ export default (async function ejectConf(
       await removeEmptyDir(oldBitJsonDirFullPath);
     }
   }
-  return { id: component.id.toString(), ejectedPath: configDir, ejectedFullPath: bitJsonDir };
+  return { id: component.id.toStringWithoutVersion(), ejectedPath: configDir, ejectedFullPath: bitJsonDir };
 });
 
 const writeBitJson = async (

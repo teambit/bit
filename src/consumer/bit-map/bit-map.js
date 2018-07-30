@@ -279,6 +279,9 @@ export default class BitMap {
 
   validateConfigDir(configDir: PathLinux): boolean {
     const components = this.getAllComponents();
+    if (configDir.startsWith('./')) {
+      configDir = configDir.replace('./', '');
+    }
     const comps = R.pickBy((component) => {
       if (pathIsInside(configDir, component.getTrackDir())) {
         return true;
@@ -290,7 +293,9 @@ export default class BitMap {
       return false;
     }, components);
     if (!R.isEmpty(comps)) {
-      throw new InvalidConfigDir(R.keys(comps)[0]);
+      const id = R.keys(comps)[0];
+      const stringId = BitId.parse(id).toStringWithoutVersion();
+      throw new InvalidConfigDir(stringId);
     }
     return true;
   }
