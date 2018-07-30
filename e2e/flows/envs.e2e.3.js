@@ -1,9 +1,16 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { eol } from '../../src/utils';
+import EjectToWorkspace from '../../src/consumer/component/exceptions/eject-to-workspace';
+import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject-bound-to-workspace';
+import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-config-dir';
+
+chai.use(require('chai-fs'));
 
 // TODO: backward compatibility
 // should support declare env in old format (string)
@@ -61,6 +68,8 @@ describe('envs', function () {
     helper.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
     helper.createFile('', 'pass.spec.js', fixtures.passTest);
     helper.addComponentWithOptions('objRestSpread.js', { i: 'comp/my-comp', t: '"*.spec.js"', m: 'objRestSpread.js' });
+    helper.createFile('', 'comp2.js');
+    helper.addComponentWithOptions('comp2.js', { i: 'comp/my-comp2' });
     helper.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.installNpmPackage('babel-preset-env', '1.6.1');
     helper.installNpmPackage('chai', '4.1.2');
@@ -168,6 +177,17 @@ describe('envs', function () {
         'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"b"};var y={c:"c"};var z=_extends({},x,y);'
       );
     });
+
+    describe.only('eject conf', () => {
+      describe('negative tests', () => {
+        it('should show error for authored component if it is not detached', () => {
+          const error = new EjectBoundToWorkspace();
+          const ejectFunc = () => helper.ejectConf('comp/my-comp');
+          helper.expectToThrow(ejectFunc, error);
+        });
+      });
+    });
+
     describe('attach - detach envs', () => {
       let fullComponentFolder;
       let bitJsonPath;
@@ -194,6 +214,11 @@ describe('envs', function () {
         componentModel = helper.showComponentParsed('comp/my-comp');
         compilerModel = componentModel.compiler;
         testerModel = componentModel.tester;
+      });
+      it.only('should show error when trying to eject conf without path provided', () => {
+        const error = new EjectNoDir(`${helper.remoteScope}/comp/my-comp`);
+        const ejectFunc = () => helper.ejectConf('comp/my-comp');
+        helper.expectToThrow(ejectFunc, error);
       });
       it('should mark the compiler as detached in .bitmap if the compiler is detached', () => {
         expect(componentMap.detachedCompiler).to.be.true;
@@ -463,6 +488,7 @@ describe('envs', function () {
   });
   describe('imported environment', () => {
     const componentFolder = path.join('components', 'comp', 'my-comp');
+    let importedScopeBeforeChanges;
 
     describe('without ejceting (--conf)', () => {
       before(() => {
@@ -470,6 +496,7 @@ describe('envs', function () {
         helper.addRemoteScope();
         helper.addRemoteEnvironment();
         helper.importComponent('comp/my-comp');
+        importedScopeBeforeChanges = helper.cloneLocalScope();
       });
       it('should not show the component as modified after import', () => {
         // Make sure the component is not modified before the changes
@@ -545,8 +572,102 @@ describe('envs', function () {
           });
         });
       });
+      describe.only('eject conf', () => {
+        let fullComponentFolder;
+        let bitJsonPath;
+        let babelrcPath;
+        let mochaConfPath;
+        before(() => {
+          helper.getClonedLocalScope(importedScopeBeforeChanges);
+          fullComponentFolder = path.join(helper.localScopePath, componentFolder);
+        });
+        describe('negative tests', () => {
+          it('should show error if the component id does not exist', () => {
+            const error = new MissingBitMapComponent('fake/comp');
+            const ejectFunc = () => helper.ejectConf('fake/comp');
+            helper.expectToThrow(ejectFunc, error);
+          });
+          it('should show error if the provided path is the workspace dir', () => {
+            const error = new EjectToWorkspace();
+            const ejectFunc = () => helper.ejectConf('comp/my-comp', { p: '.' });
+            helper.expectToThrow(ejectFunc, error);
+            const ejectFunc2 = () => helper.ejectConf('comp/my-comp', { p: './' });
+            helper.expectToThrow(ejectFunc2, error);
+          });
+          describe('invalid config dir', () => {
+            before(() => {
+              helper.importComponentWithOptions('comp/my-comp2', { p: 'comp2' });
+            });
+            it('should show error if the provided path is a under root dir of another component', () => {
+              const error = new InvalidConfigDir(`${helper.remoteScope}/comp/my-comp2`);
+              const ejectFunc = () => helper.ejectConf('comp/my-comp', { p: './comp2/sub' });
+              helper.expectToThrow(ejectFunc, error);
+            });
+            it('should show error if the provided path is a under config dir of another component', () => {
+              helper.ejectConf('comp/my-comp2', { p: 'my-conf-folder' });
+              const error = new InvalidConfigDir(`${helper.remoteScope}/comp/my-comp2`);
+              const ejectFunc = () => helper.ejectConf('comp/my-comp', { p: './my-conf-folder/sub' });
+              helper.expectToThrow(ejectFunc, error);
+            });
+          });
+        });
+        describe('without path provided', () => {
+          before(() => {
+            bitJsonPath = path.join(fullComponentFolder, 'bit.json');
+            babelrcPath = path.join(fullComponentFolder, '.babelrc');
+            mochaConfPath = path.join(fullComponentFolder, 'config');
+            helper.ejectConf('comp/my-comp');
+          });
+          it('should write the bit.json to the component folder', () => {
+            expect(bitJsonPath).to.be.a.file();
+          });
+          it('should write the envs config files to the component folder', () => {
+            expect(babelrcPath).to.be.a.file();
+            expect(mochaConfPath).to.be.a.file();
+          });
+        });
+        describe('with path provided', () => {
+          describe('without {ENV_TYPE} provided', () => {
+            before(() => {
+              const confFolder = 'my-conf';
+              helper.ejectConf('comp/my-comp', { p: confFolder });
+              bitJsonPath = path.join(helper.localScopePath, confFolder, 'bit.json');
+              babelrcPath = path.join(helper.localScopePath, confFolder, '.babelrc');
+              mochaConfPath = path.join(helper.localScopePath, confFolder, 'config');
+            });
+            it('should write the bit.json to the specified folder', () => {
+              expect(bitJsonPath).to.be.a.file();
+            });
+            it('should write the envs config files the specified folder', () => {
+              expect(babelrcPath).to.be.a.file();
+              expect(mochaConfPath).to.be.a.file();
+            });
+          });
+          describe('with {ENV_TYPE} provided', () => {
+            before(() => {
+              const confFolder = 'my-conf2/{ENV_TYPE}';
+              helper.ejectConf('comp/my-comp', { p: confFolder });
+              bitJsonPath = path.join(helper.localScopePath, 'my-conf2', 'bit.json');
+              babelrcPath = path.join(helper.localScopePath, 'my-conf2', 'compiler', '.babelrc');
+              mochaConfPath = path.join(helper.localScopePath, 'my-conf2', 'tester', 'config');
+            });
+            it('should write the bit.json to the specified folder', () => {
+              expect(bitJsonPath).to.be.a.file();
+            });
+            it('should write the envs config files under envType of the specified folder if {ENV_TYPE} provided', () => {
+              expect(babelrcPath).to.be.a.file();
+              expect(mochaConfPath).to.be.a.file();
+            });
+          });
+          it('should move config files if they were already ejected to another dir', () => {});
+          it('should delete old config files if they were already ejected to another dir', () => {});
+          it('should replace the component dir with dsl if the path start with the root dir', () => {});
+        });
+        it('should override the config files if they were not changed during bit checkout', () => {});
+      });
     });
-    describe('with ejceting (--conf)', () => {
+
+    describe('with ejecting (--conf)', () => {
       let fullComponentFolder;
       let bitJsonPath;
 
@@ -554,7 +675,6 @@ describe('envs', function () {
         const envFilesFolder = componentFolder;
         const compilerFilesFolder = envFilesFolder;
         const testerFilesFolder = envFilesFolder;
-        let importedScopeBeforeChanges;
         before(() => {
           helper.reInitLocalScope();
           helper.addRemoteScope();
@@ -660,6 +780,7 @@ describe('envs', function () {
           expect(statusOutput).to.have.string('nothing to tag or export');
           expect(statusOutput).to.not.have.string('modified');
         });
+
         describe('attach - detach envs', () => {
           let compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
           let componentModel;
@@ -739,6 +860,11 @@ describe('envs', function () {
             it('should print to output the attached components', () => {
               expect(output).to.have.string('the following components has been attached to the workspace environments');
               expect(output).to.have.string('comp/my-comp');
+            });
+            it.only('should show error if trying to eject config if the component is bound to the workspace config', () => {
+              const error = new EjectBoundToWorkspace();
+              const ejectFunc = () => helper.ejectConf('comp/my-comp');
+              helper.expectToThrow(ejectFunc, error);
             });
             it('should load the compiler from workspace bit.json after attach compiler back', () => {
               expect(compilerModel.config).to.include({
