@@ -9,7 +9,7 @@ import type { ExtensionOptions } from '../../extensions/extension';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
-import type { PathOsBased } from '../../utils/path';
+import type { PathOsBased, PathLinux } from '../../utils/path';
 import { BitJsonAlreadyExists } from './exceptions';
 import {
   BIT_JSON,
@@ -23,6 +23,10 @@ import {
 export type RegularExtensionObject = {
   rawConfig: Object,
   options: ExtensionOptions
+};
+
+export type EnvFile = {
+  [string]: PathLinux
 };
 
 export type EnvExtensionObject = {
