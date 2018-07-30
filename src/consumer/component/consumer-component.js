@@ -1022,11 +1022,10 @@ export default class Component {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     ids.forEach((id: string) => {
-      const bitId = BitId.parse(id, true); // it should be from imported component which has a scope name
-      const dependency = componentFromModel.dependencies.getById(bitId);
+      const dependency = componentFromModel.dependencies.getByIdStr(id);
       if (dependency) this.dependencies.add(dependency);
       else {
-        const devDependency = componentFromModel.devDependencies.getById(bitId);
+        const devDependency = componentFromModel.devDependencies.getByIdStr(id);
         if (!devDependency) throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
         this.devDependencies.add(dependency);
       }

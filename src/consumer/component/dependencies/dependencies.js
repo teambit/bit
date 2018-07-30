@@ -8,6 +8,7 @@ import BitMap from '../../bit-map';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';
+import type { BitIdStr } from '../../../bit-id/bit-id';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -84,6 +85,10 @@ export default class Dependencies {
 
   getById(id: BitId): Dependency {
     return this.dependencies.find(dep => dep.id.isEqual(id));
+  }
+
+  getByIdStr(id: BitIdStr): Dependency {
+    return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
