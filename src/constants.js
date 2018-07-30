@@ -175,6 +175,8 @@ export const CFG_ANALYTICS_DOMAIN_KEY = 'analytics_domain';
 
 export const CFG_ANALYTICS_ANONYMOUS_KEY = 'anonymous_reporting';
 
+export const CFG_REPOSITORY_REPORTING_KEY = 'repository_reporting';
+
 export const CFG_ANALYTICS_REPORTING_KEY = 'analytics_reporting';
 
 export const CFG_ANALYTICS_ERROR_REPORTS_KEY = 'error_reporting';
