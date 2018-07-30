@@ -221,10 +221,6 @@ export default class Consumer {
     return this;
   }
 
-  getComponentsPath(): PathOsBased {
-    return path.join(this.projectPath, BITS_DIRNAME);
-  }
-
   getPath(): PathOsBased {
     return this.projectPath;
   }

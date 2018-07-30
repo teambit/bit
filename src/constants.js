@@ -312,9 +312,7 @@ export const BIT_CACHE_DIRNAME = 'cache';
 
 export const LATEST_TESTED_MARK = '*';
 
-export const ASTERISK = '*';
-
-export const COMPONENTS_DEPENDENCIES_REGEX = '/*/*/*/*';
+export const SUB_DIRECTORIES_GLOB_PATTERN = '/**/*';
 
 export const SCOPE_JSON = 'scope.json';
 

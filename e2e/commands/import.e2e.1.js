@@ -2137,7 +2137,7 @@ console.log(barFoo.default());`;
     });
     it('should contain  workspaces array in package.json  and private true', () => {
       const pkgJson = helper.readPackageJson(helper.localScopePath);
-      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.private).to.be.true;
     });
     it('component dep should be install as npm package', () => {
@@ -2152,7 +2152,7 @@ console.log(barFoo.default());`;
     it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
       helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson(helper.localScopePath);
-      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.workspaces).to.be.ofSize(2);
       expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
@@ -2166,11 +2166,7 @@ console.log(barFoo.default());`;
       helper.addKeyValueToPackageJson({ workspaces: ['comp'] });
       helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson();
-      expect(pkgJson.workspaces).to.include(
-        'components/.dependencies/*/*/*/*',
-        'components/*/*',
-        'test/comp/with-deps'
-      );
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test/comp/with-deps');
     });
     it('Should save workspaces with custom import path ', () => {
       helper.reInitLocalScope();
@@ -2178,7 +2174,7 @@ console.log(barFoo.default());`;
       helper.manageWorkspaces();
       helper.importComponent('comp/with-deps -p test');
       const pkgJson = helper.readPackageJson();
-      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*', 'test');
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test');
     });
   });
   describe('importing a component when it has a local tag', () => {

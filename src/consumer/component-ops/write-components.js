@@ -213,13 +213,7 @@ export default (async function writeToComponentsDir({
   }
 
   // add workspaces if flag is true
-  await packageJson.addWorkspacesToPackageJson(
-    consumer,
-    consumer.getPath(),
-    consumer.bitJson.componentsDefaultDirectory,
-    consumer.bitJson.dependenciesDirectory,
-    writeToPath
-  );
+  await packageJson.addWorkspacesToPackageJson(consumer, writeToPath);
 
   if (installNpmPackages) {
     await installNpmPackagesForComponents(

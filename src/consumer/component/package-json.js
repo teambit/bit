@@ -2,16 +2,13 @@
 import R from 'ramda';
 import path from 'path';
 import fs from 'fs-extra';
-import format from 'string-format';
 import { BitId } from '../../bit-id';
 import Component from '../component';
 import {
   COMPONENT_ORIGINS,
   CFG_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_SEPARATOR,
-  ASTERISK,
-  COMPONENTS_DEPENDENCIES_REGEX,
+  SUB_DIRECTORIES_GLOB_PATTERN,
   NODE_PATH_COMPONENT_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
@@ -229,38 +226,23 @@ async function updateAttribute(
 
 /**
  * Adds workspace array to package.json - only if user wants to work with yarn workspaces
- *
- * formatedComponentsPath- used to resolve import path dsl. replacing all {}->*
- * for example {components/{namespace} -> components/*
- *
  */
-async function addWorkspacesToPackageJson(
-  consumer: Consumer,
-  rootDir: string,
-  componentsDefaultDirectory: string,
-  dependenciesDirectory: string,
-  customImportPath: ?string
-) {
+async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
   if (
     consumer.bitJson.manageWorkspaces &&
     consumer.bitJson.packageManager === 'yarn' &&
     consumer.bitJson.useWorkspaces
   ) {
-    const formatedComponentsPath = format(componentsDefaultDirectory, {
-      name: ASTERISK,
-      scope: ASTERISK
-    });
-    const formatedRegexPath = formatedComponentsPath
-      .split(DEFAULT_SEPARATOR)
-      .map(part => (R.contains(ASTERISK, part) ? ASTERISK : part))
-      .join(DEFAULT_SEPARATOR);
+    const rootDir = consumer.getPath();
+    const dependenciesDirectory = consumer.bitJson.dependenciesDirectory;
+    const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = await consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
       rootDir,
-      formatedRegexPath,
-      dependenciesDirectory + COMPONENTS_DEPENDENCIES_REGEX,
+      componentsDefaultDirectory + SUB_DIRECTORIES_GLOB_PATTERN,
+      dependenciesDirectory + SUB_DIRECTORIES_GLOB_PATTERN,
       customImportPath ? consumer.getPathRelativeToConsumer(customImportPath) : customImportPath
     );
   }
