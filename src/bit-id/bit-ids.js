@@ -61,7 +61,7 @@ export default class BitIds extends Array<BitId> {
     const array = [];
 
     forEach(dependencies, (version, id) => {
-      array.push(BitId.parse(id, true, version)); // @todo: make sure hasScope is correct
+      array.push(BitId.parse(id, true, version)); // bit.json has only imported dependencies, they all have scope
     });
 
     return new BitIds(...array);

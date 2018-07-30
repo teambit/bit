@@ -77,7 +77,7 @@ export default class ComponentsList {
     const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
     const componentsFromModel = await this.scope.objects.listComponents(false);
     return fileSystemComponents.filter((component) => {
-      const modelComponent = componentsFromModel.find(c => c.id() === component.id.toStringWithoutVersion());
+      const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
       if (!modelComponent) return false;
       const latestVersion = modelComponent.latest();
       if (component.id.hasVersion() && semver.gt(latestVersion, component.id.version)) {

@@ -131,7 +131,7 @@ export function diffBetweenComponentsObjects(
     if (R.isEmpty(dependenciesLeft) || R.isEmpty(dependenciesRight)) return [];
     return dependenciesLeft.reduce((acc, dependencyLeft) => {
       const idStr = dependencyLeft.id.toString();
-      const dependencyRight = dependenciesRight.find(dep => dep.id.toString() === idStr);
+      const dependencyRight = dependenciesRight.find(dep => dep.id.isEqual(dependencyLeft.id));
       if (!dependencyRight) return acc;
       if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
       const fieldName = `Dependency ${idStr} relative-paths`;

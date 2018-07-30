@@ -13,11 +13,9 @@ import Dependencies from '../dependencies';
 
 function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {
   if (!componentFromModel) return null;
-  const dependency = componentFromModel
-    .getAllDependencies()
-    .find(dep => dep.id.toStringWithoutVersion() === componentId.toStringWithoutVersion());
+  const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
   if (!dependency) return null;
-  return dependency.id;
+  return dependency;
 }
 
 function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?BitId {

@@ -229,7 +229,7 @@ export default class ImportComponents {
     if (!componentModel) {
       throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
     }
-    const existingBitMapBitId = this.consumer.bitMap.getExistingBitId(component.id.toStringWithoutVersion());
+    const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);

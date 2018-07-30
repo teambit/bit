@@ -251,9 +251,7 @@ export default class Scope {
       const componentsIds = consumerComponents.map(component => component.id);
       const latestVersionsInfo = await this.fetchRemoteVersions(componentsIds);
       latestVersionsInfo.forEach((componentId) => {
-        const component = consumerComponents.find(
-          c => c.id.toStringWithoutVersion() === componentId.toStringWithoutVersion()
-        );
+        const component = consumerComponents.find(c => c.id.isEqualWithoutVersion(componentId));
         component.latest = componentId.version;
       });
     }
@@ -883,8 +881,8 @@ export default class Scope {
     bitIds.forEach((bitId) => {
       const dependencies = [];
       allScopeComponents.forEach((scopeComponents) => {
-        scopeComponents.flattenedDependencies.forEach((flattenedDependence) => {
-          if (flattenedDependence.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
+        scopeComponents.flattenedDependencies.forEach((flattenedDependency) => {
+          if (flattenedDependency.isEqualWithoutVersion(bitId)) {
             returnResultsWithVersion
               ? dependencies.push(scopeComponents.id)
               : dependencies.push(scopeComponents.id.changeVersion(null));
@@ -949,7 +947,7 @@ export default class Scope {
    * load components from the model and return them as ComponentVersion array.
    * if a component is not available locally, it'll just ignore it without throwing any error.
    */
-  async loadLocalComponents(ids: BitId[]): Promise<ComponentVersion[]> {
+  async loadLocalComponents(ids: BitIds): Promise<ComponentVersion[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
@@ -997,9 +995,7 @@ export default class Scope {
     if (!id.scope) {
       // search for the complete ID
       const components: ComponentModel[] = await this.objects.listComponents(false); // don't fetch Symlinks
-      const foundComponent = components.filter(
-        c => c.toBitId().toStringWithoutScopeAndVersion() === id.toStringWithoutVersion()
-      );
+      const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
       // $FlowFixMe
       if (foundComponent.length) return first(foundComponent);
     }
@@ -1233,14 +1229,13 @@ export default class Scope {
   /**
    * find the components in componentsPool which one of their dependencies include in potentialDependencies
    */
-  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitId[]): Promise<Component[]> {
+  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
     const componentsVersions = await this.loadLocalComponents(componentsPool);
-    const potentialDependenciesWithoutVersions = potentialDependencies.map(id => id.toStringWithoutVersion());
     const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
       const component: Version = await componentVersion.getVersion(this.objects);
       const found = component
         .getAllDependencies()
-        .find(dependency => potentialDependenciesWithoutVersions.includes(dependency.id.toStringWithoutVersion()));
+        .find(dependency => potentialDependencies.searchWithoutVersion(dependency.id));
       return found ? componentVersion.toConsumer(this.objects) : null;
     });
     const dependents = await Promise.all(dependentsP);

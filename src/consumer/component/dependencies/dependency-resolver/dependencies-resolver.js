@@ -136,7 +136,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
         }
         const dependency = componentFromModel
           .getAllDependencies() // $FlowFixMe
-          .find(dep => dep.id.toStringWithoutVersion() === componentId.toStringWithoutVersion());
+          .find(dep => dep.id.isEqualWithoutVersion(componentId));
         if (!dependency) {
           throw new GeneralError( // $FlowFixMe
             `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
@@ -307,10 +307,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
           }
         }
         if (componentFromModel) {
-          const modelDep = componentFromModel
-            .getAllDependencies()
-            .find(dep => dep.id.toStringWithoutVersion() === componentId);
-          if (modelDep) return modelDep.id;
+          const modelDep = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
+          if (modelDep) return modelDep;
         }
         return null;
       };

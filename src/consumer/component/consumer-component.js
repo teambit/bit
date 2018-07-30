@@ -332,6 +332,11 @@ export default class Component {
     return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
   }
 
+  getAllDependenciesIds(): BitIds {
+    const allDependencies = this.getAllDependencies();
+    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
+  }
+
   hasDependencies(): boolean {
     return !this.dependencies.isEmpty() || !this.devDependencies.isEmpty();
   }

@@ -330,7 +330,7 @@ async function writeDependencyLinks(
       }
 
       // Helper function to look for the component object
-      const _byComponentId = dependency => dependency.id.toString() === resolveDepVersion.toString();
+      const _byComponentId = dependency => dependency.id.isEqual(resolveDepVersion);
       // Get the real dependency component
       const depComponent = R.find(_byComponentId, dependencies);
 

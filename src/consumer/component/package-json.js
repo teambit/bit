@@ -2,7 +2,7 @@
 import R from 'ramda';
 import path from 'path';
 import fs from 'fs-extra';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import Component from '../component';
 import {
   COMPONENT_ORIGINS,
@@ -107,7 +107,7 @@ async function changeDependenciesToRelativeSyntax(
   components: Component[],
   dependencies: Component[]
 ) {
-  const dependenciesIds = dependencies.map(dependency => dependency.id.toStringWithoutVersion());
+  const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const updateComponent = async (component) => {
@@ -122,8 +122,8 @@ async function changeDependenciesToRelativeSyntax(
       const deps = dev ? component.devDependencies.get() : component.dependencies.get();
       const packages = deps.map((dependency) => {
         const dependencyId = dependency.id.toStringWithoutVersion();
-        if (dependenciesIds.includes(dependencyId)) {
-          const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
+        if (dependenciesIds.searchWithoutVersion(dependency.id)) {
+          const dependencyComponent = dependencies.find(d => d.id.isEqualWithoutVersion(dependency.id));
           // $FlowFixMe dependencyComponent must be found (two line earlier there is a check for that)
           const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
           const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);

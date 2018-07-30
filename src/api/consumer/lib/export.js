@@ -39,11 +39,7 @@ async function addToBitJson(ids: BitId[], consumer: Consumer) {
     // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
     // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
     // already in bit.map
-    if (
-      bitJsonDependencies.find(
-        bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === componentId.toStringWithoutVersion()
-      )
-    ) {
+    if (bitJsonDependencies.searchWithoutVersion(componentId)) {
       await consumer.bitJson.addDependency(componentId).write({ bitDir: consumer.getPath() });
     }
     return componentId;

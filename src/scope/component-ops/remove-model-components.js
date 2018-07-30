@@ -14,14 +14,12 @@ import { Consumer } from '../../consumer';
 export default class RemoveModelComponents {
   scope: Scope;
   bitIds: BitIds;
-  bitIdsStr: BitIdStr[];
   force: boolean;
   removeSameOrigin: boolean = false;
   consumer: ?Consumer;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
     this.bitIds = bitIds;
-    this.bitIdsStr = bitIds.map(id => id.toStringWithoutVersion());
     this.force = force;
     this.removeSameOrigin = removeSameOrigin;
     this.consumer = consumer;
@@ -95,7 +93,7 @@ export default class RemoveModelComponents {
       }
       if (
         R.isEmpty(relevantDependents) &&
-        !this.bitIdsStr.includes(dependencyId.toStringWithoutVersion()) && // don't delete dependency if it is already deleted as an individual
+        !this.bitIds.searchWithoutVersion(dependencyId) && // don't delete dependency if it is already deleted as an individual
         (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
         isNested
       ) {
@@ -111,7 +109,7 @@ export default class RemoveModelComponents {
 
   async _removeComponent(id: BitId, componentList: Array<ConsumerComponent | Symlink>, removeRefs: boolean = false) {
     const symlink = componentList.filter(
-      component => component instanceof Symlink && component.id() === id.toStringWithoutScopeAndVersion()
+      component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
     await this.scope.sources.clean(id, removeRefs);
     if (!R.isEmpty(symlink)) await this.scope.objects.remove(symlink[0].hash());

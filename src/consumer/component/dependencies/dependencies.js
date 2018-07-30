@@ -97,16 +97,13 @@ export default class Dependencies {
     const remoteVersionsDependencies = await scope.fetchRemoteVersions(dependenciesIds);
 
     this.dependencies.forEach((dependency) => {
-      const dependencyIdWithoutVersion = dependency.id.toStringWithoutVersion();
-      const remoteVersionId = remoteVersionsDependencies.find(
-        remoteId => remoteId.toStringWithoutVersion() === dependencyIdWithoutVersion
+      const remoteVersionId = remoteVersionsDependencies.find(remoteId =>
+        remoteId.isEqualWithoutVersion(dependency.id)
       );
-      const localVersionId = localDependencies.find(
-        localId => localId.toStringWithoutVersion() === dependencyIdWithoutVersion
-      );
+      const localVersionId = localDependencies.find(localId => localId.isEqualWithoutVersion(dependency.id));
       const modelVersionId = modelDependencies
         .get()
-        .find(modelDependency => modelDependency.id.toStringWithoutVersion() === dependencyIdWithoutVersion);
+        .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
