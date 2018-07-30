@@ -12,21 +12,26 @@ import {
   COMPONENT_ORIGINS,
   DEFAULT_SEPARATOR,
   DEFAULT_INDEX_EXTS,
-  BIT_VERSION
+  BIT_VERSION,
+  COMPONENT_DIR
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
+import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside, stripTrailingChar } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
+import ComponentBitJson from '../bit-json';
+import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
+import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
 export type PathChangeResult = { id: string, changes: PathChange[] };
+export type IgnoreFilesDirs = { files: PathLinux[], dirs: PathLinux[] };
 
 export default class BitMap {
   projectRoot: string;
@@ -169,6 +174,49 @@ export default class BitMap {
     }
   }
 
+  static resolveIgnoreFilesAndDirs(
+    configDir: PathLinux,
+    rootDir: PathLinux,
+    compilerFilesPaths: PathLinux[] = [],
+    testerFilesPaths: PathLinux[] = []
+  ) {
+    const res = {
+      files: [],
+      dirs: []
+    };
+    if (!configDir) return res;
+    if (configDir.startsWith(`{${COMPONENT_DIR}}`)) {
+      const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
+      const allEnvFilesPaths = compilerFilesPaths.concat(testerFilesPaths);
+      allEnvFilesPaths.forEach((file) => {
+        const ignoreFile = pathJoinLinux(resolvedConfigDir, file);
+        res.files.push(ignoreFile);
+      });
+      const configDirWithoutCompDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '{ENV_TYPE}' });
+      // There is nested folders to ignore
+      if (configDirWithoutCompDir !== '' && configDirWithoutCompDir !== '/') {
+        const configDirWithoutCompAndEnvsDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '' });
+        // There is nested folder which is not the env folders - ignore it completely
+        if (configDirWithoutCompAndEnvsDir !== '' && configDirWithoutCompAndEnvsDir !== '/') {
+          const resolvedDirWithoutEnvType = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
+          res.dirs.push(stripTrailingChar(resolvedDirWithoutEnvType, '/'));
+        } else {
+          const resolvedCompilerConfigDir = format(configDir, {
+            [COMPONENT_DIR]: rootDir,
+            ENV_TYPE: COMPILER_ENV_TYPE
+          });
+          const resolvedTesterConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
+          res.dirs.push(resolvedCompilerConfigDir, resolvedTesterConfigDir);
+        }
+      }
+    } else {
+      // Ignore the whole dir since this dir is only for config files
+      const dirToIgnore = format(configDir, { ENV_TYPE: '' });
+      res.dirs.push(dirToIgnore);
+    }
+    return res;
+  }
+
   loadComponents(componentsJson: Object) {
     Object.keys(componentsJson).forEach((componentId) => {
       const componentMap = ComponentMap.fromJson(componentsJson[componentId]);
@@ -184,6 +232,38 @@ export default class BitMap {
     const isOriginMatchArray = component => origin.includes(component.origin);
     const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
     return R.filter(filter, this.components);
+  }
+
+  /**
+   * We should ignore ejected config files and dirs
+   * Files might be on the root dir then we need to ignore them directly by taking them from the bit.json
+   * They might be in internal dirs then we need to ignore the dir completely
+   */
+  getConfigDirsAndFilesToIgnore(consumerPath: PathLinux): IgnoreFilesDirs {
+    const res = {
+      files: [],
+      dirs: []
+    };
+    Object.values(this.components).forEach((component: ComponentMap) => {
+      if (component.configDir) {
+        const resolvedBaseConfigDir = component.getBaseConfigDir();
+        const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
+        const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
+        const compilerFilesObj = Object.values(componentBitJson.compiler)[0].files;
+        const testerFilesObj = Object.values(componentBitJson.tester)[0].files;
+        const compilerFiles = compilerFilesObj ? Object.values(compilerFilesObj) : [];
+        const testerFiles = testerFilesObj ? Object.values(testerFilesObj) : [];
+        const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
+          component.configDir,
+          component.getTrackDir(),
+          compilerFiles,
+          testerFiles
+        );
+        res.files = res.files.concat(toIgnore.files);
+        res.dirs = res.dirs.concat(toIgnore.dirs);
+      }
+    });
+    return res;
   }
 
   getAuthoredExportedComponents(): BitId[] {
