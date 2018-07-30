@@ -1,10 +1,11 @@
-const { DEFAULT_SEPARATOR } = require('../constants');
-const path = require('path');
+import path from 'path';
+import { stripTrailingChar } from './';
+import { DEFAULT_SEPARATOR } from '../constants';
 
 module.exports = function (thePath, potentialParent) {
   // For inside-directory checking, we want to allow trailing slashes, so normalize.
-  thePath = stripTrailingSep(thePath);
-  potentialParent = stripTrailingSep(potentialParent);
+  thePath = stripTrailingChar(thePath, path.sep);
+  potentialParent = stripTrailingChar(potentialParent, path.sep);
 
   // Node treats only Windows as case-insensitive in its path module; we follow those conventions.
   if (process.platform === 'win32') {
@@ -17,10 +18,3 @@ module.exports = function (thePath, potentialParent) {
     (thePath[potentialParent.length] === DEFAULT_SEPARATOR || thePath[potentialParent.length] === undefined)
   );
 };
-
-function stripTrailingSep(thePath) {
-  if (thePath[thePath.length - 1] === path.sep) {
-    return thePath.slice(0, -1);
-  }
-  return thePath;
-}
