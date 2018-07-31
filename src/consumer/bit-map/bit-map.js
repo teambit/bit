@@ -252,20 +252,20 @@ export default class BitMap {
       dirs: []
     };
     // $FlowFixMe
-    Object.values(this.components).forEach((component: ComponentMap) => {
+    R.values(this.components).forEach((component: ComponentMap) => {
       const configDir = component.configDir;
       const trackDir = component.getTrackDir();
       if (configDir && trackDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
         const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
-        const compilerObj = Object.values(componentBitJson.compiler)[0];
+        const compilerObj = R.values(componentBitJson.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
-        const testerObj = Object.values(componentBitJson.tester)[0];
+        const testerObj = R.values(componentBitJson.tester)[0];
         const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
-        const compilerFiles = compilerFilesObj ? Object.values(compilerFilesObj) : [];
-        const testerFiles = testerFilesObj ? Object.values(testerFilesObj) : [];
-        // Object.values above might return array of something which is not string
+        const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
+        const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];
+        // R.values above might return array of something which is not string
         // Which will not be ok with the input of resolveIgnoreFilesAndDirs
         const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
           configDir,
