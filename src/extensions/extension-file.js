@@ -6,17 +6,19 @@ import vinylFile from 'vinyl-file';
 import { AbstractVinyl } from '../consumer/component/sources';
 import ExtensionFileNotFound from './exceptions/extension-file-not-found';
 import logger from '../logger/logger';
-import type { PathOsBased } from '../utils/path';
+import type { PathOsBased, PathLinux } from '../utils/path';
 import { Repository, Ref } from '../scope/objects';
 import Source from '../scope/models/source';
 
 export type ExtensionFileModel = {
   name: string,
+  relativePath: PathLinux,
   file: Ref
 };
 
 export type ExtensionFileObject = {
   name: string,
+  relativePath: PathLinux,
   file: string
 };
 
@@ -93,6 +95,7 @@ export default class ExtensionFile extends AbstractVinyl {
   static fromModelObjectToObject(file: ExtensionFileModel): ExtensionFileObject {
     return {
       name: file.name,
+      relativePath: file.relativePath,
       file: file.file.toString()
     };
   }
@@ -106,6 +109,7 @@ export default class ExtensionFile extends AbstractVinyl {
   static fromObjectToModelObject(file: ExtensionFileObject): ExtensionFileModel {
     return {
       name: file.name,
+      relativePath: file.relativePath,
       file: new Ref(file.file)
     };
   }
@@ -117,6 +121,7 @@ export default class ExtensionFile extends AbstractVinyl {
   toModelObject(): ExtensionFileModel {
     return {
       name: this.name,
+      relativePath: this.relative,
       file: this.file.hash()
     };
   }
