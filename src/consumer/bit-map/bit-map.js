@@ -277,7 +277,7 @@ export default class BitMap {
     return componentsIds;
   }
 
-  validateConfigDir(configDir: PathLinux): boolean {
+  validateConfigDir(compId: string, configDir: PathLinux): boolean {
     const components = this.getAllComponents();
     if (configDir.startsWith('./')) {
       configDir = configDir.replace('./', '');
@@ -295,7 +295,9 @@ export default class BitMap {
     if (!R.isEmpty(comps)) {
       const id = R.keys(comps)[0];
       const stringId = BitId.parse(id).toStringWithoutVersion();
-      throw new InvalidConfigDir(stringId);
+      if (compId !== stringId) {
+        throw new InvalidConfigDir(stringId);
+      }
     }
     return true;
   }
@@ -447,6 +449,7 @@ export default class BitMap {
     origin,
     parent,
     rootDir,
+    configDir,
     trackDir,
     override,
     detachedCompiler,
@@ -459,6 +462,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
+    configDir?: string,
     trackDir?: PathOsBased,
     override: boolean,
     detachedCompiler: ?boolean,
@@ -516,6 +520,9 @@ export default class BitMap {
       // when running the command from an inner directory we must not run _makePathRelativeToProjectRoot.
       const rootRelative = path.isAbsolute(rootDir) ? this._makePathRelativeToProjectRoot(rootDir) : rootDir;
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
+    }
+    if (configDir) {
+      this.components[componentIdStr].configDir = pathNormalizeToLinux(configDir);
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);

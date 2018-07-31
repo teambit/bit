@@ -149,7 +149,7 @@ async function applyVersion(
   });
 
   consumer.bitMap.removeComponent(component.id);
-  component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin);
+  component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin, componentMap.configDir);
 
   const filesStatusNoSharedDir = filesStatusWithoutSharedDir(filesStatus, component, componentMap);
   const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(modifiedStatus, component, componentMap);

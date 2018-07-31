@@ -205,6 +205,7 @@ async function applyVersion(
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
     writeBitJson: !!componentFromFS.bitJson || componentMap.configDir, // write bit.json and config files only if it was there before
+    configDir: componentMap.configDir,
     verbose,
     writeDists: !ignoreDist,
     writePackageJson

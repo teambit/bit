@@ -448,6 +448,7 @@ export default class Component {
   async _writeToComponentDir({
     bitDir,
     writeBitJson,
+    configDir,
     writePackageJson,
     consumer,
     override = true,
@@ -457,6 +458,7 @@ export default class Component {
   }: {
     bitDir: string,
     writeBitJson: boolean,
+    configDir?: string,
     writePackageJson: boolean,
     consumer?: Consumer,
     override?: boolean,
@@ -472,12 +474,8 @@ export default class Component {
     if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
     if (writeBitJson && consumer) {
-      await this.writeConfig(
-        consumer.getPath(),
-        consumer.bitMap,
-        consumer.dirStructure.ejectedEnvsDirStructure,
-        override
-      );
+      const resolvedConfigDir = configDir || consumer.dirStructure.ejectedEnvsDirStructure;
+      await this.writeConfig(consumer.getPath(), consumer.bitMap, resolvedConfigDir, override);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
@@ -494,7 +492,13 @@ export default class Component {
     return bitMap.getComponent(this.id);
   }
 
-  _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
+  _addComponentToBitMap(
+    bitMap: BitMap,
+    rootDir: string,
+    origin: string,
+    parent?: string,
+    configDir?: string
+  ): ComponentMap {
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -504,6 +508,7 @@ export default class Component {
       files: filesForBitMap,
       mainFile: this.mainFile,
       rootDir,
+      configDir,
       detachedCompiler: this.detachedCompiler,
       detachedTester: this.detachedTester,
       origin,
@@ -569,6 +574,7 @@ export default class Component {
   async write({
     bitDir,
     writeBitJson = true,
+    configDir,
     writePackageJson = true,
     override = true,
     origin,
@@ -581,6 +587,7 @@ export default class Component {
   }: {
     bitDir?: string,
     writeBitJson?: boolean,
+    configDir?: boolean,
     writePackageJson?: boolean,
     override?: boolean,
     origin?: string,
@@ -618,7 +625,7 @@ export default class Component {
     }
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
-      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
+      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
     }
     if (!consumer.shouldDistsBeInsideTheComponent() && this.dists.isEmpty()) {
       // since the dists are set to be outside the components dir, the source files must be saved there
@@ -650,7 +657,7 @@ export default class Component {
       );
       fs.removeSync(oldLocation);
       bitMap.removeComponent(this.id.toString());
-      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
+      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) writeBitJson = false;
@@ -658,6 +665,7 @@ export default class Component {
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
     const rootDir = componentMap.rootDir;
+    const resolvedConfigDir = configDir || componentMap.configDir;
 
     const componentMapExistWithSameVersion = bitMap.isExistWithSameVersion(this.id);
     const updateBitMap =
@@ -670,7 +678,7 @@ export default class Component {
         // so it's better to just remove the old record and add a new one
         bitMap.removeComponent(this.id);
       }
-      this._addComponentToBitMap(bitMap, rootDir, origin, parent);
+      this._addComponentToBitMap(bitMap, rootDir, origin, parent, resolvedConfigDir);
     }
 
     // Don't write the package.json for an authored component, because it's dependencies probably managed
@@ -679,6 +687,7 @@ export default class Component {
     await this._writeToComponentDir({
       bitDir: newBase,
       writeBitJson,
+      configDir: resolvedConfigDir,
       writePackageJson: actualWithPackageJson,
       consumer,
       override,

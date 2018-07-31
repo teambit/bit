@@ -58,6 +58,7 @@ export default (async function writeToComponentsDir({
   override = true, // override files
   writePackageJson = true,
   writeBitJson = false,
+  configDir,
   writeBitDependencies = false,
   createNpmLinkFiles = false,
   writeDists = true,
@@ -75,6 +76,7 @@ export default (async function writeToComponentsDir({
   override?: boolean,
   writePackageJson?: boolean,
   writeBitJson?: boolean,
+  configDir?: string,
   writeBitDependencies?: boolean,
   createNpmLinkFiles?: boolean,
   writeDists?: boolean,
@@ -114,6 +116,7 @@ export default (async function writeToComponentsDir({
         bitDir,
         override: true,
         writeBitJson,
+        configDir: configDir || componentMap.configDir,
         writePackageJson,
         origin,
         consumer,

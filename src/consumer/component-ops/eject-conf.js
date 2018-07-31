@@ -35,13 +35,12 @@ export default (async function ejectConf(
   }
   if (!configDir.startsWith(`{${COMPONENT_DIR}}`)) {
     const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
-    bitMap.validateConfigDir(configDirToValidate);
+    bitMap.validateConfigDir(component.id.toStringWithoutVersion(), configDirToValidate);
   }
   const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
   const resolvedConfigDirFullPath = path.join(consumerPath, resolvedConfigDir);
-
   const ejectedCompilerDirectoryP = component.compiler
     ? await component.compiler.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
     : '';
