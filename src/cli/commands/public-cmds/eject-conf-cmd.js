@@ -1,7 +1,12 @@
 /** @flow */
+import * as nodePath from 'path';
 import Command from '../../command';
 import { ejectConf } from '../../../api/consumer';
 import type { EjectConfResult } from '../../../consumer/component-ops/eject-conf';
+
+type EjectConfCliResult = EjectConfResult & {
+  ejectPathRelativeToCwd: string
+};
 
 export default class EjectConf extends Command {
   name = 'eject-conf [id]';
@@ -11,11 +16,14 @@ export default class EjectConf extends Command {
   loader = true;
   migration = true;
 
-  action([id]: [string], { path }: { path?: string }): Promise<EjectConfResult> {
-    return ejectConf(id, { ejectPath: path });
+  async action([id]: [string], { path }: { path?: string }): Promise<EjectConfCliResult> {
+    const cwd = process.cwd();
+    const res = await ejectConf(id, { ejectPath: path });
+    res.ejectPathRelativeToCwd = nodePath.relative(cwd, res.ejectedFullPath);
+    return res;
   }
 
-  report(ejectResults: EjectConfResult): string {
-    return `Eject results :\n${JSON.stringify(ejectResults)}`;
+  report(ejectResults: EjectConfCliResult): string {
+    return `${ejectResults.id} configuration ejected to:\n${ejectResults.ejectPathRelativeToCwd}`;
   }
 }
