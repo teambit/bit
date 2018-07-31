@@ -573,7 +573,7 @@ export default class Component {
    */
   async write({
     bitDir,
-    writeBitJson = true,
+    writeBitJson = false,
     configDir,
     writePackageJson = true,
     override = true,
