@@ -106,6 +106,7 @@ export default (async function writeToComponentsDir({
     if (origin === COMPONENT_ORIGINS.IMPORTED) {
       componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
     }
+    const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
     throwErrorWhenDirectoryNotEmpty(bitDir, override, componentMap, writeToPath);
     // don't write dists files for authored components as the author has its own mechanism to generate them
     // also, don't write dists file for imported component, unless the user used '--dist' flag
@@ -116,7 +117,7 @@ export default (async function writeToComponentsDir({
         bitDir,
         override: true,
         writeBitJson,
-        configDir: configDir || componentMap.configDir,
+        configDir: configDir || configDirFromComponentMap,
         writePackageJson,
         origin,
         consumer,
