@@ -894,8 +894,8 @@ export default class Consumer {
     deleteFiles: boolean
   ): Promise<RemovedLocalObjects> {
     // local remove in case user wants to delete tagged components
-    const modifiedComponents = [];
-    const regularComponents = [];
+    const modifiedComponents = new BitIds();
+    const regularComponents = new BitIds();
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
     if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {

@@ -8,7 +8,6 @@ import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
 import { Symlink } from '../models';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
-import type { BitIdStr } from '../../bit-id/bit-id';
 import { Consumer } from '../../consumer';
 
 export default class RemoveModelComponents {

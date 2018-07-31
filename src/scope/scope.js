@@ -848,7 +848,7 @@ export default class Scope {
     removeSameOrigin: boolean = false,
     consumer?: Consumer
   ): Promise<RemovedObjects> {
-    logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
+    logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
