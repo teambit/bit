@@ -544,7 +544,7 @@ export default class Scope {
   getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false, context: Object = {}) {
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}, localFetch: ${localFetch.toString()}`);
     Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes, ids: ${Analytics.hashData(ids)}`);
-    enrichContextFromGlobal(context);
+    enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
         if (!localFetch) return true;
@@ -592,7 +592,7 @@ export default class Scope {
         ids.join(', ')
       )}`
     );
-    enrichContextFromGlobal(context);
+    enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
         if (!localFetch) return true;

@@ -2,7 +2,7 @@ version: 2
 jobs:
   checkout_code:
     docker:
-      - image: circleci/node:6.10.3
+      - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
       - checkout
@@ -20,7 +20,7 @@ jobs:
 
   set_ssh_key:
     docker:
-        - image: circleci/node:6.10.3
+        - image: circleci/node:6.14.3
     working_directory: ~/.ssh
     steps:
       - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
@@ -35,7 +35,7 @@ jobs:
 
   set_bitsrc_registry:
     docker:
-        - image: circleci/node:6.10.3
+        - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
       # prod registry
@@ -52,7 +52,7 @@ jobs:
 
   install_npm_deps:
     docker:
-      - image: circleci/node:6.10.3
+      - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
       - run:
@@ -68,19 +68,19 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run
             # this step without cache
-            - npm-deps10-{{ checksum "./bit/package.json" }}
+            - npm-deps11-{{ checksum "./bit/package.json" }}
             # Find the most recent cache used from any branch
-            - npm-deps10
+            - npm-deps11
       # - run: ls ~/bit/node_modules
       - run:
           name: Insatll npm dependencies
           command: 'cd bit && npm install'
       - save_cache:
-          key: npm-deps10-{{ checksum "./bit/package.json" }}
+          key: npm-deps11-{{ checksum "./bit/package.json" }}
           paths:
             - ./bit/node_modules
       - save_cache:
-          key: npm-deps10
+          key: npm-deps11
           paths:
             - ./bit/node_modules
       - persist_to_workspace:
@@ -90,7 +90,7 @@ jobs:
 
   install_bit_javascript_npm_deps:
     docker:
-      - image: circleci/node:6.10.3
+      - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
       - attach_workspace:
@@ -106,7 +106,7 @@ jobs:
 
   build:
      docker:
-       - image: circleci/node:6.10.3
+       - image: circleci/node:6.14.3
      working_directory: ~/bit
      steps:
       - run:
@@ -124,7 +124,7 @@ jobs:
 
   build_bit_javascript:
      docker:
-       - image: circleci/node:6.10.3
+       - image: circleci/node:6.14.3
      working_directory: ~/bit
      steps:
       - run:
@@ -142,7 +142,7 @@ jobs:
 
   unit_test:
     docker:
-      - image: circleci/node:6.10.3
+      - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
       - run:
@@ -164,7 +164,7 @@ jobs:
 
   unit_test_bit_javascript:
     docker:
-    - image: circleci/node:6.10.3
+    - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
     - run:
@@ -186,7 +186,7 @@ jobs:
 
   lint:
     docker:
-      - image: circleci/node:6.10.3
+      - image: circleci/node:6.14.3
     working_directory: ~/bit
     steps:
       - run:
@@ -207,7 +207,7 @@ jobs:
 
   e2e_test:
     docker:
-      - image: circleci/node:6.10.3
+      - image: circleci/node:6.14.3
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
