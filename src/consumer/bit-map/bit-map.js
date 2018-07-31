@@ -174,8 +174,15 @@ export default class BitMap {
     }
   }
 
+  /**
+   * Return files and dirs which need to be ignored since they are config files / dirs
+   * @param {*} configDir
+   * @param {*} rootDir
+   * @param {*} compilerFilesPaths
+   * @param {*} testerFilesPaths
+   */
   static resolveIgnoreFilesAndDirs(
-    configDir: PathLinux,
+    configDir?: PathLinux,
     rootDir: PathLinux,
     compilerFilesPaths: PathLinux[] = [],
     testerFilesPaths: PathLinux[] = []
@@ -244,19 +251,28 @@ export default class BitMap {
       files: [],
       dirs: []
     };
+    // $FlowFixMe
     Object.values(this.components).forEach((component: ComponentMap) => {
-      if (component.configDir) {
-        const resolvedBaseConfigDir = component.getBaseConfigDir();
+      const configDir = component.configDir;
+      const trackDir = component.getTrackDir();
+      if (configDir && trackDir) {
+        const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
         const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
-        const compilerFilesObj = Object.values(componentBitJson.compiler)[0].files;
-        const testerFilesObj = Object.values(componentBitJson.tester)[0].files;
+        const compilerObj = Object.values(componentBitJson.compiler)[0];
+        const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
+        const testerObj = Object.values(componentBitJson.tester)[0];
+        const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
         const compilerFiles = compilerFilesObj ? Object.values(compilerFilesObj) : [];
         const testerFiles = testerFilesObj ? Object.values(testerFilesObj) : [];
+        // Object.values above might return array of something which is not string
+        // Which will not be ok with the input of resolveIgnoreFilesAndDirs
         const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
-          component.configDir,
-          component.getTrackDir(),
+          configDir,
+          trackDir,
+          // $FlowFixMe - see comment above
           compilerFiles,
+          // $FlowFixMe - see comment above
           testerFiles
         );
         res.files = res.files.concat(toIgnore.files);

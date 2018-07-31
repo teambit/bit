@@ -1075,7 +1075,6 @@ describe('envs', function () {
         const envFilesFolder = path.join(componentFolder, ejectedEnvsDirectory);
         const compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
         const testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
-        let importedScopeBeforeChanges;
 
         before(() => {
           helper.reInitLocalScope();
