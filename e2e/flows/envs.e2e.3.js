@@ -575,7 +575,7 @@ describe('envs', function () {
           });
         });
       });
-      describe.only('eject conf', () => {
+      describe('eject conf', () => {
         let fullComponentFolder;
         let bitJsonPath;
         let babelrcPath;
