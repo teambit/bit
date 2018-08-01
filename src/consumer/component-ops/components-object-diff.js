@@ -87,7 +87,7 @@ export function diffBetweenComponentsObjects(
   componentLeft: Component,
   componentRight: Component
 ): ?(FieldsDiff[]) {
-  const componentMap = consumer.bitMap.getComponent(componentLeft.id, false, true, true);
+  const componentMap = consumer.bitMap.getComponentIfExist(componentLeft.id, { ignoreScopeAndVersion: true });
   if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
     componentLeft.stripOriginallySharedDir(consumer.bitMap);
     componentRight.stripOriginallySharedDir(consumer.bitMap);
@@ -131,7 +131,7 @@ export function diffBetweenComponentsObjects(
     if (R.isEmpty(dependenciesLeft) || R.isEmpty(dependenciesRight)) return [];
     return dependenciesLeft.reduce((acc, dependencyLeft) => {
       const idStr = dependencyLeft.id.toString();
-      const dependencyRight = dependenciesRight.find(dep => dep.id.toString() === idStr);
+      const dependencyRight = dependenciesRight.find(dep => dep.id.isEqual(dependencyLeft.id));
       if (!dependencyRight) return acc;
       if (JSON.stringify(dependencyLeft.relativePaths) === JSON.stringify(dependencyRight.relativePaths)) return acc;
       const fieldName = `Dependency ${idStr} relative-paths`;

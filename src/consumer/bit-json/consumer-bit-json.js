@@ -5,7 +5,7 @@ import AbstractBitJson from './abstract-bit-json';
 import type { Extensions, Compilers, Testers } from './abstract-bit-json';
 import { BitJsonNotFound, InvalidBitJson } from './exceptions';
 import {
-  DEFAULT_COMPONENTES_DIR_PATH,
+  DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_EJECTED_ENVS_DIR_PATH,
   DEFAULT_PACKAGE_MANAGER
@@ -64,7 +64,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     lang,
     distTarget,
     distEntry,
-    componentsDefaultDirectory = DEFAULT_COMPONENTES_DIR_PATH,
+    componentsDefaultDirectory = DEFAULT_COMPONENTS_DIR_PATH,
     dependenciesDirectory = DEFAULT_DEPENDENCIES_DIR_PATH,
     ejectedEnvsDirectory = DEFAULT_EJECTED_ENVS_DIR_PATH,
     bindingPrefix,

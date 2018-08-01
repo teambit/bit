@@ -1,6 +1,5 @@
 /** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
-import { BitId } from '../../../bit-id';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
 import { COMPONENT_ORIGINS } from '../../../constants';
 
@@ -16,7 +15,7 @@ export default (async function getConsumerBit({
   showRemoteVersions: boolean
 }) {
   const consumer: Consumer = await loadConsumer();
-  const bitId = BitId.parse(id);
+  const bitId = consumer.getParsedId(id);
   if (allVersions) {
     return consumer.scope.loadAllVersions(bitId);
   }

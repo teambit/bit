@@ -129,16 +129,11 @@ describe('bit show command', function () {
       });
 
       it('should include the name correctly', () => {
-        expect(output).to.include({ name: 'comp' });
+        expect(output).to.include({ name: 'comp/comp' });
       });
 
-      it('should include the namespace correctly', () => {
-        expect(output).to.include({ box: 'comp' });
-      });
-
-      // TODO: Check again after this commit merged: 6ee69fab36f5b9f31fa576216c6bf22808d0d459
-      it.skip('should include the version correctly', () => {
-        expect(output).to.include({ version: 1 });
+      it('should include the version correctly', () => {
+        expect(output).to.include({ version: '0.0.1' });
       });
 
       // TODO: get the version dynamically
@@ -276,14 +271,18 @@ describe('bit show command', function () {
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
       helper.exportAllComponents();
-    });
-    it('should show deprecated component', () => {
       helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
-      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
+    });
+    it('should show the component as deprecated when using "--remote" flag', () => {
+      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j -r`));
       expect(output).to.include({ deprecated: true });
     });
+    it('should not show the component as deprecated when not using "--remote" flag', () => {
+      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
+      expect(output).to.include({ deprecated: false });
+    });
   });
-  describe('show deprecated remote component', () => {
+  describe('show non-deprecated remote component', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -292,7 +291,11 @@ describe('bit show command', function () {
       helper.commitComponentBarFoo();
       helper.exportAllComponents();
     });
-    it('should show regular component', () => {
+    it('should indicate a component as non-deprecated when using "--remote" flag', () => {
+      output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j -r`));
+      expect(output).to.include({ deprecated: false });
+    });
+    it('should indicate a component as non-deprecated when not using "--remote flag', () => {
       output = JSON.parse(helper.runCmd(`bit show ${helper.remoteScope}/bar/foo -j`));
       expect(output).to.include({ deprecated: false });
     });
@@ -580,8 +583,7 @@ function add(a, b) {
       const parsedOutput = JSON.parse(output);
       expect(parsedOutput).to.be.ofSize(1);
       expect(parsedOutput[0]).to.to.include({
-        name: 'foo',
-        box: 'bar',
+        name: 'bar/foo',
         version: '0.0.1'
       });
     });

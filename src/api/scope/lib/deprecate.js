@@ -6,7 +6,7 @@ import HooksManager from '../../../hooks';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
-export default function deprecate({ path, ids }, headers: ?Object): Promise<string[]> {
+export default function deprecate({ path, ids }: { path: string, ids: string[] }, headers: ?Object): Promise<string[]> {
   const bitIds = BitIds.deserialize(ids);
   const args = { path, bitIds };
   HooksManagerInstance.triggerHook(PRE_DEPRECATE_REMOTE, args, headers);

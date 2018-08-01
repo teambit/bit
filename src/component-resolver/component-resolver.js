@@ -8,7 +8,8 @@ import logger from '../logger/logger';
 import type { PathOsBased } from '../utils/path';
 
 function getLatestVersion(bitId: BitId, componentsDir: string): number {
-  if (bitId.version !== LATEST_BIT_VERSION) return bitId.version;
+  // $FlowFixMe
+  if (bitId.hasVersion()) return bitId.version;
   const regexRemoveLatestVersion = new RegExp(`${LATEST_BIT_VERSION}$`);
   const relativePathWithoutVersion = bitId.toFullPath().replace(regexRemoveLatestVersion, '');
   const pathWithoutVersion: PathOsBased = path.join(componentsDir, relativePathWithoutVersion);
@@ -24,11 +25,11 @@ function componentResolver(
   mainFilePath: ?string,
   projectRoot: PathOsBased = process.cwd()
 ): PathOsBased {
-  const bitId = BitId.parse(componentId);
+  const bitId = BitId.parse(componentId, true); // used for envs. components, all have a scope
   const componentsDir = path.join(projectRoot, BITS_DIRNAME);
   const version = getLatestVersion(bitId, componentsDir);
-  bitId.version = version.toString();
-  const componentPath = path.join(componentsDir, bitId.toFullPath());
+  const bitIdWithLatestVersion = bitId.changeVersion(version.toString());
+  const componentPath = path.join(componentsDir, bitIdWithLatestVersion.toFullPath());
   logger.debug(`resolving component, path: ${componentPath}`);
   if (mainFilePath) {
     return path.join(componentPath, mainFilePath);

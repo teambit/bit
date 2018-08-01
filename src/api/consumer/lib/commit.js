@@ -3,13 +3,22 @@ import semver from 'semver';
 import R from 'ramda';
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import HooksManager from '../../../hooks';
 import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from '../../../constants';
 import InvalidVersion from './exceptions/invalid-version';
 import { Analytics } from '../../../analytics/analytics';
+import Component from '../../../consumer/component';
+import ModelComponent from '../../../scope/models/component';
 
 const HooksManagerInstance = HooksManager.getInstance();
+
+export type TagResults = {
+  taggedComponents: Component[],
+  autoTaggedComponents: ModelComponent[],
+  warnings: string[],
+  newComponents: BitIds
+};
 
 export async function commitAction(args: {
   id: string,
@@ -21,7 +30,7 @@ export async function commitAction(args: {
   ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,
   skipTests: boolean
-}) {
+}): Promise<TagResults> {
   const {
     id,
     message,
@@ -38,12 +47,13 @@ export async function commitAction(args: {
   const consumer: Consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
+  const bitId = consumer.getParsedId(id);
   if (!force) {
-    const componentStatus = await consumer.getComponentStatusById(BitId.parse(id));
+    const componentStatus = await consumer.getComponentStatusById(bitId);
     if (componentStatus.modified === false) return null;
   }
   const commitResults = await consumer.tag(
-    [id],
+    new BitIds(bitId),
     message,
     validExactVersion,
     releaseType,
@@ -64,7 +74,7 @@ async function getCommitPendingComponents(
   isAllScope: boolean,
   exactVersion: string,
   includeImported: boolean
-): Promise<{ commitPendingComponents: string[], warnings: string[] }> {
+): Promise<{ commitPendingComponents: BitId[], warnings: string[] }> {
   const componentsList = new ComponentsList(consumer);
   if (isAllScope) {
     return componentsList.listCommitPendingOfAllScope(exactVersion, includeImported);
@@ -85,7 +95,7 @@ export async function commitAllAction(args: {
   skipTests: boolean,
   scope?: boolean,
   includeImported?: boolean
-}) {
+}): Promise<TagResults> {
   const {
     message,
     exactVersion,

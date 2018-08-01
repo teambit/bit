@@ -1,5 +1,5 @@
 /** @flow */
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { loadConsumer } from '../../../consumer';
 import logger from '../../../logger/logger';
 
@@ -19,14 +19,16 @@ export type IsolateOptions = {
 export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {
   logger.debug('starting isolation process');
   if (opts.verbose) console.log('starting isolation process'); // eslint-disable-line no-console
-  let scope;
+  let scope: Scope;
   // If a scope path provided we will take the component from that scope
   if (scopePath) {
     scope = await loadScope(scopePath);
-    return scope.isolateComponent(componentId, opts);
+    const bitId = await scope.getParsedId(componentId);
+    return scope.isolateComponent(bitId, opts);
   }
   // If a scope path was not provided we will get the consumer's scope
   const consumer = await loadConsumer();
   scope = consumer.scope;
-  return scope.isolateComponent(componentId, opts);
+  const bitId = consumer.getParsedId(componentId);
+  return scope.isolateComponent(bitId, opts);
 });

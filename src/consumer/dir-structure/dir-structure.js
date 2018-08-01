@@ -2,7 +2,7 @@
 import R from 'ramda';
 import format from 'string-format';
 import {
-  DEFAULT_COMPONENTES_DIR_PATH,
+  DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_EJECTED_ENVS_DIR_PATH
 } from '../../constants';
@@ -13,7 +13,7 @@ export default class BitStructure {
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
   constructor(componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory) {
-    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTES_DIR_PATH;
+    this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
   }
@@ -21,16 +21,12 @@ export default class BitStructure {
   _getComponentStructurePart(componentStructure: string, componentPart: string): string {
     switch (componentPart) {
       case 'name':
-        return 'name';
-      case 'namespace':
-        return 'box';
       case 'scope':
-        return 'scope';
       case 'version':
-        return 'version';
+        return componentPart;
       default:
         throw new GeneralError(`the ${componentPart} part of the component structure
-           ${componentStructure} is invalid, it must be one of the following: "name", "namespace", "scope" or "version" `);
+           ${componentStructure} is invalid, it must be one of the following: "name", "scope" or "version" `);
     }
   }
 

@@ -2,16 +2,13 @@
 import R from 'ramda';
 import path from 'path';
 import fs from 'fs-extra';
-import format from 'string-format';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import Component from '../component';
 import {
   COMPONENT_ORIGINS,
   CFG_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_SEPARATOR,
-  ASTERISK,
-  COMPONENTES_DEPENDECIES_REGEX,
+  SUB_DIRECTORIES_GLOB_PATTERN,
   NODE_PATH_COMPONENT_SEPARATOR
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
@@ -42,7 +39,9 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
   const componentsToAdd = R.fromPairs(
     importedComponents.map((componentId) => {
       const componentMap = consumer.bitMap.getComponent(componentId);
-      if (!componentMap.rootDir) throw new GeneralError(`rootDir is missing from an imported component ${componentId}`);
+      if (!componentMap.rootDir) {
+        throw new GeneralError(`rootDir is missing from an imported component ${componentId.toString()}`);
+      }
       const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
       return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
@@ -80,7 +79,7 @@ function convertToValidPathForPackageManager(pathStr: PathLinux): string {
 function getPackageDependencyValue(
   dependencyId: BitId,
   parentComponentMap: ComponentMap,
-  dependencyComponentMap?: ComponentMap
+  dependencyComponentMap?: ?ComponentMap
 ): ?string {
   if (!dependencyComponentMap || dependencyComponentMap.origin === COMPONENT_ORIGINS.NESTED) {
     return dependencyId.version;
@@ -98,8 +97,8 @@ function getPackageDependencyValue(
 }
 
 async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): Promise<?string> {
-  const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
   const parentComponentMap = consumer.bitMap.getComponent(parentId);
+  const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }
 
@@ -108,11 +107,11 @@ async function changeDependenciesToRelativeSyntax(
   components: Component[],
   dependencies: Component[]
 ) {
-  const dependenciesIds = dependencies.map(dependency => dependency.id.toStringWithoutVersion());
+  const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const updateComponent = async (component) => {
-    const componentMap = component.getComponentMap(consumer.bitMap);
+    const componentMap = consumer.bitMap.getComponent(component.id);
     let packageJson;
     try {
       packageJson = await PackageJson.load(componentMap.rootDir);
@@ -123,10 +122,10 @@ async function changeDependenciesToRelativeSyntax(
       const deps = dev ? component.devDependencies.get() : component.dependencies.get();
       const packages = deps.map((dependency) => {
         const dependencyId = dependency.id.toStringWithoutVersion();
-        if (dependenciesIds.includes(dependencyId)) {
-          const dependencyComponent = dependencies.find(d => d.id.toStringWithoutVersion() === dependencyId);
+        if (dependenciesIds.searchWithoutVersion(dependency.id)) {
+          const dependencyComponent = dependencies.find(d => d.id.isEqualWithoutVersion(dependency.id));
           // $FlowFixMe dependencyComponent must be found (two line earlier there is a check for that)
-          const dependencyComponentMap = dependencyComponent.getComponentMap(consumer.bitMap);
+          const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
           const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
           return dependencyPackageValue ? [dependencyId, dependencyPackageValue] : [];
         }
@@ -149,6 +148,7 @@ function getRegistryPrefix(): string {
 function convertIdToNpmName(id: BitId, withVersion = false): string {
   const registryPrefix = getRegistryPrefix();
   const npmName = `${registryPrefix}/${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
+  // $FlowFixMe the id here has a version
   return withVersion ? `${npmName}@${id.version}` : npmName;
 }
 
@@ -226,39 +226,23 @@ async function updateAttribute(
 
 /**
  * Adds workspace array to package.json - only if user wants to work with yarn workspaces
- *
- * formatedComponentsPath- used to resolve import path dsl. replacing all {}->*
- * for example {components/{namespace} -> components/*
- *
  */
-async function addWorkspacesToPackageJson(
-  consumer: Consumer,
-  rootDir: string,
-  componentsDefaultDirectory: string,
-  dependenciesDirectory: string,
-  customImportPath: ?string
-) {
+async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
   if (
     consumer.bitJson.manageWorkspaces &&
     consumer.bitJson.packageManager === 'yarn' &&
     consumer.bitJson.useWorkspaces
   ) {
-    const formatedComponentsPath = format(componentsDefaultDirectory, {
-      name: ASTERISK,
-      scope: ASTERISK,
-      namespace: ASTERISK
-    });
-    const formatedRegexPath = formatedComponentsPath
-      .split(DEFAULT_SEPARATOR)
-      .map(part => (R.contains(ASTERISK, part) ? ASTERISK : part))
-      .join(DEFAULT_SEPARATOR);
+    const rootDir = consumer.getPath();
+    const dependenciesDirectory = consumer.bitJson.dependenciesDirectory;
+    const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = await consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
       rootDir,
-      formatedRegexPath,
-      dependenciesDirectory + COMPONENTES_DEPENDECIES_REGEX,
+      componentsDefaultDirectory + SUB_DIRECTORIES_GLOB_PATTERN,
+      dependenciesDirectory + SUB_DIRECTORIES_GLOB_PATTERN,
       customImportPath ? consumer.getPathRelativeToConsumer(customImportPath) : customImportPath
     );
   }
@@ -292,7 +276,7 @@ async function removeComponentsFromWorkspacesAndDependencies(
     consumer.bitJson.packageManager === 'yarn' &&
     consumer.bitJson.useWorkspaces
   ) {
-    const dirsToRemove = componentIds.map(id => bitMap.getComponent(id.toStringWithoutVersion()).rootDir);
+    const dirsToRemove = componentIds.map(id => bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
   }
   await PackageJson.removeComponentsFromDependencies(

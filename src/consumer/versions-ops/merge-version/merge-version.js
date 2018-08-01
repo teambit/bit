@@ -72,8 +72,8 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
   if (!componentModel.hasVersion(version)) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} doesn't have version ${version}`);
   }
-  const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
-  const currentlyUsedVersion = BitId.parse(existingBitMapId).version;
+  const existingBitMapId = consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
+  const currentlyUsedVersion = existingBitMapId.version;
   if (currentlyUsedVersion === version) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }

@@ -12,6 +12,7 @@ import ExternalError from '../error/external-error';
 import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
 import ExternalTestError from '../consumer/component/exceptions/external-test-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+import { BitId } from '../bit-id';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>,
@@ -176,6 +177,7 @@ function deserializeResults(
   };
 
   const deserializeResult = (result) => {
+    result.componentId = new BitId(result.componentId); // when BitId is received from a fork it loses its class and appears as an object
     if (!result.failures) return result;
     result.failures = result.failures.map(deserializeFailure);
     return result;

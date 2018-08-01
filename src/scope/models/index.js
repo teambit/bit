@@ -1,3 +1,5 @@
+// @flow
+
 import Component from './component';
 import ScopeMeta from './scopeMeta';
 import Source from './source';

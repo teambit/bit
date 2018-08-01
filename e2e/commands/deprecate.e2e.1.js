@@ -41,7 +41,7 @@ describe('bit deprecate command', function () {
       expect(listOutput).to.contain.string('bar/foo [Deprecated]');
     });
     it('should export component as deprecated ', () => {
-      helper.deprecateComponent(`${helper.remoteScope}/bar/foo`);
+      helper.deprecateComponent('bar/foo');
       helper.exportAllComponents();
       output = helper.listRemoteScope(false);
       expect(output).to.contain.string('bar/foo');
