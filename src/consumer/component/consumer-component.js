@@ -1156,8 +1156,16 @@ export default class Component {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
+      const origin = componentMap.origin;
       componentMap.files.forEach((file) => {
-        const filePath = path.join(bitDir, file.relativePath);
+        let filePath = path.join(bitDir, file.relativePath);
+        // This condition is because when we have root dir in component map we save the relative paths of the files
+        // relative to the root dir
+        // While if we have track dir we store it relative to the workspace and not to the track dir
+        // (we shouldn't have done this, but change it now, means migrate the bitmap for all the users)
+        if (origin === COMPONENT_ORIGINS.AUTHORED) {
+          filePath = path.join(consumer.getPath(), file.relativePath);
+        }
         try {
           const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
             test: file.test

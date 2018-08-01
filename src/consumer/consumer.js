@@ -321,6 +321,13 @@ export default class Consumer {
         // no need to resolve dependencies
         return component;
       }
+      // This condition is because when we have root dir in component map we save the relative paths of the files
+      // relative to the root dir
+      // While if we have track dir we store it relative to the workspace and not to the track dir
+      // (we shouldn't have done this, but change it now, means migrate the bitmap for all the users)
+      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+        bitDir = this.getPath();
+      }
       // @todo: check if the files were changed, and if so, skip the next line.
       await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
       await updateDependenciesVersions(this, component);
