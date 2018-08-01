@@ -1147,7 +1147,9 @@ export default class Component {
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
-    let configDir = bitDir;
+    let configDir = consumer.getPath();
+    const trackDir = componentMap.getTrackDir();
+    configDir = trackDir ? path.join(configDir, trackDir) : configDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
@@ -1158,14 +1160,7 @@ export default class Component {
       const filesToDelete = [];
       const origin = componentMap.origin;
       componentMap.files.forEach((file) => {
-        let filePath = path.join(bitDir, file.relativePath);
-        // This condition is because when we have root dir in component map we save the relative paths of the files
-        // relative to the root dir
-        // While if we have track dir we store it relative to the workspace and not to the track dir
-        // (we shouldn't have done this, but change it now, means migrate the bitmap for all the users)
-        if (origin === COMPONENT_ORIGINS.AUTHORED) {
-          filePath = path.join(consumer.getPath(), file.relativePath);
-        }
+        const filePath = path.join(bitDir, file.relativePath);
         try {
           const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
             test: file.test

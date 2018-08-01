@@ -277,8 +277,10 @@ export default class Consumer {
       const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
 
       const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
-      let bitDir = componentMap.getTrackDir();
-      bitDir = bitDir ? path.join(this.getPath(), bitDir) : this.getPath();
+      let bitDir = this.getPath();
+      if (componentMap.rootDir) {
+        bitDir = path.join(bitDir, componentMap.rootDir);
+      }
       const componentWithDependenciesFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
       const componentFromModel = componentWithDependenciesFromModel
         ? componentWithDependenciesFromModel.component
@@ -320,13 +322,6 @@ export default class Consumer {
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         // no need to resolve dependencies
         return component;
-      }
-      // This condition is because when we have root dir in component map we save the relative paths of the files
-      // relative to the root dir
-      // While if we have track dir we store it relative to the workspace and not to the track dir
-      // (we shouldn't have done this, but change it now, means migrate the bitmap for all the users)
-      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-        bitDir = this.getPath();
       }
       // @todo: check if the files were changed, and if so, skip the next line.
       await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
