@@ -18,12 +18,13 @@ export async function removeLocalVersion(
 ): Promise<untagResult> {
   const component: ComponentModel = await scope.getComponentModel(id);
   const localVersions = component.getLocalVersions();
-  if (!localVersions.length) throw new GeneralError(`unable to untag ${id}, the component is not staged`);
+  const idStr = id.toString();
+  if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
   if (version && !component.hasVersion(version)) {
-    throw new GeneralError(`unable to untag ${id}, the version ${version} does not exist`);
+    throw new GeneralError(`unable to untag ${idStr}, the version ${version} does not exist`);
   }
   if (version && !localVersions.includes(version)) {
-    throw new GeneralError(`unable to untag ${id}, the version ${version} was exported already`);
+    throw new GeneralError(`unable to untag ${idStr}, the version ${version} was exported already`);
   }
   const versionsToRemove = version ? [version] : localVersions;
 
@@ -31,12 +32,11 @@ export async function removeLocalVersion(
     const dependencyGraph = await scope.getDependencyGraph();
 
     versionsToRemove.forEach((versionToRemove) => {
-      const idWithVersion = component.toBitId();
-      idWithVersion.version = versionToRemove;
+      const idWithVersion = component.toBitId().changeVersion(versionToRemove);
       const dependents = dependencyGraph.getDependentsPerId(idWithVersion);
       if (dependents.length) {
         throw new GeneralError(
-          `unable to untag ${id}, the version ${versionToRemove} has the following dependent(s) ${dependents.join(
+          `unable to untag ${idStr}, the version ${versionToRemove} has the following dependent(s) ${dependents.join(
             ', '
           )}`
         );
@@ -60,7 +60,8 @@ export async function removeLocalVersionsForAllComponents(
   version?: string,
   force?: boolean = false
 ): Promise<untagResult[]> {
-  const components = await scope.objects.listComponents(false);
+  // $FlowFixMe
+  const components: ComponentModel[] = await scope.objects.listComponents(false);
   const candidateComponents = components.filter((component: ComponentModel) => {
     const localVersions = component.getLocalVersions();
     if (!localVersions.length) return false;
@@ -76,8 +77,7 @@ export async function removeLocalVersionsForAllComponents(
     const dependencyGraph = await scope.getDependencyGraph();
     const candidateComponentsIds = candidateComponents.map((component) => {
       const bitId = component.toBitId();
-      bitId.version = version;
-      return bitId;
+      return bitId.changeVersion(version);
     });
     const candidateComponentsIdsStr = candidateComponentsIds.map(id => id.toString());
 

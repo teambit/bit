@@ -150,9 +150,8 @@ export default class Version extends BitObject {
     const obj = this.toObject();
 
     // @todo: remove the entire dependencies.relativePaths from the ID (it's going to be a breaking change)
-    const getDependencies = (deps) => {
-      const clonedDependencies = R.clone(deps);
-      if (!clonedDependencies) return clonedDependencies;
+    const getDependencies = (deps: Dependencies) => {
+      const clonedDependencies = deps.cloneAsString();
       return clonedDependencies.map((dependency: Dependency) => {
         return {
           id: dependency.id,
@@ -186,8 +185,8 @@ export default class Version extends BitObject {
           compiler: obj.compiler,
           tester: obj.tester,
           log: obj.log,
-          dependencies: getDependencies(obj.dependencies),
-          devDependencies: getDependencies(obj.devDependencies),
+          dependencies: getDependencies(this.dependencies),
+          devDependencies: getDependencies(this.devDependencies),
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
@@ -273,10 +272,10 @@ export default class Version extends BitObject {
         ci: this.ci,
         specsResults: this.specsResults,
         docs: this.docs,
-        dependencies: this.dependencies.cloneAsString(),
-        devDependencies: this.devDependencies.cloneAsString(),
-        flattenedDependencies: this.flattenedDependencies.map(dep => dep.toString()),
-        flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.toString()),
+        dependencies: this.dependencies.cloneAsObject(),
+        devDependencies: this.devDependencies.cloneAsObject(),
+        flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
+        flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
@@ -329,7 +328,7 @@ export default class Version extends BitObject {
     const _getDependencies = (deps = []) => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
-        return deps.map(dependency => ({ id: BitId.parse(dependency) }));
+        return deps.map(dependency => ({ id: BitId.parseObsolete(dependency) }));
       }
 
       const getRelativePath = (relativePath) => {
@@ -348,12 +347,16 @@ export default class Version extends BitObject {
 
       return deps.map((dependency) => {
         return {
-          id: BitId.parse(dependency.id),
+          id: BitId.parseBackwardCompatible(dependency.id),
           relativePaths: Array.isArray(dependency.relativePaths)
             ? dependency.relativePaths.map(getRelativePath)
             : dependency.relativePaths
         };
       });
+    };
+
+    const _getFlattenedDependencies = (deps = []): BitIds => {
+      return BitIds.fromArray(deps.map(dep => BitId.parseBackwardCompatible(dep)));
     };
 
     const parseFile = (file) => {
@@ -382,9 +385,9 @@ export default class Version extends BitObject {
       specsResults,
       docs,
       dependencies: _getDependencies(dependencies),
-      flattenedDependencies: BitIds.deserialize(flattenedDependencies),
+      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       devDependencies: _getDependencies(devDependencies),
-      flattenedDevDependencies: BitIds.deserialize(flattenedDevDependencies),
+      flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,
@@ -419,7 +422,7 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent,
-    files: ?Array<SourceFileModel>,
+    files: Array<SourceFileModel>,
     flattenedDependencies: BitId[],
     flattenedDevDependencies: BitId[],
     message: string,
@@ -452,7 +455,7 @@ export default class Version extends BitObject {
 
     return new Version({
       mainFile: component.mainFile,
-      files: files ? files.map(parseFile) : null,
+      files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
       compiler: component.compiler ? component.compiler.toModelObject() : undefined,
       bindingPrefix: component.bindingPrefix,
@@ -511,7 +514,7 @@ export default class Version extends BitObject {
       validateType(message, bitIdStr, field, 'string');
       let bitId;
       try {
-        bitId = BitId.parse(bitIdStr);
+        bitId = BitId.parse(bitIdStr, true);
       } catch (err) {
         throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
       }

@@ -7,6 +7,7 @@ import { Component as ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';
+import { BitId } from '../../../bit-id';
 
 export type StatusResult = {
   newComponents: Component[],
@@ -26,7 +27,7 @@ export default (async function status(): Promise<StatusResult> {
   const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
   const { newComponents, importPendingComponents } = newAndImportPendingComponents;
   const modifiedComponent = await componentsList.listModifiedComponents(true);
-  const stagedComponents = await componentsList.listExportPendingComponents(true);
+  const stagedComponents: ModelComponent[] = await componentsList.listExportPendingComponents();
   const autoTagPendingComponents = await componentsList.listAutoTagPendingComponents();
   const autoTagPendingComponentsStr = autoTagPendingComponents.map(component => component.id().toString());
   const invalidComponents = await componentsList.listInvalidComponents();
@@ -34,7 +35,7 @@ export default (async function status(): Promise<StatusResult> {
 
   // Run over the components to check if there is missing dependencies
   // If there is at least one we won't commit anything
-  const newAndModified = newComponents.concat(modifiedComponent);
+  const newAndModified: BitId[] = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     return Boolean(component.issues);
   });

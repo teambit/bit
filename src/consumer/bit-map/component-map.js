@@ -23,19 +23,22 @@ export type ComponentMapFile = {
 };
 
 export type ComponentMapData = {
+  id: BitId,
   files: ComponentMapFile[],
   mainFile: PathLinux,
-  rootDir?: PathLinux,
-  trackDir?: PathLinux,
+  rootDir?: ?PathLinux,
+  trackDir?: ?PathLinux,
   origin: ComponentOrigin,
-  dependencies?: string[],
-  mainDistFile?: PathLinux,
-  originallySharedDir?: PathLinux
+  dependencies?: ?(string[]),
+  mainDistFile?: ?PathLinux,
+  originallySharedDir?: ?PathLinux,
+  exported?: ?boolean
 };
 
 export type PathChange = { from: PathLinux, to: PathLinux };
 
 export default class ComponentMap {
+  id: BitId;
   files: ComponentMapFile[];
   mainFile: PathLinux;
   rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
@@ -48,7 +51,9 @@ export default class ComponentMap {
   dependencies: ?(string[]); // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  exported: ?boolean; // relevant for authored components only, it helps finding out whether a component has a scope
   constructor({
+    id,
     files,
     mainFile,
     rootDir,
@@ -58,6 +63,7 @@ export default class ComponentMap {
     mainDistFile,
     originallySharedDir
   }: ComponentMapData) {
+    this.id = id;
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
@@ -246,6 +252,10 @@ export default class ComponentMap {
 
   sort() {
     this.files = R.sortBy(R.prop('relativePath'), this.files);
+  }
+
+  clone() {
+    return new ComponentMap(this);
   }
 
   validate(): void {

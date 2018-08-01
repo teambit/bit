@@ -28,13 +28,7 @@ import TesterExtension from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
 import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
-import {
-  DEFAULT_BOX_NAME,
-  DEFAULT_LANGUAGE,
-  DEFAULT_BINDINGS_PREFIX,
-  COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME
-} from '../../constants';
+import { DEFAULT_LANGUAGE, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
@@ -59,7 +53,6 @@ export type InvalidComponent = { id: BitId, error: Error };
 
 export type ComponentProps = {
   name: string,
-  box: string,
   version?: ?string,
   scope?: ?string,
   lang?: string,
@@ -88,7 +81,6 @@ export type ComponentProps = {
 
 export default class Component {
   name: string;
-  box: string;
   version: ?string;
   scope: ?string;
   lang: string;
@@ -119,12 +111,13 @@ export default class Component {
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
   isolatedEnvironment: IsolatedEnvironment;
-  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | string } };
+  issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
   customResolvedPaths: customResolvedPath[];
   _driver: Driver;
   _isModified: boolean;
   packageJsonInstance: PackageJsonInstance;
+  _currentlyUsedVersion: BitId; // used by listScope functionality
 
   set files(val: SourceFile[]) {
     this._files = val;
@@ -145,7 +138,6 @@ export default class Component {
   get id(): BitId {
     return new BitId({
       scope: this.scope,
-      box: this.box,
       name: this.name,
       version: this.version
     });
@@ -169,7 +161,6 @@ export default class Component {
 
   constructor({
     name,
-    box,
     version,
     scope,
     lang,
@@ -196,7 +187,6 @@ export default class Component {
     customResolvedPaths
   }: ComponentProps) {
     this.name = name;
-    this.box = box || DEFAULT_BOX_NAME;
     this.version = version;
     this.scope = scope;
     this.lang = lang || DEFAULT_LANGUAGE;
@@ -225,12 +215,24 @@ export default class Component {
   }
 
   validateComponent() {
-    const nonEmptyFields = ['name', 'box', 'mainFile'];
+    const nonEmptyFields = ['name', 'mainFile'];
     nonEmptyFields.forEach((field) => {
       if (!this[field]) {
         throw new GeneralError(`failed loading a component ${this.id}, the field "${field}" can't be empty`);
       }
     });
+  }
+
+  /**
+   * Warning: this method does not return a deep copy for objects properties except dependencies and devDependencies
+   * Implement deep copy of other properties if needed
+   */
+  clone() {
+    // $FlowFixMe
+    const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    newInstance.setDependencies(this.dependencies.getClone());
+    newInstance.setDevDependencies(this.devDependencies.getClone());
+    return newInstance;
   }
 
   setDependencies(dependencies?: Dependency[]) {
@@ -255,9 +257,7 @@ export default class Component {
 
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
-    const homepage = this.scope
-      ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.box}/${this.name}`
-      : undefined;
+    const homepage = this.scope ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.name}` : undefined;
     return homepage;
   }
 
@@ -297,7 +297,7 @@ export default class Component {
   }
 
   getPackageNameAndPath(): Promise<any> {
-    const packagePath = `${this.bindingPrefix}/${this.id.box}/${this.id.name}`;
+    const packagePath = `${this.bindingPrefix}/${this.id.name}`;
     const packageName = this.id.toStringWithoutVersion();
     return { packageName, packagePath };
   }
@@ -330,6 +330,11 @@ export default class Component {
 
   getAllDependencies(): Dependency[] {
     return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
+  }
+
+  getAllDependenciesIds(): BitIds {
+    const allDependencies = this.getAllDependencies();
+    return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
   }
 
   hasDependencies(): boolean {
@@ -418,7 +423,7 @@ export default class Component {
         installPackages: true,
         noPackageJson: false
       };
-      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
       const component = componentWithDependencies.component;
       const result = await runBuild(component.writtenPath);
       if (!keep) await isolatedEnvironment.destroy();
@@ -465,10 +470,6 @@ export default class Component {
     if (this.license && this.license.src) await this.license.write(bitDir, override);
     logger.debug('component has been written successfully');
     return this;
-  }
-
-  getComponentMap(bitMap: BitMap): ComponentMap {
-    return bitMap.getComponent(this.id);
   }
 
   _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
@@ -563,7 +564,7 @@ export default class Component {
     consumer?: Consumer,
     writeBitDependencies?: boolean,
     deleteBitDirContent?: boolean,
-    componentMap: ComponentMap,
+    componentMap?: ComponentMap,
     excludeRegistryPrefix?: boolean
   }): Promise<Component> {
     logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
@@ -624,7 +625,7 @@ export default class Component {
         `deleting the old directory of a component at ${oldLocation}, the new directory is ${calculatedBitDir}`
       );
       fs.removeSync(oldLocation);
-      bitMap.removeComponent(this.id.toString());
+      bitMap.removeComponent(this.id);
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
@@ -816,7 +817,7 @@ export default class Component {
         noPackageJson: false
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
-      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id.toString(), isolateOpts);
+      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
 
       createSymlinkOrCopy(testerFilePath, localTesterPath);
       const component = componentWithDependencies.component;
@@ -878,7 +879,7 @@ export default class Component {
     };
     const bitMap = consumer ? consumer.bitMap : undefined;
     const consumerPath = consumer ? consumer.getPath() : '';
-    const componentMap = bitMap && bitMap.getComponent(this.id.toString());
+    const componentMap = bitMap && bitMap.getComponentIfExist(this.id);
     let componentDir = consumerPath;
     if (componentMap) {
       componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
@@ -929,7 +930,7 @@ export default class Component {
     const isolatedEnvironment = new IsolatedEnvironment(scope, opts.writeToPath);
     try {
       await isolatedEnvironment.create();
-      await isolatedEnvironment.isolateComponent(this.id.toString(), opts);
+      await isolatedEnvironment.isolateComponent(this.id, opts);
       return isolatedEnvironment.path;
     } catch (err) {
       await isolatedEnvironment.destroy();
@@ -940,7 +941,6 @@ export default class Component {
   toObject(): Object {
     return {
       name: this.name,
-      box: this.box,
       version: this.version,
       mainFile: this.mainFile,
       scope: this.scope,
@@ -1027,10 +1027,10 @@ export default class Component {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     ids.forEach((id: string) => {
-      const dependency = componentFromModel.dependencies.getById(id);
+      const dependency = componentFromModel.dependencies.getByIdStr(id);
       if (dependency) this.dependencies.add(dependency);
       else {
-        const devDependency = componentFromModel.devDependencies.getById(id);
+        const devDependency = componentFromModel.devDependencies.getByIdStr(id);
         if (!devDependency) throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
         this.devDependencies.add(dependency);
       }
@@ -1062,8 +1062,7 @@ export default class Component {
       deprecated
     } = object;
     return new Component({
-      name,
-      box,
+      name: box ? `${box}/${name}` : name,
       version,
       scope,
       lang,
@@ -1218,7 +1217,6 @@ export default class Component {
 
     return new Component({
       name: id.name,
-      box: id.box,
       scope: id.scope,
       version: id.version,
       lang: bitJson.lang,

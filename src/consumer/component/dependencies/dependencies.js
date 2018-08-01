@@ -8,12 +8,13 @@ import BitMap from '../../bit-map';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';
+import type { BitIdStr } from '../../../bit-id/bit-id';
 
 export default class Dependencies {
   dependencies: Dependency[];
 
   constructor(dependencies: Dependency[] = []) {
-    this.dependencies = this.deserialize(dependencies);
+    this.dependencies = dependencies;
   }
 
   serialize(): Object[] {
@@ -32,16 +33,6 @@ export default class Dependencies {
     this.dependencies.push(dependency);
   }
 
-  deserialize(dependencies: Dependency[]): Dependency[] {
-    return dependencies.map(dependency => ({
-      id: R.is(String, dependency.id) ? BitId.parse(dependency.id) : dependency.id,
-      relativePaths: dependency.relativePaths || [
-        // backward compatibility. (previously, it was "relativePath" without the ending 's' and was not an array.
-        { sourceRelativePath: dependency.relativePath, destinationRelativePath: dependency.relativePath }
-      ]
-    }));
-  }
-
   toStringOfIds(): string[] {
     return this.dependencies.map(dep => dep.id.toString());
   }
@@ -58,6 +49,14 @@ export default class Dependencies {
     return this.dependencies.map((dependency) => {
       const dependencyClone = R.clone(dependency);
       dependencyClone.id = dependency.id.toString();
+      return dependencyClone;
+    });
+  }
+
+  cloneAsObject(): Object[] {
+    return this.dependencies.map((dependency) => {
+      const dependencyClone = R.clone(dependency);
+      dependencyClone.id = dependency.id.serialize();
       return dependencyClone;
     });
   }
@@ -84,7 +83,11 @@ export default class Dependencies {
     );
   }
 
-  getById(id: string): Dependency {
+  getById(id: BitId): Dependency {
+    return this.dependencies.find(dep => dep.id.isEqual(id));
+  }
+
+  getByIdStr(id: BitIdStr): Dependency {
     return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
@@ -94,16 +97,13 @@ export default class Dependencies {
     const remoteVersionsDependencies = await scope.fetchRemoteVersions(dependenciesIds);
 
     this.dependencies.forEach((dependency) => {
-      const dependencyIdWithoutVersion = dependency.id.toStringWithoutVersion();
-      const remoteVersionId = remoteVersionsDependencies.find(
-        remoteId => remoteId.toStringWithoutVersion() === dependencyIdWithoutVersion
+      const remoteVersionId = remoteVersionsDependencies.find(remoteId =>
+        remoteId.isEqualWithoutVersion(dependency.id)
       );
-      const localVersionId = localDependencies.find(
-        localId => localId.toStringWithoutVersion() === dependencyIdWithoutVersion
-      );
+      const localVersionId = localDependencies.find(localId => localId.isEqualWithoutVersion(dependency.id));
       const modelVersionId = modelDependencies
         .get()
-        .find(modelDependency => modelDependency.id.toStringWithoutVersion() === dependencyIdWithoutVersion);
+        .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
       dependency.localVersion = localVersionId ? localVersionId.version : null;
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;

@@ -2,7 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import BitsrcTester, { username } from '../bitsrc-tester';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
@@ -55,11 +55,12 @@ describe('dev-dependencies functionality', function () {
         expect(barFoo.dependencies)
           .to.be.an('array')
           .that.have.lengthOf(1);
-        expect(barFoo.dependencies[0].id).to.equal('utils/is-string@0.0.1');
+        expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
+        expect(barFoo.dependencies[0].id.version).to.equal('0.0.1');
       });
       it('should leave the flattened-dependencies intact', () => {
-        expect(barFoo.flattenedDependencies).to.include('utils/is-type@0.0.1');
-        expect(barFoo.flattenedDependencies).to.include('utils/is-string@0.0.1');
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
     });
     describe('without dependencies and with dev-dependencies', () => {
@@ -98,11 +99,11 @@ describe('foo', () => {
         expect(barFoo.devDependencies)
           .to.be.an('array')
           .that.have.lengthOf(1);
-        expect(barFoo.devDependencies[0].id).to.equal('utils/is-string@0.0.1');
+        expect(barFoo.devDependencies[0].id).to.deep.equal({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save the flattened-dev-dependencies', () => {
-        expect(barFoo.flattenedDevDependencies).to.include('utils/is-type@0.0.1');
-        expect(barFoo.flattenedDevDependencies).to.include('utils/is-string@0.0.1');
+        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+        expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
       });
       it('should save "chai" in the dev-packages', () => {
         expect(barFoo.devPackageDependencies)
@@ -134,7 +135,7 @@ describe('foo', () => {
           expect(output).to.have.string('tests passed');
         });
       });
-      describe('export and import dependencies as packages', () => {
+      (supportTestingOnBitsrc ? describe : describe.skip)('export and import dependencies as packages', () => {
         let scopeName;
         let scopeId;
         let bitsrcTester;

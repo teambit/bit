@@ -4,7 +4,6 @@ import Command from '../../command';
 import { getConsumerComponent, getScopeComponent } from '../../../api/consumer';
 import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component';
-import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
@@ -14,6 +13,7 @@ export default class Show extends Command {
   alias = '';
   opts = [
     ['j', 'json', 'return a json version of the component'],
+    ['r', 'remote', 'show a remote component'],
     ['v', 'versions', 'return a json of all the versions of the component'],
     ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
     ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
@@ -26,14 +26,14 @@ export default class Show extends Command {
     {
       json,
       versions,
+      remote = false,
       outdated = false,
       compare = false
-    }: { json?: boolean, versions: ?boolean, outdated?: boolean, compare?: boolean }
+    }: { json?: boolean, versions: ?boolean, remote: boolean, outdated?: boolean, compare?: boolean }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
-      const bitId = BitId.parse(id);
-      if (bitId.isLocal()) return getConsumerComponent({ id, compare, allVersions, showRemoteVersions: outdated });
-      return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
+      if (remote) return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
+      return getConsumerComponent({ id, compare, allVersions, showRemoteVersions: outdated });
     }
 
     if (versions && (compare || outdated)) {

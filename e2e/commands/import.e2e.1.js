@@ -29,8 +29,8 @@ describe('bit import', function () {
       // export a new simple component
       helper.createFile('global', 'simple.js');
       helper.addComponent(path.normalize('global/simple.js'));
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -272,7 +272,7 @@ describe('bit import', function () {
       let output;
       before(() => {
         helper.reInitLocalScope();
-        helper.setComponentsDirInBitJson('{scope}/{namespace}-{name}');
+        helper.setComponentsDirInBitJson('{scope}/-{name}-');
         helper.addRemoteScope();
         helper.importComponent('global/simple');
         output = helper.importComponent('global/simple');
@@ -281,7 +281,7 @@ describe('bit import', function () {
         expect(output).to.have.string('successfully imported one component');
       });
       it('should import the component into new dir structure according to dsl', () => {
-        expect(path.join(helper.localScopePath, helper.remoteScope, 'global-simple')).to.be.a.directory(
+        expect(path.join(helper.localScopePath, helper.remoteScope, '-global/simple-')).to.be.a.directory(
           'should not be empty'
         ).and.not.empty;
       });
@@ -289,7 +289,7 @@ describe('bit import', function () {
         const bitMap = helper.readBitMap();
         const cmponentId = `${helper.remoteScope}/global/simple@0.0.1`;
         expect(bitMap).to.have.property(cmponentId);
-        expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/global-simple`);
+        expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/-global/simple-`);
       });
     });
   });
@@ -676,8 +676,8 @@ describe('bit import', function () {
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
 
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
@@ -2109,8 +2109,8 @@ console.log(barFoo.default());`;
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('simple');
-      helper.exportComponent('simple');
+      helper.commitComponent('global/simple');
+      helper.exportComponent('global/simple');
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
@@ -2137,7 +2137,7 @@ console.log(barFoo.default());`;
     });
     it('should contain  workspaces array in package.json  and private true', () => {
       const pkgJson = helper.readPackageJson(helper.localScopePath);
-      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.private).to.be.true;
     });
     it('component dep should be install as npm package', () => {
@@ -2152,7 +2152,7 @@ console.log(barFoo.default());`;
     it('Should not contain duplicate regex in workspaces dir if we run import again ', () => {
       helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson(helper.localScopePath);
-      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*');
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*');
       expect(pkgJson.workspaces).to.be.ofSize(2);
       expect(path.join(helper.localScopePath, 'yarn.lock')).to.be.a.file('no yarn lock file');
     });
@@ -2166,11 +2166,7 @@ console.log(barFoo.default());`;
       helper.addKeyValueToPackageJson({ workspaces: ['comp'] });
       helper.importComponent('comp/with-deps --override');
       const pkgJson = helper.readPackageJson();
-      expect(pkgJson.workspaces).to.include(
-        'components/.dependencies/*/*/*/*',
-        'components/*/*',
-        'test/comp/with-deps'
-      );
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test/comp/with-deps');
     });
     it('Should save workspaces with custom import path ', () => {
       helper.reInitLocalScope();
@@ -2178,7 +2174,7 @@ console.log(barFoo.default());`;
       helper.manageWorkspaces();
       helper.importComponent('comp/with-deps -p test');
       const pkgJson = helper.readPackageJson();
-      expect(pkgJson.workspaces).to.include('components/.dependencies/*/*/*/*', 'components/*/*', 'test');
+      expect(pkgJson.workspaces).to.include('components/.dependencies/**/*', 'components/**/*', 'test');
     });
   });
   describe('importing a component when it has a local tag', () => {

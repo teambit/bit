@@ -1,10 +1,10 @@
 // @flow
-import { loadScope } from '../../../scope';
+import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
 
-export default function latestVersions(path: string, componentIdsStr: string[]): Promise<any> {
-  const componentIds = componentIdsStr.map(id => BitId.parse(id));
-  return loadScope(path)
-    .then(scope => scope.latestVersions(componentIds))
-    .then(componentsIds => componentsIds.map(componentId => componentId.toString()));
-}
+export default (async function latestVersions(path: string, componentIdsStr: string[]): Promise<any> {
+  const scope: Scope = await loadScope(path);
+  const bitIds: BitId[] = await Promise.all(componentIdsStr.map(id => scope.getParsedId(id)));
+  const componentsIds = await scope.latestVersions(bitIds);
+  return componentsIds.map(componentId => componentId.toString());
+});

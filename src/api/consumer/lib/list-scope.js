@@ -27,13 +27,14 @@ export default function list({
     loader.start(BEFORE_LOCAL_LIST);
     const components = cache ? await scope.list(showRemoteVersion) : await scope.listStage();
     if (consumer) {
+      const authoredAndImportedIds = consumer.bitMap.getAllBitIds([
+        COMPONENT_ORIGINS.AUTHORED,
+        COMPONENT_ORIGINS.IMPORTED
+      ]);
       components.forEach((component) => {
-        const existingBitMapId = consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion(), [
-          COMPONENT_ORIGINS.AUTHORED,
-          COMPONENT_ORIGINS.IMPORTED
-        ]);
+        const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(component.id);
         if (existingBitMapId) {
-          component.currentlyUsedVersion = existingBitMapId;
+          component._currentlyUsedVersion = existingBitMapId;
           component.componentMap = consumer.bitMap.getComponent(existingBitMapId);
         }
       });

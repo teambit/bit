@@ -106,7 +106,7 @@ export default class BitObject {
    */
   hash(): Ref {
     // console.log(`sha ${sha1(this.id())}, id ${this.id()}`); // uncomment when debugging hash issues
-    return new Ref(sha1(this.id()));
+    return new Ref(BitObject.makeHash(this.id()));
   }
 
   compress(): Promise<Buffer> {
@@ -124,5 +124,9 @@ export default class BitObject {
   static parseSync(fileContents: Buffer, types: { [string]: Function }): BitObject {
     const buffer = inflateSync(fileContents);
     return parse(buffer, types);
+  }
+
+  static makeHash(str: string | Buffer): string {
+    return sha1(str);
   }
 }

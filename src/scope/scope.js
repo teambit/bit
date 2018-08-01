@@ -73,6 +73,7 @@ import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import type { PathOsBasedAbsolute } from '../utils/path';
+import type { BitIdStr } from '../bit-id/bit-id';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -118,7 +119,7 @@ export default class Scope {
     this.objects = scopeProps.objects || new Repository(this, types());
   }
 
-  async getDependencyGraph(): DependencyGraph {
+  async getDependencyGraph(): Promise<DependencyGraph> {
     if (!this._dependencyGraph) {
       this._dependencyGraph = await DependencyGraph.load(this.objects);
     }
@@ -143,7 +144,7 @@ export default class Scope {
   }
 
   /**
-   * Get the releative components path inside the scope
+   * Get the relative components path inside the scope
    * (components such as compilers / testers / extensions)
    * currently components
    */
@@ -157,18 +158,18 @@ export default class Scope {
    * @param {BitId} id
    */
   static getComponentRelativePath(id: BitId, scopePath?: string): string {
-    const realtivePath = pathLib.join(id.box, id.name, id.scope);
+    const relativePath = pathLib.join(id.name, id.scope);
     if (!id.getVersion().latest) {
-      return pathLib.join(realtivePath, id.version);
+      return pathLib.join(relativePath, id.version);
     }
     if (!scopePath) {
       throw new Error(`could not find the latest version of ${id} without the scope path`);
     }
-    const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), realtivePath);
+    const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
     const versions = fs.readdirSync(componentFullPath);
     const latestVersion = semver.maxSatisfying(versions, '*');
-    return pathLib.join(realtivePath, latestVersion);
+    return pathLib.join(relativePath, latestVersion);
   }
 
   getBitPathInComponentsDir(id: BitId): string {
@@ -250,9 +251,7 @@ export default class Scope {
       const componentsIds = consumerComponents.map(component => component.id);
       const latestVersionsInfo = await this.fetchRemoteVersions(componentsIds);
       latestVersionsInfo.forEach((componentId) => {
-        const component = consumerComponents.find(
-          c => c.id.toStringWithoutVersion() === componentId.toStringWithoutVersion()
-        );
+        const component = consumerComponents.find(c => c.id.isEqualWithoutVersion(componentId));
         component.latest = componentId.version;
       });
     }
@@ -272,17 +271,18 @@ export default class Scope {
   }
 
   async latestVersions(componentIds: BitId[], throwOnFailure: boolean = true): Promise<BitId[]> {
-    componentIds = componentIds.map(componentId => BitId.parse(componentId.toStringWithoutVersion()));
+    componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
     return components.map((component) => {
-      const componentId = BitId.parse(component.id.toString());
-      if (component.component) {
-        componentId.version = component.component.latest();
-      } else {
+      const getVersion = () => {
+        if (component.component) {
+          return component.component.latest();
+        }
         if (throwOnFailure) throw new ComponentNotFound(component.id.toString());
-        componentId.version = DEFAULT_BIT_VERSION;
-      }
-      return componentId;
+        return DEFAULT_BIT_VERSION;
+      };
+      const version = getVersion();
+      return component.id.changeVersion(version);
     });
   }
 
@@ -378,7 +378,7 @@ export default class Scope {
     this.injectNodePathIfNeeded(consumer, components);
     const test = async (component: Component) => {
       if (!component.tester) {
-        return { componentId: component.id.toStringWithoutScope(), missingTester: true };
+        return { componentId: component.id, missingTester: true };
       }
       const specs = await component.runSpecs({
         scope: this,
@@ -386,7 +386,7 @@ export default class Scope {
         consumer,
         verbose
       });
-      return { componentId: component.id.toStringWithoutScope(), specs };
+      return { componentId: component.id, specs };
     };
     return pMapSeries(components, test);
   }
@@ -430,7 +430,7 @@ export default class Scope {
 
   /**
    * When exporting components with dependencies to a bare-scope, some of the dependencies may be created locally and as
-   * as result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
+   * a result their scope-name is null. Once the bare-scope gets the components, it needs to convert these scope names
    * to the bare-scope name.
    * Since the changes it does affect the Version objects, the version REF of a component, needs to be changed as well.
    */
@@ -438,28 +438,30 @@ export default class Scope {
     componentsObjects: { component: BitObject, objects: BitObject[] },
     remoteScope: string
   ): void {
-    const changeScopeIfNeeded = (dependencyId) => {
-      if (!dependencyId.scope) {
-        const depId = ComponentModel.fromBitId(dependencyId);
-        // todo: use 'load' for async and switch the foreach with map.
-        const dependencyObject = this.objects.loadSync(depId.hash());
-        if (dependencyObject instanceof Symlink) {
-          dependencyId.scope = dependencyObject.realScope;
-        } else {
-          dependencyId.scope = remoteScope;
-        }
+    const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
+      if (dependencyId.scope) return dependencyId;
+      const depId = ComponentModel.fromBitId(dependencyId);
+      // todo: use 'load' for async and switch the foreach with map.
+      const dependencyObject = this.objects.loadSync(depId.hash());
+      if (dependencyObject instanceof Symlink) {
+        return dependencyId.changeScope(dependencyObject.realScope);
       }
+      return dependencyId.changeScope(remoteScope);
+    };
+
+    const getBitIdsWithUpdatedScope = (bitIds: BitIds): BitIds => {
+      const updatedIds = bitIds.map(id => getIdWithUpdatedScope(id));
+      return BitIds.fromArray(updatedIds);
     };
 
     componentsObjects.objects.forEach((object: Version) => {
       if (object instanceof Version) {
         const hashBefore = object.hash().toString();
         object.getAllDependencies().forEach((dependency) => {
-          changeScopeIfNeeded(dependency.id);
+          dependency.id = getIdWithUpdatedScope(dependency.id);
         });
-        object.getAllFlattenedDependencies().forEach((dependency) => {
-          changeScopeIfNeeded(dependency);
-        });
+        object.flattenedDependencies = getBitIdsWithUpdatedScope(object.flattenedDependencies);
+        object.flattenedDevDependencies = getBitIdsWithUpdatedScope(object.flattenedDevDependencies);
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
           logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
@@ -673,7 +675,7 @@ export default class Scope {
     });
   }
 
-  async getObjects(ids: BitId[], withDevDependencies?: boolean): Promise<ComponentObjects[]> {
+  async getObjects(ids: BitIds, withDevDependencies?: boolean): Promise<ComponentObjects[]> {
     const versions = await this.importMany(ids, withDevDependencies);
     return Promise.all(versions.map(version => version.toObjects(this.objects)));
   }
@@ -745,7 +747,7 @@ export default class Scope {
     return componentVersionArr.concat(externalDeps);
   }
 
-  manyOneObjects(ids: BitId[]): Promise<ComponentObjects[]> {
+  manyOneObjects(ids: BitIds): Promise<ComponentObjects[]> {
     return this.importManyOnes(ids, false).then(componentVersions =>
       Promise.all(
         componentVersions.map((version) => {
@@ -819,8 +821,7 @@ export default class Scope {
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
         const versionId = versionDependencies.component.id;
-        versionId.version = version;
-        return versionId;
+        return versionId.changeVersion(version);
       });
       return this.importManyOnes(idsWithAllVersions);
     });
@@ -847,7 +848,7 @@ export default class Scope {
     removeSameOrigin: boolean = false,
     consumer?: Consumer
   ): Promise<RemovedObjects> {
-    logger.debug(`scope.removeMany ${bitIds} with force flag: ${force.toString()}`);
+    logger.debug(`scope.removeMany ${bitIds.toString()} with force flag: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'removeMany',
       `scope.removeMany ${Analytics.hashData(bitIds)} with force flag: ${force.toString()}`
@@ -860,15 +861,15 @@ export default class Scope {
    * findDependentBits
    * foreach component in array find the componnet that uses that component
    */
-  async findDependentBits(bitIds: Array<BitId>, returnResultsWithVersion: boolean = false): Promise<Object> {
+  async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
     const allComponents = await this.objects.listComponents(false);
     const allComponentVersions = await Promise.all(
-      allComponents.map(async (component) => {
+      allComponents.map(async (component: ComponentModel) => {
         const loadedVersions = await Promise.all(
           Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, this.objects);
             if (!componentVersion) return;
-            componentVersion.id = BitId.parse(component.id());
+            componentVersion.id = component.toBitId();
             return componentVersion;
           })
         );
@@ -880,16 +881,18 @@ export default class Scope {
     bitIds.forEach((bitId) => {
       const dependencies = [];
       allScopeComponents.forEach((scopeComponents) => {
-        scopeComponents.flattenedDependencies.forEach((flattenedDependence) => {
-          if (flattenedDependence.toStringWithoutVersion() === bitId.toStringWithoutVersion()) {
+        scopeComponents.flattenedDependencies.forEach((flattenedDependency) => {
+          if (flattenedDependency.isEqualWithoutVersion(bitId)) {
             returnResultsWithVersion
-              ? dependencies.push(scopeComponents.id.toString())
-              : dependencies.push(scopeComponents.id.toStringWithoutVersion());
+              ? dependencies.push(scopeComponents.id)
+              : dependencies.push(scopeComponents.id.changeVersion(null));
           }
         });
       });
 
-      if (!R.isEmpty(dependencies)) dependentBits[bitId.toStringWithoutVersion()] = R.uniq(dependencies);
+      if (!R.isEmpty(dependencies)) {
+        dependentBits[bitId.toStringWithoutVersion()] = BitIds.fromArray(dependencies).getUniq();
+      }
     });
     return Promise.resolve(dependentBits);
   }
@@ -898,7 +901,7 @@ export default class Scope {
    * split bit array to found and missing components (incase user misspelled id)
    */
   async filterFoundAndMissingComponents(
-    bitIds: Array<BitId>
+    bitIds: BitIds
   ): Promise<{ missingComponents: BitIds, foundComponents: BitIds }> {
     const missingComponents = new BitIds();
     const foundComponents = new BitIds();
@@ -914,10 +917,11 @@ export default class Scope {
   /**
    * deprecate components from scope
    */
-  async deprecateMany(bitIds: Array<BitId>): Promise<any> {
+  async deprecateMany(bitIds: BitIds): Promise<any> {
+    logger.debug(`scope.deprecateMany, ids: ${bitIds.toString()}`);
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const deprecateComponents = () => foundComponents.map(async bitId => this.deprecateSingle(bitId));
-    const deprecatedComponents = await Promise.all(deprecateComponents());
+    const deprecatedComponentsP = foundComponents.map(bitId => this.deprecateSingle(bitId));
+    const deprecatedComponents = await Promise.all(deprecatedComponentsP);
     const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
     return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
@@ -943,7 +947,7 @@ export default class Scope {
    * load components from the model and return them as ComponentVersion array.
    * if a component is not available locally, it'll just ignore it without throwing any error.
    */
-  async loadLocalComponents(ids: BitId[]): Promise<ComponentVersion[]> {
+  async loadLocalComponents(ids: BitIds): Promise<ComponentVersion[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const components = componentsObjects.map((componentObject) => {
       const component = componentObject.component;
@@ -991,9 +995,7 @@ export default class Scope {
     if (!id.scope) {
       // search for the complete ID
       const components: ComponentModel[] = await this.objects.listComponents(false); // don't fetch Symlinks
-      const foundComponent = components.filter(
-        c => c.toBitId().toStringWithoutScopeAndVersion() === id.toStringWithoutVersion()
-      );
+      const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
       // $FlowFixMe
       if (foundComponent.length) return first(foundComponent);
     }
@@ -1009,27 +1011,25 @@ export default class Scope {
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
    */
-  createSymlink(id, remote) {
+  createSymlink(id: BitId, remote: string) {
     const symlink = new Symlink({
       scope: id.scope,
       name: id.name,
-      box: id.box,
       realScope: remote
     });
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: string[], remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
-    logger.debug(`exportMany, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.join(', '))}`);
+  async exportMany(ids: BitIds, remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
+    logger.debug(`exportMany, ids: ${ids.toString()}`);
+    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.toString())}`);
 
     const remotes = await this.remotes();
     if (eject && !remotes.isHub(remoteName)) {
       return Promise.reject('--eject flag is relevant only when the remote is a hub');
     }
     const remote = await remotes.resolve(remoteName, this);
-    const componentIds = ids.map(id => BitId.parse(id));
-    const componentObjectsP = componentIds.map(id => this.sources.getObjects(id));
+    const componentObjectsP = ids.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);
     const componentsAndObjects = [];
     enrichContextFromGlobal(context);
@@ -1055,9 +1055,9 @@ export default class Scope {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
       return Promise.reject(err);
     }
-    await Promise.all(componentIds.map(id => this.clean(id)));
-    componentIds.map(id => this.createSymlink(id, remoteName));
-    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id));
+    await Promise.all(ids.map(id => this.clean(id)));
+    ids.map(id => this.createSymlink(id, remoteName));
+    const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
     await Promise.all(componentsAndObjects.map(componentObject => this.sources.merge(componentObject)));
     await this.objects.persist();
     return idsWithRemoteScope;
@@ -1193,17 +1193,18 @@ export default class Scope {
       );
       let pendingUpdate = false;
       loadedVersion.getAllDependencies().forEach((dependency) => {
-        const committedComponentId = committedComponents.find(
-          committedComponent => committedComponent.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
+        const committedComponentId = committedComponents.find(committedComponent =>
+          committedComponent.isEqualWithoutVersion(dependency.id)
         );
-
         if (!committedComponentId) return;
         if (semver.gt(committedComponentId.version, dependency.id.version)) {
-          dependency.id.version = committedComponentId.version;
-          const flattenDependencyToUpdate = loadedVersion.flattenedDependencies.find(
-            flattenDependency => flattenDependency.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
-          );
-          flattenDependencyToUpdate.version = committedComponentId.version;
+          dependency.id = dependency.id.changeVersion(committedComponentId.version);
+          loadedVersion.flattenedDependencies = loadedVersion.flattenedDependencies.map((flattenDependency) => {
+            if (flattenDependency.isEqualWithoutVersion(dependency.id)) {
+              return flattenDependency.changeVersion(committedComponentId.version);
+            }
+            return flattenDependency;
+          });
           pendingUpdate = true;
           // if !persist, we only check whether a modified component may cause auto-tagging
           // since it's only modified on the file-system, its version might be the same as the version stored in its
@@ -1228,14 +1229,13 @@ export default class Scope {
   /**
    * find the components in componentsPool which one of their dependencies include in potentialDependencies
    */
-  async findDirectDependentComponents(componentsPool: BitId[], potentialDependencies: BitId[]): Promise<Component[]> {
+  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
     const componentsVersions = await this.loadLocalComponents(componentsPool);
-    const potentialDependenciesWithoutVersions = potentialDependencies.map(id => id.toStringWithoutVersion());
     const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
       const component: Version = await componentVersion.getVersion(this.objects);
       const found = component
         .getAllDependencies()
-        .find(dependency => potentialDependenciesWithoutVersions.includes(dependency.id.toStringWithoutVersion()));
+        .find(dependency => potentialDependencies.searchWithoutVersion(dependency.id));
       return found ? componentVersion.toConsumer(this.objects) : null;
     });
     const dependents = await Promise.all(dependentsP);
@@ -1304,17 +1304,36 @@ export default class Scope {
     });
   }
 
+  async loadModelComponentByIdStr(id: string): Promise<Component> {
+    logger.debug(`scope.loadModelComponentByIdStr, id: ${id}`);
+    const ref = Ref.from(BitObject.makeHash(id));
+    // $FlowFixMe
+    return this.objects.load(ref);
+  }
+
+  /**
+   * if it's not in the scope, it's probably new, we assume it doesn't have scope.
+   */
+  async isIdHasScope(id: BitIdStr): Promise<boolean> {
+    const component = await this.loadModelComponentByIdStr(id);
+    return Boolean(component && component.scope);
+  }
+
+  async getParsedId(id: BitIdStr): Promise<BitId> {
+    const idHasScope = await this.isIdHasScope(id);
+    return BitId.parse(id, idHasScope);
+  }
+
   /**
    * import a component end to end. Including importing the dependencies and installing the npm
    * packages.
    *
-   * @param {string} bitId - the component id to isolate
+   * @param {BitId} bitId - the component id to isolate
    * @param {IsolateOptions} opts
    * @return {Promise.<string>} - the path to the isolated component
    */
-  async isolateComponent(bitId: string, opts: IsolateOptions): Promise<string> {
-    const parsedId = BitId.parse(bitId);
-    const component = await this.loadComponent(parsedId);
+  async isolateComponent(bitId: BitId, opts: IsolateOptions): Promise<string> {
+    const component = await this.loadComponent(bitId);
     return component.isolate(this, opts);
   }
 

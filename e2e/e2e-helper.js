@@ -328,8 +328,10 @@ export default class Helper {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
   }
 
-  exportComponent(id: string, scope: string = this.remoteScope) {
-    return this.runCmd(`bit export ${scope} ${id}`);
+  exportComponent(id: string, scope: string = this.remoteScope, assert: boolean = true) {
+    const result = this.runCmd(`bit export ${scope} ${id}`);
+    if (assert) expect(result).to.not.have.string('nothing to export');
+    return result;
   }
 
   exportAllComponents(scope: string = this.remoteScope) {
