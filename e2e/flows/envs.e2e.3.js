@@ -472,7 +472,7 @@ describe('envs', function () {
         helper.addRemoteEnvironment();
         helper.importComponent('comp/my-comp');
       });
-      it.only('should not show the component as modified after import', () => {
+      it('should not show the component as modified after import', () => {
         // Make sure the component is not modified before the changes
         const statusOutput = helper.status();
         expect(statusOutput).to.have.string('nothing to tag or export');
