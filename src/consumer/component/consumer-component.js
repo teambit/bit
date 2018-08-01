@@ -48,6 +48,7 @@ import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../extensions/env-extension';
+import Version from '../../version';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -126,6 +127,7 @@ export default class Component {
   _isModified: boolean;
   packageJsonInstance: PackageJsonInstance;
   _currentlyUsedVersion: BitId; // used by listScope functionality
+  pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
 
   set files(val: SourceFile[]) {
     this._files = val;
