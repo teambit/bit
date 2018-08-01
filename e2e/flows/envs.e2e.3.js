@@ -969,10 +969,9 @@ describe('envs', function () {
       // authorScopeBeforeChanges = helper.cloneLocalScope();
       // remoteScopeBeforeChanges = helper.cloneRemoteScope();
     });
-
     after(() => {
       helper.destroyEnv();
     });
-    it.only('should work', () => {});
+    it('should work', () => {});
   });
 });
