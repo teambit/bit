@@ -69,24 +69,24 @@ export default class BitMap {
     this.markAsChanged();
   }
 
-  setComponentProp(id: string | BitId, propName: $Keys<ComponentMap>, val: any) {
-    const componentMap = this.getComponent(id, true, true);
+  setComponentProp(id: BitId, propName: $Keys<ComponentMap>, val: any) {
+    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     // $FlowFixMe
     componentMap[propName] = val;
     this.markAsChanged();
     return componentMap;
   }
 
-  removeComponentProp(id: string | BitId, propName: $Keys<ComponentMap>) {
-    const componentMap = this.getComponent(id, true, true);
+  removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
+    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     // $FlowFixMe
     delete componentMap[propName];
     this.markAsChanged();
     return componentMap;
   }
 
-  attachEnv(id: string | BitId, { compiler, tester }: { compiler: boolean, tester: boolean }) {
-    const componentMap = this.getComponent(id, true, true);
+  attachEnv(id: BitId, { compiler, tester }: { compiler: boolean, tester: boolean }) {
+    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     // For authored component just make sure to remove the detached
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       if (compiler) {
@@ -619,13 +619,13 @@ export default class BitMap {
     this.markAsChanged();
   }
 
-  setDetachedCompiler(id: string | BitId, val: ?boolean) {
+  setDetachedCompiler(id: BitId, val: ?boolean) {
     if (val === null || val === undefined) {
       return this.removeComponentProp(id, 'detachedCompiler');
     }
     return this.setComponentProp(id, 'detachedCompiler', val);
   }
-  setDetachedTestser(id: string | BitId, val: ?boolean) {
+  setDetachedTester(id: BitId, val: ?boolean) {
     if (val === null || val === undefined) {
       return this.removeComponentProp(id, 'detachedTester');
     }
@@ -633,11 +633,11 @@ export default class BitMap {
   }
 
   setDetachedCompilerAndTester(
-    id: string | BitId,
+    id: BitId,
     { detachedCompiler, detachedTester }: { detachedCompiler: ?boolean, detachedTester: ?boolean }
   ) {
     this.setDetachedCompiler(id, detachedCompiler);
-    return this.setDetachedTestser(id, detachedTester);
+    return this.setDetachedTester(id, detachedTester);
   }
 
   isExistWithSameVersion(id: BitId) {

@@ -555,13 +555,13 @@ export default class Consumer {
     });
 
     // update bitmap with the new version
-    const taggedComponentIds = taggedComponents.map((component) => {
+    const taggedComponentIds = taggedComponents.map((component: Component) => {
       this.bitMap.updateComponentId(component.id);
       const { detachedCompiler, detachedTester } = component;
       this.bitMap.setDetachedCompilerAndTester(component.id, { detachedCompiler, detachedTester });
       return component.id;
     });
-    const autoTaggedComponentIds = autoTaggedComponents.map((component) => {
+    const autoTaggedComponentIds = autoTaggedComponents.map((component: ModelComponent) => {
       const id = component.toBitId();
       const newId = id.changeVersion(component.latest());
       this.bitMap.updateComponentId(newId);
