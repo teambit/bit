@@ -26,18 +26,21 @@ export default (async function componentsDiff(
   const tmp = new Tmp(consumer.scope);
 
   // try to resolve ids scope of by components array
-  ids.forEach(function (id) {
+  const idsWithScope = ids.map((id) => {
     if (!id.scope && components) {
-      const foundComponent = components.find(o => o.box === id.box && o.name === id.name);
-      if (foundComponent) id.scope = foundComponent.scope;
+      const foundComponent = components.find(o => o.name === id.name);
+      if (foundComponent) return id.changeScope(foundComponent.scope);
     }
+    return id;
   });
 
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
-        // $FlowFixMe - version, toVersion are string here, the error is unclear
-        return Promise.all(ids.map(id => getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion)));
+        return Promise.all(
+          // $FlowFixMe - version, toVersion are string here, the error is unclear
+          idsWithScope.map(id => getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion))
+        );
       }
       if (version) {
         // $FlowFixMe - version is string here, the error is unclear

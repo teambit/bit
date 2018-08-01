@@ -7,7 +7,7 @@ import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { Component, Version, Source, Symlink } from '../models';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
@@ -43,7 +43,7 @@ export default class SourceRepository {
     } catch (err) {
       logger.error(`findComponent got an error ${err}`);
     }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash()}`);
+    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
     return null;
   }
 
@@ -65,7 +65,7 @@ export default class SourceRepository {
     const component = Component.fromBitId(bitId);
     let foundComponent = await this.findComponent(component);
     if (foundComponent instanceof Symlink) {
-      const realComponentId = BitId.parse(foundComponent.getRealComponentId());
+      const realComponentId: BitId = foundComponent.getRealComponentId();
       foundComponent = await this.findComponent(Component.fromBitId(realComponentId));
     }
 
@@ -140,6 +140,8 @@ export default class SourceRepository {
    * Given a consumer-component object, returns the Version representation.
    * Useful for saving into the model or calculation the hash for comparing with other Version object.
    *
+   * Warning: Do not change anything on the consumerComponent instance! Only use its cloned.
+   *
    * @param consumerComponent
    * @param consumer
    * @param message
@@ -157,7 +159,7 @@ export default class SourceRepository {
     dists,
     specsResults
   }: {
-    consumerComponent: ConsumerComponent,
+    consumerComponent: $ReadOnly<ConsumerComponent>,
     versionFromModel?: Version,
     message?: string,
     flattenedDependencies?: Object,
@@ -167,6 +169,8 @@ export default class SourceRepository {
     dists?: Object,
     specsResults?: any
   }): Promise<Object> {
+    // $FlowFixMe
+    const clonedComponent: ConsumerComponent = consumerComponent.clone();
     const setEol = (files: AbstractVinyl) => {
       if (!files) return;
       const result = files.map((file) => {
@@ -180,7 +184,7 @@ export default class SourceRepository {
         ? consumerComponent.files.map((file) => {
           return {
             name: file.basename,
-            relativePath: consumerComponent.addSharedDir(file.relative),
+            relativePath: clonedComponent.addSharedDir(file.relative),
             file: Source.from(eol.lf(file.contents, file.relative)),
             test: file.test
           };
@@ -192,17 +196,17 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    consumerComponent.mainFile = consumerComponent.addSharedDir(consumerComponent.mainFile);
-    consumerComponent.getAllDependencies().forEach((dependency) => {
+    clonedComponent.mainFile = clonedComponent.addSharedDir(clonedComponent.mainFile);
+    clonedComponent.getAllDependencies().forEach((dependency) => {
       dependency.relativePaths.forEach((relativePath) => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
-          relativePath.sourceRelativePath = consumerComponent.addSharedDir(relativePath.sourceRelativePath);
+          relativePath.sourceRelativePath = clonedComponent.addSharedDir(relativePath.sourceRelativePath);
         }
       });
     });
     const version = Version.fromComponent({
-      component: consumerComponent,
+      component: clonedComponent,
       versionFromModel,
       files,
       dists,
@@ -213,6 +217,7 @@ export default class SourceRepository {
       username,
       email
     });
+    // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
 
     return { version, files, compilerFiles, testerFiles };
@@ -229,8 +234,8 @@ export default class SourceRepository {
     specsResults
   }: {
     source: ConsumerComponent,
-    flattenedDependencies: BitId[],
-    flattenedDevDependencies: BitId[],
+    flattenedDependencies: BitIds,
+    flattenedDevDependencies: BitIds,
     message: string,
     exactVersion: ?string,
     releaseType: string,

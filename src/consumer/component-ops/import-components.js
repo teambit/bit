@@ -73,9 +73,9 @@ export default class ImportComponents {
     // $FlowFixMe - we make sure the ids are populated before.
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
     // $FlowFixMe - we check if there are bitIds before we call this function
-    const bitIds = this.options.ids.map(raw => BitId.parse(raw));
+    const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
-    await this._warnForModifiedOrNewComponents(bitIds);
+    await this._throwForPotentialIssues(bitIds);
     const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
@@ -99,7 +99,7 @@ export default class ImportComponents {
       }
     }
     const allDependenciesIds = dependenciesFromBitJson.concat(componentsFromBitMap);
-    await this._warnForModifiedOrNewComponents(allDependenciesIds);
+    await this._throwForModifiedOrNewComponents(allDependenciesIds);
     const beforeImportVersions = await this._getCurrentVersions(allDependenciesIds);
 
     let componentsAndDependenciesBitJson = [];
@@ -178,7 +178,12 @@ export default class ImportComponents {
     return Promise.all(detailsP);
   }
 
-  async _warnForModifiedOrNewComponents(ids: BitId[]) {
+  async _throwForPotentialIssues(ids: BitId[]): Promise<void> {
+    await this._throwForModifiedOrNewComponents(ids);
+    this._throwForDifferentComponentWithSameName(ids);
+  }
+
+  async _throwForModifiedOrNewComponents(ids: BitId[]) {
     // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
@@ -199,6 +204,22 @@ export default class ImportComponents {
     return Promise.resolve();
   }
 
+  /**
+   * Model Component id() calculation uses id.toString() for the hash.
+   * If an imported component has scope+name equals to a local name, both will have the exact same
+   * hash and they'll override each other.
+   */
+  _throwForDifferentComponentWithSameName(ids: BitId[]): void {
+    ids.forEach((id: BitId) => {
+      const existingId = this.consumer.getParsedIdIfExist(id.toStringWithoutVersion());
+      if (existingId && !existingId.hasScope()) {
+        throw new GeneralError(`unable to import ${id.toString()}. the component name conflicted with your local component with the same name.
+        it's fine to have components with the same name as long as their scope names are different.
+        Make sure to export your component first to get a scope and then try importing again`);
+      }
+    });
+  }
+
   async _getMergeStatus(componentWithDependencies: ComponentWithDependencies): Promise<ComponentMergeStatus> {
     const component = componentWithDependencies.component;
     const componentStatus = await this.consumer.getComponentStatusById(component.id);
@@ -208,8 +229,7 @@ export default class ImportComponents {
     if (!componentModel) {
       throw new GeneralError(`component ${component.id.toString()} wasn't found in the model`);
     }
-    const existingBitMapId = this.consumer.bitMap.getExistingComponentId(component.id.toStringWithoutVersion());
-    const existingBitMapBitId = BitId.parse(existingBitMapId);
+    const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
     const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);

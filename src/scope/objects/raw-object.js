@@ -80,10 +80,10 @@ export default class BitRawObject {
         return 'component version';
       case 'Component':
         return this.parsedContent.scope
-          ? [this.parsedContent.scope, this.parsedContent.box, this.parsedContent.name].join('/')
-          : [this.parsedContent.box, this.parsedContent.name].join('/');
+          ? [this.parsedContent.scope, this.parsedContent.name].join('/')
+          : this.parsedContent.name;
       case 'Symlink':
-        return [this.parsedContent.box, this.parsedContent.name].join('/');
+        return this.parsedContent.name;
       case 'ScopeMeta':
         return this.parsedContent.name;
 
@@ -116,7 +116,7 @@ export default class BitRawObject {
   /**
    * Build a real object (model) from a parsed content (can be the original parsed conents or a provided one)
    * We use the provided version during the migration process when we change the parsed content outside
-   * @param {Any} parsedContent 
+   * @param {Any} parsedContent
    */
   toRealObject() {
     return this.types[this.type].from(this.parsedContent || this.getParsedContent());

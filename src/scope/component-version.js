@@ -35,7 +35,6 @@ export default class ComponentVersion {
   toId() {
     return new BitId({
       scope: this.component.scope,
-      box: this.component.box,
       name: this.component.name,
       version: this.version
     });

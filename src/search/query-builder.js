@@ -3,8 +3,6 @@ import { tokenizeStr, stem } from './indexer';
 import stopwords from './stopwords';
 
 const boost = {
-  box: 3,
-  tokenizedBox: 2,
   name: 5,
   tokenizedName: 4,
   stemmedName: 3,
@@ -28,8 +26,6 @@ function buildQuery(queryStr: string): Array<Object> {
     .join(' ');
   const tokenizedQuery = tokenizeStr(queryStr);
   const query = [];
-  query.push(queryItem('box', queryStr));
-  query.push(queryItem('tokenizedBox', queryStr));
   query.push(queryItem('name', queryStr));
   query.push(queryItem('tokenizedName', tokenizedQuery));
   query.push(queryItem('stemmedName', stem(tokenizedQuery)));

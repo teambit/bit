@@ -1,16 +1,18 @@
 import requestify from 'requestify';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? 'https://api.bitsrc.io' : 'https://api-stg.bitsrc.io';
+const supportTestingOnBitsrc = false;
 const apiBaseUrl = process.env.BITSRC_ENV === 'stg' ? 'https://api-stg.bitsrc.io' : 'https://api.bitsrc.io';
 const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;
 
-export { username };
+export { username, supportTestingOnBitsrc };
 const debugMode = !!process.env.npm_config_debug;
 export default class BitsrcTester {
   cookies;
 
   init() {
+    if (!supportTestingOnBitsrc) throw new Error('supportTestingOnBitsrc is set to false');
     return requestify
       .post(`${apiBaseUrl}/user/login`, { username, password })
       .then((res) => {

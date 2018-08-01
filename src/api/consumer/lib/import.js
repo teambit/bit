@@ -31,7 +31,8 @@ export default (async function importAction(
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
     if (!importOptions.ids.length) throw new GeneralError('you must specify component id for importing an environment');
     const idToImport = importOptions.ids[0];
-    const envDependencies = await consumer.importEnvironment(idToImport, importOptions.verbose, true);
+    const bitIdToImport = BitId.parse(idToImport, true); // import without id is not supported
+    const envDependencies = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
     if (!envDependencies.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envDependencies[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
@@ -79,7 +80,7 @@ export default (async function importAction(
   const { dependencies, envDependencies, importDetails } = await consumer.importComponents(importOptions);
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
-    const componentMap = consumer.bitMap.getComponent(bitId);
+    const componentMap = consumer.bitMap.getComponentIfExist(bitId);
     return componentMap && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
   };
   const notAuthoredBitIds = R.filter(notAuthored, bitIds);

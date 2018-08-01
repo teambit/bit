@@ -1,6 +1,6 @@
 /** @flow */
 import { groupBy, prop } from 'ramda';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 import Remote from './remote';
 import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
@@ -45,7 +45,11 @@ export default class Remotes extends Map<string, Remote> {
     const byScope = groupBy(prop('scope'));
     const promises = [];
     forEach(byScope(ids), (scopeIds, scopeName) => {
-      promises.push(this.resolve(scopeName, thisScope).then(remote => remote.fetch(scopeIds, withoutDeps, context)));
+      promises.push(
+        this.resolve(scopeName, thisScope).then(remote =>
+          remote.fetch(BitIds.fromArray(scopeIds), withoutDeps, context)
+        )
+      );
     });
 
     logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps}) on a remote`);
@@ -62,7 +66,7 @@ export default class Remotes extends Map<string, Remote> {
     });
     const components = await Promise.all(promises);
     const flattenComponents = flatten(components);
-    return flattenComponents.map(componentId => BitId.parse(componentId));
+    return flattenComponents.map(componentId => BitId.parse(componentId, true));
   }
 
   toPlainObject() {

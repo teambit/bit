@@ -54,6 +54,7 @@ import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 import type { InvalidComponent } from './component/consumer-component';
 import MainFileRemoved from './component/exceptions/main-file-removed';
+import type { BitIdStr } from '../bit-id/bit-id';
 
 type ConsumerProps = {
   projectPath: string,
@@ -136,6 +137,10 @@ export default class Consumer {
     return this._dirStructure;
   }
 
+  get bitmapIds(): BitIds {
+    return this.bitMap.getAllBitIds();
+  }
+
   /**
    * Check if the driver installed and print message if not
    *
@@ -144,7 +149,7 @@ export default class Consumer {
    * @returns {boolean} true if the driver exists, false otherwise
    * @memberof Consumer
    */
-  warnForMissingDriver(msg: string): boolean {
+  warnForMissingDriver(msg?: string): boolean {
     try {
       this.driver.getDriver(false);
       return true;
@@ -216,10 +221,6 @@ export default class Consumer {
     return this;
   }
 
-  getComponentsPath(): PathOsBased {
-    return path.join(this.projectPath, BITS_DIRNAME);
-  }
-
   getPath(): PathOsBased {
     return this.projectPath;
   }
@@ -234,13 +235,27 @@ export default class Consumer {
     return path.relative(this.getPath(), absolutePath);
   }
 
+  getParsedId(id: BitIdStr): BitId {
+    // $FlowFixMe, bitId is always defined as shouldThrow is true
+    const bitId: BitId = this.bitMap.getExistingBitId(id);
+    const version = BitId.getVersionOnlyFromString(id);
+    return bitId.changeVersion(version);
+  }
+
+  getParsedIdIfExist(id: BitIdStr): ?BitId {
+    const bitId: ?BitId = this.bitMap.getExistingBitId(id, false);
+    if (!bitId) return null;
+    const version = BitId.getVersionOnlyFromString(id);
+    return bitId.changeVersion(version);
+  }
+
   async loadComponent(id: BitId): Promise<Component> {
-    const { components } = await this.loadComponents([id]);
+    const { components } = await this.loadComponents(BitIds.fromArray([id]));
     return components[0];
   }
 
   async loadComponents(
-    ids: BitId[],
+    ids: BitIds,
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
     logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
@@ -249,16 +264,20 @@ export default class Consumer {
       `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
     );
     const alreadyLoadedComponents = [];
-    const idsToProcess = [];
+    const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
-    ids.forEach((id) => {
-      if (this._componentsCache[id.toString()]) {
-        logger.debug(`the component ${id.toString()} has been already loaded, use the cached component`);
+    ids.forEach((id: BitId) => {
+      if (!(id instanceof BitId)) {
+        throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
+      }
+      const idWithoutVersion = id.toStringWithoutVersion();
+      if (this._componentsCache[idWithoutVersion]) {
+        logger.debug(`the component ${idWithoutVersion} has been already loaded, use the cached component`);
         Analytics.addBreadCrumb(
           'load components',
-          `the component ${Analytics.hashData(id.toString())} has been already loaded, use the cached component`
+          `the component ${Analytics.hashData(idWithoutVersion)} has been already loaded, use the cached component`
         );
-        alreadyLoadedComponents.push(this._componentsCache[id.toString()]);
+        alreadyLoadedComponents.push(this._componentsCache[idWithoutVersion]);
       } else {
         idsToProcess.push(id);
       }
@@ -270,13 +289,9 @@ export default class Consumer {
     );
 
     const components = idsToProcess.map(async (id: BitId) => {
-      const idWithConcreteVersionString: string = getLatestVersionNumber(
-        Object.keys(this.bitMap.getAllComponents()),
-        id.toString()
-      );
-      const idWithConcreteVersion = BitId.parse(idWithConcreteVersionString);
+      const idWithConcreteVersion: BitId = getLatestVersionNumber(this.bitmapIds, id);
 
-      const componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
+      const componentMap = this.bitMap.getComponent(idWithConcreteVersion);
       let bitDir = this.getPath();
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
@@ -316,7 +331,7 @@ export default class Consumer {
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
       // reload component map as it may be changed after calling Component.loadFromFileSystem()
-      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion, true);
+      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion);
       component.componentFromModel = componentFromModel;
 
       if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -324,7 +339,7 @@ export default class Consumer {
         return component;
       }
       // @todo: check if the files were changed, and if so, skip the next line.
-      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersionString);
+      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersion);
       await updateDependenciesVersions(this, component);
       return component;
     });
@@ -334,7 +349,7 @@ export default class Consumer {
       // load the components one after another (not in parallel).
       const component = await componentP; // eslint-disable-line no-await-in-loop
       if (component) {
-        this._componentsCache[component.id.toString()] = component;
+        this._componentsCache[component.id.toStringWithoutVersion()] = component;
         logger.debug(`Finished loading the component, ${component.id.toString()}`);
         Analytics.addBreadCrumb(`Finished loading the component, ${Analytics.hashData(component.id.toString())}`);
         allComponents.push(component);
@@ -349,8 +364,7 @@ export default class Consumer {
     return importComponents.importComponents();
   }
 
-  importEnvironment(rawId: string, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
-    const bitId = BitId.parse(rawId);
+  importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
 
@@ -362,16 +376,15 @@ export default class Consumer {
     return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
-  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]) {
-    const candidateComponents = this.bitMap.getAllComponents([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<?(BitId[])> {
+    const candidateComponents = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
     );
-    const candidateComponentsIds = Object.keys(candidateComponents).map(id => BitId.parse(id));
     // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
     // correct version
-    return candidateComponentsIds.filter(
+    return candidateComponents.filter(
       component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
   }
@@ -388,7 +401,7 @@ export default class Consumer {
    */
   async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
     if (typeof componentFromFileSystem._isModified === 'undefined') {
-      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id, true);
+      const componentMap = this.bitMap.getComponent(componentFromFileSystem.id);
       if (componentMap.originallySharedDir) {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
@@ -458,7 +471,7 @@ export default class Consumer {
       const componentFromModel: ModelComponent = await this.scope.sources.get(id);
       let componentFromFileSystem;
       try {
-        componentFromFileSystem = await this.loadComponent(BitId.parse(id.toStringWithoutVersion()));
+        componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
       } catch (err) {
         if (
           err instanceof MissingFilesFromComponent ||
@@ -506,7 +519,7 @@ export default class Consumer {
   }
 
   async tag(
-    ids: BitId[],
+    ids: BitIds,
     message: string,
     exactVersion: ?string,
     releaseType: string,
@@ -516,10 +529,9 @@ export default class Consumer {
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
-    logger.debug(`committing the following components: ${ids.join(', ')}`);
+    logger.debug(`committing the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
-    const componentsIds = ids.map(componentId => BitId.parse(componentId));
-    const { components } = await this.loadComponents(componentsIds);
+    const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't commit anything
     if (!ignoreUnresolvedDependencies) {
@@ -543,23 +555,23 @@ export default class Consumer {
     });
 
     // update bitmap with the new version
-    const taggedComponentIds = taggedComponents.map((component) => {
+    const taggedComponentIds = taggedComponents.map((component: Component) => {
       this.bitMap.updateComponentId(component.id);
       const { detachedCompiler, detachedTester } = component;
       this.bitMap.setDetachedCompilerAndTester(component.id, { detachedCompiler, detachedTester });
       return component.id;
     });
-    const autoTaggedComponentIds = autoTaggedComponents.map((component) => {
+    const autoTaggedComponentIds = autoTaggedComponents.map((component: ModelComponent) => {
       const id = component.toBitId();
-      id.version = component.latest();
-      this.bitMap.updateComponentId(id);
-      return id;
+      const newId = id.changeVersion(component.latest());
+      this.bitMap.updateComponentId(newId);
+      return newId;
     });
 
     // update package.json with the new version
     const allComponentIds = taggedComponentIds.concat(autoTaggedComponentIds);
     const updatePackageJsonP = allComponentIds.map((componentId: BitId) => {
-      const componentMap = this.bitMap.getComponent(componentId, true);
+      const componentMap = this.bitMap.getComponent(componentId);
       if (componentMap.rootDir) {
         return packageJson.updateAttribute(this, componentMap.rootDir, 'version', componentId.version);
       }
@@ -572,14 +584,18 @@ export default class Consumer {
 
   static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
     if (!id.scope) {
-      throw new GeneralError(`Failed creating a path in node_modules for ${id}, as it does not have a scope yet`);
+      throw new GeneralError(
+        `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
+      );
     }
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    return path.join('node_modules', bindingPrefix, [id.scope, id.box, id.name].join(NODE_PATH_COMPONENT_SEPARATOR));
+    const allSlashes = new RegExp('/', 'g');
+    const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
+    return path.join('node_modules', bindingPrefix, [id.scope, name].join(NODE_PATH_COMPONENT_SEPARATOR));
   }
 
-  static getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): string {
+  getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     requirePath = pathNormalizeToLinux(requirePath);
     // Temp fix to support old components before the migration has been running
     bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
@@ -589,17 +605,30 @@ export default class Consumer {
       ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_COMPONENT_SEPARATOR);
-    if (pathSplit.length < 3) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
+    if (pathSplit.length < 2) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
+    // since the dynamic namespaces feature introduced, the require statement doesn't have a fixed
+    // number of separators.
+    // also, a scope name may or may not include a dot. depends whether it's on bitHub or self hosted.
+    // we must check against BitMap to get the correct scope and name of the id.
+    if (pathSplit.length === 2) {
+      return new BitId({ scope: pathSplit[0], name: pathSplit[1] });
+    }
+    const mightBeScope = R.head(pathSplit);
+    const mightBeName = R.tail(pathSplit).join('/');
+    const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
+    const allBitIds = this.bitMap.getAllBitIds();
+    if (allBitIds.searchWithoutVersion(mightBeId)) return mightBeId;
 
-    const name = pathSplit[pathSplit.length - 1];
-    const box = pathSplit[pathSplit.length - 2];
-    const scope = pathSplit.length === 3 ? pathSplit[0] : `${pathSplit[0]}.${pathSplit[1]}`;
-    return new BitId({ scope, box, name }).toString();
+    // pathSplit has 3 or more items. the first two are the scope, the rest is the name.
+    // for example "user.scopeName.utils.is-string" => scope: user.scopeName, name: utils/is-string
+    const scope = pathSplit.splice(0, 2).join('.');
+    const name = pathSplit.join('/');
+    return new BitId({ scope, name });
   }
 
   composeRelativeBitPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
-    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope, namespace: bitId.box });
+    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
   composeComponentPath(bitId: BitId): PathOsBased {
@@ -679,11 +708,10 @@ export default class Consumer {
     }
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
   }
-  static async load(currentPath: PathOsBasedAbsolute, throws: boolean = true): Promise<?Consumer> {
+  static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
     const projectPath = locateConsumer(currentPath);
     if (!projectPath) {
-      if (throws) return Promise.reject(new ConsumerNotFound());
-      return Promise.resolve(null);
+      return Promise.reject(new ConsumerNotFound());
     }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       const consumer = await Consumer.create(currentPath);
@@ -699,6 +727,7 @@ export default class Consumer {
       scope
     });
   }
+
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
     const remotes = await this.scope.remotes();
@@ -706,7 +735,8 @@ export default class Consumer {
     enrichContextFromGlobal(context);
     const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
       const resolvedRemote = await remotes.resolve(scopeName, this.scope);
-      const deprecateResult = await resolvedRemote.deprecateMany(groupedBitsByScope[scopeName], context);
+      const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
+      const deprecateResult = await resolvedRemote.deprecateMany(idsStr, context);
       return deprecateResult;
     });
     const deprecatedComponentsResult = await Promise.all(deprecateP);
@@ -715,8 +745,7 @@ export default class Consumer {
   async deprecateLocal(bitIds: Array<BitId>) {
     return this.scope.deprecateMany(bitIds);
   }
-  async deprecate(ids: string[], remote: boolean) {
-    const bitIds = ids.map(bitId => BitId.parse(bitId));
+  async deprecate(bitIds: BitId[], remote: boolean) {
     return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
   }
 
@@ -736,22 +765,23 @@ export default class Consumer {
     track,
     deleteFiles
   }: {
-    ids: string[],
+    ids: BitIds,
     force: boolean,
     remote: boolean,
     track: boolean,
     deleteFiles: boolean
   }) {
-    logger.debug(`consumer.remove: ${ids.join(', ')}. force: ${force.toString()}`);
+    logger.debug(`consumer.remove: ${ids.toString()}. force: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'remove',
       `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
     );
     // added this to remove support for remove version
-    const bitIds = ids.map(bitId => BitId.parse(bitId)).map((id) => {
-      id.version = LATEST_BIT_VERSION;
-      return id;
-    });
+    const bitIds = BitIds.fromArray(
+      ids.map((id) => {
+        return id.changeVersion(LATEST_BIT_VERSION);
+      })
+    );
     const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
     if (remote && localIds.length) {
       throw new GeneralError(
@@ -777,7 +807,8 @@ export default class Consumer {
     enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {
       const resolvedRemote = await remotes.resolve(key, this.scope);
-      return resolvedRemote.deleteMany(groupedBitsByScope[key], force, context);
+      const idsStr = groupedBitsByScope[key].map(id => id.toStringWithoutVersion());
+      return resolvedRemote.deleteMany(idsStr, force, context);
     });
 
     return Promise.all(removeP);
@@ -788,19 +819,26 @@ export default class Consumer {
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
   async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
+    logger.debug(`consumer.removeComponentFromFs, ids: ${bitIds.toString()}`);
+    const deletePath = async (pathToDelete) => {
+      logger.debug(`consumer.removeComponentFromFs deleting the following path: ${pathToDelete}`);
+      return fs.remove(pathToDelete);
+    };
     return Promise.all(
       bitIds.map(async (id) => {
-        const component = id.isLocal()
-          ? this.bitMap.getComponent(this.bitMap.getExistingComponentId(id.toStringWithoutVersion()))
-          : this.bitMap.getComponent(id);
-        if (!component) return null;
-        if (
-          (component.origin && component.origin === COMPONENT_ORIGINS.IMPORTED) ||
-          component.origin === COMPONENT_ORIGINS.NESTED
-        ) {
-          return fs.remove(path.join(this.getPath(), component.rootDir));
-        } else if (component.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(component.files.map(file => fs.remove(file.relativePath)));
+        const ignoreVersion = id.isLocal() || !id.hasVersion();
+        const componentMap = this.bitMap.getComponentIfExist(id, { ignoreVersion });
+        if (!componentMap) {
+          logger.warn(
+            `removeComponentFromFs wasn't able to delete ${id.toString()} because the id is missing from bitmap`
+          );
+          return null;
+        }
+        if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+          // $FlowFixMe rootDir is set for non authored
+          return deletePath(path.join(this.getPath(), componentMap.rootDir));
+        } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
+          return Promise.all(componentMap.files.map(file => deletePath(file.relativePath)));
         }
         return null;
       })
@@ -813,21 +851,15 @@ export default class Consumer {
    * if component is imported then cant remove version only component
    * @param {BitIds} bitIds - list of remote component ids to delete
    */
-  resolveLocalComponentIds(bitIds: BitIds) {
+  resolveLocalComponentIds(bitIds: BitIds): BitId[] {
     return bitIds.map((id) => {
-      const realName = this.bitMap.getExistingComponentId(id.toStringWithoutVersion());
-      if (!realName) return id;
-      const component = this.bitMap.getComponent(realName);
-      if (
-        component &&
-        (component.origin === COMPONENT_ORIGINS.IMPORTED || component.origin === COMPONENT_ORIGINS.NESTED)
-      ) {
-        const realId = BitId.parse(realName);
-        realId.version = LATEST_BIT_VERSION;
-        return realId;
+      const realBitId = this.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
+      if (!realBitId) return id;
+      const componentMap = this.bitMap.getComponent(realBitId);
+      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+        return realBitId.changeVersion(LATEST_BIT_VERSION);
       }
-      if (component) return BitId.parse(realName);
-      return id;
+      return realBitId;
     });
   }
 
@@ -856,8 +888,8 @@ export default class Consumer {
     deleteFiles: boolean
   ): Promise<RemovedLocalObjects> {
     // local remove in case user wants to delete tagged components
-    const modifiedComponents = [];
-    const regularComponents = [];
+    const modifiedComponents = new BitIds();
+    const regularComponents = new BitIds();
     const resolvedIDs = this.resolveLocalComponentIds(bitIds);
     if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
     if (!force) {
@@ -876,7 +908,9 @@ export default class Consumer {
       this
     );
 
-    const componentsToRemoveFromFs = removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION);
+    const componentsToRemoveFromFs = BitIds.fromArray(
+      removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION)
+    );
     if (!R.isEmpty(removedComponentIds)) {
       await this.removeComponentFromFs(componentsToRemoveFromFs, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);

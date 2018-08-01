@@ -8,20 +8,17 @@ import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
 import { Symlink } from '../models';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
-import type { BitIdStr } from '../../bit-id/bit-id';
 import { Consumer } from '../../consumer';
 
 export default class RemoveModelComponents {
   scope: Scope;
   bitIds: BitIds;
-  bitIdsStr: BitIdStr[];
   force: boolean;
   removeSameOrigin: boolean = false;
   consumer: ?Consumer;
   constructor(scope: Scope, bitIds: BitIds, force: boolean, removeSameOrigin: boolean, consumer?: Consumer) {
     this.scope = scope;
     this.bitIds = bitIds;
-    this.bitIdsStr = bitIds.map(id => id.toStringWithoutVersion());
     this.force = force;
     this.removeSameOrigin = removeSameOrigin;
     this.consumer = consumer;
@@ -53,6 +50,7 @@ export default class RemoveModelComponents {
     // $FlowFixMe
     const component = (await this.scope.sources.get(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
+    // $FlowFixMe
     const componentList = await this.scope.objects.listComponents();
 
     const dependentBits = await this.scope.findDependentBits(
@@ -68,9 +66,9 @@ export default class RemoveModelComponents {
     );
 
     await this._removeComponent(bitId, componentList, false);
-    if (Object.keys(component.component.versions).length <= 1) bitId.version = LATEST_BIT_VERSION;
+    const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
 
-    return { bitId, removedDependencies };
+    return { bitId: bitId.changeVersion(version), removedDependencies };
   }
 
   async _removeComponentsDependencies(
@@ -80,22 +78,21 @@ export default class RemoveModelComponents {
     bitId: BitId
   ): Promise<BitIds> {
     const removedComponents = consumerComponentToRemove.flattenedDependencies.map(async (dependencyId: BitId) => {
-      const dependentsIdsStr: BitIdStr[] = dependentBits[dependencyId.toStringWithoutVersion()];
-      const bitIdStr = bitId.version === LATEST_BIT_VERSION ? bitId.toStringWithoutVersion() : bitId.toString();
+      const dependentsIds: BitId[] = dependentBits[dependencyId.toStringWithoutVersion()];
       const relevantDependents = R.reject(
-        dependent => dependent === bitIdStr || BitId.parse(dependent).scope !== dependencyId.scope,
-        dependentsIdsStr
+        dependent => dependent.isEqual(bitId) || dependent.scope !== dependencyId.scope,
+        dependentsIds
       );
       let isNested = true;
       if (this.consumer) {
-        const componentMap = this.consumer.bitMap.getComponent(dependencyId);
+        const componentMap = this.consumer.bitMap.getComponentIfExist(dependencyId);
         if (componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED) {
           isNested = false;
         }
       }
       if (
         R.isEmpty(relevantDependents) &&
-        !this.bitIdsStr.includes(dependencyId.toStringWithoutVersion()) && // don't delete dependency if it is already deleted as an individual
+        !this.bitIds.searchWithoutVersion(dependencyId) && // don't delete dependency if it is already deleted as an individual
         (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
         isNested
       ) {
@@ -106,12 +103,12 @@ export default class RemoveModelComponents {
     });
     let removedDependencies = await Promise.all(removedComponents);
     removedDependencies = removedDependencies.filter(x => !R.isNil(x));
-    return new BitIds(removedDependencies);
+    return BitIds.fromArray(removedDependencies);
   }
 
   async _removeComponent(id: BitId, componentList: Array<ConsumerComponent | Symlink>, removeRefs: boolean = false) {
     const symlink = componentList.filter(
-      component => component instanceof Symlink && component.id() === id.toStringWithoutScopeAndVersion()
+      component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
     await this.scope.sources.clean(id, removeRefs);
     if (!R.isEmpty(symlink)) await this.scope.objects.remove(symlink[0].hash());

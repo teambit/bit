@@ -86,7 +86,7 @@ function symlinkPackages(from: string, to: string, consumer, component: Componen
 
 function writeDependenciesLinks(component: Component, componentMap: ComponentMap, consumer: Consumer): LinkDetail[] {
   return component.getAllDependencies().map((dependency: Dependency) => {
-    const dependencyComponentMap = consumer.bitMap.getComponent(dependency.id);
+    const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependency.id);
     const writtenLinks = [];
     if (!dependencyComponentMap) return writtenLinks;
     const parentRootDir = componentMap.rootDir || '.'; // compilers/testers don't have rootDir
@@ -128,17 +128,15 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   fs.outputFileSync(dest, fileContent);
 }
 
-function writeMissingLinks(consumer: Consumer, component, componentMap: ComponentMap): LinkDetail[] {
+function writeMissingLinks(consumer: Consumer, component: Component, componentMap: ComponentMap): LinkDetail[] {
   const missingLinks = component.issues.missingLinks;
   const result = Object.keys(component.issues.missingLinks).map((key) => {
-    return missingLinks[key].map((dependencyIdStr) => {
-      const dependencyId = consumer.bitMap.getExistingComponentId(dependencyIdStr);
-      if (!dependencyId) return null;
-
+    return missingLinks[key].map((dependencyIdRaw: BitId) => {
+      const dependencyId: BitId = consumer.bitMap.getBitId(dependencyIdRaw, { ignoreVersion: true });
       const dependencyComponentMap = consumer.bitMap.getComponent(dependencyId);
       return writeDependencyLink(
         consumer.toAbsolutePath(componentMap.rootDir),
-        BitId.parse(dependencyId),
+        dependencyId,
         consumer.toAbsolutePath(dependencyComponentMap.rootDir),
         component.bindingPrefix
       );
@@ -236,7 +234,7 @@ export default (async function linkComponents(components: Component[], consumer:
     components.map((component) => {
       const componentId = component.id;
       logger.debug(`linking component to node_modules: ${componentId}`);
-      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId, true);
+      const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId);
       switch (componentMap.origin) {
         case COMPONENT_ORIGINS.IMPORTED:
           return _linkImportedComponents(consumer, component, componentMap);

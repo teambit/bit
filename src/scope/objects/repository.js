@@ -16,7 +16,7 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 export default class Repository {
   objects: BitObject[] = [];
   _cache: { [string]: BitObject } = {};
-  _cacheListComponentsWithSymlinks: Component[] | Symlink[];
+  _cacheListComponentsWithSymlinks: Array<Component | Symlink>;
   _cacheListComponentsWithoutSymlinks: Component[];
   scope: Scope;
   types: { [string]: Function };
@@ -103,7 +103,7 @@ export default class Repository {
     );
   }
 
-  async listComponents(includeSymlinks: boolean = true): Promise<Component[] | Symlink[]> {
+  async listComponents(includeSymlinks: boolean = true): Promise<Array<Component | Symlink>> {
     const filterComponents = refs =>
       refs.filter(
         ref => (includeSymlinks ? ref instanceof Component || ref instanceof Symlink : ref instanceof Component)

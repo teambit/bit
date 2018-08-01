@@ -95,7 +95,7 @@ export default class EnvExtension extends BaseExtension {
     }
     const dependentId = R.path(['dependentId'], context);
     const installOpts = {
-      ids: [{ componentId: BitId.parse(this.name), type: this.envType.toLowerCase() }],
+      ids: [{ componentId: BitId.parse(this.name, true), type: this.envType.toLowerCase() }], // @todo: make sure it always has a scope name
       dependentId,
       ...opts
     };

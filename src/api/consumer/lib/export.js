@@ -4,43 +4,33 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 
-async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<string[]> {
+async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
   const componentsList = new ComponentsList(consumer);
   if (!ids || !ids.length) {
     // export all
-    const exportPendingComponents = await componentsList.listExportPendingComponents();
+    const exportPendingComponents: BitIds = await componentsList.listExportPendingComponentsIds();
     if (exportPendingComponents.length > 1) loader.start(BEFORE_EXPORTS);
     else loader.start(BEFORE_EXPORT);
     return exportPendingComponents;
   }
-  const componentsFromBitMap = componentsList.getFromBitMap();
-  const idsFromBitMap = Object.keys(componentsFromBitMap);
-  // the ids received from the CLI may be missing the scope-name, try to get the complete ids from bit.map
-  const idsToExport = ids.map(async (id) => {
-    const parsedId = BitId.parse(id);
-    if (parsedId.scope) return id;
-    const match = idsFromBitMap.find((idStr) => {
-      return parsedId.toString() === BitId.parse(idStr).toStringWithoutScopeAndVersion();
-    });
-    if (match) {
-      const matchParsed = BitId.parse(match);
-      const status = await consumer.getComponentStatusById(matchParsed);
-      // don't allow to re-export an exported component unless it's being exported to another scope
-      if (!status.staged && matchParsed.scope === remote) {
-        throw new IdExportedAlready(match, remote);
-      }
-      return matchParsed.toStringWithoutVersion();
+  const idsToExportP = ids.map(async (id) => {
+    const parsedId = consumer.getParsedId(id);
+    const status = await consumer.getComponentStatusById(parsedId);
+    // don't allow to re-export an exported component unless it's being exported to another scope
+    if (!status.staged && parsedId.scope === remote) {
+      throw new IdExportedAlready(parsedId.toString(), remote);
     }
-    return id;
+    return parsedId;
   });
   loader.start(BEFORE_EXPORT); // show single export
-  return Promise.all(idsToExport);
+  const idsToExport = await Promise.all(idsToExportP);
+  return BitIds.fromArray(idsToExport);
 }
 
 async function addToBitJson(ids: BitId[], consumer: Consumer) {
@@ -49,11 +39,7 @@ async function addToBitJson(ids: BitId[], consumer: Consumer) {
     // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
     // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
     // already in bit.map
-    if (
-      bitJsonDependencies.find(
-        bitJsonDependency => bitJsonDependency.toStringWithoutVersion() === componentId.toStringWithoutVersion()
-      )
-    ) {
+    if (bitJsonDependencies.searchWithoutVersion(componentId)) {
       await consumer.bitJson.addDependency(componentId).write({ bitDir: consumer.getPath() });
     }
     return componentId;

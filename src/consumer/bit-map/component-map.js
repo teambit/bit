@@ -23,21 +23,24 @@ export type ComponentMapFile = {
 };
 
 export type ComponentMapData = {
+  id: BitId,
   files: ComponentMapFile[],
   mainFile: PathLinux,
-  rootDir?: PathLinux,
-  trackDir?: PathLinux,
+  rootDir?: ?PathLinux,
+  trackDir?: ?PathLinux,
   origin: ComponentOrigin,
-  dependencies?: string[],
-  mainDistFile?: PathLinux,
-  originallySharedDir?: PathLinux,
   detachedCompiler?: ?boolean,
-  detachedTester?: ?boolean
+  detachedTester?: ?boolean,
+  dependencies?: ?(string[]),
+  mainDistFile?: ?PathLinux,
+  originallySharedDir?: ?PathLinux,
+  exported?: ?boolean
 };
 
 export type PathChange = { from: PathLinux, to: PathLinux };
 
 export default class ComponentMap {
+  id: BitId;
   files: ComponentMapFile[];
   mainFile: PathLinux;
   rootDir: ?PathLinux; // always set for IMPORTED and NESTED.
@@ -53,7 +56,9 @@ export default class ComponentMap {
   // wether the compiler / tester are detached from the workspace global configuration
   detachedCompiler: ?boolean;
   detachedTester: ?boolean;
+  exported: ?boolean; // relevant for authored components only, it helps finding out whether a component has a scope
   constructor({
+    id,
     files,
     mainFile,
     rootDir,
@@ -65,6 +70,7 @@ export default class ComponentMap {
     detachedCompiler,
     detachedTester
   }: ComponentMapData) {
+    this.id = id;
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
@@ -255,6 +261,10 @@ export default class ComponentMap {
 
   sort() {
     this.files = R.sortBy(R.prop('relativePath'), this.files);
+  }
+
+  clone() {
+    return new ComponentMap(this);
   }
 
   validate(): void {

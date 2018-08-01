@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - new envs-attach command to attach component's envs to workspace envs
 - automatically detach envs of component when changed from imported workspace
+- support dynamic namespaces (replaced the box+name format with a dynamic name that can have multiple slashes to indicate a hierarchical namespace)
 
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 

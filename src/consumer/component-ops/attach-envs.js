@@ -1,12 +1,13 @@
 // @flow
 import { Consumer } from '..';
+import { BitId } from '../../bit-id';
 
-export type AttachResult = { id: string, attached: boolean };
+export type AttachResult = { id: BitId, attached: boolean };
 export type AttachResults = Array<AttachResult>;
 
 export default (function attachEnvs(
   consumer: Consumer,
-  ids: string[],
+  ids: BitId[],
   { compiler, tester }: { compiler: boolean, tester: boolean }
 ): AttachResults {
   const results = ids.map((id) => {

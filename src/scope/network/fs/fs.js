@@ -39,16 +39,17 @@ export default class Fs implements Network {
     return put({ path: this.scopePath, componentObjects: components });
   }
 
-  deleteMany(bitIds: Array<BitId>, force: boolean): Promise<ComponentObjects[]> {
-    return remove({ path: this.scopePath, ids: bitIds, force });
+  deleteMany(ids: string[], force: boolean): Promise<ComponentObjects[]> {
+    return remove({ path: this.scopePath, ids, force });
   }
 
-  deprecateMany(bitIds: Array<BitId>): Promise<ComponentObjects[]> {
-    return deprecate({ path: this.scopePath, ids: bitIds });
+  deprecateMany(ids: string[]): Promise<ComponentObjects[]> {
+    return deprecate({ path: this.scopePath, ids });
   }
 
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
-    return fetch(this.scopePath, bitIds, noDependencies).then((bitsMatrix) => {
+    const idsStr = bitIds.serialize();
+    return fetch(this.scopePath, idsStr, noDependencies).then((bitsMatrix) => {
       if (noDependencies) return bitsMatrix;
       return flatten(bitsMatrix);
     });

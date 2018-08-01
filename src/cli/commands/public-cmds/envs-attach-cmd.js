@@ -22,7 +22,7 @@ export default class EnvsAttach extends Command {
 
   report(attachResults: AttachResults): string {
     const successAttached = attachResults.filter(result => result.attached);
-    const successAttachedNames = successAttached.map(val => val.id);
+    const successAttachedNames = successAttached.map(val => val.id.toString());
 
     return `the following components has been attached to the workspace environments:\n${successAttachedNames.join(
       '\n'
