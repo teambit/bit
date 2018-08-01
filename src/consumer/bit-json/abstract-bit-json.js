@@ -45,6 +45,7 @@ export type AbstractBitJsonProps = {
   tester?: string | Testers,
   dependencies?: Object,
   devDependencies?: Object,
+  envDependencies?: Object,
   lang?: string,
   bindingPrefix?: string,
   extensions?: Extensions
@@ -56,6 +57,7 @@ export default class AbstractBitJson {
   _tester: Testers | string;
   dependencies: { [string]: string };
   devDependencies: { [string]: string };
+  envDependencies: { [string]: string };
   lang: string;
   bindingPrefix: string;
   extensions: Extensions;
@@ -65,6 +67,7 @@ export default class AbstractBitJson {
     tester,
     dependencies,
     devDependencies,
+    envDependencies,
     lang,
     bindingPrefix,
     extensions
@@ -73,6 +76,7 @@ export default class AbstractBitJson {
     this._tester = tester || {};
     this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
     this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
+    this.envDependencies = envDependencies || DEFAULT_DEPENDENCIES;
     this.lang = lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.extensions = extensions || DEFAULT_EXTENSIONS;
