@@ -557,7 +557,7 @@ export default class Consumer {
     // update bitmap with the new version
     const taggedComponentIds = taggedComponents.map((component: Component) => {
       this.bitMap.updateComponentId(component.id);
-      const { detachedCompiler, detachedTester } = component;
+      const { detachedCompiler, detachedTester } = component.pendingVersion;
       this.bitMap.setDetachedCompilerAndTester(component.id, { detachedCompiler, detachedTester });
       return component.id;
     });
