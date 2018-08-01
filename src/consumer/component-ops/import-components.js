@@ -42,7 +42,7 @@ export type ImportStatus = 'added' | 'updated' | 'up to date';
 export type ImportDetails = { id: string, versions: string[], status: ImportStatus, filesStatus: ?FilesStatus };
 export type ImportResult = Promise<{
   dependencies: ComponentWithDependencies[],
-  envDependencies?: Component[],
+  envComponents?: Component[],
   importDetails: ImportDetails[]
 }>;
 

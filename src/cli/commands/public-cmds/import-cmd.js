@@ -132,13 +132,13 @@ export default class Import extends Command {
 
   report({
     dependencies,
-    envDependencies,
+    envComponents,
     importDetails,
     warnings,
     displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
-    envDependencies?: Component[],
+    envComponents?: Component[],
     importDetails: ImportDetails[],
     warnings?: {
       notInPackageJson: [],
@@ -148,7 +148,7 @@ export default class Import extends Command {
     displayDependencies?: boolean
   }): string {
     let dependenciesOutput;
-    let envDependenciesOutput;
+    let envComponentsOutput;
 
     if (dependencies && !R.isEmpty(dependencies)) {
       const components = dependencies.map(R.prop('component'));
@@ -179,18 +179,18 @@ export default class Import extends Command {
       dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
     }
 
-    if (envDependencies && !R.isEmpty(envDependencies)) {
-      envDependenciesOutput = immutableUnshift(
-        envDependencies.map(envDependency => formatPlainComponentItem(envDependency.component)),
+    if (envComponents && !R.isEmpty(envComponents)) {
+      envComponentsOutput = immutableUnshift(
+        envComponents.map(envDependency => formatPlainComponentItem(envDependency.component)),
         chalk.green('the following component environments were installed')
       ).join('\n');
     }
 
     const getImportOutput = () => {
-      if (dependenciesOutput && !envDependenciesOutput) return dependenciesOutput;
-      if (!dependenciesOutput && envDependenciesOutput) return envDependenciesOutput;
-      if (dependenciesOutput && envDependenciesOutput) {
-        return `${dependenciesOutput}\n\n${envDependenciesOutput}`;
+      if (dependenciesOutput && !envComponentsOutput) return dependenciesOutput;
+      if (!dependenciesOutput && envComponentsOutput) return envComponentsOutput;
+      if (dependenciesOutput && envComponentsOutput) {
+        return `${dependenciesOutput}\n\n${envComponentsOutput}`;
       }
 
       return chalk.yellow('nothing to import');
