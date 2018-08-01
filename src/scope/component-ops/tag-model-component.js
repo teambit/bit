@@ -22,6 +22,7 @@ import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
+import { dependenciesEnvsResolver } from '../../consumer/component/dependencies/dependency-resolver';
 
 function buildComponentsGraph(components: Component[]) {
   const graphDeps = new Graph();
@@ -93,6 +94,7 @@ async function setFutureVersions(
     componentsToTag.map(async (componentToTag) => {
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+      componentToTag.usedVersion = componentToTag.version;
       componentToTag.version = version;
     })
   );
@@ -237,6 +239,15 @@ export default (async function tagModelComponent({
       }
     }
   }
+
+  // check compiler dependencies
+  const envsDependenciesP = componentsToBuildAndTest.map(async (component) => {
+    if (component.compiler && component.compiler.files) {
+      const filesPaths = component.compiler.files.map(file => file.path);
+      await dependenciesEnvsResolver(consumer, filesPaths, component.bindingPrefix);
+    }
+  });
+  await Promise.all(envsDependenciesP); // todo: implement.
 
   logger.debug('scope.putMany: sequentially persist all components');
   Analytics.addBreadCrumb('scope.putMany', 'scope.putMany: sequentially persist all components');

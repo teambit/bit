@@ -30,7 +30,9 @@ export type ComponentMapData = {
   origin: ComponentOrigin,
   dependencies?: string[],
   mainDistFile?: PathLinux,
-  originallySharedDir?: PathLinux
+  originallySharedDir?: PathLinux,
+  detachedCompiler?: ?boolean,
+  detachedTester?: ?boolean
 };
 
 export type PathChange = { from: PathLinux, to: PathLinux };
@@ -48,6 +50,9 @@ export default class ComponentMap {
   dependencies: ?(string[]); // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  // wether the compiler / tester are detached from the workspace global configuration
+  detachedCompiler: ?boolean;
+  detachedTester: ?boolean;
   constructor({
     files,
     mainFile,
@@ -56,7 +61,9 @@ export default class ComponentMap {
     origin,
     dependencies,
     mainDistFile,
-    originallySharedDir
+    originallySharedDir,
+    detachedCompiler,
+    detachedTester
   }: ComponentMapData) {
     this.files = files;
     this.mainFile = mainFile;
@@ -66,6 +73,8 @@ export default class ComponentMap {
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
     this.originallySharedDir = originallySharedDir;
+    this.detachedCompiler = detachedCompiler;
+    this.detachedTester = detachedTester;
   }
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {

@@ -40,6 +40,7 @@ import removeFile from './fs-remove-file';
 import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import allSettled from './promise-all-settled';
 import values from './object/values';
+import sortObject from './object/sort';
 import glob from './glob';
 import promisify from './promisify';
 import inflate from './zlib-inflate';
@@ -89,6 +90,7 @@ export {
   mapToObject,
   rmDir,
   filterObject,
+  sortObject,
   isString,
   getStringifyArgs,
   isNumeric,

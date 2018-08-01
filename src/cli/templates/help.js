@@ -46,6 +46,7 @@ const baseTemplate = (extensionsTemplate) => {
     ${chalk.cyan(
     'test'
   )}       test any set of components with configured tester (component tester or as defined in bit.json)
+  ${chalk.cyan('  envs-attach')}attach workspace environments to components
 
   ${chalk.underline('general commands')}
     ${chalk.cyan('login')}      log the CLI into bitsrc.io

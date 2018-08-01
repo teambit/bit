@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- new envs-attach command to attach component's envs to workspace envs
+- automatically detach envs of component when changed from imported workspace
+
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 
 ### New
