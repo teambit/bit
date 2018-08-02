@@ -4,7 +4,7 @@ import R from 'ramda';
 import format from 'string-format';
 import ConsumerComponent from '../component/consumer-component';
 import ComponentBitJson from '../bit-json';
-import { sharedStartOfArray, removeEmptyDir } from '../../utils';
+import { sharedStartOfArray, removeEmptyDir, pathNormalizeToLinux } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { COMPONENT_DIR } from '../../constants';
 import BitMap from '../bit-map';
@@ -21,26 +21,27 @@ export default (async function ejectConf(
 ): Promise<EjectConfResult> {
   const oldConfigDir = R.path(['componentMap', 'configDir'], component);
   const componentMap = component.componentMap;
+  let linuxConfigDir = pathNormalizeToLinux(configDir);
   if (!componentMap) {
     throw new GeneralError('could not find component in the .bitmap file');
   }
   const trackDir = componentMap.getTrackDir();
-  if (!trackDir && configDir.includes(`{${COMPONENT_DIR}}`)) {
+  if (!trackDir && linuxConfigDir.includes(`{${COMPONENT_DIR}}`)) {
     throw new EjectNoDir(component.id.toStringWithoutVersion());
   }
   // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
   // (To better support bit move for example)
-  if (trackDir && configDir.startsWith(trackDir)) {
-    configDir = configDir.replace(trackDir, `{${COMPONENT_DIR}}`);
+  if (trackDir && linuxConfigDir.startsWith(trackDir)) {
+    linuxConfigDir = linuxConfigDir.replace(trackDir, `{${COMPONENT_DIR}}`);
   }
-  if (!configDir.startsWith(`{${COMPONENT_DIR}}`)) {
-    const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
+  if (!linuxConfigDir.startsWith(`{${COMPONENT_DIR}}`)) {
+    const configDirToValidate = _getDirToValidateAgainsetOtherComps(linuxConfigDir);
     bitMap.validateConfigDir(component.id.toStringWithoutVersion(), configDirToValidate);
   }
-  const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir;
+  const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== linuxConfigDir;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
-  const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
-  const resolvedConfigDirFullPath = path.join(consumerPath, resolvedConfigDir);
+  const resolvedConfigDir = format(linuxConfigDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
+  const resolvedConfigDirFullPath = path.normalize(path.join(consumerPath, resolvedConfigDir));
   const ejectedCompilerDirectoryP = component.compiler
     ? await component.compiler.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
     : '';
@@ -64,7 +65,7 @@ export default (async function ejectConf(
       await removeEmptyDir(oldBitJsonDirFullPath);
     }
   }
-  return { id: component.id.toStringWithoutVersion(), ejectedPath: configDir, ejectedFullPath: bitJsonDir };
+  return { id: component.id.toStringWithoutVersion(), ejectedPath: linuxConfigDir, ejectedFullPath: bitJsonDir };
 });
 
 const writeBitJson = async (
