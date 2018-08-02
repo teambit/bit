@@ -293,7 +293,7 @@ export default class Component {
     configDir: PathOsBased,
     override?: boolean = true
   ): Promise<EjectConfResult> {
-    this.componentMap = this.componentMap || this.getComponentMap(bitMap);
+    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
       throw new GeneralError('could not find component in the .bitmap file');
