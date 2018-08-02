@@ -9,7 +9,7 @@ import type { ExtensionOptions } from '../../extensions/extension';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
-import type { PathOsBased } from '../../utils/path';
+import type { PathOsBased, PathLinux } from '../../utils/path';
 import { BitJsonAlreadyExists } from './exceptions';
 import {
   BIT_JSON,
@@ -23,6 +23,10 @@ import {
 export type RegularExtensionObject = {
   rawConfig: Object,
   options: ExtensionOptions
+};
+
+export type EnvFile = {
+  [string]: PathLinux
 };
 
 export type EnvExtensionObject = {
@@ -221,7 +225,11 @@ export default class AbstractBitJson {
     override?: boolean,
     throws?: boolean
   }): Promise<boolean> {
-    const isExisting = await AbstractBitJson.hasExisting(bitDir);
+    let isExisting = false;
+    const isBitDirExisting = await fs.exists(bitDir);
+    if (isBitDirExisting) {
+      isExisting = await AbstractBitJson.hasExisting(bitDir);
+    }
     if (!override && isExisting) {
       if (throws) {
         throw new BitJsonAlreadyExists();
@@ -229,7 +237,7 @@ export default class AbstractBitJson {
       return false;
     }
 
-    return fs.writeFile(AbstractBitJson.composePath(bitDir), this.toJson());
+    return fs.outputJson(AbstractBitJson.composePath(bitDir), this.toPlainObject(), { spaces: 4 });
   }
 
   toJson(readable: boolean = true) {
@@ -243,6 +251,13 @@ export default class AbstractBitJson {
 
   static async hasExisting(bitPath: string): Promise<boolean> {
     return fs.exists(this.composePath(bitPath));
+  }
+
+  static async removeIfExist(bitPath: string): Promise<boolean> {
+    if (fs.exists(this.composePath(bitPath))) {
+      return fs.remove(this.composePath(bitPath));
+    }
+    return false;
   }
 }
 

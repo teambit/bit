@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import format from 'string-format';
 import fs from 'fs-extra';
 import R from 'ramda';
 import json from 'comment-json';
@@ -12,20 +13,26 @@ import {
   DEFAULT_SEPARATOR,
   DEFAULT_INDEX_EXTS,
   BIT_VERSION,
-  VERSION_DELIMITER
+  VERSION_DELIMITER,
+  COMPONENT_DIR
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside } from '../../utils';
+import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside, stripTrailingChar } from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
+import InvalidConfigDir from './exceptions/invalid-config-dir';
+import ComponentBitJson from '../bit-json';
+import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
+import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
 export type PathChangeResult = { id: BitId, changes: PathChange[] };
+export type IgnoreFilesDirs = { files: PathLinux[], dirs: PathLinux[] };
 
 export default class BitMap {
   projectRoot: string;
@@ -35,15 +42,17 @@ export default class BitMap {
   version: string;
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
+  markAsChangedBinded: Function;
 
-  constructor(projectRoot: string, mapPath: string, components: BitMapComponents, version: string) {
+  constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
     this.mapPath = mapPath;
-    this.components = components;
+    this.components = {};
     this.hasChanged = false;
     this.version = version;
     this.paths = {};
     this.pathsLowerCase = {};
+    this.markAsChangedBinded = this.markAsChanged.bind(this);
   }
 
   markAsChanged() {
@@ -116,10 +125,9 @@ export default class BitMap {
       return null;
     };
     const bitMapLocation = getBitMapLocation();
-    const components = {};
     if (!bitMapLocation) {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
-      return new BitMap(dirPath, standardLocation, components, BIT_VERSION);
+      return new BitMap(dirPath, standardLocation, BIT_VERSION);
     }
     const mapFileContent = fs.readFileSync(bitMapLocation);
     let componentsJson;
@@ -132,21 +140,10 @@ export default class BitMap {
     const version = componentsJson.version;
     // Don't treat version like component
     delete componentsJson.version;
-    Object.keys(componentsJson).forEach((componentId) => {
-      const componentFromJson = componentsJson[componentId];
-      const idHasScope = (): boolean => {
-        if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
-        if ('exported' in componentFromJson) {
-          return componentFromJson.exported;
-        }
-        // backward compatibility
-        return BitId.parseObsolete(componentId).hasScope();
-      };
-      componentFromJson.id = BitId.parse(componentId, idHasScope());
-      components[componentId] = ComponentMap.fromJson(componentsJson[componentId]);
-    });
 
-    return new BitMap(dirPath, bitMapLocation, components, version);
+    const bitMap = new BitMap(dirPath, bitMapLocation, version);
+    bitMap.loadComponents(componentsJson);
+    return bitMap;
   }
 
   /**
@@ -174,6 +171,74 @@ export default class BitMap {
     }
   }
 
+  /**
+   * Return files and dirs which need to be ignored since they are config files / dirs
+   * @param {*} configDir
+   * @param {*} rootDir
+   * @param {*} compilerFilesPaths
+   * @param {*} testerFilesPaths
+   */
+  static resolveIgnoreFilesAndDirs(
+    configDir?: PathLinux,
+    rootDir: PathLinux,
+    compilerFilesPaths: PathLinux[] = [],
+    testerFilesPaths: PathLinux[] = []
+  ) {
+    const res = {
+      files: [],
+      dirs: []
+    };
+    if (!configDir) return res;
+    if (configDir.startsWith(`{${COMPONENT_DIR}}`)) {
+      const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
+      const allEnvFilesPaths = compilerFilesPaths.concat(testerFilesPaths);
+      allEnvFilesPaths.forEach((file) => {
+        const ignoreFile = pathJoinLinux(resolvedConfigDir, file);
+        res.files.push(ignoreFile);
+      });
+      const configDirWithoutCompDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '{ENV_TYPE}' });
+      // There is nested folders to ignore
+      if (configDirWithoutCompDir !== '' && configDirWithoutCompDir !== '/') {
+        const configDirWithoutCompAndEnvsDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '' });
+        // There is nested folder which is not the env folders - ignore it completely
+        if (configDirWithoutCompAndEnvsDir !== '' && configDirWithoutCompAndEnvsDir !== '/') {
+          const resolvedDirWithoutEnvType = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
+          res.dirs.push(stripTrailingChar(resolvedDirWithoutEnvType, '/'));
+        } else {
+          const resolvedCompilerConfigDir = format(configDir, {
+            [COMPONENT_DIR]: rootDir,
+            ENV_TYPE: COMPILER_ENV_TYPE
+          });
+          const resolvedTesterConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
+          res.dirs.push(resolvedCompilerConfigDir, resolvedTesterConfigDir);
+        }
+      }
+    } else {
+      // Ignore the whole dir since this dir is only for config files
+      const dirToIgnore = format(configDir, { ENV_TYPE: '' });
+      res.dirs.push(dirToIgnore);
+    }
+    return res;
+  }
+
+  loadComponents(componentsJson: Object) {
+    Object.keys(componentsJson).forEach((componentId) => {
+      const componentFromJson = componentsJson[componentId];
+      const idHasScope = (): boolean => {
+        if (componentFromJson.origin !== COMPONENT_ORIGINS.AUTHORED) return true;
+        if ('exported' in componentFromJson) {
+          return componentFromJson.exported;
+        }
+        // backward compatibility
+        return BitId.parseObsolete(componentId).hasScope();
+      };
+      componentFromJson.id = BitId.parse(componentId, idHasScope());
+      const componentMap = ComponentMap.fromJson(componentsJson[componentId]);
+      componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
+      this.components[componentId] = componentMap;
+    });
+  }
+
   getAllComponents(origin?: ComponentOrigin | ComponentOrigin[]): BitMapComponents {
     if (!origin) return this.components;
     const isOriginMatch = component => component.origin === origin;
@@ -181,6 +246,47 @@ export default class BitMap {
     const isOriginMatchArray = component => origin.includes(component.origin);
     const filter = Array.isArray(origin) ? isOriginMatchArray : isOriginMatch;
     return R.filter(filter, this.components);
+  }
+
+  /**
+   * We should ignore ejected config files and dirs
+   * Files might be on the root dir then we need to ignore them directly by taking them from the bit.json
+   * They might be in internal dirs then we need to ignore the dir completely
+   */
+  getConfigDirsAndFilesToIgnore(consumerPath: PathLinux): IgnoreFilesDirs {
+    const res = {
+      files: [],
+      dirs: []
+    };
+    // $FlowFixMe
+    R.values(this.components).forEach((component: ComponentMap) => {
+      const configDir = component.configDir;
+      const trackDir = component.getTrackDir();
+      if (configDir && trackDir) {
+        const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
+        const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
+        const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
+        const compilerObj = R.values(componentBitJson.compiler)[0];
+        const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
+        const testerObj = R.values(componentBitJson.tester)[0];
+        const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
+        const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
+        const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];
+        // R.values above might return array of something which is not string
+        // Which will not be ok with the input of resolveIgnoreFilesAndDirs
+        const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
+          configDir,
+          trackDir,
+          // $FlowFixMe - see comment above
+          compilerFiles,
+          // $FlowFixMe - see comment above
+          testerFiles
+        );
+        res.files = res.files.concat(toIgnore.files);
+        res.dirs = res.dirs.concat(toIgnore.dirs);
+      }
+    });
+    return res;
   }
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {
@@ -294,6 +400,31 @@ export default class BitMap {
   getAuthoredExportedComponents(): BitId[] {
     const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter(id => id.hasScope());
+  }
+
+  validateConfigDir(compId: string, configDir: PathLinux): boolean {
+    const components = this.getAllComponents();
+    if (configDir.startsWith('./')) {
+      configDir = configDir.replace('./', '');
+    }
+    const comps = R.pickBy((component) => {
+      if (pathIsInside(configDir, component.getTrackDir())) {
+        return true;
+      }
+      const compConfigDir = component.configDir ? format(component.configDir, { ENV_TYPE: '' }) : null;
+      if (compConfigDir && pathIsInside(configDir, compConfigDir)) {
+        return true;
+      }
+      return false;
+    }, components);
+    if (!R.isEmpty(comps)) {
+      const id = R.keys(comps)[0];
+      const stringId = BitId.parse(id).toStringWithoutVersion();
+      if (compId !== stringId) {
+        throw new InvalidConfigDir(stringId);
+      }
+    }
+    return true;
   }
 
   _makePathRelativeToProjectRoot(pathToChange: PathRelative): PathOsBasedRelative {
@@ -473,6 +604,7 @@ export default class BitMap {
     origin,
     parent,
     rootDir,
+    configDir,
     trackDir,
     override,
     detachedCompiler,
@@ -485,6 +617,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
+    configDir?: string,
     trackDir?: PathOsBased,
     override: boolean,
     detachedCompiler: ?boolean,
@@ -527,7 +660,9 @@ export default class BitMap {
         this.deleteOlderVersionsOfComponent(componentId);
       }
       // $FlowFixMe not easy to fix, we can't instantiate ComponentMap with mainFile because we don't have it yet
-      this.setComponent(componentId, new ComponentMap({ files, origin }));
+      const componentMap = new ComponentMap({ files, origin });
+      componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
+      this.setComponent(componentId, componentMap);
       this.components[componentIdStr].mainFile = this._getMainFile(
         pathNormalizeToLinux(mainFile),
         this.components[componentIdStr]
@@ -540,6 +675,9 @@ export default class BitMap {
       // when running the command from an inner directory we must not run _makePathRelativeToProjectRoot.
       const rootRelative = path.isAbsolute(rootDir) ? this._makePathRelativeToProjectRoot(rootDir) : rootDir;
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
+    }
+    if (configDir) {
+      this.components[componentIdStr].configDir = pathNormalizeToLinux(configDir);
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);

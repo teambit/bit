@@ -12,6 +12,7 @@ export default class EnvsAttach extends Command {
     ['c', 'compiler', 'attach workspace compiler environments to components']
   ];
   loader = true;
+  migration = true;
 
   action(
     [ids]: [string[]],

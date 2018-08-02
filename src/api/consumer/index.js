@@ -26,6 +26,7 @@ import checkout from './lib/checkout';
 import merge from './lib/merge';
 import diff from './lib//diff';
 import attachEnvs from './lib/envs-attach';
+import ejectConf from './lib/eject-conf';
 import migrate from './lib/migrate';
 import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
@@ -64,6 +65,7 @@ export {
   merge,
   diff,
   attachEnvs,
+  ejectConf,
   migrate,
   login
 };
