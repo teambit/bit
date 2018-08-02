@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
-import Component from '../component';
+import ConsumerComponent from '../component';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathOsBased } from '../../utils/path';
@@ -34,8 +34,8 @@ export type CheckoutProps = {
   ignoreDist: boolean
 };
 type ComponentStatus = {
-  componentFromFS?: Component,
-  componentFromModel?: Component,
+  componentFromFS?: ConsumerComponent,
+  componentFromModel?: Version,
   id: BitId,
   failureMessage?: string,
   mergeResults?: ?MergeResultsThreeWay
@@ -47,7 +47,7 @@ export default (async function checkoutVersion(
 ): Promise<ApplyVersionResults> {
   const { version, ids, promptMergeOptions } = checkoutProps;
   const { components } = await consumer.loadComponents(ids);
-  const allComponentsP = components.map((component: Component) => {
+  const allComponentsP = components.map((component: ConsumerComponent) => {
     return getComponentStatus(consumer, component, checkoutProps);
   });
   const allComponents: ComponentStatus[] = await Promise.all(allComponentsP);
@@ -77,7 +77,7 @@ export default (async function checkoutVersion(
 
 async function getComponentStatus(
   consumer: Consumer,
-  component: Component,
+  component: ConsumerComponent,
   checkoutProps: CheckoutProps
 ): Promise<ComponentStatus> {
   const { version, latestVersion, reset } = checkoutProps;
@@ -153,7 +153,7 @@ async function getComponentStatus(
 async function applyVersion(
   consumer: Consumer,
   id: BitId,
-  componentFromFS: Component,
+  componentFromFS: ConsumerComponent,
   mergeResults: ?MergeResultsThreeWay,
   checkoutProps: CheckoutProps
 ): Promise<ApplyVersionResult> {
@@ -164,7 +164,6 @@ async function applyVersion(
       filesStatus[pathNormalizeToLinux(file.relative)] = FileStatus.unchanged;
     });
     consumer.bitMap.updateComponentId(id);
-    consumer.bitMap.hasChanged = true;
     return { id, filesStatus };
   }
   const componentsWithDependencies = await consumer.scope.getMany([id]);

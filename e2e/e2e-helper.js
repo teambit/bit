@@ -447,6 +447,13 @@ export default class Helper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
+  envsAttach(ids: string[] = ['bar/foo'], options: ?Object) {
+    const joinedIds = ids.join(' ');
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit envs-attach ${joinedIds} ${value}`);
+  }
   setHubDomain(domain: string = 'hub.bitsrc.io') {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }

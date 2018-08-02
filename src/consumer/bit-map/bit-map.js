@@ -69,6 +69,44 @@ export default class BitMap {
     this.markAsChanged();
   }
 
+  setComponentProp(id: BitId, propName: $Keys<ComponentMap>, val: any) {
+    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    // $FlowFixMe
+    componentMap[propName] = val;
+    this.markAsChanged();
+    return componentMap;
+  }
+
+  removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
+    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    // $FlowFixMe
+    delete componentMap[propName];
+    this.markAsChanged();
+    return componentMap;
+  }
+
+  attachEnv(id: BitId, { compiler, tester }: { compiler: boolean, tester: boolean }) {
+    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
+    // For authored component just make sure to remove the detached
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      if (compiler) {
+        this.removeComponentProp(id, 'detachedCompiler');
+      }
+      if (tester) {
+        this.removeComponentProp(id, 'detachedTester');
+      }
+      return true;
+    }
+    // For imported components we want to set the detached to false (which will cause the env loading from the workspace bit.json)
+    if (compiler) {
+      this.setComponentProp(id, 'detachedCompiler', false);
+    }
+    if (tester) {
+      this.setComponentProp(id, 'detachedTester', false);
+    }
+    return true;
+  }
+
   static load(dirPath: PathOsBasedAbsolute): BitMap {
     const standardLocation = path.join(dirPath, BIT_MAP);
     const oldLocation = path.join(dirPath, OLD_BIT_MAP);
@@ -437,6 +475,8 @@ export default class BitMap {
     rootDir,
     trackDir,
     override,
+    detachedCompiler,
+    detachedTester,
     originallySharedDir
   }: {
     componentId: BitId,
@@ -447,6 +487,8 @@ export default class BitMap {
     rootDir?: string,
     trackDir?: PathOsBased,
     override: boolean,
+    detachedCompiler: ?boolean,
+    detachedTester: ?boolean,
     originallySharedDir?: PathLinux
   }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
@@ -501,6 +543,12 @@ export default class BitMap {
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
+    }
+    if (detachedCompiler) {
+      this.components[componentIdStr].detachedCompiler = detachedCompiler;
+    }
+    if (detachedTester) {
+      this.components[componentIdStr].detachedTester = detachedTester;
     }
     this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {
@@ -569,6 +617,27 @@ export default class BitMap {
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
     this.markAsChanged();
+  }
+
+  setDetachedCompiler(id: BitId, val: ?boolean) {
+    if (val === null || val === undefined) {
+      return this.removeComponentProp(id, 'detachedCompiler');
+    }
+    return this.setComponentProp(id, 'detachedCompiler', val);
+  }
+  setDetachedTester(id: BitId, val: ?boolean) {
+    if (val === null || val === undefined) {
+      return this.removeComponentProp(id, 'detachedTester');
+    }
+    return this.setComponentProp(id, 'detachedTester', val);
+  }
+
+  setDetachedCompilerAndTester(
+    id: BitId,
+    { detachedCompiler, detachedTester }: { detachedCompiler: ?boolean, detachedTester: ?boolean }
+  ) {
+    this.setDetachedCompiler(id, detachedCompiler);
+    return this.setDetachedTester(id, detachedTester);
   }
 
   isExistWithSameVersion(id: BitId) {

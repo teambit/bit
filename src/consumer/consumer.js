@@ -35,7 +35,7 @@ import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathNormalizeToLinux } from '../utils';
+import { getLatestVersionNumber, pathNormalizeToLinux, sortObject } from '../utils';
 import { loadDependenciesForComponent, updateDependenciesVersions } from './component/dependencies/dependency-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
@@ -406,7 +406,8 @@ export default class Consumer {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
       const { version } = await this.scope.sources.consumerComponentToVersion({
-        consumerComponent: componentFromFileSystem
+        consumerComponent: componentFromFileSystem,
+        versionFromModel: componentFromModel
       });
 
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
@@ -427,18 +428,6 @@ export default class Consumer {
       };
       copyDependenciesVersionsFromModelToFS();
       copyDependenciesVersionsFromModelToFS(true);
-
-      /*
-       sort packageDependencies for comparing
-       */
-      const sortObject = (obj) => {
-        return Object.keys(obj)
-          .sort()
-          .reduce(function (result, key) {
-            result[key] = obj[key];
-            return result;
-          }, {});
-      };
 
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
@@ -514,6 +503,9 @@ export default class Consumer {
            Maybe the component was interrupted during the export and as a result the bitmap file wasn't updated with the new version
            `);
       }
+      // TODO: instead of doing that like this we should use:
+      // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.scope.objects);
+      // it looks like it's exactly the same code but it's not working from some reason
       const versionRef = componentFromModel.versions[versionFromFs];
       if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${id}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
@@ -563,11 +555,13 @@ export default class Consumer {
     });
 
     // update bitmap with the new version
-    const taggedComponentIds = taggedComponents.map((component) => {
+    const taggedComponentIds = taggedComponents.map((component: Component) => {
       this.bitMap.updateComponentId(component.id);
+      const { detachedCompiler, detachedTester } = component.pendingVersion;
+      this.bitMap.setDetachedCompilerAndTester(component.id, { detachedCompiler, detachedTester });
       return component.id;
     });
-    const autoTaggedComponentIds = autoTaggedComponents.map((component) => {
+    const autoTaggedComponentIds = autoTaggedComponents.map((component: ModelComponent) => {
       const id = component.toBitId();
       const newId = id.changeVersion(component.latest());
       this.bitMap.updateComponentId(newId);
