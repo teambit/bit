@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
-import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
+import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy, sharedStartOfArray } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -11,9 +11,11 @@ import Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
-import docsParser, { Doclet } from '../../jsdoc/parser';
-import specsRunner from '../../specs-runner';
+import docsParser from '../../jsdoc/parser';
+import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
+import ejectConf from '../component-ops/eject-conf';
+import type { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -21,15 +23,21 @@ import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
 import BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
-import type { ComponentOrigin, DetachState } from '../bit-map/component-map';
+import type { ComponentOrigin } from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
-import { BEFORE_IMPORT_ENVIRONMENT, BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
+import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
-import { DEFAULT_LANGUAGE, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME } from '../../constants';
+import {
+  DEFAULT_LANGUAGE,
+  DEFAULT_BINDINGS_PREFIX,
+  COMPONENT_ORIGINS,
+  DEFAULT_DIST_DIRNAME,
+  COMPONENT_DIR
+} from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
@@ -48,6 +56,8 @@ import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../extensions/env-extension';
+import EjectToWorkspace from './exceptions/eject-to-workspace';
+import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
@@ -277,39 +287,36 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(bitDir: string, ejectedEnvsDirectory: string, override?: boolean = true): Promise<void> {
-    const ejectedCompilerDirectoryP = this.compiler
-      ? await this.compiler.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
-      : '';
-    const ejectedTesterDirectoryP = this.tester
-      ? await this.tester.writeFilesToFs({ bitDir, ejectedEnvsDirectory })
-      : '';
-    const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
-      ejectedCompilerDirectoryP,
-      ejectedTesterDirectoryP
-    ]);
-    return this.writeBitJson(bitDir, ejectedCompilerDirectory, ejectedTesterDirectory, override);
-  }
-
-  writeBitJson(
-    bitDir: string,
-    ejectedCompilerDirectory: string,
-    ejectedTesterDirectory: string,
+  async writeConfig(
+    consumerPath: PathOsBased,
+    bitMap: BitMap,
+    configDir: PathOsBased,
     override?: boolean = true
-  ): Promise<ComponentBitJson> {
-    return new ComponentBitJson({
-      version: this.version,
-      scope: this.scope,
-      lang: this.lang,
-      bindingPrefix: this.bindingPrefix,
-      compiler: this.compiler ? this.compiler.toBitJsonObject(ejectedCompilerDirectory) : {},
-      tester: this.tester ? this.tester.toBitJsonObject(ejectedTesterDirectory) : {},
-      dependencies: this.dependencies.asWritableObject(),
-      devDependencies: this.devDependencies.asWritableObject(),
-      packageDependencies: this.packageDependencies,
-      devPackageDependencies: this.devPackageDependencies,
-      peerPackageDependencies: this.peerPackageDependencies
-    }).write({ bitDir, override });
+  ): Promise<EjectConfResult> {
+    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
+    const componentMap = this.componentMap;
+    if (!componentMap) {
+      throw new GeneralError('could not find component in the .bitmap file');
+    }
+    if (configDir === '.' || configDir === './') {
+      throw new EjectToWorkspace();
+    }
+    // Nothing is detached.. no reason to eject
+    if (
+      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
+        !componentMap.detachedCompiler &&
+        !componentMap.detachedTester) ||
+      // Need to be check for false and not falsy for imported components
+      (componentMap.detachedCompiler === false && componentMap.detachedTester === false)
+    ) {
+      throw new EjectBoundToWorkspace();
+    }
+
+    const res = await ejectConf(this, consumerPath, bitMap, configDir, override);
+    if (this.componentMap) {
+      this.componentMap.setConfigDir(res.ejectedPath);
+    }
+    return res;
   }
 
   getPackageNameAndPath(): Promise<any> {
@@ -453,6 +460,7 @@ export default class Component {
   async _writeToComponentDir({
     bitDir,
     writeBitJson,
+    configDir,
     writePackageJson,
     consumer,
     override = true,
@@ -462,6 +470,7 @@ export default class Component {
   }: {
     bitDir: string,
     writeBitJson: boolean,
+    configDir?: string,
     writePackageJson: boolean,
     consumer?: Consumer,
     override?: boolean,
@@ -476,7 +485,10 @@ export default class Component {
     }
     if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson) await this.writeConfig(bitDir, consumer.dirStructure.ejectedEnvsDirStructure, override);
+    if (writeBitJson && consumer) {
+      const resolvedConfigDir = configDir || consumer.dirStructure.ejectedEnvsDirStructure;
+      await this.writeConfig(consumer.getPath(), consumer.bitMap, resolvedConfigDir, override);
+    }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
@@ -488,7 +500,13 @@ export default class Component {
     return this;
   }
 
-  _addComponentToBitMap(bitMap: BitMap, rootDir: string, origin: string, parent?: string): ComponentMap {
+  _addComponentToBitMap(
+    bitMap: BitMap,
+    rootDir: string,
+    origin: string,
+    parent?: string,
+    configDir?: string
+  ): ComponentMap {
     const filesForBitMap = this.files.map((file) => {
       return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
     });
@@ -498,6 +516,7 @@ export default class Component {
       files: filesForBitMap,
       mainFile: this.mainFile,
       rootDir,
+      configDir,
       detachedCompiler: this.detachedCompiler,
       detachedTester: this.detachedTester,
       origin,
@@ -562,7 +581,8 @@ export default class Component {
    */
   async write({
     bitDir,
-    writeBitJson = true,
+    writeBitJson = false,
+    configDir,
     writePackageJson = true,
     override = true,
     origin,
@@ -575,6 +595,7 @@ export default class Component {
   }: {
     bitDir?: string,
     writeBitJson?: boolean,
+    configDir?: boolean,
     writePackageJson?: boolean,
     override?: boolean,
     origin?: string,
@@ -612,7 +633,7 @@ export default class Component {
     }
     if (!componentMap) {
       // if there is no componentMap, the component is new to this project and should be written to bit.map
-      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
+      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
     }
     if (!consumer.shouldDistsBeInsideTheComponent() && this.dists.isEmpty()) {
       // since the dists are set to be outside the components dir, the source files must be saved there
@@ -644,7 +665,7 @@ export default class Component {
       );
       fs.removeSync(oldLocation);
       bitMap.removeComponent(this.id);
-      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent);
+      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) writeBitJson = false;
@@ -652,6 +673,7 @@ export default class Component {
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
     const rootDir = componentMap.rootDir;
+    const resolvedConfigDir = configDir || componentMap.configDir;
 
     const componentMapExistWithSameVersion = bitMap.isExistWithSameVersion(this.id);
     const updateBitMap =
@@ -664,7 +686,7 @@ export default class Component {
         // so it's better to just remove the old record and add a new one
         bitMap.removeComponent(this.id);
       }
-      this._addComponentToBitMap(bitMap, rootDir, origin, parent);
+      this._addComponentToBitMap(bitMap, rootDir, origin, parent, resolvedConfigDir);
     }
 
     // Don't write the package.json for an authored component, because it's dependencies probably managed
@@ -673,6 +695,7 @@ export default class Component {
     await this._writeToComponentDir({
       bitDir: newBase,
       writeBitJson,
+      configDir: resolvedConfigDir,
       writePackageJson: actualWithPackageJson,
       consumer,
       override,
@@ -998,16 +1021,6 @@ export default class Component {
    */
   setOriginallySharedDir(): void {
     if (this.originallySharedDir !== undefined) return;
-    // taken from https://stackoverflow.com/questions/1916218/find-the-longest-common-starting-substring-in-a-set-of-strings
-    // It sorts the array, and then looks just at the first and last items
-    const sharedStartOfArray = (array) => {
-      const sortedArray = array.concat().sort();
-      const firstItem = sortedArray[0];
-      const lastItem = sortedArray[sortedArray.length - 1];
-      let i = 0;
-      while (i < firstItem.length && firstItem.charAt(i) === lastItem.charAt(i)) i += 1;
-      return firstItem.substring(0, i);
-    };
     const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
     const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
     const dependenciesPaths = this.dependencies.getSourcesPaths();
@@ -1140,6 +1153,9 @@ export default class Component {
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
+    let configDir = consumer.getPath();
+    const trackDir = componentMap.getTrackDir();
+    configDir = trackDir ? path.join(configDir, trackDir) : configDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
@@ -1148,6 +1164,7 @@ export default class Component {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
+      const origin = componentMap.origin;
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
@@ -1175,6 +1192,10 @@ export default class Component {
     };
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
+    if (componentMap.configDir) {
+      const resolvedBaseConfigDir = componentMap.getBaseConfigDir();
+      configDir = path.join(consumerPath, resolvedBaseConfigDir);
+    }
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
@@ -1182,14 +1203,14 @@ export default class Component {
     let componentBitJson: ComponentBitJson | typeof undefined;
     let componentBitJsonFileExist = false;
     let rawComponentBitJson;
-    if (bitDir !== consumerPath) {
-      componentBitJson = ComponentBitJson.loadSync(bitDir, consumerBitJson);
+    if (configDir !== consumerPath) {
+      componentBitJson = ComponentBitJson.loadSync(configDir, consumerBitJson);
       packageDependencies = componentBitJson.packageDependencies;
       devPackageDependencies = componentBitJson.devPackageDependencies;
       peerPackageDependencies = componentBitJson.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitJsonFileExist = await AbstractBitJson.hasExisting(bitDir);
+      componentBitJsonFileExist = await AbstractBitJson.hasExisting(configDir);
       if (componentBitJsonFileExist) {
         rawComponentBitJson = componentBitJson;
       }

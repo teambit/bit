@@ -440,10 +440,11 @@ export default class AddComponents {
     const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
       pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
-    const staticEjectedEnvsDirectory = this.consumer.dirStructure.staticEjectedEnvsDirStructure;
-    const staticEjectedEnvsDirectoryGlob = pathJoinLinux('**', staticEjectedEnvsDirectory, '**');
+    const configsToIgnore = this.bitMap.getConfigDirsAndFilesToIgnore(this.consumer.getPath());
+    const configDirs = configsToIgnore.dirs.map(dir => pathJoinLinux(dir, '**'));
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
-    ignoreList.push(staticEjectedEnvsDirectoryGlob);
+    ignoreList = ignoreList.concat(configsToIgnore.files);
+    ignoreList = ignoreList.concat(configDirs);
     return ignoreList;
   }
 

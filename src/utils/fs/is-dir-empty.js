@@ -1,10 +1,13 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
+import { promisify } from '../index';
 
-export default function isDirEmpty(dirPath: string, cb: (itDoes: boolean) => void) {
-  fs.readdir(dirPath, (err, files) => {
-    if (err) throw err;
-    if (!files.length) return cb(true);
-    return cb(false);
-  });
-}
+const readdir = promisify(fs.readdir);
+
+export default (async function isDirEmpty(dirPath: string): Promise<boolean> {
+  const files = await readdir(dirPath);
+  if (!files.length) {
+    return true;
+  }
+  return false;
+});

@@ -2,7 +2,9 @@
 
 import path from 'path';
 import R from 'ramda';
+import fs from 'fs-extra';
 import format from 'string-format';
+import pMapSeries from 'p-map-series';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
@@ -10,7 +12,7 @@ import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import { Repository } from '../scope/objects';
-import { pathJoinLinux } from '../utils';
+import { pathJoinLinux, removeEmptyDir } from '../utils';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 import { ComponentWithDependencies } from '../scope';
@@ -144,25 +146,37 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Write the env files to the file system according to the template dir
    * used for ejecting env for imported component
-   * @param {*} param0
+   * @param {*} param
    */
   async writeFilesToFs({
-    bitDir,
-    ejectedEnvsDirectory,
-    envType
+    configDir,
+    envType,
+    deleteOldFiles
   }: {
-    bitDir: string,
-    ejectedEnvsDirectory: string,
-    envType: EnvType
+    configDir: string,
+    envType: EnvType,
+    deleteOldFiles: boolean
   }): Promise<string> {
     Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
-    const resolvedEjectedEnvsDirectory = format(ejectedEnvsDirectory, { envType });
-    const newBase = path.join(bitDir, resolvedEjectedEnvsDirectory);
-    const writeP = this.files.map((file) => {
-      file.updatePaths({ newBase, newRelative: file.name });
-      return file.write();
+    const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
+    const writeP = [];
+    const deleteP = [];
+    const oldDirs = [];
+    this.files.forEach((file) => {
+      if (deleteOldFiles) {
+        oldDirs.push(path.dirname(file.path));
+        deleteP.push(fs.remove(file.path));
+      }
+      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.name });
+      writeP.push(file.write());
     });
-    await Promise.all(writeP);
+    await Promise.all(writeP.concat(deleteP));
+    if (deleteOldFiles) {
+      // Sorting it to make sure we will delete the inner dirs first
+      const sortedOldDirs = oldDirs.sort().reverse();
+      const deleteOldDirsP = pMapSeries(sortedOldDirs, removeEmptyDir);
+      await deleteOldDirsP;
+    }
     return resolvedEjectedEnvsDirectory;
   }
 
