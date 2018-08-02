@@ -4,6 +4,7 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
+import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const assertArrays = require('chai-arrays');
 
@@ -461,7 +462,7 @@ describe('bit status command', function () {
         });
         it('should show an error indicating the mainFile was deleting', () => {
           const output = helper.runCmd('bit status');
-          expect(output).to.have.string('invalid components');
+          expect(output).to.have.string(statusInvalidComponentsMsg);
           expect(output).to.have.string('main-file was removed');
         });
       });

@@ -55,6 +55,7 @@ import tagModelComponent from '../scope/component-ops/tag-model-component';
 import type { InvalidComponent } from './component/consumer-component';
 import MainFileRemoved from './component/exceptions/main-file-removed';
 import type { BitIdStr } from '../bit-id/bit-id';
+import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 
 type ConsumerProps = {
   projectPath: string,
@@ -320,6 +321,7 @@ export default class Consumer {
         if (
           err instanceof MissingFilesFromComponent ||
           err instanceof ComponentNotFoundInPath ||
+          err instanceof ExtensionFileNotFound ||
           err instanceof MainFileRemoved
         ) {
           invalidComponents.push({ id, error: err });
