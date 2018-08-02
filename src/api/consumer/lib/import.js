@@ -32,9 +32,9 @@ export default (async function importAction(
     if (!importOptions.ids.length) throw new GeneralError('you must specify component id for importing an environment');
     const idToImport = importOptions.ids[0];
     const bitIdToImport = BitId.parse(idToImport, true); // import without id is not supported
-    const envDependencies = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
-    if (!envDependencies.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
-    const id = envDependencies[0].component.id.toString();
+    const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
+    if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
+    const id = envComponents[0].component.id.toString();
     function writeToBitJsonIfNeeded() {
       if (environmentOptions.compiler) {
         consumer.bitJson.compiler = id;
@@ -69,7 +69,7 @@ export default (async function importAction(
       return Promise.resolve(true);
     }
     await writeToBitJsonIfNeeded();
-    return { envDependencies };
+    return { envComponents };
   }
 
   const consumer: Consumer = await loadConsumer();
@@ -77,7 +77,7 @@ export default (async function importAction(
   if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
     return importEnvironment(consumer);
   }
-  const { dependencies, envDependencies, importDetails } = await consumer.importComponents(importOptions);
+  const { dependencies, envComponents, importDetails } = await consumer.importComponents(importOptions);
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
     const componentMap = consumer.bitMap.getComponentIfExist(bitId);
@@ -91,13 +91,13 @@ export default (async function importAction(
 
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
-    envDependencies,
+    envComponents,
     consumer,
     installNpmPackages: importOptions.installNpmPackages
   });
   Analytics.setExtraData('num_components', bitIds.length);
   await consumer.onDestroy();
-  return { dependencies, envDependencies, importDetails, warnings };
+  return { dependencies, envComponents, importDetails, warnings };
 });
 
 // TODO: refactor to better use of semver

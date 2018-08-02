@@ -35,6 +35,7 @@ const fields = [
   'mainFile',
   'dependencies',
   'devDependencies',
+  'envDependencies',
   'packages',
   'devPackages',
   'peerDependencies',
@@ -54,11 +55,11 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
   } else {
     dependencyHeader.push(['Dependencies']);
   }
-  const getDependenciesRows = (dependencies, isDev: boolean = false) => {
+  const getDependenciesRows = (dependencies, title?: string) => {
     const dependencyRows = [];
     dependencies.forEach((dependency) => {
       let dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
-      dependencyId = isDev ? `${dependencyId} (dev)` : dependencyId;
+      dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
       const row = [dependencyId];
       if (showRemoteVersion) {
         const dependencyVersion = dependency.currentVersion;
@@ -82,8 +83,9 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
     return dependencyRows;
   };
   const dependenciesRows = getDependenciesRows(component.dependencies.get());
-  const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), true);
-  const allDependenciesRows = R.concat(dependenciesRows, devDependenciesRows);
+  const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), 'dev');
+  const envDependenciesRows = getDependenciesRows(component.envDependencies.get(), 'env');
+  const allDependenciesRows = [...dependenciesRows, ...devDependenciesRows, ...envDependenciesRows];
 
   const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
   return dependenciesTable;

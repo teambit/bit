@@ -66,8 +66,10 @@ export type ComponentProps = {
   bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
+  envDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
   flattenedDevDependencies?: ?BitIds,
+  flattenedEnvDependencies?: ?BitIds,
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
@@ -97,8 +99,10 @@ export default class Component {
   bitJson: ?ComponentBitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  flattenedDevDependencies: BitIds;
+  envDependencies: Dependencies;
   flattenedDependencies: BitIds;
+  flattenedDevDependencies: BitIds;
+  flattenedEnvDependencies: BitIds;
   packageDependencies: Object;
   devPackageDependencies: Object;
   peerPackageDependencies: Object;
@@ -181,8 +185,10 @@ export default class Component {
     bitJson,
     dependencies,
     devDependencies,
+    envDependencies,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedEnvDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -210,8 +216,10 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
+    this.setEnvDependencies(envDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
+    this.flattenedEnvDependencies = flattenedEnvDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
@@ -248,6 +256,7 @@ export default class Component {
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
+    newInstance.setEnvDependencies(this.envDependencies.getClone());
     return newInstance;
   }
 
@@ -257,6 +266,10 @@ export default class Component {
 
   setDevDependencies(devDependencies?: Dependency[]) {
     this.devDependencies = new Dependencies(devDependencies);
+  }
+
+  setEnvDependencies(envDependencies?: Dependency[]) {
+    this.envDependencies = new Dependencies(envDependencies);
   }
 
   setDists(dists?: Dist[]) {
@@ -306,6 +319,7 @@ export default class Component {
       tester: this.tester ? this.tester.toBitJsonObject(ejectedTesterDirectory) : {},
       dependencies: this.dependencies.asWritableObject(),
       devDependencies: this.devDependencies.asWritableObject(),
+      envDependencies: this.envDependencies.asWritableObject(),
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies
@@ -344,8 +358,16 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
+  flattenedEnvDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedEnvDependencies);
+  }
+
   getAllDependencies(): Dependency[] {
-    return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.envDependencies.dependencies
+    ];
   }
 
   getAllDependenciesIds(): BitIds {
@@ -354,11 +376,12 @@ export default class Component {
   }
 
   hasDependencies(): boolean {
-    return !this.dependencies.isEmpty() || !this.devDependencies.isEmpty();
+    const allDependencies = this.getAllDependencies();
+    return Boolean(allDependencies.length);
   }
 
   getAllFlattenedDependencies(): BitId[] {
-    return this.flattenedDependencies.concat(this.flattenedDevDependencies);
+    return [...this.flattenedDependencies, ...this.flattenedDevDependencies, ...this.flattenedEnvDependencies];
   }
 
   async buildIfNeeded({
@@ -533,6 +556,7 @@ export default class Component {
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.envDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
         pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
@@ -970,6 +994,7 @@ export default class Component {
       detachedTester: this.detachedTester,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
+      envDependencies: this.envDependencies.serialize(),
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies,
@@ -1012,7 +1037,8 @@ export default class Component {
     const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
     const dependenciesPaths = this.dependencies.getSourcesPaths();
     const devDependenciesPaths = this.devDependencies.getSourcesPaths();
-    const allPaths = [...filePaths, ...dependenciesPaths, ...devDependenciesPaths];
+    const envDependenciesPaths = this.envDependencies.getSourcesPaths();
+    const allPaths = [...filePaths, ...dependenciesPaths, ...devDependenciesPaths, ...envDependenciesPaths];
     const sharedStart = sharedStartOfArray(allPaths);
     if (!sharedStart || !sharedStart.includes(pathSep)) return;
     const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
@@ -1020,8 +1046,7 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (dev: boolean = false): BitIds => {
-      const field = dev ? 'flattenedDevDependencies' : 'flattenedDependencies';
+    const getFlatten = (field: string): BitIds => {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
@@ -1038,9 +1063,10 @@ export default class Component {
       );
     };
 
-    const dependencies = await getDependenciesComponents(getFlatten());
-    const devDependencies = await getDependenciesComponents(getFlatten(true));
-    return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
+    const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
+    const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
+    const envDependencies = await getDependenciesComponents(getFlatten('flattenedEnvDependencies'));
+    return new ComponentWithDependencies({ component: this, dependencies, devDependencies, envDependencies });
   }
 
   copyDependenciesFromModel(ids: string[]) {
@@ -1051,8 +1077,12 @@ export default class Component {
       if (dependency) this.dependencies.add(dependency);
       else {
         const devDependency = componentFromModel.devDependencies.getByIdStr(id);
-        if (!devDependency) throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
-        this.devDependencies.add(dependency);
+        if (devDependency) this.devDependencies.add(dependency);
+        else {
+          const envDependency = componentFromModel.envDependencies.getByIdStr(id);
+          if (envDependency) this.envDependencies.add(dependency);
+          throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
+        }
       }
     });
   }
@@ -1071,6 +1101,7 @@ export default class Component {
       detachedTester,
       dependencies,
       devDependencies,
+      envDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
@@ -1095,6 +1126,7 @@ export default class Component {
       detachedTester,
       dependencies,
       devDependencies,
+      envDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,

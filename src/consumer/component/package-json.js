@@ -118,9 +118,8 @@ async function changeDependenciesToRelativeSyntax(
     } catch (e) {
       return Promise.resolve(); // package.json doesn't exist, that's fine, no need to update anything
     }
-    const getPackages = (dev: boolean = false) => {
-      const deps = dev ? component.devDependencies.get() : component.dependencies.get();
-      const packages = deps.map((dependency) => {
+    const getPackages = (deps: Dependencies) => {
+      const packages = deps.get().map((dependency) => {
         const dependencyId = dependency.id.toStringWithoutVersion();
         if (dependenciesIds.searchWithoutVersion(dependency.id)) {
           const dependencyComponent = dependencies.find(d => d.id.isEqualWithoutVersion(dependency.id));
@@ -133,9 +132,10 @@ async function changeDependenciesToRelativeSyntax(
       });
       return R.fromPairs(packages);
     };
-
-    packageJson.addDependencies(getPackages(), getRegistryPrefix());
-    packageJson.addDevDependencies(getPackages(true), getRegistryPrefix());
+    const devDeps = getPackages(component.devDependencies);
+    const envDeps = getPackages(component.envDependencies);
+    packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
+    packageJson.addDevDependencies({ ...devDeps, ...envDeps }, getRegistryPrefix());
     return packageJson.write({ override: true });
   };
   return Promise.all(components.map(component => updateComponent(component)));
@@ -162,17 +162,17 @@ async function write(
 ): Promise<PackageJsonInstance> {
   logger.debug(`package-json.write. bitDir ${bitDir}. override ${override.toString()}`);
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
-  const getBitDependencies = async (dev: boolean = false) => {
+  const getBitDependencies = async (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
-    const dependencies: Dependencies = dev ? component.devDependencies : component.dependencies;
     const dependenciesPackages = dependencies.get().map(async (dep) => {
       const packageDependency = await getPackageDependency(consumer, dep.id, component.id);
       return [dep.id.toStringWithoutVersion(), packageDependency];
     });
     return R.fromPairs(await Promise.all(dependenciesPackages));
   };
-  const bitDependencies = await getBitDependencies();
-  const bitDevDependencies = await getBitDependencies(true);
+  const bitDependencies = await getBitDependencies(component.dependencies);
+  const bitDevDependencies = await getBitDependencies(component.devDependencies);
+  const bitEnvDependencies = await getBitDependencies(component.envDependencies);
   const registryPrefix = getRegistryPrefix();
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
@@ -191,7 +191,7 @@ async function write(
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
     packageJson.addDependencies(bitDependencies, registryPrefix);
-    packageJson.addDevDependencies(bitDevDependencies, registryPrefix);
+    packageJson.addDevDependencies({ ...bitDevDependencies, ...bitEnvDependencies }, registryPrefix);
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);

@@ -22,6 +22,7 @@ export function componentToPrintableForDiff(component: Component): Object {
     tester,
     dependencies,
     devDependencies,
+    envDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -33,6 +34,7 @@ export function componentToPrintableForDiff(component: Component): Object {
   const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
   const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies) || [];
   const printableDevPackageDependencies = parsedDevPackageDependencies.concat(parsedEnvsPackageDependencies);
+  const printableEnvDependencies = envDependencies.toStringOfIds();
 
   obj.id = component.id.toStringWithoutScope();
   obj.compiler = compiler ? compiler.name : null;
@@ -46,6 +48,7 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .concat(printableDevPackageDependencies)
+    .concat(printableEnvDependencies)
     .filter(x => x);
   obj.peerDependencies = parsePackages(peerPackageDependencies);
 

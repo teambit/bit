@@ -215,9 +215,9 @@ export default class Version extends BitObject {
   }
 
   collectDependencies(scope: Scope, withEnvironments?: boolean, dev?: boolean = false): Promise<ComponentVersion[]> {
-    const envDependencies = [this.compiler, this.tester];
+    const envComponents = [this.compiler, this.tester];
     const flattenedDependencies = dev ? this.flattenedDevDependencies : this.flattenedDependencies;
-    const dependencies = withEnvironments ? flattenedDependencies.concat(envDependencies) : flattenedDependencies;
+    const dependencies = withEnvironments ? flattenedDependencies.concat(envComponents) : flattenedDependencies;
     const allDependencies = dependencies.concat(this.flattenedDevDependencies);
     return scope.importManyOnes(allDependencies);
   }

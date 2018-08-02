@@ -413,9 +413,7 @@ export default class Consumer {
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
       // sometime dependencies from the FS don't have an exact version.
-      const copyDependenciesVersionsFromModelToFS = (dev = false) => {
-        const dependenciesFS = dev ? version.devDependencies : version.dependencies;
-        const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
+      const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
         dependenciesFS.get().forEach((dependency) => {
           const idWithoutVersion = dependency.id.toStringWithoutVersion();
           const dependencyFromModel = dependenciesModel
@@ -426,8 +424,9 @@ export default class Consumer {
           }
         });
       };
-      copyDependenciesVersionsFromModelToFS();
-      copyDependenciesVersionsFromModelToFS(true);
+      copyDependenciesVersionsFromModelToFS(version.dependencies, componentFromModel.dependencies);
+      copyDependenciesVersionsFromModelToFS(version.devDependencies, componentFromModel.devDependencies);
+      copyDependenciesVersionsFromModelToFS(version.envDependencies, componentFromModel.envDependencies);
 
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
