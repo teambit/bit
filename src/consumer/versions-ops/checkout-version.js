@@ -173,6 +173,7 @@ async function applyVersion(
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
     componentWithDependencies.dependencies = [];
     componentWithDependencies.devDependencies = [];
+    componentWithDependencies.envDependencies = [];
     componentWithDependencies.allDependencies = [];
   }
   const rootDir = componentMap.rootDir;

@@ -940,6 +940,7 @@ export default class Consumer {
     );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);
+    let modelEnvDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // try to find the model version of the component to get the stored versions of the dependencies
@@ -947,12 +948,14 @@ export default class Consumer {
         const mainComponentFromModel: Component = await this.scope.loadRemoteComponent(component.id);
         modelDependencies = mainComponentFromModel.dependencies;
         modelDevDependencies = mainComponentFromModel.devDependencies;
+        modelEnvDependencies = mainComponentFromModel.envDependencies;
       } catch (e) {
         // do nothing. the component is probably on the file-system only and not on the model.
       }
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
+    await component.envDependencies.addRemoteAndLocalVersions(this.scope, modelEnvDependencies);
   }
 
   async eject(componentsIds: BitId[]) {

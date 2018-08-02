@@ -38,11 +38,13 @@ function buildComponentsGraph(components: Component[]) {
 
   const graphDeps = new Graph();
   const graphDevDeps = new Graph();
+  const graphEnvDeps = new Graph();
   components.forEach((component) => {
     setGraphEdges(component, component.dependencies, graphDeps);
     setGraphEdges(component, component.devDependencies, graphDevDeps);
+    setGraphEdges(component, component.envDependencies, graphEnvDeps);
   });
-  return { graphDeps, graphDevDeps };
+  return { graphDeps, graphDevDeps, graphEnvDeps };
 }
 
 async function getFlattenedDependencies(
@@ -85,6 +87,7 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
   componentsToTag.forEach((componentToTag) => {
     componentToTag.dependencies.get().forEach(dependency => updateDependencyVersion(dependency));
     componentToTag.devDependencies.get().forEach(dependency => updateDependencyVersion(dependency));
+    componentToTag.envDependencies.get().forEach(dependency => updateDependencyVersion(dependency));
   });
 }
 
@@ -252,7 +255,7 @@ export default (async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
-  const { graphDeps, graphDevDeps } = buildComponentsGraph(componentsToTag);
+  const { graphDeps, graphDevDeps, graphEnvDeps } = buildComponentsGraph(componentsToTag);
 
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent: Component) => {
@@ -301,10 +304,17 @@ export default (async function tagModelComponent({
       graphDevDeps,
       dependenciesCache
     );
+    const flattenedEnvDependencies = await getFlattenedDependencies(
+      scope,
+      consumerComponent,
+      graphEnvDeps,
+      dependenciesCache
+    );
     await scope.sources.addSource({
       source: consumerComponent,
       flattenedDependencies,
       flattenedDevDependencies,
+      flattenedEnvDependencies,
       message,
       exactVersion,
       releaseType,
