@@ -48,7 +48,7 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  async toVersionDependencies(scope: Scope, source: string, withEnvironments?: boolean): Promise<VersionDependencies> {
+  async toVersionDependencies(scope: Scope, source: string): Promise<VersionDependencies> {
     const version = await this.getVersion(scope.objects);
     if (!version) {
       logger.debug(
@@ -65,7 +65,7 @@ export default class ComponentVersion {
       return scope.remotes().then((remotes) => {
         const src = this.id;
         src.scope = source;
-        return scope.getExternal({ id: src, remotes, localFetch: false, withEnvironments });
+        return scope.getExternal({ id: src, remotes, localFetch: false });
       });
     }
 
@@ -74,8 +74,8 @@ export default class ComponentVersion {
         this.version
       } found, going to collect its dependencies`
     );
-    const dependencies = await version.collectDependencies(scope, withEnvironments);
-    const devDependencies = await version.collectDependencies(scope, withEnvironments, true);
+    const dependencies = await version.collectDependencies(scope);
+    const devDependencies = await version.collectDependencies(scope, true);
 
     return new VersionDependencies(this, dependencies, devDependencies, source);
   }

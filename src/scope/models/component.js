@@ -363,9 +363,9 @@ export default class Component extends BitObject {
     return Buffer.from(str);
   }
 
-  toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: boolean) {
+  toVersionDependencies(version: string, scope: Scope, source: string) {
     const versionComp = this.toComponentVersion(version);
-    return versionComp.toVersionDependencies(scope, source, withDevDependencies);
+    return versionComp.toVersionDependencies(scope, source);
   }
 
   /**
