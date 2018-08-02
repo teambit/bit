@@ -1065,9 +1065,9 @@ describe('envs', function () {
       });
       describe('with custom ejectedEnvsDirectory', () => {
         const ejectedEnvsDirectory = 'custom-envs-config';
-        const envFilesFolder = path.join(helper.localScopePath, ejectedEnvsDirectory);
-        const compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
-        const testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
+        let envFilesFolder = path.join(helper.localScopePath, ejectedEnvsDirectory);
+        let compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
+        let testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
 
         before(() => {
           helper.reInitLocalScope();
@@ -1106,6 +1106,9 @@ describe('envs', function () {
           beforeEach(() => {
             // Make sure the component is not modified before the changes
             const statusOutput = helper.status();
+            envFilesFolder = path.join(helper.localScopePath, ejectedEnvsDirectory);
+            compilerFilesFolder = path.join(ejectedEnvsDirectory, COMPILER_ENV_TYPE);
+            testerFilesFolder = path.join(ejectedEnvsDirectory, TESTER_ENV_TYPE);
             expect(statusOutput).to.have.string('nothing to tag or export');
             expect(statusOutput).to.not.have.string('modified');
           });
