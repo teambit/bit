@@ -1,5 +1,4 @@
 /** @flow */
-import R from 'ramda';
 import c from 'chalk';
 import { table } from 'table';
 import rightpad from 'pad-right';
