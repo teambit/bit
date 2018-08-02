@@ -960,7 +960,7 @@ describe('envs with dependencies', function () {
     // helper.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     // helper.installNpmPackage('babel-preset-env', '1.6.1');
     // helper.installNpmPackage('chai', '4.1.2');
-    // helper.tagAllWithoutMessage();
+    helper.tagAllWithoutMessage();
     // helper.exportAllComponents();
     // authorScopeBeforeChanges = helper.cloneLocalScope();
     // remoteScopeBeforeChanges = helper.cloneRemoteScope();

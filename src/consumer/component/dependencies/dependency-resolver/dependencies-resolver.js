@@ -182,6 +182,9 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
 
+    // if the dependency of an envFile is already included in the env files of the component, we're good
+    if (isEnvFile && envFiles.includes(depFile)) return;
+
     const { componentId, depFileRelative, destination } = getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
     if (!componentId) {
@@ -659,13 +662,14 @@ export default (async function loadDependenciesForComponent(
   const driver: Driver = consumer.driver;
   const consumerPath = consumer.getPath();
   const componentMap: ComponentMap = component.componentMap;
-  const { allFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
+  const { nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
   const getEnvFiles = () => {
     const compilerFiles = component.compiler && component.compiler.files ? component.compiler.files : [];
     const testerFiles = component.tester && component.tester.files ? component.tester.files : [];
     return [...compilerFiles, ...testerFiles];
   };
-  const envFiles = getEnvFiles();
+  const envFiles = getEnvFiles().map(file => file.relative);
+  const allFiles = [...nonTestsFiles, ...testsFiles, ...envFiles];
   const getDependenciesTree = async () => {
     return driver.getDependencyTree(
       bitDir,
