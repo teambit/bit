@@ -43,7 +43,7 @@ function _getUpdatedId(id) {
     if (id.includes('::')) {
       id = id.replace('::', VERSION_DELIMITER);
     }
-    const parsedId = BitId.parse(id);
+    const parsedId = BitId.parseBackwardCompatible(id);
     // Don't convert latest word
     if (parsedId.getVersion().latest) {
       return id;

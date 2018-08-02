@@ -35,7 +35,7 @@ async function parseValues(
   // option #2: bit diff [ids...]
   // all arguments are ids
   if (!isLastItemVersion) {
-    return { bitIds: values.map(id => BitId.parse(id)) };
+    return { bitIds: values.map(id => consumer.getParsedId(id)) };
   }
   // option #3: bit diff [id] [version]
   // last argument is a version, first argument is id
@@ -45,7 +45,7 @@ async function parseValues(
         `bit diff [id] [version] syntax was used, however, ${values.length} arguments were given instead of 2`
       );
     }
-    return { bitIds: [BitId.parse(firstValue)], version: lastValue };
+    return { bitIds: [consumer.getParsedId(firstValue)], version: lastValue };
   }
   // option #4: bit diff [id] [version] [to_version]
   // last argument and one before the last are versions, first argument is id
@@ -56,5 +56,5 @@ async function parseValues(
       } arguments were given instead of 3`
     );
   }
-  return { bitIds: [BitId.parse(firstValue)], version: oneBeforeLastValue, toVersion: lastValue };
+  return { bitIds: [consumer.getParsedId(firstValue)], version: oneBeforeLastValue, toVersion: lastValue };
 }

@@ -165,7 +165,7 @@ export default class BaseExtension {
       this.filePath = resolvedPath;
       this.rootDir = componentPath;
     }
-    this.name = _addVersionToNameFromPathIfMissing(this.name, this.rootDir);
+    this.name = _addVersionToNameFromPathIfMissing(this.name, this.rootDir, this.options);
     const baseProps = await BaseExtension.loadFromFile({
       name: this.name,
       filePath: this.filePath,
@@ -216,6 +216,7 @@ export default class BaseExtension {
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     Analytics.addBreadCrumb('base-extension', 'load extension');
+    logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
       let absPath = options.file;
@@ -247,7 +248,7 @@ export default class BaseExtension {
     if (scopePath) {
       // $FlowFixMe
       const { resolvedPath, componentPath } = _getExtensionPath(name, scopePath, options.core);
-      const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath);
+      const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
       staticExtensionProps = await BaseExtension.loadFromFile({
         name: nameWithVersion,
         filePath: resolvedPath,
@@ -300,7 +301,7 @@ export default class BaseExtension {
     options = {},
     throws = false
   }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
-    logger.info(`loading extension ${name} from ${filePath}`);
+    logger.debug(`loading extension ${name} from ${filePath}`);
     Analytics.addBreadCrumb('base-extension', 'load extension from file');
     const extensionProps: StaticProps = {
       name,
@@ -384,7 +385,7 @@ const _getCoreExtensionPath = (name: string): ExtensionPath => {
 const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPath => {
   let bitId: BitId;
   try {
-    bitId = BitId.parse(name);
+    bitId = BitId.parse(name, true); // todo: make sure it always has a scope
   } catch (err) {
     throw new ExtensionNameNotValid(name);
   }
@@ -419,17 +420,17 @@ const _getExtensionVersionFromComponentPath = (componentPath: string): ?string =
   return version;
 };
 
-const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string): string => {
+const _addVersionToNameFromPathIfMissing = (name: string, componentPath: string, options: Object): string => {
+  if (options && options.core) return name; // if it's a core extension, it's not a bit-id.
   let bitId: BitId;
   try {
-    bitId = BitId.parse(name);
+    bitId = BitId.parse(name, true); // @todo: make sure it always has a scope name
   } catch (err) {
     throw new ExtensionNameNotValid(name);
   }
   if (bitId.getVersion().latest) {
     const version = _getExtensionVersionFromComponentPath(componentPath);
-    bitId.version = version;
-    return bitId.toString();
+    return bitId.changeVersion(version).toString();
   }
   return name;
 };

@@ -4,7 +4,6 @@ import Command from '../../command';
 import { merge } from '../../../api/consumer';
 import type { ApplyVersionResults, ApplyVersionResult } from '../../../consumer/versions-ops/merge-version';
 import { getMergeStrategy, FileStatus } from '../../../consumer/versions-ops/merge-version';
-import { BitId } from '../../../bit-id';
 
 export const applyVersionReport = (
   components: ApplyVersionResult[],
@@ -52,9 +51,8 @@ export default class Merge extends Command {
       manual?: boolean
     }
   ): Promise<ApplyVersionResults> {
-    const bitIds = ids.map(id => BitId.parse(id));
     const mergeStrategy = getMergeStrategy(ours, theirs, manual);
-    return merge(version, bitIds, mergeStrategy);
+    return merge(version, ids, mergeStrategy);
   }
 
   report({ components, version }: ApplyVersionResults): string {

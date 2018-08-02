@@ -549,7 +549,7 @@ describe('bit status command', function () {
     });
     it('should show the missing component as missing', () => {
       expect(output).to.have.string('missing components');
-      expect(output).to.have.string('bar/foo.js -> scope/bar/baz');
+      expect(output).to.have.string('bar/foo.js -> scope.bar/baz');
     });
   });
 });

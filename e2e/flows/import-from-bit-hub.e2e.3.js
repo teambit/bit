@@ -2,12 +2,12 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../e2e-helper';
-import BitsrcTester, { username } from '../bitsrc-tester';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe('importing bit components from bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe : describe.skip)('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();

@@ -55,9 +55,9 @@ function formatter(doc: Doc | *): string {
   // $FlowFixMe
   if (doc.owner && typeof doc.owner === 'string' && typeof doc.scope === 'string') {
     // from web search
-    return `> ${doc.owner}.${doc.scope}/${doc.box}/${doc.name}`;
+    return `> ${doc.owner}.${doc.scope}/${doc.name}`;
   }
-  return `> ${doc.box}/${doc.name}`;
+  return `> ${doc.name}`;
 }
 
 /**

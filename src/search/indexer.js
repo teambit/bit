@@ -10,8 +10,6 @@ export type Doc = {
   name: string,
   tokenizedName: string,
   stemmedName: string,
-  box: string,
-  tokenizedBox: string,
   functionNames: string,
   tokenizedFunctionNames: string,
   description: string,
@@ -47,17 +45,14 @@ function minimizeDescription(desc: string = ''): string {
 
 function prepareDoc(docs: Object, component: Component): Doc {
   const name = component.name;
-  const box = component.box;
   const tokenizedName = tokenizeStr(name);
   const functionNames = docs.map(doc => doc.name).join(' ');
   const minDescription = docs.map(doc => minimizeDescription(doc.description)).join(' ');
   return {
-    id: `${box}_${name}`,
+    id: name,
     name,
-    box,
     tokenizedName,
     stemmedName: stem(tokenizedName),
-    tokenizedBox: tokenizeStr(box),
     functionNames,
     tokenizedFunctionNames: tokenizeStr(functionNames),
     description: docs.map(doc => doc.description).join(' '),

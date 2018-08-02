@@ -13,14 +13,12 @@ import Dependencies from '../dependencies';
 
 function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {
   if (!componentFromModel) return null;
-  const id = componentFromModel
-    .getAllDependencies()
-    .find(dep => dep.id.toStringWithoutVersion() === componentId.toStringWithoutVersion());
-  if (!id) return null;
-  return id.id.toString();
+  const dependency = componentFromModel.getAllDependenciesIds().searchWithoutVersion(componentId);
+  if (!dependency) return null;
+  return dependency;
 }
 
-function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?string {
+function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?BitId {
   const getVersion = (): ?string => {
     if (!bitJson) return null;
     if (!bitJson.dependencies && !bitJson.devDependencies) return null;
@@ -34,8 +32,7 @@ function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?stri
   };
   const version = getVersion();
   if (!version) return null;
-  componentId.version = version;
-  return componentId.toString();
+  return componentId.changeVersion(version);
 }
 
 /**
@@ -44,7 +41,7 @@ function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?stri
  * it first searches in the dependent package.json and propagate up to the consumer root, if not
  * found it goes to the dependency package.json.
  */
-function getIdFromPackageJson(consumer: Consumer, component: Component, componentId: BitId): ?string {
+function getIdFromPackageJson(consumer: Consumer, component: Component, componentId: BitId): ?BitId {
   if (!componentId.scope) return null;
   const rootDir: PathLinux = component.componentMap.rootDir;
   const consumerPath = consumer.getPath();
@@ -58,19 +55,22 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   const packageId = Object.keys(packageObject)[0];
   const version = packageObject[packageId];
   if (!semver.valid(version)) return null; // it's probably a relative path to the component
-  componentId.version = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
-  return componentId.toString();
+  const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
+  return componentId.changeVersion(validVersion);
 }
 
-function getIdFromBitMap(consumer: Consumer, component: Component, componentId: BitId): ?string {
+function getIdFromBitMap(consumer: Consumer, component: Component, componentId: BitId): ?BitId {
   const componentMap: ComponentMap = component.componentMap;
   if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
     const dependencyId = componentMap.dependencies.find(
       dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
     );
-    if (dependencyId) return dependencyId;
+    if (dependencyId) {
+      const version = BitId.getVersionOnlyFromString(dependencyId);
+      return componentId.changeVersion(version);
+    }
   }
-  return consumer.bitMap.getExistingComponentId(componentId.toStringWithoutVersion());
+  return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
 }
 
 /**
@@ -138,7 +138,7 @@ export default (async function updateDependenciesVersions(consumer: Consumer, co
       for (const strategy of strategies) {
         const strategyId = strategy();
         if (strategyId) {
-          dependency.id.version = BitId.parse(strategyId).version;
+          dependency.id = dependency.id.changeVersion(strategyId.version);
           logger.debug(`found dependency version ${dependency.id.toString()} in strategy ${strategy.name}`);
           return;
         }

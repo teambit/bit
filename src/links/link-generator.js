@@ -241,7 +241,7 @@ async function writeDependencyLinks(
     let distLinkPath: PathOsBased;
     const linkFiles = [];
     const depComponentMap = parentComponent.dependenciesSavedAsComponents
-      ? consumer.bitMap.getComponent(depId, true)
+      ? consumer.bitMap.getComponent(depId)
       : undefined;
 
     const depRootDir: ?PathOsBased =
@@ -326,11 +326,11 @@ async function writeDependencyLinks(
       // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
       // Actual version number, because on the bitmap we have only specific versions
       if (dep.id.getVersion().latest) {
-        resolveDepVersion = flattenedDependencies.resolveVersion(dep.id).toString();
+        resolveDepVersion = flattenedDependencies.resolveVersion(dep.id);
       }
 
       // Helper function to look for the component object
-      const _byComponentId = dependency => dependency.id.toString() === resolveDepVersion.toString();
+      const _byComponentId = dependency => dependency.id.isEqual(resolveDepVersion);
       // Get the real dependency component
       const depComponent = R.find(_byComponentId, dependencies);
 
@@ -374,7 +374,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   };
 
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
-    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id, true);
+    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
         `writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`
@@ -394,7 +394,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
       const indirectLinks = await Promise.all(
         componentWithDeps.allDependencies.map((dep: Component) => {
-          const depComponentMap = consumer.bitMap.getComponent(dep.id, true);
+          const depComponentMap = consumer.bitMap.getComponent(dep.id);
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
@@ -464,8 +464,7 @@ async function generatePostInstallScript(component: Component, postInstallLinks)
  * Relevant for IMPORTED and NESTED only
  */
 async function writeEntryPointsForComponent(component: Component, consumer: Consumer): Promise<any> {
-  const componentId = component.id.toString();
-  const componentMap = consumer.bitMap.getComponent(componentId);
+  const componentMap = consumer.bitMap.getComponent(component.id);
   const componentRoot = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);

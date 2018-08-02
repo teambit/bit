@@ -33,8 +33,8 @@ export default (components: ConsumerComponent[], json: boolean, showRemoteVersio
       version = color ? c[color](version) : version;
     }
     const getCurrentlyUsedVersion = () => {
-      if (!component.currentlyUsedVersion) return 'N/A';
-      const bitId = BitId.parse(component.currentlyUsedVersion);
+      if (!component._currentlyUsedVersion) return 'N/A';
+      const bitId = component._currentlyUsedVersion;
       if (!bitId.hasVersion()) return 'N/A';
       return bitId.version;
     };

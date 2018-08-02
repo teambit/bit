@@ -11,7 +11,7 @@ describe('worker', () => {
         __impl__: '',
         __specs__: '',
         __tester__: path.join(__dirname, '../../', 'fixtures', 'invalid-tester.js'),
-        __testerId__: 'myScope/box/my-component'
+        __testerId__: 'myScope/my-component'
       }
     });
 
@@ -21,7 +21,7 @@ describe('worker', () => {
 
     child.on('message', ({ type, payload }) => {
       expect(type).to.equal('error');
-      expect(payload).to.equal('"myScope/box/my-component" doesn\'t have a valid tester interface');
+      expect(payload).to.equal('"myScope/my-component" doesn\'t have a valid tester interface');
       done();
     });
   });

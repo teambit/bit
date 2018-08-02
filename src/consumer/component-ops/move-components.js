@@ -1,7 +1,6 @@
 // @flow
 import fs from 'fs-extra';
 import R from 'ramda';
-import { BitId } from '../../bit-id';
 import { linkComponentsToNodeModules, reLinkDependents } from '../../links';
 import * as packageJson from '../component/package-json';
 import GeneralError from '../../error/general-error';
@@ -33,7 +32,7 @@ export async function movePaths(
     moveSync(fromAbsolute, toAbsolute);
   }
   if (!R.isEmpty(changes)) {
-    const componentsIds = changes.map(c => BitId.parse(c.id));
+    const componentsIds = changes.map(c => c.id);
     await packageJson.addComponentsToRoot(consumer, componentsIds);
     const { components } = await consumer.loadComponents(componentsIds);
     await linkComponentsToNodeModules(components, consumer);

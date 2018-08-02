@@ -1,11 +1,11 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import BitsrcTester, { username } from '../bitsrc-tester';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
 
-describe('export --eject functionality using bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe : describe.skip)('export --eject functionality using bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();

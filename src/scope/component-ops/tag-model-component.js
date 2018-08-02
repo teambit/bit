@@ -16,24 +16,31 @@ import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptio
 import { pathNormalizeToLinux, pathJoinLinux } from '../../utils';
 import Source from '../models/source';
 import { DependencyNotFound } from '../exceptions';
-import { BitId } from '../../bit-id';
+import { BitId, BitIds } from '../../bit-id';
 import { flattenDependencyIds } from '../flatten-dependencies';
 import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
+import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 
 function buildComponentsGraph(components: Component[]) {
+  const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
+    const id = component.id.toString();
+    dependencies.get().forEach((dependency) => {
+      const depId = dependency.id.toString();
+      // save the full BitId of a string id to be able to retrieve it laster with no confusion
+      if (!graph.hasNode(id)) graph.setNode(id, component.id);
+      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
+      graph.setEdge(id, depId);
+    });
+  };
+
   const graphDeps = new Graph();
   const graphDevDeps = new Graph();
   components.forEach((component) => {
-    const id = component.id.toString();
-    component.dependencies.get().forEach((dependency) => {
-      graphDeps.setEdge(id, dependency.id.toString());
-    });
-    component.devDependencies.get().forEach((dependency) => {
-      graphDevDeps.setEdge(id, dependency.id.toString());
-    });
+    setGraphEdges(component, component.dependencies, graphDeps);
+    setGraphEdges(component, component.devDependencies, graphDevDeps);
   });
   return { graphDeps, graphDevDeps };
 }
@@ -43,15 +50,15 @@ async function getFlattenedDependencies(
   component: Component,
   graph: Object,
   cache: Object
-): Promise<BitId[]> {
+): Promise<BitIds> {
   const id = component.id.toString();
-  if (!graph.hasNode(id)) return [];
+  if (!graph.hasNode(id)) return new BitIds();
   const edges = graphlib.alg.preorder(graph, id);
   const dependencies = R.tail(edges); // the first item is the component itself
-  if (!dependencies.length) return [];
+  if (!dependencies.length) return new BitIds();
   const flattenedP = dependencies.map(async (dependency) => {
     if (cache[dependency]) return cache[dependency];
-    const dependencyBitId = BitId.parse(dependency);
+    const dependencyBitId: BitId = graph.node(dependency);
     let versionDependencies;
     try {
       versionDependencies = await scope.importDependencies([dependencyBitId]);
@@ -67,15 +74,13 @@ async function getFlattenedDependencies(
     return flattenedDependencies;
   });
   const flattened = await Promise.all(flattenedP);
-  return R.uniq(R.flatten(flattened));
+  return BitIds.fromArray(R.flatten(flattened)).getUniq();
 }
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
-  const updateDependencyVersion = (dependency) => {
-    const foundDependency = componentsToTag.find(
-      component => component.id.toStringWithoutVersion() === dependency.id.toStringWithoutVersion()
-    );
-    if (foundDependency) dependency.id.version = foundDependency.version;
+  const updateDependencyVersion = (dependency: Dependency) => {
+    const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
+    if (foundDependency) dependency.id = dependency.id.changeVersion(foundDependency.version);
   };
   componentsToTag.forEach((componentToTag) => {
     componentToTag.dependencies.get().forEach(dependency => updateDependencyVersion(dependency));
@@ -186,7 +191,7 @@ export default (async function tagModelComponent({
   const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
   const autoTagComponents = await scope.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
-  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.id()));
+  const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
   const componentsToBuildAndTest = componentsToTag.concat(autoTagConsumerComponents);
 
@@ -251,7 +256,6 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent: Component) => {
-    const consumerComponentId = consumerComponent.id.toStringWithoutVersion();
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
     // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
@@ -282,11 +286,7 @@ export default (async function tagModelComponent({
     let testResult;
     if (!skipTests) {
       testResult = testsResults.find((result) => {
-        const idWithoutScopeAndVersion = BitId.parse(result.componentId).toStringWithoutScopeAndVersion();
-        const consumerComponentIdWithoutScopeAndVersion = BitId.parse(
-          consumerComponentId
-        ).toStringWithoutScopeAndVersion();
-        return idWithoutScopeAndVersion === consumerComponentIdWithoutScopeAndVersion;
+        return consumerComponent.id.isEqualWithoutScopeAndVersion(result.componentId);
       });
     }
     const flattenedDependencies = await getFlattenedDependencies(

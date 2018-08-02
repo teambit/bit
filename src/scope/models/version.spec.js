@@ -196,12 +196,12 @@ describe('Version', () => {
       expect(validateFunc).to.throw('missing the name attribute');
     });
     it('if a compiler is string, it should be a valid bit-id', () => {
-      version.compiler = 'this/is/invalid/bit/id';
+      version.compiler = 'this/is\\invalid?!/bit/id';
       expect(validateFunc).to.throw('the environment-id has an invalid Bit id');
     });
-    it('if a compiler is string, it should have scope ', () => {
+    it('if a compiler is string, it should have scope', () => {
       version.compiler = 'name@0.0.1';
-      expect(validateFunc).to.throw('does not have a scope');
+      expect(validateFunc).to.throw('the environment-id has an invalid Bit id');
     });
     // it('if a compiler is string, it should have version', () => {
     //   version.compiler = 'scope/box/name';
@@ -264,7 +264,7 @@ describe('Version', () => {
       expect(validateFunc).to.throw('expected to be BitId, got number');
     });
     it('should throw when a flattenDependency does not have a version', () => {
-      version.flattenedDependencies[0].version = null;
+      version.flattenedDependencies[0] = version.flattenedDependencies[0].changeVersion(null);
       expect(validateFunc).to.throw('does not have a version');
     });
     it('should throw when the log is empty', () => {

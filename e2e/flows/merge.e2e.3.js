@@ -76,7 +76,7 @@ describe('merge functionality', function () {
     });
     it('the second import should not override the previously imported component', () => {
       const catScope = helper.catScope();
-      const isTypeObject = catScope.find(c => c.name === 'is-type');
+      const isTypeObject = catScope.find(c => c.name === 'utils/is-type');
       expect(Object.keys(isTypeObject.versions).length).to.equal(2);
       expect(isTypeObject.versions).to.have.property('0.0.2');
     });

@@ -361,11 +361,6 @@ describe('bit remove command', function () {
       helper.exportComponent('utils/is-string');
       helper.exportComponent('utils/is-string2');
     });
-    it.skip('should remove component version only', () => {
-      const output = helper.removeComponent(`${helper.remoteScope}/utils/is-string@0.0.1 -s`);
-      expect(output).to.contain.string('successfully removed components');
-      expect(output).to.contain.string(`${helper.remoteScope}/utils/is-string@0.0.1`);
-    });
     it('should import component is-string with no issues', () => {
       helper.reInitLocalScope();
       helper.addRemoteScope();
