@@ -231,7 +231,7 @@ export default class ComponentMap {
       return;
     }
     this.markBitMapChangedCb();
-    this.configDir = val;
+    this.configDir = pathNormalizeToLinux(val);
   }
 
   /**
