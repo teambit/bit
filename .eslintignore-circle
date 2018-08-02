@@ -72,7 +72,6 @@ src/driver/driver.js
 src/extensions/core-extensions/ext-docs-parser.js
 src/logger/logger.js
 src/scope/objects/ref.js
-src/scope/version-dependencies.js
 e2e/commands/show.e2e.2.js
 src/api/consumer/lib/commit.js
 src/api/consumer/lib/reset.js

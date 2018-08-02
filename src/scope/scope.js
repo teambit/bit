@@ -336,7 +336,9 @@ export default class Scope {
       nodePathDirDist &&
       components.some(
         component =>
-          (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
+          (component.dependencies.isCustomResolvedUsed() ||
+            component.devDependencies.isCustomResolvedUsed() ||
+            component.envDependencies.isCustomResolvedUsed()) &&
           (component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) &&
           !component.dists.isEmpty()
       );
@@ -462,6 +464,7 @@ export default class Scope {
         });
         object.flattenedDependencies = getBitIdsWithUpdatedScope(object.flattenedDependencies);
         object.flattenedDevDependencies = getBitIdsWithUpdatedScope(object.flattenedDevDependencies);
+        object.flattenedEnvDependencies = getBitIdsWithUpdatedScope(object.flattenedEnvDependencies);
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
           logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);

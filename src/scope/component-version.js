@@ -74,10 +74,11 @@ export default class ComponentVersion {
         this.version
       } found, going to collect its dependencies`
     );
-    const dependencies = await version.collectDependencies(scope);
-    const devDependencies = await version.collectDependencies(scope, true);
+    const dependencies = await version.collectDependencies(scope, version.flattenedDependencies);
+    const devDependencies = await version.collectDependencies(scope, version.flattenedDevDependencies);
+    const envDependencies = await version.collectDependencies(scope, version.flattenedEnvDependencies);
 
-    return new VersionDependencies(this, dependencies, devDependencies, source);
+    return new VersionDependencies(this, dependencies, devDependencies, envDependencies, source);
   }
 
   toConsumer(repo: Repository): Promise<ConsumerComponent> {

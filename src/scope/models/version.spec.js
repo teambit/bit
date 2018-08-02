@@ -58,11 +58,17 @@ describe('Version', () => {
       it('should not have devDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('devDependencies');
       });
+      it('should not have envDependencies property', () => {
+        expect(idParsed).to.not.haveOwnProperty('envDependencies');
+      });
       it('should not have flattenedDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('flattenedDependencies');
       });
       it('should not have flattenedDevDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('flattenedDevDependencies');
+      });
+      it('should not have flattenedEnvDependencies property', () => {
+        expect(idParsed).to.not.haveOwnProperty('flattenedEnvDependencies');
       });
       it('should not have devPackageDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('devPackageDependencies');
@@ -254,6 +260,10 @@ describe('Version', () => {
     it('should throw when devDependencies are invalid', () => {
       version.devDependencies = {};
       expect(validateFunc).to.throw('devDependencies must be an instance of Dependencies, got object');
+    });
+    it('should throw when envDependencies are invalid', () => {
+      version.envDependencies = {};
+      expect(validateFunc).to.throw('envDependencies must be an instance of Dependencies, got object');
     });
     it('should throw when there are dependencies and the flattenDependencies are empty', () => {
       version.flattenedDependencies = [];

@@ -1,5 +1,4 @@
 /** @flow */
-import R from 'ramda';
 import ComponentWithDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';
@@ -9,30 +8,41 @@ export default class VersionDependencies {
   component: ComponentVersion;
   dependencies: ComponentVersion[];
   devDependencies: ComponentVersion[];
+  envDependencies: ComponentVersion[];
+  allDependencies: ComponentVersion[];
   sourceScope: ?string;
 
   constructor(
     component: ComponentVersion,
     dependencies: ComponentVersion[],
     devDependencies: ComponentVersion[],
+    envDependencies: ComponentVersion[],
     sourceScope: string
   ) {
     this.component = component;
     this.dependencies = dependencies;
     this.devDependencies = devDependencies;
-    this.allDependencies = this.dependencies.concat(this.devDependencies);
+    this.envDependencies = envDependencies;
+    this.allDependencies = [...this.dependencies, ...this.devDependencies, ...this.envDependencies];
     this.sourceScope = sourceScope;
   }
 
   async toConsumer(repo: Repository): Promise<ComponentWithDependencies> {
     const dependenciesP = Promise.all(this.dependencies.map(dep => dep.toConsumer(repo)));
     const devDependenciesP = Promise.all(this.devDependencies.map(dep => dep.toConsumer(repo)));
+    const envDependenciesP = Promise.all(this.envDependencies.map(dep => dep.toConsumer(repo)));
     const componentP = this.component.toConsumer(repo);
-    const [component, dependencies, devDependencies] = await Promise.all([componentP, dependenciesP, devDependenciesP]);
+    const [component, dependencies, devDependencies, envDependencies] = await Promise.all([
+      componentP,
+      dependenciesP,
+      devDependenciesP,
+      envDependenciesP
+    ]);
     return new ComponentWithDependencies({
       component,
       dependencies,
-      devDependencies
+      devDependencies,
+      envDependencies
     });
   }
 

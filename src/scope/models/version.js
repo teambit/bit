@@ -61,8 +61,10 @@ export type VersionProps = {
   docs?: Doclet[],
   dependencies?: BitIds,
   devDependencies?: BitIds,
+  envDependencies?: BitIds,
   flattenedDependencies?: BitIds,
   flattenedDevDependencies?: BitIds,
+  flattenedEnvDependencies?: BitIds,
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
@@ -88,8 +90,10 @@ export default class Version extends BitObject {
   docs: ?(Doclet[]);
   dependencies: Dependencies;
   devDependencies: Dependencies;
+  envDependencies: Dependencies;
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
+  flattenedEnvDependencies: BitIds;
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
@@ -108,11 +112,13 @@ export default class Version extends BitObject {
     log,
     dependencies,
     devDependencies,
+    envDependencies,
     docs,
     ci,
     specsResults,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedEnvDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -129,11 +135,13 @@ export default class Version extends BitObject {
     this.log = log;
     this.dependencies = new Dependencies(dependencies);
     this.devDependencies = new Dependencies(devDependencies);
+    this.envDependencies = new Dependencies(envDependencies);
     this.docs = docs;
     this.ci = ci || {};
     this.specsResults = specsResults;
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
+    this.flattenedEnvDependencies = flattenedEnvDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
@@ -176,6 +184,7 @@ export default class Version extends BitObject {
     const filterFunction = (val, key) => {
       if (
         key === 'devDependencies' ||
+        key === 'envDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
         key === 'envsPackageDependencies'
@@ -195,6 +204,7 @@ export default class Version extends BitObject {
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
+          envDependencies: getDependencies(this.envDependencies),
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
@@ -207,15 +217,18 @@ export default class Version extends BitObject {
   }
 
   getAllFlattenedDependencies() {
-    return this.flattenedDependencies.concat(this.flattenedDevDependencies);
+    return [...this.flattenedDependencies, ...this.flattenedDevDependencies, ...this.flattenedEnvDependencies];
   }
 
   getAllDependencies() {
-    return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.envDependencies.dependencies
+    ];
   }
 
-  collectDependencies(scope: Scope, dev?: boolean = false): Promise<ComponentVersion[]> {
-    const flattenedDependencies = dev ? this.flattenedDevDependencies : this.flattenedDependencies;
+  collectDependencies(scope: Scope, flattenedDependencies: BitIds): Promise<ComponentVersion[]> {
     return scope.importManyOnes(flattenedDependencies);
   }
 
@@ -281,8 +294,10 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
+        envDependencies: this.envDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
+        flattenedEnvDependencies: this.flattenedEnvDependencies.map(dep => dep.serialize()),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
@@ -325,9 +340,11 @@ export default class Version extends BitObject {
       ci,
       specsResults,
       dependencies,
-      flattenedDependencies,
       devDependencies,
+      envDependencies,
+      flattenedDependencies,
       flattenedDevDependencies,
+      flattenedEnvDependencies,
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,
@@ -396,9 +413,11 @@ export default class Version extends BitObject {
       specsResults,
       docs,
       dependencies: _getDependencies(dependencies),
-      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       devDependencies: _getDependencies(devDependencies),
+      envDependencies: _getDependencies(envDependencies),
+      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
+      flattenedEnvDependencies: _getFlattenedDependencies(flattenedEnvDependencies),
       devPackageDependencies,
       peerPackageDependencies,
       envsPackageDependencies,
@@ -428,6 +447,7 @@ export default class Version extends BitObject {
     dists,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedEnvDependencies,
     message,
     specsResults,
     username,
@@ -436,8 +456,9 @@ export default class Version extends BitObject {
     component: ConsumerComponent,
     versionFromModel: Version,
     files: Array<SourceFileModel>,
-    flattenedDependencies: BitId[],
-    flattenedDevDependencies: BitId[],
+    flattenedDependencies: BitIds,
+    flattenedDevDependencies: BitIds,
+    flattenedEnvDependencies: BitIds,
     message: string,
     dists: ?Array<DistFileModel>,
     specsResults: ?Results,
@@ -555,6 +576,9 @@ export default class Version extends BitObject {
       },
       specsResults,
       docs: component.docs,
+      dependencies: component.dependencies.get(),
+      devDependencies: component.devDependencies.get(),
+      envDependencies: component.envDependencies.get(),
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
@@ -565,8 +589,7 @@ export default class Version extends BitObject {
       ),
       flattenedDependencies,
       flattenedDevDependencies,
-      dependencies: component.dependencies.get(),
-      devDependencies: component.devDependencies.get(),
+      flattenedEnvDependencies,
       customResolvedPaths: component.customResolvedPaths
     });
   }
@@ -717,15 +740,24 @@ export default class Version extends BitObject {
         `${message}, devDependencies must be an instance of Dependencies, got ${typeof this.devDependencies}`
       );
     }
+    if (!(this.envDependencies instanceof Dependencies)) {
+      throw new VersionInvalid(
+        `${message}, envDependencies must be an instance of Dependencies, got ${typeof this.envDependencies}`
+      );
+    }
     this.dependencies.validate();
     this.devDependencies.validate();
+    this.envDependencies.validate();
     if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
       throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
     }
     if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
       throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
     }
-    const validateFlattenedDependencies = (dependencies: string[]) => {
+    if (!this.envDependencies.isEmpty() && !this.flattenedEnvDependencies.length) {
+      throw new VersionInvalid(`${message}, it has emvDependencies but its flattenedEnvDependencies is empty`);
+    }
+    const validateFlattenedDependencies = (dependencies: BitIds) => {
       validateType(message, dependencies, 'dependencies', 'array');
       dependencies.forEach((dependency) => {
         if (!(dependency instanceof BitId)) {
@@ -740,6 +772,7 @@ export default class Version extends BitObject {
     };
     validateFlattenedDependencies(this.flattenedDependencies);
     validateFlattenedDependencies(this.flattenedDevDependencies);
+    validateFlattenedDependencies(this.flattenedEnvDependencies);
     if (!this.log) throw new VersionInvalid(`${message}, the log object is missing`);
     validateType(message, this.log, 'log', 'object');
     if (this.bindingPrefix) {
