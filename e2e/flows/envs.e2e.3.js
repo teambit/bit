@@ -1065,9 +1065,12 @@ describe.only('envs', function () {
       });
       describe('with custom ejectedEnvsDirectory', () => {
         const ejectedEnvsDirectory = 'custom-envs-config';
-        let envFilesFolder = path.join(helper.localScopePath, ejectedEnvsDirectory);
+        let envFilesFolder = path.join(ejectedEnvsDirectory);
+        let envFilesFullFolder = path.join(helper.localScopePath, envFilesFolder);
         let compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
+        const compilerFilesFullFolder = path.join(envFilesFullFolder, COMPILER_ENV_TYPE);
         let testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
+        const testerFilesFullFolder = path.join(envFilesFullFolder, TESTER_ENV_TYPE);
 
         before(() => {
           helper.reInitLocalScope();
@@ -1081,11 +1084,11 @@ describe.only('envs', function () {
           importedScopeBeforeChanges = helper.cloneLocalScope();
         });
         it('should store the files under the custom directory', () => {
-          bitJsonPath = path.join(envFilesFolder, 'bit.json');
+          bitJsonPath = path.join(envFilesFullFolder, 'bit.json');
           expect(bitJsonPath).to.be.file();
-          const babelrcPath = path.join(envFilesFolder, COMPILER_ENV_TYPE, '.babelrc');
+          const babelrcPath = path.join(compilerFilesFullFolder, '.babelrc');
           expect(babelrcPath).to.be.file();
-          const mochaConfig = path.join(envFilesFolder, TESTER_ENV_TYPE, 'config');
+          const mochaConfig = path.join(testerFilesFullFolder, 'config');
           expect(mochaConfig).to.be.file();
         });
         it('should not show the component as modified if a file added to ejectedEnvsDirectory', () => {
@@ -1106,9 +1109,10 @@ describe.only('envs', function () {
           beforeEach(() => {
             // Make sure the component is not modified before the changes
             const statusOutput = helper.status();
-            envFilesFolder = path.join(helper.localScopePath, ejectedEnvsDirectory);
-            compilerFilesFolder = path.join(ejectedEnvsDirectory, COMPILER_ENV_TYPE);
-            testerFilesFolder = path.join(ejectedEnvsDirectory, TESTER_ENV_TYPE);
+            envFilesFolder = ejectedEnvsDirectory;
+            envFilesFullFolder = path.join(helper.localScopePath, envFilesFolder);
+            compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
+            testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
             expect(statusOutput).to.have.string('nothing to tag or export');
             expect(statusOutput).to.not.have.string('modified');
           });
