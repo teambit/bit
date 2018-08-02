@@ -29,7 +29,7 @@ export type ComponentMapData = {
   mainFile: PathLinux,
   rootDir?: ?PathLinux,
   trackDir?: ?PathLinux,
-  configDir?: PathLinux,
+  configDir?: ?PathLinux,
   origin: ComponentOrigin,
   detachedCompiler?: ?boolean,
   detachedTester?: ?boolean,
