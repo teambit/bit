@@ -130,6 +130,7 @@ describe('environments with dependencies', function () {
           helper.exportAllComponents();
           helper.reInitLocalScope();
           helper.addRemoteScope();
+          helper.addRemoteEnvironment();
           helper.importComponent('bar/foo');
         });
         it('should also import the environment component', () => {

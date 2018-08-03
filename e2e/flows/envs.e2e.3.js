@@ -66,8 +66,8 @@ describe('envs', function () {
     helper.addFileToEnvInBitJson(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', COMPILER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', COMPILER_ENV_TYPE);
-    helper.createFile('', 'mocha-config.js', '{"someConfKey": "someConfVal"}');
-    helper.addFileToEnvInBitJson(undefined, 'config', './mocha-config.js', TESTER_ENV_TYPE);
+    helper.createFile('', 'mocha-config.opts', '{"someConfKey": "someConfVal"}');
+    helper.addFileToEnvInBitJson(undefined, 'config', './mocha-config.opts', TESTER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', TESTER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', TESTER_ENV_TYPE);
     helper.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
@@ -147,7 +147,7 @@ describe('envs', function () {
       it('should store the tester files in the model', () => {
         const mochaConfigHash = testerModel.files[0].file;
         const mochaConfigFromModel = helper.catObject(mochaConfigHash).trim();
-        const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.js');
+        const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.opts');
         const mochaConfigFromFS = fs.readFileSync(mochaConfigPath).toString();
         expect(mochaConfigFromModel).to.equal(mochaConfigFromFS);
       });
@@ -436,7 +436,7 @@ describe('envs', function () {
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
         it('should show the component as modified after changing tester config files', () => {
-          helper.createFile('', 'mocha-config.js', 'something');
+          helper.createFile('', 'mocha-config.opts', 'something');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
@@ -450,13 +450,13 @@ describe('envs', function () {
           expect(diff).to.have.string('+{"some": "thing"}');
         });
         it('bit-diff should show tester file differences', () => {
-          helper.createFile('', 'mocha-config.js', 'something');
+          helper.createFile('', 'mocha-config.opts', 'something');
           const diff = helper.diff('comp/my-comp');
           expect(diff).to.have.string('--- config (0.0.1 original)');
           expect(diff).to.have.string('+++ config (0.0.1 modified)');
           expect(diff).to.have.string('-{"someConfKey": "someConfVal"}');
           expect(diff).to.have.string('+something');
-          expect(diff).to.not.have.string('mocha-config.js'); // the relative path on the FS should not appear in the diff
+          expect(diff).to.not.have.string('mocha-config.opts'); // the relative path on the FS should not appear in the diff
         });
       });
       describe('changing envs raw config', () => {
@@ -495,7 +495,7 @@ describe('envs', function () {
     const componentFolder = path.join('components', 'comp', 'my-comp');
     let importedScopeBeforeChanges;
 
-    describe('without ejceting (--conf)', () => {
+    describe('without ejecting (--conf)', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -519,7 +519,7 @@ describe('envs', function () {
         });
       });
       it('should build the component successfully', () => {
-        // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
+        // Changing the component to make sure we really run a rebuild and not taking the dist from the models
         helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
         const output = helper.build('comp/my-comp');
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));

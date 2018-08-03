@@ -548,7 +548,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
   };
 
   const copyEnvDependenciesFromModelIfNeeded = () => {
-    if (shouldProcessEnvDependencies(entryComponentMap)) return;
+    if (shouldProcessEnvDependencies(entryComponentMap) || !componentFromModel) return;
     // if we don't process env dependencies, we copy the dependencies from the model.
     envComponentsDeps = componentFromModel.envDependencies.get();
   };
@@ -740,7 +740,8 @@ export default (async function loadDependenciesForComponent(
   component.setEnvDependencies(envComponentsDeps);
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;
-  component.envsPackageDependencies = traversedDeps.envsPackagesDeps;
+  // envsPackageDependencies might be set when the compiler and test were loaded
+  component.envsPackageDependencies = R.merge(traversedDeps.envsPackagesDeps, component.envsPackageDependencies);
   component.peerPackageDependencies = findPeerDependencies(consumerPath, component);
   // assign issues to component only when it has data.
   // Otherwise, when it's empty, component.issues will be an empty object ({}), and for some weird reason,
