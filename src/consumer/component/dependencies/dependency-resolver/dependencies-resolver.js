@@ -48,10 +48,10 @@ function findComponentsOfDepsFiles(
   const componentFromModel: Component = consumerComponent.componentFromModel;
   const packagesDeps = {};
   let devPackagesDeps = {};
-  const envPackagesDeps = {};
+  let envsPackagesDeps = {};
   const componentsDeps: Dependency[] = [];
   let devComponentsDeps: Dependency[] = [];
-  const envComponentsDeps: Dependency[] = [];
+  let envComponentsDeps: Dependency[] = [];
 
   const getExistingDependency = (id: BitId): ?Dependency => componentsDeps.find(d => d.id.isEqual(id));
   const getExistingDevDependency = (id: BitId): ?Dependency => devComponentsDeps.find(d => d.id.isEqual(id));
@@ -379,7 +379,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
       if (isTestFile) {
         Object.assign(devPackagesDeps, packages);
       } else if (isEnvFile) {
-        Object.assign(envPackagesDeps, packages);
+        Object.assign(envsPackagesDeps, packages);
       } else {
         Object.assign(packagesDeps, packages);
       }
@@ -454,13 +454,16 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
    * Because if a dependency is both dev dependency and regular dependency it should be treated as regular one
    * Apply for both packages and components dependencies
    */
-  const removeDevDepsIfTheyAlsoRegulars = () => {
-    const devPackagesOnlyNames = R.difference(R.keys(devPackagesDeps), R.keys(packagesDeps));
-    devPackagesDeps = R.pick(devPackagesOnlyNames, devPackagesDeps);
-    // const devComponentsOnlyNames = R.difference(R.keys(devComponentsDeps), R.keys(componentsDeps));
-    // devComponentsDeps = R.pick(devComponentsOnlyNames, devComponentsDeps);
+  const removeDevAndEnvDepsIfTheyAlsoRegulars = () => {
+    // remove dev and env packages that are also regular packages
+    const getNotRegularPackages = packages => R.difference(R.keys(packages), R.keys(packagesDeps));
+    devPackagesDeps = R.pick(getNotRegularPackages(devPackagesDeps), devPackagesDeps);
+    envsPackagesDeps = R.pick(getNotRegularPackages(envsPackagesDeps), envsPackagesDeps);
+
+    // remove dev and env dependencies that are also regular dependencies
     const componentDepsIds = new BitIds(...componentsDeps.map(c => c.id));
     devComponentsDeps = devComponentsDeps.filter(d => !componentDepsIds.has(d.id));
+    envComponentsDeps = envComponentsDeps.filter(d => !componentDepsIds.has(d.id));
   };
 
   /**
@@ -544,6 +547,12 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     else resolveErrors[originFile] = error.message;
   };
 
+  const copyEnvDependenciesFromModelIfNeeded = () => {
+    if (shouldProcessEnvDependencies(entryComponentMap)) return;
+    // if we don't process env dependencies, we copy the dependencies from the model.
+    envComponentsDeps = componentFromModel.envDependencies.get();
+  };
+
   const combineIssues = () => {
     if (!R.isEmpty(missingDependenciesOnFs)) issues.missingDependenciesOnFs = missingDependenciesOnFs;
     if (!R.isEmpty(missingPackagesDependenciesOnFs)) {
@@ -574,6 +583,11 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
   files.forEach((file: string) => {
     const isTestFile = R.contains(file, testsFiles);
     const isEnvFile = R.contains(file, envFiles);
+    if (!tree[file]) {
+      throw new Error(
+        `DependencyResolver: a file ${file} was not returned from the driver, its dependencies are unknown`
+      );
+    }
     processMissing(file, tree[file].missing);
     processErrors(file, tree[file].error);
     processPackages(file, tree[file].packages, isTestFile, isEnvFile);
@@ -581,7 +595,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     processDepFiles(file, tree[file].files, isTestFile, isEnvFile);
     processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile, isEnvFile);
   });
-  removeDevDepsIfTheyAlsoRegulars();
+  removeDevAndEnvDepsIfTheyAlsoRegulars();
+  copyEnvDependenciesFromModelIfNeeded();
   combineIssues();
 
   return {
@@ -590,7 +605,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     envComponentsDeps,
     packagesDeps,
     devPackagesDeps,
-    envPackagesDeps,
+    envsPackagesDeps,
     issues
   };
 }
@@ -639,6 +654,38 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
 }
 
 /**
+ * if the component doesn't have the env files written on the filesystem there is nothing to pass
+ * to the dependencyResolver
+ */
+function shouldProcessEnvDependencies(componentMap: ComponentMap): boolean {
+  return Boolean(componentMap.origin === COMPONENT_ORIGINS.AUTHORED || componentMap.configDir);
+}
+
+/**
+ * get environment (compiler/tester) files relative to component root, or, if it's author, relative to consumer
+ */
+function getEnvFiles(componentMap: ComponentMap, component: Component, consumer: Consumer): PathLinux[] {
+  const getFiles = () => {
+    if (!shouldProcessEnvDependencies(componentMap)) {
+      return [];
+    }
+    const compilerFiles = component.compiler && component.compiler.files ? component.compiler.files : [];
+    const testerFiles = component.tester && component.tester.files ? component.tester.files : [];
+    return [...compilerFiles, ...testerFiles];
+  };
+  const getPathsRelativeToComponentRoot = () => {
+    const envFilesObjects = getFiles();
+    const rootDirAbsolute = consumer.toAbsolutePath(componentMap.rootDir || '.');
+    return envFilesObjects.map((file) => {
+      const envAbsolute = file.path;
+      return path.relative(rootDirAbsolute, envAbsolute);
+    });
+  };
+  const envFiles = getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
+  return envFiles;
+}
+
+/**
  * Load components and packages dependencies for a component. The process is as follows:
  * 1) Use the language driver to parse the component files and find for each file its dependencies.
  * 2) The results we get from the driver per file tells us what are the files and packages that depend on our file.
@@ -663,12 +710,7 @@ export default (async function loadDependenciesForComponent(
   const consumerPath = consumer.getPath();
   const componentMap: ComponentMap = component.componentMap;
   const { nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
-  const getEnvFiles = () => {
-    const compilerFiles = component.compiler && component.compiler.files ? component.compiler.files : [];
-    const testerFiles = component.tester && component.tester.files ? component.tester.files : [];
-    return [...compilerFiles, ...testerFiles];
-  };
-  const envFiles = getEnvFiles().map(file => file.relative);
+  const envFiles = getEnvFiles(componentMap, component, consumer);
   const allFiles = [...nonTestsFiles, ...testsFiles, ...envFiles];
   const getDependenciesTree = async () => {
     return driver.getDependencyTree(
@@ -698,7 +740,7 @@ export default (async function loadDependenciesForComponent(
   component.setEnvDependencies(envComponentsDeps);
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;
-  component.envsPackageDependencies = traversedDeps.envPackagesDeps;
+  component.envsPackageDependencies = traversedDeps.envsPackagesDeps;
   component.peerPackageDependencies = findPeerDependencies(consumerPath, component);
   // assign issues to component only when it has data.
   // Otherwise, when it's empty, component.issues will be an empty object ({}), and for some weird reason,

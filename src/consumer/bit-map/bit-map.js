@@ -184,17 +184,17 @@ export default class BitMap {
     compilerFilesPaths: PathLinux[] = [],
     testerFilesPaths: PathLinux[] = []
   ) {
-    const res = {
+    const ignoreList = {
       files: [],
       dirs: []
     };
-    if (!configDir) return res;
+    if (!configDir) return ignoreList;
     if (configDir.startsWith(`{${COMPONENT_DIR}}`)) {
       const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
       const allEnvFilesPaths = compilerFilesPaths.concat(testerFilesPaths);
       allEnvFilesPaths.forEach((file) => {
         const ignoreFile = pathJoinLinux(resolvedConfigDir, file);
-        res.files.push(ignoreFile);
+        ignoreList.files.push(ignoreFile);
       });
       const configDirWithoutCompDir = format(configDir, { [COMPONENT_DIR]: '', ENV_TYPE: '{ENV_TYPE}' });
       // There is nested folders to ignore
@@ -203,22 +203,22 @@ export default class BitMap {
         // There is nested folder which is not the env folders - ignore it completely
         if (configDirWithoutCompAndEnvsDir !== '' && configDirWithoutCompAndEnvsDir !== '/') {
           const resolvedDirWithoutEnvType = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
-          res.dirs.push(stripTrailingChar(resolvedDirWithoutEnvType, '/'));
+          ignoreList.dirs.push(stripTrailingChar(resolvedDirWithoutEnvType, '/'));
         } else {
           const resolvedCompilerConfigDir = format(configDir, {
             [COMPONENT_DIR]: rootDir,
             ENV_TYPE: COMPILER_ENV_TYPE
           });
           const resolvedTesterConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
-          res.dirs.push(resolvedCompilerConfigDir, resolvedTesterConfigDir);
+          ignoreList.dirs.push(resolvedCompilerConfigDir, resolvedTesterConfigDir);
         }
       }
     } else {
       // Ignore the whole dir since this dir is only for config files
       const dirToIgnore = format(configDir, { ENV_TYPE: '' });
-      res.dirs.push(dirToIgnore);
+      ignoreList.dirs.push(dirToIgnore);
     }
-    return res;
+    return ignoreList;
   }
 
   loadComponents(componentsJson: Object) {
@@ -254,11 +254,10 @@ export default class BitMap {
    * They might be in internal dirs then we need to ignore the dir completely
    */
   getConfigDirsAndFilesToIgnore(consumerPath: PathLinux): IgnoreFilesDirs {
-    const res = {
+    const ignoreList = {
       files: [],
       dirs: []
     };
-    // $FlowFixMe
     R.values(this.components).forEach((component: ComponentMap) => {
       const configDir = component.configDir;
       const trackDir = component.getTrackDir();
@@ -282,11 +281,11 @@ export default class BitMap {
           // $FlowFixMe - see comment above
           testerFiles
         );
-        res.files = res.files.concat(toIgnore.files);
-        res.dirs = res.dirs.concat(toIgnore.dirs);
+        ignoreList.files = ignoreList.files.concat(toIgnore.files);
+        ignoreList.dirs = ignoreList.dirs.concat(toIgnore.dirs);
       }
     });
-    return res;
+    return ignoreList;
   }
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {

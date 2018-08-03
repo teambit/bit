@@ -21,6 +21,8 @@ const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
 
 export const statusFailureMsg = 'issues found';
 export const statusInvalidComponentsMsg = 'invalid components';
+export const statusWorkspaceIsCleanMsg =
+  'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
 
 export default class Status extends Command {
   name = 'status';
@@ -161,8 +163,7 @@ export default class Status extends Command {
         ]
           .filter(x => x)
           .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
-        troubleshootingStr ||
-      chalk.yellow('nothing to tag or export (use "bit add <file...>" to track files or directories as components)')
+        troubleshootingStr || chalk.yellow(statusWorkspaceIsCleanMsg)
     );
   }
 }

@@ -12,6 +12,7 @@ import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-conf
 import { COMPILER_ENV_TYPE } from '../../src/extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
 import { COMPONENT_DIR } from '../../src/constants';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -424,7 +425,7 @@ describe('envs', function () {
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         // Make sure the component is not modified before the changes
         const statusOutput = helper.status();
-        expect(statusOutput).to.have.string('nothing to tag or export');
+        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
         expect(statusOutput).to.not.have.string('modified');
       });
       describe('changing config files', () => {
@@ -505,7 +506,7 @@ describe('envs', function () {
       it('should not show the component as modified after import', () => {
         // Make sure the component is not modified before the changes
         const statusOutput = helper.status();
-        expect(statusOutput).to.have.string('nothing to tag or export');
+        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
         expect(statusOutput).to.not.have.string('modified');
       });
       it("should add the envPackageDependencies to devDependencies in component's package.json", () => {
@@ -1019,7 +1020,7 @@ describe('envs', function () {
           beforeEach(() => {
             // Make sure the component is not modified before the changes
             const statusOutput = helper.status();
-            expect(statusOutput).to.have.string('nothing to tag or export');
+            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             expect(statusOutput).to.not.have.string('modified');
           });
           afterEach(() => {
@@ -1099,7 +1100,7 @@ describe('envs', function () {
           );
           helper.createFile(testerFilesFolder, 'someFile.js', JSON.stringify({ someConfKey: 'someConfVal' }, null, 2));
           const statusOutput = helper.status();
-          expect(statusOutput).to.have.string('nothing to tag or export');
+          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
           expect(statusOutput).to.not.have.string('modified');
         });
         describe('change envs files', () => {
@@ -1113,7 +1114,7 @@ describe('envs', function () {
             envFilesFullFolder = path.join(helper.localScopePath, envFilesFolder);
             compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
             testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
-            expect(statusOutput).to.have.string('nothing to tag or export');
+            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             expect(statusOutput).to.not.have.string('modified');
           });
           afterEach(() => {
