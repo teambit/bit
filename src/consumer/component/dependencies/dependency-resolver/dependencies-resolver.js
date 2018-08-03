@@ -547,6 +547,11 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     else resolveErrors[originFile] = error.message;
   };
 
+  // @todo: fix this. the shouldProcessEnvDependencies is incorrect.
+  // an author can detach its compiler but attach its tester, so it does process the tester files
+  // but not the compiler files.
+  // in this case we should copy the dependencies of the compiler from the model because it
+  // was not processed but should not copy the dependencies of the tester.
   const copyEnvDependenciesFromModelIfNeeded = () => {
     if (shouldProcessEnvDependencies(entryComponentMap) || !componentFromModel) return;
     // if we don't process env dependencies, we copy the dependencies from the model.
@@ -585,7 +590,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     const isEnvFile = R.contains(file, envFiles);
     if (!tree[file]) {
       throw new Error(
-        `DependencyResolver: a file ${file} was not returned from the driver, its dependencies are unknown`
+        `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
       );
     }
     processMissing(file, tree[file].missing);
@@ -666,12 +671,11 @@ function shouldProcessEnvDependencies(componentMap: ComponentMap): boolean {
  */
 function getEnvFiles(componentMap: ComponentMap, component: Component, consumer: Consumer): PathLinux[] {
   const getFiles = () => {
-    if (!shouldProcessEnvDependencies(componentMap)) {
-      return [];
-    }
     const compilerFiles = component.compiler && component.compiler.files ? component.compiler.files : [];
     const testerFiles = component.tester && component.tester.files ? component.tester.files : [];
-    return [...compilerFiles, ...testerFiles];
+    const allFiles = [...compilerFiles, ...testerFiles];
+    // do not process files that were loaded from the model and are not on the filesystem
+    return allFiles.filter(file => !file.fromModel);
   };
   const getPathsRelativeToComponentRoot = () => {
     const envFilesObjects = getFiles();

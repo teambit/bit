@@ -1085,12 +1085,18 @@ export default class Component {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     ids.forEach((id: string) => {
-      const dependencies = new Dependencies(componentFromModel.getAllDependencies());
-      const dependency = dependencies.getByIdStr(id);
-      if (!dependency) {
-        throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
-      }
-      this.dependencies.add(dependency);
+      const addDependency = (modelDependencies: Dependencies, dependencies: Dependencies) => {
+        const dependency = modelDependencies.getByIdStr(id);
+        if (dependency) dependencies.add(dependency);
+        return Boolean(dependency);
+      };
+      const addedDep = addDependency(componentFromModel.dependencies, this.dependencies);
+      if (addedDep) return;
+      const addedDevDep = addDependency(componentFromModel.devDependencies, this.devDependencies);
+      if (addedDevDep) return;
+      const addedEnvDep = addDependency(componentFromModel.envDependencies, this.envDependencies);
+      if (addedEnvDep) return;
+      throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
     });
   }
 
