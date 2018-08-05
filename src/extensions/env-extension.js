@@ -1,10 +1,7 @@
 /** @flow */
 
-import path from 'path';
 import R from 'ramda';
-import fs from 'fs-extra';
 import format from 'string-format';
-import pMapSeries from 'p-map-series';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
@@ -12,7 +9,7 @@ import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import { Repository } from '../scope/objects';
-import { pathJoinLinux, removeEmptyDir, removeFilesAndEmptyDirsRecursively } from '../utils';
+import { pathJoinLinux, removeFilesAndEmptyDirsRecursively } from '../utils';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 import { ComponentWithDependencies } from '../scope';
