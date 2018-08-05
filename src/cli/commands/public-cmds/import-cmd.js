@@ -121,7 +121,7 @@ export default class Import extends Command {
       withEnvironments: environment,
       override,
       writeDists: !ignoreDist,
-      writeBitJson: conf,
+      writeConfig: conf,
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson
     };
