@@ -43,11 +43,11 @@ export default (async function ejectConf(
   const resolvedConfigDir = format(linuxConfigDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
   const resolvedConfigDirFullPath = path.normalize(path.join(consumerPath, resolvedConfigDir));
   const ejectedCompilerDirectoryP = component.compiler
-    ? await component.compiler.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
-    : '';
+    ? component.compiler.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
+    : Promise.resolve('');
   const ejectedTesterDirectoryP = component.tester
-    ? await component.tester.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
-    : '';
+    ? component.tester.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
+    : Promise.resolve('');
   const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
     ejectedCompilerDirectoryP,
     ejectedTesterDirectoryP

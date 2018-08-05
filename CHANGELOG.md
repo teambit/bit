@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - automatically detach envs of component when changed from imported workspace
 - support dynamic namespaces (replaced the box+name format with a dynamic name that can have multiple slashes to indicate a hierarchical namespace)
 - new eject-conf command to write bit.json and envs config files to file system
+- new inject-conf command to delete bit.json and envs config files from the file system
 
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 

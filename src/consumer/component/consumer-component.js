@@ -15,6 +15,7 @@ import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
 import ejectConf from '../component-ops/eject-conf';
+import injectConf from '../component-ops/inject-conf';
 import type { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
@@ -59,6 +60,7 @@ import EnvExtension from '../../extensions/env-extension';
 import EjectToWorkspace from './exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
+import InjectNonEjected from './exceptions/inject-non-ejected';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -319,6 +321,24 @@ export default class Component {
     return res;
   }
 
+  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force?: boolean = false): Promise<EjectConfResult> {
+    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
+    const componentMap = this.componentMap;
+    if (!componentMap) {
+      throw new GeneralError('could not find component in the .bitmap file');
+    }
+    const configDir = componentMap.configDir;
+    if (!configDir) {
+      throw new InjectNonEjected();
+    }
+
+    const res = await injectConf(this, consumerPath, bitMap, configDir, force);
+    if (this.componentMap) {
+      this.componentMap.setConfigDir();
+    }
+    return res;
+  }
+
   getPackageNameAndPath(): Promise<any> {
     const packagePath = `${this.bindingPrefix}/${this.id.name}`;
     const packageName = this.id.toStringWithoutVersion();
@@ -459,7 +479,7 @@ export default class Component {
 
   async _writeToComponentDir({
     bitDir,
-    writeBitJson,
+    writeConfig,
     configDir,
     writePackageJson,
     consumer,
@@ -469,7 +489,7 @@ export default class Component {
     excludeRegistryPrefix = false
   }: {
     bitDir: string,
-    writeBitJson: boolean,
+    writeConfig: boolean,
     configDir?: string,
     writePackageJson: boolean,
     consumer?: Consumer,
@@ -485,7 +505,7 @@ export default class Component {
     }
     if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
     await this.dists.writeDists(this, consumer, false);
-    if (writeBitJson && consumer) {
+    if (writeConfig && consumer) {
       const resolvedConfigDir = configDir || consumer.dirStructure.ejectedEnvsDirStructure;
       await this.writeConfig(consumer.getPath(), consumer.bitMap, resolvedConfigDir, override);
     }
@@ -581,7 +601,7 @@ export default class Component {
    */
   async write({
     bitDir,
-    writeBitJson = false,
+    writeConfig = false,
     configDir,
     writePackageJson = true,
     override = true,
@@ -594,7 +614,7 @@ export default class Component {
     excludeRegistryPrefix = false
   }: {
     bitDir?: string,
-    writeBitJson?: boolean,
+    writeConfig?: boolean,
     configDir?: boolean,
     writePackageJson?: boolean,
     override?: boolean,
@@ -623,7 +643,7 @@ export default class Component {
     if (!bitMap) {
       return this._writeToComponentDir({
         bitDir: calculatedBitDir,
-        writeBitJson,
+        writeConfig,
         writePackageJson,
         consumer,
         override,
@@ -668,7 +688,7 @@ export default class Component {
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) writeBitJson = false;
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) writeConfig = false;
     const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
     this.writtenPath = newBase;
     this.files.forEach(file => file.updatePaths({ newBase }));
@@ -694,7 +714,7 @@ export default class Component {
     const actualWithPackageJson = writePackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
     await this._writeToComponentDir({
       bitDir: newBase,
-      writeBitJson,
+      writeConfig,
       configDir: resolvedConfigDir,
       writePackageJson: actualWithPackageJson,
       consumer,

@@ -28,6 +28,7 @@ import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
 import EnvsAttach from './commands/public-cmds/envs-attach-cmd';
 import EjectConf from './commands/public-cmds/eject-conf-cmd';
+import InjectConf from './commands/public-cmds/inject-conf-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
 import RefreshScope from './commands/private-cmds/refresh-scope-cmd';
 import CatScope from './commands/private-cmds/cat-scope-cmd';
@@ -80,6 +81,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Build(),
       new EnvsAttach(),
       new EjectConf(),
+      new InjectConf(),
       new DescribeScope(),
       new CiUpdate(),
       new RefreshScope(),
