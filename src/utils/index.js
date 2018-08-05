@@ -56,7 +56,8 @@ import isNumeric from './number/is-numeric';
 import diff from './array/diff';
 import sharedStartOfArray from './array/shared-start';
 import filterObject from './filter-object';
-import removeContainingDirIfEmpty from './remove-containing-dir-if-empty';
+import removeContainingDirIfEmpty from './fs/remove-containing-dir-if-empty';
+import removeFilesAndEmptyDirsRecursively from './fs/remove-files-and-empty-dirs-recursively';
 import isValidIdChunk from './is-valid-id-chunk';
 import isValidScopeName from './is-valid-scope-name';
 import packCommand from './pack-command';
@@ -123,6 +124,7 @@ export {
   hasOwnProperty,
   contains,
   removeContainingDirIfEmpty,
+  removeFilesAndEmptyDirsRecursively,
   isBitUrl,
   isDir,
   mapObject,

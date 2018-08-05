@@ -15,6 +15,7 @@ import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
 import ejectConf from '../component-ops/eject-conf';
+import injectConf from '../component-ops/inject-conf';
 import type { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
@@ -59,6 +60,7 @@ import EnvExtension from '../../extensions/env-extension';
 import EjectToWorkspace from './exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
+import InjectNonEjected from './exceptions/inject-non-ejected';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -315,6 +317,24 @@ export default class Component {
     const res = await ejectConf(this, consumerPath, bitMap, configDir, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
+    }
+    return res;
+  }
+
+  async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force?: boolean = false): Promise<EjectConfResult> {
+    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
+    const componentMap = this.componentMap;
+    if (!componentMap) {
+      throw new GeneralError('could not find component in the .bitmap file');
+    }
+    const configDir = componentMap.configDir;
+    if (!configDir) {
+      throw new InjectNonEjected();
+    }
+
+    const res = await injectConf(this, consumerPath, bitMap, configDir, force);
+    if (this.componentMap) {
+      this.componentMap.setConfigDir();
     }
     return res;
   }

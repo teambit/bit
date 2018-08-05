@@ -462,6 +462,14 @@ export default class Helper {
       : '';
     return this.runCmd(`bit eject-conf ${id} ${value}`);
   }
+  injectConf(id: string = 'bar/foo', options: ?Object) {
+    const value = options
+      ? Object.keys(options)
+        .map(key => `-${key} ${options[key]}`)
+        .join(' ')
+      : '';
+    return this.runCmd(`bit inject-conf ${id} ${value}`);
+  }
   setHubDomain(domain: string = 'hub.bitsrc.io') {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
