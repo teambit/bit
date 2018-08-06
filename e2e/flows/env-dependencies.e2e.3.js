@@ -36,6 +36,7 @@ describe('environments with dependencies', function () {
     helper.copyFixtureFile(path.join('compilers', 'webpack', 'base.config.js'));
     helper.copyFixtureFile(path.join('compilers', 'webpack', 'dev.config.js'));
     helper.addNpmPackage('webpack-merge', '4.1.4');
+    helper.addNpmPackage('webpack', '4.16.5');
     helper.createComponentBarFoo();
     helper.addComponentBarFoo();
     scopeBeforeTagging = helper.cloneLocalScope();
@@ -73,7 +74,7 @@ describe('environments with dependencies', function () {
       helper.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
       helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });
-    it('bit status should now show any missing', () => {
+    it('bit status should not show any missing', () => {
       const output = helper.runCmd('bit status');
       expect(output).to.not.have.string(statusFailureMsg);
       expect(output).to.not.have.string(statusInvalidComponentsMsg);
@@ -87,7 +88,7 @@ describe('environments with dependencies', function () {
       helper.addNpmPackage('webpack', '4.16.4');
       helper.addComponentWithOptions('base.config.js', { i: 'webpack/base' });
     });
-    it('bit status should now show any missing', () => {
+    it('bit status should not show any missing', () => {
       const output = helper.runCmd('bit status');
       expect(output).to.not.have.string(statusFailureMsg);
       expect(output).to.not.have.string(statusInvalidComponentsMsg);
