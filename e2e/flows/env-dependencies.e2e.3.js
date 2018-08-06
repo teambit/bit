@@ -35,6 +35,7 @@ describe('environments with dependencies', function () {
     helper.importCompiler(`${helper.envScope}/${compilerId}`);
     helper.copyFixtureFile(path.join('compilers', 'webpack', 'base.config.js'));
     helper.copyFixtureFile(path.join('compilers', 'webpack', 'dev.config.js'));
+    helper.addNpmPackage('webpack-merge', '4.1.4');
     helper.createComponentBarFoo();
     helper.addComponentBarFoo();
     scopeBeforeTagging = helper.cloneLocalScope();
@@ -99,6 +100,11 @@ describe('environments with dependencies', function () {
       expect(showJson.compilerDependencies).to.have.lengthOf(1);
       const envDependency = showJson.compilerDependencies[0];
       expect(envDependency.id).to.equal('webpack/base');
+    });
+    it('bit show should show compiler package dependency', () => {
+      const showJson = helper.showComponentParsed('bar/foo');
+      expect(showJson).to.have.property('compilerPackageDependencies');
+      expect(showJson.compilerPackageDependencies).to.have.property('webpack-merge');
     });
     describe('after tagging the components', () => {
       let catComponent;

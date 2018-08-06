@@ -521,48 +521,42 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
 
   const processMissing = (originFile: PathLinuxRelative, missing: $ElementType<DependenciesResults, 'missing'>) => {
     if (!missing) return;
-    const componentFiles = consumerComponent.files;
-    const doesFileExistInComponent = !R.isEmpty(
-      componentFiles.filter(componentFile => pathNormalizeToLinux(componentFile.relative) === originFile)
-    );
-    if (doesFileExistInComponent) {
-      if (missing.files && !R.isEmpty(missing.files)) {
-        if (missingDependenciesOnFs[originFile]) {
-          missingDependenciesOnFs[originFile].concat(missing.files);
-        } else missingDependenciesOnFs[originFile] = missing.files;
-      }
-      if (missing.packages && !R.isEmpty(missing.packages)) {
-        const customResolvedDependencies = findOriginallyCustomModuleResolvedDependencies(missing.packages);
-        if (customResolvedDependencies) {
-          Object.keys(customResolvedDependencies).forEach((missingPackage) => {
-            const componentId = customResolvedDependencies[missingPackage].toString();
-            if (missingCustomModuleResolutionLinks[originFile]) {
-              missingCustomModuleResolutionLinks[originFile].push(componentId);
-            } else missingCustomModuleResolutionLinks[originFile] = [componentId];
-          });
-        }
-        const missingPackages = customResolvedDependencies
-          ? R.difference(missing.packages, Object.keys(customResolvedDependencies))
-          : missing.packages;
-
-        if (!R.isEmpty(missingPackages)) {
-          if (missingPackagesDependenciesOnFs[originFile]) {
-            missingPackagesDependenciesOnFs[originFile].concat(missing.packages);
-          } else missingPackagesDependenciesOnFs[originFile] = missing.packages;
-        }
-      }
-
-      if (missing.bits && !R.isEmpty(missing.bits)) {
-        missing.bits.forEach((missingBit) => {
-          const componentId = consumer.getComponentIdFromNodeModulesPath(missingBit, consumerComponent.bindingPrefix);
-          // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
-          if (consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
-            if (missingLinks[originFile]) missingLinks[originFile].push(componentId);
-            else missingLinks[originFile] = [componentId];
-          } else if (missingComponents[originFile]) missingComponents[originFile].push(componentId);
-          else missingComponents[originFile] = [componentId];
+    if (missing.files && !R.isEmpty(missing.files)) {
+      if (missingDependenciesOnFs[originFile]) {
+        missingDependenciesOnFs[originFile].concat(missing.files);
+      } else missingDependenciesOnFs[originFile] = missing.files;
+    }
+    if (missing.packages && !R.isEmpty(missing.packages)) {
+      const customResolvedDependencies = findOriginallyCustomModuleResolvedDependencies(missing.packages);
+      if (customResolvedDependencies) {
+        Object.keys(customResolvedDependencies).forEach((missingPackage) => {
+          const componentId = customResolvedDependencies[missingPackage].toString();
+          if (missingCustomModuleResolutionLinks[originFile]) {
+            missingCustomModuleResolutionLinks[originFile].push(componentId);
+          } else missingCustomModuleResolutionLinks[originFile] = [componentId];
         });
       }
+      const missingPackages = customResolvedDependencies
+        ? R.difference(missing.packages, Object.keys(customResolvedDependencies))
+        : missing.packages;
+
+      if (!R.isEmpty(missingPackages)) {
+        if (missingPackagesDependenciesOnFs[originFile]) {
+          missingPackagesDependenciesOnFs[originFile].concat(missing.packages);
+        } else missingPackagesDependenciesOnFs[originFile] = missing.packages;
+      }
+    }
+
+    if (missing.bits && !R.isEmpty(missing.bits)) {
+      missing.bits.forEach((missingBit) => {
+        const componentId = consumer.getComponentIdFromNodeModulesPath(missingBit, consumerComponent.bindingPrefix);
+        // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
+        if (consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
+          if (missingLinks[originFile]) missingLinks[originFile].push(componentId);
+          else missingLinks[originFile] = [componentId];
+        } else if (missingComponents[originFile]) missingComponents[originFile].push(componentId);
+        else missingComponents[originFile] = [componentId];
+      });
     }
   };
 
