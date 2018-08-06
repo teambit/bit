@@ -70,7 +70,8 @@ export type VersionProps = {
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
-  envsPackageDependencies?: { [string]: string },
+  compilerPackageDependencies?: { [string]: string },
+  testerPackageDependencies?: { [string]: string },
   bindingPrefix?: string,
   customResolvedPaths?: customResolvedPath[]
 };
@@ -101,7 +102,8 @@ export default class Version extends BitObject {
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
-  envsPackageDependencies: { [string]: string };
+  compilerPackageDependencies: { [string]: string };
+  testerPackageDependencies: { [string]: string };
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
 
@@ -127,7 +129,8 @@ export default class Version extends BitObject {
     this.packageDependencies = props.packageDependencies || {};
     this.devPackageDependencies = props.devPackageDependencies || {};
     this.peerPackageDependencies = props.peerPackageDependencies || {};
-    this.envsPackageDependencies = props.envsPackageDependencies || {};
+    this.compilerPackageDependencies = props.compilerPackageDependencies || {};
+    this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
     this.customResolvedPaths = props.customResolvedPaths;
     this.detachedCompiler = props.detachedCompiler;
@@ -194,7 +197,8 @@ export default class Version extends BitObject {
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
-          envsPackageDependencies: obj.envsPackageDependencies,
+          compilerPackageDependencies: obj.compilerPackageDependencies,
+          testerPackageDependencies: obj.testerPackageDependencies,
           bindingPrefix: obj.bindingPrefix
         },
         filterFunction
@@ -291,7 +295,8 @@ export default class Version extends BitObject {
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        envsPackageDependencies: this.envsPackageDependencies,
+        compilerPackageDependencies: this.compilerPackageDependencies,
+        testerPackageDependencies: this.testerPackageDependencies,
         customResolvedPaths: this.customResolvedPaths
       },
       val => !!val
@@ -339,7 +344,8 @@ export default class Version extends BitObject {
       flattenedTesterDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       packageDependencies,
       customResolvedPaths
     } = JSON.parse(contents);
@@ -414,7 +420,8 @@ export default class Version extends BitObject {
       flattenedTesterDependencies: _getFlattenedDependencies(flattenedTesterDependencies),
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       packageDependencies,
       customResolvedPaths
     });
@@ -512,13 +519,6 @@ export default class Version extends BitObject {
       return areEnvsDifferent(envModelFromFs, envModelFromModel);
     };
 
-    const mergePackageDependencies = (
-      envsPackageDependencies = {},
-      compilerDynamicPakageDependencies = {},
-      testerDynamicPakageDependencies = {}
-    ) => {
-      return { ...envsPackageDependencies, ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies };
-    };
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
 
@@ -579,14 +579,14 @@ export default class Version extends BitObject {
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
-      compilerPackageDependencies: mergePackageDependencies(
-        component.compilerPackageDependencies,
-        compilerDynamicPakageDependencies
-      ),
-      testerPackageDependencies: mergePackageDependencies(
-        component.compilerPackageDependencies,
-        testerDynamicPakageDependencies
-      ),
+      compilerPackageDependencies: {
+        ...component.compilerPackageDependencies,
+        ...compilerDynamicPakageDependencies
+      },
+      testerPackageDependencies: {
+        ...component.compilerPackageDependencies,
+        ...testerDynamicPakageDependencies
+      },
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,
@@ -723,7 +723,8 @@ export default class Version extends BitObject {
     _validatePackageDependencies(this.packageDependencies);
     _validatePackageDependencies(this.devPackageDependencies);
     _validatePackageDependencies(this.peerPackageDependencies);
-    _validatePackageDependencies(this.envsPackageDependencies);
+    _validatePackageDependencies(this.compilerPackageDependencies);
+    _validatePackageDependencies(this.testerPackageDependencies);
     if (this.dists && this.dists.length) {
       validateType(message, this.dists, 'dist', 'array');
       // $FlowFixMe

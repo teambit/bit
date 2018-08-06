@@ -776,8 +776,11 @@ export default (async function loadDependenciesForComponent(
   component.setTesterDependencies(testerComponentsDeps);
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;
-  // envsPackageDependencies might be set when the compiler and tester were loaded
-  component.envsPackageDependencies = R.merge(traversedDeps.envsPackagesDeps, component.envsPackageDependencies);
+  component.compilerPackageDependencies = R.merge(
+    traversedDeps.compilerPackagesDeps,
+    component.compilerPackageDependencies
+  );
+  component.testerPackageDependencies = R.merge(traversedDeps.testerPackagesDeps, component.testerPackageDependencies);
   component.peerPackageDependencies = findPeerDependencies(consumerPath, component);
   // assign issues to component only when it has data.
   // Otherwise, when it's empty, component.issues will be an empty object ({}), and for some weird reason,

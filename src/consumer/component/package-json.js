@@ -186,8 +186,12 @@ async function write(
       homepage: component._getHomepage(),
       main: pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile)),
       dependencies: component.packageDependencies,
-      // Add envsPackageDependencies to the devDependencies in the package.json
-      devDependencies: { ...component.devPackageDependencies, ...component.envsPackageDependencies },
+      // Add environments PackageDependencies to the devDependencies in the package.json
+      devDependencies: {
+        ...component.devPackageDependencies,
+        ...component.compilerPackageDependencies,
+        ...component.testerPackageDependencies
+      },
       peerDependencies: component.peerPackageDependencies,
       componentRootFolder: dir,
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`

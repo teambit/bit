@@ -87,7 +87,8 @@ export type ComponentProps = {
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
-  envsPackageDependencies?: ?Object,
+  compilerPackageDependencies?: ?Object,
+  testerPackageDependencies?: ?Object,
   customResolvedPaths?: ?(customResolvedPath[]),
   files: SourceFile[],
   docs?: ?(Doclet[]),
@@ -1351,18 +1352,24 @@ export default class Component {
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
 
-    // Load the envsPackageDependencies from the actual compiler / tester or from the model
+    // Load the compilerPackageDependencies/testerPackageDependencies from the actual compiler / tester or from the model
     // if they are not loaded (aka not installed)
     // We load it from model to prevent case when component is modified becasue changes in envsPackageDependencies
     // That occur as a result that we import component but didn't import its envs so we can't
     // calculate the envsPackageDependencies (without install the env, which we don't want)
     const compilerDynamicPackageDependencies = compiler && compiler.loaded ? compiler.dynamicPackageDependencies : {};
     const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
-    const modelEnvsPackageDependencies = componentFromModel ? componentFromModel.envsPackageDependencies || {} : {};
-    const envsPackageDependencies = {
-      ...modelEnvsPackageDependencies,
-      ...testerDynamicPackageDependencies,
+    const modelCompilerPackageDependencies = componentFromModel
+      ? componentFromModel.compilerPackageDependencies || {}
+      : {};
+    const modelTesterPackageDependencies = componentFromModel ? componentFromModel.testerPackageDependencies || {} : {};
+    const compilerPackageDependencies = {
+      ...modelCompilerPackageDependencies,
       ...compilerDynamicPackageDependencies
+    };
+    const testerPackageDependencies = {
+      ...modelTesterPackageDependencies,
+      ...testerDynamicPackageDependencies
     };
 
     return new Component({
@@ -1380,7 +1387,8 @@ export default class Component {
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       deprecated,
       origin: componentMap.origin,
       detachedCompiler: componentMap.detachedCompiler,
