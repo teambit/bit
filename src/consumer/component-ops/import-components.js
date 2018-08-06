@@ -26,7 +26,7 @@ export type ImportOptions = {
   withEnvironments: boolean, // default: false
   writeToPath?: string,
   writePackageJson: boolean, // default: true
-  writeBitJson: boolean, // default: false
+  writeConfig: boolean, // default: false
   writeDists: boolean, // default: true
   override: boolean, // default: false
   installNpmPackages: boolean, // default: true
@@ -330,7 +330,7 @@ export default class ImportComponents {
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,
-      writeBitJson: this.options.writeBitJson,
+      writeConfig: this.options.writeConfig,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,

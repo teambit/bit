@@ -976,9 +976,14 @@ export default class Consumer {
     return componentsIds;
   }
 
-  async ejectConf(componentId: BitId[], { ejectPath }: { ejectPath: ?string }) {
+  async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {
     const component = await this.loadComponent(componentId);
     return component.writeConfig(this.getPath(), this.bitMap, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
+  }
+
+  async injectConf(componentId: BitId, force: boolean) {
+    const component = await this.loadComponent(componentId);
+    return component.injectConfig(this.getPath(), this.bitMap, force);
   }
 
   async onDestroy() {

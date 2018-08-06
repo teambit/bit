@@ -140,7 +140,7 @@ async function applyVersion(
 
   await component.write({
     override: true,
-    writeBitJson: false, // never override the existing bit.json
+    writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
     deleteBitDirContent: false,
     origin: componentMap.origin,

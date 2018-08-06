@@ -83,6 +83,7 @@ import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspac
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import { COMPONENT_DIR } from '../constants';
+import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -133,6 +134,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     EjectBoundToWorkspace,
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
+  [InjectNonEjected, () => 'error: could not inject config for already injected component'],
   [
     EjectNoDir,
     err =>

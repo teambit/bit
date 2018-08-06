@@ -1,10 +1,7 @@
 /** @flow */
 
-import path from 'path';
 import R from 'ramda';
-import fs from 'fs-extra';
 import format from 'string-format';
-import pMapSeries from 'p-map-series';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
@@ -12,7 +9,7 @@ import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel } from './extension-file';
 import { Repository } from '../scope/objects';
-import { pathJoinLinux, removeEmptyDir } from '../utils';
+import { pathJoinLinux, removeFilesAndEmptyDirsRecursively } from '../utils';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 import { ComponentWithDependencies } from '../scope';
@@ -166,24 +163,26 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - writeFilesToFs');
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
     const writeP = [];
-    const deleteP = [];
-    const oldDirs = [];
+    const filePaths = [];
     this.files.forEach((file) => {
       if (deleteOldFiles) {
-        oldDirs.push(path.dirname(file.path));
-        deleteP.push(fs.remove(file.path));
+        filePaths.push(file.path);
       }
       file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.name });
       writeP.push(file.write());
     });
-    await Promise.all(writeP.concat(deleteP));
-    if (deleteOldFiles) {
-      // Sorting it to make sure we will delete the inner dirs first
-      const sortedOldDirs = oldDirs.sort().reverse();
-      const deleteOldDirsP = pMapSeries(sortedOldDirs, removeEmptyDir);
-      await deleteOldDirsP;
-    }
+    await Promise.all(writeP);
+    await removeFilesAndEmptyDirsRecursively(filePaths);
     return resolvedEjectedEnvsDirectory;
+  }
+
+  /**
+   * Delete env files from file system
+   */
+  async removeFilesFromFs(): Promise<boolean> {
+    Analytics.addBreadCrumb('env-extension', 'removeFilesFromFs');
+    const filePaths = this.files.map(file => file.path);
+    return removeFilesAndEmptyDirsRecursively(filePaths);
   }
 
   async reload(scopePath: string, context?: Object): Promise<void> {

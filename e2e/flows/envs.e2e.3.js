@@ -13,6 +13,7 @@ import { COMPILER_ENV_TYPE } from '../../src/extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
 import { COMPONENT_DIR } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -783,6 +784,134 @@ describe('envs', function () {
           expect(babelRcFromFS2.ast).to.equal(false);
           expect(mochaConfigFromFS2.someConfKey).to.equal('someConfVal');
           expect(bitJsonFromFS2.lang).to.be.undefined;
+        });
+      });
+      describe('inject conf', () => {
+        let fullComponentFolder;
+        let bitJsonPath;
+        let babelRcPath;
+        let mochaConfigPath;
+        let componentMap;
+        let compilerFolder;
+        let testerFolder;
+        let compId;
+        before(() => {
+          helper.getClonedLocalScope(importedScopeBeforeChanges);
+          fullComponentFolder = path.join(helper.localScopePath, componentFolder);
+          compId = `${helper.remoteScope}/comp/my-comp@0.0.1`;
+        });
+        describe('negative tests', () => {
+          it('should show error if the component id does not exist', () => {
+            const error = new MissingBitMapComponent('fake/comp');
+            const injectFunc = () => helper.injectConf('fake/comp');
+            helper.expectToThrow(injectFunc, error);
+          });
+          it('should show error if the component was not ejected before', () => {
+            const error = new InjectNonEjected();
+            const injectFunc = () => helper.injectConf('comp/my-comp');
+            helper.expectToThrow(injectFunc, error);
+          });
+        });
+        describe('inject component which ejected to component dir', () => {
+          describe('with ENV_TYPE', () => {
+            before(() => {
+              const confFolder = '{COMPONENT_DIR}/{ENV_TYPE}';
+              helper.ejectConf('comp/my-comp', { p: confFolder });
+              helper.injectConf('comp/my-comp');
+              compilerFolder = path.join(fullComponentFolder, COMPILER_ENV_TYPE);
+              babelRcPath = path.join(compilerFolder, '.babelrc');
+              testerFolder = path.join(fullComponentFolder, TESTER_ENV_TYPE);
+              mochaConfigPath = path.join(testerFolder, 'config');
+              bitJsonPath = path.join(fullComponentFolder, 'bit.json');
+              const bitmap = helper.readBitMap();
+              componentMap = bitmap[compId];
+            });
+            it('should delete config files and folders', () => {
+              // Validate config files and folder deleted
+              expect(bitJsonPath).to.not.be.a.path();
+              expect(compilerFolder).to.not.be.a.path();
+              expect(testerFolder).to.not.be.a.path();
+              expect(babelRcPath).to.not.be.a.path();
+              expect(mochaConfigPath).to.not.be.a.path();
+            });
+            it('should remove config dir from the bitmap', () => {
+              expect(componentMap.configDir).to.be.undefined;
+            });
+          });
+          describe('without ENV_TYPE', () => {
+            before(() => {
+              const confFolder = '{COMPONENT_DIR}';
+              helper.ejectConf('comp/my-comp', { p: confFolder });
+              helper.injectConf('comp/my-comp');
+              babelRcPath = path.join(fullComponentFolder, '.babelrc');
+              mochaConfigPath = path.join(fullComponentFolder, 'config');
+              bitJsonPath = path.join(fullComponentFolder, 'bit.json');
+
+              const bitmap = helper.readBitMap();
+              componentMap = bitmap[compId];
+            });
+            it('should delete config files and folders', () => {
+              // Validate config files and folder deleted
+              expect(bitJsonPath).to.not.be.a.path();
+              expect(babelRcPath).to.not.be.a.path();
+              expect(mochaConfigPath).to.not.be.a.path();
+            });
+            it('should remove config dir from the bitmap', () => {
+              expect(componentMap.configDir).to.be.undefined;
+            });
+          });
+        });
+        describe('inject component which ejected to dedicated dir', () => {
+          describe('with ENV_TYPE', () => {
+            before(() => {
+              const confFolder = 'conf-folder/{ENV_TYPE}';
+              helper.ejectConf('comp/my-comp', { p: confFolder });
+              helper.injectConf('comp/my-comp');
+              const confFolderFullPath = path.join(helper.localScopePath, 'conf-folder');
+              compilerFolder = path.join(confFolderFullPath, COMPILER_ENV_TYPE);
+              babelRcPath = path.join(compilerFolder, '.babelrc');
+              testerFolder = path.join(confFolderFullPath, TESTER_ENV_TYPE);
+              mochaConfigPath = path.join(testerFolder, 'config');
+              bitJsonPath = path.join(confFolderFullPath, 'bit.json');
+              const bitmap = helper.readBitMap();
+              componentMap = bitmap[compId];
+            });
+            it('should delete config files and folders', () => {
+              // Validate config files and folder deleted
+              expect(bitJsonPath).to.not.be.a.path();
+              expect(compilerFolder).to.not.be.a.path();
+              expect(testerFolder).to.not.be.a.path();
+              expect(babelRcPath).to.not.be.a.path();
+              expect(mochaConfigPath).to.not.be.a.path();
+            });
+            it('should remove config dir from the bitmap', () => {
+              expect(componentMap.configDir).to.be.undefined;
+            });
+          });
+          describe('without ENV_TYPE', () => {
+            before(() => {
+              const confFolder = 'conf-folder';
+              helper.ejectConf('comp/my-comp', { p: confFolder });
+              helper.injectConf('comp/my-comp');
+              const confFolderFullPath = path.join(helper.localScopePath, 'conf-folder');
+              compilerFolder = path.join(confFolderFullPath);
+              babelRcPath = path.join(compilerFolder, '.babelrc');
+              testerFolder = path.join(confFolderFullPath);
+              mochaConfigPath = path.join(testerFolder, 'config');
+              bitJsonPath = path.join(confFolderFullPath, 'bit.json');
+              const bitmap = helper.readBitMap();
+              componentMap = bitmap[compId];
+            });
+            it('should delete config files and folders', () => {
+              // Validate config files and folder deleted
+              expect(bitJsonPath).to.not.be.a.path();
+              expect(babelRcPath).to.not.be.a.path();
+              expect(mochaConfigPath).to.not.be.a.path();
+            });
+            it('should remove config dir from the bitmap', () => {
+              expect(componentMap.configDir).to.be.undefined;
+            });
+          });
         });
       });
     });
