@@ -91,13 +91,13 @@ describe('environments with dependencies', function () {
       expect(output).to.not.have.string(statusFailureMsg);
       expect(output).to.not.have.string(statusInvalidComponentsMsg);
     });
-    it('bit show should show environment dependency', () => {
+    it('bit show should show compiler dependency', () => {
       const showJson = helper.showComponentParsed('bar/foo');
       expect(showJson)
-        .to.have.property('envDependencies')
+        .to.have.property('compilerDependencies')
         .that.is.an('array');
-      expect(showJson.envDependencies).to.have.lengthOf(1);
-      const envDependency = showJson.envDependencies[0];
+      expect(showJson.compilerDependencies).to.have.lengthOf(1);
+      const envDependency = showJson.compilerDependencies[0];
       expect(envDependency.id).to.equal('webpack/base');
     });
     describe('after tagging the components', () => {
@@ -107,10 +107,10 @@ describe('environments with dependencies', function () {
         expect(output).to.have.string('2 components tagged');
         catComponent = helper.catComponent('bar/foo@latest');
       });
-      it('should save the envDependencies in the model', () => {
-        expect(catComponent).to.have.property('envDependencies');
-        expect(catComponent.envDependencies).to.have.lengthOf(1);
-        const envDependency = catComponent.envDependencies[0];
+      it('should save the compilerDependencies in the model', () => {
+        expect(catComponent).to.have.property('compilerDependencies');
+        expect(catComponent.compilerDependencies).to.have.lengthOf(1);
+        const envDependency = catComponent.compilerDependencies[0];
         expect(envDependency.id.name).to.equal('webpack/base');
         expect(envDependency.id.version).to.equal('0.0.1');
         expect(envDependency.relativePaths).to.have.lengthOf(1);
@@ -118,12 +118,12 @@ describe('environments with dependencies', function () {
         expect(relativePath.sourceRelativePath).to.equal('base.config.js');
         expect(relativePath.destinationRelativePath).to.equal('base.config.js');
       });
-      it('should save the flattenedEnvDependencies in the model', () => {
-        expect(catComponent).to.have.property('flattenedEnvDependencies');
-        expect(catComponent.flattenedEnvDependencies).to.have.lengthOf(1);
-        const flattenedEnvDependency = catComponent.flattenedEnvDependencies[0];
-        expect(flattenedEnvDependency.name).to.equal('webpack/base');
-        expect(flattenedEnvDependency.version).to.equal('0.0.1');
+      it('should save the flattenedCompilerDependencies in the model', () => {
+        expect(catComponent).to.have.property('flattenedCompilerDependencies');
+        expect(catComponent.flattenedCompilerDependencies).to.have.lengthOf(1);
+        const flattenedCompilerDependency = catComponent.flattenedCompilerDependencies[0];
+        expect(flattenedCompilerDependency.name).to.equal('webpack/base');
+        expect(flattenedCompilerDependency.version).to.equal('0.0.1');
       });
       describe('importing the component to another scope', () => {
         before(() => {

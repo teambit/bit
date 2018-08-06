@@ -428,7 +428,8 @@ export default class Consumer {
       };
       copyDependenciesVersionsFromModelToFS(version.dependencies, componentFromModel.dependencies);
       copyDependenciesVersionsFromModelToFS(version.devDependencies, componentFromModel.devDependencies);
-      copyDependenciesVersionsFromModelToFS(version.envDependencies, componentFromModel.envDependencies);
+      copyDependenciesVersionsFromModelToFS(version.compilerDependencies, componentFromModel.compilerDependencies);
+      copyDependenciesVersionsFromModelToFS(version.testerDependencies, componentFromModel.testerDependencies);
 
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
@@ -942,7 +943,8 @@ export default class Consumer {
     );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);
-    let modelEnvDependencies = new Dependencies([]);
+    let modelCompilerDependencies = new Dependencies([]);
+    let modelTesterDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // try to find the model version of the component to get the stored versions of the dependencies
@@ -950,14 +952,16 @@ export default class Consumer {
         const mainComponentFromModel: Component = await this.scope.loadRemoteComponent(component.id);
         modelDependencies = mainComponentFromModel.dependencies;
         modelDevDependencies = mainComponentFromModel.devDependencies;
-        modelEnvDependencies = mainComponentFromModel.envDependencies;
+        modelCompilerDependencies = mainComponentFromModel.compilerDependencies;
+        modelTesterDependencies = mainComponentFromModel.testerDependencies;
       } catch (e) {
         // do nothing. the component is probably on the file-system only and not on the model.
       }
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
-    await component.envDependencies.addRemoteAndLocalVersions(this.scope, modelEnvDependencies);
+    await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
+    await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
   async eject(componentsIds: BitId[]) {

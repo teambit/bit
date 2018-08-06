@@ -338,7 +338,8 @@ export default class Scope {
         component =>
           (component.dependencies.isCustomResolvedUsed() ||
             component.devDependencies.isCustomResolvedUsed() ||
-            component.envDependencies.isCustomResolvedUsed()) &&
+            component.compilerDependencies.isCustomResolvedUsed() ||
+            component.testerDependencies.isCustomResolvedUsed()) &&
           (component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) &&
           !component.dists.isEmpty()
       );
@@ -464,7 +465,8 @@ export default class Scope {
         });
         object.flattenedDependencies = getBitIdsWithUpdatedScope(object.flattenedDependencies);
         object.flattenedDevDependencies = getBitIdsWithUpdatedScope(object.flattenedDevDependencies);
-        object.flattenedEnvDependencies = getBitIdsWithUpdatedScope(object.flattenedEnvDependencies);
+        object.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(object.flattenedCompilerDependencies);
+        object.flattenedTesterDependencies = getBitIdsWithUpdatedScope(object.flattenedTesterDependencies);
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
           logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
@@ -724,7 +726,7 @@ export default class Scope {
     return versionDeps.concat(externalDeps);
   }
 
-  async importManyOnes(ids: BitId[], cache: boolean = true): Promise<ComponentVersion[]> {
+  async importManyOnes(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
     logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
     Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
 
@@ -804,7 +806,8 @@ export default class Scope {
         const versionId = versionDependencies.component.id;
         return versionId.changeVersion(version);
       });
-      return this.importManyOnes(idsWithAllVersions);
+      const bitIdsWithAllVersions = BitIds.fromArray(idsWithAllVersions.filter(x => x));
+      return this.importManyOnes(bitIdsWithAllVersions);
     });
     await Promise.all(allVersionsP);
 

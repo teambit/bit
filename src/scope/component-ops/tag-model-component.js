@@ -38,13 +38,15 @@ function buildComponentsGraph(components: Component[]) {
 
   const graphDeps = new Graph();
   const graphDevDeps = new Graph();
-  const graphEnvDeps = new Graph();
+  const graphCompilerDeps = new Graph();
+  const graphTesterDeps = new Graph();
   components.forEach((component) => {
     setGraphEdges(component, component.dependencies, graphDeps);
     setGraphEdges(component, component.devDependencies, graphDevDeps);
-    setGraphEdges(component, component.envDependencies, graphEnvDeps);
+    setGraphEdges(component, component.compilerDependencies, graphCompilerDeps);
+    setGraphEdges(component, component.testerDependencies, graphTesterDeps);
   });
-  return { graphDeps, graphDevDeps, graphEnvDeps };
+  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
 }
 
 async function getFlattenedDependencies(
@@ -84,10 +86,8 @@ function updateDependenciesVersions(componentsToTag: Component[]): void {
     const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
     if (foundDependency) dependency.id = dependency.id.changeVersion(foundDependency.version);
   };
-  componentsToTag.forEach((componentToTag) => {
-    componentToTag.dependencies.get().forEach(dependency => updateDependencyVersion(dependency));
-    componentToTag.devDependencies.get().forEach(dependency => updateDependencyVersion(dependency));
-    componentToTag.envDependencies.get().forEach(dependency => updateDependencyVersion(dependency));
+  componentsToTag.forEach((oneComponentToTag) => {
+    oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));
   });
 }
 
@@ -255,7 +255,7 @@ export default (async function tagModelComponent({
   // go through all dependencies and update their versions
   updateDependenciesVersions(componentsToTag);
   // build the dependencies graph
-  const { graphDeps, graphDevDeps, graphEnvDeps } = buildComponentsGraph(componentsToTag);
+  const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = buildComponentsGraph(componentsToTag);
 
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent: Component) => {
@@ -304,17 +304,24 @@ export default (async function tagModelComponent({
       graphDevDeps,
       dependenciesCache
     );
-    const flattenedEnvDependencies = await getFlattenedDependencies(
+    const flattenedCompilerDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,
-      graphEnvDeps,
+      graphCompilerDeps,
+      dependenciesCache
+    );
+    const flattenedTesterDependencies = await getFlattenedDependencies(
+      scope,
+      consumerComponent,
+      graphTesterDeps,
       dependenciesCache
     );
     await scope.sources.addSource({
       source: consumerComponent,
       flattenedDependencies,
       flattenedDevDependencies,
-      flattenedEnvDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies,
       message,
       exactVersion,
       releaseType,

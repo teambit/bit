@@ -8,7 +8,8 @@ export default class VersionDependencies {
   component: ComponentVersion;
   dependencies: ComponentVersion[];
   devDependencies: ComponentVersion[];
-  envDependencies: ComponentVersion[];
+  compilerDependencies: ComponentVersion[];
+  testerDependencies: ComponentVersion[];
   allDependencies: ComponentVersion[];
   sourceScope: ?string;
 
@@ -16,33 +17,43 @@ export default class VersionDependencies {
     component: ComponentVersion,
     dependencies: ComponentVersion[],
     devDependencies: ComponentVersion[],
-    envDependencies: ComponentVersion[],
+    compilerDependencies: ComponentVersion[],
+    testerDependencies: ComponentVersion[],
     sourceScope: string
   ) {
     this.component = component;
     this.dependencies = dependencies;
     this.devDependencies = devDependencies;
-    this.envDependencies = envDependencies;
-    this.allDependencies = [...this.dependencies, ...this.devDependencies, ...this.envDependencies];
+    this.compilerDependencies = compilerDependencies;
+    this.testerDependencies = testerDependencies;
+    this.allDependencies = [
+      ...this.dependencies,
+      ...this.devDependencies,
+      ...this.compilerDependencies,
+      ...this.testerDependencies
+    ];
     this.sourceScope = sourceScope;
   }
 
   async toConsumer(repo: Repository): Promise<ComponentWithDependencies> {
     const dependenciesP = Promise.all(this.dependencies.map(dep => dep.toConsumer(repo)));
     const devDependenciesP = Promise.all(this.devDependencies.map(dep => dep.toConsumer(repo)));
-    const envDependenciesP = Promise.all(this.envDependencies.map(dep => dep.toConsumer(repo)));
+    const compilerDependenciesP = Promise.all(this.compilerDependencies.map(dep => dep.toConsumer(repo)));
+    const testerDependenciesP = Promise.all(this.testerDependencies.map(dep => dep.toConsumer(repo)));
     const componentP = this.component.toConsumer(repo);
-    const [component, dependencies, devDependencies, envDependencies] = await Promise.all([
+    const [component, dependencies, devDependencies, compilerDependencies, testerDependencies] = await Promise.all([
       componentP,
       dependenciesP,
       devDependenciesP,
-      envDependenciesP
+      compilerDependenciesP,
+      testerDependenciesP
     ]);
     return new ComponentWithDependencies({
       component,
       dependencies,
       devDependencies,
-      envDependencies
+      compilerDependencies,
+      testerDependencies
     });
   }
 

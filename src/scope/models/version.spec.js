@@ -58,8 +58,11 @@ describe('Version', () => {
       it('should not have devDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('devDependencies');
       });
-      it('should not have envDependencies property', () => {
-        expect(idParsed).to.not.haveOwnProperty('envDependencies');
+      it('should not have compilerDependencies property', () => {
+        expect(idParsed).to.not.haveOwnProperty('compilerDependencies');
+      });
+      it('should not have testerDependencies property', () => {
+        expect(idParsed).to.not.haveOwnProperty('testerDependencies');
       });
       it('should not have flattenedDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('flattenedDependencies');
@@ -67,8 +70,11 @@ describe('Version', () => {
       it('should not have flattenedDevDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('flattenedDevDependencies');
       });
-      it('should not have flattenedEnvDependencies property', () => {
-        expect(idParsed).to.not.haveOwnProperty('flattenedEnvDependencies');
+      it('should not have flattenedCompilerDependencies property', () => {
+        expect(idParsed).to.not.haveOwnProperty('flattenedCompilerDependencies');
+      });
+      it('should not have flattenedTesterDependencies property', () => {
+        expect(idParsed).to.not.haveOwnProperty('flattenedTesterDependencies');
       });
       it('should not have devPackageDependencies property', () => {
         expect(idParsed).to.not.haveOwnProperty('devPackageDependencies');
@@ -261,9 +267,13 @@ describe('Version', () => {
       version.devDependencies = {};
       expect(validateFunc).to.throw('devDependencies must be an instance of Dependencies, got object');
     });
-    it('should throw when envDependencies are invalid', () => {
-      version.envDependencies = {};
-      expect(validateFunc).to.throw('envDependencies must be an instance of Dependencies, got object');
+    it('should throw when compilerDependencies are invalid', () => {
+      version.compilerDependencies = {};
+      expect(validateFunc).to.throw('compilerDependencies must be an instance of Dependencies, got object');
+    });
+    it('should throw when testerDependencies are invalid', () => {
+      version.testerDependencies = {};
+      expect(validateFunc).to.throw('testerDependencies must be an instance of Dependencies, got object');
     });
     it('should throw when there are dependencies and the flattenDependencies are empty', () => {
       version.flattenedDependencies = [];

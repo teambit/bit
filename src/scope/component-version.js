@@ -1,7 +1,7 @@
 /** @flow */
 import Component from './models/component';
 import Version from './models/version';
-import { BitId } from '../bit-id';
+import { BitId, BitIds } from '../bit-id';
 import Scope from './scope';
 import Repository from './objects/repository';
 import VersionDependencies from './version-dependencies';
@@ -24,16 +24,20 @@ export default class ComponentVersion {
     return this.component.loadVersion(this.version, repository);
   }
 
-  flattenedDependencies(repository: Repository): Promise<BitId[]> {
+  flattenedDependencies(repository: Repository): Promise<BitIds> {
     return this.getVersion(repository).then(version => version.flattenedDependencies);
   }
 
-  flattenedDevDependencies(repository: Repository): Promise<BitId[]> {
+  flattenedDevDependencies(repository: Repository): Promise<BitIds> {
     return this.getVersion(repository).then(version => version.flattenedDevDependencies);
   }
 
-  flattenedEnvDependencies(repository: Repository): Promise<BitId[]> {
-    return this.getVersion(repository).then(version => version.flattenedEnvDependencies);
+  flattenedCompilerDependencies(repository: Repository): Promise<BitIds> {
+    return this.getVersion(repository).then(version => version.flattenedCompilerDependencies);
+  }
+
+  flattenedTesterDependencies(repository: Repository): Promise<BitIds> {
+    return this.getVersion(repository).then(version => version.flattenedTesterDependencies);
   }
 
   toId() {
@@ -74,11 +78,19 @@ export default class ComponentVersion {
         this.version
       } found, going to collect its dependencies`
     );
-    const dependencies = await version.collectDependencies(scope, version.flattenedDependencies);
-    const devDependencies = await version.collectDependencies(scope, version.flattenedDevDependencies);
-    const envDependencies = await version.collectDependencies(scope, version.flattenedEnvDependencies);
+    const dependencies = await scope.importManyOnes(version.flattenedDependencies);
+    const devDependencies = await scope.importManyOnes(version.flattenedDevDependencies);
+    const compilerDependencies = await scope.importManyOnes(version.flattenedCompilerDependencies);
+    const testerDependencies = await scope.importManyOnes(version.flattenedTesterDependencies);
 
-    return new VersionDependencies(this, dependencies, devDependencies, envDependencies, source);
+    return new VersionDependencies(
+      this,
+      dependencies,
+      devDependencies,
+      compilerDependencies,
+      testerDependencies,
+      source
+    );
   }
 
   toConsumer(repo: Repository): Promise<ConsumerComponent> {

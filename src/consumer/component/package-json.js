@@ -133,9 +133,10 @@ async function changeDependenciesToRelativeSyntax(
       return R.fromPairs(packages);
     };
     const devDeps = getPackages(component.devDependencies);
-    const envDeps = getPackages(component.envDependencies);
+    const compilerDeps = getPackages(component.compilerDependencies);
+    const testerDeps = getPackages(component.testerDependencies);
     packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
-    packageJson.addDevDependencies({ ...devDeps, ...envDeps }, getRegistryPrefix());
+    packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, getRegistryPrefix());
     return packageJson.write({ override: true });
   };
   return Promise.all(components.map(component => updateComponent(component)));
@@ -172,7 +173,8 @@ async function write(
   };
   const bitDependencies = await getBitDependencies(component.dependencies);
   const bitDevDependencies = await getBitDependencies(component.devDependencies);
-  const bitEnvDependencies = await getBitDependencies(component.envDependencies);
+  const bitCompilerDependencies = await getBitDependencies(component.compilerDependencies);
+  const bitTesterDependencies = await getBitDependencies(component.testerDependencies);
   const registryPrefix = getRegistryPrefix();
   const name = excludeRegistryPrefix
     ? component.id.toStringWithoutVersion().replace(/\//g, '.')
@@ -191,7 +193,10 @@ async function write(
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
     packageJson.addDependencies(bitDependencies, registryPrefix);
-    packageJson.addDevDependencies({ ...bitDevDependencies, ...bitEnvDependencies }, registryPrefix);
+    packageJson.addDevDependencies(
+      { ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies },
+      registryPrefix
+    );
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);
