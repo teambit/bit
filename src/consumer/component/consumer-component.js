@@ -78,10 +78,12 @@ export type ComponentProps = {
   bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
-  envDependencies?: Dependency[],
+  compilerDependencies?: Dependency[],
+  testerDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
   flattenedDevDependencies?: ?BitIds,
-  flattenedEnvDependencies?: ?BitIds,
+  flattenedCompilerDependencies?: ?BitIds,
+  flattenedTesterDependencies?: ?BitIds,
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
@@ -111,14 +113,17 @@ export default class Component {
   bitJson: ?ComponentBitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  envDependencies: Dependencies;
+  compilerDependencies: Dependencies;
+  testerDependencies: Dependencies;
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
-  flattenedEnvDependencies: BitIds;
+  flattenedCompilerDependencies: BitIds;
+  flattenedTesterDependencies: BitIds;
   packageDependencies: Object;
   devPackageDependencies: Object;
   peerPackageDependencies: Object;
-  envsPackageDependencies: Object;
+  compilerPackageDependencies: Object;
+  testerPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: SourceFile[];
   dists: Dists;
@@ -197,14 +202,17 @@ export default class Component {
     bitJson,
     dependencies,
     devDependencies,
-    envDependencies,
+    compilerDependencies,
+    testerDependencies,
     flattenedDependencies,
     flattenedDevDependencies,
-    flattenedEnvDependencies,
+    flattenedCompilerDependencies,
+    flattenedTesterDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
-    envsPackageDependencies,
+    compilerPackageDependencies,
+    testerPackageDependencies,
     files,
     docs,
     dists,
@@ -228,14 +236,17 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
-    this.setEnvDependencies(envDependencies);
+    this.setCompilerDependencies(compilerDependencies);
+    this.setTesterDependencies(testerDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
-    this.flattenedEnvDependencies = flattenedEnvDependencies || new BitIds();
+    this.flattenedCompilerDependencies = flattenedCompilerDependencies || new BitIds();
+    this.flattenedTesterDependencies = flattenedTesterDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
-    this.envsPackageDependencies = envsPackageDependencies || {};
+    this.compilerPackageDependencies = compilerPackageDependencies || {};
+    this.testerPackageDependencies = testerPackageDependencies || {};
     this._files = files;
     this._docs = docs;
     this.setDists(dists);
@@ -268,7 +279,8 @@ export default class Component {
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
-    newInstance.setEnvDependencies(this.envDependencies.getClone());
+    newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
+    newInstance.setTesterDependencies(this.testerDependencies.getClone());
     return newInstance;
   }
 
@@ -280,8 +292,12 @@ export default class Component {
     this.devDependencies = new Dependencies(devDependencies);
   }
 
-  setEnvDependencies(envDependencies?: Dependency[]) {
-    this.envDependencies = new Dependencies(envDependencies);
+  setCompilerDependencies(compilerDependencies?: Dependency[]) {
+    this.compilerDependencies = new Dependencies(compilerDependencies);
+  }
+
+  setTesterDependencies(testerDependencies?: Dependency[]) {
+    this.testerDependencies = new Dependencies(testerDependencies);
   }
 
   setDists(dists?: Dist[]) {
@@ -384,15 +400,20 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
-  flattenedEnvDependencies(): BitIds {
-    return BitIds.fromObject(this.flattenedEnvDependencies);
+  flattenedCompilerDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedCompilerDependencies);
+  }
+
+  flattenedTesterDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedTesterDependencies);
   }
 
   getAllDependencies(): Dependency[] {
     return [
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
-      ...this.envDependencies.dependencies
+      ...this.compilerDependencies.dependencies,
+      ...this.testerDependencies.dependencies
     ];
   }
 
@@ -407,7 +428,12 @@ export default class Component {
   }
 
   getAllFlattenedDependencies(): BitId[] {
-    return [...this.flattenedDependencies, ...this.flattenedDevDependencies, ...this.flattenedEnvDependencies];
+    return [
+      ...this.flattenedDependencies,
+      ...this.flattenedDevDependencies,
+      ...this.flattenedCompilerDependencies,
+      ...this.flattenedTesterDependencies
+    ];
   }
 
   async buildIfNeeded({
@@ -594,7 +620,8 @@ export default class Component {
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
-    this.envDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.compilerDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.testerDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
         pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
@@ -1036,11 +1063,13 @@ export default class Component {
       detachedTester: this.detachedTester,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
-      envDependencies: this.envDependencies.serialize(),
+      compilerDependencies: this.compilerDependencies.serialize(),
+      testerDependencies: this.testerDependencies.serialize(),
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies,
-      envsPackageDependencies: this.envsPackageDependencies,
+      compilerPackageDependencies: this.compilerPackageDependencies,
+      testerPackageDependencies: this.testerPackageDependencies,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
@@ -1069,8 +1098,15 @@ export default class Component {
     const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
     const dependenciesPaths = this.dependencies.getSourcesPaths();
     const devDependenciesPaths = this.devDependencies.getSourcesPaths();
-    const envDependenciesPaths = this.envDependencies.getSourcesPaths();
-    const allPaths = [...filePaths, ...dependenciesPaths, ...devDependenciesPaths, ...envDependenciesPaths];
+    const compilerDependenciesPaths = this.compilerDependencies.getSourcesPaths();
+    const testerDependenciesPaths = this.testerDependencies.getSourcesPaths();
+    const allPaths = [
+      ...filePaths,
+      ...dependenciesPaths,
+      ...devDependenciesPaths,
+      ...compilerDependenciesPaths,
+      ...testerDependenciesPaths
+    ];
     const sharedStart = sharedStartOfArray(allPaths);
     if (!sharedStart || !sharedStart.includes(pathSep)) return;
     const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
@@ -1097,8 +1133,15 @@ export default class Component {
 
     const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
     const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
-    const envDependencies = await getDependenciesComponents(getFlatten('flattenedEnvDependencies'));
-    return new ComponentWithDependencies({ component: this, dependencies, devDependencies, envDependencies });
+    const compilerDependencies = await getDependenciesComponents(getFlatten('flattenedCompilerDependencies'));
+    const testerDependencies = await getDependenciesComponents(getFlatten('flattenedTesterDependencies'));
+    return new ComponentWithDependencies({
+      component: this,
+      dependencies,
+      devDependencies,
+      compilerDependencies,
+      testerDependencies
+    });
   }
 
   copyDependenciesFromModel(ids: string[]) {
@@ -1114,8 +1157,10 @@ export default class Component {
       if (addedDep) return;
       const addedDevDep = addDependency(componentFromModel.devDependencies, this.devDependencies);
       if (addedDevDep) return;
-      const addedEnvDep = addDependency(componentFromModel.envDependencies, this.envDependencies);
-      if (addedEnvDep) return;
+      const addedCompilerDep = addDependency(componentFromModel.compilerDependencies, this.compilerDependencies);
+      if (addedCompilerDep) return;
+      const addedTesterDep = addDependency(componentFromModel.testerDependencies, this.testerDependencies);
+      if (addedTesterDep) return;
       throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
     });
   }
@@ -1134,11 +1179,13 @@ export default class Component {
       detachedTester,
       dependencies,
       devDependencies,
-      envDependencies,
+      compilerDependencies,
+      testerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       docs,
       mainFile,
       dists,
@@ -1159,11 +1206,13 @@ export default class Component {
       detachedTester,
       dependencies,
       devDependencies,
-      envDependencies,
+      compilerDependencies,
+      testerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       mainFile,
       files,
       docs,

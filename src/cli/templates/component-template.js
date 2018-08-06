@@ -34,7 +34,8 @@ const fields = [
   'mainFile',
   'dependencies',
   'devDependencies',
-  'envDependencies',
+  'compilerDependencies',
+  'testerDependencies',
   'packages',
   'devPackages',
   'peerDependencies',
@@ -83,8 +84,14 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
   };
   const dependenciesRows = getDependenciesRows(component.dependencies.get());
   const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), 'dev');
-  const envDependenciesRows = getDependenciesRows(component.envDependencies.get(), 'env');
-  const allDependenciesRows = [...dependenciesRows, ...devDependenciesRows, ...envDependenciesRows];
+  const compilerDependenciesRows = getDependenciesRows(component.compilerDependencies.get(), 'compiler');
+  const testerDependenciesRows = getDependenciesRows(component.testerDependencies.get(), 'tester');
+  const allDependenciesRows = [
+    ...dependenciesRows,
+    ...devDependenciesRows,
+    ...compilerDependenciesRows,
+    ...testerDependenciesRows
+  ];
 
   const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
   return dependenciesTable;

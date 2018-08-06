@@ -16,6 +16,7 @@ import Dependencies from '../dependencies';
 import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
 import type { RelativePath } from '../dependency';
+import EnvExtension from '../../../../extensions/env-extension';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -38,7 +39,8 @@ function findComponentsOfDepsFiles(
   tree: Tree,
   files: string[],
   testsFiles: string[],
-  envFiles: string[],
+  compilerFiles: string[],
+  testerFiles: string[],
   entryComponentId: BitId,
   consumer: Consumer,
   consumerComponent: Component
@@ -48,14 +50,15 @@ function findComponentsOfDepsFiles(
   const componentFromModel: Component = consumerComponent.componentFromModel;
   const packagesDeps = {};
   let devPackagesDeps = {};
-  let envsPackagesDeps = {};
+  let compilerPackagesDeps = {};
+  let testerPackagesDeps = {};
   const componentsDeps: Dependency[] = [];
   let devComponentsDeps: Dependency[] = [];
-  let envComponentsDeps: Dependency[] = [];
+  let compilerComponentsDeps: Dependency[] = [];
+  let testerComponentsDeps: Dependency[] = [];
 
-  const getExistingDependency = (id: BitId): ?Dependency => componentsDeps.find(d => d.id.isEqual(id));
-  const getExistingDevDependency = (id: BitId): ?Dependency => devComponentsDeps.find(d => d.id.isEqual(id));
-  const getExistingEnvDependency = (id: BitId): ?Dependency => envComponentsDeps.find(d => d.id.isEqual(id));
+  const getExistingDependency = (dependencies: Dependency[], id: BitId): ?Dependency =>
+    dependencies.find(d => d.id.isEqual(id));
 
   // issues
   const missingDependenciesOnFs = {};
@@ -170,20 +173,34 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     return { componentId, depFileRelative, destination };
   };
 
+  const pushToDependenciesArray = (currentComponentsDeps, isTestFile, isCompilerFile, isTesterFile) => {
+    if (isTestFile) {
+      devComponentsDeps.push(currentComponentsDeps);
+    } else if (isCompilerFile) {
+      compilerComponentsDeps.push(currentComponentsDeps);
+    } else if (isTesterFile) {
+      testerComponentsDeps.push(currentComponentsDeps);
+    } else {
+      componentsDeps.push(currentComponentsDeps);
+    }
+  };
+
   const processDepFile = (
     originFile: PathLinuxRelative,
     depFile: string,
     importSpecifiers?: ImportSpecifier[],
     linkFile?: string,
     isTestFile: boolean = false,
-    isEnvFile: boolean = false,
+    isCompilerFile: boolean = false,
+    isTesterFile: boolean = false,
     depFileObject: FileObject
   ) => {
     if (processedFiles.includes(depFile)) return;
     processedFiles.push(depFile);
 
     // if the dependency of an envFile is already included in the env files of the component, we're good
-    if (isEnvFile && envFiles.includes(depFile)) return;
+    if (isCompilerFile && compilerFiles.includes(depFile)) return;
+    if (isTesterFile && testerFiles.includes(depFile)) return;
 
     const { componentId, depFileRelative, destination } = getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to untrackedDeps
@@ -250,19 +267,18 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
       return;
     }
 
-    const existingDependency = getExistingDependency(componentId);
-    const existingDevDependency = getExistingDevDependency(componentId);
+    const allDependencies: Dependency[] = [
+      ...componentsDeps,
+      ...devComponentsDeps,
+      ...compilerComponentsDeps,
+      ...testerComponentsDeps
+    ];
+    const existingDependency = getExistingDependency(allDependencies, componentId);
     if (existingDependency) {
       // it is another file of an already existing component. Just add the new path
       existingDependency.relativePaths.push(depsPaths);
-    } else if (existingDevDependency) {
-      existingDevDependency.relativePaths.push(depsPaths);
-    } else if (isTestFile) {
-      devComponentsDeps.push(currentComponentsDeps);
-    } else if (isEnvFile) {
-      envComponentsDeps.push(currentComponentsDeps);
     } else {
-      componentsDeps.push(currentComponentsDeps);
+      pushToDependenciesArray(currentComponentsDeps, isTestFile, isCompilerFile, isTesterFile);
     }
   };
 
@@ -270,7 +286,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     originFile: PathLinuxRelative,
     linkFile: FileObject,
     isTestFile: boolean = false,
-    isEnvFile: boolean = false
+    isCompilerFile: boolean = false,
+    isTesterFile: boolean = false
   ) => {
     if (!linkFile.linkDependencies || R.isEmpty(linkFile.linkDependencies)) return;
     const nonLinkImportSpecifiers = [];
@@ -291,7 +308,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
           dependency.importSpecifiers,
           linkFile.file,
           isTestFile,
-          isEnvFile,
+          isCompilerFile,
+          isTesterFile,
           linkFile
         );
       }
@@ -303,7 +321,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
         R.flatten(nonLinkImportSpecifiers),
         undefined,
         isTestFile,
-        isEnvFile,
+        isCompilerFile,
+        isTesterFile,
         linkFile
       );
     }
@@ -313,23 +332,28 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     originFile: PathLinuxRelative,
     allDepsFiles?: FileObject[],
     isTestFile: boolean = false,
-    isEnvFile: boolean = false
+    isCompilerFile: boolean = false,
+    isTesterFile: boolean = false
   ) => {
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
-      if (depFile.isLink) processLinkFile(originFile, depFile, isTestFile, isEnvFile);
+      if (depFile.isLink) processLinkFile(originFile, depFile, isTestFile, isCompilerFile, isTesterFile);
       else {
-        processDepFile(originFile, depFile.file, depFile.importSpecifiers, undefined, isTestFile, isEnvFile, depFile);
+        processDepFile(
+          originFile,
+          depFile.file,
+          depFile.importSpecifiers,
+          undefined,
+          isTestFile,
+          isCompilerFile,
+          isTesterFile,
+          depFile
+        );
       }
     });
   };
 
-  const processBits = (
-    originFile: PathLinuxRelative,
-    bits,
-    isTestFile: boolean = false,
-    isEnvFile: boolean = false
-  ) => {
+  const processBits = (originFile: PathLinuxRelative, bits, isTestFile, isCompilerFile, isTesterFile) => {
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
       const componentId: BitId = consumer.getComponentIdFromNodeModulesPath(bitDep, bindingPrefix);
@@ -358,15 +382,9 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
       const existingId = getExistingId();
       if (existingId) {
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
-        const existingDependency = getExistingDependency(existingId);
+        const existingDependency = getExistingDependency(componentsDeps, existingId);
         if (!existingDependency) {
-          if (isTestFile) {
-            devComponentsDeps.push(currentComponentsDeps);
-          } else if (isEnvFile) {
-            envComponentsDeps.push(currentComponentsDeps);
-          } else {
-            componentsDeps.push(currentComponentsDeps);
-          }
+          pushToDependenciesArray(currentComponentsDeps, isTestFile, isCompilerFile, isTesterFile);
         }
       } else {
         missingBits[originFile] ? missingBits[originFile].push(componentId) : (missingBits[originFile] = [componentId]);
@@ -374,12 +392,14 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     });
   };
 
-  const processPackages = (originFile, packages, isTestFile, isEnvFile) => {
+  const processPackages = (originFile, packages, isTestFile, isCompilerFile, isTesterFile) => {
     if (packages && !R.isEmpty(packages)) {
       if (isTestFile) {
         Object.assign(devPackagesDeps, packages);
-      } else if (isEnvFile) {
-        Object.assign(envsPackagesDeps, packages);
+      } else if (isCompilerFile) {
+        Object.assign(compilerPackagesDeps, packages);
+      } else if (isTesterFile) {
+        Object.assign(testerPackagesDeps, packages);
       } else {
         Object.assign(packagesDeps, packages);
       }
@@ -403,13 +423,15 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     originFile,
     unidentifiedPackages?: string[],
     isTestFile: boolean = false,
-    isEnvFile: boolean = false
+    isCompilerFile: boolean = false,
+    isTesterFile: boolean = false
   ) => {
     if (!unidentifiedPackages) return;
     if (!componentFromModel) return; // not relevant, the component is not imported
     const getDependencies = (): Dependencies => {
       if (isTestFile) return componentFromModel.devDependencies;
-      if (isEnvFile) return componentFromModel.envDependencies;
+      if (isCompilerFile) return componentFromModel.compilerDependencies;
+      if (isTesterFile) return componentFromModel.testerDependencies;
       return componentFromModel.dependencies;
     };
     const dependencies: Dependencies = getDependencies();
@@ -432,18 +454,22 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
       );
       if (foundImportSource) {
         const dependencyId: BitId = importSourceMap[foundImportSource];
-        const existingDependency = getExistingDependency(dependencyId);
-        const existingDevDependency = getExistingDevDependency(dependencyId);
-        const existingEnvDependency = getExistingEnvDependency(dependencyId);
+        const existingDependency = getExistingDependency(componentsDeps, dependencyId);
+        const existingDevDependency = getExistingDependency(devComponentsDeps, dependencyId);
+        const existingCompilerDependency = getExistingDependency(compilerComponentsDeps, dependencyId);
+        const existingTesterDependency = getExistingDependency(testerComponentsDeps, dependencyId);
+        const currentComponentDeps = {
+          id: dependencyId,
+          relativePaths: clonedDependencies.getById(dependencyId).relativePaths
+        };
         if (isTestFile && !existingDevDependency) {
-          devComponentsDeps.push({ id: dependencyId, relativePaths: dependencies.getById(dependencyId).relativePaths });
-        } else if (isEnvFile && !existingEnvDependency) {
-          envComponentsDeps.push({ id: dependencyId, relativePaths: dependencies.getById(dependencyId).relativePaths });
-        } else if (!isTestFile && !isEnvFile && !existingDependency) {
-          componentsDeps.push({
-            id: dependencyId,
-            relativePaths: clonedDependencies.getById(dependencyId).relativePaths
-          });
+          devComponentsDeps.push(currentComponentDeps);
+        } else if (isCompilerFile && !existingCompilerDependency) {
+          compilerComponentsDeps.push(currentComponentDeps);
+        } else if (isTesterFile && !existingTesterDependency) {
+          testerComponentsDeps.push(currentComponentDeps);
+        } else if (!isTestFile && !isCompilerFile && !isTesterFile && !existingDependency) {
+          componentsDeps.push(currentComponentDeps);
         }
       }
     });
@@ -458,12 +484,14 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     // remove dev and env packages that are also regular packages
     const getNotRegularPackages = packages => R.difference(R.keys(packages), R.keys(packagesDeps));
     devPackagesDeps = R.pick(getNotRegularPackages(devPackagesDeps), devPackagesDeps);
-    envsPackagesDeps = R.pick(getNotRegularPackages(envsPackagesDeps), envsPackagesDeps);
+    compilerPackagesDeps = R.pick(getNotRegularPackages(compilerPackagesDeps), compilerPackagesDeps);
+    testerPackagesDeps = R.pick(getNotRegularPackages(testerPackagesDeps), testerPackagesDeps);
 
     // remove dev and env dependencies that are also regular dependencies
     const componentDepsIds = new BitIds(...componentsDeps.map(c => c.id));
     devComponentsDeps = devComponentsDeps.filter(d => !componentDepsIds.has(d.id));
-    envComponentsDeps = envComponentsDeps.filter(d => !componentDepsIds.has(d.id));
+    compilerComponentsDeps = compilerComponentsDeps.filter(d => !componentDepsIds.has(d.id));
+    testerComponentsDeps = testerComponentsDeps.filter(d => !componentDepsIds.has(d.id));
   };
 
   /**
@@ -547,15 +575,15 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     else resolveErrors[originFile] = error.message;
   };
 
-  // @todo: fix this. the shouldProcessEnvDependencies is incorrect.
-  // an author can detach its compiler but attach its tester, so it does process the tester files
-  // but not the compiler files.
-  // in this case we should copy the dependencies of the compiler from the model because it
-  // was not processed but should not copy the dependencies of the tester.
+  // when env dependencies are not sent to the dependency-resolver, they should be copied from the model
   const copyEnvDependenciesFromModelIfNeeded = () => {
-    if (shouldProcessEnvDependencies(entryComponentMap) || !componentFromModel) return;
-    // if we don't process env dependencies, we copy the dependencies from the model.
-    envComponentsDeps = componentFromModel.envDependencies.get();
+    if (!componentFromModel) return;
+    if (!shouldProcessEnvDependencies(consumerComponent.compiler)) {
+      compilerComponentsDeps = componentFromModel.compilerDependencies.get();
+    }
+    if (!shouldProcessEnvDependencies(consumerComponent.tester)) {
+      testerComponentsDeps = componentFromModel.testerDependencies.get();
+    }
   };
 
   const combineIssues = () => {
@@ -587,7 +615,8 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
 
   files.forEach((file: string) => {
     const isTestFile = R.contains(file, testsFiles);
-    const isEnvFile = R.contains(file, envFiles);
+    const isCompilerFile = R.contains(file, compilerFiles);
+    const isTesterFile = R.contains(file, testerFiles);
     if (!tree[file]) {
       throw new Error(
         `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
@@ -595,10 +624,10 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     }
     processMissing(file, tree[file].missing);
     processErrors(file, tree[file].error);
-    processPackages(file, tree[file].packages, isTestFile, isEnvFile);
-    processBits(file, tree[file].bits, isTestFile, isEnvFile);
-    processDepFiles(file, tree[file].files, isTestFile, isEnvFile);
-    processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile, isEnvFile);
+    processPackages(file, tree[file].packages, isTestFile, isCompilerFile, isTesterFile);
+    processBits(file, tree[file].bits, isTestFile, isCompilerFile, isTesterFile);
+    processDepFiles(file, tree[file].files, isTestFile, isCompilerFile, isTesterFile);
+    processUnidentifiedPackages(file, tree[file].unidentifiedPackages, isTestFile, isCompilerFile, isTesterFile);
   });
   removeDevAndEnvDepsIfTheyAlsoRegulars();
   copyEnvDependenciesFromModelIfNeeded();
@@ -607,10 +636,12 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
   return {
     componentsDeps,
     devComponentsDeps,
-    envComponentsDeps,
+    compilerComponentsDeps,
+    testerComponentsDeps,
     packagesDeps,
     devPackagesDeps,
-    envsPackagesDeps,
+    compilerPackagesDeps,
+    testerPackagesDeps,
     issues
   };
 }
@@ -662,31 +693,29 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
  * if the component doesn't have the env files written on the filesystem there is nothing to pass
  * to the dependencyResolver
  */
-function shouldProcessEnvDependencies(componentMap: ComponentMap): boolean {
-  return Boolean(componentMap.origin === COMPONENT_ORIGINS.AUTHORED || componentMap.configDir);
+function shouldProcessEnvDependencies(env: EnvExtension): boolean {
+  return Boolean(env && env.files && env.files.every(file => !file.fromModel));
 }
 
-/**
- * get environment (compiler/tester) files relative to component root, or, if it's author, relative to consumer
- */
-function getEnvFiles(componentMap: ComponentMap, component: Component, consumer: Consumer): PathLinux[] {
-  const getFiles = () => {
-    const compilerFiles = component.compiler && component.compiler.files ? component.compiler.files : [];
-    const testerFiles = component.tester && component.tester.files ? component.tester.files : [];
-    const allFiles = [...compilerFiles, ...testerFiles];
-    // do not process files that were loaded from the model and are not on the filesystem
-    return allFiles.filter(file => !file.fromModel);
-  };
+function getRelativeEnvFiles(files: Object[], consumer: Consumer, componentMap: ComponentMap): PathLinux[] {
   const getPathsRelativeToComponentRoot = () => {
-    const envFilesObjects = getFiles();
     const rootDirAbsolute = consumer.toAbsolutePath(componentMap.rootDir || '.');
-    return envFilesObjects.map((file) => {
+    return files.map((file) => {
       const envAbsolute = file.path;
       return path.relative(rootDirAbsolute, envAbsolute);
     });
   };
-  const envFiles = getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
-  return envFiles;
+  return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
+}
+
+function getCompilerFiles(componentMap: ComponentMap, component: Component, consumer: Consumer): PathLinux[] {
+  const compilerFiles = shouldProcessEnvDependencies(component.compiler) ? component.compiler.files : [];
+  return getRelativeEnvFiles(compilerFiles, consumer, componentMap);
+}
+
+function getTesterFiles(componentMap: ComponentMap, component: Component, consumer: Consumer): PathLinux[] {
+  const testerFiles = shouldProcessEnvDependencies(component.tester) ? component.tester.files : [];
+  return getRelativeEnvFiles(testerFiles, consumer, componentMap);
 }
 
 /**
@@ -714,8 +743,9 @@ export default (async function loadDependenciesForComponent(
   const consumerPath = consumer.getPath();
   const componentMap: ComponentMap = component.componentMap;
   const { nonTestsFiles, testsFiles } = componentMap.getFilesGroupedByBeingTests();
-  const envFiles = getEnvFiles(componentMap, component, consumer);
-  const allFiles = [...nonTestsFiles, ...testsFiles, ...envFiles];
+  const compilerFiles = getCompilerFiles(componentMap, component, consumer);
+  const testerFiles = getTesterFiles(componentMap, component, consumer);
+  const allFiles = [...nonTestsFiles, ...testsFiles, ...compilerFiles, ...testerFiles];
   const getDependenciesTree = async () => {
     return driver.getDependencyTree(
       bitDir,
@@ -733,18 +763,20 @@ export default (async function loadDependenciesForComponent(
     dependenciesTree.tree,
     allFiles,
     testsFiles,
-    envFiles,
+    compilerFiles,
+    testerFiles,
     idWithConcreteVersion,
     consumer,
     component
   );
-  const { componentsDeps, devComponentsDeps, envComponentsDeps, issues } = traversedDeps;
+  const { componentsDeps, devComponentsDeps, compilerComponentsDeps, testerComponentsDeps, issues } = traversedDeps;
   component.setDependencies(componentsDeps);
   component.setDevDependencies(devComponentsDeps);
-  component.setEnvDependencies(envComponentsDeps);
+  component.setCompilerDependencies(compilerComponentsDeps);
+  component.setTesterDependencies(testerComponentsDeps);
   component.packageDependencies = traversedDeps.packagesDeps;
   component.devPackageDependencies = traversedDeps.devPackagesDeps;
-  // envsPackageDependencies might be set when the compiler and test were loaded
+  // envsPackageDependencies might be set when the compiler and tester were loaded
   component.envsPackageDependencies = R.merge(traversedDeps.envsPackagesDeps, component.envsPackageDependencies);
   component.peerPackageDependencies = findPeerDependencies(consumerPath, component);
   // assign issues to component only when it has data.

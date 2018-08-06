@@ -22,19 +22,27 @@ export function componentToPrintableForDiff(component: Component): Object {
     tester,
     dependencies,
     devDependencies,
-    envDependencies,
+    compilerDependencies,
+    testerDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
-    envsPackageDependencies,
+    compilerPackageDependencies,
+    testerPackageDependencies,
     files,
     mainFile,
     deprecated
   } = component;
   const parsedDevPackageDependencies = parsePackages(devPackageDependencies) || [];
-  const parsedEnvsPackageDependencies = parsePackages(envsPackageDependencies) || [];
-  const printableDevPackageDependencies = parsedDevPackageDependencies.concat(parsedEnvsPackageDependencies);
-  const printableEnvDependencies = envDependencies.toStringOfIds();
+  const parsedCompilerPackageDependencies = parsePackages(compilerPackageDependencies) || [];
+  const parsedTesterPackageDependencies = parsePackages(testerPackageDependencies) || [];
+  const printableDevPackageDependencies = [
+    ...parsedDevPackageDependencies,
+    ...parsedCompilerPackageDependencies,
+    ...parsedTesterPackageDependencies
+  ];
+  const printableCompilerDependencies = compilerDependencies.toStringOfIds();
+  const printableTesterDependencies = testerDependencies.toStringOfIds();
 
   obj.id = component.id.toStringWithoutScope();
   obj.compiler = compiler ? compiler.name : null;
@@ -48,7 +56,8 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .concat(printableDevPackageDependencies)
-    .concat(printableEnvDependencies)
+    .concat(printableCompilerDependencies)
+    .concat(printableTesterDependencies)
     .filter(x => x);
   obj.peerDependencies = parsePackages(peerPackageDependencies);
 

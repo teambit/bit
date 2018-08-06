@@ -14,7 +14,8 @@ export type BitJsonProps = {
   tester?: string | Testers,
   dependencies?: Object,
   devDependencies?: Object,
-  envDependencies?: Object,
+  compilerDependencies?: Object,
+  testerDependencies?: Object,
   packageDependencies?: Object,
   devPackageDependencies?: Object,
   peerPackageDependencies?: Object,
@@ -31,7 +32,8 @@ export default class ComponentBitJson extends AbstractBitJson {
     tester,
     dependencies,
     devDependencies,
-    envDependencies,
+    compilerDependencies,
+    testerDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
@@ -39,7 +41,17 @@ export default class ComponentBitJson extends AbstractBitJson {
     bindingPrefix,
     extensions
   }: BitJsonProps) {
-    super({ compiler, tester, dependencies, devDependencies, envDependencies, lang, bindingPrefix, extensions });
+    super({
+      compiler,
+      tester,
+      dependencies,
+      devDependencies,
+      compilerDependencies,
+      testerDependencies,
+      lang,
+      bindingPrefix,
+      extensions
+    });
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
