@@ -438,9 +438,13 @@ export default class Consumer {
 
       version.packageDependencies = sortObject(version.packageDependencies);
       version.devPackageDependencies = sortObject(version.devPackageDependencies);
+      version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
+      version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
       version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
+      componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
+      componentFromModel.testerPackageDependencies = sortObject(componentFromModel.testerPackageDependencies);
       componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
       // prefix your command with "BIT_LOG=*" to see the actual id changes
       if (process.env.BIT_LOG && componentFromModel.hash().hash !== version.hash().hash) {

@@ -580,9 +580,11 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
     if (!componentFromModel) return;
     if (!shouldProcessEnvDependencies(consumerComponent.compiler)) {
       compilerComponentsDeps = componentFromModel.compilerDependencies.get();
+      compilerPackagesDeps = componentFromModel.compilerPackageDependencies;
     }
     if (!shouldProcessEnvDependencies(consumerComponent.tester)) {
       testerComponentsDeps = componentFromModel.testerDependencies.get();
+      testerPackagesDeps = componentFromModel.testerPackageDependencies;
     }
   };
 

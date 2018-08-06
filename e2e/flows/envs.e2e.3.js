@@ -98,12 +98,14 @@ describe('envs', function () {
     let componentModel;
     let compilerModel;
     let testerModel;
-    let envsPackageDependencies;
+    let compilerPackageDependencies;
+    let testerPackageDependencies;
     before(() => {
       componentModel = helper.catComponent('comp/my-comp@0.0.1');
       compilerModel = componentModel.compiler;
       testerModel = componentModel.tester;
-      envsPackageDependencies = componentModel.envsPackageDependencies;
+      compilerPackageDependencies = componentModel.compilerPackageDependencies;
+      testerPackageDependencies = componentModel.testerPackageDependencies;
     });
     describe('storing envs metadata in the models for author', () => {
       it('should store the compiler name in the model', () => {
@@ -154,13 +156,13 @@ describe('envs', function () {
       });
       describe('should store the dynamicPackageDependencies to envPackageDependencies in the model', () => {
         it('should store the compiler dynamicPackageDependencies', () => {
-          expect(envsPackageDependencies).to.include({
+          expect(compilerPackageDependencies).to.include({
             'babel-plugin-transform-object-rest-spread': '^6.26.0',
             'babel-preset-env': '^1.6.1'
           });
         });
         it('should store the tester dynamicPackageDependencies', () => {
-          expect(envsPackageDependencies).to.include({
+          expect(testerPackageDependencies).to.include({
             'lodash.get': '4.4.2'
           });
         });

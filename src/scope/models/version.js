@@ -584,7 +584,7 @@ export default class Version extends BitObject {
         ...compilerDynamicPakageDependencies
       },
       testerPackageDependencies: {
-        ...component.compilerPackageDependencies,
+        ...component.testerPackageDependencies,
         ...testerDynamicPakageDependencies
       },
       flattenedDependencies,
