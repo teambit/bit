@@ -9,7 +9,7 @@ export const setResolver = (currentPath: string, resolverPath: string): Promise<
 };
 
 export const getResolver = (currentPath: string): Promise<string> => {
-  return loadScope(currentPath).then(scope => scope.scopeJson.resolverPath);
+  return loadScope(currentPath).then(scope => scope.scopeJson.resolverPath || '');
 };
 
 export const resetResolver = (currentPath: string): Promise<any> => {

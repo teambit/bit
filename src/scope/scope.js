@@ -12,7 +12,7 @@ import ComponentModel from './models/component';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHasAll, first, readFile, splitBy, pathNormalizeToLinux } from '../utils';
+import { propogateUntil, currentDirName, pathHasAll, first, splitBy } from '../utils';
 import {
   BIT_HIDDEN_DIR,
   LATEST,
@@ -28,9 +28,7 @@ import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import {
   ScopeNotFound,
   ComponentNotFound,
-  ResolutionException,
   DependencyNotFound,
-  CyclicDependencies,
   MergeConflictOnRemote,
   MergeConflict
 } from './exceptions';
@@ -46,19 +44,12 @@ import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
 import type { ComponentTree } from './repositories/sources';
 import Consumer from '../consumer/consumer';
-import { index } from '../search/indexer';
 import loader from '../cli/loader';
-import { MigrationResult } from '../migration/migration-helper';
+import type { MigrationResult } from '../migration/migration-helper';
 import migratonManifest from './migrations/scope-migrator-manifest';
 import migrate from './migrations/scope-migrator';
 import type { ScopeMigrationResult } from './migrations/scope-migrator';
-import {
-  BEFORE_PERSISTING_PUT_ON_SCOPE,
-  BEFORE_IMPORT_PUT_ON_SCOPE,
-  BEFORE_MIGRATION,
-  BEFORE_RUNNING_BUILD,
-  BEFORE_RUNNING_SPECS
-} from '../cli/loader/loader-messages';
+import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '../cli/loader/loader-messages';
 import performCIOps from './ci-ops';
 import logger from '../logger/logger';
 import componentResolver from '../component-resolver';
@@ -114,7 +105,7 @@ export default class Scope {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
     this.created = scopeProps.created || false;
-    this.tmp = scopeProps.tmp || new Tmp(this);
+    this.tmp = scopeProps.tmp || new Tmp((this: Scope));
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects || new Repository(this, types());
   }
@@ -158,12 +149,12 @@ export default class Scope {
    * @param {BitId} id
    */
   static getComponentRelativePath(id: BitId, scopePath?: string): string {
-    const relativePath = pathLib.join(id.name, id.scope);
+    const relativePath = pathLib.join(id.name, id.scope || '');
     if (!id.getVersion().latest) {
-      return pathLib.join(relativePath, id.version);
+      return pathLib.join(relativePath, id.version || '');
     }
     if (!scopePath) {
-      throw new Error(`could not find the latest version of ${id} without the scope path`);
+      throw new Error(`could not find the latest version of ${id.toString()} without the scope path`);
     }
     const componentFullPath = pathLib.join(scopePath, Scope.getComponentsRelativePath(), relativePath);
     if (!fs.existsSync(componentFullPath)) return '';
