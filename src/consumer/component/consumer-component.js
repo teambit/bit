@@ -319,12 +319,9 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(
-    consumerPath: PathOsBased,
-    bitMap: BitMap,
-    configDir: PathOsBased,
-    override?: boolean = true
-  ): Promise<EjectConfResult> {
+  async writeConfig(consumer: Consumer, configDir: PathOsBased, override?: boolean = true): Promise<EjectConfResult> {
+    const consumerPath: PathOsBased = consumer.getPath();
+    const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -344,7 +341,7 @@ export default class Component {
       throw new EjectBoundToWorkspace();
     }
 
-    const res = await ejectConf(this, consumerPath, bitMap, configDir, override);
+    const res = await ejectConf(this, consumer, configDir, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
