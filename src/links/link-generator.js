@@ -25,6 +25,7 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import GeneralError from '../error/general-error';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
+import Dependencies from '../consumer/component/dependencies/dependencies';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -180,101 +181,78 @@ function prepareLinkFile(
 }
 
 /**
- * The following scenario will help understanding why links are needed.
- * Component A has a dependency B. (for instance, in a.js there is a require statement to 'b.js').
- * While importing component A, it knows about the B dependency and it saves it under 'dependencies' directory of A.
- * The problem is that the above require is broken, because 'b.js' is not in the same place where it was originally.
- * This function solves this issue by creating the 'b.js' file in the original location and points to the new location
- * under 'dependencies' of A.
+ * a component may have many dependencies. this function takes care of generating links to one dependency
  */
-async function writeDependencyLinks(
-  componentDependencies: ComponentWithDependencies[],
-  consumer: Consumer,
-  createNpmLinkFiles: boolean
-): Promise<any> {
+function generateDependencyLinks(
+  depId: BitId,
+  depComponent: Component,
+  relativePath: RelativePath,
+  parentComponent: Component,
+  parentComponentMap: ComponentMap,
+  createNpmLinkFiles: boolean,
+  consumer: Consumer
+): LinkFile[] {
   const consumerPath: PathOsBased = consumer.getPath();
-  const componentLink = (
-    depId: BitId,
-    depComponent: Component,
-    relativePath: RelativePath,
-    parentComponent: Component,
-    parentComponentMap: ComponentMap
-  ): LinkFile[] => {
-    const getParentDir = (): PathOsBasedAbsolute => {
-      // when running from bit build, the writtenPath is not available
-      if (!parentComponent.writtenPath) return consumer.toAbsolutePath(parentComponentMap.rootDir);
-      if (path.isAbsolute(parentComponent.writtenPath)) return parentComponent.writtenPath;
-      return consumer.toAbsolutePath(parentComponent.writtenPath);
-    };
-    const parentDir = getParentDir();
-    const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
-    const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
-    const hasDist = parentComponent.dists.writeDistsFiles && !parentComponent.dists.isEmpty();
-    const distRoot: PathOsBased = parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+  const getParentDir = (): PathOsBasedAbsolute => {
+    // when running from bit build, the writtenPath is not available
+    if (!parentComponent.writtenPath) return consumer.toAbsolutePath(parentComponentMap.rootDir);
+    if (path.isAbsolute(parentComponent.writtenPath)) return parentComponent.writtenPath;
+    return consumer.toAbsolutePath(parentComponent.writtenPath);
+  };
+  const parentDir = getParentDir();
+  const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
+  const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
+  const hasDist = parentComponent.dists.writeDistsFiles && !parentComponent.dists.isEmpty();
+  const distRoot: PathOsBased = parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
 
-    let relativeDistPathInDependency = searchFilesIgnoreExt(
-      depComponent.dists.get(),
-      relativePathInDependency,
-      'relative'
-    );
-    relativeDistPathInDependency = relativeDistPathInDependency // $FlowFixMe relative is defined
-      ? relativeDistPathInDependency.relative
-      : relativePathInDependency;
+  let relativeDistPathInDependency = searchFilesIgnoreExt(
+    depComponent.dists.get(),
+    relativePathInDependency,
+    'relative'
+  );
+  relativeDistPathInDependency = relativeDistPathInDependency // $FlowFixMe relative is defined
+    ? relativeDistPathInDependency.relative
+    : relativePathInDependency;
 
-    const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
-    const sourceRelativePath = relativePath.sourceRelativePath;
-    const getLinkPath = () => {
-      if (!relativePath.isCustomResolveUsed) return path.join(parentDir, sourceRelativePath);
-      // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
-      const importSource: string = relativePath.importSource;
-      const importSourceFileExt = relativeDistExtInDependency || path.extname(relativePath.sourceRelativePath);
-      // e.g. for require('utils/is-string'), the link should be at node_modules/utils/is-string/index.js
-      const importSourceFile = path.extname(importSource)
-        ? importSource
-        : path.join(importSource, `${DEFAULT_INDEX_NAME}.${importSourceFileExt}`);
-      const importSourcePath = path.join('node_modules', importSourceFile);
-      // if createNpmLinkFiles, the path will be part of the postinstall script, so it shouldn't be absolute
-      return createNpmLinkFiles ? importSourcePath : path.join(parentDir, importSourcePath);
-    };
-    const linkPath = getLinkPath();
+  const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
+  const sourceRelativePath = relativePath.sourceRelativePath;
+  const getLinkPath = () => {
+    if (!relativePath.isCustomResolveUsed) return path.join(parentDir, sourceRelativePath);
+    // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
+    const importSource: string = relativePath.importSource;
+    const importSourceFileExt = relativeDistExtInDependency || path.extname(relativePath.sourceRelativePath);
+    // e.g. for require('utils/is-string'), the link should be at node_modules/utils/is-string/index.js
+    const importSourceFile = path.extname(importSource)
+      ? importSource
+      : path.join(importSource, `${DEFAULT_INDEX_NAME}.${importSourceFileExt}`);
+    const importSourcePath = path.join('node_modules', importSourceFile);
+    // if createNpmLinkFiles, the path will be part of the postinstall script, so it shouldn't be absolute
+    return createNpmLinkFiles ? importSourcePath : path.join(parentDir, importSourcePath);
+  };
+  const linkPath = getLinkPath();
 
-    let distLinkPath: PathOsBased;
-    const linkFiles = [];
-    const depComponentMap = parentComponent.dependenciesSavedAsComponents
-      ? consumer.bitMap.getComponent(depId)
+  let distLinkPath: PathOsBased;
+  const linkFiles = [];
+  const depComponentMap = parentComponent.dependenciesSavedAsComponents
+    ? consumer.bitMap.getComponent(depId)
+    : undefined;
+
+  const depRootDir: ?PathOsBased =
+    depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+  const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
+  const depRootDirDist =
+    depComponentMap && depComponentMap.rootDir
+      ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
       : undefined;
 
-    const depRootDir: ?PathOsBased =
-      depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
-    const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
-    const depRootDirDist =
-      depComponentMap && depComponentMap.rootDir
-        ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
-        : undefined;
-
-    if (hasDist) {
-      if (relativePath.isCustomResolveUsed) {
-        if (!consumer.shouldDistsBeInsideTheComponent()) {
-          // when isCustomResolvedUsed, the link is generated inside node_module directory, so for
-          // dist inside the component, only one link is needed at the parentRootDir. for dist
-          // outside the component dir, another link is needed for the dist/parentRootDir.
-          // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
-          distLinkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
-          const linkFile = prepareLinkFile(
-            depId,
-            mainFile,
-            distLinkPath,
-            relativeDistPathInDependency,
-            relativePath,
-            depRootDirDist,
-            isNpmLink
-          );
-          linkFiles.push(linkFile);
-        }
-      } else {
-        const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
-        distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
-        // Generate a link file inside dist folder of the dependent component
+  if (hasDist) {
+    if (relativePath.isCustomResolveUsed) {
+      if (!consumer.shouldDistsBeInsideTheComponent()) {
+        // when isCustomResolvedUsed, the link is generated inside node_module directory, so for
+        // dist inside the component, only one link is needed at the parentRootDir. for dist
+        // outside the component dir, another link is needed for the dist/parentRootDir.
+        // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
+        distLinkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
         const linkFile = prepareLinkFile(
           depId,
           mainFile,
@@ -286,109 +264,152 @@ async function writeDependencyLinks(
         );
         linkFiles.push(linkFile);
       }
+    } else {
+      const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
+      distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
+      // Generate a link file inside dist folder of the dependent component
+      const linkFile = prepareLinkFile(
+        depId,
+        mainFile,
+        distLinkPath,
+        relativeDistPathInDependency,
+        relativePath,
+        depRootDirDist,
+        isNpmLink
+      );
+      linkFiles.push(linkFile);
+    }
+  }
+
+  const sourceRelativePathWithCompiledExt = `${getWithoutExt(relativePathInDependency)}.${relativeDistExtInDependency}`;
+  const linkFile = prepareLinkFile(
+    depId,
+    mainFile,
+    linkPath,
+    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
+      ? sourceRelativePathWithCompiledExt
+      : relativePathInDependency,
+    relativePath,
+    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
+      ? depRootDirDist
+      : depRootDir,
+    isNpmLink
+  );
+  if (relativePath.isCustomResolveUsed && createNpmLinkFiles) {
+    linkFile.postInstallLink = true;
+  }
+
+  linkFiles.push(linkFile);
+  return linkFiles;
+}
+
+/**
+ * a component may have many dependencies, this function takes care of generating links for all of them
+ */
+async function generateComponentLinks(
+  dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
+  parentComponent: Component,
+  parentComponentMap: ComponentMap,
+  createNpmLinkFiles: boolean,
+  consumer: Consumer
+): Promise<Array<{ filePath: string, content: string }>> {
+  const directDependencies: Dependency[] = parentComponent.getAllDependencies();
+  const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
+  if (!directDependencies || !directDependencies.length) return [];
+  const links = directDependencies.map((dep: Dependency) => {
+    if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
+    let resolveDepVersion = dep.id;
+    // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
+    // Actual version number, because on the bitmap we have only specific versions
+    if (dep.id.getVersion().latest) {
+      resolveDepVersion = flattenedDependencies.resolveVersion(dep.id);
     }
 
-    const sourceRelativePathWithCompiledExt = `${getWithoutExt(
-      relativePathInDependency
-    )}.${relativeDistExtInDependency}`;
-    const linkFile = prepareLinkFile(
-      depId,
-      mainFile,
-      linkPath,
-      relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
-        ? sourceRelativePathWithCompiledExt
-        : relativePathInDependency,
-      relativePath,
-      relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
-        ? depRootDirDist
-        : depRootDir,
-      isNpmLink
-    );
-    if (relativePath.isCustomResolveUsed && createNpmLinkFiles) {
-      linkFile.postInstallLink = true;
-    }
+    // Helper function to look for the component object
+    const _byComponentId = dependency => dependency.id.isEqual(resolveDepVersion);
+    // Get the real dependency component
+    const depComponent = R.find(_byComponentId, dependencies);
 
-    linkFiles.push(linkFile);
-    return linkFiles;
-  };
-
-  const componentLinks = async (
-    dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-    parentComponent: Component,
-    parentComponentMap: ComponentMap
-  ): Promise<Array<{ filePath: string, content: string }>> => {
-    const directDependencies: Dependency[] = parentComponent.getAllDependencies();
-    const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
-    if (!directDependencies || !directDependencies.length) return [];
-    const links = directDependencies.map((dep: Dependency) => {
-      if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
-      let resolveDepVersion = dep.id;
-      // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
-      // Actual version number, because on the bitmap we have only specific versions
-      if (dep.id.getVersion().latest) {
-        resolveDepVersion = flattenedDependencies.resolveVersion(dep.id);
-      }
-
-      // Helper function to look for the component object
-      const _byComponentId = dependency => dependency.id.isEqual(resolveDepVersion);
-      // Get the real dependency component
-      const depComponent = R.find(_byComponentId, dependencies);
-
-      if (!depComponent) {
-        const errorMessage = `link-generation: failed finding ${resolveDepVersion.toString()} in the dependencies array of ${
-          parentComponent.id
-        }.
+    if (!depComponent) {
+      const errorMessage = `link-generation: failed finding ${resolveDepVersion.toString()} in the dependencies array of ${
+        parentComponent.id
+      }.
 The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
-        throw new GeneralError(errorMessage);
-      }
-
-      const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
-        return componentLink(resolveDepVersion, depComponent, relativePath, parentComponent, parentComponentMap);
-      });
-      return R.flatten(currLinks);
-    });
-    const internalCustomResolvedLinks = parentComponent.customResolvedPaths.length
-      ? getInternalCustomResolvedLinks(parentComponent, createNpmLinkFiles)
-      : [];
-    const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
-
-    const groupLinks = groupBy(flattenLinks, link => link.linkPath);
-    const linksToWrite = [];
-    const postInstallLinks = [];
-    Object.keys(groupLinks).forEach((group) => {
-      let content = '';
-      const firstGroupItem = groupLinks[group][0];
-      if (firstGroupItem.isEs6) {
-        // check by the first item of the array, it can be any other item as well
-        content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
-      }
-      content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
-      const linkFile = { filePath: group, content };
-      if (firstGroupItem.postInstallLink) postInstallLinks.push(linkFile);
-      else linksToWrite.push(linkFile);
-    });
-    if (postInstallLinks.length) {
-      await generatePostInstallScript(parentComponent, postInstallLinks);
+      throw new GeneralError(errorMessage);
     }
-    return linksToWrite;
-  };
 
+    const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
+      return generateDependencyLinks(
+        resolveDepVersion,
+        depComponent,
+        relativePath,
+        parentComponent,
+        parentComponentMap,
+        createNpmLinkFiles,
+        consumer
+      );
+    });
+    return R.flatten(currLinks);
+  });
+  const internalCustomResolvedLinks = parentComponent.customResolvedPaths.length
+    ? getInternalCustomResolvedLinks(parentComponent, createNpmLinkFiles)
+    : [];
+  const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
+
+  const groupLinks = groupBy(flattenLinks, link => link.linkPath);
+  const linksToWrite = [];
+  const postInstallLinks = [];
+  Object.keys(groupLinks).forEach((group) => {
+    let content = '';
+    const firstGroupItem = groupLinks[group][0];
+    if (firstGroupItem.isEs6) {
+      // check by the first item of the array, it can be any other item as well
+      content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
+    }
+    content += groupLinks[group].map(linkItem => linkItem.linkContent).join('\n');
+    const linkFile = { filePath: group, content };
+    if (firstGroupItem.postInstallLink) postInstallLinks.push(linkFile);
+    else linksToWrite.push(linkFile);
+  });
+  if (postInstallLinks.length) {
+    await generatePostInstallScript(parentComponent, postInstallLinks);
+  }
+  return linksToWrite;
+}
+
+/**
+ * The following scenario will help understanding why links are needed.
+ * Component A has a dependency B. (for instance, in a.js there is a require statement to 'b.js').
+ * While importing component A, it knows about the B dependency and it saves it under 'dependencies' directory of A.
+ * The problem is that the above require is broken, because 'b.js' is not in the same place where it was originally.
+ * This function solves this issue by creating the 'b.js' file in the original location and points to the new location
+ * under 'dependencies' of A.
+ */
+async function writeComponentsDependenciesLinks(
+  componentDependencies: ComponentWithDependencies[],
+  consumer: Consumer,
+  createNpmLinkFiles: boolean
+): Promise<any> {
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
     const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
-        `writeDependencyLinks, ignoring a component ${componentWithDeps.component.id} as it is an author component`
+        `writeComponentsDependenciesLinks, ignoring a component ${
+          componentWithDeps.component.id
+        } as it is an author component`
       );
       return null;
     }
     // it must be IMPORTED. We don't pass NESTED to this function
-    logger.debug(`writeDependencyLinks, generating links for ${componentWithDeps.component.id}`);
+    logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id}`);
     componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
-    const directLinks = await componentLinks(
+    const directLinks = await generateComponentLinks(
       componentWithDeps.allDependencies,
       componentWithDeps.component,
-      componentMap
+      componentMap,
+      createNpmLinkFiles,
+      consumer
     );
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
@@ -398,7 +419,13 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
-          return componentLinks(componentWithDeps.allDependencies, dep, depComponentMap);
+          return generateComponentLinks(
+            componentWithDeps.allDependencies,
+            dep,
+            depComponentMap,
+            createNpmLinkFiles,
+            consumer
+          );
         })
       );
       return [directLinks, ...indirectLinks];
@@ -481,4 +508,21 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
   return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
 }
 
-export { writeEntryPointsForComponent, writeDependencyLinks, getLinkContent, getIndexFileName };
+/**
+ * used for writing compiler and tester dependencies to the directory of their configuration file
+ * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
+ * this methods write the environment dependency links no matter where the directory located on the workspace
+ *
+ */
+async function writeDependenciesLinksToDir(targetDir: PathOsBased, dependencies: Dependencies, consumer: Consumer) {
+  // dependencies.map((dependency: Dependency) => {
+  // });
+}
+
+export {
+  writeEntryPointsForComponent,
+  writeComponentsDependenciesLinks,
+  getLinkContent,
+  getIndexFileName,
+  writeDependenciesLinksToDir
+};
