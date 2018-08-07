@@ -553,7 +553,7 @@ export default class Component {
     await this.dists.writeDists(this, consumer, false);
     if (writeConfig && consumer) {
       const resolvedConfigDir = configDir || consumer.dirStructure.ejectedEnvsDirStructure;
-      await this.writeConfig(consumer.getPath(), consumer.bitMap, resolvedConfigDir, override);
+      await this.writeConfig(consumer, resolvedConfigDir, override);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
