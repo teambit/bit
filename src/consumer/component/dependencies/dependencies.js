@@ -2,7 +2,7 @@
 import R from 'ramda';
 import { Dependency } from './';
 import type { RelativePath } from './dependency';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import Scope from '../../../scope/scope';
 import BitMap from '../../bit-map';
 import { isValidPath } from '../../../utils';
@@ -89,6 +89,10 @@ export default class Dependencies {
 
   getByIdStr(id: BitIdStr): Dependency {
     return this.dependencies.find(dep => dep.id.toString() === id);
+  }
+
+  getAllIds(): BitIds {
+    return BitIds.fromArray(this.dependencies.map(dependency => dependency.id));
   }
 
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
