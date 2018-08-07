@@ -891,7 +891,7 @@ export default class BitMap {
         componentMap.exported = componentMap.id.hasScope();
       }
       delete componentMap.id;
-      components[id] = componentMap;
+      components[id] = componentMap.toPlainObject();
     });
 
     return components;
