@@ -55,6 +55,7 @@ import tagModelComponent from '../scope/component-ops/tag-model-component';
 import type { InvalidComponent } from './component/consumer-component';
 import MainFileRemoved from './component/exceptions/main-file-removed';
 import type { BitIdStr } from '../bit-id/bit-id';
+import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 
 type ConsumerProps = {
   projectPath: string,
@@ -320,6 +321,7 @@ export default class Consumer {
         if (
           err instanceof MissingFilesFromComponent ||
           err instanceof ComponentNotFoundInPath ||
+          err instanceof ExtensionFileNotFound ||
           err instanceof MainFileRemoved
         ) {
           invalidComponents.push({ id, error: err });
@@ -413,9 +415,7 @@ export default class Consumer {
       version.log = componentFromModel.log; // ignore the log, it's irrelevant for the comparison
 
       // sometime dependencies from the FS don't have an exact version.
-      const copyDependenciesVersionsFromModelToFS = (dev = false) => {
-        const dependenciesFS = dev ? version.devDependencies : version.dependencies;
-        const dependenciesModel = dev ? componentFromModel.devDependencies : componentFromModel.dependencies;
+      const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
         dependenciesFS.get().forEach((dependency) => {
           const idWithoutVersion = dependency.id.toStringWithoutVersion();
           const dependencyFromModel = dependenciesModel
@@ -426,8 +426,10 @@ export default class Consumer {
           }
         });
       };
-      copyDependenciesVersionsFromModelToFS();
-      copyDependenciesVersionsFromModelToFS(true);
+      copyDependenciesVersionsFromModelToFS(version.dependencies, componentFromModel.dependencies);
+      copyDependenciesVersionsFromModelToFS(version.devDependencies, componentFromModel.devDependencies);
+      copyDependenciesVersionsFromModelToFS(version.compilerDependencies, componentFromModel.compilerDependencies);
+      copyDependenciesVersionsFromModelToFS(version.testerDependencies, componentFromModel.testerDependencies);
 
       // sort the files by 'relativePath' because the order can be changed when adding or renaming
       // files in bitmap, which affects later on the model.
@@ -436,9 +438,13 @@ export default class Consumer {
 
       version.packageDependencies = sortObject(version.packageDependencies);
       version.devPackageDependencies = sortObject(version.devPackageDependencies);
+      version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
+      version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
       version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
+      componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
+      componentFromModel.testerPackageDependencies = sortObject(componentFromModel.testerPackageDependencies);
       componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
       // prefix your command with "BIT_LOG=*" to see the actual id changes
       if (process.env.BIT_LOG && componentFromModel.hash().hash !== version.hash().hash) {
@@ -941,6 +947,8 @@ export default class Consumer {
     );
     let modelDependencies = new Dependencies([]);
     let modelDevDependencies = new Dependencies([]);
+    let modelCompilerDependencies = new Dependencies([]);
+    let modelTesterDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
       // try to find the model version of the component to get the stored versions of the dependencies
@@ -948,12 +956,16 @@ export default class Consumer {
         const mainComponentFromModel: Component = await this.scope.loadRemoteComponent(component.id);
         modelDependencies = mainComponentFromModel.dependencies;
         modelDevDependencies = mainComponentFromModel.devDependencies;
+        modelCompilerDependencies = mainComponentFromModel.compilerDependencies;
+        modelTesterDependencies = mainComponentFromModel.testerDependencies;
       } catch (e) {
         // do nothing. the component is probably on the file-system only and not on the model.
       }
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
+    await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
+    await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
   async eject(componentsIds: BitId[]) {

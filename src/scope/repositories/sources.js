@@ -156,6 +156,8 @@ export default class SourceRepository {
     message,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedCompilerDependencies,
+    flattenedTesterDependencies,
     dists,
     specsResults
   }: {
@@ -164,6 +166,8 @@ export default class SourceRepository {
     message?: string,
     flattenedDependencies?: Object,
     flattenedDevDependencies?: Object,
+    flattenedCompilerDependencies?: Object,
+    flattenedTesterDependencies?: Object,
     force?: boolean,
     verbose?: boolean,
     dists?: Object,
@@ -212,6 +216,8 @@ export default class SourceRepository {
       dists,
       flattenedDependencies,
       flattenedDevDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies,
       specsResults,
       message,
       username,
@@ -227,6 +233,8 @@ export default class SourceRepository {
     source,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedCompilerDependencies,
+    flattenedTesterDependencies,
     message,
     exactVersion,
     releaseType,
@@ -236,6 +244,8 @@ export default class SourceRepository {
     source: ConsumerComponent,
     flattenedDependencies: BitIds,
     flattenedDevDependencies: BitIds,
+    flattenedCompilerDependencies: BitIds,
+    flattenedTesterDependencies: BitIds,
     message: string,
     exactVersion: ?string,
     releaseType: string,
@@ -261,6 +271,8 @@ export default class SourceRepository {
       message,
       flattenedDependencies,
       flattenedDevDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies,
       dists,
       specsResults
     });

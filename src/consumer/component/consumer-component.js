@@ -78,12 +78,17 @@ export type ComponentProps = {
   bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
+  compilerDependencies?: Dependency[],
+  testerDependencies?: Dependency[],
   flattenedDependencies?: ?BitIds,
   flattenedDevDependencies?: ?BitIds,
+  flattenedCompilerDependencies?: ?BitIds,
+  flattenedTesterDependencies?: ?BitIds,
   packageDependencies?: ?Object,
   devPackageDependencies?: ?Object,
   peerPackageDependencies?: ?Object,
-  envsPackageDependencies?: ?Object,
+  compilerPackageDependencies?: ?Object,
+  testerPackageDependencies?: ?Object,
   customResolvedPaths?: ?(customResolvedPath[]),
   files: SourceFile[],
   docs?: ?(Doclet[]),
@@ -109,12 +114,17 @@ export default class Component {
   bitJson: ?ComponentBitJson;
   dependencies: Dependencies;
   devDependencies: Dependencies;
-  flattenedDevDependencies: BitIds;
+  compilerDependencies: Dependencies;
+  testerDependencies: Dependencies;
   flattenedDependencies: BitIds;
+  flattenedDevDependencies: BitIds;
+  flattenedCompilerDependencies: BitIds;
+  flattenedTesterDependencies: BitIds;
   packageDependencies: Object;
   devPackageDependencies: Object;
   peerPackageDependencies: Object;
-  envsPackageDependencies: Object;
+  compilerPackageDependencies: Object;
+  testerPackageDependencies: Object;
   _docs: ?(Doclet[]);
   _files: SourceFile[];
   dists: Dists;
@@ -193,12 +203,17 @@ export default class Component {
     bitJson,
     dependencies,
     devDependencies,
+    compilerDependencies,
+    testerDependencies,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedCompilerDependencies,
+    flattenedTesterDependencies,
     packageDependencies,
     devPackageDependencies,
     peerPackageDependencies,
-    envsPackageDependencies,
+    compilerPackageDependencies,
+    testerPackageDependencies,
     files,
     docs,
     dists,
@@ -222,12 +237,17 @@ export default class Component {
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
+    this.setCompilerDependencies(compilerDependencies);
+    this.setTesterDependencies(testerDependencies);
     this.flattenedDependencies = flattenedDependencies || new BitIds();
     this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
+    this.flattenedCompilerDependencies = flattenedCompilerDependencies || new BitIds();
+    this.flattenedTesterDependencies = flattenedTesterDependencies || new BitIds();
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
-    this.envsPackageDependencies = envsPackageDependencies || {};
+    this.compilerPackageDependencies = compilerPackageDependencies || {};
+    this.testerPackageDependencies = testerPackageDependencies || {};
     this._files = files;
     this._docs = docs;
     this.setDists(dists);
@@ -260,6 +280,8 @@ export default class Component {
     const newInstance: Component = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
+    newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
+    newInstance.setTesterDependencies(this.testerDependencies.getClone());
     return newInstance;
   }
 
@@ -269,6 +291,14 @@ export default class Component {
 
   setDevDependencies(devDependencies?: Dependency[]) {
     this.devDependencies = new Dependencies(devDependencies);
+  }
+
+  setCompilerDependencies(compilerDependencies?: Dependency[]) {
+    this.compilerDependencies = new Dependencies(compilerDependencies);
+  }
+
+  setTesterDependencies(testerDependencies?: Dependency[]) {
+    this.testerDependencies = new Dependencies(testerDependencies);
   }
 
   setDists(dists?: Dist[]) {
@@ -371,8 +401,21 @@ export default class Component {
     return BitIds.fromObject(this.flattenedDevDependencies);
   }
 
+  flattenedCompilerDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedCompilerDependencies);
+  }
+
+  flattenedTesterDependencies(): BitIds {
+    return BitIds.fromObject(this.flattenedTesterDependencies);
+  }
+
   getAllDependencies(): Dependency[] {
-    return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.compilerDependencies.dependencies,
+      ...this.testerDependencies.dependencies
+    ];
   }
 
   getAllDependenciesIds(): BitIds {
@@ -381,11 +424,17 @@ export default class Component {
   }
 
   hasDependencies(): boolean {
-    return !this.dependencies.isEmpty() || !this.devDependencies.isEmpty();
+    const allDependencies = this.getAllDependencies();
+    return Boolean(allDependencies.length);
   }
 
   getAllFlattenedDependencies(): BitId[] {
-    return this.flattenedDependencies.concat(this.flattenedDevDependencies);
+    return [
+      ...this.flattenedDependencies,
+      ...this.flattenedDevDependencies,
+      ...this.flattenedCompilerDependencies,
+      ...this.flattenedTesterDependencies
+    ];
   }
 
   async buildIfNeeded({
@@ -572,6 +621,8 @@ export default class Component {
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.compilerDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.testerDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
         pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
@@ -1013,10 +1064,13 @@ export default class Component {
       detachedTester: this.detachedTester,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
+      compilerDependencies: this.compilerDependencies.serialize(),
+      testerDependencies: this.testerDependencies.serialize(),
       packageDependencies: this.packageDependencies,
       devPackageDependencies: this.devPackageDependencies,
       peerPackageDependencies: this.peerPackageDependencies,
-      envsPackageDependencies: this.envsPackageDependencies,
+      compilerPackageDependencies: this.compilerPackageDependencies,
+      testerPackageDependencies: this.testerPackageDependencies,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
@@ -1045,7 +1099,15 @@ export default class Component {
     const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
     const dependenciesPaths = this.dependencies.getSourcesPaths();
     const devDependenciesPaths = this.devDependencies.getSourcesPaths();
-    const allPaths = [...filePaths, ...dependenciesPaths, ...devDependenciesPaths];
+    const compilerDependenciesPaths = this.compilerDependencies.getSourcesPaths();
+    const testerDependenciesPaths = this.testerDependencies.getSourcesPaths();
+    const allPaths = [
+      ...filePaths,
+      ...dependenciesPaths,
+      ...devDependenciesPaths,
+      ...compilerDependenciesPaths,
+      ...testerDependenciesPaths
+    ];
     const sharedStart = sharedStartOfArray(allPaths);
     if (!sharedStart || !sharedStart.includes(pathSep)) return;
     const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
@@ -1053,8 +1115,7 @@ export default class Component {
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
-    const getFlatten = (dev: boolean = false): BitIds => {
-      const field = dev ? 'flattenedDevDependencies' : 'flattenedDependencies';
+    const getFlatten = (field: string): BitIds => {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
@@ -1071,22 +1132,37 @@ export default class Component {
       );
     };
 
-    const dependencies = await getDependenciesComponents(getFlatten());
-    const devDependencies = await getDependenciesComponents(getFlatten(true));
-    return new ComponentWithDependencies({ component: this, dependencies, devDependencies });
+    const dependencies = await getDependenciesComponents(getFlatten('flattenedDependencies'));
+    const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
+    const compilerDependencies = await getDependenciesComponents(getFlatten('flattenedCompilerDependencies'));
+    const testerDependencies = await getDependenciesComponents(getFlatten('flattenedTesterDependencies'));
+    return new ComponentWithDependencies({
+      component: this,
+      dependencies,
+      devDependencies,
+      compilerDependencies,
+      testerDependencies
+    });
   }
 
   copyDependenciesFromModel(ids: string[]) {
     const componentFromModel = this.componentFromModel;
     if (!componentFromModel) throw new Error('copyDependenciesFromModel: component is missing from the model');
     ids.forEach((id: string) => {
-      const dependency = componentFromModel.dependencies.getByIdStr(id);
-      if (dependency) this.dependencies.add(dependency);
-      else {
-        const devDependency = componentFromModel.devDependencies.getByIdStr(id);
-        if (!devDependency) throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
-        this.devDependencies.add(dependency);
-      }
+      const addDependency = (modelDependencies: Dependencies, dependencies: Dependencies) => {
+        const dependency = modelDependencies.getByIdStr(id);
+        if (dependency) dependencies.add(dependency);
+        return Boolean(dependency);
+      };
+      const addedDep = addDependency(componentFromModel.dependencies, this.dependencies);
+      if (addedDep) return;
+      const addedDevDep = addDependency(componentFromModel.devDependencies, this.devDependencies);
+      if (addedDevDep) return;
+      const addedCompilerDep = addDependency(componentFromModel.compilerDependencies, this.compilerDependencies);
+      if (addedCompilerDep) return;
+      const addedTesterDep = addDependency(componentFromModel.testerDependencies, this.testerDependencies);
+      if (addedTesterDep) return;
+      throw new Error(`copyDependenciesFromModel unable to find dependency ${id} in the model`);
     });
   }
 
@@ -1104,10 +1180,13 @@ export default class Component {
       detachedTester,
       dependencies,
       devDependencies,
+      compilerDependencies,
+      testerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       docs,
       mainFile,
       dists,
@@ -1128,10 +1207,13 @@ export default class Component {
       detachedTester,
       dependencies,
       devDependencies,
+      compilerDependencies,
+      testerDependencies,
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       mainFile,
       files,
       docs,
@@ -1270,18 +1352,24 @@ export default class Component {
 
     const [compiler, tester] = await Promise.all([compilerP, testerP]);
 
-    // Load the envsPackageDependencies from the actual compiler / tester or from the model
+    // Load the compilerPackageDependencies/testerPackageDependencies from the actual compiler / tester or from the model
     // if they are not loaded (aka not installed)
     // We load it from model to prevent case when component is modified becasue changes in envsPackageDependencies
     // That occur as a result that we import component but didn't import its envs so we can't
     // calculate the envsPackageDependencies (without install the env, which we don't want)
     const compilerDynamicPackageDependencies = compiler && compiler.loaded ? compiler.dynamicPackageDependencies : {};
     const testerDynamicPackageDependencies = tester && tester.loaded ? tester.dynamicPackageDependencies : {};
-    const modelEnvsPackageDependencies = componentFromModel ? componentFromModel.envsPackageDependencies || {} : {};
-    const envsPackageDependencies = {
-      ...modelEnvsPackageDependencies,
-      ...testerDynamicPackageDependencies,
+    const modelCompilerPackageDependencies = componentFromModel
+      ? componentFromModel.compilerPackageDependencies || {}
+      : {};
+    const modelTesterPackageDependencies = componentFromModel ? componentFromModel.testerPackageDependencies || {} : {};
+    const compilerPackageDependencies = {
+      ...modelCompilerPackageDependencies,
       ...compilerDynamicPackageDependencies
+    };
+    const testerPackageDependencies = {
+      ...modelTesterPackageDependencies,
+      ...testerDynamicPackageDependencies
     };
 
     return new Component({
@@ -1299,7 +1387,8 @@ export default class Component {
       packageDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       deprecated,
       origin: componentMap.origin,
       detachedCompiler: componentMap.detachedCompiler,

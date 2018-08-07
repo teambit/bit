@@ -22,6 +22,7 @@ import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import ConsumerComponent from '../consumer/component';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
+import logger from '../logger/logger';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -84,6 +85,7 @@ export default class EnvExtension extends BaseExtension {
 
   async install(scope: Scope, opts: { verbose: boolean }, context?: Object): Promise<?(ComponentWithDependencies[])> {
     Analytics.addBreadCrumb('env-extension', 'install env extension');
+    logger.debug('env-extension - install env extension');
 
     // Skip the installation in case of using specific file
     // options.file usually used for develop your extension
@@ -104,6 +106,7 @@ export default class EnvExtension extends BaseExtension {
 
   toModelObject(): EnvExtensionModel {
     Analytics.addBreadCrumb('env-extension', 'toModelObject');
+    logger.debug('env-extension - toModelObject');
     const baseObject: BaseExtensionModel = super.toModelObject();
     const files = this.files.map(file => file.toModelObject());
     const modelObject = { files, ...baseObject };
@@ -112,6 +115,7 @@ export default class EnvExtension extends BaseExtension {
 
   toObject(): Object {
     Analytics.addBreadCrumb('env-extension', 'toObject');
+    logger.debug('env-extension - toObject');
     const baseObject: Object = super.toObject();
     const files = this.files;
     const object = { files, ...baseObject };
@@ -125,6 +129,7 @@ export default class EnvExtension extends BaseExtension {
    */
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
     Analytics.addBreadCrumb('env-extension', 'toBitJsonObject');
+    logger.debug('env-extension - toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.name);
@@ -155,6 +160,7 @@ export default class EnvExtension extends BaseExtension {
     deleteOldFiles: boolean
   }): Promise<string> {
     Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
+    logger.debug('env-extension - writeFilesToFs');
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
     const writeP = [];
     const filePaths = [];
@@ -181,6 +187,7 @@ export default class EnvExtension extends BaseExtension {
 
   async reload(scopePath: string, context?: Object): Promise<void> {
     Analytics.addBreadCrumb('env-extension', 'reload');
+    logger.debug('env-extension - reload');
     if (context) {
       this.context = context;
     }
@@ -198,6 +205,7 @@ export default class EnvExtension extends BaseExtension {
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('env-extension', 'load');
+    logger.debug('env-extension - load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
@@ -209,6 +217,7 @@ export default class EnvExtension extends BaseExtension {
 
   static async loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): Promise<?Object> {
     Analytics.addBreadCrumb('env-extension', 'loadDynamicPackageDependencies');
+    logger.debug('env-extension - loadDynamicPackageDependencies');
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       try {

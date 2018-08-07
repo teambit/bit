@@ -20,6 +20,9 @@ const TROUBLESHOOTING_MESSAGE = `${chalk.yellow(
 )}`;
 
 export const statusFailureMsg = 'issues found';
+export const statusInvalidComponentsMsg = 'invalid components';
+export const statusWorkspaceIsCleanMsg =
+  'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
 
 export default class Status extends Command {
   name = 'status';
@@ -137,7 +140,7 @@ export default class Status extends Command {
     const invalidDesc = '\nthese components were failed to load.\n';
     const invalidComponentOutput = immutableUnshift(
       invalidComponents.map(c => format(c.id.toString(), true, getInvalidComponentLabel(c.error))).sort(),
-      invalidComponents.length ? chalk.underline.white('invalid components') + invalidDesc : ''
+      invalidComponents.length ? chalk.underline.white(statusInvalidComponentsMsg) + invalidDesc : ''
     ).join('\n');
 
     const stagedDesc = '\n(use "bit export <remote_scope> to push these components to a remote scope")\n';
@@ -160,8 +163,7 @@ export default class Status extends Command {
         ]
           .filter(x => x)
           .join(chalk.underline('\n                         \n') + chalk.white('\n')) +
-        troubleshootingStr ||
-      chalk.yellow('nothing to tag or export (use "bit add <file...>" to track files or directories as components)')
+        troubleshootingStr || chalk.yellow(statusWorkspaceIsCleanMsg)
     );
   }
 }

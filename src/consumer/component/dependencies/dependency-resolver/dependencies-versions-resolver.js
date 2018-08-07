@@ -21,12 +21,18 @@ function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId):
 function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?BitId {
   const getVersion = (): ?string => {
     if (!bitJson) return null;
-    if (!bitJson.dependencies && !bitJson.devDependencies) return null;
-    if (bitJson.dependencies[componentId.toStringWithoutVersion()]) {
-      return bitJson.dependencies[componentId.toStringWithoutVersion()];
+    const idWithoutVersion = componentId.toStringWithoutVersion();
+    if (bitJson.dependencies[idWithoutVersion]) {
+      return bitJson.dependencies[idWithoutVersion];
     }
-    if (bitJson.devDependencies) {
-      return bitJson.devDependencies[componentId.toStringWithoutVersion()];
+    if (bitJson.devDependencies[idWithoutVersion]) {
+      return bitJson.devDependencies[idWithoutVersion];
+    }
+    if (bitJson.compilerDependencies[idWithoutVersion]) {
+      return bitJson.compilerDependencies[idWithoutVersion];
+    }
+    if (bitJson.testerDependencies[idWithoutVersion]) {
+      return bitJson.testerDependencies[idWithoutVersion];
     }
     return null;
   };
@@ -147,4 +153,6 @@ export default (async function updateDependenciesVersions(consumer: Consumer, co
   };
   updateDependencies(component.dependencies);
   updateDependencies(component.devDependencies);
+  updateDependencies(component.compilerDependencies);
+  updateDependencies(component.testerDependencies);
 });

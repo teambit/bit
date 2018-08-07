@@ -336,7 +336,10 @@ export default class Scope {
       nodePathDirDist &&
       components.some(
         component =>
-          (component.dependencies.isCustomResolvedUsed() || component.devDependencies.isCustomResolvedUsed()) &&
+          (component.dependencies.isCustomResolvedUsed() ||
+            component.devDependencies.isCustomResolvedUsed() ||
+            component.compilerDependencies.isCustomResolvedUsed() ||
+            component.testerDependencies.isCustomResolvedUsed()) &&
           (component.componentMap && component.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) &&
           !component.dists.isEmpty()
       );
@@ -462,6 +465,8 @@ export default class Scope {
         });
         object.flattenedDependencies = getBitIdsWithUpdatedScope(object.flattenedDependencies);
         object.flattenedDevDependencies = getBitIdsWithUpdatedScope(object.flattenedDevDependencies);
+        object.flattenedCompilerDependencies = getBitIdsWithUpdatedScope(object.flattenedCompilerDependencies);
+        object.flattenedTesterDependencies = getBitIdsWithUpdatedScope(object.flattenedTesterDependencies);
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
           logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
@@ -529,7 +534,7 @@ export default class Scope {
       'exportManyBareScope',
       'exportManyBareScope: will try to importMany in case there are missing dependencies'
     );
-    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), undefined, true, false); // resolve dependencies
+    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true, false); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     Analytics.addBreadCrumb('exportManyBareScope', 'exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
@@ -675,8 +680,8 @@ export default class Scope {
     });
   }
 
-  async getObjects(ids: BitIds, withDevDependencies?: boolean): Promise<ComponentObjects[]> {
-    const versions = await this.importMany(ids, withDevDependencies);
+  async getObjects(ids: BitIds): Promise<ComponentObjects[]> {
+    const versions = await this.importMany(ids);
     return Promise.all(versions.map(version => version.toObjects(this.objects)));
   }
 
@@ -694,12 +699,7 @@ export default class Scope {
    * and save them locally.
    * 3. External objects, fetch from a remote and save locally. (done by this.getExternalOnes method).
    */
-  async importMany(
-    ids: BitIds,
-    withEnvironments?: boolean,
-    cache: boolean = true,
-    persist: boolean = true
-  ): Promise<VersionDependencies[]> {
+  async importMany(ids: BitIds, cache: boolean = true, persist: boolean = true): Promise<VersionDependencies[]> {
     logger.debug(`scope.importMany: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('importMany', `scope.importMany: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
@@ -711,7 +711,7 @@ export default class Scope {
     const versionDeps = await Promise.all(
       localDefs.map((def) => {
         if (!def.component) throw new ComponentNotFound(def.id.toString());
-        return def.component.toVersionDependencies(def.id.version, this, def.id.scope, withEnvironments);
+        return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
       })
     );
     logger.debug(
@@ -726,7 +726,7 @@ export default class Scope {
     return versionDeps.concat(externalDeps);
   }
 
-  async importManyOnes(ids: BitId[], cache: boolean = true): Promise<ComponentVersion[]> {
+  async importManyOnes(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
     logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
     Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
 
@@ -757,23 +757,6 @@ export default class Scope {
     );
   }
 
-  import(id: BitId): Promise<VersionDependencies> {
-    if (!id.isLocal(this.name)) {
-      return this.remotes().then(remotes => this.getExternal({ id, remotes, localFetch: true }));
-    }
-
-    return this.sources.get(id).then((component) => {
-      if (!component) throw new ComponentNotFound(id.toString());
-      return component.toVersionDependencies(id.version, this, this.name);
-    });
-  }
-
-  async get(id: BitId): Promise<ComponentWithDependencies> {
-    return this.import(id).then((versionDependencies) => {
-      return versionDependencies.toConsumer(this.objects);
-    });
-  }
-
   /**
    * return a component only when it's stored locally. Don't go to any remote server and don't throw an exception if the
    * component is not there.
@@ -799,7 +782,7 @@ export default class Scope {
 
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    return this.importMany(idsWithoutNils, false, cache).then((versionDependenciesArr: VersionDependencies[]) => {
+    return this.importMany(idsWithoutNils, cache).then((versionDependenciesArr: VersionDependencies[]) => {
       return Promise.all(
         versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects))
       );
@@ -814,7 +797,7 @@ export default class Scope {
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, false, cache);
+    const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
 
     const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
@@ -823,7 +806,8 @@ export default class Scope {
         const versionId = versionDependencies.component.id;
         return versionId.changeVersion(version);
       });
-      return this.importManyOnes(idsWithAllVersions);
+      const bitIdsWithAllVersions = BitIds.fromArray(idsWithAllVersions.filter(x => x));
+      return this.importManyOnes(bitIdsWithAllVersions);
     });
     await Promise.all(allVersionsP);
 

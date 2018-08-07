@@ -1,5 +1,4 @@
 /** @flow */
-import R from 'ramda';
 import c from 'chalk';
 import { table } from 'table';
 import rightpad from 'pad-right';
@@ -35,6 +34,8 @@ const fields = [
   'mainFile',
   'dependencies',
   'devDependencies',
+  'compilerDependencies',
+  'testerDependencies',
   'packages',
   'devPackages',
   'peerDependencies',
@@ -54,11 +55,11 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
   } else {
     dependencyHeader.push(['Dependencies']);
   }
-  const getDependenciesRows = (dependencies, isDev: boolean = false) => {
+  const getDependenciesRows = (dependencies, title?: string) => {
     const dependencyRows = [];
     dependencies.forEach((dependency) => {
       let dependencyId = showRemoteVersion ? dependency.id.toStringWithoutVersion() : dependency.id.toString();
-      dependencyId = isDev ? `${dependencyId} (dev)` : dependencyId;
+      dependencyId = title ? `${dependencyId} (${title})` : dependencyId;
       const row = [dependencyId];
       if (showRemoteVersion) {
         const dependencyVersion = dependency.currentVersion;
@@ -82,8 +83,15 @@ function generateDependenciesTable(component: ConsumerComponent, showRemoteVersi
     return dependencyRows;
   };
   const dependenciesRows = getDependenciesRows(component.dependencies.get());
-  const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), true);
-  const allDependenciesRows = R.concat(dependenciesRows, devDependenciesRows);
+  const devDependenciesRows = getDependenciesRows(component.devDependencies.get(), 'dev');
+  const compilerDependenciesRows = getDependenciesRows(component.compilerDependencies.get(), 'compiler');
+  const testerDependenciesRows = getDependenciesRows(component.testerDependencies.get(), 'tester');
+  const allDependenciesRows = [
+    ...dependenciesRows,
+    ...devDependenciesRows,
+    ...compilerDependenciesRows,
+    ...testerDependenciesRows
+  ];
 
   const dependenciesTable = table(dependencyHeader.concat(allDependenciesRows));
   return dependenciesTable;

@@ -6,6 +6,7 @@ import glob from 'glob';
 import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -1743,7 +1744,7 @@ console.log(barFoo.default());`;
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.a.string('utils/is-string');
         expect(output).to.not.have.a.string('utils/is-type');
-        expect(output).to.have.a.string('nothing to tag or export');
+        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
       });
       it('should not break the is-string component', () => {
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -2020,7 +2021,7 @@ console.log(barFoo.default());`;
     });
     it('should not show any of the components as new or modified or deleted or staged', () => {
       const output = helper.runCmd('bit status');
-      expect(output.includes('nothing to tag or export')).to.be.true;
+      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
     describe('when cloning the project to somewhere else', () => {
       before(() => {

@@ -319,12 +319,17 @@ export default class Component extends BitObject {
       detachedTester: version.detachedTester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
+      compilerDependencies: version.compilerDependencies.getClone(),
+      testerDependencies: version.testerDependencies.getClone(),
       flattenedDependencies: version.flattenedDependencies.clone(),
       flattenedDevDependencies: version.flattenedDevDependencies.clone(),
+      flattenedCompilerDependencies: version.flattenedCompilerDependencies.clone(),
+      flattenedTesterDependencies: version.flattenedTesterDependencies.clone(),
       packageDependencies: clone(version.packageDependencies),
       devPackageDependencies: clone(version.devPackageDependencies),
       peerPackageDependencies: clone(version.peerPackageDependencies),
-      envsPackageDependencies: clone(version.envsPackageDependencies),
+      compilerPackageDependencies: clone(version.compilerPackageDependencies),
+      testerPackageDependencies: clone(version.testerPackageDependencies),
       files,
       dists,
       docs: version.docs,
@@ -363,9 +368,9 @@ export default class Component extends BitObject {
     return Buffer.from(str);
   }
 
-  toVersionDependencies(version: string, scope: Scope, source: string, withDevDependencies?: boolean) {
+  toVersionDependencies(version: string, scope: Scope, source: string) {
     const versionComp = this.toComponentVersion(version);
-    return versionComp.toVersionDependencies(scope, source, withDevDependencies);
+    return versionComp.toVersionDependencies(scope, source);
   }
 
   /**

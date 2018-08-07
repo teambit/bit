@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 describe('peer-dependencies functionality', function () {
   this.timeout(0);
@@ -50,7 +51,7 @@ describe('peer-dependencies functionality', function () {
       });
       it('should not be shown as modified', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.have.a.string('nothing to tag or export');
+        expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
       });
       describe('and the package.json of the component was changed to remove the peerDependencies', () => {
         before(() => {
@@ -70,7 +71,7 @@ describe('peer-dependencies functionality', function () {
         });
         it('should not be shown as modified', () => {
           const output = helper.runCmd('bit status');
-          expect(output).to.have.a.string('nothing to tag or export');
+          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
         });
       });
     });
