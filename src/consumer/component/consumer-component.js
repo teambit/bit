@@ -37,7 +37,8 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
   DEFAULT_DIST_DIRNAME,
-  COMPONENT_DIR
+  COMPONENT_DIR,
+  BIT_WORKSPACE_TMP_DIRNAME
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -61,6 +62,7 @@ import EjectToWorkspace from './exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 import InjectNonEjected from './exceptions/inject-non-ejected';
+import ConfigDir from '../bit-map/config-dir';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -179,6 +181,17 @@ export default class Component {
       this._driver = Driver.load(this.lang);
     }
     return this._driver;
+  }
+
+  get tmpFolder(): PathOsBased {
+    let folder = path.join(BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
+    if (this.componentMap) {
+      const trackDir = this.componentMap.getTrackDir();
+      if (trackDir) {
+        folder = path.join(trackDir, BIT_WORKSPACE_TMP_DIRNAME);
+      }
+    }
+    return folder;
   }
 
   constructor({
@@ -300,7 +313,8 @@ export default class Component {
     if (!componentMap) {
       throw new GeneralError('could not find component in the .bitmap file');
     }
-    if (configDir === '.' || configDir === './') {
+    const configDirInstance = new ConfigDir(configDir);
+    if (configDirInstance.isWorkspaceRoot) {
       throw new EjectToWorkspace();
     }
     // Nothing is detached.. no reason to eject
@@ -314,7 +328,7 @@ export default class Component {
       throw new EjectBoundToWorkspace();
     }
 
-    const res = await ejectConf(this, consumerPath, bitMap, configDir, override);
+    const res = await ejectConf(this, consumerPath, bitMap, configDirInstance, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -412,12 +426,14 @@ export default class Component {
 
     const runBuild = async (componentRoot: string): Promise<any> => {
       let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
+
       let componentDir;
+      let componentDirFullPath;
       if (componentMap) {
         // $FlowFixMe
         rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-        componentDir =
-          consumer && componentMap.rootDir ? path.join(consumer.getPath(), componentMap.rootDir) : undefined;
+        componentDir = consumer && componentMap && componentMap.getTrackDir() ? componentMap.getTrackDir() : '';
+        componentDirFullPath = consumer ? path.join(consumer.getPath(), componentDir) : componentRoot;
       }
       return Promise.resolve()
         .then(async () => {
@@ -430,6 +446,11 @@ export default class Component {
           // Change the cwd to make sure we found the needed files
           process.chdir(componentRoot);
           if (compiler.action) {
+            // Write config files to tmp folder
+            if (compiler.writeConfigFilesOnAction) {
+              const tpmFolderFullPath = path.join(componentDirFullPath, BIT_WORKSPACE_TMP_DIRNAME);
+              await compiler.writeFilesToFs({ configDir: tpmFolderFullPath, deleteOldFiles: false });
+            }
             const actionParams = {
               files,
               rawConfig: compiler.rawConfig,

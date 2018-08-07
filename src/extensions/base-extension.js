@@ -215,6 +215,7 @@ export default class BaseExtension {
       this.loaded = baseProps.loaded;
       this.script = baseProps.script;
       this.dynamicConfig = baseProps.dynamicConfig;
+      this.init();
     }
   }
 
