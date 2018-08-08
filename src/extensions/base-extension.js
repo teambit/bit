@@ -112,7 +112,7 @@ export default class BaseExtension {
     if (!this.initOptions) {
       return false;
     }
-    return R.path(this.initOptions.writeConfigFilesOnAction);
+    return this.initOptions.writeConfigFilesOnAction;
   }
 
   get initOptions() {
