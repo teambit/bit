@@ -81,7 +81,6 @@ src/cli/templates/bare-list-template.js
 src/extensions/extension-command.js
 src/git-hooks/git-hooks-manager.js
 src/npm-client/npm-client.js
-src/scope/objects/object.js
 src/cli/commands/public-cmds/link-cmd.js
 src/cli/default-error-handler.js
 src/cli/templates/docs-template.js
@@ -112,7 +111,6 @@ src/hooks/hooks-manager.js
 src/scope/component-remove.js
 src/extensions/extension.js
 src/scope/models/component.js
-src/utils/string/to-base64-array-buffer.js
 src/consumer/consumer.js
 e2e/e2e-helper.js
 src/consumer/component/consumer-component.js

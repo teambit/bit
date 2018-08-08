@@ -5,6 +5,7 @@
     "flowtype-errors"
   ],
   "rules": {
+    "no-bitwise": "off",
     "arrow-body-style": [0, "as-needed"],
     "camelcase": [0],
     "no-trailing-spaces": [0],

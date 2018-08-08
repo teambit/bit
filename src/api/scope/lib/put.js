@@ -8,7 +8,7 @@ const HooksManagerInstance = HooksManager.getInstance();
 
 export type ComponentObjectsInput = {
   path: string,
-  componentObjects: string
+  componentObjects: string | ComponentObjects[]
 };
 
 export default function put(
@@ -18,10 +18,11 @@ export default function put(
   if (typeof componentObjects === 'string') {
     componentObjects = ComponentObjects.manyFromString(componentObjects);
   }
+
   HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
 
   return loadScope(path).then((scope) => {
-    return scope.exportManyBareScope(componentObjects).then(async (componentsIds) => {
+    return scope.exportManyBareScope(((componentObjects: any): ComponentObjects[])).then(async (componentsIds) => {
       await HooksManagerInstance.triggerHook(
         POST_RECEIVE_OBJECTS,
         {
@@ -32,7 +33,7 @@ export default function put(
         },
         headers
       );
-      return componentsIds;
+      return (componentsIds: any);
     });
   });
 }
