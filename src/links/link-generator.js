@@ -181,32 +181,45 @@ function prepareLinkFile(
 }
 
 /**
- * a component may have many dependencies. this function takes care of generating links to one dependency
+ * a dependency component may have multiple files required by the main component.
+ * this function returns the link content of one file of a dependency.
+ * @see RelativePath docs for more info
  */
-function generateDependencyLinks(
-  depId: BitId,
-  depComponent: Component,
+function _getLinksForOneDependencyFile({
+  consumer,
+  component,
+  componentMap,
+  relativePath,
+  dependencyId,
+  dependencyComponent,
+  createNpmLinkFiles,
+  targetDir
+}: {
+  consumer: Consumer,
+  component: Component,
+  componentMap: ComponentMap,
   relativePath: RelativePath,
-  parentComponent: Component,
-  parentComponentMap: ComponentMap,
+  dependencyId: BitId,
+  dependencyComponent: Component,
   createNpmLinkFiles: boolean,
-  consumer: Consumer
-): LinkFile[] {
+  targetDir?: string
+}): LinkFile[] {
   const consumerPath: PathOsBased = consumer.getPath();
-  const getParentDir = (): PathOsBasedAbsolute => {
+  const getTargetDir = (): PathOsBasedAbsolute => {
+    if (targetDir) return targetDir;
     // when running from bit build, the writtenPath is not available
-    if (!parentComponent.writtenPath) return consumer.toAbsolutePath(parentComponentMap.rootDir);
-    if (path.isAbsolute(parentComponent.writtenPath)) return parentComponent.writtenPath;
-    return consumer.toAbsolutePath(parentComponent.writtenPath);
+    if (!component.writtenPath) return consumer.toAbsolutePath(componentMap.rootDir);
+    if (path.isAbsolute(component.writtenPath)) return component.writtenPath;
+    return consumer.toAbsolutePath(component.writtenPath);
   };
-  const parentDir = getParentDir();
+  const parentDir = getTargetDir();
   const relativePathInDependency = path.normalize(relativePath.destinationRelativePath);
-  const mainFile: PathOsBased = depComponent.dists.calculateMainDistFile(depComponent.mainFile);
-  const hasDist = parentComponent.dists.writeDistsFiles && !parentComponent.dists.isEmpty();
-  const distRoot: PathOsBased = parentComponent.dists.getDistDirForConsumer(consumer, parentComponentMap.rootDir);
+  const mainFile: PathOsBased = dependencyComponent.dists.calculateMainDistFile(dependencyComponent.mainFile);
+  const hasDist = component.dists.writeDistsFiles && !component.dists.isEmpty();
+  const distRoot: PathOsBased = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
 
   let relativeDistPathInDependency = searchFilesIgnoreExt(
-    depComponent.dists.get(),
+    dependencyComponent.dists.get(),
     relativePathInDependency,
     'relative'
   );
@@ -233,16 +246,16 @@ function generateDependencyLinks(
 
   let distLinkPath: PathOsBased;
   const linkFiles = [];
-  const depComponentMap = parentComponent.dependenciesSavedAsComponents
-    ? consumer.bitMap.getComponent(depId)
+  const depComponentMap = component.dependenciesSavedAsComponents
+    ? consumer.bitMap.getComponent(dependencyId)
     : undefined;
 
   const depRootDir: ?PathOsBased =
     depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
-  const isNpmLink = createNpmLinkFiles || !parentComponent.dependenciesSavedAsComponents;
+  const isNpmLink = createNpmLinkFiles || !component.dependenciesSavedAsComponents;
   const depRootDirDist =
     depComponentMap && depComponentMap.rootDir
-      ? depComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
+      ? dependencyComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
       : undefined;
 
   if (hasDist) {
@@ -254,7 +267,7 @@ function generateDependencyLinks(
         // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
         distLinkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
         const linkFile = prepareLinkFile(
-          depId,
+          dependencyId,
           mainFile,
           distLinkPath,
           relativeDistPathInDependency,
@@ -269,7 +282,7 @@ function generateDependencyLinks(
       distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
       const linkFile = prepareLinkFile(
-        depId,
+        dependencyId,
         mainFile,
         distLinkPath,
         relativeDistPathInDependency,
@@ -283,7 +296,7 @@ function generateDependencyLinks(
 
   const sourceRelativePathWithCompiledExt = `${getWithoutExt(relativePathInDependency)}.${relativeDistExtInDependency}`;
   const linkFile = prepareLinkFile(
-    depId,
+    dependencyId,
     mainFile,
     linkPath,
     relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
@@ -304,55 +317,61 @@ function generateDependencyLinks(
 }
 
 /**
- * a component may have many dependencies, this function takes care of generating links for all of them
+ * a component may have many dependencies, this function returns the links content for all of its dependencies
  */
-async function generateComponentLinks(
+async function getComponentLinks({
+  consumer,
+  component,
+  componentMap,
+  dependencies,
+  createNpmLinkFiles
+}: {
+  consumer: Consumer,
+  component: Component,
+  componentMap: ComponentMap,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-  parentComponent: Component,
-  parentComponentMap: ComponentMap,
-  createNpmLinkFiles: boolean,
-  consumer: Consumer
-): Promise<Array<{ filePath: string, content: string }>> {
-  const directDependencies: Dependency[] = parentComponent.getAllDependencies();
-  const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
+  createNpmLinkFiles: boolean
+}): Promise<Array<{ filePath: string, content: string }>> {
+  const directDependencies: Dependency[] = component.getAllDependencies();
+  const flattenedDependencies: BitIds = component.getAllFlattenedDependencies();
   if (!directDependencies || !directDependencies.length) return [];
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
-    let resolveDepVersion = dep.id;
-    // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
-    // Actual version number, because on the bitmap we have only specific versions
-    if (dep.id.getVersion().latest) {
-      resolveDepVersion = flattenedDependencies.resolveVersion(dep.id);
-    }
-
-    // Helper function to look for the component object
-    const _byComponentId = dependency => dependency.id.isEqual(resolveDepVersion);
+    const getDependencyIdWithResolvedVersion = (): BitId => {
+      // Check if the dependency is latest, if yes we need to resolve if from the flatten dependencies to get the
+      // Actual version number, because on the bitmap we have only specific versions
+      if (dep.id.getVersion().latest) {
+        return flattenedDependencies.resolveVersion(dep.id);
+      }
+      return dep.id;
+    };
+    const dependencyId = getDependencyIdWithResolvedVersion();
     // Get the real dependency component
-    const depComponent = R.find(_byComponentId, dependencies);
+    const dependencyComponent = dependencies.find(dependency => dependency.id.isEqual(dependencyId));
 
-    if (!depComponent) {
-      const errorMessage = `link-generation: failed finding ${resolveDepVersion.toString()} in the dependencies array of ${
-        parentComponent.id
+    if (!dependencyComponent) {
+      const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${
+        component.id
       }.
 The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
       throw new GeneralError(errorMessage);
     }
 
-    const currLinks = dep.relativePaths.map((relativePath: RelativePath) => {
-      return generateDependencyLinks(
-        resolveDepVersion,
-        depComponent,
+    const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
+      return _getLinksForOneDependencyFile({
+        consumer,
+        component,
+        componentMap,
         relativePath,
-        parentComponent,
-        parentComponentMap,
-        createNpmLinkFiles,
-        consumer
-      );
+        dependencyId,
+        dependencyComponent,
+        createNpmLinkFiles
+      });
     });
-    return R.flatten(currLinks);
+    return R.flatten(dependencyLinks);
   });
-  const internalCustomResolvedLinks = parentComponent.customResolvedPaths.length
-    ? getInternalCustomResolvedLinks(parentComponent, createNpmLinkFiles)
+  const internalCustomResolvedLinks = component.customResolvedPaths.length
+    ? getInternalCustomResolvedLinks(component, createNpmLinkFiles)
     : [];
   const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
 
@@ -372,7 +391,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     else linksToWrite.push(linkFile);
   });
   if (postInstallLinks.length) {
-    await generatePostInstallScript(parentComponent, postInstallLinks);
+    await generatePostInstallScript(component, postInstallLinks);
   }
   return linksToWrite;
 }
@@ -384,6 +403,14 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
  * The problem is that the above require is broken, because 'b.js' is not in the same place where it was originally.
  * This function solves this issue by creating the 'b.js' file in the original location and points to the new location
  * under 'dependencies' of A.
+ *
+ * It does the link generation in two steps.
+ * step 1: "componentsLinks", it generates links to all imported components.
+ * target: imported components. source: dependencies.
+ * step 2: "dependenciesLinks", it generates links to all dependencies of the imported components.
+ * target: dependencies. source: other dependencies.
+ * this step is not needed when the imported components don't have dependencies, or when the
+ * dependencies were installed as npm/yarn packages.
  */
 async function writeComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
@@ -404,33 +431,33 @@ async function writeComponentsDependenciesLinks(
     logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id}`);
     componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
-    const directLinks = await generateComponentLinks(
-      componentWithDeps.allDependencies,
-      componentWithDeps.component,
+    const componentsLinks = await getComponentLinks({
+      consumer,
+      component: componentWithDeps.component,
       componentMap,
-      createNpmLinkFiles,
-      consumer
-    );
+      dependencies: componentWithDeps.allDependencies,
+      createNpmLinkFiles
+    });
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
-      const indirectLinks = await Promise.all(
+      const dependenciesLinks = await Promise.all(
         componentWithDeps.allDependencies.map((dep: Component) => {
           const depComponentMap = consumer.bitMap.getComponent(dep.id);
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
-          return generateComponentLinks(
-            componentWithDeps.allDependencies,
-            dep,
-            depComponentMap,
-            createNpmLinkFiles,
-            consumer
-          );
+          return getComponentLinks({
+            consumer,
+            component: dep,
+            componentMap: depComponentMap,
+            dependencies: componentWithDeps.allDependencies,
+            createNpmLinkFiles
+          });
         })
       );
-      return [directLinks, ...indirectLinks];
+      return [componentsLinks, ...dependenciesLinks];
     }
-    return directLinks;
+    return componentsLinks;
   });
   const allLinks = await Promise.all(allLinksP);
 
@@ -514,9 +541,31 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
  * this methods write the environment dependency links no matter where the directory located on the workspace
  *
  */
-async function writeDependenciesLinksToDir(targetDir: PathOsBased, dependencies: Dependencies, consumer: Consumer) {
-  // dependencies.map((dependency: Dependency) => {
-  // });
+async function writeDependenciesLinksToDir(
+  targetDir: PathOsBased,
+  component: Component,
+  dependencies: Dependencies,
+  consumer: Consumer
+) {
+  const linksP = dependencies.get().map(async (dependency: Dependency) => {
+    const dependencyComponent = await consumer.scope.getConsumerComponent(dependency.id);
+    const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
+      return _getLinksForOneDependencyFile({
+        consumer,
+        component,
+        componentMap: component.componentMap,
+        relativePath,
+        dependencyId: dependency.id,
+        dependencyComponent,
+        createNpmLinkFiles: false,
+        targetDir
+      });
+    });
+    return R.flatten(dependencyLinks);
+  });
+  const links = await Promise.all(linksP);
+
+  return Promise.all(R.flatten(links).map(link => outputFile({ filePath: link.linkPath, content: link.linkContent })));
 }
 
 export {

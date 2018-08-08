@@ -56,7 +56,7 @@ export default (async function ejectConf(
     ejectedCompilerDirectoryP,
     ejectedTesterDirectoryP
   ]);
-  await writeDependenciesLinksToDir(resolvedConfigDirFullPath, component.compilerDependencies, consumer);
+  await writeDependenciesLinksToDir(resolvedConfigDirFullPath, component, component.compilerDependencies, consumer);
   const bitJsonDir = format(resolvedConfigDirFullPath, { ENV_TYPE: '' });
   const relativeEjectedCompilerDirectory = _getRelativeDir(bitJsonDir, ejectedCompilerDirectory);
   const relativeEjectedTesterDirectory = _getRelativeDir(bitJsonDir, ejectedTesterDirectory);

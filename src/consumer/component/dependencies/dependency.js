@@ -6,6 +6,16 @@ import type { ImportSpecifier } from './dependency-resolver/types/dependency-tre
 import BitMap from '../../bit-map';
 import { COMPONENT_ORIGINS } from '../../../constants';
 
+/**
+ * a dependency component may have multiple files that are required from the parent component, each
+ * one of the files has its RelativePath instance.
+ *
+ * For example:
+ * main component: "foo" => foo.js => `const isString = require('../utils/is-string'); const isArray = require('../utils/is-array');
+ * dependency: "utils" => utils/is-string.js, utils/is-array.js
+ * In this example, the component "foo" has one dependency "utils" with two RelativePaths.
+ * one for utils/is-string.js file and the second for utils/is-array.js file
+ */
 export type RelativePath = {
   sourceRelativePath: PathLinux,
   destinationRelativePath: PathLinux,
