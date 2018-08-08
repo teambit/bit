@@ -149,9 +149,16 @@ export default class Scope {
    * @param {BitId} id
    */
   static getComponentRelativePath(id: BitId, scopePath?: string): string {
-    const relativePath = pathLib.join(id.name, id.scope || '');
+    if (!id.scope) {
+      throw new Error('could not find id.scope');
+    }
+    const relativePath = pathLib.join(id.name, id.scope);
     if (!id.getVersion().latest) {
-      return pathLib.join(relativePath, id.version || '');
+      if (!id.version) {
+        // brought closer because flow can't deduce if it's done in the beginning.
+        throw new Error('could not find id.version');
+      }
+      return pathLib.join(relativePath, id.version);
     }
     if (!scopePath) {
       throw new Error(`could not find the latest version of ${id.toString()} without the scope path`);
