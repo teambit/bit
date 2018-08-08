@@ -63,6 +63,7 @@ import EjectBoundToWorkspace from './exceptions/eject-bound-to-workspace';
 import Version from '../../version';
 import InjectNonEjected from './exceptions/inject-non-ejected';
 import ConfigDir from '../bit-map/config-dir';
+import buildComponent from '../component-ops/build-component';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -183,17 +184,6 @@ export default class Component {
     return this._driver;
   }
 
-  get tmpFolder(): PathOsBased {
-    let folder = path.join(BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
-    if (this.componentMap) {
-      const trackDir = this.componentMap.getTrackDir();
-      if (trackDir) {
-        folder = path.join(trackDir, BIT_WORKSPACE_TMP_DIRNAME);
-      }
-    }
-    return folder;
-  }
-
   constructor({
     name,
     version,
@@ -274,6 +264,22 @@ export default class Component {
     newInstance.setDependencies(this.dependencies.getClone());
     newInstance.setDevDependencies(this.devDependencies.getClone());
     return newInstance;
+  }
+
+  getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {
+    let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
+    if (this.componentMap) {
+      const trackDir = this.componentMap.getTrackDir();
+      if (trackDir) {
+        folder = path.join(workspacePrefix, trackDir, BIT_WORKSPACE_TMP_DIRNAME);
+      }
+    }
+    // Isolated components (for ci-update for example)
+    if (this.isolatedEnvironment && this.writtenPath) {
+      // Do not join the workspacePrefix since the written path is already a full path
+      folder = path.join(this.writtenPath, BIT_WORKSPACE_TMP_DIRNAME);
+    }
+    return folder;
   }
 
   setDependencies(dependencies?: Dependency[]) {
@@ -400,102 +406,6 @@ export default class Component {
 
   getAllFlattenedDependencies(): BitId[] {
     return this.flattenedDependencies.concat(this.flattenedDevDependencies);
-  }
-
-  async buildIfNeeded({
-    compiler,
-    consumer,
-    componentMap,
-    scope,
-    verbose,
-    directory,
-    keep
-  }: {
-    compiler: CompilerExtension,
-    consumer?: Consumer,
-    componentMap?: ComponentMap,
-    scope: Scope,
-    verbose: boolean,
-    directory: ?string,
-    keep: ?boolean
-  }): Promise<?{ code: string, mappings?: string }> {
-    if (!compiler) {
-      return Promise.resolve({ code: '' });
-    }
-    const files = this.files.map(file => file.clone());
-
-    const runBuild = async (componentRoot: string): Promise<any> => {
-      let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
-
-      let componentDir;
-      let componentDirFullPath;
-      if (componentMap) {
-        // $FlowFixMe
-        rootDistFolder = this.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-        componentDir = consumer && componentMap && componentMap.getTrackDir() ? componentMap.getTrackDir() : '';
-        componentDirFullPath = consumer ? path.join(consumer.getPath(), componentDir) : componentRoot;
-      }
-      return Promise.resolve()
-        .then(async () => {
-          const context: Object = {
-            componentObject: this.toObject(),
-            rootDistFolder,
-            componentDir
-          };
-
-          // Change the cwd to make sure we found the needed files
-          process.chdir(componentRoot);
-          if (compiler.action) {
-            // Write config files to tmp folder
-            if (compiler.writeConfigFilesOnAction) {
-              const tpmFolderFullPath = path.join(componentDirFullPath, BIT_WORKSPACE_TMP_DIRNAME);
-              await compiler.writeFilesToFs({ configDir: tpmFolderFullPath, deleteOldFiles: false });
-            }
-            const actionParams = {
-              files,
-              rawConfig: compiler.rawConfig,
-              dynamicConfig: compiler.dynamicConfig,
-              configFiles: compiler.files,
-              api: compiler.api,
-              context
-            };
-            const result = await compiler.action(actionParams);
-            // TODO: Gilad - handle return of main dist file
-            if (!result || !result.files) {
-              throw new Error('compiler return invalid response');
-            }
-            return result.files;
-          }
-          return compiler.oldAction(files, rootDistFolder, context);
-        })
-        .catch((e) => {
-          throw new ExternalBuildError(e, this.id.toString());
-        });
-    };
-    if (!compiler.action && !compiler.oldAction) {
-      return Promise.reject(new InvalidCompilerInterface(compiler.name));
-    }
-
-    if (consumer) return runBuild(consumer.getPath());
-    if (this.isolatedEnvironment) return runBuild(this.writtenPath);
-
-    const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
-    try {
-      await isolatedEnvironment.create();
-      const isolateOpts = {
-        verbose,
-        installPackages: true,
-        noPackageJson: false
-      };
-      const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
-      const component = componentWithDependencies.component;
-      const result = await runBuild(component.writtenPath);
-      if (!keep) await isolatedEnvironment.destroy();
-      return result;
-    } catch (err) {
-      await isolatedEnvironment.destroy();
-      return Promise.reject(err);
-    }
   }
 
   async _writeToComponentDir({
@@ -748,6 +658,32 @@ export default class Component {
     return this;
   }
 
+  async build({
+    scope,
+    save,
+    consumer,
+    noCache,
+    verbose,
+    keep
+  }: {
+    scope: Scope,
+    save?: boolean,
+    consumer?: Consumer,
+    noCache?: boolean,
+    verbose?: boolean,
+    keep?: boolean
+  }): Promise<?Dists> {
+    return buildComponent({
+      component: this,
+      scope,
+      save,
+      consumer,
+      noCache,
+      verbose,
+      keep
+    });
+  }
+
   async runSpecs({
     scope,
     rejectOnFailure = false, // reject when some (or all) of the tests were failed. relevant when running tests during 'bit tag'
@@ -768,6 +704,7 @@ export default class Component {
     keep?: boolean
   }): Promise<?SpecsResults> {
     const testFiles = this.files.filter(file => file.test);
+    const consumerPath = consumer ? consumer.getPath() : '';
     if (!this.tester || !testFiles || R.isEmpty(testFiles)) return null;
 
     logger.debug('tester found, start running tests');
@@ -782,7 +719,6 @@ export default class Component {
     const testerFilePath = tester.filePath;
 
     const run = async (component: ConsumerComponent, cwd?: PathOsBased) => {
-      // Change the cwd to make sure we found the needed files
       if (cwd) {
         logger.debug(`changing process cwd to ${cwd}`);
         Analytics.addBreadCrumb('runSpecs.run', 'changing process cwd');
@@ -899,6 +835,7 @@ export default class Component {
         noPackageJson: false
       };
       const localTesterPath = path.join(isolatedEnvironment.getPath(), 'tester');
+
       const componentWithDependencies = await isolatedEnvironment.isolateComponent(this.id, isolateOpts);
 
       createSymlinkOrCopy(testerFilePath, localTesterPath);
@@ -919,93 +856,6 @@ export default class Component {
       await isolatedEnvironment.destroy();
       return Promise.reject(e);
     }
-  }
-
-  async build({
-    scope,
-    save,
-    consumer,
-    noCache,
-    verbose,
-    keep
-  }: {
-    scope: Scope,
-    save?: boolean,
-    consumer?: Consumer,
-    noCache?: boolean,
-    verbose?: boolean,
-    keep?: boolean
-  }): Promise<?Dists> {
-    logger.debug(`consumer-component.build ${this.id.toString()}`);
-    // @TODO - write SourceMap Type
-    if (!this.compiler) {
-      if (!consumer || consumer.shouldDistsBeInsideTheComponent()) {
-        logger.debug('compiler was not found, nothing to build');
-        return null;
-      }
-      logger.debug(
-        'compiler was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
-      );
-      this.copyFilesIntoDists();
-      return this.dists;
-    }
-    // Ideally it's better to use the dists from the model.
-    // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
-    // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
-    const isNeededToReBuild = async () => {
-      // Forcly rebuild
-      if (noCache) return true;
-      if (!consumer) return false;
-      const componentStatus = await consumer.getComponentStatusById(this.id);
-      return componentStatus.modified;
-    };
-    const bitMap = consumer ? consumer.bitMap : undefined;
-    const consumerPath = consumer ? consumer.getPath() : '';
-    const componentMap = bitMap && bitMap.getComponentIfExist(this.id);
-    let componentDir = consumerPath;
-    if (componentMap) {
-      componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
-    }
-    const needToRebuild = await isNeededToReBuild();
-    if (!needToRebuild && !this.dists.isEmpty()) {
-      logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
-      if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        this.stripOriginallySharedDir(bitMap);
-        // don't worry about the dist.entry and dist.target at this point. It'll be done later on once the files are
-        // written, probably by this.dists.writeDists()
-      }
-
-      return this.dists;
-    }
-    logger.debug('compiler found, start building');
-    if (!this.compiler.loaded) {
-      await this.compiler.install(
-        scope,
-        { verbose },
-        { workspaceDir: consumerPath, componentDir, dependentId: this.id }
-      );
-    }
-
-    const builtFiles = await this.buildIfNeeded({
-      compiler: this.compiler,
-      consumer,
-      componentMap,
-      scope,
-      keep,
-      verbose
-    });
-    // return buildFilesP.then((buildedFiles) => {
-    builtFiles.forEach((file) => {
-      if (file && (!file.contents || !isString(file.contents.toString()))) {
-        throw new GeneralError('builder interface has to return object with a code attribute that contains string');
-      }
-    });
-    this.setDists(builtFiles.map(file => new Dist(file)));
-
-    if (save) {
-      await scope.sources.updateDist({ source: this });
-    }
-    return this.dists;
   }
 
   async isolate(scope: Scope, opts: IsolateOptions): Promise<string> {
@@ -1316,6 +1166,8 @@ export default class Component {
       bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
+      loadedFromFileSystem: true,
+      componentMap,
       dists,
       packageDependencies,
       devPackageDependencies,
