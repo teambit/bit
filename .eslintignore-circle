@@ -111,7 +111,6 @@ src/hooks/hooks-manager.js
 src/scope/component-remove.js
 src/extensions/extension.js
 src/scope/models/component.js
-src/utils/string/to-base64-array-buffer.js
 src/consumer/consumer.js
 e2e/e2e-helper.js
 src/consumer/component/consumer-component.js
