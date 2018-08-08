@@ -81,7 +81,6 @@ src/cli/templates/bare-list-template.js
 src/extensions/extension-command.js
 src/git-hooks/git-hooks-manager.js
 src/npm-client/npm-client.js
-src/scope/objects/object.js
 src/cli/commands/public-cmds/link-cmd.js
 src/cli/default-error-handler.js
 src/cli/templates/docs-template.js
