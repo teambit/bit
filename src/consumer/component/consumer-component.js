@@ -415,6 +415,10 @@ export default class Component {
     ];
   }
 
+  getAllNonEnvsDependencies(): Dependency[] {
+    return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
+  }
+
   getAllDependenciesIds(): BitIds {
     const allDependencies = this.getAllDependencies();
     return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
@@ -432,6 +436,10 @@ export default class Component {
       ...this.flattenedCompilerDependencies,
       ...this.flattenedTesterDependencies
     ];
+  }
+
+  getAllNonEnvsFlattenedDependencies(): BitId[] {
+    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
   }
 
   async buildIfNeeded({
