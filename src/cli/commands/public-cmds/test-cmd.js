@@ -10,7 +10,7 @@ import type { SpecsResultsWithComponentId } from '../../../consumer/specs-result
 const validForkLevels = R.values(TESTS_FORK_LEVEL);
 export default class Test extends Command {
   name = 'test [id]';
-  description = `test any set of components with configured tester (as defined in bit.json)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html`;
+  description = `test any set of components with a configured tester as defined in bit.json (by default applies only on modified components)\n  https://${BASE_DOCS_DOMAIN}/docs/testing-components.html)`;
   alias = '';
   opts = [
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
