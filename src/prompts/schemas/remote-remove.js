@@ -8,7 +8,7 @@ export default {
     shouldRemove: {
       required: true,
       description: "are you sure you would like to proceed with this operation? (yes[y]/no[n])'",
-      message: 'please use yes or no.',
+      message: 'please type yes or no.',
       type: 'string',
       conform(value: string) {
         return (

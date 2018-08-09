@@ -199,7 +199,8 @@ describe('bit remove command', function () {
     });
     it('should not remove modified component ', () => {
       const output = helper.removeComponent('utils/is-type@0.0.1 -s');
-      expect(output).to.contain.string('error: unable to remove modified components: utils/is-type');
+      expect(output).to.contain.string('error: unable to remove modified components');
+      expect(output).to.contain.string('utils/is-type');
     });
   });
   describe('with imported components, no dependencies and yarn workspace', () => {
@@ -245,11 +246,13 @@ describe('bit remove command', function () {
         "module.exports = function isType() { return 'got is-type'; };console.log('sdfsdfsdf')"
       );
       const output = helper.removeComponent('utils/is-string@0.0.1 -s');
-      expect(output).to.contain.string('error: unable to remove modified components: utils/is-string@0.0.1');
+      expect(output).to.contain.string('error: unable to remove modified components');
+      expect(output).to.contain.string('utils/is-string@0.0.1');
     });
     it('should not remove component when component is modified', () => {
       const output = helper.removeComponent('utils/is-string -s');
-      expect(output).to.contain.string('error: unable to remove modified components: utils/is-string');
+      expect(output).to.contain.string('error: unable to remove modified components');
+      expect(output).to.contain.string('utils/is-string');
     });
     it('should print error msg when trying to remove missing component', () => {
       helper.commitAllComponents();
