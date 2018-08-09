@@ -244,6 +244,7 @@ export default class EnvExtension extends BaseExtension {
     repository: Repository
   ): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
+    logger.debug('env-extension - loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -286,6 +287,7 @@ export default class EnvExtension extends BaseExtension {
     context?: Object
   }): Promise<?CompilerExtension | ?TesterExtension> {
     Analytics.addBreadCrumb('env-extension', 'loadFromCorrectSource');
+    logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
 
     // Authored component
     if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
@@ -295,7 +297,7 @@ export default class EnvExtension extends BaseExtension {
       }
       // The component is detached - load from the component bit.json or from the models
       return loadFromComponentBitJsonOrFromModel({
-        models: componentFromModel,
+        modelComponent: componentFromModel,
         componentBitJson,
         envType,
         consumerPath,
@@ -311,7 +313,7 @@ export default class EnvExtension extends BaseExtension {
       return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
     }
     return loadFromComponentBitJsonOrFromModel({
-      models: componentFromModel,
+      modelComponent: componentFromModel,
       componentBitJson,
       envType,
       consumerPath,
@@ -328,6 +330,7 @@ const loadFromBitJson = ({
   scopePath,
   context
 }): Promise<?CompilerExtension | ?TesterExtension> => {
+  logger.debug(`env-extension (${envType}) loadFromBitJson`);
   if (envType === COMPILER_ENV_TYPE) {
     return bitJson.loadCompiler(consumerPath, scopePath, context);
   }
@@ -335,21 +338,30 @@ const loadFromBitJson = ({
 };
 
 const loadFromComponentBitJsonOrFromModel = async ({
-  models,
+  modelComponent,
   componentBitJson,
   envType,
   consumerPath,
   scopePath,
   context
+}: {
+  modelComponent: ConsumerComponent,
+  componentBitJson: ?ComponentBitJson,
+  envType: EnvType,
+  consumerPath: string,
+  scopePath: string,
+  context?: Object
 }): Promise<?CompilerExtension | ?TesterExtension> => {
+  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel`);
   if (componentBitJson) {
     return loadFromBitJson({ bitJson: componentBitJson, envType, consumerPath, scopePath, context });
   }
+  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel. loading from the model`);
   if (envType === COMPILER_ENV_TYPE) {
-    return models ? models.compiler : undefined;
+    return modelComponent ? modelComponent.compiler : undefined;
   }
   if (envType === TESTER_ENV_TYPE) {
-    return models ? models.tester : undefined;
+    return modelComponent ? modelComponent.tester : undefined;
   }
 
   return undefined;
