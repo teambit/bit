@@ -798,6 +798,9 @@ export default class Component {
 
           if (tester.writeConfigFilesOnAction) {
             tmpFolderFullPath = component.getTmpFolder(consumerPath);
+            if (verbose) {
+              console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
+            }
             await tester.writeFilesToFs({ configDir: tmpFolderFullPath, deleteOldFiles: false });
           }
 
@@ -818,6 +821,9 @@ export default class Component {
 
           specsResults = await tester.action(actionParams);
           if (tmpFolderFullPath) {
+            if (verbose) {
+              console.log(`deleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
+            }
             await fs.remove(tmpFolderFullPath);
           }
         } else {

@@ -71,6 +71,13 @@ export default class Helper {
     return str.replace(/\u001b\[.*?m/g, '');
   }
 
+  static alignOutput(str?: ?string): ?string {
+    if (!str) return str;
+    // on Mac the directory '/var' is sometimes shown as '/private/var'
+    // $FlowFixMe
+    return Helper.removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
+  }
+
   expectToThrow(cmdFunc: Function, error: Error) {
     let output;
     try {
@@ -78,14 +85,9 @@ export default class Helper {
     } catch (err) {
       output = err.toString();
     }
-    const alignOutput = (str) => {
-      if (!str) return str;
-      // on Mac the directory '/var' is sometimes shown as '/private/var'
-      // $FlowFixMe
-      return Helper.removeChalkCharacters(str).replace('/private/var/', '/var/');
-    };
+
     const errorString = defaultErrorHandler(error);
-    expect(alignOutput(output)).to.have.string(alignOutput(errorString));
+    expect(Helper.alignOutput(output)).to.have.string(Helper.alignOutput(errorString));
   }
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);

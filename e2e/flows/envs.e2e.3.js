@@ -11,7 +11,7 @@ import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-config-dir';
 import { COMPILER_ENV_TYPE } from '../../src/extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
-import { COMPONENT_DIR } from '../../src/constants';
+import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 
@@ -175,9 +175,14 @@ describe('envs', function () {
       expect(output).to.have.string('lodash.get@4.4.2');
     });
     it('should build the component successfully', () => {
-      const output = helper.build('comp/my-comp');
+      const output = helper.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
+      const alignedOuput = Helper.alignOutput(output);
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
+      expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
+      const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
+      expect(alignedOuput).to.have.string(`writing config files to ${tmpFolder}`);
+      expect(alignedOuput).to.have.string(`deleting tmp directory ${tmpFolder}`);
       // const distFilePath = path.join(helper.localScopePath, 'components', 'comp', 'my-comp', 'dist', 'objRestSpread.js');
       const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
       const distContent = fs.readFileSync(distFilePath).toString();
@@ -327,6 +332,18 @@ describe('envs', function () {
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
+          });
+          it('should write config files to tmp directory', () => {
+            const output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            const alignedOuput = Helper.alignOutput(output);
+            const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
+            const writingRegEx = new RegExp(`writing config files to ${tmpFolder}`, 'g');
+            const writingCount = (alignedOuput.match(writingRegEx) || []).length;
+            // There should be 2 occurrences - one for the compiler and one for the tester
+            expect(writingCount).to.equal(2);
+            const deletingRegEx = new RegExp(`deleting tmp directory ${tmpFolder}`, 'g');
+            const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
+            expect(deletingCount).to.equal(2);
           });
           it('should show results when there is exception on a test file', () => {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
@@ -524,9 +541,13 @@ describe('envs', function () {
       it('should build the component successfully', () => {
         // Changing the component to make sure we really run a rebuild and not taking the dist from the models
         helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
-        const output = helper.build('comp/my-comp');
+        const output = helper.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
+        const alignedOuput = Helper.alignOutput(output);
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
+        const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
+        expect(alignedOuput).to.have.string(`writing config files to ${tmpFolder}`);
+        expect(alignedOuput).to.have.string(`deleting tmp directory ${tmpFolder}`);
         const distFilePath = path.join(
           helper.localScopePath,
           'components',
@@ -542,11 +563,26 @@ describe('envs', function () {
       });
       describe('testing components', () => {
         describe('with success tests', () => {
+          let output;
+          let alignedOuput;
+          before(() => {
+            output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            alignedOuput = Helper.alignOutput(output);
+          });
           it('should show tests passed', () => {
-            const output = helper.testComponent('comp/my-comp');
             expect(output).to.have.string('tests passed');
             expect(output).to.have.string('total duration');
             expect(output).to.have.string('✔   group of passed tests');
+          });
+          it('should write config files to tmp directory', () => {
+            const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
+            const writingRegEx = new RegExp(`writing config files to ${tmpFolder}`, 'g');
+            const writingCount = (alignedOuput.match(writingRegEx) || []).length;
+            // There should be 2 occurrences - one for the compiler and one for the tester
+            expect(writingCount).to.equal(2);
+            const deletingRegEx = new RegExp(`deleting tmp directory ${tmpFolder}`, 'g');
+            const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
+            expect(deletingCount).to.equal(2);
           });
         });
         describe('with failing tests', () => {
