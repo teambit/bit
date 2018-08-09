@@ -22,7 +22,8 @@ import {
   NODE_PATH_COMPONENT_SEPARATOR,
   LATEST_BIT_VERSION,
   BIT_GIT_DIR,
-  DOT_GIT_DIR
+  DOT_GIT_DIR,
+  BIT_WORKSPACE_TMP_DIRNAME
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -139,6 +140,22 @@ export default class Consumer {
 
   get bitmapIds(): BitIds {
     return this.bitMap.getAllBitIds();
+  }
+
+  getTmpFolder(fullPath: boolean = false): PathOsBased {
+    if (!fullPath) {
+      return BIT_WORKSPACE_TMP_DIRNAME;
+    }
+    return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
+  }
+
+  async cleanTmpFolder() {
+    const tmpPath = this.getTmpFolder(true);
+    const exists = await fs.exists(tmpPath);
+    if (exists) {
+      return fs.remove(tmpPath);
+    }
+    return null;
   }
 
   /**
@@ -983,6 +1000,7 @@ export default class Consumer {
   }
 
   async onDestroy() {
+    await this.cleanTmpFolder();
     return this.bitMap.write();
   }
 }

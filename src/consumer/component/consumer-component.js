@@ -730,6 +730,7 @@ export default class Component {
         : component.files.filter(file => file.test);
 
       let specsResults: RawTestsResults[];
+      let tmpFolderFullPath;
 
       let contextPaths;
       if (this.tester && this.tester.context) {
@@ -740,9 +741,15 @@ export default class Component {
         };
       }
       try {
-        if (tester.action) {
+        if (tester && tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
+
+          if (tester.writeConfigFilesOnAction) {
+            tmpFolderFullPath = component.getTmpFolder(consumerPath);
+            await tester.writeFilesToFs({ configDir: tmpFolderFullPath, deleteOldFiles: false });
+          }
+
           const context: Object = {
             componentObject: component.toObject()
           };
@@ -759,6 +766,9 @@ export default class Component {
           };
 
           specsResults = await tester.action(actionParams);
+          if (tmpFolderFullPath) {
+            await fs.remove(tmpFolderFullPath);
+          }
         } else {
           logger.debug('running tests using old format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using old format');
@@ -788,6 +798,9 @@ export default class Component {
           specsResults = await Promise.all(specsResultsP);
         }
       } catch (err) {
+        if (tmpFolderFullPath) {
+          fs.removeSync(tmpFolderFullPath);
+        }
         throw new ExternalTestError(err, this.id.toString());
       }
 

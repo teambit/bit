@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import Dists from '../component/sources/dists';
 import ConsumerComponent from '../component/consumer-component';
@@ -180,6 +181,7 @@ const _runBuild = async ({
   let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
   const consumerPath = consumer ? consumer.getPath() : '';
   const files = component.files.map(file => file.clone());
+  let tmpFolderFullPath;
 
   let componentDir = '';
   if (componentMap) {
@@ -204,6 +206,12 @@ const _runBuild = async ({
       // Change the cwd to make sure we found the needed files
       process.chdir(componentRoot);
       if (compiler.action) {
+        // Write config files to tmp folder
+        if (compiler.writeConfigFilesOnAction) {
+          tmpFolderFullPath = component.getTmpFolder(consumerPath);
+          await compiler.writeFilesToFs({ configDir: tmpFolderFullPath, deleteOldFiles: false });
+        }
+
         const actionParams = {
           files,
           rawConfig: compiler.rawConfig,
@@ -213,6 +221,9 @@ const _runBuild = async ({
           context
         };
         const result = await compiler.action(actionParams);
+        if (tmpFolderFullPath) {
+          await fs.remove(tmpFolderFullPath);
+        }
         // TODO: Gilad - handle return of main dist file
         if (!result || !result.files) {
           throw new Error('compiler return invalid response');
@@ -225,6 +236,9 @@ const _runBuild = async ({
       return compiler.oldAction(files, rootDistFolder, context);
     })
     .catch((e) => {
+      if (tmpFolderFullPath) {
+        fs.removeSync(tmpFolderFullPath);
+      }
       throw new ExternalBuildError(e, component.id.toString());
     });
 };
