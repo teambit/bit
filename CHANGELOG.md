@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- changed `--include-unmodified` to `--all`
 - support Bit components dependencies for compilers and testers
 - resolve dependencies of environments configuration files
 - new envs-attach command to attach component's envs to workspace envs

@@ -328,15 +328,15 @@ describe('bit test command', function () {
       const output = helper.testComponent();
       expect(output).to.have.string('nothing to test');
     });
-    describe('using --include-unmodified flag', () => {
+    describe('using --all flag', () => {
       let output;
       before(() => {
-        output = helper.testComponentWithOptions('', { '-include-unmodified': '' });
+        output = helper.testComponentWithOptions('', { '-all': '' });
       });
-      it('should test authored component when using --include-unmodified', () => {
+      it('should test authored component when using --all', () => {
         expect(output).to.have.string('bar/foo@0.0.1\ntests passed');
       });
-      it('should test imported component when using --include-unmodified', () => {
+      it('should test imported component when using --all', () => {
         expect(output).to.have.string('utils/is-type@0.0.1\ntests passed');
       });
     });
