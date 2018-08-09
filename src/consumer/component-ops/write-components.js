@@ -236,6 +236,7 @@ export default (async function writeToComponentsDir({
     writtenDependencies,
     consumer,
     createNpmLinkFiles,
-    writePackageJson
+    writePackageJson,
+    configDir
   );
 });

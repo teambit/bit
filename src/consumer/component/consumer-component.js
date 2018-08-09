@@ -319,12 +319,9 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(
-    consumerPath: PathOsBased,
-    bitMap: BitMap,
-    configDir: PathOsBased,
-    override?: boolean = true
-  ): Promise<EjectConfResult> {
+  async writeConfig(consumer: Consumer, configDir: PathOsBased, override?: boolean = true): Promise<EjectConfResult> {
+    const consumerPath: PathOsBased = consumer.getPath();
+    const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -344,7 +341,7 @@ export default class Component {
       throw new EjectBoundToWorkspace();
     }
 
-    const res = await ejectConf(this, consumerPath, bitMap, configDir, override);
+    const res = await ejectConf(this, consumer, configDir, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -418,6 +415,10 @@ export default class Component {
     ];
   }
 
+  getAllNonEnvsDependencies(): Dependency[] {
+    return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
+  }
+
   getAllDependenciesIds(): BitIds {
     const allDependencies = this.getAllDependencies();
     return BitIds.fromArray(allDependencies.map(dependency => dependency.id));
@@ -435,6 +436,10 @@ export default class Component {
       ...this.flattenedCompilerDependencies,
       ...this.flattenedTesterDependencies
     ];
+  }
+
+  getAllNonEnvsFlattenedDependencies(): BitId[] {
+    return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
   }
 
   async buildIfNeeded({
@@ -556,7 +561,7 @@ export default class Component {
     await this.dists.writeDists(this, consumer, false);
     if (writeConfig && consumer) {
       const resolvedConfigDir = configDir || consumer.dirStructure.ejectedEnvsDirStructure;
-      await this.writeConfig(consumer.getPath(), consumer.bitMap, resolvedConfigDir, override);
+      await this.writeConfig(consumer, resolvedConfigDir, override);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation

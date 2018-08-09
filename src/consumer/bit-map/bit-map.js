@@ -221,6 +221,26 @@ export default class BitMap {
     return ignoreList;
   }
 
+  /**
+   * this is a temporarily method until ConfigDir class is merged into master
+   */
+  parseConfigDir(configDir: string, rootDir: string) {
+    const configDirResolved = { compiler: configDir, tester: configDir };
+    if (!configDir.startsWith(`{${COMPONENT_DIR}}`)) return configDirResolved;
+    const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
+    if (!configDir.includes('{ENV_TYPE}')) {
+      configDirResolved.compiler = resolvedConfigDir;
+      configDirResolved.tester = resolvedConfigDir;
+      return configDirResolved;
+    }
+    configDirResolved.compiler = format(configDir, {
+      [COMPONENT_DIR]: rootDir,
+      ENV_TYPE: COMPILER_ENV_TYPE
+    });
+    configDirResolved.tester = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
+    return configDirResolved;
+  }
+
   loadComponents(componentsJson: Object) {
     Object.keys(componentsJson).forEach((componentId) => {
       const componentFromJson = componentsJson[componentId];
@@ -407,7 +427,8 @@ export default class BitMap {
       configDir = configDir.replace('./', '');
     }
     const comps = R.pickBy((component) => {
-      if (pathIsInside(configDir, component.getTrackDir())) {
+      const compDir = component.getComponentDir();
+      if (compDir && pathIsInside(configDir, compDir)) {
         return true;
       }
       const compConfigDir = component.configDir ? format(component.configDir, { ENV_TYPE: '' }) : null;
