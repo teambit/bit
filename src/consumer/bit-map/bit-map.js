@@ -427,7 +427,8 @@ export default class BitMap {
       configDir = configDir.replace('./', '');
     }
     const comps = R.pickBy((component) => {
-      if (pathIsInside(configDir, component.getTrackDir())) {
+      const compDir = component.getComponentDir();
+      if (compDir && pathIsInside(configDir, compDir)) {
         return true;
       }
       const compConfigDir = component.configDir ? format(component.configDir, { ENV_TYPE: '' }) : null;
