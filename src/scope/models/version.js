@@ -59,14 +59,19 @@ export type VersionProps = {
   ci?: CiProps,
   specsResults?: ?Results,
   docs?: Doclet[],
-  dependencies?: BitIds,
-  devDependencies?: BitIds,
+  dependencies?: Dependency[],
+  devDependencies?: Dependency[],
+  compilerDependencies?: Dependency[],
+  testerDependencies?: Dependency[],
   flattenedDependencies?: BitIds,
   flattenedDevDependencies?: BitIds,
+  flattenedCompilerDependencies?: BitIds,
+  flattenedTesterDependencies?: BitIds,
   packageDependencies?: { [string]: string },
   devPackageDependencies?: { [string]: string },
   peerPackageDependencies?: { [string]: string },
-  envsPackageDependencies?: { [string]: string },
+  compilerPackageDependencies?: { [string]: string },
+  testerPackageDependencies?: { [string]: string },
   bindingPrefix?: string,
   customResolvedPaths?: customResolvedPath[]
 };
@@ -88,66 +93,55 @@ export default class Version extends BitObject {
   docs: ?(Doclet[]);
   dependencies: Dependencies;
   devDependencies: Dependencies;
+  compilerDependencies: Dependencies;
+  testerDependencies: Dependencies;
   flattenedDependencies: BitIds;
   flattenedDevDependencies: BitIds;
+  flattenedCompilerDependencies: BitIds;
+  flattenedTesterDependencies: BitIds;
   packageDependencies: { [string]: string };
   devPackageDependencies: { [string]: string };
   peerPackageDependencies: { [string]: string };
-  envsPackageDependencies: { [string]: string };
+  compilerPackageDependencies: { [string]: string };
+  testerPackageDependencies: { [string]: string };
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
 
-  constructor({
-    mainFile,
-    files,
-    dists,
-    compiler,
-    tester,
-    detachedCompiler,
-    detachedTester,
-    log,
-    dependencies,
-    devDependencies,
-    docs,
-    ci,
-    specsResults,
-    flattenedDependencies,
-    flattenedDevDependencies,
-    packageDependencies,
-    devPackageDependencies,
-    peerPackageDependencies,
-    envsPackageDependencies,
-    bindingPrefix,
-    customResolvedPaths
-  }: VersionProps) {
+  constructor(props: VersionProps) {
     super();
-    this.mainFile = mainFile;
-    this.files = files;
-    this.dists = dists;
-    this.compiler = compiler;
-    this.tester = tester;
-    this.log = log;
-    this.dependencies = new Dependencies(dependencies);
-    this.devDependencies = new Dependencies(devDependencies);
-    this.docs = docs;
-    this.ci = ci || {};
-    this.specsResults = specsResults;
-    this.flattenedDependencies = flattenedDependencies || new BitIds();
-    this.flattenedDevDependencies = flattenedDevDependencies || new BitIds();
-    this.packageDependencies = packageDependencies || {};
-    this.devPackageDependencies = devPackageDependencies || {};
-    this.peerPackageDependencies = peerPackageDependencies || {};
-    this.envsPackageDependencies = envsPackageDependencies || {};
-    this.bindingPrefix = bindingPrefix;
-    this.customResolvedPaths = customResolvedPaths;
-    this.detachedCompiler = detachedCompiler;
-    this.detachedTester = detachedTester;
+    this.mainFile = props.mainFile;
+    this.files = props.files;
+    this.dists = props.dists;
+    this.compiler = props.compiler;
+    this.tester = props.tester;
+    this.log = props.log;
+    this.dependencies = new Dependencies(props.dependencies);
+    this.devDependencies = new Dependencies(props.devDependencies);
+    this.compilerDependencies = new Dependencies(props.compilerDependencies);
+    this.testerDependencies = new Dependencies(props.testerDependencies);
+    this.docs = props.docs;
+    this.ci = props.ci || {};
+    this.specsResults = props.specsResults;
+    this.flattenedDependencies = props.flattenedDependencies || new BitIds();
+    this.flattenedDevDependencies = props.flattenedDevDependencies || new BitIds();
+    this.flattenedCompilerDependencies = props.flattenedCompilerDependencies || new BitIds();
+    this.flattenedTesterDependencies = props.flattenedTesterDependencies || new BitIds();
+    this.packageDependencies = props.packageDependencies || {};
+    this.devPackageDependencies = props.devPackageDependencies || {};
+    this.peerPackageDependencies = props.peerPackageDependencies || {};
+    this.compilerPackageDependencies = props.compilerPackageDependencies || {};
+    this.testerPackageDependencies = props.testerPackageDependencies || {};
+    this.bindingPrefix = props.bindingPrefix;
+    this.customResolvedPaths = props.customResolvedPaths;
+    this.detachedCompiler = props.detachedCompiler;
+    this.detachedTester = props.detachedTester;
     this.validateVersion();
   }
 
   validateVersion() {
     const nonEmptyFields = ['mainFile', 'files'];
     nonEmptyFields.forEach((field) => {
+      // $FlowFixMe
       if (!this[field]) {
         throw new VersionInvalid(`failed creating a version object, the field "${field}" can't be empty`);
       }
@@ -176,9 +170,12 @@ export default class Version extends BitObject {
     const filterFunction = (val, key) => {
       if (
         key === 'devDependencies' ||
+        key === 'compilerDependencies' ||
+        key === 'testerDependencies' ||
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
-        key === 'envsPackageDependencies'
+        key === 'compilerPackageDependencies' ||
+        key === 'testerPackageDependencies'
       ) {
         return !R.isEmpty(val);
       }
@@ -195,10 +192,13 @@ export default class Version extends BitObject {
           log: obj.log,
           dependencies: getDependencies(this.dependencies),
           devDependencies: getDependencies(this.devDependencies),
+          compilerDependencies: getDependencies(this.compilerDependencies),
+          testerDependencies: getDependencies(this.testerDependencies),
           packageDependencies: obj.packageDependencies,
           devPackageDependencies: obj.devPackageDependencies,
           peerPackageDependencies: obj.peerPackageDependencies,
-          envsPackageDependencies: obj.envsPackageDependencies,
+          compilerPackageDependencies: obj.compilerPackageDependencies,
+          testerPackageDependencies: obj.testerPackageDependencies,
           bindingPrefix: obj.bindingPrefix
         },
         filterFunction
@@ -207,19 +207,21 @@ export default class Version extends BitObject {
   }
 
   getAllFlattenedDependencies() {
-    return this.flattenedDependencies.concat(this.flattenedDevDependencies);
+    return [
+      ...this.flattenedDependencies,
+      ...this.flattenedDevDependencies,
+      ...this.flattenedCompilerDependencies,
+      ...this.flattenedTesterDependencies
+    ];
   }
 
   getAllDependencies() {
-    return this.dependencies.dependencies.concat(this.devDependencies.dependencies);
-  }
-
-  collectDependencies(scope: Scope, withEnvironments?: boolean, dev?: boolean = false): Promise<ComponentVersion[]> {
-    const envDependencies = [this.compiler, this.tester];
-    const flattenedDependencies = dev ? this.flattenedDevDependencies : this.flattenedDependencies;
-    const dependencies = withEnvironments ? flattenedDependencies.concat(envDependencies) : flattenedDependencies;
-    const allDependencies = dependencies.concat(this.flattenedDevDependencies);
-    return scope.importManyOnes(allDependencies);
+    return [
+      ...this.dependencies.dependencies,
+      ...this.devDependencies.dependencies,
+      ...this.compilerDependencies.dependencies,
+      ...this.testerDependencies.dependencies
+    ];
   }
 
   refs(): Ref[] {
@@ -284,12 +286,17 @@ export default class Version extends BitObject {
         docs: this.docs,
         dependencies: this.dependencies.cloneAsObject(),
         devDependencies: this.devDependencies.cloneAsObject(),
+        compilerDependencies: this.compilerDependencies.cloneAsObject(),
+        testerDependencies: this.testerDependencies.cloneAsObject(),
         flattenedDependencies: this.flattenedDependencies.map(dep => dep.serialize()),
         flattenedDevDependencies: this.flattenedDevDependencies.map(dep => dep.serialize()),
+        flattenedCompilerDependencies: this.flattenedCompilerDependencies.map(dep => dep.serialize()),
+        flattenedTesterDependencies: this.flattenedTesterDependencies.map(dep => dep.serialize()),
         packageDependencies: this.packageDependencies,
         devPackageDependencies: this.devPackageDependencies,
         peerPackageDependencies: this.peerPackageDependencies,
-        envsPackageDependencies: this.envsPackageDependencies,
+        compilerPackageDependencies: this.compilerPackageDependencies,
+        testerPackageDependencies: this.testerPackageDependencies,
         customResolvedPaths: this.customResolvedPaths
       },
       val => !!val
@@ -328,16 +335,21 @@ export default class Version extends BitObject {
       ci,
       specsResults,
       dependencies,
-      flattenedDependencies,
       devDependencies,
+      compilerDependencies,
+      testerDependencies,
+      flattenedDependencies,
       flattenedDevDependencies,
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies,
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       packageDependencies,
       customResolvedPaths
     } = JSON.parse(contents);
-    const _getDependencies = (deps = []) => {
+    const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
         // backward compatibility
         return deps.map(dependency => ({ id: BitId.parseObsolete(dependency) }));
@@ -399,12 +411,17 @@ export default class Version extends BitObject {
       specsResults,
       docs,
       dependencies: _getDependencies(dependencies),
-      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       devDependencies: _getDependencies(devDependencies),
+      compilerDependencies: _getDependencies(compilerDependencies),
+      testerDependencies: _getDependencies(testerDependencies),
+      flattenedDependencies: _getFlattenedDependencies(flattenedDependencies),
       flattenedDevDependencies: _getFlattenedDependencies(flattenedDevDependencies),
+      flattenedCompilerDependencies: _getFlattenedDependencies(flattenedCompilerDependencies),
+      flattenedTesterDependencies: _getFlattenedDependencies(flattenedTesterDependencies),
       devPackageDependencies,
       peerPackageDependencies,
-      envsPackageDependencies,
+      compilerPackageDependencies,
+      testerPackageDependencies,
       packageDependencies,
       customResolvedPaths
     });
@@ -431,6 +448,8 @@ export default class Version extends BitObject {
     dists,
     flattenedDependencies,
     flattenedDevDependencies,
+    flattenedCompilerDependencies,
+    flattenedTesterDependencies,
     message,
     specsResults,
     username,
@@ -439,8 +458,10 @@ export default class Version extends BitObject {
     component: ConsumerComponent,
     versionFromModel: Version,
     files: Array<SourceFileModel>,
-    flattenedDependencies: BitId[],
-    flattenedDevDependencies: BitId[],
+    flattenedDependencies: BitIds,
+    flattenedDevDependencies: BitIds,
+    flattenedCompilerDependencies: BitIds,
+    flattenedTesterDependencies: BitIds,
     message: string,
     dists: ?Array<DistFileModel>,
     specsResults: ?Results,
@@ -498,13 +519,6 @@ export default class Version extends BitObject {
       return areEnvsDifferent(envModelFromFs, envModelFromModel);
     };
 
-    const mergePackageDependencies = (
-      envsPackageDependencies = {},
-      compilerDynamicPakageDependencies = {},
-      testerDynamicPakageDependencies = {}
-    ) => {
-      return { ...envsPackageDependencies, ...testerDynamicPakageDependencies, ...compilerDynamicPakageDependencies };
-    };
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
 
@@ -558,18 +572,25 @@ export default class Version extends BitObject {
       },
       specsResults,
       docs: component.docs,
+      dependencies: component.dependencies.get(),
+      devDependencies: component.devDependencies.get(),
+      compilerDependencies: component.compilerDependencies.get(),
+      testerDependencies: component.testerDependencies.get(),
       packageDependencies: component.packageDependencies,
       devPackageDependencies: component.devPackageDependencies,
       peerPackageDependencies: component.peerPackageDependencies,
-      envsPackageDependencies: mergePackageDependencies(
-        component.envsPackageDependencies,
-        compilerDynamicPakageDependencies,
-        testerDynamicPakageDependencies
-      ),
+      compilerPackageDependencies: {
+        ...component.compilerPackageDependencies,
+        ...compilerDynamicPakageDependencies
+      },
+      testerPackageDependencies: {
+        ...component.testerPackageDependencies,
+        ...testerDynamicPakageDependencies
+      },
       flattenedDependencies,
       flattenedDevDependencies,
-      dependencies: component.dependencies.get(),
-      devDependencies: component.devDependencies.get(),
+      flattenedCompilerDependencies,
+      flattenedTesterDependencies,
       customResolvedPaths: component.customResolvedPaths
     });
   }
@@ -702,7 +723,8 @@ export default class Version extends BitObject {
     _validatePackageDependencies(this.packageDependencies);
     _validatePackageDependencies(this.devPackageDependencies);
     _validatePackageDependencies(this.peerPackageDependencies);
-    _validatePackageDependencies(this.envsPackageDependencies);
+    _validatePackageDependencies(this.compilerPackageDependencies);
+    _validatePackageDependencies(this.testerPackageDependencies);
     if (this.dists && this.dists.length) {
       validateType(message, this.dists, 'dist', 'array');
       // $FlowFixMe
@@ -710,25 +732,34 @@ export default class Version extends BitObject {
         validateFile(file, true);
       });
     }
-    if (!(this.dependencies instanceof Dependencies)) {
-      throw new VersionInvalid(
-        `${message}, dependencies must be an instance of Dependencies, got ${typeof this.dependencies}`
-      );
-    }
-    if (!(this.devDependencies instanceof Dependencies)) {
-      throw new VersionInvalid(
-        `${message}, devDependencies must be an instance of Dependencies, got ${typeof this.devDependencies}`
-      );
-    }
+    const dependenciesInstances = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
+    dependenciesInstances.forEach((dependenciesType) => {
+      // $FlowFixMe
+      if (!(this[dependenciesType] instanceof Dependencies)) {
+        throw new VersionInvalid(
+          `${message}, ${dependenciesType} must be an instance of Dependencies, got ${typeof this[dependenciesType]}`
+        );
+      }
+    });
     this.dependencies.validate();
     this.devDependencies.validate();
+    this.compilerDependencies.validate();
+    this.testerDependencies.validate();
     if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
       throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
     }
     if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
       throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
     }
-    const validateFlattenedDependencies = (dependencies: string[]) => {
+    if (!this.compilerDependencies.isEmpty() && !this.flattenedCompilerDependencies.length) {
+      throw new VersionInvalid(
+        `${message}, it has compilerDependencies but its flattenedCompilerDependencies is empty`
+      );
+    }
+    if (!this.testerDependencies.isEmpty() && !this.flattenedTesterDependencies.length) {
+      throw new VersionInvalid(`${message}, it has testerDependencies but its flattenedTesterDependencies is empty`);
+    }
+    const validateFlattenedDependencies = (dependencies: BitIds) => {
       validateType(message, dependencies, 'dependencies', 'array');
       dependencies.forEach((dependency) => {
         if (!(dependency instanceof BitId)) {
@@ -743,6 +774,8 @@ export default class Version extends BitObject {
     };
     validateFlattenedDependencies(this.flattenedDependencies);
     validateFlattenedDependencies(this.flattenedDevDependencies);
+    validateFlattenedDependencies(this.flattenedCompilerDependencies);
+    validateFlattenedDependencies(this.flattenedTesterDependencies);
     if (!this.log) throw new VersionInvalid(`${message}, the log object is missing`);
     validateType(message, this.log, 'log', 'object');
     if (this.bindingPrefix) {

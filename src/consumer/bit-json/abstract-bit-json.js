@@ -49,6 +49,8 @@ export type AbstractBitJsonProps = {
   tester?: string | Testers,
   dependencies?: Object,
   devDependencies?: Object,
+  compilerDependencies?: Object,
+  testerDependencies?: Object,
   lang?: string,
   bindingPrefix?: string,
   extensions?: Extensions
@@ -60,26 +62,22 @@ export default class AbstractBitJson {
   _tester: Testers | string;
   dependencies: { [string]: string };
   devDependencies: { [string]: string };
+  compilerDependencies: { [string]: string };
+  testerDependencies: { [string]: string };
   lang: string;
   bindingPrefix: string;
   extensions: Extensions;
 
-  constructor({
-    compiler,
-    tester,
-    dependencies,
-    devDependencies,
-    lang,
-    bindingPrefix,
-    extensions
-  }: AbstractBitJsonProps) {
-    this._compiler = compiler || {};
-    this._tester = tester || {};
-    this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
-    this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
-    this.lang = lang || DEFAULT_LANGUAGE;
-    this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.extensions = extensions || DEFAULT_EXTENSIONS;
+  constructor(props: AbstractBitJsonProps) {
+    this._compiler = props.compiler || {};
+    this._tester = props.tester || {};
+    this.dependencies = props.dependencies || DEFAULT_DEPENDENCIES;
+    this.devDependencies = props.devDependencies || DEFAULT_DEPENDENCIES;
+    this.compilerDependencies = props.compilerDependencies || DEFAULT_DEPENDENCIES;
+    this.testerDependencies = props.testerDependencies || DEFAULT_DEPENDENCIES;
+    this.lang = props.lang || DEFAULT_LANGUAGE;
+    this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
+    this.extensions = props.extensions || DEFAULT_EXTENSIONS;
   }
 
   get compiler(): ?Compilers {

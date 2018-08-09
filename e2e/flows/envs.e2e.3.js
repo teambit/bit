@@ -12,6 +12,7 @@ import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-conf
 import { COMPILER_ENV_TYPE } from '../../src/extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
 import { COMPONENT_DIR } from '../../src/constants';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 
 chai.use(require('chai-fs'));
@@ -66,8 +67,8 @@ describe('envs', function () {
     helper.addFileToEnvInBitJson(undefined, '.babelrc', './.babelrc', COMPILER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', COMPILER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', COMPILER_ENV_TYPE);
-    helper.createFile('', 'mocha-config.js', '{"someConfKey": "someConfVal"}');
-    helper.addFileToEnvInBitJson(undefined, 'config', './mocha-config.js', TESTER_ENV_TYPE);
+    helper.createFile('', 'mocha-config.opts', '{"someConfKey": "someConfVal"}');
+    helper.addFileToEnvInBitJson(undefined, 'config', './mocha-config.opts', TESTER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'b', TESTER_ENV_TYPE);
     helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', TESTER_ENV_TYPE);
     helper.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
@@ -97,12 +98,14 @@ describe('envs', function () {
     let componentModel;
     let compilerModel;
     let testerModel;
-    let envsPackageDependencies;
+    let compilerPackageDependencies;
+    let testerPackageDependencies;
     before(() => {
       componentModel = helper.catComponent('comp/my-comp@0.0.1');
       compilerModel = componentModel.compiler;
       testerModel = componentModel.tester;
-      envsPackageDependencies = componentModel.envsPackageDependencies;
+      compilerPackageDependencies = componentModel.compilerPackageDependencies;
+      testerPackageDependencies = componentModel.testerPackageDependencies;
     });
     describe('storing envs metadata in the models for author', () => {
       it('should store the compiler name in the model', () => {
@@ -147,19 +150,19 @@ describe('envs', function () {
       it('should store the tester files in the model', () => {
         const mochaConfigHash = testerModel.files[0].file;
         const mochaConfigFromModel = helper.catObject(mochaConfigHash).trim();
-        const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.js');
+        const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.opts');
         const mochaConfigFromFS = fs.readFileSync(mochaConfigPath).toString();
         expect(mochaConfigFromModel).to.equal(mochaConfigFromFS);
       });
       describe('should store the dynamicPackageDependencies to envPackageDependencies in the model', () => {
         it('should store the compiler dynamicPackageDependencies', () => {
-          expect(envsPackageDependencies).to.include({
+          expect(compilerPackageDependencies).to.include({
             'babel-plugin-transform-object-rest-spread': '^6.26.0',
             'babel-preset-env': '^1.6.1'
           });
         });
         it('should store the tester dynamicPackageDependencies', () => {
-          expect(envsPackageDependencies).to.include({
+          expect(testerPackageDependencies).to.include({
             'lodash.get': '4.4.2'
           });
         });
@@ -425,7 +428,7 @@ describe('envs', function () {
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         // Make sure the component is not modified before the changes
         const statusOutput = helper.status();
-        expect(statusOutput).to.have.string('nothing to tag or export');
+        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
         expect(statusOutput).to.not.have.string('modified');
       });
       describe('changing config files', () => {
@@ -436,7 +439,7 @@ describe('envs', function () {
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
         it('should show the component as modified after changing tester config files', () => {
-          helper.createFile('', 'mocha-config.js', 'something');
+          helper.createFile('', 'mocha-config.opts', 'something');
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
@@ -450,13 +453,13 @@ describe('envs', function () {
           expect(diff).to.have.string('+{"some": "thing"}');
         });
         it('bit-diff should show tester file differences', () => {
-          helper.createFile('', 'mocha-config.js', 'something');
+          helper.createFile('', 'mocha-config.opts', 'something');
           const diff = helper.diff('comp/my-comp');
           expect(diff).to.have.string('--- config (0.0.1 original)');
           expect(diff).to.have.string('+++ config (0.0.1 modified)');
           expect(diff).to.have.string('-{"someConfKey": "someConfVal"}');
           expect(diff).to.have.string('+something');
-          expect(diff).to.not.have.string('mocha-config.js'); // the relative path on the FS should not appear in the diff
+          expect(diff).to.not.have.string('mocha-config.opts'); // the relative path on the FS should not appear in the diff
         });
       });
       describe('changing envs raw config', () => {
@@ -495,7 +498,7 @@ describe('envs', function () {
     const componentFolder = path.join('components', 'comp', 'my-comp');
     let importedScopeBeforeChanges;
 
-    describe('without ejceting (--conf)', () => {
+    describe('without ejecting (--conf)', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -506,7 +509,7 @@ describe('envs', function () {
       it('should not show the component as modified after import', () => {
         // Make sure the component is not modified before the changes
         const statusOutput = helper.status();
-        expect(statusOutput).to.have.string('nothing to tag or export');
+        expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
         expect(statusOutput).to.not.have.string('modified');
       });
       it("should add the envPackageDependencies to devDependencies in component's package.json", () => {
@@ -519,7 +522,7 @@ describe('envs', function () {
         });
       });
       it('should build the component successfully', () => {
-        // Chaning the component to make sure we really run a rebuild and not taking the dist from the models
+        // Changing the component to make sure we really run a rebuild and not taking the dist from the models
         helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
         const output = helper.build('comp/my-comp');
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
@@ -1148,7 +1151,7 @@ describe('envs', function () {
           beforeEach(() => {
             // Make sure the component is not modified before the changes
             const statusOutput = helper.status();
-            expect(statusOutput).to.have.string('nothing to tag or export');
+            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             expect(statusOutput).to.not.have.string('modified');
           });
           afterEach(() => {
@@ -1228,7 +1231,7 @@ describe('envs', function () {
           );
           helper.createFile(testerFilesFolder, 'someFile.js', JSON.stringify({ someConfKey: 'someConfVal' }, null, 2));
           const statusOutput = helper.status();
-          expect(statusOutput).to.have.string('nothing to tag or export');
+          expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
           expect(statusOutput).to.not.have.string('modified');
         });
         describe('change envs files', () => {
@@ -1242,7 +1245,7 @@ describe('envs', function () {
             envFilesFullFolder = path.join(helper.localScopePath, envFilesFolder);
             compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
             testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
-            expect(statusOutput).to.have.string('nothing to tag or export');
+            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             expect(statusOutput).to.not.have.string('modified');
           });
           afterEach(() => {

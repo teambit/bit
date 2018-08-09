@@ -4,7 +4,6 @@ import Repository from './repository';
 import { deflate, inflate, sha1 } from '../../utils';
 import { NULL_BYTE, SPACE_DELIMITER } from '../../constants';
 import Ref from './ref';
-import GeneralError from '../../error/general-error';
 // import logger from '../../logger/logger';
 
 function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
@@ -52,7 +51,7 @@ export default class BitObject {
         .filter(x => x);
 
       refsCollection.push(...refs);
-      objs.forEach(obj => addRefs(obj));
+      objs.forEach(obj => addRefs(((obj: any): BitObject)));
     }
 
     addRefs(this);
@@ -71,7 +70,7 @@ export default class BitObject {
         .filter(x => x);
       const filtered = refs.filter(ref => repo.loadSync(ref, false));
       refsCollection.push(...filtered);
-      objs.forEach(obj => addRefs(obj));
+      objs.forEach(obj => addRefs(((obj: any): BitObject)));
     }
 
     addRefs(this);
@@ -86,15 +85,15 @@ export default class BitObject {
   }
 
   collect(repo: Repository): BitObject[] {
-    const objects = [];
+    const objects: BitObject[] = [];
 
     function addRefs(object: BitObject) {
       const objs = object.refs().map((ref) => {
         return ref.loadSync(repo);
       });
 
-      objects.push(...objs);
-      objs.forEach(obj => addRefs(obj));
+      objects.concat(objs);
+      objs.forEach(obj => addRefs(((obj: any): BitObject)));
     }
 
     addRefs(this);

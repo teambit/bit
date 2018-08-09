@@ -68,5 +68,6 @@
     "packageDependencies": {},
     "devPackageDependencies": {},
     "peerPackageDependencies": {},
-    "envsPackageDependencies": {}
+    "compilerPackageDependencies": {},
+    "testerPackageDependencies": {}
 }

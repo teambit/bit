@@ -66,7 +66,7 @@ function execAction(command, concrete, args) {
   }
   const migrateWrapper = (run: boolean) => {
     if (run) {
-      logger.info('Checking if a migration is needed');
+      logger.debug('Checking if a migration is needed');
       return migrate(null, false);
     }
     return Promise.resolve();

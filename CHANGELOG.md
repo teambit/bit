@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support Bit components dependencies for compilers and testers
+- resolve dependencies of environments configuration files
 - new envs-attach command to attach component's envs to workspace envs
 - automatically detach envs of component when changed from imported workspace
 - support dynamic namespaces (replaced the box+name format with a dynamic name that can have multiple slashes to indicate a hierarchical namespace)
