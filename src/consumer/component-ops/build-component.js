@@ -127,9 +127,9 @@ async function _buildIfNeeded({
     throw new InvalidCompilerInterface(compiler.name);
   }
 
-  if (consumer) return _runBuild({ component, componentRoot: consumer.getPath(), consumer, componentMap });
+  if (consumer) return _runBuild({ component, componentRoot: consumer.getPath(), consumer, componentMap, verbose });
   if (component.isolatedEnvironment) {
-    return _runBuild({ component, componentRoot: component.writtenPath, consumer, componentMap });
+    return _runBuild({ component, componentRoot: component.writtenPath, consumer, componentMap, verbose });
   }
 
   const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
@@ -142,7 +142,13 @@ async function _buildIfNeeded({
     };
     const componentWithDependencies = await isolatedEnvironment.isolateComponent(component.id, isolateOpts);
     const isolatedComponent = componentWithDependencies.component;
-    const result = await _runBuild({ component, componentRoot: isolatedComponent.writtenPath, consumer, componentMap });
+    const result = await _runBuild({
+      component,
+      componentRoot: isolatedComponent.writtenPath,
+      consumer,
+      componentMap,
+      verbose
+    });
     if (!keep) await isolatedEnvironment.destroy();
     return result;
   } catch (err) {
@@ -166,12 +172,14 @@ const _runBuild = async ({
   component,
   componentRoot,
   consumer,
-  componentMap
+  componentMap,
+  verbose
 }: {
   component: ConsumerComponent,
   componentRoot: PathLinux,
   consumer: ?Consumer,
-  componentMap: ComponentMap
+  componentMap: ComponentMap,
+  verbose: boolean
 }): Promise<Vinyl[]> => {
   const compiler = component.compiler;
   if (!compiler) {
@@ -209,6 +217,9 @@ const _runBuild = async ({
         // Write config files to tmp folder
         if (compiler.writeConfigFilesOnAction) {
           tmpFolderFullPath = component.getTmpFolder(consumerPath);
+          if (verbose) {
+            console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
+          }
           await compiler.writeFilesToFs({ configDir: tmpFolderFullPath, deleteOldFiles: false });
         }
 
@@ -222,6 +233,9 @@ const _runBuild = async ({
         };
         const result = await compiler.action(actionParams);
         if (tmpFolderFullPath) {
+          if (verbose) {
+            console.log(`deleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
+          }
           await fs.remove(tmpFolderFullPath);
         }
         // TODO: Gilad - handle return of main dist file
