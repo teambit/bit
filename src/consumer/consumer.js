@@ -1003,7 +1003,7 @@ export default class Consumer {
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {
     const component = await this.loadComponent(componentId);
-    return component.writeConfig(this.getPath(), this.bitMap, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
+    return component.writeConfig(this, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
   }
 
   async injectConf(componentId: BitId, force: boolean) {

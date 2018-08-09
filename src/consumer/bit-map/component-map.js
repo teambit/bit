@@ -250,6 +250,14 @@ export default class ComponentMap {
     return null;
   }
 
+  /**
+   * directory of the component (root / track)
+   */
+  getComponentDir(): ?PathLinux {
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    return this.rootDir;
+  }
+
   setConfigDir(val: ?PathLinux) {
     if (val === null || val === undefined) {
       delete this.configDir;

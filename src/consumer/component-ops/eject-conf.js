@@ -8,16 +8,20 @@ import GeneralError from '../../error/general-error';
 import BitMap from '../bit-map';
 import EjectNoDir from './exceptions/eject-no-dir';
 import ConfigDir from '../bit-map/config-dir';
+import { writeDependenciesLinksToDir } from '../../links/link-generator';
+import { Consumer } from '..';
+import type { PathOsBased } from '../../utils/path';
 
 export type EjectConfResult = { id: string, ejectedPath: string };
 
 export default (async function ejectConf(
   component: ConsumerComponent,
-  consumerPath: string,
-  bitMap: BitMap,
+  consumer: Consumer,
   configDir: ConfigDir,
   override?: boolean = true
 ): Promise<EjectConfResult> {
+  const consumerPath: PathOsBased = consumer.getPath();
+  const bitMap: BitMap = consumer.bitMap;
   const oldConfigDir = R.path(['componentMap', 'configDir'], component);
   const componentMap = component.componentMap;
   if (!componentMap) {
@@ -50,6 +54,8 @@ export default (async function ejectConf(
     ejectedCompilerDirectoryP,
     ejectedTesterDirectoryP
   ]);
+  await writeDependenciesLinksToDir(resolvedConfigDirFullPath, component, component.compilerDependencies, consumer);
+  await writeDependenciesLinksToDir(resolvedConfigDirFullPath, component, component.testerDependencies, consumer);
   const bitJsonDir = resolvedConfigDir.getEnvTypeCleaned();
   const bitJsonDirFullPath = path.normalize(path.join(consumerPath, bitJsonDir.dirPath));
   const relativeEjectedCompilerDirectory = _getRelativeDir(bitJsonDirFullPath, ejectedCompilerDirectory);
