@@ -9,6 +9,7 @@ import logger from '../logger/logger';
 import type { PathOsBased, PathLinux } from '../utils/path';
 import { Repository, Ref } from '../scope/objects';
 import Source from '../scope/models/source';
+import type { EnvType } from './env-extension';
 
 export type ExtensionFileModel = {
   name: string,
@@ -50,15 +51,36 @@ export default class ExtensionFile extends AbstractVinyl {
   static async loadFromBitJsonObject(
     bitJsonObj: PathOsBased,
     consumerPath: PathOsBased,
-    bitJsonPath: PathOsBased
+    bitJsonPath: PathOsBased,
+    envType?: EnvType
   ): Promise<ExtensionFile[]> {
     if (!bitJsonObj || R.isEmpty(bitJsonObj)) return [];
     const loadP: Promise<ExtensionFile>[] = [];
     const bitJsonDirPath = path.dirname(bitJsonPath);
+
+    // for non-envs extension, the base is the consumer root.
+    // for envs, bit.json may have "{ENV_TYPE}" in its "ejectedEnvsDirectory" configuration, when
+    // this happens, the base dir includes the env-type. e.g. base-dir/compiler or base/dir-tester
+    // @todo 1: make sure relativePath is PathLinux
+    // @todo 2: pass the 'ejectedEnvsDirectory' and work according to its value. the implementation
+    // below won't work well if a user decided to name the compiler folder as 'compiler' without
+    // using {ENV_TYPE} notation.
+    const getBase = (relativePath: PathLinux): PathOsBased => {
+      if (!envType) return consumerPath;
+      const pathSplit = relativePath.split('/');
+      const envRelativePath = pathSplit[0] === '.' ? R.tail(pathSplit) : pathSplit;
+      const potentialEnvTypePlaceholder = R.head(envRelativePath);
+      if (potentialEnvTypePlaceholder === envType && envRelativePath.length > 1) {
+        return path.join(bitJsonDirPath, envType);
+      }
+      return bitJsonDirPath;
+    };
+
     const loadFile = (value, key) => {
       // TODO: Gilad - support component bit json
       const fullPath = path.resolve(bitJsonDirPath, value);
-      loadP.push(this.load(key, fullPath, bitJsonDirPath, bitJsonDirPath));
+      const base = getBase(value);
+      loadP.push(this.load(key, fullPath, bitJsonDirPath, base));
     };
     R.forEachObjIndexed(loadFile, bitJsonObj);
     return Promise.all(loadP);

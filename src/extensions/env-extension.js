@@ -208,7 +208,12 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
-    const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
+    const files = await ExtensionFile.loadFromBitJsonObject(
+      props.files,
+      props.consumerPath,
+      props.bitJsonPath,
+      props.envType
+    );
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
