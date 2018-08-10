@@ -128,17 +128,19 @@ export default class ComponentBitJson extends AbstractBitJson {
   }
 
   static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitJson {
+    if (!dirPath) throw new TypeError('bit-json.loadSync missing dirPath arg');
     let thisBJ = {};
-    let bitJsonPath = '';
-    if (dirPath) {
-      bitJsonPath = AbstractBitJson.composePath(dirPath);
-      if (fs.existsSync(bitJsonPath)) {
-        try {
-          thisBJ = fs.readJsonSync(bitJsonPath);
-        } catch (e) {
-          throw new InvalidBitJson(bitJsonPath);
-        }
+    const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    if (fs.existsSync(bitJsonPath)) {
+      try {
+        thisBJ = fs.readJsonSync(bitJsonPath);
+      } catch (e) {
+        throw new InvalidBitJson(bitJsonPath);
       }
+    } else if (!protoBJ) {
+      throw new Error(
+        `bit-json.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
+      );
     }
 
     const componentBitJson = ComponentBitJson.mergeWithProto(thisBJ, protoBJ);

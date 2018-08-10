@@ -17,6 +17,7 @@ import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
 import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
+import BitMap from '../../../bit-map';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -162,7 +163,7 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
             // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
             const resolvedSource = path.resolve(entryComponentMap.rootDir, depFile);
             // @todo: use the new ConfigDir class that Gilad added once it is merged.
-            const { compiler: compilerConfigDir, tester: testerConfigDir } = consumer.bitMap.parseConfigDir(
+            const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
               entryComponentMap.configDir,
               entryComponentMap.rootDir
             );

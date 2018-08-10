@@ -18,8 +18,10 @@ export function componentToPrintableForDiff(component: Component): Object {
       ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
       : null;
   };
-  const parseEnvFiles = (envExtension?: EnvExtension): ?(string[]) => {
+  const parseEnvFiles = (envExtension: ?EnvExtension): ?(string[]) => {
+    // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     if (RA.isNilOrEmpty(envExtension) || RA.isNilOrEmpty(envExtension.files)) return null;
+    // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
   };
   const {
