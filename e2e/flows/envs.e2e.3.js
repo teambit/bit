@@ -1154,16 +1154,7 @@ describe('envs', function () {
           });
         });
         describe('change envs files/config', () => {
-          before(() => {
-            helper.getClonedLocalScope(importedScopeBeforeChanges);
-          });
           beforeEach(() => {
-            // Make sure the component is not modified before the changes
-            const statusOutput = helper.status();
-            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-            expect(statusOutput).to.not.have.string('modified');
-          });
-          afterEach(() => {
             // Restore to clean state of the scope
             helper.getClonedLocalScope(importedScopeBeforeChanges);
           });
@@ -1172,6 +1163,10 @@ describe('envs', function () {
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string('modified components');
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
+
+            const diffOutput = helper.diff('comp/my-comp');
+            expect(diffOutput).to.have.string('- "a": "b"');
+            expect(diffOutput).to.have.string('+ "a": "compiler"');
           });
           it('should show the component as modified if tester config has been changed', () => {
             helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', TESTER_ENV_TYPE);
@@ -1184,6 +1179,23 @@ describe('envs', function () {
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string('modified components');
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
+          });
+          it('should show the component as modified if a compiler file has been renamed', () => {
+            fs.moveSync(path.join(fullComponentFolder, '.babelrc'), path.join(fullComponentFolder, '.babelrc2'));
+            helper.addFileToEnvInBitJson(
+              path.join(fullComponentFolder, 'bit.json'),
+              '.babelrc',
+              './.babelrc2',
+              COMPILER_ENV_TYPE
+            );
+
+            const statusOutput = helper.status();
+            expect(statusOutput).to.have.string('modified components');
+            expect(statusOutput).to.have.string('comp/my-comp ... ok');
+
+            const diffOutput = helper.diff('comp/my-comp');
+            expect(diffOutput).to.have.string('- [ .babelrc => .babelrc ]');
+            expect(diffOutput).to.have.string('+ [ .babelrc => .babelrc2 ]');
           });
           it('should show the component as modified if tester file has been changed', () => {
             helper.createFile(testerFilesFolder, 'mocha-config.opts', 'something');
@@ -1283,24 +1295,15 @@ describe('envs', function () {
           });
         });
         describe('change envs files', () => {
-          before(() => {
-            helper.getClonedLocalScope(importedScopeBeforeChanges);
-          });
           beforeEach(() => {
-            // Make sure the component is not modified before the changes
-            const statusOutput = helper.status();
+            // Restore to clean state of the scope
+            helper.getClonedLocalScope(importedScopeBeforeChanges);
+
             envFilesFolder = ejectedEnvsDirectory;
             envFilesFullFolder = path.join(helper.localScopePath, envFilesFolder);
             compilerFilesFolder = path.join(envFilesFolder, COMPILER_ENV_TYPE);
             testerFilesFolder = path.join(envFilesFolder, TESTER_ENV_TYPE);
-            expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-            expect(statusOutput).to.not.have.string('modified');
           });
-          afterEach(() => {
-            // Restore to clean state of the scope
-            helper.getClonedLocalScope(importedScopeBeforeChanges);
-          });
-
           it('should show the component as modified if compiler file has been changed', () => {
             helper.createFile(compilerFilesFolder, '.babelrc', '{"some": "thing"}');
             const statusOutput = helper.status();
@@ -1314,6 +1317,59 @@ describe('envs', function () {
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
           });
         });
+      });
+    });
+  });
+});
+
+describe('envs with relative paths', function () {
+  this.timeout(0);
+  const helper = new Helper();
+  before(() => {
+    helper.setNewLocalAndRemoteScopes();
+    helper.importCompiler();
+    const dest = path.join(helper.localScopePath, 'base');
+    helper.copyFixtureFile(
+      path.join('compilers', 'webpack-relative', 'base', 'base.config.js'),
+      'base.config.js',
+      dest
+    );
+    helper.copyFixtureFile(path.join('compilers', 'webpack-relative', 'dev.config.js'));
+    helper.addNpmPackage('webpack-merge', '4.1.4');
+    helper.addNpmPackage('webpack', '4.16.5');
+    helper.addFileToEnvInBitJson(undefined, 'base.config.js', './base/base.config.js', 'compiler');
+    helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
+    helper.createComponentBarFoo();
+    helper.addComponentBarFoo();
+  });
+  after(() => {
+    helper.destroyEnv();
+  });
+  describe('tagging the component', () => {
+    before(() => {
+      helper.tagAllWithoutMessage();
+    });
+    it('should save the relative paths of the compiler files', () => {
+      const catComponent = helper.catComponent('bar/foo@latest');
+      expect(catComponent.compiler.files).to.have.lengthOf(2);
+      expect(catComponent.compiler.files[0].relativePath).to.equal('base/base.config.js');
+      expect(catComponent.compiler.files[1].relativePath).to.equal('dev.config.js');
+    });
+    describe('exporting and importing the component with --conf', () => {
+      before(() => {
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo --conf');
+      });
+      it('should write the configuration files according to their relativePaths', () => {
+        expect(path.join(helper.localScopePath, 'components/bar/foo/base/base.config.js')).to.be.a.file();
+        expect(path.join(helper.localScopePath, 'components/bar/foo/dev.config.js')).to.be.a.file();
+      });
+      it('should not show the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.have.string(statusWorkspaceIsCleanMsg);
       });
     });
   });

@@ -209,7 +209,8 @@ export default class EnvExtension extends BaseExtension {
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(
-      props.files,
+      // $FlowFixMe
+      props.files, // $FlowFixMe
       props.consumerPath,
       props.bitJsonPath,
       props.envType
