@@ -20,7 +20,7 @@ export function componentToPrintableForDiff(component: Component): Object {
   };
   const parseEnvFiles = (envExtension?: EnvExtension): ?(string[]) => {
     if (RA.isNilOrEmpty(envExtension) || RA.isNilOrEmpty(envExtension.files)) return null;
-    return envExtension.files.map(file => `${file.name} => ${file.relative}`);
+    return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
   };
   const {
     lang,

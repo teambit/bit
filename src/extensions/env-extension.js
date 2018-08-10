@@ -132,7 +132,7 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
-      const relativePath = pathJoinLinux(ejectedEnvDirectory, file.name);
+      const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
       files[file.name] = `./${relativePath}`;
     });
     const envVal = {
@@ -168,7 +168,7 @@ export default class EnvExtension extends BaseExtension {
       if (deleteOldFiles) {
         filePaths.push(file.path);
       }
-      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.name });
+      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
       writeP.push(file.write());
     });
     await Promise.all(writeP);
