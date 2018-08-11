@@ -10,6 +10,7 @@ import type { PathOsBased, PathLinux } from '../utils/path';
 import { Repository, Ref } from '../scope/objects';
 import Source from '../scope/models/source';
 import type { EnvType } from './env-extension';
+import { pathNormalizeToLinux } from '../utils/path';
 
 export type ExtensionFileModel = {
   name: string,
@@ -144,7 +145,7 @@ export default class ExtensionFile extends AbstractVinyl {
   toModelObject(): ExtensionFileModel {
     return {
       name: this.name,
-      relativePath: this.relative,
+      relativePath: pathNormalizeToLinux(this.relative),
       file: this.file.hash()
     };
   }
