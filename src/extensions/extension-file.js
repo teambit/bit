@@ -6,17 +6,21 @@ import vinylFile from 'vinyl-file';
 import { AbstractVinyl } from '../consumer/component/sources';
 import ExtensionFileNotFound from './exceptions/extension-file-not-found';
 import logger from '../logger/logger';
-import type { PathOsBased } from '../utils/path';
+import type { PathOsBased, PathLinux } from '../utils/path';
 import { Repository, Ref } from '../scope/objects';
 import Source from '../scope/models/source';
+import type { EnvType } from './env-extension';
+import { pathNormalizeToLinux } from '../utils/path';
 
 export type ExtensionFileModel = {
   name: string,
+  relativePath: PathLinux,
   file: Ref
 };
 
 export type ExtensionFileObject = {
   name: string,
+  relativePath: PathLinux,
   file: string
 };
 
@@ -48,15 +52,36 @@ export default class ExtensionFile extends AbstractVinyl {
   static async loadFromBitJsonObject(
     bitJsonObj: PathOsBased,
     consumerPath: PathOsBased,
-    bitJsonPath: PathOsBased
+    bitJsonPath: PathOsBased,
+    envType?: EnvType
   ): Promise<ExtensionFile[]> {
     if (!bitJsonObj || R.isEmpty(bitJsonObj)) return [];
     const loadP: Promise<ExtensionFile>[] = [];
     const bitJsonDirPath = path.dirname(bitJsonPath);
+
+    // for non-envs extension, the base is the consumer root.
+    // for envs, bit.json may have "{ENV_TYPE}" in its "ejectedEnvsDirectory" configuration, when
+    // this happens, the base dir includes the env-type. e.g. base-dir/compiler or base/dir-tester
+    // @todo 1: make sure relativePath is PathLinux
+    // @todo 2: pass the 'ejectedEnvsDirectory' and work according to its value. the implementation
+    // below won't work well if a user decided to name the compiler folder as 'compiler' without
+    // using {ENV_TYPE} notation.
+    const getBase = (relativePath: PathLinux): PathOsBased => {
+      if (!envType) return consumerPath;
+      const pathSplit = relativePath.split('/');
+      const envRelativePath = pathSplit[0] === '.' ? R.tail(pathSplit) : pathSplit;
+      const potentialEnvTypePlaceholder = R.head(envRelativePath);
+      if (potentialEnvTypePlaceholder === envType && envRelativePath.length > 1) {
+        return path.join(bitJsonDirPath, envType);
+      }
+      return bitJsonDirPath;
+    };
+
     const loadFile = (value, key) => {
       // TODO: Gilad - support component bit json
       const fullPath = path.resolve(bitJsonDirPath, value);
-      loadP.push(this.load(key, fullPath, bitJsonDirPath, consumerPath));
+      const base = getBase(value);
+      loadP.push(this.load(key, fullPath, bitJsonDirPath, base));
     };
     R.forEachObjIndexed(loadFile, bitJsonObj);
     return Promise.all(loadP);
@@ -78,7 +103,7 @@ export default class ExtensionFile extends AbstractVinyl {
   static async loadFromExtensionFileModel(file: ExtensionFileModel, repository: Repository): Promise<ExtensionFile> {
     // $FlowFixMe
     const content = await file.file.load(repository);
-    const extensionFile = new ExtensionFile({ base: '.', path: file.name, contents: content.contents });
+    const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath, contents: content.contents });
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
     extensionFile.fromModel = true;
@@ -94,6 +119,7 @@ export default class ExtensionFile extends AbstractVinyl {
   static fromModelObjectToObject(file: ExtensionFileModel): ExtensionFileObject {
     return {
       name: file.name,
+      relativePath: file.relativePath,
       file: file.file.toString()
     };
   }
@@ -107,6 +133,7 @@ export default class ExtensionFile extends AbstractVinyl {
   static fromObjectToModelObject(file: ExtensionFileObject): ExtensionFileModel {
     return {
       name: file.name,
+      relativePath: file.relativePath,
       file: new Ref(file.file)
     };
   }
@@ -118,6 +145,7 @@ export default class ExtensionFile extends AbstractVinyl {
   toModelObject(): ExtensionFileModel {
     return {
       name: this.name,
+      relativePath: pathNormalizeToLinux(this.relative),
       file: this.file.hash()
     };
   }
