@@ -22,7 +22,7 @@ export default (async function injectConf(
   if (!componentMap) {
     throw new GeneralError('could not find component in the .bitmap file');
   }
-  const trackDir = componentMap.getTrackDir();
+  const componentDir = componentMap.getComponentDir();
 
   // TODO: check if files were modified before deleting them and delete them only if forces provided
   if (!force) {
@@ -32,7 +32,7 @@ export default (async function injectConf(
   }
 
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
-  const resolvedConfigDir = format(linuxConfigDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '{ENV_TYPE}' });
+  const resolvedConfigDir = format(linuxConfigDir, { [COMPONENT_DIR]: componentDir, ENV_TYPE: '{ENV_TYPE}' });
   const resolvedConfigDirFullPath = path.normalize(path.join(consumerPath, resolvedConfigDir));
 
   const deleteCompilerFilesP = component.compiler ? component.compiler.removeFilesFromFs() : Promise.resolve('');

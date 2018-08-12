@@ -195,8 +195,8 @@ const _runBuild = async ({
   if (componentMap) {
     // $FlowFixMe
     rootDistFolder = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-    if (consumerPath && componentMap && componentMap.getTrackDir()) {
-      componentDir = componentMap.getTrackDir() || '';
+    if (consumerPath && componentMap && componentMap.getComponentDir()) {
+      componentDir = componentMap.getComponentDir() || '';
     }
   }
   return Promise.resolve()

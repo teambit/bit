@@ -273,8 +273,8 @@ export default class BitMap {
     };
     R.values(this.components).forEach((component: ComponentMap) => {
       const configDir = component.configDir;
-      const trackDir = component.getTrackDir();
-      if (configDir && trackDir) {
+      const componentDir = component.getComponentDir();
+      if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
         const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
@@ -288,7 +288,7 @@ export default class BitMap {
         // Which will not be ok with the input of resolveIgnoreFilesAndDirs
         const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
           configDir.linuxDirPath,
-          trackDir,
+          componentDir,
           // $FlowFixMe - see comment above
           compilerFiles,
           // $FlowFixMe - see comment above

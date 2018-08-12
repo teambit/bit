@@ -27,14 +27,14 @@ export default (async function ejectConf(
   if (!componentMap) {
     throw new GeneralError('could not find component in the .bitmap file');
   }
-  const trackDir = componentMap.getTrackDir();
-  if (!trackDir && configDir.isUnderComponentDir) {
+  const componentDir = componentMap.getComponentDir();
+  if (!componentDir && configDir.isUnderComponentDir) {
     throw new EjectNoDir(component.id.toStringWithoutVersion());
   }
   // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
   // (To better support bit move for example)
-  if (trackDir) {
-    configDir.repalceByComponentDirDSL(trackDir);
+  if (componentDir) {
+    configDir.repalceByComponentDirDSL(componentDir);
   }
   if (!configDir.isUnderComponentDir) {
     const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
@@ -42,7 +42,7 @@ export default (async function ejectConf(
   }
   const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir.linuxDirPath;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
-  const resolvedConfigDir = configDir.getResolved({ componentDir: trackDir });
+  const resolvedConfigDir = configDir.getResolved({ componentDir });
   const resolvedConfigDirFullPath = path.normalize(path.join(consumerPath, resolvedConfigDir.dirPath));
   const ejectedCompilerDirectoryP = component.compiler
     ? component.compiler.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
@@ -70,7 +70,7 @@ export default (async function ejectConf(
   );
   if (deleteOldFiles) {
     if (oldConfigDir) {
-      const oldBitJsonDir = oldConfigDir.getResolved({ componentDir: trackDir }).getEnvTypeCleaned();
+      const oldBitJsonDir = oldConfigDir.getResolved({ componentDir }).getEnvTypeCleaned();
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
       await ComponentBitJson.removeIfExist(oldBitJsonDirFullPath);
       await removeEmptyDir(oldBitJsonDirFullPath);

@@ -275,9 +275,8 @@ export default class ComponentMap {
    */
   getBaseConfigDir(): ?PathLinux {
     if (!this.configDir) return null;
-    const trackDir = this.getTrackDir();
-    const configDir =
-      this.configDir && this.configDir.getResolved({ componentDir: trackDir }).getEnvTypeCleaned().linuxDirPath;
+    const componentDir = this.getComponentDir();
+    const configDir = this.configDir && this.configDir.getResolved({ componentDir }).getEnvTypeCleaned().linuxDirPath;
     return configDir;
   }
 

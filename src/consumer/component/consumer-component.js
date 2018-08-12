@@ -275,9 +275,9 @@ export default class Component {
   getTmpFolder(workspacePrefix: PathOsBased = ''): PathOsBased {
     let folder = path.join(workspacePrefix, BIT_WORKSPACE_TMP_DIRNAME, this.id.name);
     if (this.componentMap) {
-      const trackDir = this.componentMap.getTrackDir();
-      if (trackDir) {
-        folder = path.join(workspacePrefix, trackDir, BIT_WORKSPACE_TMP_DIRNAME);
+      const componentDir = this.componentMap.getComponentDir();
+      if (componentDir) {
+        folder = path.join(workspacePrefix, componentDir, BIT_WORKSPACE_TMP_DIRNAME);
       }
     }
     // Isolated components (for ci-update for example)
@@ -1134,8 +1134,8 @@ export default class Component {
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     let configDir = consumer.getPath();
-    const trackDir = componentMap.getTrackDir();
-    configDir = trackDir ? path.join(configDir, trackDir) : configDir;
+    const componentDir = componentMap.getComponentDir();
+    configDir = componentDir ? path.join(configDir, componentDir) : configDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     let packageDependencies;
     let devPackageDependencies;
