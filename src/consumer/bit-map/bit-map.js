@@ -224,15 +224,8 @@ export default class BitMap {
   /**
    * this is a temporarily method until ConfigDir class is merged into master
    */
-  parseConfigDir(configDir: string, rootDir: string) {
-    const configDirResolved = { compiler: configDir, tester: configDir };
-    if (!configDir.startsWith(`{${COMPONENT_DIR}}`)) return configDirResolved;
-    const resolvedConfigDir = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: '' });
-    if (!configDir.includes('{ENV_TYPE}')) {
-      configDirResolved.compiler = resolvedConfigDir;
-      configDirResolved.tester = resolvedConfigDir;
-      return configDirResolved;
-    }
+  static parseConfigDir(configDir: string, rootDir: string) {
+    const configDirResolved = {};
     configDirResolved.compiler = format(configDir, {
       [COMPONENT_DIR]: rootDir,
       ENV_TYPE: COMPILER_ENV_TYPE

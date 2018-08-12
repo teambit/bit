@@ -129,7 +129,7 @@ export default class Component {
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
   _docs: ?(Doclet[]);
-  _files: SourceFile[];
+  files: SourceFile[];
   dists: Dists;
   specsResults: ?(SpecsResults[]);
   license: ?License;
@@ -153,22 +153,6 @@ export default class Component {
   packageJsonInstance: PackageJsonInstance;
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
-
-  set files(val: SourceFile[]) {
-    this._files = val;
-  }
-
-  get files(): SourceFile[] {
-    if (!this._files) return null;
-    if (this._files instanceof Array) return this._files;
-
-    if (R.is(Object, this._files)) {
-      // $FlowFixMe
-      this._files = SourceFile.load(this._files);
-    }
-    // $FlowFixMe
-    return this._files;
-  }
 
   get id(): BitId {
     return new BitId({
@@ -198,6 +182,7 @@ export default class Component {
     name,
     version,
     scope,
+    files,
     lang,
     bindingPrefix,
     mainFile,
@@ -217,7 +202,6 @@ export default class Component {
     peerPackageDependencies,
     compilerPackageDependencies,
     testerPackageDependencies,
-    files,
     docs,
     dists,
     specsResults,
@@ -232,6 +216,7 @@ export default class Component {
     this.name = name;
     this.version = version;
     this.scope = scope;
+    this.files = files;
     this.lang = lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.mainFile = path.normalize(mainFile);
@@ -251,7 +236,6 @@ export default class Component {
     this.peerPackageDependencies = peerPackageDependencies || {};
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
-    this._files = files;
     this._docs = docs;
     this.setDists(dists);
     this.specsResults = specsResults;
@@ -339,7 +323,6 @@ export default class Component {
   }
 
   async writeConfig(consumer: Consumer, configDir: PathOsBased, override?: boolean = true): Promise<EjectConfResult> {
-    const consumerPath: PathOsBased = consumer.getPath();
     const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;

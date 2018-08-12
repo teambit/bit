@@ -106,4 +106,26 @@ describe('BitMap', () => {
       expect(res.files).to.contain('my-comp-dir/mochaConf.js');
     });
   });
+  describe('parseConfigDir', () => {
+    it('without any place holder', () => {
+      const results = BitMap.parseConfigDir('config-dir', 'root-dir');
+      expect(results.compiler).to.equal('config-dir');
+      expect(results.tester).to.equal('config-dir');
+    });
+    it('with {COMPONENT_DIR}', () => {
+      const results = BitMap.parseConfigDir('{COMPONENT_DIR}', 'root-dir');
+      expect(results.compiler).to.equal('root-dir');
+      expect(results.tester).to.equal('root-dir');
+    });
+    it('with {COMPONENT_DIR}/{ENV_TYPE}', () => {
+      const results = BitMap.parseConfigDir('{COMPONENT_DIR}/{ENV_TYPE}', 'root-dir');
+      expect(results.compiler).to.equal('root-dir/compiler');
+      expect(results.tester).to.equal('root-dir/tester');
+    });
+    it('with dir/{ENV_TYPE}', () => {
+      const results = BitMap.parseConfigDir('dir/{ENV_TYPE}', 'root-dir');
+      expect(results.compiler).to.equal('dir/compiler');
+      expect(results.tester).to.equal('dir/tester');
+    });
+  });
 });
