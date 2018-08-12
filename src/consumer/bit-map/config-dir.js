@@ -56,7 +56,7 @@ export default class ConfigDir {
   getResolved({ componentDir, envType }: { componentDir?: ?string, envType?: ?string }): ConfigDir {
     const resolvedComponentDir = componentDir || `{${COMPONENT_DIR}}`;
     const resolvedEnvType = envType || '{ENV_TYPE}';
-    const resolved = format(this.dirPath, { [`{${COMPONENT_DIR}}`]: resolvedComponentDir, ENV_TYPE: resolvedEnvType });
+    const resolved = format(this.dirPath, { [COMPONENT_DIR]: resolvedComponentDir, ENV_TYPE: resolvedEnvType });
     return new ConfigDir(resolved);
   }
 }
