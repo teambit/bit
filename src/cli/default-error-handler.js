@@ -38,7 +38,8 @@ import {
   HashMismatch,
   MergeConflictOnRemote,
   VersionNotFound,
-  CyclicDependencies
+  CyclicDependencies,
+  HashNotFound
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
@@ -189,6 +190,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   currentHash: ${chalk.bold(err.currentHash)}
   this usually happens when a component is old and the migration script was not running or interrupted`
   ],
+  [HashNotFound, err => `hash ${chalk.bold(err.hash)} not found`],
   [
     MergeConflict,
     err =>
