@@ -78,6 +78,8 @@ export default class ComponentMap {
     let confDir;
     if (configDir && typeof configDir === 'string') {
       confDir = new ConfigDir(configDir);
+    } else if (configDir && configDir instanceof ConfigDir) {
+      confDir = configDir.clone();
     }
     this.id = id;
     this.files = files;

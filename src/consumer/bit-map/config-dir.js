@@ -28,6 +28,10 @@ export default class ConfigDir {
     return linDirPath === '.' || linDirPath === './';
   }
 
+  clone() {
+    return new ConfigDir(this.dirPath);
+  }
+
   repalceByComponentDirDSL(componentDir: string) {
     if (this.dirPath.startsWith(componentDir) || this.linuxDirPath.startsWith(componentDir)) {
       this.dirPath = this.dirPath.replace(componentDir, `{${COMPONENT_DIR}}`);
