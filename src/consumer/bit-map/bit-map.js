@@ -287,7 +287,7 @@ export default class BitMap {
         // R.values above might return array of something which is not string
         // Which will not be ok with the input of resolveIgnoreFilesAndDirs
         const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
-          configDir,
+          configDir.linuxDirPath,
           trackDir,
           // $FlowFixMe - see comment above
           compilerFiles,
