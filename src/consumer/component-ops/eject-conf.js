@@ -10,6 +10,8 @@ import EjectNoDir from './exceptions/eject-no-dir';
 import ConfigDir from '../bit-map/config-dir';
 import { writeDependenciesLinksToDir } from '../../links/link-generator';
 import { Consumer } from '..';
+import CompilerExtension from '../../extensions/compiler-extension';
+import TesterExtension from '../../extensions/tester-extension';
 import type { PathOsBased } from '../../utils/path';
 
 export type EjectConfResult = { id: string, ejectedPath: string };
@@ -44,18 +46,24 @@ export default (async function ejectConf(
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = configDir.getResolved({ componentDir });
   const resolvedConfigDirFullPath = path.normalize(path.join(consumerPath, resolvedConfigDir.dirPath));
-  const ejectedCompilerDirectoryP = component.compiler
-    ? component.compiler.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
-    : Promise.resolve('');
-  const ejectedTesterDirectoryP = component.tester
-    ? component.tester.writeFilesToFs({ configDir: resolvedConfigDirFullPath, deleteOldFiles })
-    : Promise.resolve('');
+  const ejectedCompilerDirectoryP = writeEnvFiles({
+    fullConfigDir: resolvedConfigDirFullPath,
+    env: component.compiler,
+    consumer,
+    component,
+    deleteOldFiles
+  });
+  const ejectedTesterDirectoryP = writeEnvFiles({
+    fullConfigDir: resolvedConfigDirFullPath,
+    env: component.tester,
+    consumer,
+    component,
+    deleteOldFiles
+  });
   const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
     ejectedCompilerDirectoryP,
     ejectedTesterDirectoryP
   ]);
-  await writeDependenciesLinksToDir(resolvedConfigDirFullPath, component, component.compilerDependencies, consumer);
-  await writeDependenciesLinksToDir(resolvedConfigDirFullPath, component, component.testerDependencies, consumer);
   const bitJsonDir = resolvedConfigDir.getEnvTypeCleaned();
   const bitJsonDirFullPath = path.normalize(path.join(consumerPath, bitJsonDir.dirPath));
   const relativeEjectedCompilerDirectory = _getRelativeDir(bitJsonDirFullPath, ejectedCompilerDirectory);
@@ -82,6 +90,28 @@ export default (async function ejectConf(
     ejectedFullPath: bitJsonDir.linuxDirPath
   };
 });
+
+export async function writeEnvFiles({
+  fullConfigDir,
+  env,
+  consumer,
+  component,
+  deleteOldFiles
+}: {
+  fullConfigDir: PathOsBased,
+  env?: CompilerExtension | TesterExtension,
+  consumer: Consumer,
+  component: ConsumerComponent,
+  deleteOldFiles: boolean
+}): Promise<PathOsBased> {
+  if (!env) {
+    return '';
+  }
+  const ejectedDirectory = await env.writeFilesToFs({ configDir: fullConfigDir, deleteOldFiles });
+  const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
+  await writeDependenciesLinksToDir(fullConfigDir, component, deps, consumer);
+  return ejectedDirectory;
+}
 
 const writeBitJson = async (
   component: ConsumerComponent,

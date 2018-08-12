@@ -16,6 +16,7 @@ import type { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
+import { writeEnvFiles } from './eject-conf';
 
 // @flow
 
@@ -220,7 +221,13 @@ const _runBuild = async ({
           if (verbose) {
             console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
           }
-          await compiler.writeFilesToFs({ configDir: tmpFolderFullPath, deleteOldFiles: false });
+          await writeEnvFiles({
+            fullConfigDir: tmpFolderFullPath,
+            env: compiler,
+            consumer,
+            component,
+            deleteOldFiles: false
+          });
         }
 
         const actionParams = {
