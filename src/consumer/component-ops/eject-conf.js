@@ -96,18 +96,20 @@ export async function writeEnvFiles({
   env,
   consumer,
   component,
-  deleteOldFiles
+  deleteOldFiles,
+  verbose = false
 }: {
   fullConfigDir: PathOsBased,
   env?: CompilerExtension | TesterExtension,
   consumer: Consumer,
   component: ConsumerComponent,
-  deleteOldFiles: boolean
+  deleteOldFiles: boolean,
+  verbose: boolean
 }): Promise<PathOsBased> {
   if (!env) {
     return '';
   }
-  const ejectedDirectory = await env.writeFilesToFs({ configDir: fullConfigDir, deleteOldFiles });
+  const ejectedDirectory = await env.writeFilesToFs({ configDir: fullConfigDir, deleteOldFiles, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
   await writeDependenciesLinksToDir(fullConfigDir, component, deps, consumer);
   return ejectedDirectory;

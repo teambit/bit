@@ -153,11 +153,13 @@ export default class EnvExtension extends BaseExtension {
   async writeFilesToFs({
     configDir,
     envType,
-    deleteOldFiles
+    deleteOldFiles,
+    verbose = false
   }: {
     configDir: string,
     envType: EnvType,
-    deleteOldFiles: boolean
+    deleteOldFiles: boolean,
+    verbose: boolean
   }): Promise<string> {
     Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
     logger.debug('env-extension - writeFilesToFs');
@@ -169,7 +171,7 @@ export default class EnvExtension extends BaseExtension {
         filePaths.push(file.path);
       }
       file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
-      writeP.push(file.write());
+      writeP.push(file.write(null, true, verbose));
     });
     await Promise.all(writeP);
     await removeFilesAndEmptyDirsRecursively(filePaths);

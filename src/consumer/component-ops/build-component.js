@@ -226,7 +226,8 @@ const _runBuild = async ({
             env: compiler,
             consumer,
             component,
-            deleteOldFiles: false
+            deleteOldFiles: false,
+            verbose
           });
         }
 
@@ -241,7 +242,7 @@ const _runBuild = async ({
         const result = await compiler.action(actionParams);
         if (tmpFolderFullPath) {
           if (verbose) {
-            console.log(`deleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
+            console.log(`\ndeleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
           }
           await fs.remove(tmpFolderFullPath);
         }
