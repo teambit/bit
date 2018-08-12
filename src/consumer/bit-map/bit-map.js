@@ -28,6 +28,7 @@ import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentBitJson from '../bit-json';
 import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
+import ConfigDir from './config-dir';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -224,13 +225,13 @@ export default class BitMap {
   /**
    * this is a temporarily method until ConfigDir class is merged into master
    */
-  static parseConfigDir(configDir: string, rootDir: string) {
+  static parseConfigDir(configDir: ConfigDir, rootDir: string) {
     const configDirResolved = {};
-    configDirResolved.compiler = format(configDir, {
-      [COMPONENT_DIR]: rootDir,
-      ENV_TYPE: COMPILER_ENV_TYPE
-    });
-    configDirResolved.tester = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
+    configDirResolved.compiler = configDir.getResolved({
+      componentDir: rootDir,
+      envType: COMPILER_ENV_TYPE
+    }).linuxDirPath;
+    configDirResolved.tester = configDir.getResolved({ componentDir: rootDir, envType: TESTER_ENV_TYPE }).linuxDirPath;
     return configDirResolved;
   }
 
