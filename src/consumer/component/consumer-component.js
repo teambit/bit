@@ -14,7 +14,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
-import ejectConf from '../component-ops/eject-conf';
+import ejectConf, { writeEnvFiles } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
 import type { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
@@ -789,7 +789,14 @@ export default class Component {
             if (verbose) {
               console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
             }
-            await tester.writeFilesToFs({ configDir: tmpFolderFullPath, deleteOldFiles: false });
+            await writeEnvFiles({
+              fullConfigDir: tmpFolderFullPath,
+              env: tester,
+              consumer,
+              component,
+              deleteOldFiles: false,
+              verbose: !!verbose
+            });
           }
 
           const context: Object = {
