@@ -14,6 +14,7 @@ import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
 import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
+import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -182,6 +183,8 @@ describe('envs', function () {
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
       expect(alignedOuput).to.have.string(`writing config files to ${tmpFolder}`);
+      const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+      expect(alignedOuput).to.have.string(babelRcWriteMessage);
       expect(alignedOuput).to.have.string(`deleting tmp directory ${tmpFolder}`);
       // const distFilePath = path.join(helper.localScopePath, 'components', 'comp', 'my-comp', 'dist', 'objRestSpread.js');
       const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
@@ -344,6 +347,10 @@ describe('envs', function () {
             const deletingRegEx = new RegExp(`deleting tmp directory ${tmpFolder}`, 'g');
             const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
             expect(deletingCount).to.equal(2);
+            const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+            const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
+            expect(alignedOuput).to.have.string(babelRcWriteMessage);
+            expect(alignedOuput).to.have.string(mochaOptsWriteMessage);
           });
           it('should show results when there is exception on a test file', () => {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
@@ -547,6 +554,8 @@ describe('envs', function () {
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
         const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
         expect(alignedOuput).to.have.string(`writing config files to ${tmpFolder}`);
+        const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+        expect(alignedOuput).to.have.string(babelRcWriteMessage);
         expect(alignedOuput).to.have.string(`deleting tmp directory ${tmpFolder}`);
         const distFilePath = path.join(
           helper.localScopePath,
@@ -583,6 +592,10 @@ describe('envs', function () {
             const deletingRegEx = new RegExp(`deleting tmp directory ${tmpFolder}`, 'g');
             const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
             expect(deletingCount).to.equal(2);
+            const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+            const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
+            expect(alignedOuput).to.have.string(babelRcWriteMessage);
+            expect(alignedOuput).to.have.string(mochaOptsWriteMessage);
           });
         });
         describe('with failing tests', () => {
