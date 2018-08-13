@@ -232,7 +232,7 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = false) {
+  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
     if (deleteCurrentScope) {
       fs.removeSync(this.localScopePath);
     } else {
@@ -251,7 +251,7 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope: boolean = false) {
+  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
     if (deleteCurrentScope) {
       fs.removeSync(this.remoteScopePath);
     } else {
