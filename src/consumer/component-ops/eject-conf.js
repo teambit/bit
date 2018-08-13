@@ -80,8 +80,10 @@ export default (async function ejectConf(
     if (oldConfigDir) {
       const oldBitJsonDir = oldConfigDir.getResolved({ componentDir }).getEnvTypeCleaned();
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
-      await ComponentBitJson.removeIfExist(oldBitJsonDirFullPath);
-      await removeEmptyDir(oldBitJsonDirFullPath);
+      if (bitJsonDirFullPath !== oldBitJsonDirFullPath) {
+        await ComponentBitJson.removeIfExist(oldBitJsonDirFullPath);
+        await removeEmptyDir(oldBitJsonDirFullPath);
+      }
     }
   }
   return {
@@ -122,7 +124,7 @@ const writeBitJson = async (
   ejectedTesterDirectory: string,
   override?: boolean = true
 ): Promise<ComponentBitJson> => {
-  return new ComponentBitJson({
+  const bitJson = new ComponentBitJson({
     version: component.version,
     scope: component.scope,
     lang: component.lang,
@@ -134,7 +136,8 @@ const writeBitJson = async (
     packageDependencies: component.packageDependencies,
     devPackageDependencies: component.devPackageDependencies,
     peerPackageDependencies: component.peerPackageDependencies
-  }).write({ bitDir: bitJsonDir, override });
+  });
+  return bitJson.write({ bitDir: bitJsonDir, override });
 };
 
 const _getRelativeDir = (bitJsonDir, envDir) => {
