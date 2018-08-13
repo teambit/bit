@@ -215,8 +215,9 @@ const _runBuild = async ({
       // Change the cwd to make sure we found the needed files
       process.chdir(componentRoot);
       if (compiler.action) {
+        const shouldWriteConfig = compiler.writeConfigFilesOnAction && component.getDetachedCompiler();
         // Write config files to tmp folder
-        if (compiler.writeConfigFilesOnAction) {
+        if (shouldWriteConfig) {
           tmpFolderFullPath = component.getTmpFolder(consumerPath);
           if (verbose) {
             console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console

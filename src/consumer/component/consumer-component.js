@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
-import { mkdirp, isString, pathNormalizeToLinux, createSymlinkOrCopy, sharedStartOfArray } from '../../utils';
+import { mkdirp, pathNormalizeToLinux, createSymlinkOrCopy, sharedStartOfArray } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -36,8 +36,6 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  DEFAULT_DIST_DIRNAME,
-  COMPONENT_DIR,
   BIT_WORKSPACE_TMP_DIRNAME
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
@@ -48,8 +46,6 @@ import type { PathLinux, PathOsBased } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestError from './exceptions/external-test-error';
-import ExternalBuildError from './exceptions/external-build-error';
-import InvalidCompilerInterface from './exceptions/invalid-compiler-interface';
 import GeneralError from '../../error/general-error';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
@@ -314,6 +310,14 @@ export default class Component {
       default:
         return 'js';
     }
+  }
+
+  getDetachedCompiler(): boolean {
+    return _calculateDetachByOrigin(this.detachedCompiler, this.origin);
+  }
+
+  getDetachedTester(): boolean {
+    return _calculateDetachByOrigin(this.detachedTester, this.origin);
   }
 
   _getHomepage() {
@@ -787,8 +791,8 @@ export default class Component {
         if (tester && tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
-
-          if (tester.writeConfigFilesOnAction) {
+          const shouldWriteConfig = tester.writeConfigFilesOnAction && component.getDetachedTester();
+          if (shouldWriteConfig) {
             tmpFolderFullPath = component.getTmpFolder(consumerPath);
             if (verbose) {
               console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
@@ -1286,4 +1290,17 @@ export default class Component {
       detachedTester: componentMap.detachedTester
     });
   }
+}
+
+function _calculateDetachByOrigin(detachVal: ?boolean, origin: ComponentOrigin): boolean {
+  // If it was set to true it's the strongest
+  if (detachVal) {
+    return detachVal;
+  }
+  // Authored components are by default attached
+  if (origin === COMPONENT_ORIGINS.AUTHORED) {
+    return false;
+  }
+  // Not authored components are by default detached
+  return true;
 }
