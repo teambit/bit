@@ -182,11 +182,10 @@ describe('envs', function () {
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
-      expect(alignedOuput).to.have.string(`writing config files to ${tmpFolder}`);
+      expect(alignedOuput).to.not.have.string('writing config files to');
       const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
-      expect(alignedOuput).to.have.string(babelRcWriteMessage);
-      expect(alignedOuput).to.have.string(`deleting tmp directory ${tmpFolder}`);
-      // const distFilePath = path.join(helper.localScopePath, 'components', 'comp', 'my-comp', 'dist', 'objRestSpread.js');
+      expect(alignedOuput).to.not.have.string(babelRcWriteMessage);
+      expect(alignedOuput).to.not.have.string('deleting tmp directory');
       const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
       const distContent = fs.readFileSync(distFilePath).toString();
       expect(distContent).to.have.string(
@@ -340,17 +339,17 @@ describe('envs', function () {
             const output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
             const alignedOuput = Helper.alignOutput(output);
             const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
-            const writingRegEx = new RegExp(`writing config files to ${tmpFolder}`, 'g');
+            const writingRegEx = new RegExp('writing config files to', 'g');
             const writingCount = (alignedOuput.match(writingRegEx) || []).length;
-            // There should be 2 occurrences - one for the compiler and one for the tester
-            expect(writingCount).to.equal(2);
-            const deletingRegEx = new RegExp(`deleting tmp directory ${tmpFolder}`, 'g');
+            // There should be 0 occurrences - since it's not detached
+            expect(writingCount).to.equal(0);
+            const deletingRegEx = new RegExp('deleting tmp directory', 'g');
             const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
-            expect(deletingCount).to.equal(2);
+            expect(deletingCount).to.equal(0);
             const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
             const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
-            expect(alignedOuput).to.have.string(babelRcWriteMessage);
-            expect(alignedOuput).to.have.string(mochaOptsWriteMessage);
+            expect(alignedOuput).to.not.have.string(babelRcWriteMessage);
+            expect(alignedOuput).to.not.have.string(mochaOptsWriteMessage);
           });
           it('should show results when there is exception on a test file', () => {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
