@@ -631,7 +631,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
-    configDir?: string,
+    configDir?: ConfigDir,
     trackDir?: PathOsBased,
     override: boolean,
     detachedCompiler: ?boolean,
@@ -691,7 +691,7 @@ export default class BitMap {
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
     }
     if (configDir) {
-      this.components[componentIdStr].configDir = pathNormalizeToLinux(configDir);
+      this.components[componentIdStr].configDir = configDir;
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);

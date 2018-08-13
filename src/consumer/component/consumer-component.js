@@ -322,14 +322,18 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(consumer: Consumer, configDir: PathOsBased, override?: boolean = true): Promise<EjectConfResult> {
+  async writeConfig(
+    consumer: Consumer,
+    configDir: PathOsBased | ConfigDir,
+    override?: boolean = true
+  ): Promise<EjectConfResult> {
     const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
       throw new GeneralError('could not find component in the .bitmap file');
     }
-    const configDirInstance = new ConfigDir(configDir);
+    const configDirInstance = typeof configDir === 'string' ? new ConfigDir(configDir) : configDir.clone();
     if (configDirInstance.isWorkspaceRoot) {
       throw new EjectToWorkspace();
     }
