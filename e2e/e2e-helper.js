@@ -232,8 +232,12 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedLocalScope(clonedScopePath: string) {
-    fs.removeSync(this.localScopePath);
+  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = false) {
+    if (deleteCurrentScope) {
+      fs.removeSync(this.localScopePath);
+    } else {
+      this.setLocalScope();
+    }
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
     fs.copySync(clonedScopePath, this.localScopePath);
   }
@@ -247,8 +251,12 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath: string) {
-    fs.removeSync(this.remoteScopePath);
+  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope: boolean = false) {
+    if (deleteCurrentScope) {
+      fs.removeSync(this.remoteScopePath);
+    } else {
+      this.getNewBareScope();
+    }
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.remoteScopePath}`);
     fs.copySync(clonedScopePath, this.remoteScopePath);
   }
