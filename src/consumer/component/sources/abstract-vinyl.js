@@ -27,7 +27,7 @@ export default class AbstractVinyl extends Vinyl {
 
   async write(writePath?: string, force?: boolean = true, verbose: boolean = false): Promise<?string> {
     const filePath = writePath || this.path;
-    const msg = `writing a file to the file-system at ${filePath}, force: ${force.toString()}`;
+    const msg = _verboseMsg(filePath, force);
     if (verbose) {
       console.log(msg); // eslint-disable-line no-console
     }
@@ -60,4 +60,13 @@ export default class AbstractVinyl extends Vinyl {
     if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
   }
+}
+
+/**
+ * Generate message for the logs and for output in case of verbose
+ * this function is exported for testing purposes
+ */
+export function _verboseMsg(filePath: string, force: boolean) {
+  const msg = `writing a file to the file-system at ${filePath}, force: ${force.toString()}`;
+  return msg;
 }
