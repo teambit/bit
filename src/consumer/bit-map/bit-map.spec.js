@@ -4,6 +4,7 @@ import BitMap from './bit-map';
 import { BitId } from '../../bit-id';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
+import ConfigDir from './config-dir';
 
 const bitMapFixtureDir = path.join(__dirname, '../../../fixtures/bitmap-fixtures');
 
@@ -108,22 +109,22 @@ describe('BitMap', () => {
   });
   describe('parseConfigDir', () => {
     it('without any place holder', () => {
-      const results = BitMap.parseConfigDir('config-dir', 'root-dir');
+      const results = BitMap.parseConfigDir(new ConfigDir('config-dir'), 'root-dir');
       expect(results.compiler).to.equal('config-dir');
       expect(results.tester).to.equal('config-dir');
     });
     it('with {COMPONENT_DIR}', () => {
-      const results = BitMap.parseConfigDir('{COMPONENT_DIR}', 'root-dir');
+      const results = BitMap.parseConfigDir(new ConfigDir('{COMPONENT_DIR}'), 'root-dir');
       expect(results.compiler).to.equal('root-dir');
       expect(results.tester).to.equal('root-dir');
     });
     it('with {COMPONENT_DIR}/{ENV_TYPE}', () => {
-      const results = BitMap.parseConfigDir('{COMPONENT_DIR}/{ENV_TYPE}', 'root-dir');
+      const results = BitMap.parseConfigDir(new ConfigDir('{COMPONENT_DIR}/{ENV_TYPE}'), 'root-dir');
       expect(results.compiler).to.equal('root-dir/compiler');
       expect(results.tester).to.equal('root-dir/tester');
     });
     it('with dir/{ENV_TYPE}', () => {
-      const results = BitMap.parseConfigDir('dir/{ENV_TYPE}', 'root-dir');
+      const results = BitMap.parseConfigDir(new ConfigDir('dir/{ENV_TYPE}'), 'root-dir');
       expect(results.compiler).to.equal('dir/compiler');
       expect(results.tester).to.equal('dir/tester');
     });

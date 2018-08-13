@@ -112,7 +112,8 @@ export default class ComponentMap {
       mainDistFile: this.mainDistFile,
       originallySharedDir: this.originallySharedDir,
       detachedCompiler: this.detachedCompiler,
-      detachedTester: this.detachedTester
+      detachedTester: this.detachedTester,
+      exported: this.exported
     };
     const notNil = (val) => {
       return !R.isNil(val);
