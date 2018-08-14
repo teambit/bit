@@ -1,5 +1,6 @@
 /** @flow */
 
+import path from 'path';
 import format from 'string-format';
 import { pathNormalizeToLinux } from '../../utils';
 import { COMPONENT_DIR } from '../../constants';
@@ -33,8 +34,9 @@ export default class ConfigDir {
   }
 
   repalceByComponentDirDSL(componentDir: string) {
-    if (this.dirPath.startsWith(componentDir) || this.linuxDirPath.startsWith(componentDir)) {
-      this.dirPath = this.dirPath.replace(componentDir, `{${COMPONENT_DIR}}`);
+    if (this.linuxDirPath.startsWith(componentDir)) {
+      const replaced = this.linuxDirPath.replace(componentDir, `{${COMPONENT_DIR}}`);
+      this.dirPath = path.normalize(replaced);
     }
   }
 
