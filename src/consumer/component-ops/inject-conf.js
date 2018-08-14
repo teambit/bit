@@ -1,11 +1,9 @@
 // @flow
 import path from 'path';
-import format from 'string-format';
 import ConsumerComponent from '../component/consumer-component';
 import ComponentBitJson from '../bit-json';
-import { removeEmptyDir, pathNormalizeToLinux } from '../../utils';
+import { removeEmptyDir } from '../../utils';
 import GeneralError from '../../error/general-error';
-import { COMPONENT_DIR } from '../../constants';
 import BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
 

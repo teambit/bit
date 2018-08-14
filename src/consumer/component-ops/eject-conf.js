@@ -51,14 +51,16 @@ export default (async function ejectConf(
     env: component.compiler,
     consumer,
     component,
-    deleteOldFiles
+    deleteOldFiles,
+    verbose: false
   });
   const ejectedTesterDirectoryP = writeEnvFiles({
     fullConfigDir: resolvedConfigDirFullPath,
     env: component.tester,
     consumer,
     component,
-    deleteOldFiles
+    deleteOldFiles,
+    verbose: false
   });
   const [ejectedCompilerDirectory, ejectedTesterDirectory] = await Promise.all([
     ejectedCompilerDirectoryP,
@@ -102,7 +104,7 @@ export async function writeEnvFiles({
   verbose = false
 }: {
   fullConfigDir: PathOsBased,
-  env?: CompilerExtension | TesterExtension,
+  env?: ?CompilerExtension | ?TesterExtension,
   consumer: Consumer,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
