@@ -584,12 +584,15 @@ describe('envs', function () {
           });
           it('should write config files to tmp directory', () => {
             const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
-            const writingRegEx = new RegExp(`writing config files to ${tmpFolder}`, 'g');
-            const writingCount = (alignedOuput.match(writingRegEx) || []).length;
+            const writingStr = `writing config files to ${tmpFolder}`;
+            // Since the output comes from console.log it's with \n also in windows
+            const splittedAlignedOutput = alignedOuput.split('\n');
+            // don't use regex because of windows problems
+            const writingCount = splittedAlignedOutput.filter(line => line === writingStr).length;
             // There should be 2 occurrences - one for the compiler and one for the tester
             expect(writingCount).to.equal(2);
-            const deletingRegEx = new RegExp(`deleting tmp directory ${tmpFolder}`, 'g');
-            const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
+            const deletingStr = `deleting tmp directory ${tmpFolder}`;
+            const deletingCount = splittedAlignedOutput.filter(line => line === deletingStr).length;
             expect(deletingCount).to.equal(2);
             const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
             const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
