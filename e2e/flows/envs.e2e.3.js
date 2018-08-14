@@ -11,9 +11,10 @@ import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-config-dir';
 import { COMPILER_ENV_TYPE } from '../../src/extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
-import { COMPONENT_DIR } from '../../src/constants';
+import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
+import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -175,10 +176,16 @@ describe('envs', function () {
       expect(output).to.have.string('lodash.get@4.4.2');
     });
     it('should build the component successfully', () => {
-      const output = helper.build('comp/my-comp');
+      const output = helper.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
+      const alignedOuput = Helper.alignOutput(output);
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
-      // const distFilePath = path.join(helper.localScopePath, 'components', 'comp', 'my-comp', 'dist', 'objRestSpread.js');
+      expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
+      const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
+      expect(alignedOuput).to.not.have.string('writing config files to');
+      const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+      expect(alignedOuput).to.not.have.string(babelRcWriteMessage);
+      expect(alignedOuput).to.not.have.string('deleting tmp directory');
       const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
       const distContent = fs.readFileSync(distFilePath).toString();
       expect(distContent).to.have.string(
@@ -327,6 +334,22 @@ describe('envs', function () {
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
+          });
+          it('should write config files to tmp directory', () => {
+            const output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            const alignedOuput = Helper.alignOutput(output);
+            const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
+            const writingRegEx = new RegExp('writing config files to', 'g');
+            const writingCount = (alignedOuput.match(writingRegEx) || []).length;
+            // There should be 0 occurrences - since it's not detached
+            expect(writingCount).to.equal(0);
+            const deletingRegEx = new RegExp('deleting tmp directory', 'g');
+            const deletingCount = (alignedOuput.match(deletingRegEx) || []).length;
+            expect(deletingCount).to.equal(0);
+            const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+            const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
+            expect(alignedOuput).to.not.have.string(babelRcWriteMessage);
+            expect(alignedOuput).to.not.have.string(mochaOptsWriteMessage);
           });
           it('should show results when there is exception on a test file', () => {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
@@ -524,9 +547,15 @@ describe('envs', function () {
       it('should build the component successfully', () => {
         // Changing the component to make sure we really run a rebuild and not taking the dist from the models
         helper.createFile(componentFolder, 'objRestSpread.js', fixtures.objectRestSpreadWithChange);
-        const output = helper.build('comp/my-comp');
+        const output = helper.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
+        const alignedOuput = Helper.alignOutput(output);
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
         expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
+        const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
+        expect(alignedOuput).to.have.string(`writing config files to ${tmpFolder}`);
+        const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+        expect(alignedOuput).to.have.string(babelRcWriteMessage);
+        expect(alignedOuput).to.have.string(`deleting tmp directory ${tmpFolder}`);
         const distFilePath = path.join(
           helper.localScopePath,
           'components',
@@ -542,11 +571,33 @@ describe('envs', function () {
       });
       describe('testing components', () => {
         describe('with success tests', () => {
+          let output;
+          let alignedOuput;
+          before(() => {
+            output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            alignedOuput = Helper.alignOutput(output);
+          });
           it('should show tests passed', () => {
-            const output = helper.testComponent('comp/my-comp');
             expect(output).to.have.string('tests passed');
             expect(output).to.have.string('total duration');
             expect(output).to.have.string('✔   group of passed tests');
+          });
+          it('should write config files to tmp directory', () => {
+            const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
+            const writingStr = `writing config files to ${tmpFolder}`;
+            // Since the output comes from console.log it's with \n also in windows
+            const splittedAlignedOutput = alignedOuput.split('\n');
+            // don't use regex because of windows problems
+            const writingCount = splittedAlignedOutput.filter(line => line === writingStr).length;
+            // There should be 2 occurrences - one for the compiler and one for the tester
+            expect(writingCount).to.equal(2);
+            const deletingStr = `deleting tmp directory ${tmpFolder}`;
+            const deletingCount = splittedAlignedOutput.filter(line => line === deletingStr).length;
+            expect(deletingCount).to.equal(2);
+            const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
+            const mochaOptsWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, 'mocha-config.opts'), true);
+            expect(alignedOuput).to.have.string(babelRcWriteMessage);
+            expect(alignedOuput).to.have.string(mochaOptsWriteMessage);
           });
         });
         describe('with failing tests', () => {

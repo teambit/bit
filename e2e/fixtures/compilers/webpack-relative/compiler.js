@@ -1,6 +1,6 @@
 const compiler = {
   init: ({ rawConfig, dynamicConfig, api }) => {
-
+    return {write: true}
   },
   getDynamicConfig: ({ rawConfig }) => {
   },

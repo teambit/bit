@@ -28,6 +28,7 @@ import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentBitJson from '../bit-json';
 import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
+import ConfigDir from './config-dir';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -224,13 +225,13 @@ export default class BitMap {
   /**
    * this is a temporarily method until ConfigDir class is merged into master
    */
-  static parseConfigDir(configDir: string, rootDir: string) {
+  static parseConfigDir(configDir: ConfigDir, rootDir: string) {
     const configDirResolved = {};
-    configDirResolved.compiler = format(configDir, {
-      [COMPONENT_DIR]: rootDir,
-      ENV_TYPE: COMPILER_ENV_TYPE
-    });
-    configDirResolved.tester = format(configDir, { [COMPONENT_DIR]: rootDir, ENV_TYPE: TESTER_ENV_TYPE });
+    configDirResolved.compiler = configDir.getResolved({
+      componentDir: rootDir,
+      envType: COMPILER_ENV_TYPE
+    }).linuxDirPath;
+    configDirResolved.tester = configDir.getResolved({ componentDir: rootDir, envType: TESTER_ENV_TYPE }).linuxDirPath;
     return configDirResolved;
   }
 
@@ -273,8 +274,8 @@ export default class BitMap {
     };
     R.values(this.components).forEach((component: ComponentMap) => {
       const configDir = component.configDir;
-      const trackDir = component.getTrackDir();
-      if (configDir && trackDir) {
+      const componentDir = component.getComponentDir();
+      if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
         const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
@@ -287,8 +288,8 @@ export default class BitMap {
         // R.values above might return array of something which is not string
         // Which will not be ok with the input of resolveIgnoreFilesAndDirs
         const toIgnore = BitMap.resolveIgnoreFilesAndDirs(
-          configDir,
-          trackDir,
+          configDir.linuxDirPath,
+          componentDir,
           // $FlowFixMe - see comment above
           compilerFiles,
           // $FlowFixMe - see comment above
@@ -424,7 +425,9 @@ export default class BitMap {
       if (compDir && pathIsInside(configDir, compDir)) {
         return true;
       }
-      const compConfigDir = component.configDir ? format(component.configDir, { ENV_TYPE: '' }) : null;
+      const compConfigDir = component.configDir
+        ? component.configDir.getResolved({ componentDir: compDir || '' }).getEnvTypeCleaned().linuxDirPath
+        : null;
       if (compConfigDir && pathIsInside(configDir, compConfigDir)) {
         return true;
       }
@@ -630,7 +633,7 @@ export default class BitMap {
     origin: ComponentOrigin,
     parent?: BitId,
     rootDir?: string,
-    configDir?: string,
+    configDir?: ConfigDir,
     trackDir?: PathOsBased,
     override: boolean,
     detachedCompiler: ?boolean,
@@ -690,7 +693,7 @@ export default class BitMap {
       this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
     }
     if (configDir) {
-      this.components[componentIdStr].configDir = pathNormalizeToLinux(configDir);
+      this.components[componentIdStr].configDir = configDir;
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
@@ -904,7 +907,7 @@ export default class BitMap {
         componentMap.exported = componentMap.id.hasScope();
       }
       delete componentMap.id;
-      components[id] = componentMap;
+      components[id] = componentMap.toPlainObject();
     });
 
     return components;

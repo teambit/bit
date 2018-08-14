@@ -68,6 +68,10 @@ type ExtensionPath = {
   componentPath: string
 };
 
+export type InitOptions = {
+  writeConfigFilesOnAction: ?boolean
+};
+
 // export type BaseExtensionProps = {
 //   ...InstanceSpecificProps,
 //   ...StaticProps
@@ -87,6 +91,7 @@ export default class BaseExtension {
   dynamicConfig: Object;
   context: ?Object;
   script: ?Function; // Store the required plugin
+  _initOptions: ?InitOptions; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
 
   constructor(extensionProps: BaseExtensionProps) {
@@ -103,15 +108,47 @@ export default class BaseExtension {
     this.api = extensionProps.api;
   }
 
+  get writeConfigFilesOnAction() {
+    if (!this.initOptions) {
+      return false;
+    }
+    return this.initOptions.writeConfigFilesOnAction;
+  }
+
+  get initOptions() {
+    return this._initOptions;
+  }
+
+  set initOptions(opts: ?Object) {
+    const defaultInitOpts = {
+      writeConfigFilesOnAction: false
+    };
+    if (!opts) {
+      this._initOptions = defaultInitOpts;
+      return;
+    }
+    const res = {};
+    if (opts.write) {
+      res.writeConfigFilesOnAction = true;
+    }
+    this._initOptions = res;
+  }
+
   /**
    * Run the extension's init function
    */
   async init(throws: boolean = false): Promise<boolean> {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
+      let initOptions = {};
       if (this.script && this.script.init && typeof this.script.init === 'function') {
-        await this.script.init({ rawConfig: this.rawConfig, dynamicConfig: this.dynamicConfig, api: this.api });
+        initOptions = await this.script.init({
+          rawConfig: this.rawConfig,
+          dynamicConfig: this.dynamicConfig,
+          api: this.api
+        });
       }
+      this.initOptions = initOptions;
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
@@ -178,6 +215,7 @@ export default class BaseExtension {
       this.loaded = baseProps.loaded;
       this.script = baseProps.script;
       this.dynamicConfig = baseProps.dynamicConfig;
+      this.init();
     }
   }
 
