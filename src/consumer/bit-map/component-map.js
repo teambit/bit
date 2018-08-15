@@ -237,6 +237,15 @@ export default class ComponentMap {
     }
     for (const file of this.files) {
       if (!file.relativePath.startsWith(this.trackDir)) {
+        // Make sure we are not getting to case where we have config dir with {COMPONENT_DIR} but there is no component dir
+        // This might happen in the following case:
+        // User add a folder to bit which create the track dir
+        // Then the user eject the config to that dir
+        // Then the user adding a new file to that component which is outside of the component dir
+        // This will remove the trackDir, so just before the remove we resolve it
+        if (this.configDir) {
+          this.configDir = this.configDir.getResolved({ componentDir: this.trackDir });
+        }
         this.trackDir = undefined;
         return;
       }
