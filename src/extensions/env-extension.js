@@ -118,7 +118,7 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - toObject');
     const baseObject: Object = super.toObject();
     const files = this.files;
-    const object = { files, ...baseObject };
+    const object = { ...baseObject, files };
     return object;
   }
 
