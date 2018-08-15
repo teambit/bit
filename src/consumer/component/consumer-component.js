@@ -1188,8 +1188,11 @@ export default class Component {
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
     if (componentMap.configDir) {
+      await componentMap.deleteConfigDirIfNotExists();
       const resolvedBaseConfigDir = componentMap.getBaseConfigDir();
-      configDir = path.join(consumerPath, resolvedBaseConfigDir);
+      if (resolvedBaseConfigDir) {
+        configDir = path.join(consumerPath, resolvedBaseConfigDir);
+      }
     }
     // Load the base entry from the root dir in map file in case it was imported using -path
     // Or created using bit create so we don't want all the path but only the relative one

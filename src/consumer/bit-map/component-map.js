@@ -271,6 +271,16 @@ export default class ComponentMap {
     this.configDir = new ConfigDir(val);
   }
 
+  async deleteConfigDirIfNotExists() {
+    const resolvedDir = this.getBaseConfigDir();
+    if (resolvedDir) {
+      const isExist = await fs.exists(resolvedDir);
+      if (!isExist) {
+        this.setConfigDir(null);
+      }
+    }
+  }
+
   /**
    * Get resolved base config dir (the dir where the bit.json is) after resolving the DSL
    */
