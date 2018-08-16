@@ -27,6 +27,7 @@ export type ImportOptions = {
   writeToPath?: string,
   writePackageJson: boolean, // default: true
   writeConfig: boolean, // default: false
+  configDir?: string,
   writeDists: boolean, // default: true
   override: boolean, // default: false
   installNpmPackages: boolean, // default: true
@@ -330,12 +331,16 @@ export default class ImportComponents {
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
+    if (this.options.writeConfig && !this.options.configDir) {
+      this.options.configDir = this.consumer.dirStructure.ejectedEnvsDirStructure;
+    }
     await writeComponents({
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,
       writeConfig: this.options.writeConfig,
+      configDir: this.options.configDir,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
