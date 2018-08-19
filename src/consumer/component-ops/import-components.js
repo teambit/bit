@@ -17,7 +17,6 @@ import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } 
 import Version from '../../version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import writeComponents from './write-components';
-import ConfigDir from '../bit-map/config-dir';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
