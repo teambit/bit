@@ -1,18 +1,18 @@
 // @flow
 import R from 'ramda';
-import format from 'string-format';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
   DEFAULT_EJECTED_ENVS_DIR_PATH
 } from '../../constants';
 import GeneralError from '../../error/general-error';
+import ConfigDir from '../bit-map/config-dir';
 
 export default class BitStructure {
   componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
-  constructor(componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory) {
+  constructor(componentsDefaultDirectory: ?string, dependenciesDirectory: ?string, ejectedEnvsDirectory: ?string) {
     this.componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
@@ -34,18 +34,8 @@ export default class BitStructure {
     return this.dependenciesDirectory;
   }
 
-  get ejectedEnvsDirStructure(): string {
-    return this.ejectedEnvsDirectory;
-  }
-
-  /**
-   * Return only the static parts of the ejectedEnvs dir
-   * Used for adding it to the ignore list
-   */
-  get staticEjectedEnvsDirStructure(): string {
-    const ejectedEnvsDirectory = this.ejectedEnvsDirectory;
-    const staticEjectedEnvsDirectory = format(ejectedEnvsDirectory, { envType: '' });
-    return staticEjectedEnvsDirectory;
+  get ejectedEnvsDirStructure(): ConfigDir {
+    return new ConfigDir(this.ejectedEnvsDirectory);
   }
 
   get componentsDirStructure(): Object {
