@@ -33,7 +33,11 @@ export default class Import extends Command {
     ['O', 'override', 'override local changes'],
     ['v', 'verbose', 'showing verbose output for inspection'],
     ['', 'ignore-dist', 'write dist files (when exist) to the configured directory'],
-    ['', 'conf', 'write the configuration file (bit.json)'],
+    [
+      '',
+      'conf [path]',
+      'write the configuration file (bit.json) and the envs configuration files (use --conf without path to write to the default dir)'
+    ],
     [
       '',
       'skip-npm-install',
@@ -66,7 +70,7 @@ export default class Import extends Command {
       override = false,
       verbose = false,
       ignoreDist = false,
-      conf = false,
+      conf,
       skipNpmInstall = false,
       ignorePackageJson = false,
       merge
@@ -81,7 +85,7 @@ export default class Import extends Command {
       override?: boolean,
       verbose?: boolean,
       ignoreDist?: boolean,
-      conf?: boolean,
+      conf?: string,
       skipNpmInstall?: boolean,
       ignorePackageJson?: boolean,
       merge?: MergeStrategy
@@ -121,10 +125,14 @@ export default class Import extends Command {
       withEnvironments: environment,
       override,
       writeDists: !ignoreDist,
-      writeConfig: conf,
+      writeConfig: !!conf,
       installNpmPackages: !skipNpmInstall,
       writePackageJson: !ignorePackageJson
     };
+    // From the CLI you can pass the conf as path or just --conf (which will later translate to the default eject conf folder)
+    if (typeof conf === 'string') {
+      importOptions.configDir = conf;
+    }
     return importAction(environmentOptions, importOptions, packageManagerArgs).then(importResults =>
       R.assoc('displayDependencies', displayDependencies, importResults)
     );
