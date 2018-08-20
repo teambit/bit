@@ -918,9 +918,18 @@ export default class Consumer {
     if (!force) {
       await Promise.all(
         resolvedIDs.map(async (id) => {
-          const componentStatus = await this.getComponentStatusById(id);
-          if (componentStatus.modified) modifiedComponents.push(id);
-          else regularComponents.push(id);
+          try {
+            const componentStatus = await this.getComponentStatusById(id);
+            if (componentStatus.modified) modifiedComponents.push(id);
+            else regularComponents.push(id);
+          } catch (err) {
+            // if a component has an error, such as, missing main file, we do want to allow removing that component
+            if (Component.isComponentInvalidByErrorType(err)) {
+              regularComponents.push(id);
+            } else {
+              throw err;
+            }
+          }
         })
       );
     }

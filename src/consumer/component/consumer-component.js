@@ -60,6 +60,7 @@ import Version from '../../version';
 import InjectNonEjected from './exceptions/inject-non-ejected';
 import ConfigDir from '../bit-map/config-dir';
 import buildComponent from '../component-ops/build-component';
+import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-not-found';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -1005,6 +1006,16 @@ export default class Component {
     if (!sharedStart || !sharedStart.includes(pathSep)) return;
     const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
     this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
+  }
+
+  static isComponentInvalidByErrorType(err: Error): boolean {
+    const invalidComponentErrors = [
+      MainFileRemoved,
+      MissingFilesFromComponent,
+      ComponentNotFoundInPath,
+      ExtensionFileNotFound
+    ];
+    return invalidComponentErrors.some(errorType => err instanceof errorType);
   }
 
   async toComponentWithDependencies(consumer: Consumer): Promise<ComponentWithDependencies> {
