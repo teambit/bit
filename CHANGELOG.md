@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.2 - 2018-08-20]
+
 - change `--conf` on `bit import` to be a path to the config dir
 
-## [13.0.5-dev.1]
+## [13.0.5-dev.1 - 2018-08-14]
 
 - support Bit components dependencies for compilers and testers
 - resolve dependencies of environments configuration files
