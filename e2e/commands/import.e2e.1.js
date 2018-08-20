@@ -983,6 +983,20 @@ describe('bit import', function () {
         expect(localConsumerFiles).to.include(expectedLocation);
       });
     });
+    describe('when imported component has lower dependencies versions than local', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-type');
+        helper.importComponent('utils/is-string');
+        helper.commitComponent('utils/is-type --force'); // it tags also is-string to 0.0.2
+        output = helper.importComponent('bar/foo'); // import bar/foo@0.0.1 with is-string@0.0.1 and is-type@0.0.1 as dependencies
+      });
+      it('should not show an error saying failed finding in the dependencies array', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+    });
   });
 
   describe('components with auto-resolve dependencies using css', () => {
