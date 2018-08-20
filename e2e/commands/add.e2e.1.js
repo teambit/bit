@@ -12,6 +12,7 @@ import {
   MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
+import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -1096,6 +1097,24 @@ describe('bit add command', function () {
       expect(componentMap.files[0].relativePath).to.equal('Bar/foo.js');
       expect(componentMap.files[0].relativePath).to.not.equal('bar/foo.js');
       expect(componentMap.mainFile).to.equal('Bar/foo.js');
+    });
+  });
+  describe('add the main file when it was removed before', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo-main.js');
+      helper.addComponentWithOptions('bar', { m: 'foo-main.js', i: 'bar/foo' });
+      helper.deleteFile('bar/foo-main.js');
+      const status = helper.status();
+      expect(status).to.have.string(statusInvalidComponentsMsg);
+      expect(status).to.have.string('main-file was removed');
+      helper.createFile('bar', 'foo-main2.js');
+      output = helper.addComponentWithOptions('bar/foo-main2.js', { m: 'bar/foo-main2.js', i: 'bar/foo' });
+    });
+    it('should add the main file successfully', () => {
+      expect(output).to.have.string('added bar/foo-main2.js');
     });
   });
 });
