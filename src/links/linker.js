@@ -77,18 +77,12 @@ export async function linkComponents(
   writtenDependencies: ?(Component[]),
   consumer: Consumer,
   createNpmLinkFiles: boolean,
-  writePackageJson: boolean,
-  configDir?: string
+  writePackageJson: boolean
 ) {
   const allComponents = writtenDependencies
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
     : writtenComponents;
-  await linkGenerator.writeComponentsDependenciesLinks(
-    componentsWithDependencies,
-    consumer,
-    createNpmLinkFiles,
-    Boolean(configDir)
-  );
+  await linkGenerator.writeComponentsDependenciesLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
 
   // no need for entry-point file if package.json is written.
   if (writtenDependencies) {

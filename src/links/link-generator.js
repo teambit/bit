@@ -331,22 +331,16 @@ async function getComponentLinks({
   component,
   componentMap,
   dependencies,
-  createNpmLinkFiles,
-  writeEnvironmentsDependenciesLinks
+  createNpmLinkFiles
 }: {
   consumer: Consumer,
   component: Component,
   componentMap: ComponentMap,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-  createNpmLinkFiles: boolean,
-  writeEnvironmentsDependenciesLinks: boolean
+  createNpmLinkFiles: boolean
 }): Promise<OutputFileParams[]> {
-  const directDependencies: Dependency[] = writeEnvironmentsDependenciesLinks
-    ? component.getAllDependencies()
-    : component.getAllNonEnvsDependencies();
-  const flattenedDependencies: BitIds = writeEnvironmentsDependenciesLinks
-    ? component.getAllFlattenedDependencies()
-    : component.getAllNonEnvsFlattenedDependencies();
+  const directDependencies: Dependency[] = component.getAllNonEnvsDependencies();
+  const flattenedDependencies: BitIds = component.getAllNonEnvsFlattenedDependencies();
   if (!directDependencies || !directDependencies.length) return [];
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
@@ -438,8 +432,7 @@ function groupLinks(
 async function writeComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: Consumer,
-  createNpmLinkFiles: boolean,
-  writeEnvironmentsDependenciesLinks: boolean = false
+  createNpmLinkFiles: boolean
 ): Promise<any> {
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
     const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
@@ -460,8 +453,7 @@ async function writeComponentsDependenciesLinks(
       component: componentWithDeps.component,
       componentMap,
       dependencies: componentWithDeps.allDependencies,
-      createNpmLinkFiles,
-      writeEnvironmentsDependenciesLinks
+      createNpmLinkFiles
     });
 
     if (componentWithDeps.component.dependenciesSavedAsComponents) {
@@ -476,8 +468,7 @@ async function writeComponentsDependenciesLinks(
             component: dep,
             componentMap: depComponentMap,
             dependencies: componentWithDeps.allDependencies,
-            createNpmLinkFiles,
-            writeEnvironmentsDependenciesLinks
+            createNpmLinkFiles
           });
         })
       );
