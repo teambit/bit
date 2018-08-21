@@ -31,8 +31,12 @@ export default (async function injectConf(
 
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = configDir.getResolved({ componentDir });
-  const deleteCompilerFilesP = component.compiler ? component.compiler.removeFilesFromFs() : Promise.resolve('');
-  const deleteTesterFilesP = component.tester ? component.tester.removeFilesFromFs() : Promise.resolve('');
+  const deleteCompilerFilesP = component.compiler
+    ? component.compiler.removeFilesFromFs(component.compilerDependencies)
+    : Promise.resolve('');
+  const deleteTesterFilesP = component.tester
+    ? component.tester.removeFilesFromFs(component.testerDependencies)
+    : Promise.resolve('');
 
   await Promise.all([deleteCompilerFilesP, deleteTesterFilesP]);
 
