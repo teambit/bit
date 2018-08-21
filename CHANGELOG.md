@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support components with binary files (or non-supported extensions) as the only files
+- allow removing a component when it is invalid
+
 ## [13.0.5-dev.2 - 2018-08-20]
 
 - change `--conf` on `bit import` to be a path to the config dir

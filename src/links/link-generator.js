@@ -156,7 +156,8 @@ function getLinkContent(
   }
 
   if (!template) {
-    throw new GeneralError(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+    logger.debug(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+    return '';
   }
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
