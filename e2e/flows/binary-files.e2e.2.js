@@ -1,5 +1,6 @@
 import path from 'path';
 import fs from 'fs-extra';
+import glob from 'glob';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -61,10 +62,13 @@ describe('binary files', function () {
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
-    it('should not create an index.png file in node_modules/@bit', () => {
-      expect(
-        path.join(helper.localScopePath, 'node_modules/@bit', `${helper.remoteScope}.bar.foo`, 'index.png')
-      ).to.not.be.a.path();
+    it('should not create any other file in node_modules/@bit other than the binary file itself', () => {
+      const files = glob.sync(path.normalize('**/*'), {
+        cwd: path.join(helper.localScopePath, 'node_modules/@bit'),
+        nodir: true
+      });
+      expect(files).to.be.lengthOf(1);
+      expect(files[0]).to.have.string('png_fixture.png');
     });
     it('should not install a package "undefined" ', () => {
       expect(path.join(helper.localScopePath, 'node_modules/undefined')).to.not.be.a.path;
