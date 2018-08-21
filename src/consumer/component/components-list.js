@@ -193,8 +193,14 @@ export default class ComponentsList {
   async listExportPendingComponentsIds(): Promise<BitIds> {
     const idsFromObjects = await this.idsFromObjects();
     // $FlowFixMe BitIds is an array type
-    const ids = await filterAsync(idsFromObjects, (componentId) => {
-      return this.consumer.getComponentStatusById(componentId).then(status => status.staged);
+    const ids = await filterAsync(idsFromObjects, async (componentId) => {
+      try {
+        const status = await this.consumer.getComponentStatusById(componentId);
+        return status.staged;
+      } catch (err) {
+        // if a component has an error, such as, missing main file, we don't want the status to break
+        if (!Component.isComponentInvalidByErrorType(err)) throw err;
+      }
     });
     return BitIds.fromArray(ids);
   }

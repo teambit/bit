@@ -410,9 +410,8 @@ describe('bit remove command', function () {
       helper.addComponentWithOptions('bar', { m: 'foo-main.js', i: 'bar/foo' });
       helper.tagAllWithoutMessage();
       helper.deleteFile('bar/foo-main.js');
-      // @todo: we have a bug here. bit-status breaks when a component is invalid after tagging.
-      // const status = helper.status();
-      // expect(status).to.have.string('main-file was removed');
+      const status = helper.status();
+      expect(status).to.have.string('main-file was removed');
       output = helper.removeComponent('bar/foo -s');
     });
     it('should remove the component successfully', () => {
