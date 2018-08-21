@@ -125,7 +125,10 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
   const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
   const fileContent = getLinkContent(destRelative);
-  fs.outputFileSync(dest, fileContent);
+  if (fileContent) {
+    // otherwise, the file type is not supported, no need to write anything
+    fs.outputFileSync(dest, fileContent);
+  }
 }
 
 function writeMissingLinks(consumer: Consumer, component: Component, componentMap: ComponentMap): LinkDetail[] {
