@@ -1,6 +1,7 @@
 /** @flow */
 
 import R from 'ramda';
+import path from 'path';
 import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
@@ -23,6 +24,7 @@ import ConsumerComponent from '../consumer/component';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
 import logger from '../logger/logger';
+import { Dependencies } from '../consumer/component/dependencies';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -181,10 +183,14 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Delete env files from file system
    */
-  async removeFilesFromFs(): Promise<boolean> {
+  async removeFilesFromFs(dependencies: Dependencies): Promise<boolean> {
     Analytics.addBreadCrumb('env-extension', 'removeFilesFromFs');
     const filePaths = this.files.map(file => file.path);
-    return removeFilesAndEmptyDirsRecursively(filePaths);
+    const relativeSourcePaths = dependencies.getSourcesPaths();
+    if (!this.context) throw new Error('env-extension.removeFilesFromFs, this.context is missing');
+    const componentDir = this.context.componentDir;
+    const linkPaths = relativeSourcePaths.map(relativePath => path.join(componentDir, relativePath));
+    return removeFilesAndEmptyDirsRecursively([...filePaths, ...linkPaths]);
   }
 
   async reload(scopePath: string, context?: Object): Promise<void> {

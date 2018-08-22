@@ -186,6 +186,9 @@ describe('environments with dependencies', function () {
           });
         });
         describe('importing with --conf flag', () => {
+          const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+          const linkFile = path.join(componentDir, 'base.config.js');
+          const configurationFile = path.join(componentDir, 'dev.config.js');
           before(() => {
             helper.getClonedLocalScope(scopeAfterImport);
             helper.importComponent('bar/foo --conf');
@@ -195,8 +198,16 @@ describe('environments with dependencies', function () {
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
           it('should generate the links for environment component', () => {
-            const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
             expect(linkFile).to.be.a.file();
+          });
+          describe('injecting the configuration back', () => {
+            before(() => {
+              helper.injectConf('bar/foo');
+            });
+            it('should remove not only the configuration files but also the generated links', () => {
+              expect(configurationFile).to.not.be.a.path();
+              expect(linkFile).to.not.be.a.path();
+            });
           });
         });
         describe('importing with --conf [path] flag for saving the configuration files in another directory', () => {
