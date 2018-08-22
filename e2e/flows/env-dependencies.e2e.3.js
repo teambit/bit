@@ -199,6 +199,24 @@ describe('environments with dependencies', function () {
             expect(linkFile).to.be.a.file();
           });
         });
+        describe('importing with --conf [path] flag for saving the configuration files in another directory', () => {
+          before(() => {
+            helper.getClonedLocalScope(scopeAfterImport);
+            helper.importComponent('bar/foo --conf my-config-dir');
+          });
+          it('should not show the component as modified', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          });
+          it('should generate the links for environment component', () => {
+            const linkFile = path.join(helper.localScopePath, 'my-config-dir/base.config.js');
+            expect(linkFile).to.be.a.file();
+          });
+          it('should not generate an extra link in the components dir', () => {
+            const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
+            expect(linkFile).to.not.be.a.path();
+          });
+        });
       });
     });
   });
