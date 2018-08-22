@@ -187,7 +187,7 @@ const _runBuild = async ({
     throw new GeneralError('compiler was not found, nothing to build');
   }
 
-  let rootDistFolder = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
+  let rootDistDir = path.join(componentRoot, DEFAULT_DIST_DIRNAME);
   const consumerPath = consumer ? consumer.getPath() : '';
   const files = component.files.map(file => file.clone());
   let tmpFolderFullPath;
@@ -195,7 +195,7 @@ const _runBuild = async ({
   let componentDir = '';
   if (componentMap) {
     // $FlowFixMe
-    rootDistFolder = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+    rootDistDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
     if (consumerPath && componentMap && componentMap.getComponentDir()) {
       componentDir = componentMap.getComponentDir() || '';
     }
@@ -208,7 +208,7 @@ const _runBuild = async ({
 
       const context: Object = {
         componentObject: component.toObject(),
-        rootDistFolder,
+        rootDistDir,
         componentDir
       };
 
@@ -256,7 +256,7 @@ const _runBuild = async ({
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
       }
-      return compiler.oldAction(files, rootDistFolder, context);
+      return compiler.oldAction(files, rootDistDir, context);
     })
     .catch((e) => {
       if (tmpFolderFullPath) {
