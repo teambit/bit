@@ -11,6 +11,23 @@ const compiler = {
     logger = api.getLogger();
     return { write: true };
   },
+  getSchema: () => {
+    const schema = {
+      "$id": "http://example.com/schemas/schema.json",
+      "type": "object",
+      "properties": {
+        "valToDynamic": {
+          "type": "string",
+          "description": "prop which will be changed to dynamic val"
+        },
+        "bablercPath": {
+          "type": "string",
+          "description": "path to the .babelrc file"
+        }
+      }
+    };
+    return schema;
+  },
   getDynamicConfig: ({ rawConfig }) => {
     const dynamicConfig = Object.assign({}, rawConfig);
     if (dynamicConfig.valToDynamic){
