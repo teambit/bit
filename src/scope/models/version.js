@@ -206,22 +206,36 @@ export default class Version extends BitObject {
     );
   }
 
-  getAllFlattenedDependencies() {
-    return [
+  getAllFlattenedDependencies(): BitIds {
+    return BitIds.fromArray([
       ...this.flattenedDependencies,
       ...this.flattenedDevDependencies,
       ...this.flattenedCompilerDependencies,
       ...this.flattenedTesterDependencies
-    ];
+    ]);
   }
 
-  getAllDependencies() {
+  getAllDependencies(): Dependency[] {
     return [
       ...this.dependencies.dependencies,
       ...this.devDependencies.dependencies,
       ...this.compilerDependencies.dependencies,
       ...this.testerDependencies.dependencies
     ];
+  }
+
+  updateFlattenedDependency(currentId: BitId, newId: BitId) {
+    const getUpdated = (flattenedDependencies: BitIds): BitIds => {
+      const updatedIds = flattenedDependencies.map((depId) => {
+        if (depId.isEqual(currentId)) return newId;
+        return depId;
+      });
+      return BitIds.fromArray(updatedIds);
+    };
+    this.flattenedDependencies = getUpdated(this.flattenedDependencies);
+    this.flattenedDevDependencies = getUpdated(this.flattenedDevDependencies);
+    this.flattenedCompilerDependencies = getUpdated(this.flattenedCompilerDependencies);
+    this.flattenedTesterDependencies = getUpdated(this.flattenedTesterDependencies);
   }
 
   refs(): Ref[] {

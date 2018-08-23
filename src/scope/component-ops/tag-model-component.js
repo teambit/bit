@@ -23,6 +23,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
+import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
@@ -192,7 +193,7 @@ export default (async function tagModelComponent({
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
   const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
-  const autoTagComponents = await scope.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
+  const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
@@ -336,7 +337,7 @@ export default (async function tagModelComponent({
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
   const taggedIds = taggedComponents.map(c => c.id);
-  const autoTaggedComponents = await scope.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
+  const autoTaggedComponents = await bumpDependenciesVersions(scope, autoTagCandidates, BitIds.fromArray(taggedIds));
   validateOriginallySharedDir(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedComponents };
