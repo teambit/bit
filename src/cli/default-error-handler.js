@@ -84,7 +84,7 @@ import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir'
 import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR } from '../constants';
+import { COMPONENT_DIR, FILE_PROTOCOL_PREFIX, SSH_PROTOCOL_PREFIX, BIT_PROTOCOL_PREFIX } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
@@ -94,7 +94,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     RemoteUndefined,
     () =>
       chalk.red(
-        'error: remote url must be defined. please use: `ssh://`, `file://` or `bit://` protocols to define remote access'
+        `error: remote url must be defined. please use: \`${SSH_PROTOCOL_PREFIX}\`, \`${FILE_PROTOCOL_PREFIX}\` or \`${BIT_PROTOCOL_PREFIX}\` protocols to define remote access`
       )
   ],
   [
@@ -128,7 +128,8 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   ],
   [
     ProtocolNotSupported,
-    () => 'error: remote scope protocol is not supported, please use: `ssh://`, `file://` or `bit://`'
+    () =>
+      `error: remote scope protocol is not supported, please use: \`${SSH_PROTOCOL_PREFIX}\`, \`${FILE_PROTOCOL_PREFIX}\` or \`${BIT_PROTOCOL_PREFIX}\``
   ],
   [RemoteScopeNotFound, err => `error: remote scope "${chalk.bold(err.name)}" was not found.`],
   [InvalidBitId, () => 'error: component ID is invalid, please use the following format: [scope]/<name>'],

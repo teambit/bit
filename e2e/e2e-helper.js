@@ -10,7 +10,7 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, FILE_PROTOCOL_PREFIX } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 
@@ -215,11 +215,11 @@ export default class Helper {
     if (process.env.npm_config_with_ssh) {
       return this.runCmd(`bit remote add ssh://\`whoami\`@127.0.0.1:/${remoteScopePath}`, localScopePath);
     }
-    return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
+    return this.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${remoteScopePath}`, localScopePath);
   }
 
   addRemoteEnvironment() {
-    return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
+    return this.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${this.envScopePath}`, this.localScopePath);
   }
 
   reInitRemoteScope() {
@@ -591,7 +591,7 @@ export default class Helper {
 
     fs.emptyDirSync(this.envScopePath);
     this.runCmd('bit init --bare', this.envScopePath);
-    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${this.envScopePath}`, tempScopePath);
     this.runCmd(`bit export ${this.envScope} compilers/babel`, tempScopePath);
     this.addRemoteScope(this.envScopePath);
     this.compilerCreated = true;

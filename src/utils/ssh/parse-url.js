@@ -1,5 +1,6 @@
 /** @flow */
 import isNumber from '../number/is-number';
+import { BIT_PROTOCOL_PREFIX, SSH_PROTOCOL_PREFIX } from '../../constants';
 
 export type SSHUrl = {
   username: string,
@@ -26,8 +27,8 @@ export default function parseSSHUrl(str: string): SSHUrl {
   let user = 'root';
   let port = 22;
   let path = null;
-  if (str.startsWith('ssh://')) str = str.replace('ssh://', '');
-  if (str.startsWith('bit://')) str = str.replace('ssh://', '');
+  if (str.startsWith(SSH_PROTOCOL_PREFIX)) str = str.replace(SSH_PROTOCOL_PREFIX, '');
+  if (str.startsWith(BIT_PROTOCOL_PREFIX)) str = str.replace(SSH_PROTOCOL_PREFIX, '');
 
   if (str.indexOf('@') !== -1) {
     user = str.slice(0, str.indexOf('@'));

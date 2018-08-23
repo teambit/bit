@@ -4,6 +4,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import { FILE_PROTOCOL_PREFIX } from '../../src/constants';
 
 const helper = new Helper();
 const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
@@ -254,11 +255,11 @@ describe('javascript-hooks', function () {
         fs.writeFileSync(fooImplPath, fooComponentFixture);
         helper.runCmd('bit commit foo commit-msg'); // run the test as well
         helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${helper.remoteScopePath}`);
         helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
         fs.emptyDirSync(helper.localScopePath); // a new local scope
         helper.runCmd('bit init');
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${helper.remoteScopePath}`);
         helper.runCmd(`bit import @${helper.remoteScope}/global/foo`);
       });
       it('should create links in the component level', () => {
@@ -278,7 +279,7 @@ describe('javascript-hooks', function () {
         createFile('foo');
         helper.commitComponent('foo');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${helper.remoteScopePath}`);
         helper.exportComponent('foo');
 
         const barComponentFixture =
@@ -364,13 +365,13 @@ describe('javascript-hooks', function () {
         fs.writeFileSync(fooImplPath, fooComponentV2);
         helper.runCmd('bit commit foo commit-msg2');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${helper.remoteScopePath}`);
         helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
       });
       const prepareCleanLocalEnv = () => {
         fs.emptyDirSync(helper.localScopePath); // a new local scope
         helper.runCmd('bit init');
-        helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
+        helper.runCmd(`bit remote add ${FILE_PROTOCOL_PREFIX}${helper.remoteScopePath}`);
       };
       describe('importing without mentioning the version', () => {
         before(() => {

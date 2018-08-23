@@ -2,12 +2,12 @@
 import R from 'ramda';
 import Scope from '../../scope/scope';
 import { getSync } from '../../api/consumer/lib/global-config';
-import { DEFAULT_HUB_DOMAIN, CFG_HUB_DOMAIN_KEY } from '../../constants';
+import { DEFAULT_HUB_DOMAIN, CFG_HUB_DOMAIN_KEY, SSH_PROTOCOL_PREFIX } from '../../constants';
 
 const hubDomain = getSync(CFG_HUB_DOMAIN_KEY) || DEFAULT_HUB_DOMAIN;
 
 const hubResolver = (scopeName) => {
-  const hubPrefix = `ssh://bit@${hubDomain}:`;
+  const hubPrefix = `${SSH_PROTOCOL_PREFIX}bit@${hubDomain}:`;
   return Promise.resolve(hubPrefix + scopeName);
 };
 

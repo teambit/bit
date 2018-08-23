@@ -3,6 +3,7 @@ import { expect } from 'chai';
 import Version from '../../../src/scope/models/version';
 import versionFixture from '../../../fixtures/version-model-object.json';
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
+import { SSH_PROTOCOL_PREFIX } from '../../constants';
 
 const getVersionWithDepsFixture = () => {
   return Version.parse(JSON.stringify(R.clone(versionWithDepsFixture)));
@@ -224,7 +225,7 @@ describe('Version', () => {
       expect(validateFunc).to.throw('expected version of "lodash" to be string, got number');
     });
     it('should not throw for a package version which is a git url', () => {
-      version.packageDependencies = { userLib: 'git+ssh://git@git.bit.io' };
+      version.packageDependencies = { userLib: `git+${SSH_PROTOCOL_PREFIX}git@git.bit.io` };
       expect(validateFunc).to.not.throw();
     });
     it('should throw for invalid packageDependencies type', () => {
