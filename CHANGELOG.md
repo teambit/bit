@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - fix `bit status` to not throw an exception for invalid components
 - support components with binary files (or non-supported extensions) as the only files
 - allow removing a component when it is invalid
+- add `getSchema` to extension life cycle
+- validate extension's rawConfig against extension schema
 
 ## [13.0.5-dev.2 - 2018-08-20]
 

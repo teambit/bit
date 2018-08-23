@@ -85,6 +85,7 @@ import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import { COMPONENT_DIR } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
+import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -401,7 +402,11 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     err =>
       `error: bit failed to load ${err.name} with the following exception:\n${getExternalErrorMessage(
         err.originalError
-      )}.\n${err.originalError.stack}`
+      )}.\n${err.printStack ? err.originalError.stack : ''}`
+  ],
+  [
+    ExtensionSchemaError,
+    err => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`
   ],
   [
     ExtensionInitError,

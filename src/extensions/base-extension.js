@@ -3,6 +3,7 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
+import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
@@ -15,6 +16,9 @@ import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ExtensionLoadError from './exceptions/extension-load-error';
 import Environment from '../environment';
+import ExtensionSchemaError from './exceptions/extension-schema-error';
+
+const ajv = new Ajv();
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -46,6 +50,7 @@ type StaticProps = BaseArgs & {
   dynamicConfig: Object,
   filePath: string,
   rootDir?: ?string,
+  schema?: ?Object,
   script?: Function,
   disabled: boolean,
   loaded: boolean,
@@ -87,6 +92,7 @@ export default class BaseExtension {
   filePath: string;
   rootDir: string;
   rawConfig: Object;
+  schema: ?Object;
   options: Object;
   dynamicConfig: Object;
   context: ?Object;
@@ -97,6 +103,7 @@ export default class BaseExtension {
   constructor(extensionProps: BaseExtensionProps) {
     this.name = extensionProps.name;
     this.rawConfig = extensionProps.rawConfig;
+    this.schema = extensionProps.schema;
     this.options = extensionProps.options;
     this.dynamicConfig = extensionProps.dynamicConfig || extensionProps.rawConfig;
     this.context = extensionProps.context;
@@ -379,6 +386,13 @@ export default class BaseExtension {
       // $FlowFixMe
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
+      if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {
+        extensionProps.schema = await extensionProps.script.getSchema();
+        const valid = ajv.validate(extensionProps.schema, rawConfig);
+        if (!valid) {
+          throw new ExtensionSchemaError(name, ajv.errorsText());
+        }
+      }
       if (extensionProps.script.getDynamicConfig && typeof extensionProps.script.getDynamicConfig === 'function') {
         extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig({ rawConfig });
       }
@@ -393,7 +407,11 @@ export default class BaseExtension {
       logger.error(err);
       extensionProps.loaded = false;
       if (throws) {
-        throw new ExtensionLoadError(err, extensionProps.name);
+        let printStack = true;
+        if (err instanceof ExtensionSchemaError) {
+          printStack = false;
+        }
+        throw new ExtensionLoadError(err, extensionProps.name, printStack);
       }
       return extensionProps;
     }

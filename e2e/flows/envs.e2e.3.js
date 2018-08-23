@@ -15,6 +15,8 @@ import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';
+import ExtensionSchemaError from '../../src/extensions/exceptions/extension-schema-error';
+import ExtensionLoadError from '../../src/extensions/exceptions/extension-load-error';
 
 chai.use(require('chai-fs'));
 chai.use(require('chai-string'));
@@ -492,7 +494,7 @@ describe('envs', function () {
           expect(statusOutput).to.have.string('modified components');
           expect(statusOutput).to.have.string('comp/my-comp ... ok');
         });
-        it('should show the component as modified after changning tester raw config', () => {
+        it('should show the component as modified after changing tester raw config', () => {
           helper.addToRawConfigOfEnvInBitJson(undefined, 'a', 'c', TESTER_ENV_TYPE);
           const statusOutput = helper.status();
           expect(statusOutput).to.have.string('modified components');
@@ -513,6 +515,15 @@ describe('envs', function () {
           expect(diff).to.have.string('+++ Tester configuration (0.0.1 modified)');
           expect(diff).to.have.string('- "a": "b",');
           expect(diff).to.have.string('+ "a": "c",');
+        });
+        it('should show error if the raw config is not valid', () => {
+          helper.addToRawConfigOfEnvInBitJson(undefined, 'bablercPath', 5, COMPILER_ENV_TYPE);
+          const fullCompilerId = `${helper.envScope}/${compilerId}@0.0.1`;
+          const schemaRawError = 'data.bablercPath should be string';
+          const schemaError = new ExtensionSchemaError(fullCompilerId, schemaRawError);
+          const loadError = new ExtensionLoadError(schemaError, fullCompilerId, false);
+          const statusFunc = () => helper.status();
+          helper.expectToThrow(statusFunc, loadError);
         });
       });
     });
