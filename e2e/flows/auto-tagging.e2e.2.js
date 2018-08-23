@@ -187,8 +187,7 @@ describe('auto tagging functionality', function () {
     });
   });
 
-  // todo: this was implemented in https://github.com/teambit/bit/pull/603, remove the 'skip' once merging it.
-  describe.skip('with dependencies of dependencies', () => {
+  describe('with dependencies of dependencies', () => {
     /**
      * Directory structure of the author
      * bar/foo.js
@@ -200,9 +199,11 @@ describe('auto tagging functionality', function () {
      *
      * We change the dependency is-type implementation. When committing this change, we expect all dependent of is-type
      * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
-     * In this case, is-string should be updated to include is-type with v2.
+     * In this case, is-string (so-called "dependent") should be updated to include is-type with v2.
+     * Also, bar/foo (so-called "dependent of dependent") should be updated to include is-string and is-type with v2.
      */
     describe('as AUTHORED', () => {
+      let commitOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -218,22 +219,42 @@ describe('auto tagging functionality', function () {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
 
-        const commitOutput = helper.commitComponent('utils/is-type');
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('utils/is-string');
-        expect(commitOutput).to.have.string('bar/foo');
-        // notice how is-string and bar-foo are not manually committed again.
-        helper.exportAllComponents();
-
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        commitOutput = helper.commitComponent('utils/is-type');
       });
-      it('should use the updated dependencies and print the results from the latest versions', () => {
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
-        const result = helper.runCmd('node app.js');
-        // notice the "v2" (!)
-        expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
+      it('should auto tag the dependencies and the nested dependencies', () => {
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('utils/is-string@0.0.2');
+        expect(commitOutput).to.have.string('bar/foo@0.0.2');
+      });
+      it('should update the dependencies and the flattenedDependencies of the dependent with the new versions', () => {
+        const barFoo = helper.catComponent('utils/is-string@latest');
+        expect(barFoo.dependencies[0].id.name).to.equal('utils/is-type');
+        expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.2' });
+      });
+      it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
+        const barFoo = helper.catComponent('bar/foo@latest');
+        expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
+        expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.2' });
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.2' });
+      });
+      describe('importing the component to another scope', () => {
+        before(() => {
+          helper.exportAllComponents();
+
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should use the updated dependencies and print the results from the latest versions', () => {
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          const result = helper.runCmd('node app.js');
+          // notice the "v2" (!)
+          expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
+        });
       });
     });
     describe('as IMPORTED', () => {
@@ -252,6 +273,7 @@ describe('auto tagging functionality', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
+        helper.importComponent('utils/is-string');
         helper.importComponent('utils/is-type');
 
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
