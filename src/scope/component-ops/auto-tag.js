@@ -11,6 +11,27 @@ import Component from '../../consumer/component';
 
 const removeNils = R.reject(R.isNil);
 
+/**
+ * bumping dependencies version, so-called "auto tagging" is needed when the currently tagged
+ * component has dependents. these dependents should have the updated version of the currently
+ * tagged component.
+ *
+ * to successfully accomplish the auto-tag, we do it with two rounds.
+ * it's easier to understand why another round of updateComponents() is needed by an example.
+ * say we have 3 components, bar/foo@0.0.1 depends on utils/is-string, utils/is-string@0.0.1 depends on
+ * utils/is-type, utils/is-type@0.0.1 with no dependencies.
+ * when utils/is-type is tagged, utils/is-string and bar/foo are updated in the first updateComponents() round.
+ * by looking at bar/foo dependencies, we find out that its utils/is-type dependency was updated to 0.0.2
+ * however, its utils/is-string dependency stays with 0.0.1, because utils/is-string was never part of
+ * committedComponents array.
+ * this second round of updateComponents() makes sure that the auto-tagged components will be updated as well.
+ *
+ * another case when round2 is needed is when the tagged component has a cycle dependency.
+ * for example, A => B => C => A, and C is now tagged. the component C has the components A and B
+ * in its flattenedDependencies.
+ * Round1 updates A and B. It changes the C dependency to be 0.0.2 and bump their version to 0.0.2.
+ * Round2 updates the dependencies and flattenedDependencies of C to have A and B with version 0.0.2.
+ */
 export async function bumpDependenciesVersions(
   scope: Scope,
   potentialComponents: BitIds,
@@ -29,18 +50,9 @@ export async function bumpDependenciesVersions(
     graph
   );
   if (updatedComponents.length) {
-    // it's easier to understand why another round of updateComponents() is needed by an example.
-    // say we have 3 components, bar/foo@0.0.1 depends on utils/is-string, utils/is-string@0.0.1 depends on
-    // utils/is-type, utils/is-type@0.0.1 with no dependencies.
-    // when utils/is-type is tagged, utils/is-string and bar/foo are updated in the first updateComponents() round.
-    // by looking at bar/foo dependencies, we find out that its utils/is-type dependency was updated to 0.0.2
-    // however, its utils/is-string dependency stays with 0.0.1, because utils/is-string was never part of
-    // committedComponents array.
-    // this second round of updateComponents() makes sure that the auto-tagged components will be updated as well.
     const ids = updatedComponents.map(component => component.toBitIdWithLatestVersion());
     await updateComponents(componentsAndVersions, scope, committedComponentsIds, BitIds.fromArray(ids), true, graph);
   }
-
   return updatedComponents;
 }
 
@@ -57,21 +69,23 @@ async function updateComponents(
     const bitId = component.toBitId();
     const idStr = bitId.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) return null;
+    const isCommittedComponent = committedComponents.hasWithoutVersion(bitId);
+    if (isCommittedComponent && !isRound2) {
+      // if isCommittedComponent is true, the only case it's needed to be updated is when it has
+      // cycle dependencies. in that case, it should be updated on the round2 only.
+      return null;
+    }
     const edges = graphlib.alg.preorder(graph, idStr);
     edges.forEach((edge: string) => {
       const edgeId: BitId = graph.node(edge);
       const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
-      if (!changedComponentId) return null;
-      if (semver.gt(changedComponentId.version, edgeId.version)) {
-        if (!isRound2 && committedComponents.searchWithoutVersion(bitId)) {
-          return null;
-        }
+      if (changedComponentId && semver.gt(changedComponentId.version, edgeId.version)) {
         updateDependencies(version, edgeId, changedComponentId);
         pendingUpdate = true;
       }
     });
-    if (pendingUpdate && !committedComponents.searchWithoutVersion(bitId)) {
-      const message = 'bump dependencies versions';
+    if (pendingUpdate) {
+      const message = isCommittedComponent ? version.log.message : 'bump dependencies versions';
       if (isRound2) {
         delete component.versions[component.latest()];
       }

@@ -94,7 +94,8 @@ export type IsolateOptions = {
 
 export type ComponentsAndVersions = {
   component: ComponentModel,
-  version: Version
+  version: Version,
+  versionStr: string
 };
 
 export default class Scope {

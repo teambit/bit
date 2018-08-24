@@ -79,7 +79,9 @@ async function getFlattenedDependencies(
     return flattenedDependencies;
   });
   const flattened = await Promise.all(flattenedP);
-  return BitIds.fromArray(R.flatten(flattened)).getUniq();
+  const flattenedUnique = BitIds.fromArray(R.flatten(flattened)).getUniq();
+  // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
+  return flattenedUnique.removeIfExistWithoutVersion(component.id);
 }
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
