@@ -396,7 +396,7 @@ export default class Consumer {
     return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
-  async candidateComponentsForAutoTagging(modifiedComponents: BitIds): Promise<BitIds> {
+  async potentialComponentsForAutoTagging(modifiedComponents: BitIds): Promise<BitIds> {
     const candidateComponents = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
@@ -410,7 +410,7 @@ export default class Consumer {
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<ModelComponent[]> {
-    const candidateComponents = await this.candidateComponentsForAutoTagging(modifiedComponents);
+    const candidateComponents = await this.potentialComponentsForAutoTagging(modifiedComponents);
     return getAutoTagPending(this.scope, candidateComponents, modifiedComponents);
   }
 

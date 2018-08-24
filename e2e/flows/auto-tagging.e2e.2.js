@@ -301,4 +301,86 @@ describe('auto tagging functionality', function () {
       });
     });
   });
+  describe('with long chain of dependencies, some are nested', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'a.js', 'require("./b")');
+      helper.createFile('bar', 'b.js', 'require("./c")');
+      helper.createFile('bar', 'c.js', 'require("./d")');
+      helper.createFile('bar', 'd.js', 'require("./e")');
+      helper.createFile('bar', 'e.js', 'console.log("I am E v1")');
+      helper.addComponent('bar/*.js');
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/e');
+      helper.importComponent('bar/d');
+      helper.importComponent('bar/c');
+      helper.importComponent('bar/a');
+
+      helper.createFile('components/bar/e', 'e.js', 'console.log("I am E v2")');
+    });
+    it('bit-status should show only the IMPORTED dependents of the modified component as auto-tag pending', () => {
+      const status = helper.statusJson();
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.remoteScope}/bar/c`);
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.remoteScope}/bar/d`);
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/b`); // it's nested
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/a`); // it's a dependent via nested
+    });
+  });
+  describe('with cyclic dependencies', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'a.js', 'require("./b")');
+      helper.createFile('bar', 'b.js', 'require("./c")');
+      helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
+      helper.addComponent('bar/*.js');
+      helper.tagAllWithoutMessage();
+      helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
+    });
+    it('bit status should recognize the auto tag pending components', () => {
+      const output = helper.statusJson();
+      expect(output.autoTagPendingComponents).to.deep.include('bar/a');
+      expect(output.autoTagPendingComponents).to.deep.include('bar/b');
+    });
+    describe('after tagging the components', () => {
+      let commitOutput;
+      before(() => {
+        commitOutput = helper.tagAllWithoutMessage();
+      });
+      it('should auto tag all dependents', () => {
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('bar/a@0.0.2');
+        expect(commitOutput).to.have.string('bar/b@0.0.2');
+      });
+      it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
+        const barA = helper.catComponent('bar/a@latest');
+        expect(barA.dependencies[0].id.name).to.equal('bar/b');
+        expect(barA.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '0.0.2' });
+
+        const barB = helper.catComponent('bar/b@latest');
+        expect(barB.dependencies[0].id.name).to.equal('bar/c');
+        expect(barB.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '0.0.2' });
+        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+      });
+      it('should update the dependencies and the flattenedDependencies of the modified component with the cycle dependency', () => {
+        const barC = helper.catComponent('bar/c@latest');
+        expect(barC.dependencies[0].id.name).to.equal('bar/a');
+        expect(barC.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+
+        // @todo: we have a bug there. it shows itself as a flattened dependency.
+        expect(barC.flattenedDependencies).to.have.lengthOf(2);
+      });
+    });
+  });
 });

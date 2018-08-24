@@ -995,8 +995,9 @@ export default class Scope {
     const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
       if (!componentObjects.component) return null;
       const component: ComponentModel = componentObjects.component;
-      const version: Version = await component.loadVersion(componentObjects.id.getVersion().toString(), this.objects);
-      return { component, version };
+      const versionStr = componentObjects.id.getVersion().toString();
+      const version: Version = await component.loadVersion(versionStr, this.objects);
+      return { component, version, versionStr };
     });
     const componentsAndVersions = await Promise.all(componentsAndVersionsP);
     return removeNils(componentsAndVersions);

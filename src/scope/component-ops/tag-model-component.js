@@ -30,7 +30,7 @@ function buildComponentsGraph(components: Component[]) {
     const id = component.id.toString();
     dependencies.get().forEach((dependency) => {
       const depId = dependency.id.toString();
-      // save the full BitId of a string id to be able to retrieve it laster with no confusion
+      // save the full BitId of a string id to be able to retrieve it later with no confusion
       if (!graph.hasNode(id)) graph.setNode(id, component.id);
       if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
       graph.setEdge(id, depId);
@@ -192,7 +192,7 @@ export default (async function tagModelComponent({
   const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
-  const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
+  const autoTagCandidates = await consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
   const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));

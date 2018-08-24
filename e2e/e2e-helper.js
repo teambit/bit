@@ -421,6 +421,11 @@ export default class Helper {
     return this.runCmd('bit status');
   }
 
+  statusJson() {
+    const status = this.runCmd('bit status --json');
+    return JSON.parse(status);
+  }
+
   showComponent(id: string = 'bar/foo') {
     return this.runCmd(`bit show ${id}`);
   }
