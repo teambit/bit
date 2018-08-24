@@ -336,12 +336,7 @@ export default class Consumer {
           'load components',
           `failed loading ${Analytics.hashData(id.toString())} from the file-system`
         );
-        if (
-          err instanceof MissingFilesFromComponent ||
-          err instanceof ComponentNotFoundInPath ||
-          err instanceof ExtensionFileNotFound ||
-          err instanceof MainFileRemoved
-        ) {
+        if (Component.isComponentInvalidByErrorType(err)) {
           invalidComponents.push({ id, error: err });
           return null;
         }
