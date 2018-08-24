@@ -92,6 +92,12 @@ export type IsolateOptions = {
   override: ?boolean
 };
 
+export type ComponentsAndVersions = {
+  component: ComponentModel,
+  version: Version,
+  versionStr: string
+};
+
 export default class Scope {
   created: boolean = false;
   scopeJson: ScopeJson;
@@ -268,10 +274,10 @@ export default class Scope {
     return remotes.latestVersions(externals, this);
   }
 
-  async latestVersions(componentIds: BitId[], throwOnFailure: boolean = true): Promise<BitId[]> {
+  async latestVersions(componentIds: BitId[], throwOnFailure: boolean = true): Promise<BitIds> {
     componentIds = componentIds.map(componentId => componentId.changeVersion(null));
     const components = await this.sources.getMany(componentIds);
-    return components.map((component) => {
+    const ids = components.map((component) => {
       const getVersion = () => {
         if (component.component) {
           return component.component.latest();
@@ -282,6 +288,7 @@ export default class Scope {
       const version = getVersion();
       return component.id.changeVersion(version);
     });
+    return BitIds.fromArray(ids);
   }
 
   importDependencies(dependencies: BitId[]): Promise<VersionDependencies[]> {
@@ -984,6 +991,19 @@ export default class Scope {
     throw new ComponentNotFound(id.toString());
   }
 
+  async getComponentsAndVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
+    const componentsObjects = await this.sources.getMany(ids);
+    const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
+      if (!componentObjects.component) return null;
+      const component: ComponentModel = componentObjects.component;
+      const versionStr = componentObjects.id.getVersion().toString();
+      const version: Version = await component.loadVersion(versionStr, this.objects);
+      return { component, version, versionStr };
+    });
+    const componentsAndVersions = await Promise.all(componentsAndVersionsP);
+    return removeNils(componentsAndVersions);
+  }
+
   async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
     const componentModel = await this.getComponentModel(id);
     return componentModel.toConsumerComponent(id.version, this.name, this.objects);
@@ -1158,54 +1178,6 @@ export default class Scope {
       }
     };
     return pMapSeries(nonExistingEnvsIds, importEnv);
-  }
-
-  async bumpDependenciesVersions(
-    componentsToUpdate: BitId[],
-    committedComponents: BitId[],
-    persist: boolean
-  ): Promise<ComponentModel[]> {
-    const componentsObjects = await this.sources.getMany(componentsToUpdate);
-    const componentsToUpdateP = componentsObjects.map(async (componentObjects) => {
-      const component: ComponentModel = componentObjects.component;
-      if (!component) return null;
-      const loadedVersion: Version = await component.loadVersion(
-        componentObjects.id.getVersion().toString(),
-        this.objects
-      );
-      let pendingUpdate = false;
-      loadedVersion.getAllDependencies().forEach((dependency) => {
-        const committedComponentId = committedComponents.find(committedComponent =>
-          committedComponent.isEqualWithoutVersion(dependency.id)
-        );
-        if (!committedComponentId) return;
-        if (semver.gt(committedComponentId.version, dependency.id.version)) {
-          dependency.id = dependency.id.changeVersion(committedComponentId.version);
-          loadedVersion.flattenedDependencies = loadedVersion.flattenedDependencies.map((flattenDependency) => {
-            if (flattenDependency.isEqualWithoutVersion(dependency.id)) {
-              return flattenDependency.changeVersion(committedComponentId.version);
-            }
-            return flattenDependency;
-          });
-          pendingUpdate = true;
-          // if !persist, we only check whether a modified component may cause auto-tagging
-          // since it's only modified on the file-system, its version might be the same as the version stored in its
-          // dependents. That's why in this case even equal means pendingUpdate
-        } else if (!persist && semver.eq(committedComponentId.version, dependency.id.version)) {
-          pendingUpdate = true;
-        }
-      });
-      if (pendingUpdate) {
-        if (!persist) return component;
-        const message = 'bump dependencies versions';
-        return this.sources.putAdditionalVersion(component, loadedVersion, message);
-      }
-      return null;
-    });
-    const updatedComponentsAll = await Promise.all(componentsToUpdateP);
-    const updatedComponents = removeNils(updatedComponentsAll);
-
-    return updatedComponents;
   }
 
   /**

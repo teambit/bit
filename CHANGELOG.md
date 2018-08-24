@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on
 - fix `bit status` to not throw an exception for invalid components
 - support components with binary files (or non-supported extensions) as the only files
 - allow removing a component when it is invalid

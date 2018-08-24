@@ -186,9 +186,7 @@ describe('auto tagging functionality', function () {
       });
     });
   });
-
-  // todo: this was implemented in https://github.com/teambit/bit/pull/603, remove the 'skip' once merging it.
-  describe.skip('with dependencies of dependencies', () => {
+  describe('with dependencies of dependencies', () => {
     /**
      * Directory structure of the author
      * bar/foo.js
@@ -200,9 +198,11 @@ describe('auto tagging functionality', function () {
      *
      * We change the dependency is-type implementation. When committing this change, we expect all dependent of is-type
      * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
-     * In this case, is-string should be updated to include is-type with v2.
+     * In this case, is-string (so-called "dependent") should be updated to include is-type with v2.
+     * Also, bar/foo (so-called "dependent of dependent") should be updated to include is-string and is-type with v2.
      */
     describe('as AUTHORED', () => {
+      let commitOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -218,22 +218,49 @@ describe('auto tagging functionality', function () {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
 
-        const commitOutput = helper.commitComponent('utils/is-type');
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('utils/is-string');
-        expect(commitOutput).to.have.string('bar/foo');
-        // notice how is-string and bar-foo are not manually committed again.
-        helper.exportAllComponents();
-
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        helper.importComponent('bar/foo');
+        commitOutput = helper.commitComponent('utils/is-type');
       });
-      it('should use the updated dependencies and print the results from the latest versions', () => {
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
-        const result = helper.runCmd('node app.js');
-        // notice the "v2" (!)
-        expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
+      it('should auto tag the dependencies and the nested dependencies', () => {
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('utils/is-string@0.0.2');
+        expect(commitOutput).to.have.string('bar/foo@0.0.2');
+      });
+      it('should update the dependencies and the flattenedDependencies of the dependent with the new versions', () => {
+        const barFoo = helper.catComponent('utils/is-string@latest');
+        expect(barFoo.dependencies[0].id.name).to.equal('utils/is-type');
+        expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.2' });
+      });
+      it('should update the dependencies and the flattenedDependencies of the dependent of the dependent with the new versions', () => {
+        const barFoo = helper.catComponent('bar/foo@latest');
+        expect(barFoo.dependencies[0].id.name).to.equal('utils/is-string');
+        expect(barFoo.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.2' });
+        expect(barFoo.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.2' });
+      });
+      it('bit-status should show them all as staged and not modified', () => {
+        const status = helper.statusJson();
+        expect(status.modifiedComponent).to.be.empty;
+        expect(status.stagedComponents).to.include('bar/foo');
+        expect(status.stagedComponents).to.include('utils/is-string');
+        expect(status.stagedComponents).to.include('utils/is-type');
+      });
+      describe('importing the component to another scope', () => {
+        before(() => {
+          helper.exportAllComponents();
+
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should use the updated dependencies and print the results from the latest versions', () => {
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+          const result = helper.runCmd('node app.js');
+          // notice the "v2" (!)
+          expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo');
+        });
       });
     });
     describe('as IMPORTED', () => {
@@ -252,6 +279,7 @@ describe('auto tagging functionality', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
+        helper.importComponent('utils/is-string');
         helper.importComponent('utils/is-type');
 
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -276,6 +304,140 @@ describe('auto tagging functionality', function () {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string and got foo'); // notice the "v2"
+      });
+    });
+  });
+  describe('with long chain of dependencies, some are nested', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'a.js', 'require("./b")');
+      helper.createFile('bar', 'b.js', 'require("./c")');
+      helper.createFile('bar', 'c.js', 'require("./d")');
+      helper.createFile('bar', 'd.js', 'require("./e")');
+      helper.createFile('bar', 'e.js', 'console.log("I am E v1")');
+      helper.addComponent('bar/*.js');
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/e');
+      helper.importComponent('bar/d');
+      helper.importComponent('bar/c');
+      helper.importComponent('bar/a');
+
+      helper.createFile('components/bar/e', 'e.js', 'console.log("I am E v2")');
+    });
+    it('bit-status should show only the IMPORTED dependents of the modified component as auto-tag pending', () => {
+      const status = helper.statusJson();
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.remoteScope}/bar/c`);
+      expect(status.autoTagPendingComponents).to.deep.include(`${helper.remoteScope}/bar/d`);
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/b`); // it's nested
+      expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/a`); // it's a dependent via nested
+    });
+    describe('after tagging the components', () => {
+      let commitOutput;
+      before(() => {
+        commitOutput = helper.tagAllWithoutMessage();
+      });
+      it('should auto tag only IMPORTED', () => {
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('bar/c@0.0.2');
+        expect(commitOutput).to.have.string('bar/d@0.0.2');
+        expect(commitOutput).to.not.have.string('bar/b');
+        expect(commitOutput).to.not.have.string('bar/a');
+      });
+      it('should update the dependencies and the flattenedDependencies of the IMPORTED dependents with the new versions', () => {
+        const barC = helper.catComponent(`${helper.remoteScope}/bar/c@latest`);
+        expect(barC.dependencies[0].id.name).to.equal('bar/d');
+        expect(barC.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.remoteScope,
+          name: 'bar/d',
+          version: '0.0.2'
+        });
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.remoteScope,
+          name: 'bar/e',
+          version: '0.0.2'
+        });
+
+        const barD = helper.catComponent(`${helper.remoteScope}/bar/d@latest`);
+        expect(barD.dependencies[0].id.name).to.equal('bar/e');
+        expect(barD.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barD.flattenedDependencies).to.deep.include({
+          scope: helper.remoteScope,
+          name: 'bar/e',
+          version: '0.0.2'
+        });
+      });
+      it('should update the dependencies correctly in the .bitmap file', () => {
+        const bitMap = helper.readBitMapWithoutVersion();
+        const barC = bitMap[`${helper.remoteScope}/bar/c@0.0.2`];
+        expect(barC.dependencies).to.include(`${helper.remoteScope}/bar/d@0.0.2`);
+        expect(barC.dependencies).to.include(`${helper.remoteScope}/bar/e@0.0.2`);
+
+        const barD = bitMap[`${helper.remoteScope}/bar/d@0.0.2`];
+        expect(barD.dependencies).to.include(`${helper.remoteScope}/bar/e@0.0.2`);
+      });
+      it('bit-status should not show any component as modified', () => {
+        const status = helper.statusJson();
+        expect(status.modifiedComponent).to.be.empty;
+      });
+    });
+  });
+  describe('with cyclic dependencies', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'a.js', 'require("./b")');
+      helper.createFile('bar', 'b.js', 'require("./c")');
+      helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
+      helper.addComponent('bar/*.js');
+      helper.tagAllWithoutMessage();
+      helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
+    });
+    it('bit status should recognize the auto tag pending components', () => {
+      const output = helper.statusJson();
+      expect(output.autoTagPendingComponents).to.deep.include('bar/a');
+      expect(output.autoTagPendingComponents).to.deep.include('bar/b');
+    });
+    describe('after tagging the components', () => {
+      let commitOutput;
+      before(() => {
+        commitOutput = helper.tagAllWithoutMessage();
+      });
+      it('should auto tag all dependents', () => {
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('bar/a@0.0.2');
+        expect(commitOutput).to.have.string('bar/b@0.0.2');
+      });
+      it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
+        const barA = helper.catComponent('bar/a@latest');
+        expect(barA.dependencies[0].id.name).to.equal('bar/b');
+        expect(barA.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+        expect(barA.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '0.0.2' });
+
+        const barB = helper.catComponent('bar/b@latest');
+        expect(barB.dependencies[0].id.name).to.equal('bar/c');
+        expect(barB.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/c', version: '0.0.2' });
+        expect(barB.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+      });
+      it('should update the dependencies and the flattenedDependencies of the modified component with the cycle dependency', () => {
+        const barC = helper.catComponent('bar/c@latest');
+        expect(barC.dependencies[0].id.name).to.equal('bar/a');
+        expect(barC.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/a', version: '0.0.2' });
+        expect(barC.flattenedDependencies).to.deep.include({ name: 'bar/b', version: '0.0.2' });
+
+        // @todo: we have a bug there. it shows itself as a flattened dependency.
+        expect(barC.flattenedDependencies).to.have.lengthOf(2);
       });
     });
   });
