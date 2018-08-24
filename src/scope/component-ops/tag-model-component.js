@@ -336,8 +336,7 @@ export default (async function tagModelComponent({
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
-  const taggedIds = taggedComponents.map(c => c.id);
-  const autoTaggedComponents = await bumpDependenciesVersions(scope, autoTagCandidates, BitIds.fromArray(taggedIds));
+  const autoTaggedComponents = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
   validateOriginallySharedDir(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedComponents };

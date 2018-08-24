@@ -7,17 +7,27 @@ import { BitId, BitIds } from '../../bit-id';
 import Scope from '../scope';
 import type { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
+import Component from '../../consumer/component';
 
 const removeNils = R.reject(R.isNil);
 
 export async function bumpDependenciesVersions(
   scope: Scope,
   potentialComponents: BitIds,
-  committedComponents: BitIds
+  committedComponents: Component[]
 ): Promise<ComponentModel[]> {
-  const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(potentialComponents);
-  const graph = await buildGraph(scope, new BitIds(...potentialComponents, ...committedComponents));
-  const updatedComponents = await updateComponents(componentsAndVersions, scope, committedComponents, false, graph);
+  const committedComponentsIds = BitIds.fromArray(committedComponents.map(c => c.id));
+  const allComponents = new BitIds(...potentialComponents, ...committedComponentsIds);
+  const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
+  const graph = await buildGraph(scope, componentsAndVersions);
+  const updatedComponents = await updateComponents(
+    componentsAndVersions,
+    scope,
+    committedComponentsIds,
+    committedComponentsIds,
+    false,
+    graph
+  );
   if (updatedComponents.length) {
     // it's easier to understand why another round of updateComponents() is needed by an example.
     // say we have 3 components, bar/foo@0.0.1 depends on utils/is-string, utils/is-string@0.0.1 depends on
@@ -28,7 +38,7 @@ export async function bumpDependenciesVersions(
     // committedComponents array.
     // this second round of updateComponents() makes sure that the auto-tagged components will be updated as well.
     const ids = updatedComponents.map(component => component.toBitIdWithLatestVersion());
-    await updateComponents(componentsAndVersions, scope, BitIds.fromArray(ids), true, graph);
+    await updateComponents(componentsAndVersions, scope, committedComponentsIds, BitIds.fromArray(ids), true, graph);
   }
 
   return updatedComponents;
@@ -37,34 +47,30 @@ export async function bumpDependenciesVersions(
 async function updateComponents(
   componentsAndVersions: ComponentsAndVersions[],
   scope: Scope,
+  committedComponents: BitIds,
   changedComponents: BitIds,
   isRound2 = false,
   graph: Object
 ): Promise<ComponentModel[]> {
   const componentsToUpdateP = componentsAndVersions.map(async ({ component, version }) => {
     let pendingUpdate = false;
-
-    const id = component.toBitId().toStringWithoutVersion();
-    if (!graph.hasNode(id)) return null;
-    const edges = graphlib.alg.preorder(graph, id);
+    const bitId = component.toBitId();
+    const idStr = bitId.toStringWithoutVersion();
+    if (!graph.hasNode(idStr)) return null;
+    const edges = graphlib.alg.preorder(graph, idStr);
     edges.forEach((edge: string) => {
       const edgeId: BitId = graph.node(edge);
       const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
       if (!changedComponentId) return null;
       if (semver.gt(changedComponentId.version, edgeId.version)) {
-        pendingUpdate = true;
-        version.updateFlattenedDependency(edgeId, edgeId.changeVersion(changedComponentId.version));
-        const dependencyToUpdate = version
-          .getAllDependencies()
-          .find(dependency => dependency.id.isEqualWithoutVersion(edgeId));
-        if (dependencyToUpdate) {
-          // it's a direct dependency
-          dependencyToUpdate.id = dependencyToUpdate.id.changeVersion(changedComponentId.version);
+        if (!isRound2 && committedComponents.searchWithoutVersion(bitId)) {
+          return null;
         }
+        updateDependencies(version, edgeId, changedComponentId);
+        pendingUpdate = true;
       }
     });
-
-    if (pendingUpdate) {
+    if (pendingUpdate && !committedComponents.searchWithoutVersion(bitId)) {
       const message = 'bump dependencies versions';
       if (isRound2) {
         delete component.versions[component.latest()];
@@ -77,13 +83,24 @@ async function updateComponents(
   return removeNils(updatedComponentsAll);
 }
 
-async function buildGraph(scope: Scope, components: BitIds) {
-  const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(components);
+function updateDependencies(version, edgeId, changedComponentId) {
+  version.updateFlattenedDependency(edgeId, edgeId.changeVersion(changedComponentId.version));
+  const dependencyToUpdate = version
+    .getAllDependencies()
+    .find(dependency => dependency.id.isEqualWithoutVersion(edgeId));
+  if (dependencyToUpdate) {
+    // it's a direct dependency
+    dependencyToUpdate.id = dependencyToUpdate.id.changeVersion(changedComponentId.version);
+  }
+}
+
+async function buildGraph(scope: Scope, componentsAndVersions: ComponentsAndVersions[]) {
   const graph = new Graph();
+  const componentsIds = BitIds.fromArray(componentsAndVersions.map(c => c.component.toBitId()));
   componentsAndVersions.forEach(({ component, version, versionStr }) => {
     const id = component.id();
     version.getAllDependencies().forEach((dependency: Dependency) => {
-      if (components.searchWithoutVersion(dependency.id)) {
+      if (componentsIds.searchWithoutVersion(dependency.id)) {
         const depId = dependency.id.toStringWithoutVersion();
         // save the full BitId of a string id to be able to retrieve it later with no confusion
         if (!graph.hasNode(id)) graph.setNode(id, component.toBitId().changeVersion(versionStr));
@@ -100,17 +117,21 @@ export async function getAutoTagPending(
   potentialComponents: BitIds,
   changedComponents: BitIds
 ): Promise<ComponentModel[]> {
-  const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(potentialComponents);
-  const graph = await buildGraph(scope, new BitIds(...potentialComponents, ...changedComponents));
+  const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(
+    new BitIds(...potentialComponents, ...changedComponents)
+  );
+  const graph = await buildGraph(scope, componentsAndVersions);
 
   const autoTagPendingComponents = componentsAndVersions.map(({ component }) => {
-    const id = component.toBitId().toStringWithoutVersion();
-    if (!graph.hasNode(id)) return null;
-    const edges = graphlib.alg.preorder(graph, id);
+    const bitId = component.toBitId();
+    const idStr = bitId.toStringWithoutVersion();
+    if (!graph.hasNode(idStr)) return null;
+    const edges = graphlib.alg.preorder(graph, idStr);
     const isAutoTagPending = edges.some((edge) => {
       const edgeId: BitId = graph.node(edge);
       const changedComponentId = changedComponents.searchWithoutVersion(edgeId);
       if (!changedComponentId) return false;
+      if (changedComponents.searchWithoutVersion(bitId)) return false;
       // we only check whether a modified component may cause auto-tagging
       // since it's only modified on the file-system, its version might be the same as the version stored in its
       // dependents. That's why "semver.gte" is used instead of "semver.gt".

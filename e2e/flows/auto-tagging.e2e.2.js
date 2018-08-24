@@ -329,6 +329,45 @@ describe('auto tagging functionality', function () {
       expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/b`); // it's nested
       expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/a`); // it's a dependent via nested
     });
+    describe('after tagging the components', () => {
+      let commitOutput;
+      before(() => {
+        commitOutput = helper.tagAllWithoutMessage();
+      });
+      it('should auto tag only IMPORTED', () => {
+        expect(commitOutput).to.have.string('auto-tagged components');
+        expect(commitOutput).to.have.string('bar/c@0.0.2');
+        expect(commitOutput).to.have.string('bar/d@0.0.2');
+        expect(commitOutput).to.not.have.string('bar/b');
+        expect(commitOutput).to.not.have.string('bar/a');
+      });
+      it('should update the dependencies and the flattenedDependencies of the IMPORTED dependents with the new versions', () => {
+        const barC = helper.catComponent(`${helper.remoteScope}/bar/c@latest`);
+        expect(barC.dependencies[0].id.name).to.equal('bar/d');
+        expect(barC.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.remoteScope,
+          name: 'bar/d',
+          version: '0.0.2'
+        });
+        expect(barC.flattenedDependencies).to.deep.include({
+          scope: helper.remoteScope,
+          name: 'bar/e',
+          version: '0.0.2'
+        });
+
+        const barD = helper.catComponent(`${helper.remoteScope}/bar/d@latest`);
+        expect(barD.dependencies[0].id.name).to.equal('bar/e');
+        expect(barD.dependencies[0].id.version).to.equal('0.0.2');
+
+        expect(barD.flattenedDependencies).to.deep.include({
+          scope: helper.remoteScope,
+          name: 'bar/e',
+          version: '0.0.2'
+        });
+      });
+    });
   });
   describe('with cyclic dependencies', () => {
     before(() => {
