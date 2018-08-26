@@ -43,10 +43,12 @@ export default ({ dependentBits, modifiedComponents = [], removedComponentIds, m
 
   const paintModifiedComponents = () =>
     (!R.isEmpty(modifiedComponents)
-      ? `${chalk.red.underline('error: unable to remove modified components:') +
+      ? `${chalk.red(
+        'error: unable to remove modified components (please use --force to remove modified components)\n'
+      ) +
           chalk(
-            ` ${modifiedComponents.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}`
-          )},${chalk.red(' please use --force flag')}`
+            `- ${modifiedComponents.map(id => (id.version === 'latest' ? id.toStringWithoutVersion() : id.toString()))}`
+          )}`
       : '');
 
   return (

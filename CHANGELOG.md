@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - allow removing a component when it is invalid
 - add `getSchema` to extension life cycle
 - validate extension's rawConfig against extension schema
+- changed `--include-unmodified` to `--all`
 
 ## [13.0.5-dev.2 - 2018-08-20]
 

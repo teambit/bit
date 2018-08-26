@@ -23,7 +23,7 @@ export default class Export extends Command {
   }
 
   report({ componentId, remote }: { componentId: BitId | BitId[], remote: string }): string {
-    if (R.isEmpty(componentId)) return chalk.green('nothing to export');
+    if (R.isEmpty(componentId)) return chalk.yellow('nothing to export');
     if (Array.isArray(componentId)) {
       return chalk.green(`exported ${componentId.length} components to scope ${chalk.bold(remote)}`);
     }
