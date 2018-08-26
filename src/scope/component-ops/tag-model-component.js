@@ -23,13 +23,14 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
+import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
     const id = component.id.toString();
     dependencies.get().forEach((dependency) => {
       const depId = dependency.id.toString();
-      // save the full BitId of a string id to be able to retrieve it laster with no confusion
+      // save the full BitId of a string id to be able to retrieve it later with no confusion
       if (!graph.hasNode(id)) graph.setNode(id, component.id);
       if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
       graph.setEdge(id, depId);
@@ -78,7 +79,9 @@ async function getFlattenedDependencies(
     return flattenedDependencies;
   });
   const flattened = await Promise.all(flattenedP);
-  return BitIds.fromArray(R.flatten(flattened)).getUniq();
+  const flattenedUnique = BitIds.fromArray(R.flatten(flattened)).getUniq();
+  // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
+  return flattenedUnique.removeIfExistWithoutVersion(component.id);
 }
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
@@ -191,8 +194,8 @@ export default (async function tagModelComponent({
   const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
-  const autoTagCandidates = await consumer.candidateComponentsForAutoTagging(componentsToTagIdsLatest);
-  const autoTagComponents = await scope.bumpDependenciesVersions(autoTagCandidates, componentsToTagIdsLatest, false);
+  const autoTagCandidates = await consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
+  const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
   const autoTagConsumerComponents = autoTagComponentsLoaded.components;
@@ -335,8 +338,7 @@ export default (async function tagModelComponent({
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
-  const taggedIds = taggedComponents.map(c => c.id);
-  const autoTaggedComponents = await scope.bumpDependenciesVersions(autoTagCandidates, taggedIds, true);
+  const autoTaggedComponents = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
   validateOriginallySharedDir(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedComponents };

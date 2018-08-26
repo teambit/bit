@@ -27,6 +27,7 @@ export type ImportOptions = {
   writeToPath?: string,
   writePackageJson: boolean, // default: true
   writeConfig: boolean, // default: false
+  configDir?: string,
   writeDists: boolean, // default: true
   override: boolean, // default: false
   installNpmPackages: boolean, // default: true
@@ -88,13 +89,16 @@ export default class ImportComponents {
     const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
     const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
 
-    const compiler = await this.consumer.compiler;
-    const tester = await this.consumer.tester;
+    let compiler;
+    let tester;
 
     if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
       if (!this.options.withEnvironments) {
         return Promise.reject(new NothingToImport());
-      } else if (!tester && !compiler) {
+      }
+      compiler = await this.consumer.compiler;
+      tester = await this.consumer.tester;
+      if (!tester && !compiler) {
         return Promise.reject(new NothingToImport());
       }
     }
@@ -123,6 +127,8 @@ export default class ImportComponents {
     const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
+      compiler = compiler || (await this.consumer.compiler);
+      tester = tester || (await this.consumer.tester);
       const envsPromises = [];
       if (compiler) {
         envsPromises.push(compiler.install(this.consumer.scope, { verbose: this.options.verbose }));
@@ -325,12 +331,16 @@ export default class ImportComponents {
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
     if (this.options.objectsOnly) return;
     const componentsToWrite = await this.updateAllComponentsAccordingToMergeStrategy(componentsWithDependencies);
+    if (this.options.writeConfig && !this.options.configDir) {
+      this.options.configDir = this.consumer.dirStructure.ejectedEnvsDirStructure;
+    }
     await writeComponents({
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
       writePackageJson: this.options.writePackageJson,
       writeConfig: this.options.writeConfig,
+      configDir: this.options.configDir,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,

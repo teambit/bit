@@ -1,4 +1,4 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
 import {
@@ -6,6 +6,8 @@ import {
   statusInvalidComponentsMsg,
   statusWorkspaceIsCleanMsg
 } from '../../src/cli/commands/public-cmds/status-cmd';
+
+chai.use(require('chai-fs'));
 
 describe('environments with dependencies', function () {
   this.timeout(0);
@@ -133,12 +135,14 @@ describe('environments with dependencies', function () {
         expect(flattenedCompilerDependency.version).to.equal('0.0.1');
       });
       describe('importing the component to another scope', () => {
+        let scopeAfterImport;
         before(() => {
           helper.exportAllComponents();
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.addRemoteEnvironment();
           helper.importComponent('bar/foo');
+          scopeAfterImport = helper.cloneLocalScope();
         });
         it('should also import the environment component', () => {
           const output = helper.listLocalScope('--scope');
@@ -147,6 +151,10 @@ describe('environments with dependencies', function () {
         it('should not show the component as modified', () => {
           const output = helper.runCmd('bit status');
           expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        it('should not generate the links for environment component when --conf was not used', () => {
+          const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
+          expect(linkFile).to.not.be.a.path();
         });
         describe('ejecting the environment configuration to component dir', () => {
           before(() => {
@@ -157,9 +165,9 @@ describe('environments with dependencies', function () {
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
-        // @todo: needs to be fixed
-        describe.skip('ejecting the environment configuration to a directory outside the component dir', () => {
+        describe('ejecting the environment configuration to a directory outside the component dir', () => {
           before(() => {
+            helper.getClonedLocalScope(scopeAfterImport);
             helper.ejectConf('bar/foo -p my-conf-dir');
           });
           it('still should not show the component as modified', () => {
@@ -167,14 +175,57 @@ describe('environments with dependencies', function () {
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
           });
         });
-        // @todo: needs to be fixed
-        describe.skip('ejecting the environment configuration to a an inner component dir directory', () => {
+        describe('ejecting the environment configuration to a an inner component dir directory', () => {
           before(() => {
+            helper.getClonedLocalScope(scopeAfterImport);
             helper.ejectConf('bar/foo -p {COMPONENT_DIR}/my-inner-dir');
           });
           it('still should not show the component as modified', () => {
             const output = helper.runCmd('bit status');
             expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          });
+        });
+        describe('importing with --conf flag', () => {
+          const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+          const linkFile = path.join(componentDir, 'base.config.js');
+          const configurationFile = path.join(componentDir, 'dev.config.js');
+          before(() => {
+            helper.getClonedLocalScope(scopeAfterImport);
+            helper.importComponent('bar/foo --conf');
+          });
+          it('should not show the component as modified', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          });
+          it('should generate the links for environment component', () => {
+            expect(linkFile).to.be.a.file();
+          });
+          describe('injecting the configuration back', () => {
+            before(() => {
+              helper.injectConf('bar/foo');
+            });
+            it('should remove not only the configuration files but also the generated links', () => {
+              expect(configurationFile).to.not.be.a.path();
+              expect(linkFile).to.not.be.a.path();
+            });
+          });
+        });
+        describe('importing with --conf [path] flag for saving the configuration files in another directory', () => {
+          before(() => {
+            helper.getClonedLocalScope(scopeAfterImport);
+            helper.importComponent('bar/foo --conf my-config-dir');
+          });
+          it('should not show the component as modified', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          });
+          it('should generate the links for environment component', () => {
+            const linkFile = path.join(helper.localScopePath, 'my-config-dir/base.config.js');
+            expect(linkFile).to.be.a.file();
+          });
+          it('should not generate an extra link in the components dir', () => {
+            const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
+            expect(linkFile).to.not.be.a.path();
           });
         });
       });

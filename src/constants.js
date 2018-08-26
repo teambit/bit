@@ -307,6 +307,8 @@ export const BIT_SOURCES_DIRNAME = 'source';
 
 export const BIT_TMP_DIRNAME = 'tmp';
 
+export const BIT_WORKSPACE_TMP_DIRNAME = '.bitTmp';
+
 export const BIT_CACHE_DIRNAME = 'cache';
 
 export const LATEST_TESTED_MARK = '*';

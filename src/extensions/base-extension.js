@@ -3,6 +3,7 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
+import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
@@ -15,6 +16,9 @@ import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ExtensionLoadError from './exceptions/extension-load-error';
 import Environment from '../environment';
+import ExtensionSchemaError from './exceptions/extension-schema-error';
+
+const ajv = new Ajv();
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -46,6 +50,7 @@ type StaticProps = BaseArgs & {
   dynamicConfig: Object,
   filePath: string,
   rootDir?: ?string,
+  schema?: ?Object,
   script?: Function,
   disabled: boolean,
   loaded: boolean,
@@ -68,6 +73,10 @@ type ExtensionPath = {
   componentPath: string
 };
 
+export type InitOptions = {
+  writeConfigFilesOnAction: ?boolean
+};
+
 // export type BaseExtensionProps = {
 //   ...InstanceSpecificProps,
 //   ...StaticProps
@@ -83,15 +92,18 @@ export default class BaseExtension {
   filePath: string;
   rootDir: string;
   rawConfig: Object;
+  schema: ?Object;
   options: Object;
   dynamicConfig: Object;
   context: ?Object;
   script: ?Function; // Store the required plugin
+  _initOptions: ?InitOptions; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
 
   constructor(extensionProps: BaseExtensionProps) {
     this.name = extensionProps.name;
     this.rawConfig = extensionProps.rawConfig;
+    this.schema = extensionProps.schema;
     this.options = extensionProps.options;
     this.dynamicConfig = extensionProps.dynamicConfig || extensionProps.rawConfig;
     this.context = extensionProps.context;
@@ -103,15 +115,47 @@ export default class BaseExtension {
     this.api = extensionProps.api;
   }
 
+  get writeConfigFilesOnAction() {
+    if (!this.initOptions) {
+      return false;
+    }
+    return this.initOptions.writeConfigFilesOnAction;
+  }
+
+  get initOptions() {
+    return this._initOptions;
+  }
+
+  set initOptions(opts: ?Object) {
+    const defaultInitOpts = {
+      writeConfigFilesOnAction: false
+    };
+    if (!opts) {
+      this._initOptions = defaultInitOpts;
+      return;
+    }
+    const res = {};
+    if (opts.write) {
+      res.writeConfigFilesOnAction = true;
+    }
+    this._initOptions = res;
+  }
+
   /**
    * Run the extension's init function
    */
   async init(throws: boolean = false): Promise<boolean> {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
+      let initOptions = {};
       if (this.script && this.script.init && typeof this.script.init === 'function') {
-        await this.script.init({ rawConfig: this.rawConfig, dynamicConfig: this.dynamicConfig, api: this.api });
+        initOptions = await this.script.init({
+          rawConfig: this.rawConfig,
+          dynamicConfig: this.dynamicConfig,
+          api: this.api
+        });
       }
+      this.initOptions = initOptions;
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
@@ -178,6 +222,7 @@ export default class BaseExtension {
       this.loaded = baseProps.loaded;
       this.script = baseProps.script;
       this.dynamicConfig = baseProps.dynamicConfig;
+      this.init();
     }
   }
 
@@ -341,6 +386,13 @@ export default class BaseExtension {
       // $FlowFixMe
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
+      if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {
+        extensionProps.schema = await extensionProps.script.getSchema();
+        const valid = ajv.validate(extensionProps.schema, rawConfig);
+        if (!valid) {
+          throw new ExtensionSchemaError(name, ajv.errorsText());
+        }
+      }
       if (extensionProps.script.getDynamicConfig && typeof extensionProps.script.getDynamicConfig === 'function') {
         extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig({ rawConfig });
       }
@@ -355,7 +407,11 @@ export default class BaseExtension {
       logger.error(err);
       extensionProps.loaded = false;
       if (throws) {
-        throw new ExtensionLoadError(err, extensionProps.name);
+        let printStack = true;
+        if (err instanceof ExtensionSchemaError) {
+          printStack = false;
+        }
+        throw new ExtensionLoadError(err, extensionProps.name, printStack);
       }
       return extensionProps;
     }

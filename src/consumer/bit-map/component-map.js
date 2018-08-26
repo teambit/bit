@@ -1,10 +1,9 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
-import format from 'string-format';
 import path from 'path';
 import logger from '../../logger/logger';
-import { COMPONENT_ORIGINS, BIT_MAP, COMPONENT_DIR } from '../../constants';
+import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/path';
 import { Consumer } from '..';
@@ -14,6 +13,7 @@ import { NoFiles, EmptyDirectory } from '../component-ops/add-components/excepti
 import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
 import ComponentNotFoundInPath from '../component/exceptions/component-not-found-in-path';
+import ConfigDir from './config-dir';
 
 export type ComponentOrigin = $Keys<typeof COMPONENT_ORIGINS>;
 
@@ -29,7 +29,7 @@ export type ComponentMapData = {
   mainFile: PathLinux,
   rootDir?: ?PathLinux,
   trackDir?: ?PathLinux,
-  configDir?: ?PathLinux,
+  configDir?: ?PathLinux | ?ConfigDir | string,
   origin: ComponentOrigin,
   detachedCompiler?: ?boolean,
   detachedTester?: ?boolean,
@@ -51,7 +51,7 @@ export default class ComponentMap {
   // be relative to consumer-root. (we can't save in the model relative to rootDir, otherwise the
   // dependencies paths won't work).
   trackDir: ?PathLinux; // relevant for AUTHORED only when a component was added as a directory, used for tracking changes in that dir
-  configDir: ?PathLinux;
+  configDir: ?ConfigDir;
   origin: ComponentOrigin;
   dependencies: ?(string[]); // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
@@ -75,12 +75,18 @@ export default class ComponentMap {
     detachedCompiler,
     detachedTester
   }: ComponentMapData) {
+    let confDir;
+    if (configDir && typeof configDir === 'string') {
+      confDir = new ConfigDir(configDir);
+    } else if (configDir && configDir instanceof ConfigDir) {
+      confDir = configDir.clone();
+    }
     this.id = id;
     this.files = files;
     this.mainFile = mainFile;
     this.rootDir = rootDir;
     this.trackDir = trackDir;
-    this.configDir = configDir;
+    this.configDir = confDir;
     this.origin = origin;
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
@@ -91,6 +97,29 @@ export default class ComponentMap {
 
   static fromJson(componentMapObj: ComponentMapData): ComponentMap {
     return new ComponentMap(componentMapObj);
+  }
+
+  toPlainObject(): Object {
+    let res = {
+      id: this.id,
+      files: this.files,
+      mainFile: this.mainFile,
+      rootDir: this.rootDir,
+      trackDir: this.trackDir,
+      configDir: this.configDir ? this.configDir.linuxDirPath : undefined,
+      origin: this.origin,
+      dependencies: this.dependencies,
+      mainDistFile: this.mainDistFile,
+      originallySharedDir: this.originallySharedDir,
+      detachedCompiler: this.detachedCompiler,
+      detachedTester: this.detachedTester,
+      exported: this.exported
+    };
+    const notNil = (val) => {
+      return !R.isNil(val);
+    };
+    res = R.filter(notNil, res);
+    return res;
   }
 
   static getPathWithoutRootDir(rootDir: PathLinux, filePath: PathLinux): PathLinux {
@@ -208,6 +237,15 @@ export default class ComponentMap {
     }
     for (const file of this.files) {
       if (!file.relativePath.startsWith(this.trackDir)) {
+        // Make sure we are not getting to case where we have config dir with {COMPONENT_DIR} but there is no component dir
+        // This might happen in the following case:
+        // User add a folder to bit which create the track dir
+        // Then the user eject the config to that dir
+        // Then the user adding a new file to that component which is outside of the component dir
+        // This will remove the trackDir, so just before the remove we resolve it
+        if (this.configDir) {
+          this.configDir = this.configDir.getResolved({ componentDir: this.trackDir });
+        }
         this.trackDir = undefined;
         return;
       }
@@ -224,6 +262,14 @@ export default class ComponentMap {
     return null;
   }
 
+  /**
+   * directory of the component (root / track)
+   */
+  getComponentDir(): ?PathLinux {
+    if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
+    return this.rootDir;
+  }
+
   setConfigDir(val: ?PathLinux) {
     if (val === null || val === undefined) {
       delete this.configDir;
@@ -231,7 +277,17 @@ export default class ComponentMap {
       return;
     }
     this.markBitMapChangedCb();
-    this.configDir = pathNormalizeToLinux(val);
+    this.configDir = new ConfigDir(val);
+  }
+
+  async deleteConfigDirIfNotExists() {
+    const resolvedDir = this.getBaseConfigDir();
+    if (resolvedDir) {
+      const isExist = await fs.exists(resolvedDir);
+      if (!isExist) {
+        this.setConfigDir(null);
+      }
+    }
   }
 
   /**
@@ -239,8 +295,8 @@ export default class ComponentMap {
    */
   getBaseConfigDir(): ?PathLinux {
     if (!this.configDir) return null;
-    const trackDir = this.getTrackDir();
-    const configDir = format(this.configDir, { [COMPONENT_DIR]: trackDir, ENV_TYPE: '' });
+    const componentDir = this.getComponentDir();
+    const configDir = this.configDir && this.configDir.getResolved({ componentDir }).getEnvTypeCleaned().linuxDirPath;
     return configDir;
   }
 
@@ -294,6 +350,7 @@ export default class ComponentMap {
   }
 
   clone() {
+    // $FlowFixMe - there is some issue with the config dir type
     return new ComponentMap(this);
   }
 

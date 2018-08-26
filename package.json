@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "13.0.4-dev.4",
+  "version": "13.0.5-dev.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@teambit/gitconfig": "^2.0.6",
+    "ajv": "^6.5.3",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",

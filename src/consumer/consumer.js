@@ -22,7 +22,8 @@ import {
   NODE_PATH_COMPONENT_SEPARATOR,
   LATEST_BIT_VERSION,
   BIT_GIT_DIR,
-  DOT_GIT_DIR
+  DOT_GIT_DIR,
+  BIT_WORKSPACE_TMP_DIRNAME
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -56,6 +57,7 @@ import type { InvalidComponent } from './component/consumer-component';
 import MainFileRemoved from './component/exceptions/main-file-removed';
 import type { BitIdStr } from '../bit-id/bit-id';
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
+import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 
 type ConsumerProps = {
   projectPath: string,
@@ -140,6 +142,22 @@ export default class Consumer {
 
   get bitmapIds(): BitIds {
     return this.bitMap.getAllBitIds();
+  }
+
+  getTmpFolder(fullPath: boolean = false): PathOsBased {
+    if (!fullPath) {
+      return BIT_WORKSPACE_TMP_DIRNAME;
+    }
+    return path.join(this.getPath(), BIT_WORKSPACE_TMP_DIRNAME);
+  }
+
+  async cleanTmpFolder() {
+    const tmpPath = this.getTmpFolder(true);
+    const exists = await fs.exists(tmpPath);
+    if (exists) {
+      return fs.remove(tmpPath);
+    }
+    return null;
   }
 
   /**
@@ -318,12 +336,7 @@ export default class Consumer {
           'load components',
           `failed loading ${Analytics.hashData(id.toString())} from the file-system`
         );
-        if (
-          err instanceof MissingFilesFromComponent ||
-          err instanceof ComponentNotFoundInPath ||
-          err instanceof ExtensionFileNotFound ||
-          err instanceof MainFileRemoved
-        ) {
+        if (Component.isComponentInvalidByErrorType(err)) {
           invalidComponents.push({ id, error: err });
           return null;
         }
@@ -378,22 +391,22 @@ export default class Consumer {
     return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
-  async candidateComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<?(BitId[])> {
+  async potentialComponentsForAutoTagging(modifiedComponents: BitIds): Promise<BitIds> {
     const candidateComponents = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
-    if (!candidateComponents) return null;
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
     );
     // if a modified component is in candidates array, remove it from the array as it will be already tagged with the
     // correct version
-    return candidateComponents.filter(
+    const idsWithoutModified = candidateComponents.filter(
       component => !modifiedComponentsWithoutVersions.includes(component.toStringWithoutVersion())
     );
+    return BitIds.fromArray(idsWithoutModified);
   }
 
-  async listComponentsForAutoTagging(modifiedComponents: BitId[]): Promise<ModelComponent[]> {
-    const candidateComponents = await this.candidateComponentsForAutoTagging(modifiedComponents);
-    return this.scope.bumpDependenciesVersions(candidateComponents, modifiedComponents, false);
+  async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<ModelComponent[]> {
+    const candidateComponents = await this.potentialComponentsForAutoTagging(modifiedComponents);
+    return getAutoTagPending(this.scope, candidateComponents, modifiedComponents);
   }
 
   /**
@@ -901,9 +914,18 @@ export default class Consumer {
     if (!force) {
       await Promise.all(
         resolvedIDs.map(async (id) => {
-          const componentStatus = await this.getComponentStatusById(id);
-          if (componentStatus.modified) modifiedComponents.push(id);
-          else regularComponents.push(id);
+          try {
+            const componentStatus = await this.getComponentStatusById(id);
+            if (componentStatus.modified) modifiedComponents.push(id);
+            else regularComponents.push(id);
+          } catch (err) {
+            // if a component has an error, such as, missing main file, we do want to allow removing that component
+            if (Component.isComponentInvalidByErrorType(err)) {
+              regularComponents.push(id);
+            } else {
+              throw err;
+            }
+          }
         })
       );
     }
@@ -986,7 +1008,7 @@ export default class Consumer {
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {
     const component = await this.loadComponent(componentId);
-    return component.writeConfig(this.getPath(), this.bitMap, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
+    return component.writeConfig(this, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
   }
 
   async injectConf(componentId: BitId, force: boolean) {
@@ -995,6 +1017,7 @@ export default class Consumer {
   }
 
   async onDestroy() {
+    await this.cleanTmpFolder();
     return this.bitMap.write();
   }
 }

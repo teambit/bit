@@ -7,7 +7,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on
+- fix `bit status` to not throw an exception for invalid components
+- support components with binary files (or non-supported extensions) as the only files
+- allow removing a component when it is invalid
+- add `getSchema` to extension life cycle
+- validate extension's rawConfig against extension schema
 - changed `--include-unmodified` to `--all`
+
+## [13.0.5-dev.2 - 2018-08-20]
+
+- change `--conf` on `bit import` to be a path to the config dir
+
+## [13.0.5-dev.1 - 2018-08-14]
+
 - support Bit components dependencies for compilers and testers
 - resolve dependencies of environments configuration files
 - new envs-attach command to attach component's envs to workspace envs
@@ -15,6 +28,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - support dynamic namespaces (replaced the box+name format with a dynamic name that can have multiple slashes to indicate a hierarchical namespace)
 - new eject-conf command to write bit.json and envs config files to file system
 - new inject-conf command to delete bit.json and envs config files from the file system
+- support return `{ write: true }` from environment init function
 
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 

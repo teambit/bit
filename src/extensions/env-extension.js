@@ -1,6 +1,7 @@
 /** @flow */
 
 import R from 'ramda';
+import path from 'path';
 import format from 'string-format';
 import BaseExtension from './base-extension';
 import Scope from '../scope/scope';
@@ -23,6 +24,7 @@ import ConsumerComponent from '../consumer/component';
 import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
 import logger from '../logger/logger';
+import { Dependencies } from '../consumer/component/dependencies';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -118,7 +120,7 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - toObject');
     const baseObject: Object = super.toObject();
     const files = this.files;
-    const object = { files, ...baseObject };
+    const object = { ...baseObject, files };
     return object;
   }
 
@@ -132,7 +134,7 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
-      const relativePath = pathJoinLinux(ejectedEnvDirectory, file.name);
+      const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
       files[file.name] = `./${relativePath}`;
     });
     const envVal = {
@@ -153,11 +155,13 @@ export default class EnvExtension extends BaseExtension {
   async writeFilesToFs({
     configDir,
     envType,
-    deleteOldFiles
+    deleteOldFiles,
+    verbose = false
   }: {
     configDir: string,
     envType: EnvType,
-    deleteOldFiles: boolean
+    deleteOldFiles: boolean,
+    verbose: boolean
   }): Promise<string> {
     Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
     logger.debug('env-extension - writeFilesToFs');
@@ -168,8 +172,8 @@ export default class EnvExtension extends BaseExtension {
       if (deleteOldFiles) {
         filePaths.push(file.path);
       }
-      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.name });
-      writeP.push(file.write());
+      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
+      writeP.push(file.write(null, true, verbose));
     });
     await Promise.all(writeP);
     await removeFilesAndEmptyDirsRecursively(filePaths);
@@ -179,10 +183,14 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Delete env files from file system
    */
-  async removeFilesFromFs(): Promise<boolean> {
+  async removeFilesFromFs(dependencies: Dependencies): Promise<boolean> {
     Analytics.addBreadCrumb('env-extension', 'removeFilesFromFs');
     const filePaths = this.files.map(file => file.path);
-    return removeFilesAndEmptyDirsRecursively(filePaths);
+    const relativeSourcePaths = dependencies.getSourcesPaths();
+    if (!this.context) throw new Error('env-extension.removeFilesFromFs, this.context is missing');
+    const componentDir = this.context.componentDir;
+    const linkPaths = relativeSourcePaths.map(relativePath => path.join(componentDir, relativePath));
+    return removeFilesAndEmptyDirsRecursively([...filePaths, ...linkPaths]);
   }
 
   async reload(scopePath: string, context?: Object): Promise<void> {
@@ -208,7 +216,13 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension - load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
-    const files = await ExtensionFile.loadFromBitJsonObject(props.files, props.consumerPath, props.bitJsonPath);
+    const files = await ExtensionFile.loadFromBitJsonObject(
+      // $FlowFixMe
+      props.files, // $FlowFixMe
+      props.consumerPath,
+      props.bitJsonPath,
+      props.envType
+    );
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
@@ -244,6 +258,7 @@ export default class EnvExtension extends BaseExtension {
     repository: Repository
   ): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
+    logger.debug('env-extension - loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -286,6 +301,7 @@ export default class EnvExtension extends BaseExtension {
     context?: Object
   }): Promise<?CompilerExtension | ?TesterExtension> {
     Analytics.addBreadCrumb('env-extension', 'loadFromCorrectSource');
+    logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
 
     // Authored component
     if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
@@ -295,7 +311,7 @@ export default class EnvExtension extends BaseExtension {
       }
       // The component is detached - load from the component bit.json or from the models
       return loadFromComponentBitJsonOrFromModel({
-        models: componentFromModel,
+        modelComponent: componentFromModel,
         componentBitJson,
         envType,
         consumerPath,
@@ -311,7 +327,7 @@ export default class EnvExtension extends BaseExtension {
       return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
     }
     return loadFromComponentBitJsonOrFromModel({
-      models: componentFromModel,
+      modelComponent: componentFromModel,
       componentBitJson,
       envType,
       consumerPath,
@@ -328,6 +344,7 @@ const loadFromBitJson = ({
   scopePath,
   context
 }): Promise<?CompilerExtension | ?TesterExtension> => {
+  logger.debug(`env-extension (${envType}) loadFromBitJson`);
   if (envType === COMPILER_ENV_TYPE) {
     return bitJson.loadCompiler(consumerPath, scopePath, context);
   }
@@ -335,21 +352,30 @@ const loadFromBitJson = ({
 };
 
 const loadFromComponentBitJsonOrFromModel = async ({
-  models,
+  modelComponent,
   componentBitJson,
   envType,
   consumerPath,
   scopePath,
   context
+}: {
+  modelComponent: ConsumerComponent,
+  componentBitJson: ?ComponentBitJson,
+  envType: EnvType,
+  consumerPath: string,
+  scopePath: string,
+  context?: Object
 }): Promise<?CompilerExtension | ?TesterExtension> => {
+  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel`);
   if (componentBitJson) {
     return loadFromBitJson({ bitJson: componentBitJson, envType, consumerPath, scopePath, context });
   }
+  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel. loading from the model`);
   if (envType === COMPILER_ENV_TYPE) {
-    return models ? models.compiler : undefined;
+    return modelComponent ? modelComponent.compiler : undefined;
   }
   if (envType === TESTER_ENV_TYPE) {
-    return models ? models.tester : undefined;
+    return modelComponent ? modelComponent.tester : undefined;
   }
 
   return undefined;

@@ -199,6 +199,10 @@ export default class Component extends BitObject {
     return new BitId({ scope: this.scope, name: this.name });
   }
 
+  toBitIdWithLatestVersion(): BitId {
+    return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
+  }
+
   toObject() {
     function versions(vers: Versions) {
       const obj = {};

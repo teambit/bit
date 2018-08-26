@@ -71,6 +71,13 @@ export default class Helper {
     return str.replace(/\u001b\[.*?m/g, '');
   }
 
+  static alignOutput(str?: ?string): ?string {
+    if (!str) return str;
+    // on Mac the directory '/var' is sometimes shown as '/private/var'
+    // $FlowFixMe
+    return Helper.removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
+  }
+
   expectToThrow(cmdFunc: Function, error: Error) {
     let output;
     try {
@@ -78,14 +85,9 @@ export default class Helper {
     } catch (err) {
       output = err.toString();
     }
-    const alignOutput = (str) => {
-      if (!str) return str;
-      // on Mac the directory '/var' is sometimes shown as '/private/var'
-      // $FlowFixMe
-      return Helper.removeChalkCharacters(str).replace('/private/var/', '/var/');
-    };
+
     const errorString = defaultErrorHandler(error);
-    expect(alignOutput(output)).to.have.string(alignOutput(errorString));
+    expect(Helper.alignOutput(output)).to.have.string(Helper.alignOutput(errorString));
   }
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);
@@ -230,8 +232,12 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedLocalScope(clonedScopePath: string) {
-    fs.removeSync(this.localScopePath);
+  getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+    if (deleteCurrentScope) {
+      fs.removeSync(this.localScopePath);
+    } else {
+      this.setLocalScope();
+    }
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.localScopePath}`);
     fs.copySync(clonedScopePath, this.localScopePath);
   }
@@ -245,8 +251,12 @@ export default class Helper {
     return clonedScopePath;
   }
 
-  getClonedRemoteScope(clonedScopePath: string) {
-    fs.removeSync(this.remoteScopePath);
+  getClonedRemoteScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+    if (deleteCurrentScope) {
+      fs.removeSync(this.remoteScopePath);
+    } else {
+      this.getNewBareScope();
+    }
     if (this.debugMode) console.log(`cloning a scope from ${clonedScopePath} to ${this.remoteScopePath}`);
     fs.copySync(clonedScopePath, this.remoteScopePath);
   }
@@ -409,6 +419,11 @@ export default class Helper {
 
   status() {
     return this.runCmd('bit status');
+  }
+
+  statusJson() {
+    const status = this.runCmd('bit status --json');
+    return JSON.parse(status);
   }
 
   showComponent(id: string = 'bar/foo') {

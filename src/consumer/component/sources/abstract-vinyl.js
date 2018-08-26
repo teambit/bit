@@ -25,9 +25,13 @@ export default class AbstractVinyl extends Vinyl {
     this.path = path.join(this.base, relative);
   }
 
-  async write(writePath?: string, force?: boolean = true): Promise<?string> {
+  async write(writePath?: string, force?: boolean = true, verbose: boolean = false): Promise<?string> {
     const filePath = writePath || this.path;
-    logger.debug(`writing a file to the file-system at ${filePath}, force: ${force.toString()}`);
+    const msg = _verboseMsg(filePath, force);
+    if (verbose) {
+      console.log(msg); // eslint-disable-line no-console
+    }
+    logger.debug(msg);
     if (!force && fs.existsSync(filePath)) return null;
     await fs.outputFile(filePath, eol.auto(this.contents, this.relative));
     return filePath;
@@ -56,4 +60,13 @@ export default class AbstractVinyl extends Vinyl {
     if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
   }
+}
+
+/**
+ * Generate message for the logs and for output in case of verbose
+ * this function is exported for testing purposes
+ */
+export function _verboseMsg(filePath: string, force: boolean) {
+  const msg = `writing a file to the file-system at ${filePath}, force: ${force.toString()}`;
+  return msg;
 }

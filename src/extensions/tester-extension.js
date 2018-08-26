@@ -5,6 +5,7 @@ import BaseExtension from './base-extension';
 import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension';
 import { Repository } from '../scope/objects';
 import { Analytics } from '../analytics/analytics';
+import logger from '../logger/logger';
 
 export type TesterExtensionOptions = EnvExtensionOptions;
 export type TesterExtensionModel = EnvExtensionModel;
@@ -29,7 +30,7 @@ export default class TesterExtension extends EnvExtension {
    * used for ejecting env for imported component
    * @param {*} param0
    */
-  async writeFilesToFs(baseOpts: { configDir: string, deleteOldFiles: boolean }): Promise<string> {
+  async writeFilesToFs(baseOpts: { configDir: string, deleteOldFiles: boolean, verbose: boolean }): Promise<string> {
     Analytics.addBreadCrumb('tester-extension', 'writeFilesToFs');
     const concreteOpts = { ...baseOpts, envType: this.envType };
     return super.writeFilesToFs(concreteOpts);
@@ -41,6 +42,7 @@ export default class TesterExtension extends EnvExtension {
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('tester-extension', 'load');
+    logger.debug('tester-extension: load');
     props.envType = TESTER_ENV_TYPE;
     // Throw error if tester not loaded
     props.throws = true;

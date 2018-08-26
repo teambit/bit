@@ -4,6 +4,7 @@ let logger;
 const tester = {
   init: ({ rawConfig, dynamicConfig, api }) => {
     logger = api.getLogger();
+    return { write: true };
   },
   getDynamicConfig: ({ rawConfig }) => {
     const dynamicConfig = Object.assign({}, rawConfig);

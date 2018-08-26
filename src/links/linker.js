@@ -23,7 +23,7 @@ export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksRes
 
 export async function writeLinksInDist(component: Component, componentMap: ComponentMap, consumer: Consumer) {
   const componentWithDeps = await component.toComponentWithDependencies(consumer);
-  await linkGenerator.writeDependencyLinks([componentWithDeps], consumer, false);
+  await linkGenerator.writeComponentsDependenciesLinks([componentWithDeps], consumer, false);
   const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   if (!componentMap.rootDir) throw new GeneralError('writeLinksInDist should get called on imported components only');
   await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
@@ -42,7 +42,7 @@ async function reLinkDirectlyImportedDependencies(components: Component[], consu
   const componentsWithDependencies = await Promise.all(
     components.map(component => component.toComponentWithDependencies(consumer))
   );
-  await linkGenerator.writeDependencyLinks(componentsWithDependencies, consumer, false);
+  await linkGenerator.writeComponentsDependenciesLinks(componentsWithDependencies, consumer, false);
   await linkComponentsToNodeModules(components, consumer);
 }
 
@@ -82,7 +82,7 @@ export async function linkComponents(
   const allComponents = writtenDependencies
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
     : writtenComponents;
-  await linkGenerator.writeDependencyLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
+  await linkGenerator.writeComponentsDependenciesLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
 
   // no need for entry-point file if package.json is written.
   if (writtenDependencies) {

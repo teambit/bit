@@ -38,7 +38,8 @@ import {
   HashMismatch,
   MergeConflictOnRemote,
   VersionNotFound,
-  CyclicDependencies
+  CyclicDependencies,
+  HashNotFound
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
@@ -84,6 +85,7 @@ import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import { COMPONENT_DIR } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
+import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -189,6 +191,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   currentHash: ${chalk.bold(err.currentHash)}
   this usually happens when a component is old and the migration script was not running or interrupted`
   ],
+  [HashNotFound, err => `hash ${chalk.bold(err.hash)} not found`],
   [
     MergeConflict,
     err =>
@@ -383,30 +386,34 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ExternalTestError,
     err =>
-      `error: bit failed to test ${err.id} with the following exception:\n${err.originalError.message}.\n${
-        err.originalError.stack
-      }`
+      `error: bit failed to test ${err.id} with the following exception:\n${getExternalErrorMessage(
+        err.originalError
+      )}.\n${err.originalError.stack}`
   ],
   [
     ExternalBuildError,
     err =>
-      `error: bit failed to build ${err.id} with the following exception:\n${err.originalError.message}.\n${
-        err.originalError.stack
-      }`
+      `error: bit failed to build ${err.id} with the following exception:\n${getExternalErrorMessage(
+        err.originalError
+      )}.\n${err.originalError.stack}`
   ],
   [
     ExtensionLoadError,
     err =>
-      `error: bit failed to load ${err.name} with the following exception:\n${err.originalError.message}.\n${
-        err.originalError.stack
-      }`
+      `error: bit failed to load ${err.name} with the following exception:\n${getExternalErrorMessage(
+        err.originalError
+      )}.\n${err.printStack ? err.originalError.stack : ''}`
+  ],
+  [
+    ExtensionSchemaError,
+    err => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`
   ],
   [
     ExtensionInitError,
     err =>
-      `error: bit failed to initialized ${err.name} with the following exception:\n${err.originalError.message}.\n${
-        err.originalError.stack
-      }`
+      `error: bit failed to initialized ${err.name} with the following exception:\n${getExternalErrorMessage(
+        err.originalError
+      )}.\n${err.originalError.stack}`
   ],
   [
     ExtensionGetDynamicPackagesError,
@@ -422,9 +429,9 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ResolutionException,
     err =>
-      `error: bit failed to require ${err.filePath} due to the following exception:\n${err.originalError.message}.\n${
-        err.originalError.stack
-      }`
+      `error: bit failed to require ${err.filePath} due to the following exception:\n${getExternalErrorMessage(
+        err.originalError
+      )}.\n${err.originalError.stack}`
   ],
   [
     AuthenticationFailed,
@@ -437,12 +444,41 @@ function formatUnhandled(err: Error): string {
   return chalk.red(err.message || err);
 }
 
-export default (err: Error): ?string => {
+function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {
     return err instanceof ErrorType || err.name === ErrorType.name; // in some cases, such as forked process, the received err is serialized.
   });
+  return error;
+}
 
-  if (!error) return formatUnhandled(err);
+function getErrorFunc(errorDefinition) {
+  if (!errorDefinition) return null;
+  const [, func] = errorDefinition;
+  return func;
+}
+
+function getErrorMessage(error: ?Error, func: ?Function): string {
+  if (!error || !func) return '';
+  const errorMessage = func(error);
+  return errorMessage;
+}
+
+function getExternalErrorMessage(externalError: ?Error): string {
+  if (!externalError) return '';
+  // In case it's not a bit error
+  if (externalError.message) {
+    return externalError.message;
+  }
+  const errorDefinition = findErrorDefinition(externalError);
+  const func = getErrorFunc(errorDefinition);
+  const errorMessage = getErrorMessage(externalError, func);
+  return errorMessage;
+}
+
+export default (err: Error): ?string => {
+  const errorDefinition = findErrorDefinition(err);
+
+  if (!errorDefinition) return formatUnhandled(err);
   /* this is an error that bit knows how to handle dont send to sentry */
 
   if (err instanceof AbstractError) {
@@ -450,8 +486,8 @@ export default (err: Error): ?string => {
   } else {
     Analytics.setError(LEVEL.FATAL, err);
   }
-  const [, func] = error;
-  const errorMessage = func(err);
+  const func = getErrorFunc(errorDefinition);
+  const errorMessage = getErrorMessage(err, func) || 'unknown error';
   err.message = errorMessage;
   logger.error(`User gets the following error: ${errorMessage}`);
   return chalk.red(errorMessage);

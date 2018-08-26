@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
 import chalk from 'chalk';
 import diff from 'object-diff';
 import normalize from 'normalize-path';
@@ -8,6 +9,7 @@ import Component from '../component/consumer-component';
 import type { FieldsDiff } from './components-diff';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '..';
+import EnvExtension from '../../extensions/env-extension';
 
 export function componentToPrintableForDiff(component: Component): Object {
   const obj = {};
@@ -15,6 +17,12 @@ export function componentToPrintableForDiff(component: Component): Object {
     return !R.isEmpty(packages) && !R.isNil(packages)
       ? Object.keys(packages).map(key => `${key}@${packages[key]}`)
       : null;
+  };
+  const parseEnvFiles = (envExtension: ?EnvExtension): ?(string[]) => {
+    // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
+    if (RA.isNilOrEmpty(envExtension) || RA.isNilOrEmpty(envExtension.files)) return null;
+    // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
+    return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
   };
   const {
     lang,
@@ -46,8 +54,10 @@ export function componentToPrintableForDiff(component: Component): Object {
 
   obj.id = component.id.toStringWithoutScope();
   obj.compiler = compiler ? compiler.name : null;
+  obj.compilerFiles = parseEnvFiles(compiler);
   obj.language = lang || null;
   obj.tester = tester ? tester.name : null;
+  obj.testerFiles = parseEnvFiles(tester);
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies
     .toStringOfIds()

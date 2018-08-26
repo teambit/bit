@@ -47,7 +47,7 @@ export default class SourceRepository {
     return null;
   }
 
-  getMany(ids: BitId[]): Promise<ComponentDef[]> {
+  getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
       ids.map((id) => {

@@ -17,6 +17,7 @@ import GeneralError from '../../../../error/general-error';
 import { Dependency } from '..';
 import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
+import BitMap from '../../../bit-map';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.
@@ -151,9 +152,30 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
             }`
           );
         }
-        const originallySource: PathLinux = entryComponentMap.originallySharedDir
-          ? pathJoinLinux(entryComponentMap.originallySharedDir, depFile)
-          : depFile;
+
+        const isCompilerDependency = componentFromModel.compilerDependencies.getById(componentId);
+        const isTesterDependency = componentFromModel.testerDependencies.getById(componentId);
+        const isEnvDependency = isCompilerDependency || isTesterDependency;
+        const isRelativeToConfigDir = isEnvDependency && entryComponentMap.configDir && entryComponentMap.rootDir;
+
+        const getOriginallySourcePath = (): PathLinux => {
+          if (isRelativeToConfigDir) {
+            // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
+            const resolvedSource = path.resolve(entryComponentMap.rootDir, depFile);
+            // @todo: use the new ConfigDir class that Gilad added once it is merged.
+            const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
+              entryComponentMap.configDir,
+              entryComponentMap.rootDir
+            );
+            const configDir = isCompilerDependency ? compilerConfigDir : testerConfigDir;
+            const absoluteConfigDir = consumer.toAbsolutePath(configDir);
+            return pathRelativeLinux(absoluteConfigDir, resolvedSource);
+          }
+          return entryComponentMap.originallySharedDir
+            ? pathJoinLinux(entryComponentMap.originallySharedDir, depFile)
+            : depFile;
+        };
+        const originallySource: PathLinux = getOriginallySourcePath();
         const relativePath: RelativePath = dependency.relativePaths.find(
           r => r.sourceRelativePath === originallySource
         );
@@ -167,6 +189,11 @@ Try to run "bit import ${consumerComponent.id.toString()} --objects" to get the 
         destination = relativePath.destinationRelativePath;
 
         depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
+
+        if (isRelativeToConfigDir) {
+          // in this case, sourceRelativePath should be relative to configDir
+          depFileRelative = originallySource;
+        }
       }
     }
 

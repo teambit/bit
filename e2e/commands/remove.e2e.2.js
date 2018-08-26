@@ -404,4 +404,21 @@ describe('bit remove command', function () {
       expect(bitJson).to.not.have.property(`${helper.remoteScope}/utils/is-string2`);
     });
   });
+  describe('remove a component when the main file is missing', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo-main.js');
+      helper.addComponentWithOptions('bar', { m: 'foo-main.js', i: 'bar/foo' });
+      helper.tagAllWithoutMessage();
+      helper.deleteFile('bar/foo-main.js');
+      const status = helper.status();
+      expect(status).to.have.string('main-file was removed');
+      output = helper.removeComponent('bar/foo -s');
+    });
+    it('should remove the component successfully', () => {
+      expect(output).to.have.string('successfully removed component');
+    });
+  });
 });

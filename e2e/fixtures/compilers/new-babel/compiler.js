@@ -9,6 +9,24 @@ let logger;
 const compiler = {
   init: ({ rawConfig, dynamicConfig, api }) => {
     logger = api.getLogger();
+    return { write: true };
+  },
+  getSchema: () => {
+    const schema = {
+      "$id": "http://example.com/schemas/schema.json",
+      "type": "object",
+      "properties": {
+        "valToDynamic": {
+          "type": "string",
+          "description": "prop which will be changed to dynamic val"
+        },
+        "bablercPath": {
+          "type": "string",
+          "description": "path to the .babelrc file"
+        }
+      }
+    };
+    return schema;
   },
   getDynamicConfig: ({ rawConfig }) => {
     const dynamicConfig = Object.assign({}, rawConfig);
@@ -72,7 +90,7 @@ const compiler = {
     }
 
     try {
-      const builtFiles = files.map(file => runBabel(file, babelrc, context.rootDistFolder)).reduce((a, b) => a.concat(b));
+      const builtFiles = files.map(file => runBabel(file, babelrc, context.rootDistDir)).reduce((a, b) => a.concat(b));
       return {files: builtFiles};
     } catch (e) {
       throw e;

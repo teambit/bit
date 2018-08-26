@@ -11,7 +11,7 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first } from '../utils';
 import Consumer from '../consumer/consumer';
-import { getLinkContent, getIndexFileName, writeDependencyLinks } from './link-generator';
+import { getLinkContent, getIndexFileName, writeComponentsDependenciesLinks } from './link-generator';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
 import { Dependency } from '../consumer/component/dependencies';
@@ -125,7 +125,10 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
   const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
   const fileContent = getLinkContent(destRelative);
-  fs.outputFileSync(dest, fileContent);
+  if (fileContent) {
+    // otherwise, the file type is not supported, no need to write anything
+    fs.outputFileSync(dest, fileContent);
+  }
 }
 
 function writeMissingLinks(consumer: Consumer, component: Component, componentMap: ComponentMap): LinkDetail[] {
@@ -152,7 +155,7 @@ async function writeMissingCustomResolvedLinks(consumer: Consumer, component: Co
   const missingLinks = component.issues.missingCustomModuleResolutionLinks;
   const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
   component.copyDependenciesFromModel(dependenciesStr);
-  await writeDependencyLinks([componentWithDependencies], consumer, false);
+  await writeComponentsDependenciesLinks([componentWithDependencies], consumer, false);
 
   // for now, don't display these links as they're not symlinks, and are not compatible with the
   // LinkDetail type
