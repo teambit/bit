@@ -441,4 +441,43 @@ describe('auto tagging functionality', function () {
       });
     });
   });
+  describe('with same component as direct and indirect dependent (A in: A => B => C, A => C)', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'a.js', 'require("./b"); require("./c");');
+      helper.createFile('bar', 'b.js', 'require("./c")');
+      helper.createFile('bar', 'c.js', 'console.log("I am C v1")');
+      helper.addComponent('bar/*.js');
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/a');
+      helper.importComponent('bar/b');
+      helper.importComponent('bar/c');
+
+      helper.createFile('components/bar/c', 'c.js', 'console.log("I am C v2")');
+    });
+    it('bit-status should show the auto-tagged pending', () => {
+      const status = helper.statusJson();
+      expect(status.autoTagPendingComponents).to.include(`${helper.remoteScope}/bar/a`);
+      expect(status.autoTagPendingComponents).to.include(`${helper.remoteScope}/bar/b`);
+    });
+    describe('tagging the dependency', () => {
+      let commitOutput;
+      before(() => {
+        commitOutput = helper.commitComponent('bar/c');
+      });
+      it('should bump the component version that is direct and indirect dependent only once', () => {
+        expect(commitOutput).to.have.string('bar/a@0.0.2');
+
+        const barA = helper.catComponent(`${helper.remoteScope}/bar/a`);
+        const barAVersions = Object.keys(barA.versions);
+        expect(barAVersions).to.include('0.0.1');
+        expect(barAVersions).to.include('0.0.2');
+        expect(barAVersions).to.have.lengthOf(2);
+      });
+    });
+  });
 });
