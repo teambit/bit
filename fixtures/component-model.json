@@ -1,0 +1,10 @@
+{
+  "validateBeforePersist": true,
+  "scope": "remote",
+  "name": "bar/foo",
+  "versions": { "0.0.1": { "hash": "d410b67990f465795d337604be144fd826f847b2" } },
+  "lang": "javascript",
+  "deprecated": false,
+  "bindingPrefix": "@bit",
+  "state": {}
+}

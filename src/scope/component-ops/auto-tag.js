@@ -40,7 +40,7 @@ export async function bumpDependenciesVersions(
   const committedComponentsIds = BitIds.fromArray(committedComponents.map(c => c.id));
   const allComponents = new BitIds(...potentialComponents, ...committedComponentsIds);
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
-  const graph = await buildGraph(scope, componentsAndVersions);
+  const graph = buildGraph(componentsAndVersions);
   const updatedComponents = await updateComponents(
     componentsAndVersions,
     scope,
@@ -108,7 +108,7 @@ function updateDependencies(version, edgeId, changedComponentId) {
   }
 }
 
-async function buildGraph(scope: Scope, componentsAndVersions: ComponentsAndVersions[]) {
+function buildGraph(componentsAndVersions: ComponentsAndVersions[]) {
   const graph = new Graph();
   const componentsIds = BitIds.fromArray(componentsAndVersions.map(c => c.component.toBitId()));
   componentsAndVersions.forEach(({ component, version, versionStr }) => {
@@ -134,7 +134,7 @@ export async function getAutoTagPending(
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(
     new BitIds(...potentialComponents, ...changedComponents)
   );
-  const graph = await buildGraph(scope, componentsAndVersions);
+  const graph = buildGraph(componentsAndVersions);
 
   const autoTagPendingComponents = componentsAndVersions.map(({ component }) => {
     const bitId = component.toBitId();
