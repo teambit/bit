@@ -1,7 +1,6 @@
 // @flow
 import fs from 'fs-extra';
 import path from 'path';
-import normalize from 'normalize-path';
 import R from 'ramda';
 import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
@@ -19,7 +18,6 @@ import Component from '../consumer/component';
 import { Dependency } from '../consumer/component/dependencies';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
-import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
@@ -27,29 +25,7 @@ import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import GeneralError from '../error/general-error';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import Dependencies from '../consumer/component/dependencies/dependencies';
-
-const LINKS_CONTENT_TEMPLATES = {
-  js: "module.exports = require('{filePath}');",
-  ts: "export * from '{filePath}';",
-  jsx: "export * from '{filePath}';",
-  tsx: "export * from '{filePath}';",
-  css: "@import '{filePath}.css';",
-  scss: "@import '{filePath}.scss';",
-  sass: "@import '{filePath}.sass';",
-  less: "@import '{filePath}.less';",
-  vue: "<script>\nmodule.exports = require('{filePath}.vue');\n</script>"
-};
-
-const PACKAGES_LINKS_CONTENT_TEMPLATES = {
-  css: "@import '~{filePath}';",
-  scss: "@import '~{filePath}';",
-  sass: "@import '~{filePath}';",
-  less: "@import '~{filePath}';",
-  'st.css': ':import { -st-from: "{filePath}";}',
-  vue: "<script>\nmodule.exports = require('{filePath}');\n</script>"
-};
-
-const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
+import getLinkContent from './link-content';
 
 type LinkFile = {
   linkPath: string,
@@ -58,111 +34,7 @@ type LinkFile = {
   postInstallLink?: boolean // postInstallLink is needed when custom module resolution was used
 };
 
-// todo: move to bit-javascript
-function getIndexFileName(mainFile: string): string {
-  return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
-}
-
-// todo: move to bit-javascript
-function getLinkContent(
-  filePath: PathOsBased,
-  importSpecifiers?: Object,
-  createNpmLinkFiles?: boolean,
-  bitPackageName?: string
-): string {
-  const fileExt = getExt(filePath);
-  /**
-   * Get the template for the generated link file.
-   *
-   * For ES6 and TypeScript the template is more complicated and we often need to know how originally the variables were
-   * imported, whether default (e.g. import foo from './bar') or non-default (e.g. import { foo } from './bar').
-   *
-   * The importSpecifier.linkFile attribute exists when the main-file doesn't require the variable directly, but uses a
-   * link-file to require it indirectly. E.g. src/bar.js: `import foo from './utils;` utils/index.js: `import foo from './foo';`
-   */
-  const getTemplate = () => {
-    if (importSpecifiers && importSpecifiers.length) {
-      if (fileExt === 'js' || fileExt === 'jsx') {
-        // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
-        return importSpecifiers
-          .map((importSpecifier) => {
-            if (!importSpecifier.linkFile) {
-              // when no link-file is involved, use the standard non-es6 syntax (a privilege that doesn't exist for TS)
-              return LINKS_CONTENT_TEMPLATES.js;
-            }
-            // for link files we need to know whether the main-file imports the variable as default or non-default
-            let exportPart = 'exports';
-            if (importSpecifier.mainFile.isDefault) {
-              exportPart += '.default';
-            } else {
-              exportPart += `.${importSpecifier.mainFile.name}`;
-            }
-            const linkVariable = `_${importSpecifier.linkFile.name}`;
-            const linkRequire = `var ${linkVariable} = require('{filePath}');`;
-            // when add-module-export babel plugin is used, there is no .default
-            // the link-file should support both cases, with and without that plugin
-            const pathPart = importSpecifier.linkFile.isDefault
-              ? `${linkVariable} && ${linkVariable}.hasOwnProperty('default') ? ${linkVariable}.default : ${linkVariable}`
-              : `${linkVariable}.${importSpecifier.mainFile.name}`;
-
-            return `${linkRequire}\n${exportPart} = ${pathPart};`;
-          })
-          .join('\n');
-      } else if (fileExt === 'ts' || fileExt === 'tsx') {
-        return importSpecifiers
-          .map((importSpecifier) => {
-            let importPart = 'import ';
-            if (
-              (importSpecifier.linkFile && importSpecifier.linkFile.isDefault) ||
-              (!importSpecifier.linkFile && importSpecifier.mainFile.isDefault)
-            ) {
-              importPart += `${importSpecifier.mainFile.name}`;
-            } else {
-              importPart += `{ ${importSpecifier.mainFile.name} }`;
-            }
-            importPart += " from '{filePath}';";
-
-            let exportPart = 'export ';
-            if (importSpecifier.mainFile.isDefault) {
-              exportPart += `default ${importSpecifier.mainFile.name};`;
-            } else {
-              exportPart += `{ ${importSpecifier.mainFile.name} };`;
-            }
-            return `${importPart}\n${exportPart}`;
-          })
-          .join('\n');
-      }
-    }
-    fileTypesPlugins.forEach((plugin) => {
-      LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
-    });
-
-    if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) {
-      return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
-    }
-    return LINKS_CONTENT_TEMPLATES[fileExt];
-  };
-
-  if (!filePath.startsWith('.')) {
-    filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
-  }
-
-  let filePathWithoutExt = getWithoutExt(filePath);
-  const template = getTemplate();
-  if (createNpmLinkFiles) {
-    filePathWithoutExt = bitPackageName;
-  } else {
-    filePathWithoutExt = getWithoutExt(filePath); // remove the extension
-  }
-
-  if (!template) {
-    logger.debug(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
-    return '';
-  }
-  return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
-}
-
-function prepareLinkFile(
+type PrepareLinkFileParams = {
   componentId: BitId,
   mainFile: PathOsBased,
   linkPath: string,
@@ -170,7 +42,22 @@ function prepareLinkFile(
   relativePath: Object,
   depRootDir: ?PathOsBased,
   isNpmLink: boolean
-): LinkFile {
+};
+
+// todo: move to bit-javascript
+function getIndexFileName(mainFile: string): string {
+  return `${DEFAULT_INDEX_NAME}.${getExt(mainFile)}`;
+}
+
+function prepareLinkFile({
+  componentId,
+  mainFile,
+  linkPath,
+  relativePathInDependency,
+  relativePath,
+  depRootDir,
+  isNpmLink
+}: PrepareLinkFileParams): LinkFile {
   // this is used to convert the component name to a valid npm package  name
   const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
     DEFAULT_REGISTRY_DOMAIN_PREFIX}/${componentId.toStringWithoutVersion().replace(/\//g, '.')}`;
@@ -251,7 +138,6 @@ function _getLinksForOneDependencyFile({
   };
   const linkPath = getLinkPath();
 
-  let distLinkPath: PathOsBased;
   const linkFiles = [];
   const depComponentMap = component.dependenciesSavedAsComponents
     ? consumer.bitMap.getComponent(dependencyId)
@@ -264,62 +150,49 @@ function _getLinksForOneDependencyFile({
     depComponentMap && depComponentMap.rootDir
       ? dependencyComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
       : undefined;
+  const isCustomResolvedWithDistInside =
+    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist;
+
+  const prepareLinkFileParams: PrepareLinkFileParams = {
+    componentId: dependencyId,
+    mainFile,
+    linkPath,
+    relativePathInDependency: isCustomResolvedWithDistInside
+      ? `${getWithoutExt(relativePathInDependency)}.${relativeDistExtInDependency}`
+      : relativePathInDependency,
+    relativePath,
+    depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir,
+    isNpmLink
+  };
+
+  const linkFile = prepareLinkFile(prepareLinkFileParams);
+  if (relativePath.isCustomResolveUsed && createNpmLinkFiles) {
+    linkFile.postInstallLink = true;
+  }
+  linkFiles.push(linkFile);
 
   if (hasDist) {
+    prepareLinkFileParams.relativePathInDependency = relativeDistPathInDependency;
+    prepareLinkFileParams.depRootDir = depRootDirDist;
     if (relativePath.isCustomResolveUsed) {
       if (!consumer.shouldDistsBeInsideTheComponent()) {
         // when isCustomResolvedUsed, the link is generated inside node_module directory, so for
         // dist inside the component, only one link is needed at the parentRootDir. for dist
         // outside the component dir, another link is needed for the dist/parentRootDir.
         // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
-        distLinkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
-        const linkFile = prepareLinkFile(
-          dependencyId,
-          mainFile,
-          distLinkPath,
-          relativeDistPathInDependency,
-          relativePath,
-          depRootDirDist,
-          isNpmLink
-        );
-        linkFiles.push(linkFile);
+        prepareLinkFileParams.linkPath = path.join(distRoot, 'node_modules', relativePath.importSource);
+        const linkFileInNodeModules = prepareLinkFile(prepareLinkFileParams);
+        linkFiles.push(linkFileInNodeModules);
       }
     } else {
       const sourceRelativePathWithCompiledExt = `${getWithoutExt(sourceRelativePath)}.${relativeDistExtInDependency}`;
-      distLinkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
       // Generate a link file inside dist folder of the dependent component
-      const linkFile = prepareLinkFile(
-        dependencyId,
-        mainFile,
-        distLinkPath,
-        relativeDistPathInDependency,
-        relativePath,
-        depRootDirDist,
-        isNpmLink
-      );
-      linkFiles.push(linkFile);
+      prepareLinkFileParams.linkPath = path.join(distRoot, sourceRelativePathWithCompiledExt);
+      const linkFileInDist = prepareLinkFile(prepareLinkFileParams);
+      linkFiles.push(linkFileInDist);
     }
   }
 
-  const sourceRelativePathWithCompiledExt = `${getWithoutExt(relativePathInDependency)}.${relativeDistExtInDependency}`;
-  const linkFile = prepareLinkFile(
-    dependencyId,
-    mainFile,
-    linkPath,
-    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
-      ? sourceRelativePathWithCompiledExt
-      : relativePathInDependency,
-    relativePath,
-    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
-      ? depRootDirDist
-      : depRootDir,
-    isNpmLink
-  );
-  if (relativePath.isCustomResolveUsed && createNpmLinkFiles) {
-    linkFile.postInstallLink = true;
-  }
-
-  linkFiles.push(linkFile);
   return linkFiles;
 }
 
@@ -594,7 +467,6 @@ async function writeDependenciesLinksToDir(
 export {
   writeEntryPointsForComponent,
   writeComponentsDependenciesLinks,
-  getLinkContent,
   getIndexFileName,
   writeDependenciesLinksToDir
 };

@@ -90,4 +90,24 @@ describe('binary files', function () {
       });
     });
   });
+  describe.skip('importing a PNG file as the only file and have it as a dependency of another component', () => {
+    let destPngFile;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
+      destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
+      fs.copySync(sourcePngFile, destPngFile);
+      helper.runCmd('bit add bar -m png_fixture.png -i bar/png');
+      const fixture = 'require("./png_fixture.png")';
+      helper.createFile('bar', 'foo.js', fixture);
+      helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo' });
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should import with the correct links', () => {});
+  });
 });
