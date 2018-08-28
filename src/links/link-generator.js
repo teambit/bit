@@ -2,6 +2,7 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
+import symlinkOrCopy from 'symlink-or-copy';
 import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
 import {
@@ -31,7 +32,13 @@ type LinkFile = {
   linkPath: string,
   linkContent: string,
   isEs6: boolean,
-  postInstallLink?: boolean // postInstallLink is needed when custom module resolution was used
+  postInstallLink?: boolean, // postInstallLink is needed when custom module resolution was used
+  symlinkTo?: ?PathOsBased // symlink (instead of link) is needed for unsupported files, such as binary files
+};
+
+type Symlink = {
+  source: PathOsBasedAbsolute,
+  dest: PathOsBasedAbsolute // existing file
 };
 
 type PrepareLinkFileParams = {
@@ -71,7 +78,8 @@ function prepareLinkFile({
   logger.debug(`prepareLinkFile, on ${linkPath}`);
   const linkPathExt = getExt(linkPath);
   const isEs6 = importSpecifiers && linkPathExt === 'js';
-  return { linkPath, linkContent, isEs6 };
+  const symlinkTo = linkContent ? undefined : actualFilePath;
+  return { linkPath, linkContent, isEs6, symlinkTo };
 }
 
 /**
@@ -255,22 +263,44 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     : [];
   const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
 
-  const { postInstallLinks, linksToWrite } = groupLinks(flattenLinks);
+  const { postInstallLinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
   if (postInstallLinks.length) {
     await generatePostInstallScript(component, postInstallLinks);
+  }
+  if (symlinks.length) {
+    createSymlinkOrCopy(symlinks, component.id);
   }
   return linksToWrite;
 }
 
+function createSymlinkOrCopy(symlinks: Symlink[], componentId: string) {
+  symlinks.forEach((symlink: Symlink) => {
+    try {
+      logger.debug(`generating a symlink on ${symlink.dest} pointing to ${symlink.source}`);
+      fs.ensureDirSync(path.dirname(symlink.dest));
+      symlinkOrCopy.sync(symlink.dest, symlink.source);
+    } catch (err) {
+      throw new GeneralError(`failed to link a component ${componentId}.
+           Symlink (or maybe copy for Windows) from: ${symlink.source}, to: ${symlink.dest} was failed.
+           Original error: ${err}`);
+    }
+  });
+}
+
 function groupLinks(
   flattenLinks: LinkFile[]
-): { postInstallLinks: OutputFileParams[], linksToWrite: OutputFileParams[] } {
+): { postInstallLinks: OutputFileParams[], linksToWrite: OutputFileParams[], symlinks: Symlink[] } {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];
   const postInstallLinks = [];
+  const symlinks = [];
   Object.keys(groupedLinks).forEach((group) => {
     let content = '';
     const firstGroupItem = groupedLinks[group][0];
+    if (firstGroupItem.symlinkTo) {
+      symlinks.push({ source: firstGroupItem.linkPath, dest: firstGroupItem.symlinkTo });
+      return;
+    }
     if (firstGroupItem.isEs6) {
       // check by the first item of the array, it can be any other item as well
       content = 'Object.defineProperty(exports, "__esModule", { value: true });\n';
@@ -283,7 +313,7 @@ function groupLinks(
       linksToWrite.push(linkFile);
     }
   });
-  return { postInstallLinks, linksToWrite };
+  return { postInstallLinks, linksToWrite, symlinks };
 }
 
 /**

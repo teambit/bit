@@ -52,8 +52,6 @@ export default function getLinkContent(
   const template = getTemplate(fileExt, filePath, importSpecifiers, createNpmLinkFiles);
   if (createNpmLinkFiles) {
     filePathWithoutExt = bitPackageName;
-  } else {
-    filePathWithoutExt = getWithoutExt(filePath); // remove the extension
   }
 
   if (!template) {
