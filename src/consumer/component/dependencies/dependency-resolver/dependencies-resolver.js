@@ -18,6 +18,7 @@ import { Dependency } from '..';
 import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
+import { isSupportedExtension } from '../../../../links/link-content';
 
 /**
  * Given the tree of file dependencies from the driver, find the components of these files.

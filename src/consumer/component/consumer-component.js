@@ -427,6 +427,16 @@ export default class Component {
     ];
   }
 
+  getAllDependenciesCloned(): Dependencies {
+    const dependencies = [
+      ...this.dependencies.getClone(),
+      ...this.devDependencies.getClone(),
+      ...this.compilerDependencies.getClone(),
+      ...this.testerDependencies.getClone()
+    ];
+    return new Dependencies(dependencies);
+  }
+
   getAllNonEnvsDependencies(): Dependency[] {
     return [...this.dependencies.dependencies, ...this.devDependencies.dependencies];
   }

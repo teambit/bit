@@ -28,13 +28,19 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 
 const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
-const supportedExtension = (): string[] => {
+function getSupportedExtensions(): string[] {
   const extensions = Object.keys(LINKS_CONTENT_TEMPLATES);
   fileTypesPlugins.forEach((plugin) => {
     extensions.push(plugin.getExtension());
   });
   return extensions;
-};
+}
+
+export function isSupportedExtension(filePath: string) {
+  const ext = getExt(filePath);
+  const supportedExtensions = getSupportedExtensions();
+  return supportedExtensions.includes(ext);
+}
 
 export default function getLinkContent(
   filePath: PathOsBased,

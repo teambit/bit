@@ -91,6 +91,14 @@ export default class Dependencies {
     return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
+  getBySourcePath(sourcePath: string): Dependency {
+    return this.dependencies.find(dependency =>
+      dependency.relativePaths.some((relativePath) => {
+        return relativePath.sourceRelativePath === sourcePath;
+      })
+    );
+  }
+
   getAllIds(): BitIds {
     return BitIds.fromArray(this.dependencies.map(dependency => dependency.id));
   }

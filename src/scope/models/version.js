@@ -224,6 +224,16 @@ export default class Version extends BitObject {
     ];
   }
 
+  getAllDependenciesCloned(): Dependencies {
+    const dependencies = [
+      ...this.dependencies.getClone(),
+      ...this.devDependencies.getClone(),
+      ...this.compilerDependencies.getClone(),
+      ...this.testerDependencies.getClone()
+    ];
+    return new Dependencies(dependencies);
+  }
+
   updateFlattenedDependency(currentId: BitId, newId: BitId) {
     const getUpdated = (flattenedDependencies: BitIds): BitIds => {
       const updatedIds = flattenedDependencies.map((depId) => {
