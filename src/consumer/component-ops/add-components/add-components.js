@@ -196,7 +196,7 @@ export default class AddComponents {
    * 2. a user is updating an existing component. there is a record for this component in bit.map
    * 3. some or all the files of this component were previously added as another component-id.
    */
-  async addOrUpdateComponentInBitMap(component: AddedComponent): ?AddResult {
+  async addOrUpdateComponentInBitMap(component: AddedComponent): Promise<?AddResult> {
     const consumerPath = this.consumer.getPath();
     const parsedBitId = component.componentId;
     const files: ComponentMapFile[] = component.files;
@@ -237,8 +237,10 @@ export default class AddComponents {
       }
       return file;
     });
-    component.files = (await Promise.all(componentFilesP)).filter(file => file);
-    if (R.isEmpty(component.files)) return null;
+    const componentFiles = (await Promise.all(componentFilesP)).filter(file => file);
+    if (!componentFiles.length) return null;
+    // $FlowFixMe it can't be null due to the filter function
+    component.files = componentFiles;
     return this.addToBitMap(component);
   }
 

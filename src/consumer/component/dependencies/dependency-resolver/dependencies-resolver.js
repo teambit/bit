@@ -18,7 +18,6 @@ import { Dependency } from '..';
 import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
-import { isSupportedExtension } from '../../../../links/link-content';
 
 type AllDependencies = {
   dependencies: Dependency[],
@@ -185,7 +184,9 @@ export default class DependencyResolver {
 
   traverseTreeForComponentId(depFile: PathLinux): ?BitId {
     if (!this.tree[depFile] || (!this.tree[depFile].files && !this.tree[depFile].bits)) return;
-    if (!this.componentMap.rootDir) { throw Error('traverseTreeForComponentId should get called only when rootDir is set'); }
+    if (!this.componentMap.rootDir) {
+      throw Error('traverseTreeForComponentId should get called only when rootDir is set');
+    }
     const rootDirFullPath = path.join(this.consumerPath, this.componentMap.rootDir);
     if (this.tree[depFile].files && this.tree[depFile].files.length) {
       for (const file of this.tree[depFile].files) {
@@ -334,7 +335,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     const { componentId, depFileRelative, destination } = this.getComponentIdByDepFile(depFile);
     // the file dependency doesn't have any counterpart component. Add it to this.issues.untrackedDependencies
     if (!componentId) {
-      if (this.issues.untrackedDependencies[originFile]) { this.issues.untrackedDependencies[originFile].push(depFileRelative); } else this.issues.untrackedDependencies[originFile] = [depFileRelative];
+      if (this.issues.untrackedDependencies[originFile]) {
+        this.issues.untrackedDependencies[originFile].push(depFileRelative);
+      } else {
+        this.issues.untrackedDependencies[originFile] = [depFileRelative];
+      }
       return;
     }
 
@@ -542,7 +547,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
         if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
           if (this.issues.missingLinks[originFile]) this.issues.missingLinks[originFile].push(componentId);
           else this.issues.missingLinks[originFile] = [componentId];
-        } else if (this.issues.missingComponents[originFile]) { this.issues.missingComponents[originFile].push(componentId); } else this.issues.missingComponents[originFile] = [componentId];
+        } else if (this.issues.missingComponents[originFile]) {
+          this.issues.missingComponents[originFile].push(componentId);
+        } else {
+          this.issues.missingComponents[originFile] = [componentId];
+        }
       });
     }
   }
@@ -627,7 +636,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     });
   }
 
-  pushToDependenciesArray(currentComponentsDeps, fileType: FileType) {
+  pushToDependenciesArray(currentComponentsDeps: Dependency, fileType: FileType) {
     if (fileType.isTestFile) {
       this.allDependencies.devDependencies.push(currentComponentsDeps);
     } else if (fileType.isCompilerFile) {
