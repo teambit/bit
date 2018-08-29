@@ -17,7 +17,7 @@ import { add as remoteAdd, list as remoteList, remove as remoteRm } from './lib/
 import config from './lib/global-config';
 import getDriver from './lib/get-driver';
 import watchAll from './lib/watch';
-import add from './lib/add';
+import { addAction as add, addManny as addMany } from './lib/add';
 import untrack from './lib/untrack';
 import unTagAction from './lib/untag';
 import move from './lib/move';
@@ -57,6 +57,7 @@ export {
   getDriver,
   watchAll,
   add,
+  addMany,
   dependencyStatus,
   untrack,
   unTagAction,
