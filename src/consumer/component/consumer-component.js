@@ -769,7 +769,7 @@ export default class Component {
     const tester = this.tester;
     if (!tester.loaded) {
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
-      await tester.install(scope, { verbose });
+      await tester.install(scope, { verbose }, { dependentId: this.id });
       logger.debug('Environment components are installed');
     }
 
