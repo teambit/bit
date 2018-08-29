@@ -18,6 +18,7 @@ import { Dependency } from '..';
 import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
+import { isSupportedExtension } from '../../../../links/link-content';
 
 type AllDependencies = {
   dependencies: Dependency[],
@@ -248,62 +249,95 @@ export default class DependencyResolver {
           throw new GeneralError(`Failed to resolve ${componentId.toString()} dependencies because the component is not in the model.
 Try to run "bit import ${this.component.id.toString()} --objects" to get the component saved in the model`);
         }
-        const dependency = this.componentFromModel
-          .getAllDependencies() // $FlowFixMe
-          .find(dep => dep.id.isEqualWithoutVersion(componentId));
-        if (!dependency) {
-          throw new GeneralError( // $FlowFixMe
-            `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-              this.componentFromModel.id
-            }`
-          );
-        }
-
-        const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
-        const isTesterDependency = this.componentFromModel.testerDependencies.getById(componentId);
-        const isEnvDependency = isCompilerDependency || isTesterDependency;
-        const isRelativeToConfigDir = isEnvDependency && this.componentMap.configDir && this.componentMap.rootDir;
-
-        const getOriginallySourcePath = (): PathLinux => {
-          if (isRelativeToConfigDir) {
-            // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
-            const resolvedSource = path.resolve(rootDir, depFile);
-            // @todo: use the new ConfigDir class that Gilad added once it is merged.
-            const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
-              this.componentMap.configDir,
-              this.componentMap.rootDir
-            );
-            const configDir = isCompilerDependency ? compilerConfigDir : testerConfigDir;
-            const absoluteConfigDir = this.consumer.toAbsolutePath(configDir);
-            return pathRelativeLinux(absoluteConfigDir, resolvedSource);
-          }
-          return this.componentMap.originallySharedDir
-            ? pathJoinLinux(this.componentMap.originallySharedDir, depFile)
-            : depFile;
-        };
-        const originallySource: PathLinux = getOriginallySourcePath();
-        const relativePath: RelativePath = dependency.relativePaths.find(
-          r => r.sourceRelativePath === originallySource
-        );
-        if (!relativePath) {
-          throw new GeneralError(
-            `unable to find ${originallySource} path in the dependencies relativePaths of ${this.componentFromModel.id}`
-          );
-        }
-
-        componentId = dependency.id;
-        destination = relativePath.destinationRelativePath;
-
-        depFileRelative = depFile; // change it back to partial-part, this will be later on the sourceRelativePath
-
-        if (isRelativeToConfigDir) {
-          // in this case, sourceRelativePath should be relative to configDir
-          depFileRelative = originallySource;
+        ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
+          componentId,
+          depFile,
+          rootDir
+        ));
+      } else if (!isSupportedExtension(depFile) && this.componentFromModel) {
+        // unsupported files, such as binary files, don't have link files. instead, they have a
+        // symlink (or sometimes a copy on Windows) of the dependency inside the component. to
+        // check whether a file is a symlink to a dependency we loop through the
+        // sourceRelativePaths of the dependency, if there is match, we use the data from the model
+        const dependenciesWithoutSharedDir = this.getDependenciesWithoutSharedDir();
+        const sourcePaths = dependenciesWithoutSharedDir.getSourcesPaths();
+        if (sourcePaths.includes(depFile)) {
+          const dependencyWithoutSharedDir = dependenciesWithoutSharedDir.getBySourcePath(depFile);
+          componentId = dependencyWithoutSharedDir.id;
+          ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
+            componentId,
+            depFile,
+            rootDir
+          ));
         }
       }
     }
 
     return { componentId, depFileRelative, destination };
+  }
+
+  getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
+    const dependency = this.componentFromModel
+      .getAllDependencies() // $FlowFixMe
+      .find(dep => dep.id.isEqualWithoutVersion(componentId));
+    if (!dependency) {
+      throw new GeneralError( // $FlowFixMe
+        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+          this.componentFromModel.id
+        }`
+      );
+    }
+    const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
+    const isTesterDependency = this.componentFromModel.testerDependencies.getById(componentId);
+    const isEnvDependency = isCompilerDependency || isTesterDependency;
+    const isRelativeToConfigDir = Boolean(isEnvDependency && this.componentMap.configDir && this.componentMap.rootDir);
+    const originallySource: PathLinux = this.getOriginallySourcePath(
+      isRelativeToConfigDir,
+      rootDir,
+      depFile,
+      isCompilerDependency
+    );
+    const relativePath: RelativePath = dependency.relativePaths.find(r => r.sourceRelativePath === originallySource);
+    if (!relativePath) {
+      throw new GeneralError(
+        `unable to find ${originallySource} path in the dependencies relativePaths of ${this.componentFromModel.id}`
+      );
+    }
+    return {
+      componentId: dependency.id,
+      destination: relativePath.destinationRelativePath,
+      // in the case of isRelativeToConfigDir, sourceRelativePath should be relative to configDir
+      depFileRelative: isRelativeToConfigDir ? originallySource : depFile
+    };
+  }
+
+  getOriginallySourcePath(
+    isRelativeToConfigDir: boolean,
+    rootDir: PathLinux,
+    depFile: PathLinux,
+    isCompilerDependency: boolean
+  ): PathLinux {
+    if (isRelativeToConfigDir) {
+      // find the sourceRelativePath relative to the configDir, not to the rootDir of the component
+      const resolvedSource = path.resolve(rootDir, depFile);
+      // @todo: use the new ConfigDir class that Gilad added once it is merged.
+      const { compiler: compilerConfigDir, tester: testerConfigDir } = BitMap.parseConfigDir(
+        this.componentMap.configDir,
+        this.componentMap.rootDir
+      );
+      const configDir = isCompilerDependency ? compilerConfigDir : testerConfigDir;
+      const absoluteConfigDir = this.consumer.toAbsolutePath(configDir);
+      return pathRelativeLinux(absoluteConfigDir, resolvedSource);
+    }
+    return this.componentMap.originallySharedDir
+      ? pathJoinLinux(this.componentMap.originallySharedDir, depFile)
+      : depFile;
+  }
+
+  getDependenciesWithoutSharedDir() {
+    const dependencies = this.componentFromModel.getAllDependenciesCloned();
+    dependencies.stripOriginallySharedDir(this.consumer.bitMap, this.componentMap.originallySharedDir);
+    return dependencies;
   }
 
   processDepFiles(originFile: PathLinuxRelative, fileType: FileType) {
