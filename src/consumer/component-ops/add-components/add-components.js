@@ -173,6 +173,11 @@ export default class AddComponents {
     return { id: componentId.toString(), files: componentMap.files };
   }
 
+  /**
+   * unsupported files, such as, binary files, don't have link-file. instead, they have a symlink
+   * inside the component dir, pointing to the dependency.
+   * this methods check whether a file is auto generated for the unsupported files.
+   */
   async _isGeneratedForUnsupportedFiles(
     fileRelativePath: PathLinux,
     componentId: BitId,

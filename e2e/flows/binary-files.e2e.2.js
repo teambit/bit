@@ -112,6 +112,11 @@ describe('binary files', function () {
     it('should create a symlink or copy of the dependency file inside the component dir', () => {
       const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/png_fixture.png');
       expect(expectedDest).to.be.a.file();
+
+      const symlinkValue = fs.readlinkSync(expectedDest);
+      expect(symlinkValue).to.have.string(
+        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/bar/png_fixture.png')
+      );
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
