@@ -124,6 +124,9 @@ export default class Helper {
       fs.ensureDirSync(this.localScopePath);
     }
   }
+  getLocalScopePath() {
+    return this.localScopePath;
+  }
   cleanLocalScope() {
     fs.emptyDirSync(this.localScopePath);
   }
