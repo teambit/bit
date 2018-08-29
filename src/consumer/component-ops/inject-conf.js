@@ -6,6 +6,8 @@ import { removeEmptyDir } from '../../utils';
 import GeneralError from '../../error/general-error';
 import BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
+import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
+import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 
 export type InjectConfResult = { id: string };
 
@@ -32,10 +34,10 @@ export default (async function injectConf(
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = configDir.getResolved({ componentDir });
   const deleteCompilerFilesP = component.compiler
-    ? component.compiler.removeFilesFromFs(component.compilerDependencies)
+    ? component.compiler.removeFilesFromFs(component.compilerDependencies, configDir, COMPILER_ENV_TYPE, consumerPath)
     : Promise.resolve('');
   const deleteTesterFilesP = component.tester
-    ? component.tester.removeFilesFromFs(component.testerDependencies)
+    ? component.tester.removeFilesFromFs(component.testerDependencies, configDir, TESTER_ENV_TYPE, consumerPath)
     : Promise.resolve('');
 
   await Promise.all([deleteCompilerFilesP, deleteTesterFilesP]);

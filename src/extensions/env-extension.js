@@ -25,6 +25,7 @@ import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
 import ComponentBitJson from '../consumer/bit-json';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
+import ConfigDir from '../consumer/bit-map/config-dir';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -183,13 +184,20 @@ export default class EnvExtension extends BaseExtension {
   /**
    * Delete env files from file system
    */
-  async removeFilesFromFs(dependencies: Dependencies): Promise<boolean> {
+  async removeFilesFromFs(
+    dependencies: Dependencies,
+    configDir: ConfigDir,
+    envType: EnvType,
+    consumerPath: PathOsBased
+  ): Promise<boolean> {
     Analytics.addBreadCrumb('env-extension', 'removeFilesFromFs');
     const filePaths = this.files.map(file => file.path);
     const relativeSourcePaths = dependencies.getSourcesPaths();
     if (!this.context) throw new Error('env-extension.removeFilesFromFs, this.context is missing');
     const componentDir = this.context.componentDir;
-    const linkPaths = relativeSourcePaths.map(relativePath => path.join(componentDir, relativePath));
+    const configDirResolved = configDir.getResolved({ componentDir, envType });
+    const absoluteEnvsDirectory = path.join(consumerPath, configDirResolved.dirPath);
+    const linkPaths = relativeSourcePaths.map(relativePath => path.join(absoluteEnvsDirectory, relativePath));
     return removeFilesAndEmptyDirsRecursively([...filePaths, ...linkPaths]);
   }
 
