@@ -7,7 +7,7 @@ import { loadConsumer, Consumer } from '../../../consumer';
 
 const readJsonSync = util.promisify(fs.readJson);
 
-async function addAction(addProps: AddProps): Promise<AddActionResults> {
+export async function addAction(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
   const addComponents = new AddComponents(consumer, addProps);
   const addResults = await addComponents.add();
@@ -15,11 +15,11 @@ async function addAction(addProps: AddProps): Promise<AddActionResults> {
   return addResults;
 }
 
-async function addMany(filePath: string): Promise<AddActionResults[]> {
+export async function addMany(filePath: string): Promise<AddActionResults[]> {
   const consumer: Consumer = await loadConsumer();
   const componentsDefinitionObj = readJsonSync(filePath);
 
-  console.log(JSON.stringify(componentsDefinitionObj));
+  console.log(`my file content is ${JSON.stringify(componentsDefinitionObj)}`);
 
   const componentsDefinitions = componentsDefinitionObj.components;
   const addComponentsArr = [];
@@ -45,7 +45,3 @@ async function addMany(filePath: string): Promise<AddActionResults[]> {
   await consumer.onDestroy();
   return addResults;
 }
-
-exports.addAction = addAction;
-
-exports.addMany = addMany;
