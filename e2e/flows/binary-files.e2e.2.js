@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -90,7 +91,7 @@ describe('binary files', function () {
       });
     });
   });
-  describe.skip('importing a PNG file as the only file and have it as a dependency of another component', () => {
+  describe('importing a PNG file as the only file and have it as a dependency of another component', () => {
     let destPngFile;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -108,6 +109,13 @@ describe('binary files', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
-    it('should import with the correct links', () => {});
+    it('should create a symlink or copy of the dependency file inside the component dir', () => {
+      const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/png_fixture.png');
+      expect(expectedDest).to.be.a.file();
+    });
+    it('bit-status should not show the component as modified', () => {
+      const status = helper.status();
+      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+    });
   });
 });
