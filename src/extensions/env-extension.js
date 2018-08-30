@@ -196,7 +196,10 @@ export default class EnvExtension extends BaseExtension {
     if (!this.context) throw new Error('env-extension.removeFilesFromFs, this.context is missing');
     const componentDir = this.context.componentDir;
     const configDirResolved = configDir.getResolved({ componentDir, envType });
-    const absoluteEnvsDirectory = path.join(consumerPath, configDirResolved.dirPath);
+    const configDirPath = configDirResolved.dirPath;
+    const absoluteEnvsDirectory = path.isAbsolute(configDirPath)
+      ? configDirPath
+      : path.join(consumerPath, configDirPath);
     const linkPaths = relativeSourcePaths.map(relativePath => path.join(absoluteEnvsDirectory, relativePath));
     return removeFilesAndEmptyDirsRecursively([...filePaths, ...linkPaths]);
   }
