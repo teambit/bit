@@ -49,6 +49,7 @@
     "enhanced-resolve": "^4.0.0",
     "fs-extra": "^4.0.2",
     "glob": "^7.1.1",
+    "gonzales-pe": "^4.2.3",
     "ini-builder": "^1.1.1",
     "is-relative-path": "^2.0.0",
     "lodash.partition": "^4.6.0",

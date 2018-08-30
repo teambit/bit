@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add detective-css (before it was using detective-sass for css files)
+- avoid suppressing parsing errors for css, sass, scss and less
+
 ## [1.0.5] - 2018-07-24
 
 - update typescript package

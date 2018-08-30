@@ -30,10 +30,18 @@ describe('buildTree', () => {
       expect(results.tree).to.have.property('fixtures/unsupported-file.pdf');
       expect(results.tree).to.have.property('fixtures/precinct/es6.js');
     });
-    it('when a file has parsing error it should add the file to the tree with the error instance', async () => {
+    it('when a js file has parsing error it should add the file to the tree with the error instance', async () => {
       dependencyTreeParams.filePaths = [`${precinctFixtures}/unparseable.js`];
       const results = await buildTree.getDependencyTree(dependencyTreeParams);
       const unParsedFile = 'fixtures/precinct/unparseable.js';
+      expect(results.tree).to.have.property(unParsedFile);
+      expect(results.tree[unParsedFile]).to.have.property('error');
+      expect(results.tree[unParsedFile].error).to.be.instanceof(Error);
+    });
+    it('when a css file has parsing error it should add the file to the tree with the error instance', async () => {
+      dependencyTreeParams.filePaths = [`${buildTreeFixtures}/unparsed.css`];
+      const results = await buildTree.getDependencyTree(dependencyTreeParams);
+      const unParsedFile = 'fixtures/build-tree/unparsed.css';
       expect(results.tree).to.have.property(unParsedFile);
       expect(results.tree[unParsedFile]).to.have.property('error');
       expect(results.tree[unParsedFile].error).to.be.instanceof(Error);

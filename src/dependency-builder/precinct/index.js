@@ -9,9 +9,10 @@ const Walker = require('node-source-walk');
 
 const detectiveAmd = require('detective-amd');
 const detectiveEs6 = require('../detectives/detective-es6');
-const detectiveLess = require('detective-less');
-const detectiveSass = require('detective-sass');
-const detectiveScss = require('detective-scss');
+const detectiveLess = require('../detectives/detective-less');
+const detectiveSass = require('../detectives/detective-sass');
+const detectiveScss = require('../detectives/detective-scss');
+const detectiveCss = require('../detectives/detective-css');
 const detectiveStylus = require('detective-stylus');
 const detectiveTypeScript = require('../detectives/detective-typescript');
 const detectiveStylable = require('../detectives/detective-stylable');
@@ -89,6 +90,9 @@ function precinct(content, options) {
     case 'scss':
       theDetective = detectiveScss;
       break;
+    case 'css':
+      theDetective = detectiveCss;
+      break;
     case 'stylus':
       theDetective = detectiveStylus;
       break;
@@ -152,6 +156,7 @@ precinct.paperwork = function (filename, options) {
       return 'stylable';
     }
     switch (ext) {
+      case '.css':
       case '.scss':
       case '.sass':
       case '.less':
@@ -166,8 +171,6 @@ precinct.paperwork = function (filename, options) {
         return 'ts';
       case '.jsx':
         return 'es6';
-      case '.css':
-        return 'scss'; // there is no detective for CSS at the moment, however, the import syntax of scss supports css
       default:
         return null;
     }
