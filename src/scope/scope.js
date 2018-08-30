@@ -991,6 +991,13 @@ export default class Scope {
     throw new ComponentNotFound(id.toString());
   }
 
+  async getVersionInstance(id: BitId): Promise<Version> {
+    if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
+    const component: ComponentModel = await this.getComponentModel(id);
+    // $FlowFixMe id.version is not null, was checked above
+    return component.loadVersion(id.version, this.objects);
+  }
+
   async getComponentsAndVersions(ids: BitIds): Promise<ComponentsAndVersions[]> {
     const componentsObjects = await this.sources.getMany(ids);
     const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {

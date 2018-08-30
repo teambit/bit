@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import glob from 'glob';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -88,6 +89,38 @@ describe('binary files', function () {
         const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
         expect(packageJson.main).to.equal('png_fixture.png');
       });
+    });
+  });
+  describe('importing a PNG file as the only file and have it as a dependency of another component', () => {
+    let destPngFile;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
+      destPngFile = path.join(helper.localScopePath, 'bar', 'png_fixture.png');
+      fs.copySync(sourcePngFile, destPngFile);
+      helper.runCmd('bit add bar -m png_fixture.png -i bar/png');
+      const fixture = 'require("./png_fixture.png")';
+      helper.createFile('bar', 'foo.js', fixture);
+      helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo' });
+      helper.commitAllComponents();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should create a symlink or copy of the dependency file inside the component dir', () => {
+      const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/png_fixture.png');
+      expect(expectedDest).to.be.a.file();
+
+      const symlinkValue = fs.readlinkSync(expectedDest);
+      expect(symlinkValue).to.have.string(
+        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/bar/png_fixture.png')
+      );
+    });
+    it('bit-status should not show the component as modified', () => {
+      const status = helper.status();
+      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
   });
 });
