@@ -227,6 +227,15 @@ describe('environments with dependencies', function () {
             const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
             expect(linkFile).to.not.be.a.path();
           });
+          describe('running inject-conf', () => {
+            before(() => {
+              helper.injectConf('bar/foo');
+            });
+            it('should delete not only the configuration files but also the link file', () => {
+              const linkFile = path.join(helper.localScopePath, 'my-config-dir/base.config.js');
+              expect(linkFile).to.not.be.a.path();
+            });
+          });
         });
       });
     });
