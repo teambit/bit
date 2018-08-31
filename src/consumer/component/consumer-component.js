@@ -42,7 +42,7 @@ import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
-import type { PathLinux, PathOsBased } from '../../utils/path';
+import type { PathLinux, PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestError from './exceptions/external-test-error';
@@ -1159,7 +1159,7 @@ export default class Component {
     consumer,
     componentFromModel
   }: {
-    bitDir: PathOsBased,
+    bitDir: PathOsBasedAbsolute,
     componentMap: ComponentMap,
     id: BitId,
     consumer: Consumer,
