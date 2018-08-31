@@ -175,10 +175,10 @@ export default class SourceRepository {
   }): Promise<Object> {
     // $FlowFixMe
     const clonedComponent: ConsumerComponent = consumerComponent.clone();
-    const setEol = (files: AbstractVinyl) => {
+    const setEol = (files: AbstractVinyl[]) => {
       if (!files) return;
       const result = files.map((file) => {
-        file.file = Source.from(eol.lf(file.contents, file.relative));
+        file.file = file.toSourceAsLinuxEOL();
         return file;
       });
       return result;
@@ -189,7 +189,7 @@ export default class SourceRepository {
           return {
             name: file.basename,
             relativePath: clonedComponent.addSharedDir(file.relative),
-            file: Source.from(eol.lf(file.contents, file.relative)),
+            file: file.toSourceAsLinuxEOL(),
             test: file.test
           };
         })

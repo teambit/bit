@@ -9,6 +9,7 @@ import BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
 import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
+import { AbstractVinyl } from '../component/sources';
 
 export type InjectConfResult = { id: string };
 
@@ -60,7 +61,7 @@ function areEnvsModified(componentFromFs: ConsumerComponent, componentFromModel:
   return envTypes.some((envType) => {
     const fsHashes = // $FlowFixMe
       componentFromFs[envType] && componentFromFs[envType].files
-        ? componentFromFs[envType].files.map(file => file.file.hash()).sort()
+        ? componentFromFs[envType].files.map((file: AbstractVinyl) => file.toSourceAsLinuxEOL().hash()).sort()
         : [];
     const modelHashes = // $FlowFixMe
       componentFromModel[envType] && componentFromModel[envType].files
