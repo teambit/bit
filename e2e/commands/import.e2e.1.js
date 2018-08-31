@@ -1018,7 +1018,7 @@ describe('bit import', function () {
     let localConsumerFiles;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('style', 'style.css');
+      helper.createFile('style', 'style.css', '.main {}');
       helper.addComponent('style/style.css');
       const fooBarFixture = "const style = require('../style/style.css');";
       helper.createFile('bar', 'foo.js', fooBarFixture);
