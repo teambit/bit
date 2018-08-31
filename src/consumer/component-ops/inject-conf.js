@@ -58,13 +58,11 @@ function areEnvsModified(componentFromFs: ConsumerComponent, componentFromModel:
   if (!componentFromModel) return false;
   const envTypes = [COMPILER_ENV_TYPE, TESTER_ENV_TYPE];
   return envTypes.some((envType) => {
-    // $FlowFixMe
-    const fsHashes =
+    const fsHashes = // $FlowFixMe
       componentFromFs[envType] && componentFromFs[envType].files
         ? componentFromFs[envType].files.map(file => file.file.hash()).sort()
         : [];
-    // $FlowFixMe
-    const modelHashes =
+    const modelHashes = // $FlowFixMe
       componentFromModel[envType] && componentFromModel[envType].files
         ? componentFromModel[envType].files.map(file => file.file.hash()).sort()
         : [];
