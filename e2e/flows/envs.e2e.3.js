@@ -1032,6 +1032,17 @@ describe('envs', function () {
             'var _extends=Object.assign||function(target){for(var i=1;i<arguments.length;i++){var source=arguments[i];for(var key in source){if(Object.prototype.hasOwnProperty.call(source,key)){target[key]=source[key]}}}return target};var g=5;var x={a:"a",b:"c"};var y={c:"c"};var z=_extends({},x,y);'
           );
         });
+        it('should move envs files during bit move command', () => {
+          const newComponentFolder = path.join('components', 'new-path');
+          const newEnvFilesFolder = newComponentFolder;
+          helper.move(componentFolder, newComponentFolder);
+          bitJsonPath = path.join(helper.localScopePath, newEnvFilesFolder, 'bit.json');
+          expect(bitJsonPath).to.be.file();
+          const babelrcPath = path.join(helper.localScopePath, newEnvFilesFolder, '.babelrc');
+          expect(babelrcPath).to.be.file();
+          const mochaConfig = path.join(helper.localScopePath, newEnvFilesFolder, 'mocha-config.opts');
+          expect(mochaConfig).to.be.file();
+        });
         describe('testing components', () => {
           describe('with success tests', () => {
             it('should show tests passed', () => {
@@ -1094,7 +1105,6 @@ describe('envs', function () {
             });
           });
         });
-
         describe('attach - detach envs', () => {
           let compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
           let componentModel;
@@ -1215,7 +1225,7 @@ describe('envs', function () {
             });
           });
         });
-        describe('change envs files/config', () => {
+        describe('change envs config', () => {
           beforeEach(() => {
             // Restore to clean state of the scope
             helper.getClonedLocalScope(importedScopeBeforeChanges);
@@ -1236,46 +1246,77 @@ describe('envs', function () {
             expect(statusOutput).to.have.string('modified components');
             expect(statusOutput).to.have.string('comp/my-comp ... ok');
           });
-          it('should show the component as modified if compiler file has been changed', () => {
-            helper.createFile(compilerFilesFolder, '.babelrc', '{"some": "thing"}');
-            const statusOutput = helper.status();
-            expect(statusOutput).to.have.string('modified components');
-            expect(statusOutput).to.have.string('comp/my-comp ... ok');
-          });
-          it('should show the component as modified if a compiler file has been renamed', () => {
-            fs.moveSync(path.join(fullComponentFolder, '.babelrc'), path.join(fullComponentFolder, '.babelrc2'));
-            helper.addFileToEnvInBitJson(
-              path.join(fullComponentFolder, 'bit.json'),
-              '.babelrc',
-              './.babelrc2',
-              COMPILER_ENV_TYPE
-            );
-
-            const statusOutput = helper.status();
-            expect(statusOutput).to.have.string('modified components');
-            expect(statusOutput).to.have.string('comp/my-comp ... ok');
-
-            const diffOutput = helper.diff('comp/my-comp');
-            expect(diffOutput).to.have.string('- [ .babelrc => .babelrc ]');
-            expect(diffOutput).to.have.string('+ [ .babelrc => .babelrc2 ]');
-          });
-          it('should show the component as modified if tester file has been changed', () => {
-            helper.createFile(testerFilesFolder, 'mocha-config.opts', 'something');
-            const statusOutput = helper.status();
-            expect(statusOutput).to.have.string('modified components');
-            expect(statusOutput).to.have.string('comp/my-comp ... ok');
-          });
         });
-        it('should move envs files during bit move command', () => {
-          const newComponentFolder = path.join('components', 'new-path');
-          const newEnvFilesFolder = newComponentFolder;
-          helper.move(componentFolder, newComponentFolder);
-          bitJsonPath = path.join(helper.localScopePath, newEnvFilesFolder, 'bit.json');
-          expect(bitJsonPath).to.be.file();
-          const babelrcPath = path.join(helper.localScopePath, newEnvFilesFolder, '.babelrc');
-          expect(babelrcPath).to.be.file();
-          const mochaConfig = path.join(helper.localScopePath, newEnvFilesFolder, 'mocha-config.opts');
-          expect(mochaConfig).to.be.file();
+        describe('change envs files', () => {
+          const compilerFile = path.join(helper.localScopePath, compilerFilesFolder, '.babelrc');
+          describe('change a compiler file', () => {
+            before(() => {
+              helper.getClonedLocalScope(importedScopeBeforeChanges);
+              helper.createFile(compilerFilesFolder, '.babelrc', '{"some": "thing"}');
+            });
+            it('should show the component as modified', () => {
+              const statusOutput = helper.status();
+              expect(statusOutput).to.have.string('modified components');
+              expect(statusOutput).to.have.string('comp/my-comp ... ok');
+            });
+            describe('running eject-conf without --force flag', () => {
+              let output;
+              before(() => {
+                output = helper.runWithTryCatch('bit inject-conf comp/my-comp');
+              });
+              it('should throw an error', () => {
+                expect(output).to.have.string('unable to inject-conf');
+              });
+              it('should not delete the configuration file', () => {
+                expect(compilerFile).to.be.a.file();
+              });
+            });
+            describe('running eject-conf with --force flag', () => {
+              let output;
+              before(() => {
+                output = helper.injectConf('comp/my-comp --force');
+              });
+              it('should show a success message', () => {
+                expect(output).to.have.string('successfully injected');
+              });
+              it('should delete the configuration file', () => {
+                expect(compilerFile).to.not.be.a.path();
+              });
+            });
+          });
+          describe('rename a compiler file', () => {
+            before(() => {
+              helper.getClonedLocalScope(importedScopeBeforeChanges);
+              fs.moveSync(path.join(fullComponentFolder, '.babelrc'), path.join(fullComponentFolder, '.babelrc2'));
+              helper.addFileToEnvInBitJson(
+                path.join(fullComponentFolder, 'bit.json'),
+                '.babelrc',
+                './.babelrc2',
+                COMPILER_ENV_TYPE
+              );
+            });
+            it('should show the component as modified', () => {
+              const statusOutput = helper.status();
+              expect(statusOutput).to.have.string('modified components');
+              expect(statusOutput).to.have.string('comp/my-comp ... ok');
+            });
+            it('bit-diff should show the changes', () => {
+              const diffOutput = helper.diff('comp/my-comp');
+              expect(diffOutput).to.have.string('- [ .babelrc => .babelrc ]');
+              expect(diffOutput).to.have.string('+ [ .babelrc => .babelrc2 ]');
+            });
+          });
+          describe('change a tester file', () => {
+            before(() => {
+              helper.getClonedLocalScope(importedScopeBeforeChanges);
+              helper.createFile(testerFilesFolder, 'mocha-config.opts', 'something');
+            });
+            it('should show the component as modified', () => {
+              const statusOutput = helper.status();
+              expect(statusOutput).to.have.string('modified components');
+              expect(statusOutput).to.have.string('comp/my-comp ... ok');
+            });
+          });
         });
       });
       describe('with custom ejectedEnvsDirectory', () => {

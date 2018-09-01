@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import R from 'ramda';
 import ConsumerComponent from '../component/consumer-component';
 import ComponentBitJson from '../bit-json';
 import { removeEmptyDir } from '../../utils';
@@ -8,6 +9,7 @@ import BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
 import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
+import { AbstractVinyl } from '../component/sources';
 
 export type InjectConfResult = { id: string };
 
@@ -24,11 +26,10 @@ export default (async function injectConf(
   }
   const componentDir = componentMap.getComponentDir();
 
-  // TODO: check if files were modified before deleting them and delete them only if forces provided
-  if (!force) {
-    // To implement
-    // Check if config files changed
-    // If yes throw error
+  if (!force && areEnvsModified(component, component.componentFromModel)) {
+    throw new Error(
+      'unable to inject-conf, some or all configuration files are modified. please use "--force" flag to force removing the configuration files'
+    );
   }
 
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
@@ -50,3 +51,22 @@ export default (async function injectConf(
 
   return { id: component.id.toStringWithoutVersion() };
 });
+
+/**
+ * returns whether the envs configuration files were modified on the filesystem
+ */
+function areEnvsModified(componentFromFs: ConsumerComponent, componentFromModel: ?ConsumerComponent) {
+  if (!componentFromModel) return false;
+  const envTypes = [COMPILER_ENV_TYPE, TESTER_ENV_TYPE];
+  return envTypes.some((envType) => {
+    const fsHashes = // $FlowFixMe
+      componentFromFs[envType] && componentFromFs[envType].files
+        ? componentFromFs[envType].files.map((file: AbstractVinyl) => file.toSourceAsLinuxEOL().hash()).sort()
+        : [];
+    const modelHashes = // $FlowFixMe
+      componentFromModel[envType] && componentFromModel[envType].files
+        ? componentFromModel[envType].files.map(file => file.file.hash()).sort()
+        : [];
+    return !R.equals(fsHashes, modelHashes);
+  });
+}
