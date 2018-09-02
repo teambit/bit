@@ -1,8 +1,12 @@
 /** @flow */
-import fs from 'fs-extra';
+import path from 'path';
 import type { PathOsBased } from '../../../utils/path';
 import AddComponents from '../../../consumer/component-ops/add-components';
-import type { AddProps, AddActionResults } from '../../../consumer/component-ops/add-components/add-components';
+import type {
+  AddProps,
+  AddActionResults,
+  PathOrDSL
+} from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
 
 export async function addAction(addProps: AddProps): Promise<AddActionResults> {
@@ -18,12 +22,17 @@ export async function addMany(components: Object): Promise<AddActionResults[]> {
   const componentsDefinitions = components.components;
   const addComponentsArr = [];
   componentsDefinitions.forEach((componentDefinition) => {
-    const normalizedPaths: PathOsBased[] = componentDefinition.paths;
+    const normalizedPaths: PathOsBased[] = componentDefinition.paths.map((p) => {
+      return path.normalize(p);
+    });
+    const normalizedTests: PathOrDSL[] = componentDefinition.tests
+      ? componentDefinition.tests.map(testFile => path.normalize(testFile.trim()))
+      : [];
     const addProps = {
       componentPaths: normalizedPaths,
       id: componentDefinition.id,
       main: componentDefinition.main,
-      tests: componentDefinition.tests ? componentDefinition.tests.map(testFile => testFile.trim()) : [],
+      tests: normalizedTests,
       namespace: componentDefinition.namespae,
       exclude: componentDefinition.exclude ? componentDefinition.exclude : [],
       override: componentDefinition.override
