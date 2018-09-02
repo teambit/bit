@@ -116,6 +116,21 @@ export default class Helper {
   }
   // #endregion
 
+  // #region npm utils
+
+  npmInit() {
+    return this.runCmd('npm init');
+  }
+
+  npmRunFile(scriptName: string) {
+    return this.runCmd(`node ${scriptName}`);
+  }
+
+  npmLink(library: string) {
+    return this.runCmd(`npm link ${library}`);
+  }
+  // #endregion
+
   // #region scopes utils (init, remote etc')
   setLocalScope(localScope?: string) {
     this.localScope = localScope || `${generateRandomStr()}-local`;

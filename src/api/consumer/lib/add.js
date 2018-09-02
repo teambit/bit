@@ -15,11 +15,10 @@ export async function addAction(addProps: AddProps): Promise<AddActionResults> {
 
 export async function addMany(components: Object): Promise<AddActionResults[]> {
   const consumer: Consumer = await loadConsumer();
-  const componentsDefinitions = components.componentsDefinitions;
+  const componentsDefinitions = components.components;
   const addComponentsArr = [];
   componentsDefinitions.forEach((componentDefinition) => {
     const normalizedPaths: PathOsBased[] = componentDefinition.paths;
-    console.log(`currently working on component ${JSON.stringify(componentDefinition)}`);
     const addProps = {
       componentPaths: normalizedPaths,
       id: componentDefinition.id,
