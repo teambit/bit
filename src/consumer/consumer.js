@@ -37,7 +37,7 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathNormalizeToLinux, sortObject } from '../utils';
-import { loadDependenciesForComponent, updateDependenciesVersions } from './component/dependencies/dependency-resolver';
+import { DependencyResolver, updateDependenciesVersions } from './component/dependencies/dependency-resolver';
 import { Version, Component as ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
@@ -354,7 +354,8 @@ export default class Consumer {
         return component;
       }
       // @todo: check if the files were changed, and if so, skip the next line.
-      await loadDependenciesForComponent(component, bitDir, this, idWithConcreteVersion);
+      const dependencyResolver = new DependencyResolver(component, this, idWithConcreteVersion);
+      await dependencyResolver.loadDependenciesForComponent(bitDir);
       await updateDependenciesVersions(this, component);
       return component;
     });

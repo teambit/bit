@@ -5,6 +5,7 @@ import Vinyl from 'vinyl';
 import logger from '../../../logger/logger';
 import { eol } from '../../../utils';
 import type { PathOsBased } from '../../../utils/path';
+import Source from '../../../scope/models/source';
 
 type AbstractVinylProps = {
   cwd: PathOsBased,
@@ -59,6 +60,15 @@ export default class AbstractVinyl extends Vinyl {
   static loadFromParsedStringArray(arr: Object[]): ?(AbstractVinylProps[]) {
     if (!arr) return undefined;
     return arr.map(this.loadFromParsedString);
+  }
+
+  /**
+   * before saving component files in the model, their EOL should be converted to Linux format so
+   * then when working on the same components in Windows and Linux they won't appear as modified
+   */
+  toSourceAsLinuxEOL(): Source {
+    // $FlowFixMe
+    return Source.from(eol.lf(this.contents, this.relative));
   }
 }
 
