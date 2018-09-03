@@ -9,7 +9,7 @@ import type {
 } from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
 
-export async function addAction(addProps: AddProps): Promise<AddActionResults> {
+export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
   const addComponents = new AddComponents(consumer, addProps);
   const addResults = await addComponents.add();
@@ -17,12 +17,11 @@ export async function addAction(addProps: AddProps): Promise<AddActionResults> {
   return addResults;
 }
 
-export async function addMany(components: Object): Promise<AddActionResults[]> {
+export async function addMany(components: AddProps[]): Promise<AddActionResults[]> {
   const consumer: Consumer = await loadConsumer();
-  const componentsDefinitions = components.components;
   const addComponentsArr = [];
-  componentsDefinitions.forEach((componentDefinition) => {
-    const normalizedPaths: PathOsBased[] = componentDefinition.paths.map((p) => {
+  components.forEach((componentDefinition) => {
+    const normalizedPaths: PathOsBased[] = componentDefinition.componentPaths.map((p) => {
       return path.normalize(p);
     });
     const normalizedTests: PathOrDSL[] = componentDefinition.tests
@@ -33,7 +32,7 @@ export async function addMany(components: Object): Promise<AddActionResults[]> {
       id: componentDefinition.id,
       main: componentDefinition.main,
       tests: normalizedTests,
-      namespace: componentDefinition.namespae,
+      namespace: componentDefinition.namespace,
       exclude: componentDefinition.exclude ? componentDefinition.exclude : [],
       override: componentDefinition.override
     };

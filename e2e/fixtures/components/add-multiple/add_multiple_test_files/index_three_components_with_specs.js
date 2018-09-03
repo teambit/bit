@@ -1,24 +1,28 @@
 const bitBin = require('bit-bin');
 
-const components = {
-    'components' : [
+const components = 
+    [
         {
-            'paths' : ['add_multiple_test_files/a.js'],
+            'componentPaths' : ['add_multiple_test_files/a.js'],
             'main' : 'add_multiple_test_files/a.js',
+            'id' : 'add_multiple_test_files/a',
             'tests' : ['add_multiple_test_files/a.spec.js']
         },
         {
-            'paths' : ['add_multiple_test_files/c.js'],
+            'componentPaths' : ['add_multiple_test_files/c.js'],
+            'id' : 'add_multiple_test_files/c',
             'main' : 'add_multiple_test_files/c.js'
         }, 
         {
-            'paths' : ['add_multiple_test_files/b.js'],
+            'componentPaths' : ['add_multiple_test_files/b.js'],
+            'id' : 'add_multiple_test_files/b',
             'main' : 'add_multiple_test_files/b.js'
         }
     ]
-}
 
-bitBin.addMany(components).then(function () {
-    console.log('success');
-});
 
+    bitBin.addMany(components).then(function (results) {
+        const resultsStr = JSON.stringify(results)
+        console.log(resultsStr);
+    });
+    

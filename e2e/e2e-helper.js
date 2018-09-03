@@ -118,16 +118,16 @@ export default class Helper {
 
   // #region npm utils
 
-  npmInit() {
-    return this.runCmd('npm init');
+  initNpm(initPath: string = path.join(this.localScopePath)) {
+    this.runCmd('npm init -y', initPath);
   }
 
-  npmRunFile(scriptName: string) {
-    return this.runCmd(`node ${scriptName}`);
+  nodeStart(mainFilePath: string) {
+    return this.runCmd(`node ${mainFilePath}`);
   }
 
-  npmLink(library: string) {
-    return this.runCmd(`npm link ${library}`);
+  linkNpm(libraryName: string) {
+    return this.runCmd(`npm link ${libraryName}`);
   }
   // #endregion
 
@@ -714,9 +714,6 @@ export default class Helper {
     fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
   }
 
-  initNpm(initPath: string = path.join(this.localScopePath)) {
-    this.runCmd('npm init -y', initPath);
-  }
   /**
    * install package, if you don't really need the package code and can use mock
    * just run addNpmPackage which will be faster
