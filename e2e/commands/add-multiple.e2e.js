@@ -8,7 +8,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit add command', function () {
+describe('bit add command', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
