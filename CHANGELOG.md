@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- update bit-javascript to improve scalability of the dependency resolution
 - update bit-javascript to show a descriptive error when failed to parse css, sass, scss and less files
 - improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on
 - fix `bit status` to not throw an exception for invalid components

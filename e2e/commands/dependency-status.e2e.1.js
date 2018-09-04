@@ -36,4 +36,12 @@ describe('bit dependency status', function () {
       expect(output).to.have.string('c.js');
     });
   });
+  describe('large code base', () => {
+    // we use our bit-bin code as an example of large code base
+    it('should not hang indefinitely', () => {
+      const bitBinRoot = path.resolve(path.join(__dirname, '../..'));
+      const output = helper.runCmd('bit dependency-status src/app.js', bitBinRoot);
+      expect(output).to.have.string('The following file exist in dependency tree but are not a component');
+    });
+  });
 });
