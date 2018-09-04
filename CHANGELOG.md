@@ -7,7 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- improve scalability of the dependency resolution
+## [1.0.6-dev.2] - 2018-09-03
+
+- improve the scalability of the dependency resolution
 
 ## [1.0.6-dev.1] - 2018-08-31
 
