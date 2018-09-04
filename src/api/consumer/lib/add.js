@@ -24,19 +24,15 @@ export async function addMany(components: AddProps[]): Promise<AddActionResults[
     const normalizedPaths: PathOsBased[] = componentDefinition.componentPaths.map((p) => {
       return path.normalize(p);
     });
+    componentDefinition.componentPaths = normalizedPaths;
     const normalizedTests: PathOrDSL[] = componentDefinition.tests
       ? componentDefinition.tests.map(testFile => path.normalize(testFile.trim()))
       : [];
-    const addProps = {
-      componentPaths: normalizedPaths,
-      id: componentDefinition.id,
-      main: componentDefinition.main,
-      tests: normalizedTests,
-      namespace: componentDefinition.namespace,
-      exclude: componentDefinition.exclude ? componentDefinition.exclude : [],
-      override: componentDefinition.override
-    };
-    const addComponents = new AddComponents(consumer, addProps);
+    componentDefinition.tests = normalizedTests;
+    componentDefinition.exclude = componentDefinition.exclude
+      ? componentDefinition.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
+      : [];
+    const addComponents = new AddComponents(consumer, componentDefinition);
     addComponentsArr.push(addComponents);
   });
   const addResults = [];
