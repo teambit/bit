@@ -1,6 +1,6 @@
 // @flow
 
-import ModelComponent from './component';
+import ModelComponent from './model-component';
 import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';

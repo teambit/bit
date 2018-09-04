@@ -1,5 +1,5 @@
 /** @flow */
-import ModelComponent from './models/component';
+import ModelComponent from './models/model-component';
 import Version from './models/version';
 import { BitId, BitIds } from '../bit-id';
 import Scope from './scope';

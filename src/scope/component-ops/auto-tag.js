@@ -2,7 +2,7 @@
 import R from 'ramda';
 import semver from 'semver';
 import graphlib, { Graph } from 'graphlib';
-import ComponentModel from '../models/component';
+import ComponentModel from '../models/model-component';
 import { BitId, BitIds } from '../../bit-id';
 import Scope from '../scope';
 import type { ComponentsAndVersions } from '../scope';

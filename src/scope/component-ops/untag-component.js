@@ -1,6 +1,6 @@
 // @flow
 import { BitId } from '../../bit-id';
-import ComponentModel from '../models/component';
+import ComponentModel from '../models/model-component';
 import logger from '../../logger/logger';
 import { Scope } from '..';
 import GeneralError from '../../error/general-error';

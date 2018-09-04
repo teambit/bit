@@ -8,7 +8,7 @@ import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import ComponentObjects from './component-objects';
-import ComponentModel from './models/component';
+import ComponentModel from './models/model-component';
 import { Symlink, Version } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
