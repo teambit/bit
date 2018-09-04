@@ -273,7 +273,8 @@ function updateTreeWithPathMap(tree: Tree, pathMapAbsolute: PathMapItem[], baseD
     if (!treeFiles || !treeFiles.length) return; // file has no dependency
     const mainFilePathMap = pathMap.find(file => file.file === filePath);
     if (!mainFilePathMap) throw new Error(`updateTreeWithPathMap: PathMap is missing for ${filePath}`);
-    const files: FileObject[] = treeFiles.map((dependency: string) => {
+    // a file might have a cycle dependency with itself, remove it from the dependencies.
+    const files: FileObject[] = treeFiles.filter(dependency => dependency !== filePath).map((dependency: string) => {
       const dependencyPathMap = mainFilePathMap.dependencies.find(file => file.resolvedDep === dependency);
       if (!dependencyPathMap) throw new Error(`updateTreeWithPathMap: dependencyPathMap is missing for ${dependency}`);
       const fileObject: FileObject = {

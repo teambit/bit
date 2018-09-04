@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve scalability of the dependency resolution
+
 ## [1.0.6-dev.1] - 2018-08-31
 
 - add detective-css (before it was using detective-sass for css files)

@@ -6,7 +6,6 @@ import { isRelativeImport } from '../../utils';
  */
 
 const precinct = require('../precinct');
-const path = require('path');
 const fs = require('fs');
 const cabinet = require('../filing-cabinet');
 const debug = require('debug')('tree');
@@ -24,7 +23,6 @@ const Config = require('./Config');
  * @param {Object} [options.visited] - Cache of visited, absolutely pathed files that should not be reprocessed.
  *                             Format is a filename -> tree as list lookup table
  * @param {Array} [options.nonExistent] - List of partials that do not exist
- * @param {Boolean} [options.isListForm=false]
  * @return {Object}
  */
 module.exports = function (options) {
@@ -32,29 +30,10 @@ module.exports = function (options) {
 
   if (!fs.existsSync(config.filename)) {
     debug(`file ${config.filename} does not exist`);
-    return config.isListForm ? [] : {};
+    return {};
   }
 
-  const results = traverse(config);
-  debug('traversal complete', results);
-
-  debug('deduped list of nonExistent partials: ', config.nonExistent);
-
-  let tree;
-  if (config.isListForm) {
-    debug('list form of results requested');
-
-    tree = removeDups(results);
-    debug('removed dups from the resulting list');
-  } else {
-    debug('object form of results requested');
-
-    tree = {};
-    tree[config.filename] = results;
-  }
-
-  debug('final tree', tree);
-  return tree;
+  return traverse(config);
 };
 
 /**
@@ -173,76 +152,29 @@ module.exports._getDependencies = function (config) {
   return resolvedDependencies;
 };
 
-/**
- * @param  {Config} config
- * @return {Object|String[]}
- */
 function traverse(config) {
-  let subTree = config.isListForm ? [] : {};
-
-  debug(`traversing ${config.filename}`);
-
-  if (config.visited[config.filename]) {
-    debug(`already visited ${config.filename}`);
-    return config.visited[config.filename];
-  }
-
-  let dependencies = module.exports._getDependencies(config);
-
-  debug('cabinet-resolved all dependencies: ', dependencies);
-  // Prevents cycles by eagerly marking the current file as read
-  // so that any dependent dependencies exit
-  config.visited[config.filename] = config.isListForm ? [] : {};
-
-  if (config.filter) {
-    debug('using filter function to filter out dependencies');
-    debug(`unfiltered number of dependencies: ${dependencies.length}`);
-    dependencies = dependencies.filter(function (filePath) {
-      return config.filter(filePath, config.filename);
-    });
-    debug(`filtered number of dependencies: ${dependencies.length}`);
-  }
-
-  for (let i = 0, l = dependencies.length; i < l; i++) {
-    const d = dependencies[i];
-    const localConfig = config.clone();
-    localConfig.filename = d;
-
-    if (localConfig.isListForm) {
-      subTree = subTree.concat(traverse(localConfig));
-    } else {
-      subTree[d] = traverse(localConfig);
+  const tree = [];
+  const stack = [config.filename];
+  while (stack.length) {
+    const dependency = stack.pop();
+    debug(`traversing ${dependency}`);
+    if (!tree[dependency]) {
+      const localConfig = config.clone();
+      localConfig.filename = dependency;
+      let dependencies = module.exports._getDependencies(localConfig);
+      if (config.filter) {
+        debug('using filter function to filter out dependencies');
+        debug(`unfiltered number of dependencies: ${dependencies.length}`);
+        dependencies = dependencies.filter(function (filePath) {
+          return config.filter(filePath, config.filename);
+        });
+        debug(`filtered number of dependencies: ${dependencies.length}`);
+      }
+      debug('cabinet-resolved all dependencies: ', dependencies);
+      tree[dependency] = dependencies;
+      dependencies.forEach(d => stack.push(d));
     }
   }
 
-  if (config.isListForm) {
-    // Prevents redundancy about each memoized step
-    subTree = removeDups(subTree);
-    subTree.push(config.filename);
-    config.visited[config.filename] = config.visited[config.filename].concat(subTree);
-  } else {
-    config.visited[config.filename] = subTree;
-  }
-
-  return subTree;
-}
-
-/**
- * Returns a list of unique items from the array
- *
- * @param  {String[]} list
- * @return {String[]}
- */
-function removeDups(list) {
-  const cache = {};
-  const unique = [];
-
-  list.forEach(function (item) {
-    if (!cache[item]) {
-      unique.push(item);
-      cache[item] = true;
-    }
-  });
-
-  return unique;
+  return tree;
 }

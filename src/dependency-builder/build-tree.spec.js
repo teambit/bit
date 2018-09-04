@@ -84,5 +84,35 @@ describe('buildTree', () => {
         expect(results.tree[missingDepsFile].missing.packages[0]).to.equal('non-exist-package');
       });
     });
+    describe('tree shaking with cycle', () => {
+      describe('when a file imports from itself', () => {
+        let results;
+        before(async () => {
+          dependencyTreeParams.filePaths = [`${buildTreeFixtures}/tree-shaking-cycle/self-cycle.js`];
+          results = await buildTree.getDependencyTree(dependencyTreeParams);
+        });
+        it('should not throw an error and should remove itself from the dependencies files', () => {
+          const file = 'fixtures/build-tree/tree-shaking-cycle/self-cycle.js';
+          expect(results.tree[file].files).to.be.an('array').and.empty;
+        });
+      });
+      describe('cycle with multiple files', () => {
+        let results;
+        before(async () => {
+          dependencyTreeParams.filePaths = [`${buildTreeFixtures}/tree-shaking-cycle/foo.js`];
+          results = await buildTree.getDependencyTree(dependencyTreeParams);
+        });
+        it('should not recognize the cycle dependencies as link files', () => {
+          const file = 'fixtures/build-tree/tree-shaking-cycle/foo.js';
+          expect(results.tree[file].files)
+            .to.be.an('array')
+            .and.have.lengthOf(1);
+          const indexDep = results.tree[file].files[0];
+          expect(indexDep.file).to.equal('fixtures/build-tree/tree-shaking-cycle/index.js');
+          expect(indexDep).to.not.have.property('isLink');
+          expect(indexDep).to.not.have.property('linkDependencies');
+        });
+      });
+    });
   });
 });

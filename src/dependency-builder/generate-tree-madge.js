@@ -87,20 +87,11 @@ export function processPath(absPath, cache, baseDir) {
  * @param  {String} baseDir
  * @return {Object}
  */
-function convertTree(depTree, tree, pathCache, baseDir) {
-  for (const key in depTree) {
-    const id = processPath(key, pathCache, baseDir);
-
-    if (!tree[id]) {
-      tree[id] = [];
-
-      for (const dep in depTree[key]) {
-        tree[id].push(processPath(dep, pathCache, baseDir));
-      }
-    }
-
-    convertTree(depTree[key], tree, pathCache, baseDir);
-  }
+function convertTreePaths(depTree, pathCache, baseDir) {
+  const tree = {};
+  Object.keys(depTree).forEach((file) => {
+    tree[processPath(file, pathCache, baseDir)] = depTree[file].map(d => processPath(d, pathCache, baseDir));
+  });
 
   return tree;
 }
@@ -121,7 +112,7 @@ export default function generateTree(files = [], config) {
   const errors = {};
 
   files.forEach((file) => {
-    if (visited[file]) {
+    if (depTree[file]) {
       return;
     }
 
@@ -159,7 +150,7 @@ export default function generateTree(files = [], config) {
     }
   });
 
-  let tree = convertTree(depTree, {}, pathCache, config.baseDir);
+  let tree = convertTreePaths(depTree, pathCache, config.baseDir);
 
   // rename errors keys from absolute paths to relative paths
   Object.keys(errors).forEach((file) => {

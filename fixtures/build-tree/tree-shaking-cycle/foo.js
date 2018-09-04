@@ -1,0 +1,1 @@
+import { isString } from '.';

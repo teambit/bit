@@ -143,14 +143,14 @@ describe('dependencyTree', function () {
 
     // b and c
     const subTree = tree[filename];
-    assert.equal(Object.keys(subTree).length, 2);
+    assert.equal(subTree.length, 2);
 
-    const bTree = subTree[path.normalize(`${directory}/b.js`)];
-    const cTree = subTree[path.normalize(`${directory}/c.js`)];
+    const bTree = tree[path.normalize(`${directory}/b.js`)];
+    const cTree = tree[path.normalize(`${directory}/c.js`)];
     // d and e
-    assert.equal(Object.keys(bTree).length, 2);
+    assert.equal(bTree.length, 2);
     // f ang g
-    assert.equal(Object.keys(cTree).length, 2);
+    assert.equal(cTree.length, 2);
   });
 
   it('does not include files that are not real (#13)', () => {
@@ -206,7 +206,7 @@ describe('dependencyTree', function () {
     const tree = dependencyTree({ filename, directory });
     const subTree = tree[filename];
 
-    assert(Object.keys(subTree).some(dep => dep === require.resolve('debug')));
+    assert(subTree.includes(require.resolve('debug')));
   });
 
   it('returns a list of absolutely pathed files', () => {
@@ -218,25 +218,6 @@ describe('dependencyTree', function () {
     for (const node in tree.nodes) {
       assert(node.indexOf(process.cwd()) !== -1);
     }
-  });
-
-  it('excludes duplicate modules from the tree', () => {
-    mockfs({
-      root: {
-        // More than one module includes c
-        'a.js': `import b from "./b";
-                 import c from "./c";`,
-        'b.js': 'import c from "./c";',
-        'c.js': 'export default 1;'
-      }
-    });
-
-    const tree = dependencyTree.toList({
-      filename: path.normalize('root/a.js'),
-      directory: 'root'
-    });
-
-    assert(tree.length === 3);
   });
 
   describe('when given a detective configuration', () => {
@@ -487,7 +468,7 @@ describe('dependencyTree', function () {
           directory: this._directory
         });
 
-        assert.ok(tree[filename][path.normalize(`${this._directory}/c.js`)]);
+        assert.ok(tree[filename].includes(path.normalize(`${this._directory}/c.js`)));
       });
 
       it('resolves files with a jsx extension', () => {
@@ -496,17 +477,16 @@ describe('dependencyTree', function () {
           filename,
           directory: this._directory
         });
-        assert.ok(tree[filename][path.normalize(`${this._directory}/b.js`)]);
+        assert.ok(tree[filename].includes(path.normalize(`${this._directory}/b.js`)));
       });
 
       it('resolves files that have es7', () => {
         const filename = path.normalize(`${this._directory}/es7.js`);
-        const { [filename]: tree } = dependencyTree({
+        const tree = dependencyTree({
           filename,
           directory: this._directory
         });
-
-        assert.ok(tree[path.normalize(`${this._directory}/c.js`)]);
+        assert.ok(tree[filename].includes(path.normalize(`${this._directory}/c.js`)));
       });
     });
 
@@ -616,7 +596,7 @@ describe('dependencyTree', function () {
 
       const filename = path.resolve(process.cwd(), 'root/a.js');
       const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
-      assert.ok(path.normalize('root/lodizzle.js') in tree[filename]);
+      assert(tree[filename].includes(path.normalize('root/lodizzle.js')));
     });
 
     it('resolves non-aliased paths', () => {
@@ -628,7 +608,7 @@ describe('dependencyTree', function () {
 
       const filename = path.resolve(process.cwd(), 'root/b.js');
       const aliasedFile = path.resolve(process.cwd(), 'root/lodizzle.js');
-      assert.ok(path.normalize('root/lodizzle.js') in tree[filename]);
+      assert.ok(tree[filename].includes(path.normalize('root/lodizzle.js')));
     });
   });
 
@@ -671,9 +651,7 @@ describe('dependencyTree', function () {
       const filename = path.normalize(`${directory}/foo.js`);
 
       const tree = dependencyTree({ filename, directory });
-      const subTree = tree[filename];
-
-      assert.ok(path.normalize(`${directory}/bar.js`) in subTree);
+      assert.ok(tree[filename].includes(path.normalize(`${directory}/bar.js`)));
     });
   });
 
@@ -702,27 +680,7 @@ describe('dependencyTree', function () {
           }
         });
 
-        const subTree = tree[filename];
-
-        assert.ok(path.normalize(`${directory}/bar.js`) in subTree);
-      });
-
-      it('also works for toList', () => {
-        const directory = path.normalize(`${__dirname}/es6`);
-        const filename = path.normalize(`${directory}/foo.js`);
-
-        const results = dependencyTree.toList({
-          filename,
-          directory,
-          detective: {
-            es6: {
-              mixedImports: true
-            }
-          }
-        });
-
-        assert.equal(results[0], path.normalize(`${directory}/bar.js`));
-        assert.equal(results[1], filename);
+        assert.ok(tree[filename].includes(path.normalize(`${directory}/bar.js`)));
       });
     });
   });
@@ -771,8 +729,7 @@ describe('dependencyTree', function () {
         directory
       });
 
-      const subTree = tree[filename];
-      assert.ok(`${directory}/bar.json` in subTree);
+      assert.ok(`${directory}/bar.json` in tree);
     });
   });
 
