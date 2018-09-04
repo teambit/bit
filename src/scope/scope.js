@@ -915,6 +915,9 @@ export default class Scope {
     return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
 
+  /**
+   * get ConsumerComponent by bitId. if the component was not found locally, import it from a remote scope
+   */
   loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
     return this.getComponentVersion(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());
@@ -1011,6 +1014,10 @@ export default class Scope {
     return removeNils(componentsAndVersions);
   }
 
+  /**
+   * get consumerComponent by bitId only if is saved in the local scope. don't import from a remote scope.
+   * throws error if not found.
+   */
   async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
     const componentModel = await this.getComponentModel(id);
     return componentModel.toConsumerComponent(id.version, this.name, this.objects);
