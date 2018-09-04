@@ -124,6 +124,8 @@ describe.only('bit add command', function () {
       expect(nodeStartOutputObj).to.be.ofSize(3);
       const status = helper.status();
       expect(status).to.have.string('add_multiple_test_files/a ... ok');
+      expect(status).to.have.string('add_multiple_test_files/b ... ok');
+      expect(status).to.have.string('add_multiple_test_files/c ... ok');
       const compData = helper.showComponent('add_multiple_test_files/a');
       expect(compData).to.have.string('Specs');
       expect(compData).to.have.string('add_multiple_test_files/a.spec.js');

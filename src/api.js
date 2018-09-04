@@ -1,6 +1,7 @@
 /** @flow */
 
 import { getScopeComponent, addMany } from './api/consumer/index';
+import type { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
 import Extension from './extensions/extension';
 import HooksManager from './hooks';
@@ -16,7 +17,7 @@ module.exports = {
       return c.toObject();
     }),
   list: (scopePath: string) => scopeList(scopePath).then(components => components.map(c => c.id.toString())),
-  addMany: async (components: Object) => {
+  addMany: async (components: AddProps[]) => {
     return addMany(components);
   },
   /**
