@@ -3,7 +3,7 @@ import BitObject from './objects/object';
 import Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
 import { typesObj } from './object-registrar';
-import Component from './models/component';
+import ModelComponent from './models/component';
 // import logger from '../logger/logger';
 
 export default class ComponentObjects {
@@ -48,7 +48,7 @@ export default class ComponentObjects {
     return new ComponentObjects(_from64Buffer(component), objects.map(_from64Buffer));
   }
 
-  toObjects(repo: Repository): { component: Component, objects: BitObject[] } {
+  toObjects(repo: Repository): { component: ModelComponent, objects: BitObject[] } {
     return {
       component: BitObject.parseSync(this.component, repo.types),
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))

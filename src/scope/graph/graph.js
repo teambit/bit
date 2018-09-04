@@ -4,7 +4,7 @@ import semver from 'semver';
 import R from 'ramda';
 import { Repository } from '../objects';
 import { BitId, BitIds } from '../../bit-id';
-import { Component, Version } from '../models';
+import { ModelComponent, Version } from '../models';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../constants';
 
 const Graph = GraphLib.Graph;
@@ -54,7 +54,7 @@ export default class DependencyGraph {
     return Promise.resolve(graph);
   }
 
-  getComponent(id: BitId): Component {
+  getComponent(id: BitId): ModelComponent {
     return this.graph.node(id.toStringWithoutVersion());
   }
 

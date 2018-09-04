@@ -6,7 +6,7 @@ import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
-import { Component, Version, Source, Symlink } from '../models';
+import { ModelComponent, Version, Source, Symlink } from '../models';
 import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/component';
 import ConsumerComponent from '../../consumer/component';
@@ -16,13 +16,13 @@ import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 
 export type ComponentTree = {
-  component: Component,
+  component: ModelComponent,
   objects: BitObject[]
 };
 
 export type ComponentDef = {
   id: BitId,
-  component: ?Component
+  component: ?ModelComponent
 };
 
 export default class SourceRepository {
@@ -36,7 +36,7 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  async findComponent(component: Component): Promise<?Component> {
+  async findComponent(component: ModelComponent): Promise<?ModelComponent> {
     try {
       const foundComponent = await this.objects().findOne(component.hash());
       if (foundComponent) return foundComponent;
@@ -61,12 +61,12 @@ export default class SourceRepository {
     );
   }
 
-  async get(bitId: BitId): Promise<?Component> {
-    const component = Component.fromBitId(bitId);
+  async get(bitId: BitId): Promise<?ModelComponent> {
+    const component = ModelComponent.fromBitId(bitId);
     let foundComponent = await this.findComponent(component);
     if (foundComponent instanceof Symlink) {
       const realComponentId: BitId = foundComponent.getRealComponentId();
-      foundComponent = await this.findComponent(Component.fromBitId(realComponentId));
+      foundComponent = await this.findComponent(ModelComponent.fromBitId(realComponentId));
     }
 
     if (foundComponent && bitId.hasVersion()) {
@@ -92,8 +92,8 @@ export default class SourceRepository {
     });
   }
 
-  findOrAddComponent(props: ComponentProps): Promise<Component> {
-    const comp = Component.from(props);
+  findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
+    const comp = ModelComponent.from(props);
     return this.findComponent(comp).then((component) => {
       if (!component) return comp;
       return component;
@@ -251,7 +251,7 @@ export default class SourceRepository {
     releaseType: string,
     dists: ?Object,
     specsResults?: any
-  }): Promise<Component> {
+  }): Promise<ModelComponent> {
     const objectRepo = this.objects();
 
     // if a component exists in the model, add a new version. Otherwise, create a new component on the model
@@ -288,11 +288,11 @@ export default class SourceRepository {
   }
 
   putAdditionalVersion(
-    component: Component,
+    component: ModelComponent,
     version: Version,
     message,
     releaseType: string = DEFAULT_BIT_RELEASE_TYPE
-  ): Component {
+  ): ModelComponent {
     version.log = {
       message,
       username: globalConfig.getSync(CFG_USER_NAME_KEY),
@@ -303,14 +303,14 @@ export default class SourceRepository {
     return this.put({ component, objects: [version] });
   }
 
-  put({ component, objects }: ComponentTree): Component {
+  put({ component, objects }: ComponentTree): ModelComponent {
     logger.debug(`sources.put, id: ${component.id()}, versions: ${component.listVersions().join(', ')}`);
     const repo: Repository = this.objects();
     repo.add(component);
 
     const isObjectShouldBeAdded = (obj) => {
       // don't add a component if it's already exist locally with more versions
-      if (obj instanceof Component) {
+      if (obj instanceof ModelComponent) {
         const loaded = repo.loadSync(obj.hash(), false);
         if (loaded) {
           if (Object.keys(loaded.versions) > Object.keys(obj.versions)) {
@@ -329,11 +329,11 @@ export default class SourceRepository {
 
   /**
    * removeVersion - remove specific component version from component
-   * @param {Component} component - component to remove version from
+   * @param {ModelComponent} component - component to remove version from
    * @param {string} version - version to remove.
    * @param persist
    */
-  async removeVersion(component: Component, version: string, persist: boolean = true): Promise<void> {
+  async removeVersion(component: ModelComponent, version: string, persist: boolean = true): Promise<void> {
     logger.debug(`removing version ${version} of ${component.id()} from a local scope`);
     const objectRepo = this.objects();
     const modifiedComponent = await component.removeVersion(objectRepo, version);
@@ -359,7 +359,7 @@ export default class SourceRepository {
    * here, we assume that there is no conflict between the two, otherwise, this.merge() would throw
    * a MergeConflict exception.
    */
-  mergeTwoComponentsObjects(existingComponent: Component, incomingComponent: Component): Component {
+  mergeTwoComponentsObjects(existingComponent: ModelComponent, incomingComponent: ModelComponent): ModelComponent {
     // the base component to save is the existingComponent because it might contain local data that
     // is not available in the remote component, such as the "state" property.
     const mergedComponent = existingComponent;
@@ -396,9 +396,9 @@ export default class SourceRepository {
     { component, objects }: ComponentTree,
     inScope: boolean = false,
     local: boolean = true
-  ): Promise<Component> {
+  ): Promise<ModelComponent> {
     if (inScope) component.scope = this.scope.name;
-    const existingComponent: ?Component = await this.findComponent(component);
+    const existingComponent: ?ModelComponent = await this.findComponent(component);
     if (!existingComponent) return this.put({ component, objects });
     const locallyChanged = await existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {

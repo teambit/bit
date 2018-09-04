@@ -8,7 +8,7 @@ import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, removeFile, readFile, glob } from '../../utils';
 import { Scope } from '../../scope';
-import { Component, Symlink, ScopeMeta } from '../models';
+import { ModelComponent, Symlink, ScopeMeta } from '../models';
 import logger from '../../logger/logger';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
@@ -16,8 +16,8 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 export default class Repository {
   objects: BitObject[] = [];
   _cache: { [string]: BitObject } = {};
-  _cacheListComponentsWithSymlinks: Array<Component | Symlink>;
-  _cacheListComponentsWithoutSymlinks: Component[];
+  _cacheListComponentsWithSymlinks: Array<ModelComponent | Symlink>;
+  _cacheListComponentsWithoutSymlinks: ModelComponent[];
   scope: Scope;
   types: { [string]: Function };
 
@@ -103,10 +103,11 @@ export default class Repository {
     );
   }
 
-  async listComponents(includeSymlinks: boolean = true): Promise<Array<Component | Symlink>> {
+  async listComponents(includeSymlinks: boolean = true): Promise<Array<ModelComponent | Symlink>> {
     const filterComponents = refs =>
       refs.filter(
-        ref => (includeSymlinks ? ref instanceof Component || ref instanceof Symlink : ref instanceof Component)
+        ref =>
+          (includeSymlinks ? ref instanceof ModelComponent || ref instanceof Symlink : ref instanceof ModelComponent)
       );
 
     if (includeSymlinks) {
