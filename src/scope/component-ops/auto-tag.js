@@ -2,7 +2,7 @@
 import R from 'ramda';
 import semver from 'semver';
 import graphlib, { Graph } from 'graphlib';
-import ComponentModel from '../models/model-component';
+import ModelComponent from '../models/model-component';
 import { BitId, BitIds } from '../../bit-id';
 import Scope from '../scope';
 import type { ComponentsAndVersions } from '../scope';
@@ -36,7 +36,7 @@ export async function bumpDependenciesVersions(
   scope: Scope,
   potentialComponents: BitIds,
   committedComponents: Component[]
-): Promise<ComponentModel[]> {
+): Promise<ModelComponent[]> {
   const committedComponentsIds = BitIds.fromArray(committedComponents.map(c => c.id));
   const allComponents = new BitIds(...potentialComponents, ...committedComponentsIds);
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
@@ -63,7 +63,7 @@ async function updateComponents(
   changedComponents: BitIds,
   isRound2 = false,
   graph: Object
-): Promise<ComponentModel[]> {
+): Promise<ModelComponent[]> {
   const componentsToUpdateP = componentsAndVersions.map(async ({ component, version }) => {
     let pendingUpdate = false;
     const bitId = component.toBitId();
@@ -130,7 +130,7 @@ export async function getAutoTagPending(
   scope: Scope,
   potentialComponents: BitIds,
   changedComponents: BitIds
-): Promise<ComponentModel[]> {
+): Promise<ModelComponent[]> {
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(
     new BitIds(...potentialComponents, ...changedComponents)
   );

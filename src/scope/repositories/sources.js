@@ -8,7 +8,7 @@ import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPON
 import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { ModelComponent, Version, Source, Symlink } from '../models';
 import { BitId, BitIds } from '../../bit-id';
-import type { ComponentProps } from '../models/component';
+import type { ComponentProps } from '../models/model-component';
 import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import logger from '../../logger/logger';

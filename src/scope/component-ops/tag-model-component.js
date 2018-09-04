@@ -8,7 +8,7 @@ import { Scope } from '..';
 import { Consumer } from '../../consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
 import Component from '../../consumer/component';
-import ComponentModel from '../models/model-component';
+import ModelComponent from '../models/model-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -181,7 +181,7 @@ export default (async function tagModelComponent({
   ignoreNewestVersion: boolean,
   skipTests: boolean,
   verbose?: boolean
-}): Promise<{ taggedComponents: Component[], autoTaggedComponents: ComponentModel[] }> {
+}): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
