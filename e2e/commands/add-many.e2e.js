@@ -21,7 +21,7 @@ describe('bit add many programatically', function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.linkNpm('bit-bin');
-      const nodeStartOutput = helper.nodeStart('add_many_test_files/index_four_components.js');
+      const nodeStartOutput = helper.nodeStart('add_many_test_files/add_components_programatically.js');
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       status = helper.status();
     });
