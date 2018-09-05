@@ -52,7 +52,11 @@ export type ComponentProps = {
   state?: State // get deleted after export
 };
 
-export default class ModelComponent extends BitObject {
+/**
+ * we can't rename the class as ModelComponent because old components are already saved in the model
+ * with 'Component' in their headers. see object-registrar.types()
+ */
+export default class Component extends BitObject {
   scope: ?string;
   name: string;
   versions: Versions;
@@ -100,7 +104,7 @@ export default class ModelComponent extends BitObject {
    * otherwise, it doesn't matter whether the hashes are different.
    */
   _getComparableVersionsObjects(
-    otherComponent: ModelComponent, // in case of merging, the otherComponent is the existing component, and "this" is the incoming component
+    otherComponent: Component, // in case of merging, the otherComponent is the existing component, and "this" is the incoming component
     local: boolean // for 'bit import' the local is true, for 'bit export' the local is false
   ): { thisComponentVersions: Versions, otherComponentVersions: Versions } {
     const otherLocalVersion = otherComponent.getLocalVersions();
@@ -115,12 +119,12 @@ export default class ModelComponent extends BitObject {
     return { thisComponentVersions, otherComponentVersions };
   }
 
-  compatibleWith(component: ModelComponent, local: boolean): boolean {
+  compatibleWith(component: Component, local: boolean): boolean {
     const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component, local);
     return equals(thisComponentVersions, otherComponentVersions);
   }
 
-  diffWith(component: ModelComponent, local: boolean): string[] {
+  diffWith(component: Component, local: boolean): string[] {
     const { thisComponentVersions, otherComponentVersions } = this._getComparableVersionsObjects(component, local);
     return Object.keys(thisComponentVersions).filter(
       version => thisComponentVersions[version].hash !== otherComponentVersions[version].hash
@@ -264,7 +268,7 @@ export default class ModelComponent extends BitObject {
   /**
    * to delete a version from a component, don't call this method directly. Instead, use sources.removeVersion()
    */
-  async removeVersion(repo: Repository, version: string): Promise<ModelComponent> {
+  async removeVersion(repo: Repository, version: string): Promise<Component> {
     const objectRefs = this.versions[version];
     delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
@@ -360,7 +364,7 @@ export default class ModelComponent extends BitObject {
 
   validateBeforePersisting(componentStr: string): void {
     logger.debug(`validating component object: ${this.hash().hash} ${this.id()}`);
-    const component = ModelComponent.parse(componentStr);
+    const component = Component.parse(componentStr);
     component.validate();
   }
 
@@ -406,9 +410,9 @@ export default class ModelComponent extends BitObject {
     return localVersions.length > 0;
   }
 
-  static parse(contents: string): ModelComponent {
+  static parse(contents: string): Component {
     const rawComponent = JSON.parse(contents);
-    return ModelComponent.from({
+    return Component.from({
       name: rawComponent.box ? `${rawComponent.box}/${rawComponent.name}` : rawComponent.name,
       scope: rawComponent.scope,
       versions: mapObject(rawComponent.versions, val => Ref.from(val)),
@@ -420,13 +424,13 @@ export default class ModelComponent extends BitObject {
     });
   }
 
-  static from(props: ComponentProps): ModelComponent {
-    return new ModelComponent(props);
+  static from(props: ComponentProps): Component {
+    return new Component(props);
   }
 
-  static fromBitId(bitId: BitId): ModelComponent {
+  static fromBitId(bitId: BitId): Component {
     if (bitId.box) throw new Error('component.fromBitId, bitId should not have the "box" property populated');
-    return new ModelComponent({
+    return new Component({
       name: bitId.name,
       scope: bitId.scope
     });
