@@ -158,7 +158,7 @@ function traverse(config) {
   while (stack.length) {
     const dependency = stack.pop();
     debug(`traversing ${dependency}`);
-    if (!tree[dependency]) {
+    if (!config.visited[dependency]) {
       const localConfig = config.clone();
       localConfig.filename = dependency;
       let dependencies = module.exports._getDependencies(localConfig);
@@ -172,7 +172,10 @@ function traverse(config) {
       }
       debug('cabinet-resolved all dependencies: ', dependencies);
       tree[dependency] = dependencies;
+      config.visited[dependency] = dependencies;
       dependencies.forEach(d => stack.push(d));
+    } else {
+      debug(`already visited ${dependency}`);
     }
   }
 
