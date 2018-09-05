@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bit-javascript get-dependency command to cache the processed files
+
 ## [13.0.5-dev.4 - 2018-09-05]
 
 - new programmatic API for add multiple components
