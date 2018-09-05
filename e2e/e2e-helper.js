@@ -116,6 +116,21 @@ export default class Helper {
   }
   // #endregion
 
+  // #region npm utils
+
+  initNpm(initPath: string = path.join(this.localScopePath)) {
+    this.runCmd('npm init -y', initPath);
+  }
+
+  nodeStart(mainFilePath: string) {
+    return this.runCmd(`node ${mainFilePath}`);
+  }
+
+  linkNpm(libraryName: string) {
+    return this.runCmd(`npm link ${libraryName}`);
+  }
+  // #endregion
+
   // #region scopes utils (init, remote etc')
   setLocalScope(localScope?: string) {
     this.localScope = localScope || `${generateRandomStr()}-local`;
@@ -699,9 +714,6 @@ export default class Helper {
     fs.writeJSONSync(packageJsonPath, data, { spaces: 2 });
   }
 
-  initNpm(initPath: string = path.join(this.localScopePath)) {
-    this.runCmd('npm init -y', initPath);
-  }
   /**
    * install package, if you don't really need the package code and can use mock
    * just run addNpmPackage which will be faster

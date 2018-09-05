@@ -1,7 +1,7 @@
 /** @flow */
 import semver from 'semver';
 import R from 'ramda';
-import { Version, Component as ModelComponent } from '../../scope/models';
+import { Version, ModelComponent } from '../../scope/models';
 import { Scope } from '../../scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';

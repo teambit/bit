@@ -9,7 +9,7 @@ import { PRE_TAG_HOOK, POST_TAG_HOOK, PRE_TAG_ALL_HOOK, POST_TAG_ALL_HOOK } from
 import InvalidVersion from './exceptions/invalid-version';
 import { Analytics } from '../../../analytics/analytics';
 import Component from '../../../consumer/component';
-import ModelComponent from '../../../scope/models/component';
+import ModelComponent from '../../../scope/models/model-component';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
