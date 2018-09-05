@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.4 - 2018-09-05]
+
+- new programmatic API for add multiple components
 - update bit-javascript to improve scalability of the dependency resolution
+
+## [13.0.5-dev.3 - 2018-08-27]
+
 - update bit-javascript to show a descriptive error when failed to parse css, sass, scss and less files
 - improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on
 - fix `bit status` to not throw an exception for invalid components
