@@ -23,6 +23,11 @@ const components =
             'tests' : ['add_many_test_files/d.spec.js'],
             'exclude' : ['add_many_test_files/d.spec.js'],
             'id' : 'add_many_test_files/d',
+        },
+        {
+            'componentPaths' : ['add_many_test_files/e.js', 'add_many_test_files/f.js'],
+            'main' : 'add_many_test_files/e.js',
+            'id' : 'add_many_test_files/component_with_many_paths',
         }
     ]
 
