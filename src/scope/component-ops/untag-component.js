@@ -1,11 +1,11 @@
 // @flow
 import { BitId } from '../../bit-id';
-import ComponentModel from '../models/component';
+import ModelComponent from '../models/model-component';
 import logger from '../../logger/logger';
 import { Scope } from '..';
 import GeneralError from '../../error/general-error';
 
-export type untagResult = { id: BitId, versions: string[], component: ComponentModel };
+export type untagResult = { id: BitId, versions: string[], component: ModelComponent };
 
 /**
  * If not specified version, remove all local versions.
@@ -16,7 +16,7 @@ export async function removeLocalVersion(
   version?: string,
   force?: boolean = false
 ): Promise<untagResult> {
-  const component: ComponentModel = await scope.getComponentModel(id);
+  const component: ModelComponent = await scope.getModelComponent(id);
   const localVersions = component.getLocalVersions();
   const idStr = id.toString();
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);
@@ -61,8 +61,8 @@ export async function removeLocalVersionsForAllComponents(
   force?: boolean = false
 ): Promise<untagResult[]> {
   // $FlowFixMe
-  const components: ComponentModel[] = await scope.objects.listComponents(false);
-  const candidateComponents = components.filter((component: ComponentModel) => {
+  const components: ModelComponent[] = await scope.objects.listComponents(false);
+  const candidateComponents = components.filter((component: ModelComponent) => {
     const localVersions = component.getLocalVersions();
     if (!localVersions.length) return false;
     return version ? localVersions.includes(version) : true;
