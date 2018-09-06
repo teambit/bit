@@ -1,5 +1,5 @@
 /* eslint-disable max-lines */
-import chai, { expect } from 'chai';
+import chai, { expect, assert } from 'chai';
 import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -16,6 +16,16 @@ describe('bit add many programatically', function () {
   this.timeout(10000);
   let nodeStartOutputObj;
   let status;
+  describe('should transfer wrong script path', function () {
+    it('should transfer wrong script path ', function () {
+      helper.reInitLocalScope();
+      helper.copyFixtureComponents('add-many');
+      helper.linkNpm('bit-bin');
+      assert.throws(() => {
+        helper.nodeStart('add_many_test_files/add_components_programatically.js true', process.cwd());
+      });
+    });
+  });
   describe('should add many components', function () {
     before(() => {
       helper.reInitLocalScope();

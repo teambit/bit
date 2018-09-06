@@ -122,8 +122,8 @@ export default class Helper {
     this.runCmd('npm init -y', initPath);
   }
 
-  nodeStart(mainFilePath: string) {
-    return this.runCmd(`node ${mainFilePath}`);
+  nodeStart(mainFilePath: string, runScriptPath?: string) {
+    return this.runCmd(`node ${mainFilePath}`, runScriptPath);
   }
 
   linkNpm(libraryName: string) {
