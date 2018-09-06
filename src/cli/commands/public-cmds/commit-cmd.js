@@ -3,7 +3,7 @@ import Command from '../../command';
 import { commitAction, commitAllAction } from '../../../api/consumer';
 import type { TagResults } from '../../../api/consumer/lib/commit';
 import { isString } from '../../../utils';
-import ModelComponent from '../../../scope/models/component';
+import ModelComponent from '../../../scope/models/model-component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 

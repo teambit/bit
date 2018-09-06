@@ -38,7 +38,7 @@ import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { getLatestVersionNumber, pathNormalizeToLinux, sortObject } from '../utils';
 import { DependencyResolver, updateDependenciesVersions } from './component/dependencies/dependency-resolver';
-import { Version, Component as ModelComponent } from '../scope/models';
+import { Version, ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import { installPackages } from '../npm-client/install-packages';

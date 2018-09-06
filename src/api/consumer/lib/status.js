@@ -3,7 +3,7 @@ import { loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import Component from '../../../consumer/component';
 import type { InvalidComponents } from '../../../consumer/component';
-import { Component as ModelComponent } from '../../../scope/models';
+import { ModelComponent } from '../../../scope/models';
 import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';

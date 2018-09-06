@@ -8,8 +8,7 @@ import pMapSeries from 'p-map-series';
 import { GlobalRemotes } from '../global-config';
 import enrichContextFromGlobal from '../hooks/utils/enrich-context-from-global';
 import ComponentObjects from './component-objects';
-import ComponentModel from './models/component';
-import { Symlink, Version } from './models';
+import { Symlink, Version, ModelComponent } from './models';
 import { Remotes } from '../remotes';
 import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHasAll, first, splitBy } from '../utils';
@@ -93,7 +92,7 @@ export type IsolateOptions = {
 };
 
 export type ComponentsAndVersions = {
-  component: ComponentModel,
+  component: ModelComponent,
   version: Version,
   versionStr: string
 };
@@ -240,7 +239,7 @@ export default class Scope {
     };
   }
 
-  toConsumerComponents(components: ComponentModel[]): Promise<ConsumerComponent[]> {
+  toConsumerComponents(components: ModelComponent[]): Promise<ConsumerComponent[]> {
     return Promise.all(
       components
         .filter(comp => !(comp instanceof Symlink))
@@ -448,7 +447,7 @@ export default class Scope {
   ): void {
     const getIdWithUpdatedScope = (dependencyId: BitId): BitId => {
       if (dependencyId.scope) return dependencyId;
-      const depId = ComponentModel.fromBitId(dependencyId);
+      const depId = ModelComponent.fromBitId(dependencyId);
       // todo: use 'load' for async and switch the foreach with map.
       const dependencyObject = this.objects.loadSync(depId.hash());
       if (dependencyObject instanceof Symlink) {
@@ -773,7 +772,7 @@ export default class Scope {
     return versionDependencies.toConsumer(this.objects);
   }
 
-  async getModelComponentIfExist(id: BitId): Promise<?ComponentModel> {
+  async getModelComponentIfExist(id: BitId): Promise<?ModelComponent> {
     return this.sources.get(id);
   }
 
@@ -853,7 +852,7 @@ export default class Scope {
   async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
     const allComponents = await this.objects.listComponents(false);
     const allComponentVersions = await Promise.all(
-      allComponents.map(async (component: ComponentModel) => {
+      allComponents.map(async (component: ModelComponent) => {
         const loadedVersions = await Promise.all(
           Object.keys(component.versions).map(async (version) => {
             const componentVersion = await component.loadVersion(version, this.objects);
@@ -973,17 +972,17 @@ export default class Scope {
   }
 
   /**
-   * Get ComponentModel instance per bit-id. The id can be either with or without a scope-name.
+   * Get ModelComponent instance per bit-id. The id can be either with or without a scope-name.
    * In case the component is saved in the model only with the scope (imported), it loads all
    * components and search for it.
    * It throws an error if the component wasn't found.
    */
-  async getComponentModel(id: BitId): Promise<ComponentModel> {
+  async getModelComponent(id: BitId): Promise<ModelComponent> {
     const component = await this.sources.get(id);
     if (component) return component;
     if (!id.scope) {
       // search for the complete ID
-      const components: ComponentModel[] = await this.objects.listComponents(false); // don't fetch Symlinks
+      const components: ModelComponent[] = await this.objects.listComponents(false); // don't fetch Symlinks
       const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
       // $FlowFixMe
       if (foundComponent.length) return first(foundComponent);
@@ -993,7 +992,7 @@ export default class Scope {
 
   async getVersionInstance(id: BitId): Promise<Version> {
     if (!id.hasVersion()) throw new TypeError(`scope.getVersionInstance - id ${id.toString()} is missing the version`);
-    const component: ComponentModel = await this.getComponentModel(id);
+    const component: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe id.version is not null, was checked above
     return component.loadVersion(id.version, this.objects);
   }
@@ -1002,7 +1001,7 @@ export default class Scope {
     const componentsObjects = await this.sources.getMany(ids);
     const componentsAndVersionsP = componentsObjects.map(async (componentObjects) => {
       if (!componentObjects.component) return null;
-      const component: ComponentModel = componentObjects.component;
+      const component: ModelComponent = componentObjects.component;
       const versionStr = componentObjects.id.getVersion().toString();
       const version: Version = await component.loadVersion(versionStr, this.objects);
       return { component, version, versionStr };
@@ -1012,7 +1011,7 @@ export default class Scope {
   }
 
   async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
-    const componentModel = await this.getComponentModel(id);
+    const componentModel = await this.getModelComponent(id);
     return componentModel.toConsumerComponent(id.version, this.name, this.objects);
   }
 

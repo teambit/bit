@@ -3,7 +3,7 @@ import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
-import { ScopeMeta, Source } from '../models';
+import { ScopeMeta, Source } from '.';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
 import Version from './version';
@@ -52,6 +52,10 @@ export type ComponentProps = {
   state?: State // get deleted after export
 };
 
+/**
+ * we can't rename the class as ModelComponent because old components are already saved in the model
+ * with 'Component' in their headers. see object-registrar.types()
+ */
 export default class Component extends BitObject {
   scope: ?string;
   name: string;

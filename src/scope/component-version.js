@@ -1,5 +1,5 @@
 /** @flow */
-import Component from './models/component';
+import ModelComponent from './models/model-component';
 import Version from './models/version';
 import { BitId, BitIds } from '../bit-id';
 import Scope from './scope';
@@ -12,10 +12,10 @@ import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 
 export default class ComponentVersion {
-  component: Component;
+  component: ModelComponent;
   version: string;
 
-  constructor(component: Component, version: string) {
+  constructor(component: ModelComponent, version: string) {
     this.component = component;
     this.version = version;
   }

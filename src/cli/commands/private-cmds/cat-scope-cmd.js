@@ -2,7 +2,7 @@
 import Table from 'tty-table';
 import Command from '../../command';
 import { catScope } from '../../../api/scope';
-import componentObject from '../../../scope/models/component';
+import ModelComponent from '../../../scope/models/model-component';
 
 export default class CatScope extends Command {
   name = 'cat-scope [scopePath]';
@@ -15,7 +15,7 @@ export default class CatScope extends Command {
     return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json }));
   }
 
-  report({ payload, full, json }: { payload: componentObject[], full: ?boolean, json: ?boolean }): string {
+  report({ payload, full, json }: { payload: ModelComponent[], full: ?boolean, json: ?boolean }): string {
     if (json) {
       return JSON.stringify(payload);
     }
