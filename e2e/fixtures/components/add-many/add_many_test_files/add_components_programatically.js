@@ -31,8 +31,7 @@ const components =
         }
     ]
 
-
-    bitBin.addMany(components).then(function (results) {
+    bitBin.addMany(components, process.cwd()).then(function (results) {
         const resultsStr = JSON.stringify(results)
         console.log(resultsStr);
     });
