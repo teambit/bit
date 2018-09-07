@@ -51,7 +51,8 @@ export default class BitObject {
         .filter(x => x);
 
       refsCollection.push(...refs);
-      objs.forEach(obj => addRefs(((obj: any): BitObject)));
+      // $FlowFixMe
+      objs.forEach(obj => addRefs(obj));
     }
 
     addRefs(this);
@@ -70,7 +71,8 @@ export default class BitObject {
         .filter(x => x);
       const filtered = refs.filter(ref => repo.loadSync(ref, false));
       refsCollection.push(...filtered);
-      objs.forEach(obj => addRefs(((obj: any): BitObject)));
+      // $FlowFixMe
+      objs.forEach(obj => addRefs(obj));
     }
 
     addRefs(this);
@@ -93,7 +95,8 @@ export default class BitObject {
       });
 
       objects.concat(objs);
-      objs.forEach(obj => addRefs(((obj: any): BitObject)));
+      // $FlowFixMe
+      objs.forEach(obj => addRefs(obj));
     }
 
     addRefs(this);
