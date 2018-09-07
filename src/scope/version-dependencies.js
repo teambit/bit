@@ -36,12 +36,12 @@ export default class VersionDependencies {
     this.sourceScope = sourceScope;
   }
 
-  async toConsumer(repo: Repository, bitMap?: BitMap): Promise<ComponentWithDependencies> {
+  async toConsumer(repo: Repository, bitMap?: BitMap, manipulateDir?: boolean): Promise<ComponentWithDependencies> {
     const dependenciesP = Promise.all(this.dependencies.map(dep => dep.toConsumer(repo)));
     const devDependenciesP = Promise.all(this.devDependencies.map(dep => dep.toConsumer(repo)));
     const compilerDependenciesP = Promise.all(this.compilerDependencies.map(dep => dep.toConsumer(repo)));
     const testerDependenciesP = Promise.all(this.testerDependencies.map(dep => dep.toConsumer(repo)));
-    const componentP = this.component.toConsumer(repo, bitMap);
+    const componentP = this.component.toConsumer(repo, bitMap, manipulateDir);
     const [component, dependencies, devDependencies, compilerDependencies, testerDependencies] = await Promise.all([
       componentP,
       dependenciesP,

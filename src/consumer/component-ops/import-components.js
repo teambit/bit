@@ -151,7 +151,7 @@ export default class ImportComponents {
     const versionDependenciesArr: VersionDependencies[] = await this.scope.getManyWithAllVersions(ids, false);
     return Promise.all(
       versionDependenciesArr.map(versionDependencies =>
-        versionDependencies.toConsumer(this.scope.objects, this.consumer.bitMap)
+        versionDependencies.toConsumer(this.scope.objects, this.consumer.bitMap, true)
       )
     );
   }

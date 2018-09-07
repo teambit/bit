@@ -293,7 +293,8 @@ export default class Component extends BitObject {
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    bitMap?: BitMap
+    bitMap?: BitMap,
+    manipulateDir?: boolean
   ): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
@@ -356,8 +357,10 @@ export default class Component extends BitObject {
     });
     if (bitMap) {
       const componentMap = bitMap.getComponentIfExist(this.toBitId(), { ignoreVersion: true });
+      const shouldManipulateDir = manipulateDir || (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED);
       // if !componentMap it must be a newly imported component. authored are always in .bitmap
-      if (!componentMap || componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      // if (!componentMap || componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      if (shouldManipulateDir) {
         consumerComponent.stripOriginallySharedDir(bitMap);
       }
     }

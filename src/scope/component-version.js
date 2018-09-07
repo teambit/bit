@@ -94,8 +94,8 @@ export default class ComponentVersion {
     );
   }
 
-  toConsumer(repo: Repository, bitMap?: BitMap): Promise<ConsumerComponent> {
-    return this.component.toConsumerComponent(this.version, this.component.scope, repo, bitMap);
+  toConsumer(repo: Repository, bitMap?: BitMap, manipulateDir?: boolean): Promise<ConsumerComponent> {
+    return this.component.toConsumerComponent(this.version, this.component.scope, repo, bitMap, manipulateDir);
   }
 
   async toObjects(repo: Repository): Promise<ComponentObjects> {
