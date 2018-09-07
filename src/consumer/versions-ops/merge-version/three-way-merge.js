@@ -79,7 +79,8 @@ export default (async function threeWayMergeVersions({
   // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
   const baseFiles: SourceFileModel[] = baseComponent.files;
   const currentFiles: SourceFileModel[] = currentComponent.files;
-  const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
+  // const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
+  const fsFiles: SourceFile[] = otherComponent.files;
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
   const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
