@@ -1040,7 +1040,7 @@ export default class Component {
           }
           // when dependencies are imported as npm packages, they are not in bit.map
           this.dependenciesSavedAsComponents = false;
-          return consumer.scope.loadComponent(dependencyId, false);
+          return consumer.loadComponentFromModel(dependencyId);
         })
       );
     };

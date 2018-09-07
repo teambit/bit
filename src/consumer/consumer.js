@@ -60,6 +60,9 @@ import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-f
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
+import ComponentVersion from '../scope/component-version';
+
+const removeNils = R.reject(R.isNil);
 
 type ConsumerProps = {
   projectPath: string,
@@ -1039,6 +1042,19 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
     await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
     await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
+  }
+
+  /**
+   * find the components in componentsPool which one of their dependencies include in potentialDependencies
+   */
+  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
+    const componentsVersions: ComponentVersion[] = await this.scope.findDirectDependentComponents(
+      componentsPool,
+      potentialDependencies
+    );
+    return Promise.all(
+      componentsVersions.map(componentVersion => componentVersion.toConsumer(this.scope.objects, this.bitMap))
+    );
   }
 
   async eject(componentsIds: BitId[]) {
