@@ -206,10 +206,14 @@ export default class SourceRepository {
 
     clonedComponent.mainFile = clonedComponent.addSharedDir(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
+      const depFromBitMap = consumer.bitMap.getComponentIfExist(dependency.id);
       dependency.relativePaths.forEach((relativePath) => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
           relativePath.sourceRelativePath = clonedComponent.addSharedDir(relativePath.sourceRelativePath);
+          if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+            relativePath.destinationRelativePath = clonedComponent.addSharedDir(relativePath.destinationRelativePath);
+          }
         }
       });
     });

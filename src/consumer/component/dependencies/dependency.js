@@ -17,8 +17,8 @@ import { COMPONENT_ORIGINS } from '../../../constants';
  * one for utils/is-string.js file and the second for utils/is-array.js file
  */
 export type RelativePath = {
-  sourceRelativePath: PathLinux,
-  destinationRelativePath: PathLinux,
+  sourceRelativePath: PathLinux, // location of the link file
+  destinationRelativePath: PathLinux, // destination written inside the link file
   importSpecifiers?: ImportSpecifier[],
   isCustomResolveUsed?: boolean, // custom resolve can be configured on consumer bit.json file in resolveModules attribute
   importSource?: string // available when isCustomResolveUsed=true, contains the import path. e.g. "import x from 'src/utils'", importSource is 'src/utils'.

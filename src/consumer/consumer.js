@@ -476,6 +476,7 @@ export default class Consumer {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
       const { version } = await this.scope.sources.consumerComponentToVersion({
+        consumer: this,
         consumerComponent: componentFromFileSystem,
         versionFromModel: componentFromModel
       });
