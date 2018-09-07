@@ -278,7 +278,7 @@ export default class Consumer {
    */
   async loadComponentFromModel(id: BitId): Promise<Component> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    // if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
+    if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
     return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, this.bitMap);
   }
 
@@ -372,7 +372,7 @@ export default class Consumer {
       // const componentFromModel = componentWithDependenciesFromModel
       //   ? componentWithDependenciesFromModel.component
       //   : undefined;
-      const componentFromModel = await this.loadComponentFromModelIfExist(id);
+      const componentFromModel = await this.loadComponentFromModelIfExist(idWithConcreteVersion);
       let component;
       try {
         component = await Component.loadFromFileSystem({
