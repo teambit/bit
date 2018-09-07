@@ -60,7 +60,7 @@ export default function getScopeComponent({
       }
 
       if (allVersions) {
-        return consumer.scope.loadAllVersions(bitId);
+        return consumer.scope.loadAllVersions(bitId, consumer.bitMap);
       }
       return consumer.scope.loadComponent(bitId);
     })

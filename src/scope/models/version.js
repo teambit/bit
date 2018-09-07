@@ -38,7 +38,7 @@ export type SourceFileModel = {
   file: Ref
 };
 
-type DistFileModel = SourceFileModel;
+export type DistFileModel = SourceFileModel;
 
 export type Log = {
   message: string,

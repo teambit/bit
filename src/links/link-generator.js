@@ -349,7 +349,6 @@ async function writeComponentsDependenciesLinks(
     }
     // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id}`);
-    componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
 
     const componentsLinks = await getComponentLinks({
       consumer,

@@ -49,7 +49,8 @@ export default class RemoveModelComponents {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // $FlowFixMe
     const component = (await this.scope.sources.get(bitId)).toComponentVersion();
-    const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
+    const bitMap = this.consumer ? this.consumer.bitMap : undefined;
+    const consumerComponentToRemove = await component.toConsumer(this.scope.objects, bitMap);
     // $FlowFixMe
     const componentList = await this.scope.objects.listComponents();
 

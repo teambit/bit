@@ -259,10 +259,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
         // symlink (or sometimes a copy on Windows) of the dependency inside the component. to
         // check whether a file is a symlink to a dependency we loop through the
         // sourceRelativePaths of the dependency, if there is match, we use the data from the model
-        const dependenciesWithoutSharedDir = this.getDependenciesWithoutSharedDir();
-        const sourcePaths = dependenciesWithoutSharedDir.getSourcesPaths();
+        const dependenciesFromModel = this.componentFromModel.getAllDependenciesCloned();
+        const sourcePaths = dependenciesFromModel.getSourcesPaths();
         if (sourcePaths.includes(depFile)) {
-          const dependencyWithoutSharedDir = dependenciesWithoutSharedDir.getBySourcePath(depFile);
+          const dependencyWithoutSharedDir = dependenciesFromModel.getBySourcePath(depFile);
           componentId = dependencyWithoutSharedDir.id;
           ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
             componentId,
@@ -329,15 +329,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       const absoluteConfigDir = this.consumer.toAbsolutePath(configDir);
       return pathRelativeLinux(absoluteConfigDir, resolvedSource);
     }
-    return this.componentMap.originallySharedDir
-      ? pathJoinLinux(this.componentMap.originallySharedDir, depFile)
-      : depFile;
-  }
-
-  getDependenciesWithoutSharedDir() {
-    const dependencies = this.componentFromModel.getAllDependenciesCloned();
-    dependencies.stripOriginallySharedDir(this.consumer.bitMap, this.componentMap.originallySharedDir);
-    return dependencies;
+    return depFile;
+    // return this.componentMap.originallySharedDir
+    //   ? pathJoinLinux(this.componentMap.originallySharedDir, depFile)
+    //   : depFile;
   }
 
   processDepFiles(originFile: PathLinuxRelative, fileType: FileType) {

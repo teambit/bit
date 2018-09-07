@@ -59,7 +59,8 @@ export default class Environment {
     if (typeof bitId === 'string') {
       bitId = await BitId.parse(bitId, true);
     }
-    const componentsWithDependencies = await this.scope.getMany([bitId]);
+    const componentsWithDependencies = await this.consumer.importManyComponentsWithDependencies([bitId]);
+    const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
       consumer: this.consumer,
@@ -81,7 +82,7 @@ export default class Environment {
     };
     await writeComponents(concreteOpts);
     await Environment.markEnvironmentAsInstalled(writeToPath);
-    return R.head(componentsWithDependencies);
+    return componentWithDependencies;
   }
 
   /**

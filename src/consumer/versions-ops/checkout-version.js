@@ -166,8 +166,9 @@ async function applyVersion(
     consumer.bitMap.updateComponentId(id);
     return { id, filesStatus };
   }
-  const componentsWithDependencies = await consumer.scope.getMany([id]);
-  const componentWithDependencies = componentsWithDependencies[0];
+  // const componentsWithDependencies = await consumer.scope.getMany([id]);
+  // const componentWithDependencies = componentsWithDependencies[0];
+  const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
   const componentMap = componentFromFS.componentMap;
   if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && !id.scope) {
@@ -202,7 +203,7 @@ async function applyVersion(
 
   await writeComponents({
     consumer,
-    componentsWithDependencies,
+    componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
     override: true,
     writeConfig: !!componentFromFS.bitJson || componentMap.configDir, // write bit.json and config files only if it was there before

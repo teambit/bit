@@ -14,6 +14,7 @@ import * as globalConfig from '../../api/consumer/lib/global-config';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
+import Consumer from '../../consumer/consumer';
 
 export type ComponentTree = {
   component: ModelComponent,
@@ -137,10 +138,11 @@ export default class SourceRepository {
   }
 
   /**
-   * Given a consumer-component object, returns the Version representation.
-   * Useful for saving into the model or calculation the hash for comparing with other Version object.
+   * given a consumer-component object, returns the Version representation.
+   * useful for saving into the model or calculation the hash for comparing with other Version object.
+   * among other things, it adds the originallySharedDir for the files, dists and dependencies.
    *
-   * Warning: Do not change anything on the consumerComponent instance! Only use its cloned.
+   * warning: Do not change anything on the consumerComponent instance! Only use its clone.
    *
    * @param consumerComponent
    * @param consumer
@@ -152,16 +154,17 @@ export default class SourceRepository {
    */
   async consumerComponentToVersion({
     consumerComponent,
+    consumer,
     versionFromModel,
     message,
     flattenedDependencies,
     flattenedDevDependencies,
     flattenedCompilerDependencies,
     flattenedTesterDependencies,
-    dists,
     specsResults
   }: {
     consumerComponent: $ReadOnly<ConsumerComponent>,
+    consumer: Consumer,
     versionFromModel?: Version,
     message?: string,
     flattenedDependencies?: Object,
@@ -170,7 +173,6 @@ export default class SourceRepository {
     flattenedTesterDependencies?: Object,
     force?: boolean,
     verbose?: boolean,
-    dists?: Object,
     specsResults?: any
   }): Promise<Object> {
     // $FlowFixMe
@@ -183,17 +185,19 @@ export default class SourceRepository {
       });
       return result;
     };
-    const files =
-      consumerComponent.files && consumerComponent.files.length
-        ? consumerComponent.files.map((file) => {
-          return {
-            name: file.basename,
-            relativePath: clonedComponent.addSharedDir(file.relative),
-            file: file.toSourceAsLinuxEOL(),
-            test: file.test
-          };
-        })
-        : null;
+    const files = consumerComponent.files.map((file) => {
+      return {
+        name: file.basename,
+        relativePath: clonedComponent.addSharedDir(file.relative),
+        file: file.toSourceAsLinuxEOL(),
+        test: file.test
+      };
+    });
+    const dists = clonedComponent.dists.toDistFilesModel(
+      consumer,
+      consumerComponent.originallySharedDir,
+      consumerComponent.compiler
+    );
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
@@ -226,11 +230,12 @@ export default class SourceRepository {
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
 
-    return { version, files, compilerFiles, testerFiles };
+    return { version, files, dists, compilerFiles, testerFiles };
   }
 
   async addSource({
     source,
+    consumer,
     flattenedDependencies,
     flattenedDevDependencies,
     flattenedCompilerDependencies,
@@ -238,10 +243,10 @@ export default class SourceRepository {
     message,
     exactVersion,
     releaseType,
-    dists,
     specsResults
   }: {
     source: ConsumerComponent,
+    consumer: Consumer,
     flattenedDependencies: BitIds,
     flattenedDevDependencies: BitIds,
     flattenedCompilerDependencies: BitIds,
@@ -249,7 +254,6 @@ export default class SourceRepository {
     message: string,
     exactVersion: ?string,
     releaseType: string,
-    dists: ?Object,
     specsResults?: any
   }): Promise<ModelComponent> {
     const objectRepo = this.objects();
@@ -265,21 +269,21 @@ export default class SourceRepository {
     if (versionRef) {
       versionFromModel = await this.scope.getObject(versionRef.hash);
     }
-    const { version, files, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
+    const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
       consumerComponent: source,
+      consumer,
       versionFromModel,
       message,
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
-      dists,
       specsResults
     });
     component.addVersion(version, releaseType, exactVersion);
     objectRepo.add(version).add(component);
 
-    if (files) files.forEach(file => objectRepo.add(file.file));
+    files.forEach(file => objectRepo.add(file.file));
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
     if (compilerFiles) compilerFiles.forEach(file => objectRepo.add(file.file));
     if (testerFiles) testerFiles.forEach(file => objectRepo.add(file.file));

@@ -103,9 +103,6 @@ export default (async function writeToComponentsDir({
       componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
         ? COMPONENT_ORIGINS.AUTHORED
         : COMPONENT_ORIGINS.IMPORTED;
-    if (origin === COMPONENT_ORIGINS.IMPORTED) {
-      componentWithDeps.component.stripOriginallySharedDir(consumer.bitMap);
-    }
     const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
     throwErrorWhenDirectoryNotEmpty(bitDir, override, componentMap, writeToPath);
     // don't write dists files for authored components as the author has its own mechanism to generate them

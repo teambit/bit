@@ -1,7 +1,6 @@
 /** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
-import { COMPONENT_ORIGINS } from '../../../constants';
 
 export default (async function getConsumerBit({
   id,
@@ -17,22 +16,15 @@ export default (async function getConsumerBit({
   const consumer: Consumer = await loadConsumer();
   const bitId = consumer.getParsedId(id);
   if (allVersions) {
-    return consumer.scope.loadAllVersions(bitId);
+    return consumer.scope.loadAllVersions(bitId, consumer.bitMap);
   }
   const component = await consumer.loadComponent(bitId); // loads recent component
   if (showRemoteVersions) {
     await consumer.addRemoteAndLocalVersionsToDependencies(component, true);
   }
   if (compare) {
-    try {
-      const componentModel = await consumer.scope.loadRemoteComponent(component.id);
-      if (component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-        componentModel.stripOriginallySharedDir(consumer.bitMap);
-      }
-      return { component, componentModel };
-    } catch (err) {
-      throw new NothingToCompareTo(id);
-    }
+    if (!component.componentFromModel) throw new NothingToCompareTo(id);
+    return { component, componentModel: component.componentFromModel };
   }
   await consumer.onDestroy();
   return { component };

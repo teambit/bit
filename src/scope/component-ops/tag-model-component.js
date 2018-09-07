@@ -1,5 +1,4 @@
 // @flow
-import path from 'path';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import graphlib, { Graph } from 'graphlib';
@@ -13,8 +12,7 @@ import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
 import { ComponentSpecsFailed, NewerVersionFound } from '../../consumer/exceptions';
-import { pathNormalizeToLinux, pathJoinLinux } from '../../utils';
-import Source from '../models/source';
+import { pathJoinLinux } from '../../utils';
 import { DependencyNotFound } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import { flattenDependencyIds } from '../flatten-dependencies';
@@ -262,33 +260,6 @@ export default (async function tagModelComponent({
 
   const dependenciesCache = {};
   const persistComponent = async (consumerComponent: Component) => {
-    // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
-    // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
-    // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
-    // consumerComponent.dists.distEntryShouldBeStripped is set to true.
-    // because the model always has the paths of the original author, in case part of the path was stripped, add it
-    // back before saving to the model. this way, when the author updates the components, the paths will be correct.
-    const addSharedDirAndDistEntry = (pathStr) => {
-      const withSharedDir = consumerComponent.originallySharedDir
-        ? path.join(consumerComponent.originallySharedDir, pathStr)
-        : pathStr;
-      const withDistEntry = consumerComponent.dists.distEntryShouldBeStripped
-        ? path.join(consumer.bitJson.distEntry, withSharedDir)
-        : withSharedDir;
-      return pathNormalizeToLinux(withDistEntry);
-    };
-
-    const dists =
-      !consumerComponent.dists.isEmpty() && consumerComponent.compiler
-        ? consumerComponent.dists.get().map((dist) => {
-          return {
-            name: dist.basename,
-            relativePath: addSharedDirAndDistEntry(dist.relative),
-            file: Source.from(dist.contents),
-            test: dist.test
-          };
-        })
-        : null;
     let testResult;
     if (!skipTests) {
       testResult = testsResults.find((result) => {
@@ -321,6 +292,7 @@ export default (async function tagModelComponent({
     );
     await scope.sources.addSource({
       source: consumerComponent,
+      consumer,
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,
@@ -328,7 +300,6 @@ export default (async function tagModelComponent({
       message,
       exactVersion,
       releaseType,
-      dists,
       specsResults: testResult ? testResult.specs : undefined
     });
     return consumerComponent;

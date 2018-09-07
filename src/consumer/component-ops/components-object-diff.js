@@ -109,11 +109,6 @@ export function diffBetweenComponentsObjects(
   componentLeft: Component,
   componentRight: Component
 ): ?(FieldsDiff[]) {
-  const componentMap = consumer.bitMap.getComponentIfExist(componentLeft.id, { ignoreScopeAndVersion: true });
-  if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-    componentLeft.stripOriginallySharedDir(consumer.bitMap);
-    componentRight.stripOriginallySharedDir(consumer.bitMap);
-  }
   const printableLeft = componentToPrintableForDiff(componentLeft);
   const printableRight = componentToPrintableForDiff(componentRight);
   const fieldsDiff = getDiffBetweenObjects(printableLeft, printableRight);

@@ -133,11 +133,6 @@ async function applyVersion(
   // update files according to the merge results
   const modifiedStatus = await applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
 
-  if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-    component.originallySharedDir = componentMap.originallySharedDir || null;
-    component.stripOriginallySharedDir(consumer.bitMap);
-  }
-
   await component.write({
     override: true,
     writeConfig: false, // never override the existing bit.json
@@ -222,13 +217,14 @@ export function filesStatusWithoutSharedDir(
   component: Component,
   componentMap: ComponentMap
 ): FilesStatus {
-  if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return filesStatus;
-  component.setOriginallySharedDir();
-  if (!component.originallySharedDir) return filesStatus;
-  const sharedDir = component.originallySharedDir;
-  const fileWithoutSharedDir = (file: PathLinux): PathLinux => file.replace(`${sharedDir}/`, '');
-  return Object.keys(filesStatus).reduce((acc, file) => {
-    acc[fileWithoutSharedDir(file)] = filesStatus[file];
-    return acc;
-  }, {});
+  return filesStatus;
+  // if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return filesStatus;
+  // component.setOriginallySharedDir();
+  // if (!component.originallySharedDir) return filesStatus;
+  // const sharedDir = component.originallySharedDir;
+  // const fileWithoutSharedDir = (file: PathLinux): PathLinux => file.replace(`${sharedDir}/`, '');
+  // return Object.keys(filesStatus).reduce((acc, file) => {
+  //   acc[fileWithoutSharedDir(file)] = filesStatus[file];
+  //   return acc;
+  // }, {});
 }
