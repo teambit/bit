@@ -205,7 +205,7 @@ export default class Dists {
     return this.get().map((dist) => {
       return {
         name: dist.basename,
-        relativePath: addSharedDirAndDistEntry(dist.relative),
+        relativePath: addSharedDirAndDistEntry(dist.relative), // $FlowFixMe
         file: Source.from(dist.contents),
         test: dist.test
       };

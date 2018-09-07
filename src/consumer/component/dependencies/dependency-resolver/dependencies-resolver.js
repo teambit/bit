@@ -7,7 +7,7 @@ import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import Component from '../../../component';
 import { Driver } from '../../../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../../../utils';
+import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import logger from '../../../../logger/logger';
 import { Consumer } from '../../../../consumer';
 import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';

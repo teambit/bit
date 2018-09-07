@@ -9,7 +9,7 @@ import IsolatedEnvironment from '../../environment';
 import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
-import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME } from '../../constants';
+import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ExternalBuildError from '../component/exceptions/external-build-error';
 import Consumer from '../consumer';
 import type { PathLinux } from '../../utils/path';
@@ -61,12 +61,6 @@ export default (async function buildComponent({
   const needToRebuild = await _isNeededToReBuild(consumer, component.id, noCache);
   if (!needToRebuild && !component.dists.isEmpty()) {
     logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
-    // if (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-    //   component.stripOriginallySharedDir(bitMap);
-    //   // don't worry about the dist.entry and dist.target at component point. It'll be done later on once the files are
-    //   // written, probably by component.dists.writeDists()
-    // }
-
     return component.dists;
   }
   logger.debug('compiler found, start building');

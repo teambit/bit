@@ -112,6 +112,7 @@ export default class ImportComponents {
     let componentsAndDependenciesBitJson = [];
     let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
+      // $FlowFixMe
       componentsAndDependenciesBitJson = await this._importComponentsWithAllVersions(dependenciesFromBitJson);
       await this._writeToFileSystem(componentsAndDependenciesBitJson);
     }
