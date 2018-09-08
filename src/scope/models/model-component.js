@@ -357,10 +357,18 @@ export default class Component extends BitObject {
     });
     if (bitMap) {
       const componentMap = bitMap.getComponentIfExist(this.toBitId(), { ignoreVersion: true });
-      const shouldManipulateDir = manipulateDir || (componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED);
-      // if !componentMap it must be a newly imported component. authored are always in .bitmap
-      // if (!componentMap || componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      if (shouldManipulateDir) {
+      const shouldManipulateDir = () => {
+        // manipulate only for IMPORTED. However, it might be nested before and is imported now, in this case
+        // the manipulateDir is true.
+        if (componentMap) {
+          return (
+            componentMap.origin === COMPONENT_ORIGINS.IMPORTED ||
+            (componentMap.origin === COMPONENT_ORIGINS.NESTED && manipulateDir)
+          );
+        }
+        return manipulateDir;
+      };
+      if (shouldManipulateDir()) {
         consumerComponent.stripOriginallySharedDir(bitMap);
       }
     }
