@@ -64,7 +64,6 @@ import GeneralError from '../error/general-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import type { PathOsBasedAbsolute } from '../utils/path';
 import type { BitIdStr } from '../bit-id/bit-id';
-import BitMap from '../consumer/bit-map/bit-map';
 
 const removeNils = R.reject(R.isNil);
 const pathHasScope = pathHasAll([OBJECTS_DIR, SCOPE_JSON]);
@@ -777,11 +776,6 @@ export default class Scope {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     return this.importMany(idsWithoutNils, cache);
-    // .then((versionDependenciesArr: VersionDependencies[]) => {
-    //   return Promise.all(
-    //     versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects))
-    //   );
-    // });
   }
 
   // todo: improve performance by finding all versions needed and fetching them in one request from the server
@@ -946,10 +940,10 @@ export default class Scope {
     });
   }
 
-  loadAllVersions(id: BitId, bitMap?: BitMap): Promise<ConsumerComponent[]> {
+  loadAllVersions(id: BitId): Promise<ConsumerComponent[]> {
     return this.sources.get(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
-      return componentModel.collectVersions(this.objects, bitMap);
+      return componentModel.collectVersions(this.objects);
     });
   }
 

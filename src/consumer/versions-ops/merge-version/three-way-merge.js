@@ -64,9 +64,9 @@ export default (async function threeWayMergeVersions({
   consumer: Consumer,
   otherComponent: Component,
   otherVersion: string,
-  currentComponent: Consumer,
+  currentComponent: Component,
   currentVersion: string,
-  baseComponent: Consumer
+  baseComponent: Component
 }): Promise<MergeResultsThreeWay> {
   const baseFiles: SourceFile[] = baseComponent.files;
   const currentFiles: SourceFile[] = currentComponent.files;

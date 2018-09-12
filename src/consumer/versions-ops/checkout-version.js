@@ -162,8 +162,6 @@ async function applyVersion(
     consumer.bitMap.updateComponentId(id);
     return { id, filesStatus };
   }
-  // const componentsWithDependencies = await consumer.scope.getMany([id]);
-  // const componentWithDependencies = componentsWithDependencies[0];
   const componentWithDependencies = await consumer.loadComponentWithDependenciesFromModel(id);
   const componentMap = componentFromFS.componentMap;
   if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');

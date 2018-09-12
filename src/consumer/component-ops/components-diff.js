@@ -75,7 +75,6 @@ async function getComponentDiffOfVersion(
   const repository = consumer.scope.objects;
   const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
   const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
-  // const fsFiles = component.cloneFilesWithSharedDir();
   const fsFiles = component.files;
   // $FlowFixMe version must be defined as the component.componentFromModel do exist
   const versionB: string = component.id.version;
@@ -120,7 +119,6 @@ async function getComponentDiff(consumer: Consumer, tmp: Tmp, component: Compone
   // $FlowFixMe version must be defined as the component.componentFromModel do exist
   const version: string = component.id.version;
   const modelFiles = component.componentFromModel.files;
-  // const fsFiles = component.cloneFilesWithSharedDir();
   const fsFiles = component.files;
   diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, version, version);
   // $FlowFixMe we made sure already that component.componentFromModel is defined

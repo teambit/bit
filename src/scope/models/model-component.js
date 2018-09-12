@@ -166,6 +166,9 @@ export default class Component extends BitObject {
     });
   }
 
+  /**
+   * when bitMap is passed, it got called from the consumer and as such it strips the sharedDir
+   */
   collectVersions(repo: Repository, bitMap?: BitMap): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {

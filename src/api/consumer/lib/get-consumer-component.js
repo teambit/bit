@@ -16,7 +16,7 @@ export default (async function getConsumerBit({
   const consumer: Consumer = await loadConsumer();
   const bitId = consumer.getParsedId(id);
   if (allVersions) {
-    return consumer.scope.loadAllVersions(bitId, consumer.bitMap);
+    return consumer.loadAllVersionsOfComponentFromModel(bitId);
   }
   const component = await consumer.loadComponent(bitId); // loads recent component
   if (showRemoteVersions) {

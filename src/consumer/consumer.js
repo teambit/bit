@@ -62,8 +62,6 @@ import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
 import ComponentVersion from '../scope/component-version';
 
-const removeNils = R.reject(R.isNil);
-
 type ConsumerProps = {
   projectPath: string,
   bitJson: ConsumerBitJson,
@@ -293,6 +291,11 @@ export default class Consumer {
     });
   }
 
+  async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
+    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+    return modelComponent.collectVersions(this.scope.objects, this.bitMap);
+  }
+
   /**
    * return a component only when it's stored locally.
    * don't go to any remote server and don't throw an exception if the component is not there.
@@ -368,10 +371,6 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      // const componentWithDependenciesFromModel = await this.loadComponentWithDependenciesFromModel(idWithConcreteVersion);
-      // const componentFromModel = componentWithDependenciesFromModel
-      //   ? componentWithDependenciesFromModel.component
-      //   : undefined;
       const componentFromModel = await this.loadComponentFromModelIfExist(idWithConcreteVersion);
       let component;
       try {
