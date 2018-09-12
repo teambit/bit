@@ -121,7 +121,6 @@ async function applyVersion(
   if (!component) throw new GeneralError('failed finding the component in the model');
   const componentMap = componentFromFS.componentMap;
   if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  // const files = componentFromFS.cloneFilesWithSharedDir();
   const files = componentFromFS.files;
   component.files = files;
 

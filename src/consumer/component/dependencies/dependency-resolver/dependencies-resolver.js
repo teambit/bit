@@ -262,8 +262,8 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
         const dependenciesFromModel = this.componentFromModel.getAllDependenciesCloned();
         const sourcePaths = dependenciesFromModel.getSourcesPaths();
         if (sourcePaths.includes(depFile)) {
-          const dependencyWithoutSharedDir = dependenciesFromModel.getBySourcePath(depFile);
-          componentId = dependencyWithoutSharedDir.id;
+          const dependencyFromModel = dependenciesFromModel.getBySourcePath(depFile);
+          componentId = dependencyFromModel.id;
           ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
             componentId,
             depFile,
@@ -330,9 +330,6 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       return pathRelativeLinux(absoluteConfigDir, resolvedSource);
     }
     return depFile;
-    // return this.componentMap.originallySharedDir
-    //   ? pathJoinLinux(this.componentMap.originallySharedDir, depFile)
-    //   : depFile;
   }
 
   processDepFiles(originFile: PathLinuxRelative, fileType: FileType) {

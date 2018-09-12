@@ -46,7 +46,6 @@ export default (async function twoWayMergeVersions({
   currentVersion: string
 }): Promise<MergeResultsTwoWay> {
   const otherFiles: SourceFileModel[] = otherComponent.files;
-  // const currentFiles: SourceFile[] = currentComponent.cloneFilesWithSharedDir();
   const currentFiles: SourceFile[] = currentComponent.files;
   const results: MergeResultsTwoWay = {
     addFiles: [],
