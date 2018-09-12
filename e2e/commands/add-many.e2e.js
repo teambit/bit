@@ -1,6 +1,6 @@
 /* eslint-disable max-lines */
 import path from 'path';
-import chai, { expect, assert } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
