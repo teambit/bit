@@ -248,11 +248,8 @@ export default class ImportComponents {
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
-    const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const currentComponent: Version = await componentModel.loadVersion(
-      component.id.version,
-      this.consumer.scope.objects
-    );
+    const baseComponent: Component = await this.consumer.loadComponentFromModel(existingBitMapBitId);
+    const currentComponent: Component = await this.consumer.loadComponentFromModel(component.id);
     const mergeResults = await threeWayMerge({
       consumer: this.consumer,
       otherComponent: fsComponent,
