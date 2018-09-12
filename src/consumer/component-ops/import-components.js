@@ -14,7 +14,6 @@ import GeneralError from '../../error/general-error';
 import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
-import Version from '../../version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import writeComponents from './write-components';
 import VersionDependencies from '../../scope/version-dependencies';
