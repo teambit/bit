@@ -3,10 +3,8 @@ import path from 'path';
 import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
 import Component from '../../component';
-import { Version } from '../../../scope/models';
 import { Consumer } from '../..';
 import { SourceFile } from '../../component/sources';
-import type { SourceFileModel } from '../../../scope/models/version';
 import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';
@@ -75,7 +73,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
   if (currentlyUsedVersion === version) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
-  const otherComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
+  const otherComponent: Component = await consumer.loadComponentFromModel(component.id.changeVersion(version));
   const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({
     consumer,
     otherComponent,
@@ -160,10 +158,8 @@ async function applyModifiedVersion(
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
-      const otherFile: SourceFileModel = file.otherFile;
-      // $FlowFixMe
-      const content = await otherFile.file.load(consumer.scope.objects);
-      foundFile.contents = content.contents;
+      const otherFile: SourceFile = file.otherFile;
+      foundFile.contents = otherFile.contents;
       filesStatus[file.filePath] = FileStatus.updated;
     } else if (file.conflict) {
       foundFile.contents = Buffer.from(file.conflict);
@@ -176,9 +172,8 @@ async function applyModifiedVersion(
     }
   });
   const addFilesP = mergeResults.addFiles.map(async (file) => {
-    const otherFile: SourceFileModel = file.otherFile;
-    const newFile = await SourceFile.loadFromSourceFileModel(otherFile, consumer.scope.objects);
-    componentFiles.push(newFile);
+    const otherFile: SourceFile = file.otherFile;
+    componentFiles.push(otherFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
 

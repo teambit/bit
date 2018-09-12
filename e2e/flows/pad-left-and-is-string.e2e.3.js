@@ -322,7 +322,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.getClonedLocalScope(scopeAfterImport);
         helper.getClonedRemoteScope(remoteScope);
         helper.testComponent('string/pad-left');
-        helper.createFile('src/pad-left/pad-left', 'pad-left.js', 'modified-pad-left-imported');
+        fs.appendFileSync(
+          path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js'),
+          '\n console.log("modified");'
+        );
         helper.tagAllWithoutMessage('--force');
         mergeCommandScope = helper.cloneLocalScope();
       });
