@@ -9,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add many programatically', function () {
+describe('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
@@ -24,12 +24,13 @@ describe('bit add many programatically', function () {
       helper.linkNpm('bit-bin');
     });
     it('should transfer wrong script path ', function () {
-      const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programatically.js');
+      const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programmatically.js');
+      // Pass non existing path as arg to make sure it won't take the default cwd
       const wrongPathOutput = helper.nodeStart(`${scriptPath} /ninja`);
       expect(wrongPathOutput).to.have.string('ConsumerNotFoundError');
     });
     it('should transfer right script path ', function () {
-      const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programatically.js');
+      const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programmatically.js');
       const nodeStartOutput = helper.nodeStart(`${scriptPath} PROCESS`);
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
@@ -42,7 +43,7 @@ describe('bit add many programatically', function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.linkNpm('bit-bin');
-      const nodeStartOutput = helper.nodeStart('add_many_test_files/add_components_programatically.js');
+      const nodeStartOutput = helper.nodeStart('add_many_test_files/add_components_programmatically.js');
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       status = helper.status();
     });
@@ -102,7 +103,7 @@ describe('bit add many programatically', function () {
       const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/d', { j: '' }));
       expect(compData).to.not.property('Specs');
     });
-    it('should add a component with many files file', function () {
+    it('should add a component with many files', function () {
       expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('id');
       expect(nodeStartOutputObj[2].addedComponents[0].id).to.equal('add_many_test_files/component_with_many_paths');
       expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('files');

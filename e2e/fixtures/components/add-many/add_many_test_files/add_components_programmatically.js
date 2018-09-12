@@ -31,6 +31,8 @@ const components =
         }
     ]
 
+    // Take the cwd from args
+    // Support special arg name PROCESS to pass the current working directory
     const cwd = process.argv.length === 3 ? (process.argv[2] === 'PROCESS' ? process.cwd() : process.argv[2]) : undefined;
     bitBin.addMany(components, cwd).then(function (results) {
             const resultsStr = JSON.stringify(results)
