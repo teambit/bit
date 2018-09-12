@@ -17,8 +17,11 @@ export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   return addResults;
 }
 
-export async function addMany(components: AddProps[]): Promise<AddActionResults[]> {
-  const consumer: Consumer = await loadConsumer();
+export async function addMany(
+  components: AddProps[],
+  consumerPath: string = process.cwd()
+): Promise<AddActionResults[]> {
+  const consumer: Consumer = await loadConsumer(consumerPath);
   const addComponentsArr = [];
   components.forEach((componentDefinition) => {
     const normalizedPaths: PathOsBased[] = componentDefinition.componentPaths.map((p) => {
