@@ -604,9 +604,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
    * the goal here is to use the 'package' the driver found and match it with one of the
    * dependencies from the model. In the example above, we might find in the model, a dependency
    * is-string with importSource of 'utils/is-string'.
-   * Once a match is found, copy the relativePaths from the model. Before coping, we must strip the
-   * originallySharedDir, because in this process, the component is loaded from the filesystem and
-   * as such the sharedDir is expected to be stripped.
+   * Once a match is found, copy the relativePaths from the model.
    */
   processUnidentifiedPackages(originFile: PathLinuxRelative, fileType: FileType) {
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
@@ -622,14 +620,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     if (dependencies.isEmpty()) return;
     const importSourceMap = dependencies.getCustomResolvedData();
     if (R.isEmpty(importSourceMap)) return;
-    // clone before stripping the sharedDir to not change the model by mistake
     const clonedDependencies = new Dependencies(dependencies.getClone());
-    if (this.componentMap.originallySharedDir) {
-      // @todo: disabled for now. When the files are saved into the model, we don't add the sharedDir
-      // in this case, so it should be fine. (see sources.consumerComponentToVersion())
-      // it needs some more thinking whether there are cases when it is needed
-      // clonedDependencies.stripOriginallySharedDir(this.consumer.bitMap, this.componentMap.originallySharedDir);
-    }
     unidentifiedPackages.forEach((unidentifiedPackage) => {
       const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
       const packageWithNoNodeModules = packageLinuxFormat.replace('node_modules/', '');

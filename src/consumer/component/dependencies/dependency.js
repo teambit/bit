@@ -40,6 +40,7 @@ export default class Dependency {
     };
     const depFromBitMap = bitMap.getComponentIfExist(dependency.id);
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
+      if (relativePath.isCustomResolveUsed) return; // don't strip sharedDir when custom resolved is used
       relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
       if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         relativePath.destinationRelativePath = pathWithoutSharedDir(
