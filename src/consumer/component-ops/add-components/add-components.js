@@ -184,9 +184,8 @@ export default class AddComponents {
     componentMap: ComponentMap
   ): Promise<boolean> {
     if (isSupportedExtension(fileRelativePath)) return false;
-    const componentVersion = await this.consumer.scope.getVersionInstance(componentId);
-    const dependencies = componentVersion.getAllDependenciesCloned();
-    dependencies.stripOriginallySharedDir(this.consumer.bitMap, componentMap.originallySharedDir);
+    const componentFromModel = await this.consumer.loadComponentFromModel(componentId);
+    const dependencies = componentFromModel.getAllDependenciesCloned();
     const sourcePaths = dependencies.getSourcesPaths();
     const sourcePathsRelativeToConsumer = sourcePaths.map(sourcePath =>
       pathJoinLinux(componentMap.rootDir, sourcePath)

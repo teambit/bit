@@ -16,7 +16,7 @@ export async function removeLocalVersion(
   version?: string,
   force?: boolean = false
 ): Promise<untagResult> {
-  const component: ModelComponent = await scope.getModelComponent(id);
+  const component: ModelComponent = await scope.getModelComponentIgnoreScope(id);
   const localVersions = component.getLocalVersions();
   const idStr = id.toString();
   if (!localVersions.length) throw new GeneralError(`unable to untag ${idStr}, the component is not staged`);

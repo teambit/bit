@@ -11,6 +11,9 @@ import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
 import { BitId } from '../../../bit-id';
 import Component from '../consumer-component';
 import { pathNormalizeToLinux } from '../../../utils/path';
+import Source from '../../../scope/models/source';
+import CompilerExtension from '../../../extensions/compiler-extension';
+import type { DistFileModel } from '../../../scope/models/version';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -42,7 +45,7 @@ import { pathNormalizeToLinux } from '../../../utils/path';
  * The opposite action is taken when a component is tagged. We load the component from the file-system while the dist
  * paths might be stripped from consumer dist.entry and originallySharedDir.
  * Then, before writing them to the model, we first add the originallySharedDir and then the dist.entry. We make sure
- * there were stripped before adding them. (See addSharedDirAndDistEntry function in scope.js and the comment there)
+ * there were stripped before adding them. (See this.toDistFilesModel() function and the comment there)
  */
 export default class Dists {
   dists: Dist[];
@@ -180,6 +183,37 @@ export default class Dists {
     if (!distMainFile) return componentMainFile;
     const distTarget = consumer.bitJson.distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, distMainFile);
+  }
+
+  toDistFilesModel(
+    consumer: Consumer,
+    originallySharedDir: ?PathLinux,
+    compiler: ?CompilerExtension
+  ): ?(DistFileModel[]) {
+    // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
+    // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
+    // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
+    // consumerComponent.dists.distEntryShouldBeStripped is set to true.
+    // because the model always has the paths of the original author, in case part of the path was stripped, add it
+    // back before saving to the model. this way, when the author updates the components, the paths will be correct.
+    const addSharedDirAndDistEntry = (pathStr) => {
+      const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
+      const withDistEntry = this.distEntryShouldBeStripped // $FlowFixMe
+        ? path.join(consumer.bitJson.distEntry, withSharedDir)
+        : withSharedDir;
+      return pathNormalizeToLinux(withDistEntry);
+    };
+
+    if (this.isEmpty() || !compiler) return null;
+
+    return this.get().map((dist) => {
+      return {
+        name: dist.basename,
+        relativePath: addSharedDirAndDistEntry(dist.relative), // $FlowFixMe
+        file: Source.from(dist.contents),
+        test: dist.test
+      };
+    });
   }
 
   /**

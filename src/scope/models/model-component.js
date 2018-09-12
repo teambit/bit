@@ -11,7 +11,8 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION
+  DEFAULT_BIT_VERSION,
+  COMPONENT_ORIGINS
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
@@ -27,6 +28,7 @@ import { BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
+import BitMap from '../../consumer/bit-map/bit-map';
 
 type State = {
   versions?: {
@@ -164,10 +166,13 @@ export default class Component extends BitObject {
     });
   }
 
-  collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
+  /**
+   * when bitMap is passed, it got called from the consumer and as such it strips the sharedDir
+   */
+  collectVersions(repo: Repository, bitMap?: BitMap): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        return this.toConsumerComponent(versionNum, this.scope, repo);
+        return this.toConsumerComponent(versionNum, this.scope, repo, bitMap);
       })
     );
   }
@@ -287,7 +292,13 @@ export default class Component extends BitObject {
     return new ComponentVersion(this, versionNum);
   }
 
-  async toConsumerComponent(versionStr: string, scopeName: string, repository: Repository): Promise<ConsumerComponent> {
+  async toConsumerComponent(
+    versionStr: string,
+    scopeName: string,
+    repository: Repository,
+    bitMap?: BitMap,
+    manipulateDir?: boolean
+  ): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
     const loadFileInstance = ClassName => async (file) => {
@@ -314,7 +325,7 @@ export default class Component extends BitObject {
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
     // the Version instance is saved in the Repository._cache, the next time a Version instance
     // is retrieved, it'll be different than the first time.
-    return new ConsumerComponent({
+    const consumerComponent = new ConsumerComponent({
       name: this.name,
       version: componentVersion.version,
       scope: this.scope,
@@ -347,6 +358,25 @@ export default class Component extends BitObject {
       customResolvedPaths: clone(version.customResolvedPaths),
       deprecated: this.deprecated
     });
+    if (bitMap) {
+      const componentMap = bitMap.getComponentIfExist(this.toBitId(), { ignoreVersion: true });
+      const shouldManipulateDir = () => {
+        // manipulate only for IMPORTED. However, it might be nested before and is imported now, in this case
+        // the manipulateDir is true.
+        if (componentMap) {
+          return (
+            componentMap.origin === COMPONENT_ORIGINS.IMPORTED ||
+            (componentMap.origin === COMPONENT_ORIGINS.NESTED && manipulateDir)
+          );
+        }
+        return manipulateDir;
+      };
+      if (shouldManipulateDir()) {
+        consumerComponent.stripOriginallySharedDir(bitMap);
+      }
+    }
+
+    return consumerComponent;
   }
 
   refs(): Ref[] {

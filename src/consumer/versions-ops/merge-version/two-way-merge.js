@@ -1,26 +1,23 @@
 // @flow
 import R from 'ramda';
-import path from 'path';
 import Component from '../../component';
-import { Version } from '../../../scope/models';
 import { Consumer } from '../..';
-import { sha1 } from '../../../utils';
+import { sha1, pathNormalizeToLinux } from '../../../utils';
 import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
 import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
 import type { PathOsBased, PathLinux } from '../../../utils/path';
-import type { SourceFileModel } from '../../../scope/models/version';
 import GeneralError from '../../../error/general-error';
 
 export type MergeResultsTwoWay = {
   addFiles: Array<{
     filePath: PathLinux,
-    otherFile: SourceFileModel
+    otherFile: SourceFile
   }>,
   modifiedFiles: Array<{
     filePath: PathLinux,
-    otherFile: SourceFileModel,
+    otherFile: SourceFile,
     currentFile: SourceFile,
     output: ?string,
     conflict: ?string
@@ -40,13 +37,13 @@ export default (async function twoWayMergeVersions({
   currentVersion
 }: {
   consumer: Consumer,
-  otherComponent: Version,
+  otherComponent: Component,
   otherVersion: string,
   currentComponent: Component,
   currentVersion: string
 }): Promise<MergeResultsTwoWay> {
-  const otherFiles: SourceFileModel[] = otherComponent.files;
-  const currentFiles: SourceFile[] = currentComponent.cloneFilesWithSharedDir();
+  const otherFiles: SourceFile[] = otherComponent.files;
+  const currentFiles: SourceFile[] = currentComponent.files;
   const results: MergeResultsTwoWay = {
     addFiles: [],
     modifiedFiles: [],
@@ -54,13 +51,13 @@ export default (async function twoWayMergeVersions({
     overrideFiles: [],
     hasConflicts: false
   };
-  const getFileResult = (otherFile: SourceFileModel, currentFile?: SourceFile) => {
-    const filePath = otherFile.relativePath;
+  const getFileResult = (otherFile: SourceFile, currentFile?: SourceFile) => {
+    const filePath = pathNormalizeToLinux(otherFile.relative);
     if (!currentFile) {
       results.addFiles.push({ filePath, otherFile });
       return;
     }
-    const otherFileHash = otherFile.file.hash;
+    const otherFileHash = sha1(otherFile.contents);
     const currentFileHash = sha1(currentFile.contents);
     if (otherFileHash === currentFileHash) {
       results.unModifiedFiles.push({ filePath, currentFile });
@@ -73,9 +70,8 @@ export default (async function twoWayMergeVersions({
     results.modifiedFiles.push({ filePath, currentFile, otherFile, output: null, conflict: null });
   };
 
-  otherFiles.forEach((otherFile: SourceFileModel) => {
-    const relativePath: PathOsBased = path.normalize(otherFile.relativePath);
-    const currentFile = currentFiles.find(file => file.relative === relativePath);
+  otherFiles.forEach((otherFile: SourceFile) => {
+    const currentFile = currentFiles.find(file => file.relative === otherFile.relative);
     getFileResult(otherFile, currentFile);
   });
 
@@ -100,9 +96,8 @@ async function getMergeResults(
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
     const currentFilePathP = tmp.save(modifiedFile.currentFile.contents);
-    const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
-      const content = await file.file.load(consumer.scope.objects);
-      return tmp.save(content);
+    const writeFile = async (file: SourceFile): Promise<PathOsBased> => {
+      return tmp.save(file.contents);
     };
     const baseFilePathP: Promise<PathOsBased> = tmp.save('');
     const otherFilePathP = writeFile(modifiedFile.otherFile);

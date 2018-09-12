@@ -3,18 +3,14 @@ import path from 'path';
 import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
 import Component from '../../component';
-import { Version } from '../../../scope/models';
 import { Consumer } from '../..';
 import { SourceFile } from '../../component/sources';
-import type { SourceFileModel } from '../../../scope/models/version';
 import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';
 import type { MergeResultsTwoWay } from './two-way-merge';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
-import { COMPONENT_ORIGINS } from '../../../constants';
 import GeneralError from '../../../error/general-error';
-import ComponentMap from '../../bit-map/component-map';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -77,7 +73,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
   if (currentlyUsedVersion === version) {
     throw new GeneralError(`component ${component.id.toStringWithoutVersion()} is already at version ${version}`);
   }
-  const otherComponent: Version = await componentModel.loadVersion(version, consumer.scope.objects);
+  const otherComponent: Component = await consumer.loadComponentFromModel(component.id.changeVersion(version));
   const mergeResults: MergeResultsTwoWay = await twoWayMergeVersions({
     consumer,
     otherComponent,
@@ -123,7 +119,7 @@ async function applyVersion(
   if (!component) throw new GeneralError('failed finding the component in the model');
   const componentMap = componentFromFS.componentMap;
   if (!componentMap) throw new GeneralError('applyVersion: componentMap was not found');
-  const files = componentFromFS.cloneFilesWithSharedDir();
+  const files = componentFromFS.files;
   component.files = files;
 
   files.forEach((file) => {
@@ -132,11 +128,6 @@ async function applyVersion(
 
   // update files according to the merge results
   const modifiedStatus = await applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
-
-  if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-    component.originallySharedDir = componentMap.originallySharedDir || null;
-    component.stripOriginallySharedDir(consumer.bitMap);
-  }
 
   await component.write({
     override: true,
@@ -151,10 +142,7 @@ async function applyVersion(
   consumer.bitMap.removeComponent(component.id);
   component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin, componentMap.configDir);
 
-  const filesStatusNoSharedDir = filesStatusWithoutSharedDir(filesStatus, component, componentMap);
-  const modifiedStatusNoSharedDir = filesStatusWithoutSharedDir(modifiedStatus, component, componentMap);
-
-  return { id, filesStatus: Object.assign(filesStatusNoSharedDir, modifiedStatusNoSharedDir) };
+  return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
 async function applyModifiedVersion(
@@ -170,10 +158,8 @@ async function applyModifiedVersion(
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     if (mergeResults.hasConflicts && mergeStrategy === MergeOptions.theirs) {
       // write the version of otherFile
-      const otherFile: SourceFileModel = file.otherFile;
-      // $FlowFixMe
-      const content = await otherFile.file.load(consumer.scope.objects);
-      foundFile.contents = content.contents;
+      const otherFile: SourceFile = file.otherFile;
+      foundFile.contents = otherFile.contents;
       filesStatus[file.filePath] = FileStatus.updated;
     } else if (file.conflict) {
       foundFile.contents = Buffer.from(file.conflict);
@@ -186,9 +172,8 @@ async function applyModifiedVersion(
     }
   });
   const addFilesP = mergeResults.addFiles.map(async (file) => {
-    const otherFile: SourceFileModel = file.otherFile;
-    const newFile = await SourceFile.loadFromSourceFileModel(otherFile, consumer.scope.objects);
-    componentFiles.push(newFile);
+    const otherFile: SourceFile = file.otherFile;
+    componentFiles.push(otherFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
 
@@ -215,20 +200,4 @@ export function getMergeStrategy(ours: boolean, theirs: boolean, manual: boolean
   if (theirs) return MergeOptions.theirs;
   if (manual) return MergeOptions.manual;
   return null;
-}
-
-export function filesStatusWithoutSharedDir(
-  filesStatus: FilesStatus,
-  component: Component,
-  componentMap: ComponentMap
-): FilesStatus {
-  if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return filesStatus;
-  component.setOriginallySharedDir();
-  if (!component.originallySharedDir) return filesStatus;
-  const sharedDir = component.originallySharedDir;
-  const fileWithoutSharedDir = (file: PathLinux): PathLinux => file.replace(`${sharedDir}/`, '');
-  return Object.keys(filesStatus).reduce((acc, file) => {
-    acc[fileWithoutSharedDir(file)] = filesStatus[file];
-    return acc;
-  }, {});
 }

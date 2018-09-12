@@ -58,6 +58,9 @@ import MainFileRemoved from './component/exceptions/main-file-removed';
 import type { BitIdStr } from '../bit-id/bit-id';
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
+import { ComponentNotFound } from '../scope/exceptions';
+import VersionDependencies from '../scope/version-dependencies';
+import ComponentVersion from '../scope/component-version';
 
 type ConsumerProps = {
   projectPath: string,
@@ -268,6 +271,59 @@ export default class Consumer {
     return bitId.changeVersion(version);
   }
 
+  /**
+   * throws a ComponentNotFound exception if not found in the model
+   */
+  async loadComponentFromModel(id: BitId): Promise<Component> {
+    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+    if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
+    return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, this.bitMap);
+  }
+
+  /**
+   * return a component only when it's stored locally.
+   * don't go to any remote server and don't throw an exception if the component is not there.
+   */
+  async loadComponentFromModelIfExist(id: BitId): Promise<?Component> {
+    return this.loadComponentFromModel(id).catch((err) => {
+      if (err instanceof ComponentNotFound) return null;
+      throw err;
+    });
+  }
+
+  async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
+    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+    return modelComponent.collectVersions(this.scope.objects, this.bitMap);
+  }
+
+  /**
+   * return a component only when it's stored locally.
+   * don't go to any remote server and don't throw an exception if the component is not there.
+   */
+  async loadComponentWithDependenciesFromModel(id: BitId): Promise<ComponentWithDependencies> {
+    // const componentFromSources: ModelComponent = await this.scope.sources.get(id);
+    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+    // if (!componentFromSources) return null;
+    if (!id.version) {
+      throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
+    }
+    const versionDependencies = await modelComponent.toVersionDependencies(id.version, this.scope, this.scope.name);
+    return versionDependencies.toConsumer(this.scope.objects, this.bitMap);
+  }
+
+  /**
+   * if a component wasn't found locally, it imports it from a remote scope.
+   */
+  async importManyComponentsWithDependencies(
+    ids: BitId[],
+    cache?: boolean = true
+  ): Promise<ComponentWithDependencies[]> {
+    const versionDependenciesArr: VersionDependencies[] = await this.scope.getMany(ids, cache);
+    return Promise.all(
+      versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.scope.objects, this.bitMap))
+    );
+  }
+
   async loadComponent(id: BitId): Promise<Component> {
     const { components } = await this.loadComponents(BitIds.fromArray([id]));
     return components[0];
@@ -315,10 +371,7 @@ export default class Consumer {
       if (componentMap.rootDir) {
         bitDir = path.join(bitDir, componentMap.rootDir);
       }
-      const componentWithDependenciesFromModel = await this.scope.getFromLocalIfExist(idWithConcreteVersion);
-      const componentFromModel = componentWithDependenciesFromModel
-        ? componentWithDependenciesFromModel.component
-        : undefined;
+      const componentFromModel = await this.loadComponentFromModelIfExist(idWithConcreteVersion);
       let component;
       try {
         component = await Component.loadFromFileSystem({
@@ -331,7 +384,7 @@ export default class Consumer {
       } catch (err) {
         if (throwOnFailure) throw err;
 
-        logger.error(`failed loading ${id} from the file-system`);
+        logger.error(`failed loading ${id.toString()} from the file-system`);
         Analytics.addBreadCrumb(
           'load components',
           `failed loading ${Analytics.hashData(id.toString())} from the file-system`
@@ -422,6 +475,7 @@ export default class Consumer {
         componentFromFileSystem.originallySharedDir = componentMap.originallySharedDir;
       }
       const { version } = await this.scope.sources.consumerComponentToVersion({
+        consumer: this,
         consumerComponent: componentFromFileSystem,
         versionFromModel: componentFromModel
       });
@@ -974,21 +1028,33 @@ export default class Consumer {
     let modelTesterDependencies = new Dependencies([]);
     if (loadedFromFileSystem) {
       // when loaded from file-system, the dependencies versions are fetched from bit.map.
-      // try to find the model version of the component to get the stored versions of the dependencies
-      try {
-        const mainComponentFromModel: Component = await this.scope.loadRemoteComponent(component.id);
+      // find the model version of the component and get the stored versions of the dependencies
+      const mainComponentFromModel: Component = component.componentFromModel;
+      if (mainComponentFromModel) {
+        // otherwise, the component is probably on the file-system only and not on the model.
         modelDependencies = mainComponentFromModel.dependencies;
         modelDevDependencies = mainComponentFromModel.devDependencies;
         modelCompilerDependencies = mainComponentFromModel.compilerDependencies;
         modelTesterDependencies = mainComponentFromModel.testerDependencies;
-      } catch (e) {
-        // do nothing. the component is probably on the file-system only and not on the model.
       }
     }
     await component.dependencies.addRemoteAndLocalVersions(this.scope, modelDependencies);
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
     await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
     await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
+  }
+
+  /**
+   * find the components in componentsPool which one of their dependencies include in potentialDependencies
+   */
+  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
+    const componentsVersions: ComponentVersion[] = await this.scope.findDirectDependentComponents(
+      componentsPool,
+      potentialDependencies
+    );
+    return Promise.all(
+      componentsVersions.map(componentVersion => componentVersion.toConsumer(this.scope.objects, this.bitMap))
+    );
   }
 
   async eject(componentsIds: BitId[]) {

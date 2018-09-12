@@ -7,7 +7,7 @@ import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import Component from '../../../component';
 import { Driver } from '../../../../driver';
-import { pathNormalizeToLinux, pathRelativeLinux, pathJoinLinux } from '../../../../utils';
+import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import logger from '../../../../logger/logger';
 import { Consumer } from '../../../../consumer';
 import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
@@ -259,11 +259,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
         // symlink (or sometimes a copy on Windows) of the dependency inside the component. to
         // check whether a file is a symlink to a dependency we loop through the
         // sourceRelativePaths of the dependency, if there is match, we use the data from the model
-        const dependenciesWithoutSharedDir = this.getDependenciesWithoutSharedDir();
-        const sourcePaths = dependenciesWithoutSharedDir.getSourcesPaths();
+        const dependenciesFromModel = this.componentFromModel.getAllDependenciesCloned();
+        const sourcePaths = dependenciesFromModel.getSourcesPaths();
         if (sourcePaths.includes(depFile)) {
-          const dependencyWithoutSharedDir = dependenciesWithoutSharedDir.getBySourcePath(depFile);
-          componentId = dependencyWithoutSharedDir.id;
+          const dependencyFromModel = dependenciesFromModel.getBySourcePath(depFile);
+          componentId = dependencyFromModel.id;
           ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
             componentId,
             depFile,
@@ -329,15 +329,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       const absoluteConfigDir = this.consumer.toAbsolutePath(configDir);
       return pathRelativeLinux(absoluteConfigDir, resolvedSource);
     }
-    return this.componentMap.originallySharedDir
-      ? pathJoinLinux(this.componentMap.originallySharedDir, depFile)
-      : depFile;
-  }
-
-  getDependenciesWithoutSharedDir() {
-    const dependencies = this.componentFromModel.getAllDependenciesCloned();
-    dependencies.stripOriginallySharedDir(this.consumer.bitMap, this.componentMap.originallySharedDir);
-    return dependencies;
+    return depFile;
   }
 
   processDepFiles(originFile: PathLinuxRelative, fileType: FileType) {
@@ -609,9 +601,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
    * the goal here is to use the 'package' the driver found and match it with one of the
    * dependencies from the model. In the example above, we might find in the model, a dependency
    * is-string with importSource of 'utils/is-string'.
-   * Once a match is found, copy the relativePaths from the model. Before coping, we must strip the
-   * originallySharedDir, because in this process, the component is loaded from the filesystem and
-   * as such the sharedDir is expected to be stripped.
+   * Once a match is found, copy the relativePaths from the model.
    */
   processUnidentifiedPackages(originFile: PathLinuxRelative, fileType: FileType) {
     const unidentifiedPackages = this.tree[originFile].unidentifiedPackages;
@@ -627,14 +617,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     if (dependencies.isEmpty()) return;
     const importSourceMap = dependencies.getCustomResolvedData();
     if (R.isEmpty(importSourceMap)) return;
-    // clone before stripping the sharedDir to not change the model by mistake
     const clonedDependencies = new Dependencies(dependencies.getClone());
-    if (this.componentMap.originallySharedDir) {
-      // @todo: disabled for now. When the files are saved into the model, we don't add the sharedDir
-      // in this case, so it should be fine. (see sources.consumerComponentToVersion())
-      // it needs some more thinking whether there are cases when it is needed
-      // clonedDependencies.stripOriginallySharedDir(this.consumer.bitMap, this.componentMap.originallySharedDir);
-    }
     unidentifiedPackages.forEach((unidentifiedPackage) => {
       const packageLinuxFormat = pathNormalizeToLinux(unidentifiedPackage);
       const packageWithNoNodeModules = packageLinuxFormat.replace('node_modules/', '');
