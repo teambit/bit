@@ -1,9 +1,8 @@
 // @flow
 import R from 'ramda';
-import path from 'path';
 import Component from '../../component';
 import { Consumer } from '../..';
-import { sha1 } from '../../../utils';
+import { sha1, pathNormalizeToLinux } from '../../../utils';
 import { SourceFile } from '../../component/sources';
 import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
@@ -53,7 +52,7 @@ export default (async function twoWayMergeVersions({
     hasConflicts: false
   };
   const getFileResult = (otherFile: SourceFile, currentFile?: SourceFile) => {
-    const filePath = otherFile.relative;
+    const filePath = pathNormalizeToLinux(otherFile.relative);
     if (!currentFile) {
       results.addFiles.push({ filePath, otherFile });
       return;
@@ -72,8 +71,7 @@ export default (async function twoWayMergeVersions({
   };
 
   otherFiles.forEach((otherFile: SourceFile) => {
-    const relativePath: PathOsBased = path.normalize(otherFile.relative);
-    const currentFile = currentFiles.find(file => file.relative === relativePath);
+    const currentFile = currentFiles.find(file => file.relative === otherFile.relative);
     getFileResult(otherFile, currentFile);
   });
 

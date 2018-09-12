@@ -108,9 +108,8 @@ export default (async function threeWayMergeVersions({
   };
 
   fsFiles.forEach((fsFile) => {
-    const relativePath = pathNormalizeToLinux(fsFile.relative);
-    const baseFile = baseFiles.find(file => file.relative === relativePath);
-    const currentFile = currentFiles.find(file => file.relative === relativePath);
+    const baseFile = baseFiles.find(file => file.relative === fsFile.relative);
+    const currentFile = currentFiles.find(file => file.relative === fsFile.relative);
     getFileResult(fsFile, baseFile, currentFile);
   });
 
