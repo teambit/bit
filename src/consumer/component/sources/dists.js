@@ -154,7 +154,11 @@ export default class Dists {
   // (or index.js if key not exists)
   calculateMainDistFile(componentMainFile: PathOsBased): PathOsBased {
     if (this.writeDistsFiles && this.areDistsInsideComponentDir) {
-      const mainFile = searchFilesIgnoreExt(this.dists, componentMainFile, 'relative', 'relative');
+      // Take the only dist file if there is only one or search for one with the same name as the main source file
+      const mainFile =
+        this.dists && this.dists.length === 1
+          ? this.dists[0].relative
+          : searchFilesIgnoreExt(this.dists, componentMainFile, 'relative', 'relative');
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
     return componentMainFile;
