@@ -31,17 +31,12 @@ const components =
         }
     ]
 
-    const transferCwd = process.argv.length > 0 ? (process.argv[0] === 'true' ? true : false ) : false;
-
-    if (transferCwd) {
-        bitBin.addMany(components, process.cwd()).then(function (results) {
+    const cwd = process.argv.length === 3 ? (process.argv[2] === 'PROCESS' ? process.cwd() : process.argv[2]) : undefined;
+    bitBin.addMany(components, cwd).then(function (results) {
             const resultsStr = JSON.stringify(results)
             console.log(resultsStr);
+        }).catch(function (err) {
+            console.log(err.toString());
         });
-    } else {
-        bitBin.addMany(components).then(function (results) {
-            const resultsStr = JSON.stringify(results)
-            console.log(resultsStr);
-        });
-    }
     
+

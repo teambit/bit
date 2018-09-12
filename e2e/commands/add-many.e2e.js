@@ -1,4 +1,5 @@
 /* eslint-disable max-lines */
+import path from 'path';
 import chai, { expect, assert } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -8,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add many programatically', function () {
+describe.only('bit add many programatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
@@ -16,14 +17,24 @@ describe('bit add many programatically', function () {
   this.timeout(10000);
   let nodeStartOutputObj;
   let status;
-  describe('should transfer wrong script path', function () {
-    it('should transfer wrong script path ', function () {
+  describe('should transfer wrong and right script path', function () {
+    before(() => {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.linkNpm('bit-bin');
-      assert.throws(() => {
-        helper.nodeStart('add_many_test_files/add_components_programatically.js true', process.cwd());
-      });
+    });
+    it('should transfer wrong script path ', function () {
+      const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programatically.js');
+      const wrongPathOutput = helper.nodeStart(`${scriptPath} /ninja`);
+      expect(wrongPathOutput).to.have.string('ConsumerNotFoundError');
+    });
+    it('should transfer right script path ', function () {
+      const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programatically.js');
+      const nodeStartOutput = helper.nodeStart(`${scriptPath} PROCESS`);
+      nodeStartOutputObj = JSON.parse(nodeStartOutput);
+      expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
+      expect(nodeStartOutputObj[0].addedComponents[0]).to.have.property('id');
+      expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
   describe('should add many components', function () {
@@ -80,7 +91,7 @@ describe('bit add many programatically', function () {
       expect(compData).to.have.property('name');
       expect(compData.name).to.equal('my_namespace/b');
     });
-    it('should add 1 component with exclude test', function () {
+    it('should add component with excluded test file', function () {
       expect(nodeStartOutputObj[4].addedComponents[0]).to.have.property('id');
       expect(nodeStartOutputObj[4].addedComponents[0].id).to.equal('add_many_test_files/d');
       expect(nodeStartOutputObj[4].addedComponents[0]).to.have.property('files');
