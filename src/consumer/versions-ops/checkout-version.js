@@ -104,14 +104,16 @@ async function getComponentStatus(
       `component ${component.id.toStringWithoutVersion()} is already at the latest version, which is ${newVersion}`
     );
   }
-  const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
-  const isModified = await consumer.isComponentModified(baseComponent, component);
+  const baseComponentVersion: Version = await componentModel.loadVersion(currentlyUsedVersion, consumer.scope.objects);
+  const baseComponent: ConsumerComponent = await consumer.loadComponentFromModel(existingBitMapId);
+  const isModified = await consumer.isComponentModified(baseComponentVersion, component);
   if (!isModified && reset) {
     return returnFailure(`component ${component.id.toStringWithoutVersion()} is not modified`);
   }
   let mergeResults: ?MergeResultsThreeWay;
   if (isModified && version) {
-    const currentComponent: Version = await componentModel.loadVersion(newVersion, consumer.scope.objects);
+    const newBitId = component.id.changeVersion(newVersion);
+    const currentComponent: ConsumerComponent = await consumer.loadComponentFromModel(newBitId);
     mergeResults = await threeWayMerge({
       consumer,
       otherComponent: component,
