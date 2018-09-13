@@ -1010,15 +1010,6 @@ export default class Scope {
   }
 
   /**
-   * get consumerComponent by bitId only if is saved in the local scope. don't import from a remote scope.
-   * throws error if not found.
-   */
-  async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
-    const componentModel = await this.getModelComponent(id);
-    return componentModel.toConsumerComponent(id.version, this.name, this.objects);
-  }
-
-  /**
    * Creates a symlink object with the local-scope which links to the real-object of the remote-scope
    * This way, local components that have dependencies to the exported component won't break.
    */
