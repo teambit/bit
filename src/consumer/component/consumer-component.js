@@ -37,7 +37,8 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
   BIT_WORKSPACE_TMP_DIRNAME,
-  WRAPPER_DIR
+  WRAPPER_DIR,
+  PACKAGE_JSON
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -578,8 +579,15 @@ export default class Component {
 
   isWrapperDirNeeded() {
     // if one of the files is 'package.json' and it's on the root, we need a wrapper dir to avoid
-    // collision with Bit generated package.json file
-    return this.files.some(file => file.relative === 'package.json');
+    // collision with Bit generated package.json file.
+    // also, if one of the files requires the root package.json, because we need to generate the
+    // "package.json" file as a link once imported, we have to wrap it as well.
+    const allDependencies = new Dependencies(this.getAllDependencies());
+    const dependenciesSourcePaths = allDependencies.getSourcesPaths();
+    return (
+      this.files.some(file => file.relative === PACKAGE_JSON) ||
+      dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
+    );
   }
 
   wasWrapperDirAdded() {
@@ -589,7 +597,9 @@ export default class Component {
   addWrapperDir() {
     if (this.isWrapperDirNeeded()) {
       this.wrapDir = WRAPPER_DIR;
-      this.files.forEach(file => file.updatePaths({ newBase: file.base, newRelative: path.join(this.wrapDir, file.relative) }));
+      this.files.forEach(file =>
+        file.updatePaths({ newBase: file.base, newRelative: path.join(this.wrapDir, file.relative) })
+      );
     }
   }
 

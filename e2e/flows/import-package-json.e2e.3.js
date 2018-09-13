@@ -71,4 +71,20 @@ describe('component with package.json as a file of the component', function () {
       });
     });
   });
+  describe('a component requires another component with package.json', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('', 'package.json', '{ "name": "nice-package" }');
+      helper.addComponentWithOptions('package.json', { i: 'foo/pkg' });
+      helper.createFile('', 'foo.js', 'require("./package.json");');
+      helper.addComponentWithOptions('foo.js', { i: 'bar/foo' });
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should wrap the nested component with the wrap dir', () => {});
+  });
 });

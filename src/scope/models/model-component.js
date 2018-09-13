@@ -360,7 +360,7 @@ export default class Component extends BitObject {
     });
     if (bitMap) {
       const componentMap = bitMap.getComponentIfExist(this.toBitId(), { ignoreVersion: true });
-      const shouldManipulateDir = () => {
+      const shouldManipulateDirForSharedDir = () => {
         // manipulate only for IMPORTED. However, it might be nested before and is imported now, in this case
         // the manipulateDir is true.
         if (componentMap) {
@@ -371,8 +371,13 @@ export default class Component extends BitObject {
         }
         return manipulateDir;
       };
-      if (shouldManipulateDir()) {
+      const shouldManipulateDirForWrapperDir = () =>
+        !componentMap || componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
+
+      if (shouldManipulateDirForSharedDir()) {
         consumerComponent.stripOriginallySharedDir(bitMap);
+      }
+      if (shouldManipulateDirForWrapperDir()) {
         consumerComponent.addWrapperDir();
       }
     }
