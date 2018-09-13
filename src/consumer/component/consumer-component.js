@@ -135,7 +135,7 @@ export default class Component {
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
-  _wasWrapperDirAdded: ?boolean;
+  wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
@@ -529,7 +529,8 @@ export default class Component {
       detachedTester: this.detachedTester,
       origin,
       parent,
-      originallySharedDir: this.originallySharedDir
+      originallySharedDir: this.originallySharedDir,
+      wrapDir: this.wrapDir
     });
   }
 
@@ -582,23 +583,18 @@ export default class Component {
   }
 
   wasWrapperDirAdded() {
-    return this.files.every(file => file.relative.startsWith(WRAPPER_DIR));
+    return this.files.every(file => file.relative.startsWith(this.wrapDir));
   }
 
   addWrapperDir() {
     if (this.isWrapperDirNeeded()) {
-      this.files.forEach(file =>
-        file.updatePaths({ newBase: file.base, newRelative: path.join(WRAPPER_DIR, file.relative) })
-      );
+      this.wrapDir = WRAPPER_DIR;
+      this.files.forEach(file => file.updatePaths({ newBase: file.base, newRelative: path.join(this.wrapDir, file.relative) }));
     }
   }
 
   removeWrapperDir(pathStr: PathLinux): PathLinux {
-    if (this._wasWrapperDirAdded === undefined) {
-      this._wasWrapperDirAdded = this.wasWrapperDirAdded();
-    }
-    const replaced = this._wasWrapperDirAdded ? pathStr.replace(`${WRAPPER_DIR}/`, '') : pathStr;
-    return replaced;
+    return this.wrapDir ? pathStr.replace(`${this.wrapDir}/`, '') : pathStr;
   }
 
   /**

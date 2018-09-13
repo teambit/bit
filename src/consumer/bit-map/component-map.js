@@ -36,6 +36,7 @@ export type ComponentMapData = {
   dependencies?: ?(string[]),
   mainDistFile?: ?PathLinux,
   originallySharedDir?: ?PathLinux,
+  wrapDir?: ?PathLinux,
   exported?: ?boolean
 };
 
@@ -56,6 +57,7 @@ export default class ComponentMap {
   dependencies: ?(string[]); // needed for the link process
   mainDistFile: ?PathLinux; // needed when there is a build process involved
   originallySharedDir: ?PathLinux; // directory shared among a component and its dependencies by the original author. Relevant for IMPORTED only
+  wrapDir: ?PathLinux; // a wrapper directory needed when a user adds a package.json file to the component root so then it won't collide with Bit generated one
   // wether the compiler / tester are detached from the workspace global configuration
   detachedCompiler: ?boolean;
   detachedTester: ?boolean;
@@ -72,6 +74,7 @@ export default class ComponentMap {
     dependencies,
     mainDistFile,
     originallySharedDir,
+    wrapDir,
     detachedCompiler,
     detachedTester
   }: ComponentMapData) {
@@ -91,6 +94,7 @@ export default class ComponentMap {
     this.dependencies = dependencies;
     this.mainDistFile = mainDistFile;
     this.originallySharedDir = originallySharedDir;
+    this.wrapDir = wrapDir;
     this.detachedCompiler = detachedCompiler;
     this.detachedTester = detachedTester;
   }
@@ -111,6 +115,7 @@ export default class ComponentMap {
       dependencies: this.dependencies,
       mainDistFile: this.mainDistFile,
       originallySharedDir: this.originallySharedDir,
+      wrapDir: this.wrapDir,
       detachedCompiler: this.detachedCompiler,
       detachedTester: this.detachedTester,
       exported: this.exported
@@ -257,7 +262,9 @@ export default class ComponentMap {
    */
   getTrackDir(): ?PathLinux {
     if (this.origin === COMPONENT_ORIGINS.AUTHORED) return this.trackDir;
-    if (this.origin === COMPONENT_ORIGINS.IMPORTED) return this.rootDir;
+    if (this.origin === COMPONENT_ORIGINS.IMPORTED) {
+      return this.wrapDir ? pathJoinLinux(this.rootDir, this.wrapDir) : this.rootDir;
+    }
     // DO NOT track nested components!
     return null;
   }

@@ -398,6 +398,7 @@ export default class Consumer {
 
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
+      component.wrapDir = componentMap.wrapDir || null;
       // reload component map as it may be changed after calling Component.loadFromFileSystem()
       component.componentMap = this.bitMap.getComponent(idWithConcreteVersion);
       component.componentFromModel = componentFromModel;
