@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.5 - 2018-09-12]
+
+- set the only dist file as main file in package.json (in case there is only one)
+- pass workspace path to add many components API
+
 ## [13.0.5-dev.4 - 2018-09-05]
 
 - new programmatic API for add multiple components

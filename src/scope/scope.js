@@ -110,7 +110,7 @@ export default class Scope {
     this.path = scopeProps.path;
     this.scopeJson = scopeProps.scopeJson;
     this.created = scopeProps.created || false;
-    this.tmp = scopeProps.tmp || new Tmp((this: Scope));
+    this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
     this.objects = scopeProps.objects || new Repository(this, types());
   }
@@ -761,17 +761,6 @@ export default class Scope {
     );
   }
 
-  /**
-   * return a component only when it's stored locally. Don't go to any remote server and don't throw an exception if the
-   * component is not there.
-   */
-  async getFromLocalIfExist(id: BitId): Promise<?ComponentWithDependencies> {
-    const componentFromSources = await this.sources.get(id);
-    if (!componentFromSources) return null;
-    const versionDependencies = await componentFromSources.toVersionDependencies(id.version, this, this.name);
-    return versionDependencies.toConsumer(this.objects);
-  }
-
   async getModelComponentIfExist(id: BitId): Promise<?ModelComponent> {
     return this.sources.get(id);
   }
@@ -780,23 +769,19 @@ export default class Scope {
    * get multiple components from a scope, if not found in the local scope, fetch from a remote
    * scope. Then, write them to the local scope.
    */
-  getMany(ids: BitId[], cache?: boolean = true): Promise<ComponentWithDependencies[]> {
+  getMany(ids: BitId[], cache?: boolean = true): Promise<VersionDependencies[]> {
     logger.debug(`scope.getMany, Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('getMany', `scope.getMany, Ids: ${Analytics.hashData(ids)}`);
 
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    return this.importMany(idsWithoutNils, cache).then((versionDependenciesArr: VersionDependencies[]) => {
-      return Promise.all(
-        versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects))
-      );
-    });
+    return this.importMany(idsWithoutNils, cache);
   }
 
   // todo: improve performance by finding all versions needed and fetching them in one request from the server
   // currently it goes to the server twice. First, it asks for the last version of each id, and then it goes again to
   // ask for the older versions.
-  async getManyWithAllVersions(ids: BitId[], cache?: boolean = true): Promise<ComponentWithDependencies[]> {
+  async getManyWithAllVersions(ids: BitId[], cache?: boolean = true): Promise<VersionDependencies[]> {
     logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
     Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
     const idsWithoutNils = removeNils(ids);
@@ -814,8 +799,7 @@ export default class Scope {
       return this.importManyOnes(bitIdsWithAllVersions);
     });
     await Promise.all(allVersionsP);
-
-    return Promise.all(versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.objects)));
+    return versionDependenciesArr;
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
@@ -914,6 +898,9 @@ export default class Scope {
     return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
 
+  /**
+   * get ConsumerComponent by bitId. if the component was not found locally, import it from a remote scope
+   */
   loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
     return this.getComponentVersion(id).then((component) => {
       if (!component) throw new ComponentNotFound(id.toString());
@@ -972,12 +959,24 @@ export default class Scope {
   }
 
   /**
-   * Get ModelComponent instance per bit-id. The id can be either with or without a scope-name.
-   * In case the component is saved in the model only with the scope (imported), it loads all
-   * components and search for it.
-   * It throws an error if the component wasn't found.
+   * get ModelComponent instance per bit-id.
+   * it throws an error if the component wasn't found.
+   * @see getModelComponentIfExist to not throw an error
+   * @see getModelComponentIgnoreScope to ignore the scope name
    */
   async getModelComponent(id: BitId): Promise<ModelComponent> {
+    const component = await this.sources.get(id);
+    if (component) return component;
+    throw new ComponentNotFound(id.toString());
+  }
+
+  /**
+   * the id can be either with or without a scope-name.
+   * in case the component is saved in the model only with the scope (imported), it loads all
+   * components and search for it.
+   * it throws an error if the component wasn't found.
+   */
+  async getModelComponentIgnoreScope(id: BitId): Promise<ModelComponent> {
     const component = await this.sources.get(id);
     if (component) return component;
     if (!id.scope) {
@@ -1010,6 +1009,10 @@ export default class Scope {
     return removeNils(componentsAndVersions);
   }
 
+  /**
+   * get consumerComponent by bitId only if is saved in the local scope. don't import from a remote scope.
+   * throws error if not found.
+   */
   async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
     const componentModel = await this.getModelComponent(id);
     return componentModel.toConsumerComponent(id.version, this.name, this.objects);
@@ -1189,14 +1192,17 @@ export default class Scope {
   /**
    * find the components in componentsPool which one of their dependencies include in potentialDependencies
    */
-  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
+  async findDirectDependentComponents(
+    componentsPool: BitIds,
+    potentialDependencies: BitIds
+  ): Promise<ComponentVersion[]> {
     const componentsVersions = await this.loadLocalComponents(componentsPool);
     const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
       const component: Version = await componentVersion.getVersion(this.objects);
       const found = component
         .getAllDependencies()
         .find(dependency => potentialDependencies.searchWithoutVersion(dependency.id));
-      return found ? componentVersion.toConsumer(this.objects) : null;
+      return found ? componentVersion : null;
     });
     const dependents = await Promise.all(dependentsP);
     return removeNils(dependents);

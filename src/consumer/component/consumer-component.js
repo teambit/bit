@@ -573,15 +573,6 @@ export default class Component {
     return pathNormalizeToLinux(withSharedDir);
   }
 
-  cloneFilesWithSharedDir(): SourceFile[] {
-    return this.files.map((file) => {
-      const newFile = file.clone();
-      const newRelative = this.addSharedDir(file.relative);
-      newFile.updatePaths({ newBase: file.base, newRelative });
-      return newFile;
-    });
-  }
-
   /**
    * When using this function please check if you really need to pass the bitDir or not
    * It's better to init the files with the correct base, cwd and path than pass it here
@@ -1040,7 +1031,7 @@ export default class Component {
           }
           // when dependencies are imported as npm packages, they are not in bit.map
           this.dependenciesSavedAsComponents = false;
-          return consumer.scope.loadComponent(dependencyId, false);
+          return consumer.loadComponentFromModel(dependencyId);
         })
       );
     };

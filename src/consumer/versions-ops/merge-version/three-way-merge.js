@@ -1,7 +1,6 @@
 // @flow
 import R from 'ramda';
 import Component from '../../component';
-import { Version } from '../../../scope/models';
 import { Consumer } from '../..';
 import { sha1, pathNormalizeToLinux } from '../../../utils';
 import { SourceFile } from '../../component/sources';
@@ -9,7 +8,6 @@ import { Tmp } from '../../../scope/repositories';
 import mergeFiles from '../../../utils/merge-files';
 import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
 import type { PathOsBased, PathLinux } from '../../../utils/path';
-import type { SourceFileModel } from '../../../scope/models/version';
 import GeneralError from '../../../error/general-error';
 
 export type MergeResultsThreeWay = {
@@ -20,8 +18,8 @@ export type MergeResultsThreeWay = {
   modifiedFiles: Array<{
     filePath: PathLinux,
     fsFile: SourceFile,
-    baseFile: SourceFileModel,
-    currentFile: SourceFileModel,
+    baseFile: SourceFile,
+    currentFile: SourceFile,
     output: ?string,
     conflict: ?string
   }>,
@@ -66,22 +64,15 @@ export default (async function threeWayMergeVersions({
   consumer: Consumer,
   otherComponent: Component,
   otherVersion: string,
-  currentComponent: Version,
+  currentComponent: Component,
   currentVersion: string,
-  baseComponent: Version
+  baseComponent: Component
 }): Promise<MergeResultsThreeWay> {
-  // baseFiles and currentFiles come from the model, therefore their paths include the
-  // sharedOriginallyDir. fsFiles come from the Fs, therefore their paths don't include the
-  // sharedOriginallyDir.
-  // option 1) strip sharedOriginallyDir from baseFiles and currentFiles. the problem is that the
-  // sharedDir can be different if the dependencies were changes for example, as a result, it won't
-  // be possible to compare between the files as the paths are different.
-  // option 2) add sharedOriginallyDir to the fsFiles. we must go with this option.
-  const baseFiles: SourceFileModel[] = baseComponent.files;
-  const currentFiles: SourceFileModel[] = currentComponent.files;
-  const fsFiles: SourceFile[] = otherComponent.cloneFilesWithSharedDir();
+  const baseFiles: SourceFile[] = baseComponent.files;
+  const currentFiles: SourceFile[] = currentComponent.files;
+  const fsFiles: SourceFile[] = otherComponent.files;
   const results = { addFiles: [], modifiedFiles: [], unModifiedFiles: [], overrideFiles: [], hasConflicts: false };
-  const getFileResult = (fsFile: SourceFile, baseFile?: SourceFileModel, currentFile?: SourceFileModel) => {
+  const getFileResult = (fsFile: SourceFile, baseFile?: SourceFile, currentFile?: SourceFile) => {
     const filePath: PathLinux = pathNormalizeToLinux(fsFile.relative);
     if (!currentFile) {
       // if !currentFile && !baseFile, the file was created after the last tag
@@ -96,8 +87,8 @@ export default (async function threeWayMergeVersions({
       return;
     }
     const fsFileHash = sha1(fsFile.contents);
-    const baseFileHash = baseFile.file.hash;
-    const currentFileHash = currentFile.file.hash;
+    const baseFileHash = sha1(baseFile.contents);
+    const currentFileHash = sha1(currentFile.contents);
     if (fsFileHash === currentFileHash) {
       // no need to check also for fsFileHash === baseFileHash, as long as fs == current, no need to take any action
       results.unModifiedFiles.push({ filePath, fsFile });
@@ -117,9 +108,8 @@ export default (async function threeWayMergeVersions({
   };
 
   fsFiles.forEach((fsFile) => {
-    const relativePath = pathNormalizeToLinux(fsFile.relative);
-    const baseFile = baseFiles.find(file => file.relativePath === relativePath);
-    const currentFile = currentFiles.find(file => file.relativePath === relativePath);
+    const baseFile = baseFiles.find(file => file.relative === fsFile.relative);
+    const currentFile = currentFiles.find(file => file.relative === fsFile.relative);
     getFileResult(fsFile, baseFile, currentFile);
   });
 
@@ -144,9 +134,8 @@ async function getMergeResults(
   const tmp = new Tmp(consumer.scope);
   const conflictResultsP = modifiedFiles.map(async (modifiedFile) => {
     const fsFilePathP = tmp.save(modifiedFile.fsFile.contents);
-    const writeFile = async (file: SourceFileModel): Promise<PathOsBased> => {
-      const content = await file.file.load(consumer.scope.objects);
-      return tmp.save(content);
+    const writeFile = async (file: SourceFile): Promise<PathOsBased> => {
+      return tmp.save(file.contents);
     };
     const baseFilePathP = writeFile(modifiedFile.baseFile);
     const currentFilePathP = writeFile(modifiedFile.currentFile);

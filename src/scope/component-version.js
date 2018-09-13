@@ -10,6 +10,7 @@ import logger from '../logger/logger';
 import ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
+import BitMap from '../consumer/bit-map';
 
 export default class ComponentVersion {
   component: ModelComponent;
@@ -93,8 +94,8 @@ export default class ComponentVersion {
     );
   }
 
-  toConsumer(repo: Repository): Promise<ConsumerComponent> {
-    return this.component.toConsumerComponent(this.version, this.component.scope, repo);
+  toConsumer(repo: Repository, bitMap?: BitMap, manipulateDir?: boolean): Promise<ConsumerComponent> {
+    return this.component.toConsumerComponent(this.version, this.component.scope, repo, bitMap, manipulateDir);
   }
 
   async toObjects(repo: Repository): Promise<ComponentObjects> {

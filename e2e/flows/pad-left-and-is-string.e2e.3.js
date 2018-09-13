@@ -281,12 +281,14 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       before(() => {
         helper.getClonedLocalScope(originalScope);
         helper.getClonedRemoteScope(remoteScope);
-        helper.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
+        const padLeftPath = path.join(helper.localScopePath, 'src/pad-left/pad-left.js');
+        fs.appendFileSync(padLeftPath, '\n console.log("modified");');
         helper.tagAllWithoutMessage('--force'); // 0.0.2
         helper.exportAllComponents();
 
         helper.getClonedLocalScope(scopeAfterImport);
-        helper.createFile('src/pad-left/pad-left', 'pad-left.js', 'modified-pad-left-imported');
+        const padLeftPathImported = path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js');
+        fs.appendFileSync(padLeftPathImported, '\n console.log("imported-modified");');
         helper.tagAllWithoutMessage('--force');
         try {
           helper.exportAllComponents();
@@ -303,9 +305,12 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         expect(output).to.not.have.string(FileStatusWithoutChalk.added);
       });
       it('bit-use should update the same files and not create duplications', () => {
-        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/index.js'));
-        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left.js'));
-        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left.spec.js'));
+        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/index.js'));
+        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/pad-left.js'));
+        expect(localConsumerFiles).to.include(path.normalize('src/pad-left/pad-left/pad-left.spec.js'));
+        expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/index.js'));
+        expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/pad-left.js'));
+        expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left/pad-left.spec.js'));
         expect(localConsumerFiles).to.not.include(path.normalize('src/index.js'));
         expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left.js'));
         expect(localConsumerFiles).to.not.include(path.normalize('src/pad-left.spec.js'));
@@ -317,7 +322,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.getClonedLocalScope(scopeAfterImport);
         helper.getClonedRemoteScope(remoteScope);
         helper.testComponent('string/pad-left');
-        helper.createFile('src/pad-left/pad-left', 'pad-left.js', 'modified-pad-left-imported');
+        fs.appendFileSync(
+          path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js'),
+          '\n console.log("modified");'
+        );
         helper.tagAllWithoutMessage('--force');
         mergeCommandScope = helper.cloneLocalScope();
       });

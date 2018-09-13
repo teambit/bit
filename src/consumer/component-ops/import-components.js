@@ -5,7 +5,7 @@ import { NothingToImport } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component';
 import { Consumer } from '../../consumer';
-import { ComponentWithDependencies } from '../../scope';
+import { ComponentWithDependencies, Scope } from '../../scope';
 import loader from '../../cli/loader';
 import { BEFORE_IMPORT_ACTION } from '../../cli/loader/loader-messages';
 import logger from '../../logger/logger';
@@ -14,9 +14,9 @@ import GeneralError from '../../error/general-error';
 import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/merge-version';
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
-import Version from '../../version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import writeComponents from './write-components';
+import VersionDependencies from '../../scope/version-dependencies';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -49,10 +49,12 @@ export type ImportResult = Promise<{
 
 export default class ImportComponents {
   consumer: Consumer;
+  scope: Scope;
   options: ImportOptions;
   mergeStatus: { [id: string]: FilesStatus };
   constructor(consumer: Consumer, options: ImportOptions) {
     this.consumer = consumer;
+    this.scope = consumer.scope;
     this.options = options;
   }
 
@@ -77,7 +79,7 @@ export default class ImportComponents {
     const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.scope.getManyWithAllVersions(bitIds, false);
+    const componentsWithDependencies = await this._importComponentsWithAllVersions(bitIds);
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependencies, importDetails };
@@ -109,14 +111,12 @@ export default class ImportComponents {
     let componentsAndDependenciesBitJson = [];
     let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
-      componentsAndDependenciesBitJson = await this.consumer.scope.getManyWithAllVersions(
-        dependenciesFromBitJson,
-        false
-      );
+      // $FlowFixMe
+      componentsAndDependenciesBitJson = await this._importComponentsWithAllVersions(dependenciesFromBitJson);
       await this._writeToFileSystem(componentsAndDependenciesBitJson);
     }
     if (componentsFromBitMap.length) {
-      componentsAndDependenciesBitMap = await this.consumer.scope.getManyWithAllVersions(componentsFromBitMap, false);
+      componentsAndDependenciesBitMap = await this._importComponentsWithAllVersions(componentsFromBitMap);
       // don't write the package.json for an authored component, because its dependencies probably managed by the root
       // package.json. Also, don't install npm packages for the same reason.
       this.options.writePackageJson = false;
@@ -145,6 +145,15 @@ export default class ImportComponents {
     }
 
     return { dependencies: componentsAndDependencies, importDetails };
+  }
+
+  async _importComponentsWithAllVersions(ids: BitId[]): Promise<ComponentWithDependencies[]> {
+    const versionDependenciesArr: VersionDependencies[] = await this.scope.getManyWithAllVersions(ids, false);
+    return Promise.all(
+      versionDependenciesArr.map(versionDependencies =>
+        versionDependencies.toConsumer(this.scope.objects, this.consumer.bitMap, true)
+      )
+    );
   }
 
   async _getCurrentVersions(ids: BitId[]): ImportedVersions {
@@ -238,11 +247,8 @@ export default class ImportComponents {
     const existingBitMapBitId = this.consumer.bitMap.getBitId(component.id, { ignoreVersion: true });
     const fsComponent = await this.consumer.loadComponent(existingBitMapBitId);
     const currentlyUsedVersion = existingBitMapBitId.version;
-    const baseComponent: Version = await componentModel.loadVersion(currentlyUsedVersion, this.consumer.scope.objects);
-    const currentComponent: Version = await componentModel.loadVersion(
-      component.id.version,
-      this.consumer.scope.objects
-    );
+    const baseComponent: Component = await this.consumer.loadComponentFromModel(existingBitMapBitId);
+    const currentComponent: Component = await this.consumer.loadComponentFromModel(component.id);
     const mergeResults = await threeWayMerge({
       consumer: this.consumer,
       otherComponent: fsComponent,
