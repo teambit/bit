@@ -1,8 +1,10 @@
 import path from 'path';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import { WRAPPER_DIR } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+
+chai.use(require('chai-fs'));
 
 describe('component with package.json as a file of the component', function () {
   this.timeout(0);
@@ -57,6 +59,15 @@ describe('component with package.json as a file of the component', function () {
       it('should not add them to the component', () => {
         const output = helper.runCmd('bit status');
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      });
+    });
+    describe('importing the component using isolated environment', () => {
+      let isolatePath;
+      before(() => {
+        isolatePath = helper.isolateComponent('foo/pkg', '-olw');
+      });
+      it('should create the package.json file in the wrap dir', () => {
+        expect(path.join(isolatePath, WRAPPER_DIR, 'package.json')).to.be.a.file();
       });
     });
   });

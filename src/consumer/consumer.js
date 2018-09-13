@@ -301,27 +301,12 @@ export default class Consumer {
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
   async loadComponentWithDependenciesFromModel(id: BitId): Promise<ComponentWithDependencies> {
-    // const componentFromSources: ModelComponent = await this.scope.sources.get(id);
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    // if (!componentFromSources) return null;
     if (!id.version) {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
     const versionDependencies = await modelComponent.toVersionDependencies(id.version, this.scope, this.scope.name);
     return versionDependencies.toConsumer(this.scope.objects, this.bitMap);
-  }
-
-  /**
-   * if a component wasn't found locally, it imports it from a remote scope.
-   */
-  async importManyComponentsWithDependencies(
-    ids: BitId[],
-    cache?: boolean = true
-  ): Promise<ComponentWithDependencies[]> {
-    const versionDependenciesArr: VersionDependencies[] = await this.scope.getMany(ids, cache);
-    return Promise.all(
-      versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.scope.objects, this.bitMap))
-    );
   }
 
   async loadComponent(id: BitId): Promise<Component> {
