@@ -373,6 +373,7 @@ export default class Component extends BitObject {
       };
       if (shouldManipulateDir()) {
         consumerComponent.stripOriginallySharedDir(bitMap);
+        consumerComponent.addWrapperDir();
       }
     }
 

@@ -24,7 +24,7 @@ import { Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import type { BitIdStr } from '../../../bit-id/bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER } from '../../../constants';
+import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER, PACKAGE_JSON } from '../../../constants';
 import logger from '../../../logger/logger';
 import {
   PathsNotExist,
@@ -194,6 +194,17 @@ export default class AddComponents {
   }
 
   /**
+   * for imported component, the package.json in the root directory is a bit-generated file and as
+   * such, it should be ignored
+   */
+  _isPackageJsonOnRootDir(pathRelativeToConsumerRoot: PathOsBased, componentMap: ComponentMap) {
+    if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
+      throw new Error('_isPackageJsonOnRootDir should not get called on non imported components');
+    }
+    return pathRelativeToConsumerRoot === path.join(componentMap.rootDir, PACKAGE_JSON);
+  }
+
+  /**
    * Add or update existing (imported and new) component according to bitmap
    * there are 3 options:
    * 1. a user is adding a new component. there is no record for this component in bit.map
@@ -231,6 +242,7 @@ export default class AddComponents {
           foundComponentFromBitMap
         );
         if (isGeneratedForUnsupportedFiles) return null;
+        if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
         delete component.trackDir;
       } else if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap

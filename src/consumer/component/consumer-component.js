@@ -36,7 +36,8 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  BIT_WORKSPACE_TMP_DIRNAME
+  BIT_WORKSPACE_TMP_DIRNAME,
+  WRAPPER_DIR
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -134,6 +135,7 @@ export default class Component {
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
+  _wasWrapperDirAdded: ?boolean;
   loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
@@ -571,6 +573,32 @@ export default class Component {
   addSharedDir(pathStr: string): PathLinux {
     const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
     return pathNormalizeToLinux(withSharedDir);
+  }
+
+  isWrapperDirNeeded() {
+    // if one of the files is 'package.json' and it's on the root, we need a wrapper dir to avoid
+    // collision with Bit generated package.json file
+    return this.files.some(file => file.relative === 'package.json');
+  }
+
+  wasWrapperDirAdded() {
+    return this.files.every(file => file.relative.startsWith(WRAPPER_DIR));
+  }
+
+  addWrapperDir() {
+    if (this.isWrapperDirNeeded()) {
+      this.files.forEach(file =>
+        file.updatePaths({ newBase: file.base, newRelative: path.join(WRAPPER_DIR, file.relative) })
+      );
+    }
+  }
+
+  removeWrapperDir(pathStr: PathLinux): PathLinux {
+    if (this._wasWrapperDirAdded === undefined) {
+      this._wasWrapperDirAdded = this.wasWrapperDirAdded();
+    }
+    const replaced = this._wasWrapperDirAdded ? pathStr.replace(`${WRAPPER_DIR}/`, '') : pathStr;
+    return replaced;
   }
 
   /**
