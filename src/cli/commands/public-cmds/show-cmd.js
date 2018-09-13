@@ -49,9 +49,9 @@ export default class Show extends Command {
     if (compare && outdated) {
       throw new GeneralError('please make sure to use either [--compare] or [--outdated], alone');
     }
-    return getBitComponent().then(({ component, componentModel }) => ({
+    return getBitComponent().then(component => ({
       component,
-      componentModel,
+      componentModel: component.componentFromModel,
       json,
       outdated
     }));

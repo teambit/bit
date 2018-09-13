@@ -1,6 +1,7 @@
 /** @flow */
 import { loadConsumer, Consumer } from '../../../consumer';
 import NothingToCompareTo from './exceptions/nothing-to-compare-to';
+import Component from '../../../consumer/component/consumer-component';
 
 export default (async function getConsumerBit({
   id,
@@ -12,7 +13,7 @@ export default (async function getConsumerBit({
   compare: boolean,
   allVersions: ?boolean,
   showRemoteVersions: boolean
-}) {
+}): Promise<Component | Component[]> {
   const consumer: Consumer = await loadConsumer();
   const bitId = consumer.getParsedId(id);
   if (allVersions) {
@@ -22,10 +23,9 @@ export default (async function getConsumerBit({
   if (showRemoteVersions) {
     await consumer.addRemoteAndLocalVersionsToDependencies(component, true);
   }
-  if (compare) {
-    if (!component.componentFromModel) throw new NothingToCompareTo(id);
-    return { component, componentModel: component.componentFromModel };
+  if (compare && !component.componentFromModel) {
+    throw new NothingToCompareTo(id);
   }
   await consumer.onDestroy();
-  return { component };
+  return component;
 });
