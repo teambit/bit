@@ -470,7 +470,7 @@ async function writeDependenciesLinksToDir(
   consumer: Consumer
 ) {
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
-    const dependencyComponent = await consumer.scope.getConsumerComponent(dependency.id);
+    const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       return _getLinksForOneDependencyFile({
         consumer,
