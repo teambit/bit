@@ -541,6 +541,8 @@ export default class Component {
    *
    * This is relevant for IMPORTED components only as the author may have long paths that are not needed for whoever
    * imports it. NESTED and AUTHORED components are written as is.
+   *
+   * @see sources.consumerComponentToVersion() for the opposite action. meaning, adding back the sharedDir.
    */
   stripOriginallySharedDir(bitMap: BitMap): void {
     if (this._wasOriginallySharedDirStripped) return;
@@ -577,11 +579,13 @@ export default class Component {
     return pathNormalizeToLinux(withSharedDir);
   }
 
+  /**
+   * if one of the files is 'package.json' and it's on the root, we need a wrapper dir to avoid
+   * collision with Bit generated package.json file.
+   * also, if one of the files requires the root package.json, because we need to generate the
+   * "package.json" file as a link once imported, we have to wrap it as well.
+   */
   isWrapperDirNeeded() {
-    // if one of the files is 'package.json' and it's on the root, we need a wrapper dir to avoid
-    // collision with Bit generated package.json file.
-    // also, if one of the files requires the root package.json, because we need to generate the
-    // "package.json" file as a link once imported, we have to wrap it as well.
     const allDependencies = new Dependencies(this.getAllDependencies());
     const dependenciesSourcePaths = allDependencies.getSourcesPaths();
     return (
@@ -590,17 +594,24 @@ export default class Component {
     );
   }
 
-  wasWrapperDirAdded() {
-    return this.files.every(file => file.relative.startsWith(this.wrapDir));
-  }
+  addWrapperDir(bitMap: BitMap): void {
+    if (!this.isWrapperDirNeeded()) return;
+    this.wrapDir = WRAPPER_DIR;
 
-  addWrapperDir() {
-    if (this.isWrapperDirNeeded()) {
-      this.wrapDir = WRAPPER_DIR;
-      this.files.forEach(file =>
-        file.updatePaths({ newBase: file.base, newRelative: path.join(this.wrapDir, file.relative) })
-      );
-    }
+    const pathWithWrapDir = (pathStr: PathOsBased): PathOsBased => {
+      return path.join(this.wrapDir, pathStr);
+    };
+    this.files.forEach((file) => {
+      const newRelative = pathWithWrapDir(file.relative);
+      file.updatePaths({ newBase: file.base, newRelative });
+    });
+    // @todo: for dist also.
+    this.mainFile = pathWithWrapDir(this.mainFile);
+    const allDependencies = new Dependencies(this.getAllDependencies());
+    allDependencies.addWrapDir(bitMap, this.wrapDir);
+    this.customResolvedPaths.forEach((customPath) => {
+      customPath.destinationPath = pathNormalizeToLinux(pathWithWrapDir(path.normalize(customPath.destinationPath)));
+    });
   }
 
   removeWrapperDir(pathStr: PathLinux): PathLinux {

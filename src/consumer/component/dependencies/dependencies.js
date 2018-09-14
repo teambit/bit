@@ -9,6 +9,7 @@ import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';
 import type { BitIdStr } from '../../../bit-id/bit-id';
+import type { PathLinux } from '../../../utils/path';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -64,6 +65,12 @@ export default class Dependencies {
   stripOriginallySharedDir(bitMap: BitMap, originallySharedDir: string): void {
     this.dependencies.forEach((dependency) => {
       Dependency.stripOriginallySharedDir(dependency, bitMap, originallySharedDir);
+    });
+  }
+
+  addWrapDir(bitMap: BitMap, wrapDir: PathLinux): void {
+    this.dependencies.forEach((dependency) => {
+      Dependency.addWrapDir(dependency, bitMap, wrapDir);
     });
   }
 

@@ -145,13 +145,7 @@ export default class SourceRepository {
    *
    * warning: Do not change anything on the consumerComponent instance! Only use its clone.
    *
-   * @param consumerComponent
-   * @param consumer
-   * @param message
-   * @param flattenedDependencies
-   * @param dists
-   * @param specsResults
-   * @return {Promise.<{version: Version, dists: *, files: *}>}
+   * @see consumer-components.stripOriginallySharedDir() where the sharedDir was stripped.
    */
   async consumerComponentToVersion({
     consumerComponent,

@@ -5,6 +5,7 @@ import type { PathLinux } from '../../../utils/path';
 import type { ImportSpecifier } from './dependency-resolver/types/dependency-tree-type';
 import BitMap from '../../bit-map';
 import { COMPONENT_ORIGINS } from '../../../constants';
+import { pathJoinLinux } from '../../../utils/path';
 
 /**
  * a dependency component may have multiple files that are required from the parent component, each
@@ -46,6 +47,25 @@ export default class Dependency {
         relativePath.destinationRelativePath = pathWithoutSharedDir(
           relativePath.destinationRelativePath,
           depFromBitMap.originallySharedDir
+        );
+      }
+    });
+  }
+
+  static addWrapDir(dependency: Dependency, bitMap: BitMap, componentWrapDir: PathLinux): void {
+    const pathWithWrapDir = (pathStr: PathLinux, wrapDir: ?PathLinux): PathLinux => {
+      if (!wrapDir) return pathStr;
+      return pathJoinLinux(wrapDir, pathStr);
+    };
+
+    const depFromBitMap = bitMap.getComponentIfExist(dependency.id);
+    dependency.relativePaths.forEach((relativePath: RelativePath) => {
+      if (relativePath.isCustomResolveUsed) return; // don't add wrapDir when custom resolved is used
+      relativePath.sourceRelativePath = pathWithWrapDir(relativePath.sourceRelativePath, componentWrapDir);
+      if (depFromBitMap && depFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+        relativePath.destinationRelativePath = pathWithWrapDir(
+          relativePath.destinationRelativePath,
+          depFromBitMap.wrapDir
         );
       }
     });
