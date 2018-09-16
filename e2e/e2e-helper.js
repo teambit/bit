@@ -107,6 +107,19 @@ export default class Helper {
     }
   }
 
+  createNewDirectory() {
+    const newDir = `${generateRandomStr()}-local`;
+    const newDirPath = path.join(this.e2eDir, newDir);
+    if (!fs.existsSync(newDirPath)) {
+      fs.ensureDirSync(newDirPath);
+    }
+    return newDirPath;
+  }
+
+  cleanDir(dirPath: string) {
+    fs.removeSync(dirPath);
+  }
+
   getRequireBitPath(box: string, name: string) {
     return `@bit/${this.remoteScope}.${box}.${name}`;
   }
@@ -126,12 +139,13 @@ export default class Helper {
     return this.runCmd(`node ${mainFilePath}`, cwd);
   }
 
-  linkNpm(libraryName: string) {
-    return this.runCmd(`npm link ${libraryName}`);
+  linkNpm(libraryName: string, cwd: string = process.cwd()) {
+    return this.runCmd(`npm link ${libraryName}`, cwd);
   }
   // #endregion
 
   // #region scopes utils (init, remote etc')
+
   setLocalScope(localScope?: string) {
     this.localScope = localScope || `${generateRandomStr()}-local`;
     this.localScopePath = path.join(this.e2eDir, this.localScope);

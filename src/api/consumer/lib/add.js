@@ -10,6 +10,7 @@ import type {
 import { loadConsumer, Consumer } from '../../../consumer';
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
+  addProps.configuredConsumer = false;
   const consumer: Consumer = await loadConsumer();
   const addComponents = new AddComponents(consumer, addProps);
   const addResults = await addComponents.add();
@@ -21,6 +22,7 @@ export async function addMany(
   components: AddProps[],
   consumerPath: string = process.cwd()
 ): Promise<AddActionResults[]> {
+  const configureConsumer = consumerPath !== process.cwd();
   const consumer: Consumer = await loadConsumer(consumerPath);
   const addComponentsArr = [];
   components.forEach((componentDefinition) => {
@@ -35,6 +37,7 @@ export async function addMany(
     componentDefinition.exclude = componentDefinition.exclude
       ? componentDefinition.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
       : [];
+    componentDefinition.configuredConsumer = configureConsumer;
     const addComponents = new AddComponents(consumer, componentDefinition);
     addComponentsArr.push(addComponents);
   });

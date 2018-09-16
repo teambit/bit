@@ -2,6 +2,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { addMany } from '../../src/api';
 
 chai.use(require('chai-fs'));
 
@@ -21,7 +22,7 @@ describe('bit add many programmatically', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
-      helper.linkNpm('bit-bin');
+      helper.linkNpm('bit-bin', helper.localScopePath);
     });
     it('should transfer wrong script path ', function () {
       const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programmatically.js');
@@ -38,12 +39,17 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
-  describe('should add many components', function () {
-    before(() => {
+  describe('should use addMany as reference', function () {
+    before(async function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.linkNpm('bit-bin');
-      const nodeStartOutput = helper.nodeStart('add_many_test_files/add_components_programmatically.js');
+      const newDirPath = helper.createNewDirectory();
+      const scriptRelativePath = 'add-many';
+      helper.copyFixtureComponents(scriptRelativePath, newDirPath);
+      helper.linkNpm('bit-bin', newDirPath);
+      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
+      const nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       status = helper.status();
     });
@@ -83,7 +89,7 @@ describe('bit add many programmatically', function () {
       expect(compData).to.have.property('name');
       expect(compData.name).to.equal('add_many_test_files/my_defined_id');
     });
-    it('should add a component with namespace and no id', function () {
+    it('should add a component with namespace and no id', async function () {
       expect(nodeStartOutputObj).to.be.array();
       expect(nodeStartOutputObj[1]).to.have.property('addedComponents');
       expect(nodeStartOutputObj[1].addedComponents[0].id).to.equal('my_namespace/b');
