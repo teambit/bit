@@ -8,6 +8,7 @@ import type {
   PathOrDSL
 } from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
+import logger from '../../../logger/logger';
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   addProps.configuredConsumer = false;
@@ -44,7 +45,12 @@ export async function addMany(
   const addResults = [];
   await Promise.all(
     addComponentsArr.map(async function (addComponents) {
-      const addResultsSingle = await addComponents.add();
+      let addResultsSingle;
+      try {
+        addResultsSingle = await addComponents.add();
+      } catch (ex) {
+        logger.error(`got the following exception while adding componnet ${ex.toString()}`);
+      }
       addResults.push(addResultsSingle);
     })
   );

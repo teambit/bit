@@ -2,7 +2,6 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
-import { addMany } from '../../src/api';
 
 chai.use(require('chai-fs'));
 
@@ -10,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add many programmatically', function () {
+describe.only('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
@@ -40,7 +39,7 @@ describe('bit add many programmatically', function () {
     });
   });
   describe('should use addMany as reference', function () {
-    before(async function () {
+    before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.linkNpm('bit-bin');
@@ -122,6 +121,25 @@ describe('bit add many programmatically', function () {
     it('should add many components', function () {
       expect(nodeStartOutputObj).to.be.array();
       expect(nodeStartOutputObj).to.be.ofSize(5);
+    });
+  });
+  describe('make sure gitignore is read from the correct path', function () {
+    before(function () {
+      helper.reInitLocalScope();
+      helper.copyFixtureComponents('add-many');
+      helper.linkNpm('bit-bin');
+      const newDirPath = helper.createNewDirectory();
+      const scriptRelativePath = 'add-many';
+      helper.copyFixtureComponents(scriptRelativePath, newDirPath);
+      helper.linkNpm('bit-bin', newDirPath);
+      helper.writeGitIgnore(['add_many_test_files/c.js']);
+      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
+      const nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
+      nodeStartOutputObj = JSON.parse(nodeStartOutput);
+      status = helper.status();
+    });
+    it('should not add a component if it is in gitignore', function () {
+      expect(status).to.not.have.string('add_many_test_files/c ... ok');
     });
   });
 });

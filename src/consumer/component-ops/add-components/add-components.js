@@ -517,10 +517,11 @@ export default class AddComponents {
       if (ignorePattern.startsWith('**/')) {
         return ignorePattern;
       } else if (this.configuredConsumer === true) {
-        return path.join(this.consumer.getPath(), ignorePattern);
+        return path.join('**/', ignorePattern);
       }
       return ignorePattern;
     });
+
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     // check unknown test files
@@ -543,7 +544,6 @@ export default class AddComponents {
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     const resolvedComponentPathsWithGitIgnore = this.gitIgnore.filter(resolvedComponentPathsWithoutGitIgnore);
-
     // Run diff on both arrays to see what was filtered out because of the gitignore file
     const diff = arrayDiff(resolvedComponentPathsWithGitIgnore, resolvedComponentPathsWithoutGitIgnore);
 
