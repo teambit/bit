@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix ci-update command with component version number (internal)
+
 ## [13.0.5-dev.5 - 2018-09-12]
 
 - set the only dist file as main file in package.json (in case there is only one)
