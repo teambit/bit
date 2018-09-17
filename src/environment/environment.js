@@ -60,7 +60,7 @@ export default class Environment {
     if (typeof bitId === 'string') {
       bitId = await BitId.parse(bitId, true);
     }
-    const componentsWithDependencies = await this.importManyComponentsWithDependencies([bitId]);
+    const componentsWithDependencies = await this.consumer.importComponents([bitId]);
     const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
@@ -84,21 +84,6 @@ export default class Environment {
     await writeComponents(concreteOpts);
     await Environment.markEnvironmentAsInstalled(writeToPath);
     return componentWithDependencies;
-  }
-
-  /**
-   * if a component wasn't found locally, it imports it from a remote scope.
-   */
-  async importManyComponentsWithDependencies(
-    ids: BitId[],
-    cache?: boolean = true
-  ): Promise<ComponentWithDependencies[]> {
-    const versionDependenciesArr: VersionDependencies[] = await this.scope.getMany(ids, cache);
-    return Promise.all(
-      versionDependenciesArr.map(versionDependencies =>
-        versionDependencies.toConsumer(this.scope.objects, this.consumer.bitMap, true)
-      )
-    );
   }
 
   /**

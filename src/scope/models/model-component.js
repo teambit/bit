@@ -29,6 +29,7 @@ import GeneralError from '../../error/general-error';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import BitMap from '../../consumer/bit-map/bit-map';
+import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 
 type State = {
   versions?: {
@@ -169,10 +170,10 @@ export default class Component extends BitObject {
   /**
    * when bitMap is passed, it got called from the consumer and as such it strips the sharedDir
    */
-  collectVersions(repo: Repository, bitMap?: BitMap): Promise<ConsumerComponent[]> {
+  collectVersions(repo: Repository): Promise<ConsumerComponent[]> {
     return Promise.all(
       this.listVersions().map((versionNum) => {
-        return this.toConsumerComponent(versionNum, this.scope, repo, bitMap);
+        return this.toConsumerComponent(versionNum, this.scope, repo);
       })
     );
   }
@@ -296,8 +297,7 @@ export default class Component extends BitObject {
     versionStr: string,
     scopeName: string,
     repository: Repository,
-    bitMap?: BitMap,
-    manipulateDir?: boolean
+    manipulateDirData: ?(ManipulateDirItem[])
   ): Promise<ConsumerComponent> {
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
@@ -358,28 +358,9 @@ export default class Component extends BitObject {
       customResolvedPaths: clone(version.customResolvedPaths),
       deprecated: this.deprecated
     });
-    if (bitMap) {
-      const componentMap = bitMap.getComponentIfExist(this.toBitId(), { ignoreVersion: true });
-      const shouldManipulateDirForSharedDir = () => {
-        // manipulate only for IMPORTED. However, it might be nested before and is imported now, in this case
-        // the manipulateDir is true.
-        if (componentMap) {
-          return (
-            componentMap.origin === COMPONENT_ORIGINS.IMPORTED ||
-            (componentMap.origin === COMPONENT_ORIGINS.NESTED && manipulateDir)
-          );
-        }
-        return manipulateDir;
-      };
-      const shouldManipulateDirForWrapperDir = () =>
-        !componentMap || componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
-
-      if (shouldManipulateDirForSharedDir()) {
-        consumerComponent.stripOriginallySharedDir(bitMap);
-      }
-      if (shouldManipulateDirForWrapperDir()) {
-        consumerComponent.addWrapperDir(bitMap);
-      }
+    if (manipulateDirData) {
+      consumerComponent.stripOriginallySharedDir(manipulateDirData);
+      consumerComponent.addWrapperDir(manipulateDirData);
     }
 
     return consumerComponent;

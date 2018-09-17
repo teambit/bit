@@ -5,7 +5,7 @@ import { RemovedObjects } from '../removed-components';
 import logger from '../../logger/logger';
 import { BitId, BitIds } from '../../bit-id';
 import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
-import { Symlink } from '../models';
+import { Symlink, ModelComponent } from '../models';
 import ConsumerComponent from '../../consumer/component';
 import Scope from '../scope';
 import { Consumer } from '../../consumer';
@@ -49,8 +49,7 @@ export default class RemoveModelComponents {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // $FlowFixMe
     const component = (await this.scope.sources.get(bitId)).toComponentVersion();
-    const bitMap = this.consumer ? this.consumer.bitMap : undefined;
-    const consumerComponentToRemove = await component.toConsumer(this.scope.objects, bitMap);
+    const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     // $FlowFixMe
     const componentList = await this.scope.objects.listComponents();
 
@@ -74,7 +73,7 @@ export default class RemoveModelComponents {
 
   async _removeComponentsDependencies(
     dependentBits: Object,
-    componentList: Array<ConsumerComponent | Symlink>,
+    componentList: Array<ModelComponent | Symlink>,
     consumerComponentToRemove: ConsumerComponent,
     bitId: BitId
   ): Promise<BitIds> {
@@ -107,7 +106,7 @@ export default class RemoveModelComponents {
     return BitIds.fromArray(removedDependencies);
   }
 
-  async _removeComponent(id: BitId, componentList: Array<ConsumerComponent | Symlink>, removeRefs: boolean = false) {
+  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>, removeRefs: boolean = false) {
     const symlink = componentList.filter(
       component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );

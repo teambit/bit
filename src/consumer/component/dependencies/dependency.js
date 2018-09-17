@@ -6,6 +6,7 @@ import type { ImportSpecifier } from './dependency-resolver/types/dependency-tre
 import BitMap from '../../bit-map';
 import { COMPONENT_ORIGINS } from '../../../constants';
 import { pathJoinLinux } from '../../../utils/path';
+import { ManipulateDirItem } from '../../component-ops/manipulate-dir';
 
 /**
  * a dependency component may have multiple files that are required from the parent component, each
@@ -33,39 +34,43 @@ export default class Dependency {
     this.relativePaths = relativePaths;
   }
 
-  static stripOriginallySharedDir(dependency: Dependency, bitMap: BitMap, originallySharedDir: string): void {
+  static stripOriginallySharedDir(
+    dependency: Dependency,
+    manipulateDirData: ManipulateDirItem[],
+    originallySharedDir: string
+  ): void {
     const pathWithoutSharedDir = (pathStr, sharedDir) => {
       if (!sharedDir) return pathStr;
       const partToRemove = `${sharedDir}/`;
       return pathStr.replace(partToRemove, '');
     };
-    const depFromBitMap = bitMap.getComponentIfExist(dependency.id);
+    const depManipulateDir = manipulateDirData.find(manipulateDirItem => manipulateDirItem.id.isEqual(dependency.id));
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
       if (relativePath.isCustomResolveUsed) return; // don't strip sharedDir when custom resolved is used
       relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
-      if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      if (depManipulateDir) {
         relativePath.destinationRelativePath = pathWithoutSharedDir(
           relativePath.destinationRelativePath,
-          depFromBitMap.originallySharedDir
+          depManipulateDir.originallySharedDir
         );
       }
     });
   }
 
-  static addWrapDir(dependency: Dependency, bitMap: BitMap, componentWrapDir: PathLinux): void {
+  static addWrapDir(dependency: Dependency, manipulateDirData: ManipulateDirItem[], componentWrapDir: PathLinux): void {
     const pathWithWrapDir = (pathStr: PathLinux, wrapDir: ?PathLinux): PathLinux => {
       if (!wrapDir) return pathStr;
       return pathJoinLinux(wrapDir, pathStr);
     };
 
-    const depFromBitMap = bitMap.getComponentIfExist(dependency.id);
+    const depManipulateDir = manipulateDirData.find(manipulateDirItem => manipulateDirItem.id.isEqual(dependency.id));
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
       if (relativePath.isCustomResolveUsed) return; // don't add wrapDir when custom resolved is used
       relativePath.sourceRelativePath = pathWithWrapDir(relativePath.sourceRelativePath, componentWrapDir);
-      if (depFromBitMap && depFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+      if (depManipulateDir && depManipulateDir.wrapDir) {
         relativePath.destinationRelativePath = pathWithWrapDir(
           relativePath.destinationRelativePath,
-          depFromBitMap.wrapDir
+          depManipulateDir.wrapDir
         );
       }
     });

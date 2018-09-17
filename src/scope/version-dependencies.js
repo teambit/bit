@@ -4,6 +4,7 @@ import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';
 import Repository from './objects/repository';
 import BitMap from '../consumer/bit-map';
+import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 
 export default class VersionDependencies {
   component: ComponentVersion;
@@ -36,13 +37,13 @@ export default class VersionDependencies {
     this.sourceScope = sourceScope;
   }
 
-  async toConsumer(repo: Repository, bitMap?: BitMap, manipulateDir?: boolean): Promise<ComponentWithDependencies> {
-    const depToConsumer = dep => dep.toConsumer(repo, bitMap, false);
+  async toConsumer(repo: Repository, manipulateDirData: ?(ManipulateDirItem[])): Promise<ComponentWithDependencies> {
+    const depToConsumer = dep => dep.toConsumer(repo, manipulateDirData);
     const dependenciesP = Promise.all(this.dependencies.map(depToConsumer));
     const devDependenciesP = Promise.all(this.devDependencies.map(depToConsumer));
     const compilerDependenciesP = Promise.all(this.compilerDependencies.map(depToConsumer));
     const testerDependenciesP = Promise.all(this.testerDependencies.map(depToConsumer));
-    const componentP = this.component.toConsumer(repo, bitMap, manipulateDir);
+    const componentP = this.component.toConsumer(repo, manipulateDirData);
     const [component, dependencies, devDependencies, compilerDependencies, testerDependencies] = await Promise.all([
       componentP,
       dependenciesP,

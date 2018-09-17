@@ -79,7 +79,7 @@ export default class ImportComponents {
     const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this._importComponentsWithAllVersions(bitIds);
+    const componentsWithDependencies = await this.consumer.importComponents(bitIds, true);
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependencies, importDetails };
@@ -112,11 +112,11 @@ export default class ImportComponents {
     let componentsAndDependenciesBitMap = [];
     if (dependenciesFromBitJson) {
       // $FlowFixMe
-      componentsAndDependenciesBitJson = await this._importComponentsWithAllVersions(dependenciesFromBitJson);
+      componentsAndDependenciesBitJson = await this.consumer.importComponents(dependenciesFromBitJson, true);
       await this._writeToFileSystem(componentsAndDependenciesBitJson);
     }
     if (componentsFromBitMap.length) {
-      componentsAndDependenciesBitMap = await this._importComponentsWithAllVersions(componentsFromBitMap);
+      componentsAndDependenciesBitMap = await this.consumer.importComponents(componentsFromBitMap, true);
       // don't write the package.json for an authored component, because its dependencies probably managed by the root
       // package.json. Also, don't install npm packages for the same reason.
       this.options.writePackageJson = false;
@@ -145,15 +145,6 @@ export default class ImportComponents {
     }
 
     return { dependencies: componentsAndDependencies, importDetails };
-  }
-
-  async _importComponentsWithAllVersions(ids: BitId[]): Promise<ComponentWithDependencies[]> {
-    const versionDependenciesArr: VersionDependencies[] = await this.scope.getManyWithAllVersions(ids, false);
-    return Promise.all(
-      versionDependenciesArr.map(versionDependencies =>
-        versionDependencies.toConsumer(this.scope.objects, this.consumer.bitMap, true)
-      )
-    );
   }
 
   async _getCurrentVersions(ids: BitId[]): ImportedVersions {

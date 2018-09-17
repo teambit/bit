@@ -133,7 +133,7 @@ function validateOriginallySharedDir(components: Component[]): void {
   const validateComponent = (component: Component) => {
     if (!component.componentMap) throw new Error(`componentMap is missing from ${component.id.toString()}`);
     if (!component.componentFromModel) return;
-    component.componentFromModel.setOriginallySharedDir();
+    // component.componentFromModel.setOriginallySharedDir();
     const sharedDir = component.componentFromModel.originallySharedDir;
     const pathWithSharedDir = (pathStr: PathLinux) => {
       if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
