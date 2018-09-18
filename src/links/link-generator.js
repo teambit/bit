@@ -259,7 +259,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     return R.flatten(dependencyLinks);
   });
   const internalCustomResolvedLinks = component.customResolvedPaths.length
-    ? getInternalCustomResolvedLinks(component, createNpmLinkFiles)
+    ? getInternalCustomResolvedLinks(component, componentMap, createNpmLinkFiles)
     : [];
   const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
 
@@ -399,8 +399,13 @@ async function writeComponentsDependenciesLinks(
  * components/utils/jump/utils/is-string.js
  * components/utils/jump/node_modules/utils/is-string // this is the file we generate here
  */
-function getInternalCustomResolvedLinks(component: Component, createNpmLinkFiles: boolean): LinkFile[] {
-  const componentDir = component.writtenPath;
+function getInternalCustomResolvedLinks(
+  component: Component,
+  componentMap: ComponentMap,
+  createNpmLinkFiles: boolean
+): LinkFile[] {
+  const componentDir = component.writtenPath || componentMap.rootDir;
+  if (!componentDir) { throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`); }
   const getDestination = (importSource: string) => `node_modules/${importSource}`;
   return component.customResolvedPaths.map((customPath) => {
     const sourceAbs = path.join(componentDir, customPath.destinationPath);
