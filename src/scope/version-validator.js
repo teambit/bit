@@ -85,7 +85,9 @@ export default function validateVersionInstance(version: Version): void {
   };
 
   if (!version.mainFile) throw new VersionInvalid(`${message}, the mainFile is missing`);
-  if (!isValidPath(version.mainFile)) { throw new VersionInvalid(`${message}, the mainFile ${version.mainFile} is invalid`); }
+  if (!isValidPath(version.mainFile)) {
+    throw new VersionInvalid(`${message}, the mainFile ${version.mainFile} is invalid`);
+  }
   if (!version.files || !version.files.length) throw new VersionInvalid(`${message}, the files are missing`);
   let foundMainFile = false;
   validateType(message, version.files, 'files', 'array');
@@ -129,7 +131,7 @@ export default function validateVersionInstance(version: Version): void {
     // $FlowFixMe
     if (!(version[dependenciesType] instanceof Dependencies)) {
       throw new VersionInvalid(
-        `${message}, ${dependenciesType} must be an instance of Dependencies, got ${typeof this[dependenciesType]}`
+        `${message}, ${dependenciesType} must be an instance of Dependencies, got ${typeof version[dependenciesType]}`
       );
     }
   });

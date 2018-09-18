@@ -4,7 +4,6 @@ import { Dependency } from './';
 import type { RelativePath } from './dependency';
 import { BitId, BitIds } from '../../../bit-id';
 import Scope from '../../../scope/scope';
-import BitMap from '../../bit-map';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';

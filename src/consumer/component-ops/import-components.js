@@ -16,7 +16,6 @@ import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import writeComponents from './write-components';
-import VersionDependencies from '../../scope/version-dependencies';
 
 export type ImportOptions = {
   ids: string[], // array might be empty

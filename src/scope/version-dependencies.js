@@ -3,7 +3,6 @@ import ComponentWithDependencies from './component-dependencies';
 import ComponentVersion from './component-version';
 import ComponentObjects from './component-objects';
 import Repository from './objects/repository';
-import BitMap from '../consumer/bit-map';
 import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 
 export default class VersionDependencies {

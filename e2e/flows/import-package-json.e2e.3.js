@@ -92,7 +92,7 @@ describe('component with package.json as a file of the component', function () {
       helper.importComponent('bar/foo');
       consumerFiles = helper.getConsumerFiles('*.{js,json}');
       bitMap = helper.readBitMap();
-      componentMapBarFoo = bitMap[`${helper.remoteScope}/foo/pkg@0.0.1`];
+      componentMapBarFoo = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
       componentMapFooPkg = bitMap[`${helper.remoteScope}/foo/pkg@0.0.1`];
     });
     it('should wrap the nested component (the dependency) with the wrap dir', () => {
@@ -111,6 +111,20 @@ describe('component with package.json as a file of the component', function () {
       expect(path.join(helper.localScopePath, linkPath)).to.be.a.path();
       const linkContent = helper.readFile(linkPath);
       expect(linkContent).to.be.equal(fixturePackageJson);
+    });
+    it('should save the wrapDir attribute of the dependency', () => {
+      expect(componentMapFooPkg).to.have.property('wrapDir');
+      expect(componentMapFooPkg.wrapDir).to.equal(WRAPPER_DIR);
+    });
+    it('should save the wrapDir attribute of the dependent', () => {
+      expect(componentMapBarFoo).to.have.property('wrapDir');
+      expect(componentMapBarFoo.wrapDir).to.equal(WRAPPER_DIR);
+    });
+    it('should wrap the files of the dependency', () => {
+      expect(componentMapFooPkg.files[0].relativePath).to.equal('bit_wrapper_dir/package.json');
+    });
+    it('should wrap the files of the dependent', () => {
+      expect(componentMapBarFoo.files[0].relativePath).to.equal('bit_wrapper_dir/foo.js');
     });
   });
 });
