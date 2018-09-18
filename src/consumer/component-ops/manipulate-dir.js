@@ -12,6 +12,8 @@ import { PACKAGE_JSON, COMPONENT_ORIGINS, WRAPPER_DIR } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import ComponentVersion from '../../scope/component-version';
 import Consumer from '../consumer';
+import BitIds from '../../bit-id/bit-ids';
+import Repository from '../../scope/objects/repository';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
@@ -119,8 +121,11 @@ async function getManipulateDirItemFromComponentVersion(
 export async function getManipulateDirWhenImportingComponents(
   bitMap: BitMap,
   versionsDependencies: VersionDependencies[],
-  repository
+  repository: Repository
 ): Promise<ManipulateDirItem[]> {
+  const nonDependencies = BitIds.fromArray(
+    versionsDependencies.map(versionDependency => versionDependency.component.id)
+  );
   const manipulateDirDataP = versionsDependencies.map(async (versionDependency: VersionDependencies) => {
     const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(
       versionDependency.component,
@@ -132,7 +137,10 @@ export async function getManipulateDirWhenImportingComponents(
       return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, true);
     });
     const manipulateDirDependencies = await Promise.all(manipulateDirDependenciesP);
-    return [manipulateDirComponent, ...manipulateDirDependencies];
+    // a component might be a dependency and directly imported at the same time, in which case,
+    // it should be considered as imported, not nested
+    const manipulateDirDependenciesOnly = manipulateDirDependencies.filter(m => !nonDependencies.has(m.id));
+    return [manipulateDirComponent, ...manipulateDirDependenciesOnly];
   });
   const manipulateDirData = await Promise.all(manipulateDirDataP);
   return R.flatten(manipulateDirData);
