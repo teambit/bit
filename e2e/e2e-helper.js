@@ -137,7 +137,7 @@ export default class Helper {
     return this.runCmd(`node ${mainFilePath}`, cwd);
   }
 
-  linkNpm(libraryName: string, cwd: string = process.cwd()) {
+  npmLink(libraryName: string, cwd: string = process.cwd()) {
     return this.runCmd(`npm link ${libraryName}`, cwd);
   }
   // #endregion

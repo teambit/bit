@@ -22,7 +22,7 @@ describe('bit add many programmatically', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
-      helper.linkNpm('bit-bin', helper.localScopePath);
+      helper.npmLink('bit-bin', helper.localScopePath);
     });
     it('should transfer wrong script path ', function () {
       const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programmatically.js');
@@ -43,11 +43,11 @@ describe('bit add many programmatically', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
-      helper.linkNpm('bit-bin');
+      helper.npmLink('bit-bin');
       const newDirPath = helper.createNewDirectory();
       const scriptRelativePath = 'add-many';
       helper.copyFixtureComponents(scriptRelativePath, newDirPath);
-      helper.linkNpm('bit-bin', newDirPath);
+      helper.npmLink('bit-bin', newDirPath);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
@@ -131,11 +131,11 @@ describe('bit add many programmatically', function () {
       helper.copyFixtureComponents('add-many');
       helper.createFile('foo', 'c.js');
       helper.createFileOnRootLevel('c.js');
-      helper.linkNpm('bit-bin');
+      helper.npmLink('bit-bin');
       newDirPath = helper.createNewDirectory();
       const scriptRelativePath = 'add-many';
       helper.copyFixtureComponents(scriptRelativePath, newDirPath);
-      helper.linkNpm('bit-bin', newDirPath);
+      helper.npmLink('bit-bin', newDirPath);
     });
     it('should not add a component if it is in gitignore', function () {
       helper.writeGitIgnore(['**/add_many_test_files/c.js']);
