@@ -4,16 +4,18 @@ import type { PathOsBased } from '../../../utils/path';
 import AddComponents from '../../../consumer/component-ops/add-components';
 import type {
   AddProps,
+  AddContext,
   AddActionResults,
   PathOrDSL
 } from '../../../consumer/component-ops/add-components/add-components';
 import { loadConsumer, Consumer } from '../../../consumer';
-import logger from '../../../logger/logger';
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
-  addProps.configuredConsumer = false;
   const consumer: Consumer = await loadConsumer();
-  const addComponents = new AddComponents(consumer, addProps);
+  const addContext = {};
+  addContext.consumer = consumer;
+  addContext.overrideConsumer = false;
+  const addComponents = new AddComponents(addContext, addProps);
   const addResults = await addComponents.add();
   await consumer.onDestroy();
   return addResults;
@@ -23,34 +25,30 @@ export async function addMany(
   components: AddProps[],
   consumerPath: string = process.cwd()
 ): Promise<AddActionResults[]> {
-  const configureConsumer = consumerPath !== process.cwd();
+  // we are checking whether the consumer is the default consumer which is process.cwd() or it is overriden , and we are working on another directory which is not the process.cwd()
+  const overrideConsumer = consumerPath !== process.cwd();
   const consumer: Consumer = await loadConsumer(consumerPath);
+  const addContext: AddContext = { consumer, overrideConsumer };
   const addComponentsArr = [];
-  components.forEach((componentDefinition) => {
-    const normalizedPaths: PathOsBased[] = componentDefinition.componentPaths.map((p) => {
+  components.forEach((component) => {
+    const normalizedPaths: PathOsBased[] = component.componentPaths.map((p) => {
       return path.normalize(p);
     });
-    componentDefinition.componentPaths = normalizedPaths;
-    const normalizedTests: PathOrDSL[] = componentDefinition.tests
-      ? componentDefinition.tests.map(testFile => path.normalize(testFile.trim()))
+    component.componentPaths = normalizedPaths;
+    const normalizedTests: PathOrDSL[] = component.tests
+      ? component.tests.map(testFile => path.normalize(testFile.trim()))
       : [];
-    componentDefinition.tests = normalizedTests;
-    componentDefinition.exclude = componentDefinition.exclude
-      ? componentDefinition.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
+    component.tests = normalizedTests;
+    component.exclude = component.exclude
+      ? component.exclude.map(excludeFile => path.normalize(excludeFile.trim()))
       : [];
-    componentDefinition.configuredConsumer = configureConsumer;
-    const addComponents = new AddComponents(consumer, componentDefinition);
+    const addComponents = new AddComponents(addContext, component);
     addComponentsArr.push(addComponents);
   });
   const addResults = [];
   await Promise.all(
     addComponentsArr.map(async function (addComponents) {
-      let addResultsSingle;
-      try {
-        addResultsSingle = await addComponents.add();
-      } catch (ex) {
-        logger.error(`got the following exception while adding componnet ${ex.toString()}`);
-      }
+      const addResultsSingle = await addComponents.add();
       addResults.push(addResultsSingle);
     })
   );

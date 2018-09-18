@@ -96,8 +96,12 @@ export type AddProps = {
   exclude?: PathOrDSL[],
   override: boolean,
   trackDirFeature?: boolean,
-  origin?: ComponentOrigin,
-  configuredConsumer: boolean
+  origin?: ComponentOrigin
+};
+
+export type AddContext = {
+  consumer: Consumer,
+  overrideConsumer: boolean
 };
 
 export default class AddComponents {
@@ -115,49 +119,35 @@ export default class AddComponents {
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
-  configuredConsumer: boolean;
-  constructor(consumer: Consumer, addProps: AddProps) {
-    this.configuredConsumer = addProps.configuredConsumer;
-    const consumerPath = consumer.getPath();
-    this.consumer = consumer;
-    this.bitMap = consumer.bitMap;
+  overrideConsumer: boolean;
+  constructor(context: AddContext, addProps: AddProps) {
+    this.overrideConsumer = context.overrideConsumer;
+    this.consumer = context.consumer;
+    const consumerPath = this.consumer.getPath();
+    this.bitMap = this.consumer.bitMap;
     this.componentPaths =
-      this.configuredConsumer === true
+      this.overrideConsumer === true
         ? addProps.componentPaths.map(file => path.join(consumerPath, file))
         : addProps.componentPaths;
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
-    this.initializeTests(addProps);
-    this.initializeExcluded(addProps);
+    this.tests = addProps.tests ? this.normalizeAbsolutePaths(addProps.tests) : [];
+    this.exclude = addProps.exclude ? this.normalizeAbsolutePaths(addProps.exclude) : [];
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {};
   }
 
-  initializeExcluded(addProps: AddProps) {
-    if (addProps.exclude && addProps.exclude.length) {
-      if (addProps.configuredConsumer === true) {
-        this.exclude = addProps.exclude.map(file => path.join(this.consumer.getPath(), file));
-      } else {
-        this.exclude = addProps.exclude;
+  normalizeAbsolutePaths(paths: PathOrDSL[]): PathOrDSL[] {
+    if (paths.length > 0) {
+      if (this.overrideConsumer) {
+        return paths.map(file => path.join(this.consumer.getPath(), file));
       }
-    } else {
-      this.exclude = [];
+      return paths;
     }
-  }
-
-  initializeTests(addProps: AddProps) {
-    if (addProps.tests && addProps.tests.length > 0) {
-      if (addProps.configuredConsumer) {
-        this.tests = addProps.tests.map(file => path.join(this.consumer.getPath(), file));
-      } else {
-        this.tests = addProps.tests;
-      }
-    } else {
-      this.tests = [];
-    }
+    return [];
   }
 
   /**
@@ -513,15 +503,6 @@ export default class AddComponents {
 
   async add(): Promise<AddActionResults> {
     this.ignoreList = this.getIgnoreList();
-    this.ignoreList = this.ignoreList.map((ignorePattern) => {
-      if (ignorePattern.startsWith('**/')) {
-        return ignorePattern;
-      } else if (this.configuredConsumer === true) {
-        return path.join('**/', ignorePattern);
-      }
-      return ignorePattern;
-    });
-
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     // check unknown test files

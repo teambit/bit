@@ -108,11 +108,9 @@ export default class Helper {
   }
 
   createNewDirectory() {
-    const newDir = `${generateRandomStr()}-local`;
+    const newDir = `${generateRandomStr()}-dir`;
     const newDirPath = path.join(this.e2eDir, newDir);
-    if (!fs.existsSync(newDirPath)) {
-      fs.ensureDirSync(newDirPath);
-    }
+    fs.ensureDirSync(newDirPath);
     return newDirPath;
   }
 
@@ -300,6 +298,12 @@ export default class Helper {
   createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {
     const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
     const filePath = path.join(this.localScopePath, folder, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  createFileOnRootLevel(name: string = 'foo.js', impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, name);
     fs.outputFileSync(filePath, fixture);
   }
 
