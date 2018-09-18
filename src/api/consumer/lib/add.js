@@ -12,9 +12,8 @@ import { loadConsumer, Consumer } from '../../../consumer';
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
-  const addContext = {};
-  addContext.consumer = consumer;
-  addContext.overrideConsumer = false;
+  const overrideConsumer = false;
+  const addContext: AddContext = { consumer, overrideConsumer };
   const addComponents = new AddComponents(addContext, addProps);
   const addResults = await addComponents.add();
   await consumer.onDestroy();
