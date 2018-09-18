@@ -381,6 +381,12 @@ export default class ComponentMap {
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
+    if (this.originallySharedDir && this.origin !== COMPONENT_ORIGINS.IMPORTED) {
+      throw new ValidationError(
+        `${errorMessage} originallySharedDir attribute should be set for IMPORTED components only`
+      );
+    }
+
     if (!this.files || !this.files.length) throw new ValidationError(`${errorMessage} files list is missing`);
     this.files.forEach((file) => {
       if (!isValidPath(file.relativePath)) {

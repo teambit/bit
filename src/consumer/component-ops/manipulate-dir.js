@@ -18,15 +18,12 @@ export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wr
 /**
  * find a shared directory among the files of the main component and its dependencies
  */
- function calculateOriginallySharedDir(version: Version): ?PathLinux {
+function calculateOriginallySharedDir(version: Version): ?PathLinux {
   const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
   const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
   const allDependencies = new Dependencies(version.getAllDependencies());
   const dependenciesPaths = allDependencies.getSourcesPaths();
-  const allPaths = [
-    ...filePaths,
-    ...dependenciesPaths
-  ];
+  const allPaths = [...filePaths, ...dependenciesPaths];
   const sharedStart = sharedStartOfArray(allPaths);
   if (!sharedStart || !sharedStart.includes(pathSep)) return null;
   const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
@@ -58,11 +55,13 @@ function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLin
   return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
 }
 
-
 /**
  * use this method when loading an existing component. don't use it while the import process
  */
-export async function getManipulateDirForExistingComponents(consumer: Consumer, componentVersion: ComponentVersion): Promise<ManipulateDirItem[]> {
+export async function getManipulateDirForExistingComponents(
+  consumer: Consumer,
+  componentVersion: ComponentVersion
+): Promise<ManipulateDirItem[]> {
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
   const componentMap: ComponentMap = consumer.bitMap.getComponent(id);
@@ -96,9 +95,14 @@ function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolea
   return bitmapOrigin;
 }
 
-async function getManipulateDirItemFromComponentVersion(componentVersion: ComponentVersion, bitMap: BitMap, repository, isDependency: boolean): Promise<ManipulateDirItem> {
+async function getManipulateDirItemFromComponentVersion(
+  componentVersion: ComponentVersion,
+  bitMap: BitMap,
+  repository,
+  isDependency: boolean
+): Promise<ManipulateDirItem> {
   const id: BitId = componentVersion.id;
-  const componentMap: ?ComponentMap = bitMap.getComponentIfExist(id);
+  const componentMap: ?ComponentMap = bitMap.getComponentIfExist(id, { ignoreVersion: true });
   const bitmapOrigin = componentMap ? componentMap.origin : null;
   const origin = getComponentOrigin(bitmapOrigin, isDependency);
   const version: Version = await componentVersion.getVersion(repository);
@@ -112,9 +116,18 @@ async function getManipulateDirItemFromComponentVersion(componentVersion: Compon
  * the data from bitMap is not enough because a component might be NESTED on bitmap but is now
  * imported.
  */
-export async function getManipulateDirWhenImportingComponents(bitMap: BitMap, versionsDependencies: VersionDependencies[], repository): Promise<ManipulateDirItem[]> {
+export async function getManipulateDirWhenImportingComponents(
+  bitMap: BitMap,
+  versionsDependencies: VersionDependencies[],
+  repository
+): Promise<ManipulateDirItem[]> {
   const manipulateDirDataP = versionsDependencies.map(async (versionDependency: VersionDependencies) => {
-    const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(versionDependency.component, bitMap, repository, false);
+    const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(
+      versionDependency.component,
+      bitMap,
+      repository,
+      false
+    );
     const manipulateDirDependenciesP = versionDependency.allDependencies.map((dependency: ComponentVersion) => {
       return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, true);
     });
