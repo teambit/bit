@@ -52,6 +52,8 @@ console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
       let output;
       before(() => {
         helper.mimicGitCloneLocalProject();
+        helper.addRemoteScope();
+        helper.runCmd('bit import');
         output = helper.runCmd('bit install');
       });
       it('bit install should npm-install all missing node-modules and link all components', () => {

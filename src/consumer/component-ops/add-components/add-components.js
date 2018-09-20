@@ -184,7 +184,12 @@ export default class AddComponents {
     componentMap: ComponentMap
   ): Promise<boolean> {
     if (isSupportedExtension(fileRelativePath)) return false;
-    const componentFromModel = await this.consumer.loadComponentFromModel(componentId);
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(componentId);
+    if (!componentFromModel) {
+      throw new GeneralError(
+        `failed finding ${componentId.toString()} in the model although the component is imported, try running "bit import ${componentId.toString()} --objects" to get the component saved in the model`
+      );
+    }
     const dependencies = componentFromModel.getAllDependenciesCloned();
     const sourcePaths = dependencies.getSourcesPaths();
     const sourcePathsRelativeToConsumer = sourcePaths.map(sourcePath =>
