@@ -232,7 +232,7 @@ function cssPreprocessorLookup(options: Options) {
     // webpack syntax for resolving a module from node_modules
     debug('changing the resolver of css preprocessor to resolveWebpackPath as it has a ~ prefix');
     const partialWithNoTilda = partial.replace('~', '');
-    return resolveWebpack(partialWithNoTilda, filename, directory, { extensions: styleExtensions });
+    return resolveWebpack(partialWithNoTilda, filename, directory, { extensions: styleExtensions, symlinks: false });
   }
   if (resolveConfig && !isRelativeImport(partial)) {
     const result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
