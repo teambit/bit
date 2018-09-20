@@ -293,6 +293,12 @@ export default class Component extends BitObject {
     return new ComponentVersion(this, versionNum);
   }
 
+  /**
+   * convert a ModelComponent of a specific version to ConsumerComponent
+   * when it's being called from the Consumer, some manipulation are done on the component, such
+   * as stripping the originallySharedDir and adding wrapDir.
+   * when it's being called from the Scope, no manipulations are done.
+   */
   async toConsumerComponent(
     versionStr: string,
     scopeName: string,

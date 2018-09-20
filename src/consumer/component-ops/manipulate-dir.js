@@ -28,8 +28,14 @@ function calculateOriginallySharedDir(version: Version): ?PathLinux {
   const allPaths = [...filePaths, ...dependenciesPaths];
   const sharedStart = sharedStartOfArray(allPaths);
   if (!sharedStart || !sharedStart.includes(pathSep)) return null;
-  const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
-  return sharedStart.substring(0, lastPathSeparator);
+  const sharedStartDirectories = sharedStart.split(pathSep);
+  sharedStartDirectories.pop(); // the sharedStart ended with a slash, remove it.
+  if (allPaths.some(p => p.replace(sharedStart, '') === PACKAGE_JSON)) {
+    // if package.json is located in an inside dir, don't consider that dir as a sharedDir, we
+    // must keep this directory in order to not collide with the generated package.json.
+    sharedStartDirectories.pop();
+  }
+  return sharedStartDirectories.join(pathSep);
 }
 
 function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {

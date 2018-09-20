@@ -54,13 +54,17 @@ describe('component with package.json as a file of the component', function () {
       const output = helper.runCmd('bit status');
       expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
-    describe('adding files in the rootDir outside the wrapDir', () => {
+    describe('having files in the rootDir outside the wrapDir', () => {
       before(() => {
         helper.createFile('components/foo/pkg', 'bar.js');
       });
-      it('should not add them to the component', () => {
+      it('should not automatically add them to the component', () => {
         const output = helper.runCmd('bit status');
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+      });
+      it('should prevent users from deliberately adding them', () => {
+        const output = helper.addComponentWithOptions('components/foo/pkg/bar.js', { i: 'foo/pkg' });
+        expect(output).to.have.string('no files to track');
       });
     });
     describe('importing the component using isolated environment', () => {
@@ -70,6 +74,47 @@ describe('component with package.json as a file of the component', function () {
       });
       it('should create the package.json file in the wrap dir', () => {
         expect(path.join(isolatePath, WRAPPER_DIR, 'package.json')).to.be.a.file();
+      });
+    });
+  });
+  describe('a component with package.json in an shared directory with another file', () => {
+    let consumerFiles;
+    let bitMap;
+    let componentMap;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'package.json', fixturePackageJson);
+      helper.createFile('bar', 'foo.js');
+      const addOutput = helper.addComponentWithOptions('bar', { i: 'bar/foo', m: 'foo.js' });
+      expect(addOutput).to.have.string('package.json');
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      consumerFiles = helper.getConsumerFiles('*.{js,json}');
+      bitMap = helper.readBitMap();
+      componentMap = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];
+    });
+    it('should keep the files inside the sharedDir and not strip that dir', () => {
+      expect(consumerFiles).to.include(path.join('components/bar/foo/bar/package.json'));
+      expect(consumerFiles).to.include(path.join('components/bar/foo/bar/foo.js'));
+    });
+    it('componentMap to not have originallySharedDir', () => {
+      expect(componentMap).to.not.have.property('originallySharedDir');
+    });
+    it('bit status should not show the component as modified', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+    });
+    describe('importing the component using isolated environment', () => {
+      let isolatePath;
+      before(() => {
+        isolatePath = helper.isolateComponent('bar/foo', '-olw');
+      });
+      it('should keep the package.json file in the shared dir', () => {
+        expect(path.join(isolatePath, 'bar', 'package.json')).to.be.a.file();
       });
     });
   });

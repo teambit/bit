@@ -210,6 +210,19 @@ export default class AddComponents {
   }
 
   /**
+   * imported components might have wrapDir, when they do, files should not be added outside of
+   * that wrapDir
+   */
+  _isOutsideOfWrapDir(pathRelativeToConsumerRoot: PathLinux, componentMap: ComponentMap) {
+    if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
+      throw new Error('_isOutsideOfWrapDir should not get called on non imported components');
+    }
+    if (!componentMap.wrapDir) return false;
+    const wrapDirRelativeToConsumerRoot = path.join(componentMap.rootDir, componentMap.wrapDir);
+    return !path.normalize(pathRelativeToConsumerRoot).startsWith(wrapDirRelativeToConsumerRoot);
+  }
+
+  /**
    * Add or update existing (imported and new) component according to bitmap
    * there are 3 options:
    * 1. a user is adding a new component. there is no record for this component in bit.map
@@ -242,6 +255,10 @@ export default class AddComponents {
           throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
         }
         if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
+        if (this._isOutsideOfWrapDir(file.relativePath, foundComponentFromBitMap)) {
+          logger.warn(`add-components: ignoring ${file.relativePath} as it is located outside of the wrapDir`);
+          return null;
+        }
         const isGeneratedForUnsupportedFiles = await this._isGeneratedForUnsupportedFiles(
           file.relativePath,
           component.componentId,
@@ -259,7 +276,7 @@ export default class AddComponents {
       return file;
     });
     const componentFiles = (await Promise.all(componentFilesP)).filter(file => file);
-    if (!componentFiles.length) return null;
+    if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
     // $FlowFixMe it can't be null due to the filter function
     component.files = componentFiles;
     return this.addToBitMap(component);
@@ -551,7 +568,7 @@ export default class AddComponents {
         added.map(async (component) => {
           if (!R.isEmpty(component.files)) {
             const addedComponent = await this.addOrUpdateComponentInBitMap(component);
-            if (addedComponent) addedComponents.push(addedComponent);
+            if (addedComponent && addedComponent.files.length) addedComponents.push(addedComponent);
           }
         })
       );
