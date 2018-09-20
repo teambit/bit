@@ -202,11 +202,11 @@ export default class AddComponents {
    * for imported component, the package.json in the root directory is a bit-generated file and as
    * such, it should be ignored
    */
-  _isPackageJsonOnRootDir(pathRelativeToConsumerRoot: PathOsBased, componentMap: ComponentMap) {
+  _isPackageJsonOnRootDir(pathRelativeToConsumerRoot: PathLinux, componentMap: ComponentMap) {
     if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
       throw new Error('_isPackageJsonOnRootDir should not get called on non imported components');
     }
-    return pathRelativeToConsumerRoot === path.join(componentMap.rootDir, PACKAGE_JSON);
+    return path.join(componentMap.rootDir, PACKAGE_JSON) === path.normalize(pathRelativeToConsumerRoot);
   }
 
   /**
