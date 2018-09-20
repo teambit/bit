@@ -33,6 +33,7 @@ export default class Helper {
   cache: Object;
   clonedScopes: string[] = [];
   keepEnvs: boolean;
+  externalDirsArray: string[] = [];
   constructor() {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.remoteScope = `${generateRandomStr()}-remote`;
@@ -105,12 +106,16 @@ export default class Helper {
     if (this.clonedScopes && this.clonedScopes.length) {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
     }
+    this.externalDirsArray.forEach((dirPath) => {
+      fs.removeSync(dirPath);
+    });
   }
 
   createNewDirectory() {
     const newDir = `${generateRandomStr()}-dir`;
     const newDirPath = path.join(this.e2eDir, newDir);
     fs.ensureDirSync(newDirPath);
+    this.externalDirsArray.push(newDirPath);
     return newDirPath;
   }
 
