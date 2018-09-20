@@ -8,7 +8,8 @@ import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } f
 import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/path';
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
-import { AddComponents, AddContext } from '../component-ops/add-components';
+import AddComponents from '../component-ops/add-components';
+import type { AddContext } from '../component-ops/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
