@@ -12,8 +12,8 @@ import { loadConsumer, Consumer } from '../../../consumer';
 
 export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const consumer: Consumer = await loadConsumer();
-  const overrideConsumer = false;
-  const addContext: AddContext = { consumer, overrideConsumer };
+  const overridenConsumer = false;
+  const addContext: AddContext = { consumer, overridenConsumer };
   const addComponents = new AddComponents(addContext, addProps);
   const addResults = await addComponents.add();
   await consumer.onDestroy();
@@ -25,9 +25,9 @@ export async function addMany(
   consumerPath: string = process.cwd()
 ): Promise<AddActionResults[]> {
   // we are checking whether the consumer is the default consumer which is process.cwd() or it is overriden , and we are working on another directory which is not the process.cwd()
-  const overrideConsumer = consumerPath !== process.cwd();
+  const overridenConsumer = consumerPath !== process.cwd();
   const consumer: Consumer = await loadConsumer(consumerPath);
-  const addContext: AddContext = { consumer, overrideConsumer };
+  const addContext: AddContext = { consumer, overridenConsumer };
   const addComponentsArr = [];
   components.forEach((component) => {
     const normalizedPaths: PathOsBased[] = component.componentPaths.map((p) => {

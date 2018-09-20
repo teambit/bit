@@ -107,7 +107,7 @@ export default class Helper {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
     }
     this.externalDirsArray.forEach((dirPath) => {
-      fs.removeSync(dirPath);
+      this.cleanDir(dirPath);
     });
   }
 

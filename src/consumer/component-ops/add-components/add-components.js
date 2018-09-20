@@ -99,12 +99,12 @@ export type AddProps = {
   origin?: ComponentOrigin
 };
 // This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
-// In that case , give the value false to overrideConsumer .
+// In that case , give the value false to overridenConsumer .
 // There is a possibility to execute add when the process.cwd() is different from the project directory. In that case , when add is done on a folder wchih is
 // Different from process.cwd(), transfer true.
 export type AddContext = {
   consumer: Consumer,
-  overrideConsumer: boolean
+  overridenConsumer: boolean
 };
 
 export default class AddComponents {
@@ -122,30 +122,30 @@ export default class AddComponents {
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
-  overrideConsumer: boolean;
+  overridenConsumer: boolean;
   constructor(context: AddContext, addProps: AddProps) {
-    this.overrideConsumer = context.overrideConsumer;
+    this.overridenConsumer = context.overridenConsumer;
     this.consumer = context.consumer;
     const consumerPath = this.consumer.getPath();
     this.bitMap = this.consumer.bitMap;
     this.componentPaths =
-      this.overrideConsumer === true
+      this.overridenConsumer === true
         ? addProps.componentPaths.map(file => path.join(consumerPath, file))
         : addProps.componentPaths;
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
-    this.tests = addProps.tests ? this.normalizeAbsolutePaths(addProps.tests) : [];
-    this.exclude = addProps.exclude ? this.normalizeAbsolutePaths(addProps.exclude) : [];
+    this.tests = addProps.tests ? this.joinConsumerPathIfNeeded(addProps.tests) : [];
+    this.exclude = addProps.exclude ? this.joinConsumerPathIfNeeded(addProps.exclude) : [];
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {};
   }
 
-  normalizeAbsolutePaths(paths: PathOrDSL[]): PathOrDSL[] {
+  joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
     if (paths.length > 0) {
-      if (this.overrideConsumer) {
+      if (this.overridenConsumer) {
         return paths.map(file => path.join(this.consumer.getPath(), file));
       }
       return paths;

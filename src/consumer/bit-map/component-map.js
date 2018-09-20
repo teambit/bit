@@ -319,8 +319,8 @@ export default class ComponentMap {
         origin: this.origin
       };
       const numOfFilesBefore = this.files.length;
-      const overrideConsumer = false;
-      const addContext: AddContext = { consumer, overrideConsumer };
+      const overridenConsumer = false;
+      const addContext: AddContext = { consumer, overridenConsumer };
       const addComponents = new AddComponents(addContext, addParams);
       try {
         await addComponents.add();
