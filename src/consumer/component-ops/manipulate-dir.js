@@ -66,7 +66,7 @@ export async function getManipulateDirForExistingComponents(
 ): Promise<ManipulateDirItem[]> {
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
-  const componentMap: ComponentMap = consumer.bitMap.getComponent(id);
+  const componentMap: ComponentMap = consumer.bitMap.getComponent(id, { ignoreVersion: true });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
   const originallySharedDir = getOriginallySharedDirIfNeeded(componentMap.origin, version);
   const wrapDir = getWrapDirIfNeeded(componentMap.origin, version);
