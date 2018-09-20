@@ -425,9 +425,10 @@ export default class BitMap {
       if (compDir && pathIsInside(configDir, compDir)) {
         return true;
       }
-      const compConfigDir = component.configDir
-        ? component.configDir.getResolved({ componentDir: compDir || '' }).getEnvTypeCleaned().linuxDirPath
-        : null;
+      const compConfigDir =
+        component.configDir && component.configDir instanceof ConfigDir
+          ? component.configDir.getResolved({ componentDir: compDir || '' }).getEnvTypeCleaned().linuxDirPath
+          : null;
       if (compConfigDir && pathIsInside(configDir, compConfigDir)) {
         return true;
       }

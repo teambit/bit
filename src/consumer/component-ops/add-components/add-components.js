@@ -241,13 +241,13 @@ export default class AddComponents {
           // $FlowFixMe $this.id is not null at this point
           throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
         }
+        if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
         const isGeneratedForUnsupportedFiles = await this._isGeneratedForUnsupportedFiles(
           file.relativePath,
           component.componentId,
           foundComponentFromBitMap
         );
         if (isGeneratedForUnsupportedFiles) return null;
-        if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
         delete component.trackDir;
       } else if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
