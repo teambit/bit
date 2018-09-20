@@ -299,6 +299,7 @@ export default class Component extends BitObject {
     repository: Repository,
     manipulateDirData: ?(ManipulateDirItem[])
   ): Promise<ConsumerComponent> {
+    logger.debug(`model-component, converting ${this.id()}, version: ${versionStr} to ConsumerComponent`);
     const componentVersion = this.toComponentVersion(versionStr);
     const version: Version = await componentVersion.getVersion(repository);
     const loadFileInstance = ClassName => async (file) => {

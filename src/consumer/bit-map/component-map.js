@@ -362,7 +362,7 @@ export default class ComponentMap {
   }
 
   validate(): void {
-    const errorMessage = `failed adding or updating a component-map record (of ${BIT_MAP} file).`;
+    const errorMessage = `failed adding or updating a ${BIT_MAP} record of ${this.id.toString()}.`;
     if (!this.mainFile) throw new ValidationError(`${errorMessage} mainFile attribute is missing`);
     if (!isValidPath(this.mainFile)) {
       throw new ValidationError(`${errorMessage} mainFile attribute ${this.mainFile} is invalid`);
