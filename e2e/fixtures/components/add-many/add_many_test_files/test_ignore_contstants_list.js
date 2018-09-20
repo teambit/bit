@@ -3,8 +3,12 @@ const bitBin = require('bit-bin');
 const components = 
     [
         {
-            'componentPaths' : ['add_many_test_files/package.json'],
-            'main' : 'add_many_test_files/package.json'
+            'componentPaths' : ['add_many_test_files/LICENSE'],
+            'main' : 'add_many_test_files/LICENSE'
+        },
+        {
+            'componentPaths' : ['add_many_test_files/yarn.lock'],
+            'main' : 'add_many_test_files/yarn.lock'
         }
     ]
 

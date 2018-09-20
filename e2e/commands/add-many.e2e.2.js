@@ -39,7 +39,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
-  describe('should use addMany as reference', function () {
+  describe('should add many components programatically', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
@@ -169,8 +169,8 @@ describe('bit add many programmatically', function () {
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });
-    it('should not add a component if it is package.json', function () {
-      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_package_json.js');
+    it('should not add a component if it is one of the ignore files in the contstants list', function () {
+      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_contstants_list.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });

@@ -98,7 +98,10 @@ export type AddProps = {
   trackDirFeature?: boolean,
   origin?: ComponentOrigin
 };
-
+// This is the contxt of the add operation. By default, the add is executed in the same folder in which the consumer is located and it is the process.cwd().
+// In that case , give the value false to overrideConsumer .
+// There is a possibility to execute add when the process.cwd() is different from the project directory. In that case , when add is done on a folder wchih is
+// Different from process.cwd(), transfer true.
 export type AddContext = {
   consumer: Consumer,
   overrideConsumer: boolean
