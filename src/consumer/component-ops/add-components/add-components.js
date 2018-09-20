@@ -102,6 +102,7 @@ export type AddProps = {
 // In that case , give the value false to overridenConsumer .
 // There is a possibility to execute add when the process.cwd() is different from the project directory. In that case , when add is done on a folder wchih is
 // Different from process.cwd(), transfer true.
+// Required for determining if the paths are relative to consumer or to process.cwd().
 export type AddContext = {
   consumer: Consumer,
   overridenConsumer: boolean
