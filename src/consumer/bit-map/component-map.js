@@ -9,7 +9,6 @@ import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/pa
 import { Consumer } from '..';
 import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
-import { AddContext } from '../component-ops/add-components';
 import { NoFiles, EmptyDirectory } from '../component-ops/add-components/exceptions';
 import GeneralError from '../../error/general-error';
 import ValidationError from '../../error/validation-error';
