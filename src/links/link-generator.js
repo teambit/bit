@@ -27,6 +27,7 @@ import GeneralError from '../error/general-error';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import Dependencies from '../consumer/component/dependencies/dependencies';
 import getLinkContent from './link-content';
+import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 
 type LinkFile = {
   linkPath: string,
@@ -37,8 +38,8 @@ type LinkFile = {
 };
 
 type Symlink = {
-  source: PathOsBasedAbsolute,
-  dest: PathOsBasedAbsolute // existing file
+  source: PathOsBasedAbsolute, // symlink is pointing to this path
+  dest: PathOsBasedAbsolute // path where the symlink is written to
 };
 
 type PrepareLinkFileParams = {
@@ -268,22 +269,14 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     await generatePostInstallScript(component, postInstallLinks);
   }
   if (symlinks.length) {
-    createSymlinkOrCopy(symlinks, component.id);
+    createSymlinks(symlinks, component.id);
   }
   return linksToWrite;
 }
 
-function createSymlinkOrCopy(symlinks: Symlink[], componentId: string) {
+function createSymlinks(symlinks: Symlink[], componentId: string) {
   symlinks.forEach((symlink: Symlink) => {
-    try {
-      logger.debug(`generating a symlink on ${symlink.dest} pointing to ${symlink.source}`);
-      fs.ensureDirSync(path.dirname(symlink.dest));
-      symlinkOrCopy.sync(symlink.dest, symlink.source);
-    } catch (err) {
-      throw new GeneralError(`failed to link a component ${componentId}.
-           Symlink (or maybe copy for Windows) from: ${symlink.source}, to: ${symlink.dest} was failed.
-           Original error: ${err}`);
-    }
+    createSymlinkOrCopy(symlink.source, symlink.dest, componentId);
   });
 }
 
@@ -298,7 +291,7 @@ function groupLinks(
     let content = '';
     const firstGroupItem = groupedLinks[group][0];
     if (firstGroupItem.symlinkTo) {
-      symlinks.push({ source: firstGroupItem.linkPath, dest: firstGroupItem.symlinkTo });
+      symlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
       return;
     }
     if (firstGroupItem.isEs6) {

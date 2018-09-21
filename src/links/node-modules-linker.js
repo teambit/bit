@@ -9,12 +9,11 @@ import Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
 import ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
-import { pathRelativeLinux, first } from '../utils';
+import { pathRelativeLinux, first, createSymlinkOrCopy } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getIndexFileName, writeComponentsDependenciesLinks } from './link-generator';
 import getLinkContent from './link-content';
 import type { PathOsBased } from '../utils/path';
-import GeneralError from '../error/general-error';
 import { Dependency } from '../consumer/component/dependencies';
 
 type LinkDetail = { from: string, to: string };
@@ -24,24 +23,6 @@ export type LinksResult = {
   bound: LinkDetail[]
 };
 
-/**
- * @param componentId
- * @param srcPath the path where the symlink is pointing to
- * @param destPath the path where to write the symlink
- */
-function createSymlinkOrCopy(componentId, srcPath, destPath) {
-  fs.removeSync(destPath); // in case a component has been moved
-  fs.ensureDirSync(path.dirname(destPath));
-  try {
-    logger.debug(`generating a symlink on ${destPath} pointing to ${srcPath}`);
-    symlinkOrCopy.sync(srcPath, destPath);
-  } catch (err) {
-    throw new GeneralError(`failed to link a component ${componentId.toString()}.
-         Symlink (or maybe copy for Windows) from: ${srcPath}, to: ${destPath} was failed.
-         Original error: ${err}`);
-  }
-}
-
 function writeDependencyLink(
   parentRootDir: PathOsBased, // absolute path
   bitId: BitId,
@@ -50,7 +31,7 @@ function writeDependencyLink(
 ): LinkDetail {
   const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
   const destPath = path.join(parentRootDir, relativeDestPath);
-  createSymlinkOrCopy(bitId, rootDir, destPath);
+  createSymlinkOrCopy(rootDir, destPath, bitId.toString());
 
   return { from: parentRootDir, to: rootDir };
 }
@@ -176,9 +157,9 @@ async function _linkImportedComponents(
   if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distTarget = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
     symlinkPackages(srcTarget, distTarget, consumer, component);
-    createSymlinkOrCopy(componentId, distTarget, linkPath);
+    createSymlinkOrCopy(distTarget, linkPath, componentId.toString());
   } else {
-    createSymlinkOrCopy(componentId, srcTarget, linkPath);
+    createSymlinkOrCopy(srcTarget, linkPath, componentId.toString());
   }
 
   const bound = [{ from: componentMap.rootDir, to: relativeLinkPath }];
