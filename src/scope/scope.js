@@ -1262,8 +1262,9 @@ export default class Scope {
   }
 
   async loadModelComponentByIdStr(id: string): Promise<Component> {
-    logger.debug(`scope.loadModelComponentByIdStr, id: ${id}`);
-    const ref = Ref.from(BitObject.makeHash(id));
+    // Remove the version before hashing since hashing with the version number will result a wrong hash
+    const idWithoutVersion = BitId.getStringWithoutVersion(id);
+    const ref = Ref.from(BitObject.makeHash(idWithoutVersion));
     // $FlowFixMe
     return this.objects.load(ref);
   }

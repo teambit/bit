@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support adding the project `package.json` file to a component
+- update bit-javascript to allow `import ~` from a local (authored) file to an imported sass component
+
+## [13.0.5-dev.6 - 2018-09-16]
+
+- fix ci-update command with component version number (internal)
 
 ## [13.0.5-dev.5 - 2018-09-12]
 
