@@ -1,11 +1,9 @@
 /** @flow */
 import R from 'ramda';
-import semver from 'semver';
-import packageNameValidate from 'validate-npm-package-name';
 import { Ref, BitObject } from '../objects';
 import Scope from '../scope';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs, isValidPath, sha1, sortObject } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs, sha1, sortObject } from '../../utils';
 import ConsumerComponent from '../../consumer/component';
 import type { customResolvedPath } from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
@@ -18,12 +16,12 @@ import type { PathLinux } from '../../utils/path';
 import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
 import type { TesterExtensionModel } from '../../extensions/tester-extension';
 import ExtensionFile from '../../extensions/extension-file';
-import { SourceFile } from '../../consumer/component/sources';
+import { SourceFile, License, Dist } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
 import type { RelativePath } from '../../consumer/component/dependencies/dependency';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
-import validateType from '../../utils/validate-type';
+import validateVersionInstance from '../version-validator';
 
 type CiProps = {
   error: Object,
@@ -644,167 +642,7 @@ export default class Version extends BitObject {
    * in the wrong format
    */
   validate(): void {
-    const message = 'unable to save Version object';
-    const validateBitIdStr = (bitIdStr: string, field: string, validateVersion: boolean = true) => {
-      validateType(message, bitIdStr, field, 'string');
-      let bitId;
-      try {
-        bitId = BitId.parse(bitIdStr, true);
-      } catch (err) {
-        throw new VersionInvalid(`${message}, the ${field} has an invalid Bit id`);
-      }
-      if (validateVersion && !bitId.hasVersion()) {
-        throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a version`);
-      }
-      if (!bitId.scope) throw new VersionInvalid(`${message}, the ${field} ${bitIdStr} does not have a scope`);
-    };
-    const _validateEnv = (env) => {
-      if (!env) return;
-      if (typeof env === 'string') {
-        // Do not validate version - for backward compatibility
-        validateBitIdStr(env, 'environment-id', false);
-        return;
-      }
-      validateType(message, env, 'env', 'object');
-      if (!env.name) {
-        throw new VersionInvalid(`${message}, the environment is missing the name attribute`);
-      }
-      validateBitIdStr(env.name, 'env.name');
-      if (env.files) {
-        const compilerName = env.name || '';
-        env.files.forEach((file) => {
-          if (!file.name) {
-            throw new VersionInvalid(
-              `${message}, the environment ${compilerName} has a file which missing the name attribute`
-            );
-          }
-        });
-      }
-    };
-
-    /**
-     * Validate that the package name and version are valid
-     * @param {*} packageName
-     * @param {*} packageVersion
-     */
-    const _validatePackageDependency = (packageVersion, packageName) => {
-      const packageNameValidateResult = packageNameValidate(packageName);
-      if (!packageNameValidateResult.validForNewPackages && !packageNameValidateResult.validForOldPackages) {
-        const errors = packageNameValidateResult.errors || [];
-        throw new VersionInvalid(`${packageName} is invalid package name, errors:  ${errors.join()}`);
-      }
-      // don't use semver.valid and semver.validRange to validate the package version because it
-      // can be also a URL, Git URL or Github URL. see here: https://docs.npmjs.com/files/package.json#dependencies
-      validateType(message, packageVersion, `version of "${packageName}"`, 'string');
-    };
-    const _validatePackageDependencies = (packageDependencies) => {
-      validateType(message, packageDependencies, 'packageDependencies', 'object');
-      R.forEachObjIndexed(_validatePackageDependency, packageDependencies);
-    };
-    const validateFile = (file, isDist: boolean = false) => {
-      const field = isDist ? 'dist-file' : 'file';
-      validateType(message, file, field, 'object');
-      if (!isValidPath(file.relativePath)) {
-        throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is invalid`);
-      }
-      if (!file.name) {
-        throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the name attribute`);
-      }
-      if (!file.file) throw new VersionInvalid(`${message}, the ${field} ${file.relativePath} is missing the hash`);
-      validateType(message, file.name, `${field}.name`, 'string');
-      validateType(message, file.file, `${field}.file`, 'object');
-      validateType(message, file.file.hash, `${field}.file.hash`, 'string');
-    };
-
-    if (!this.mainFile) throw new VersionInvalid(`${message}, the mainFile is missing`);
-    if (!isValidPath(this.mainFile)) throw new VersionInvalid(`${message}, the mainFile ${this.mainFile} is invalid`);
-    if (!this.files || !this.files.length) throw new VersionInvalid(`${message}, the files are missing`);
-    let foundMainFile = false;
-    validateType(message, this.files, 'files', 'array');
-    const filesPaths = [];
-    this.files.forEach((file) => {
-      validateFile(file);
-      filesPaths.push(file.relativePath);
-      if (file.relativePath === this.mainFile) foundMainFile = true;
-    });
-    if (!foundMainFile) {
-      throw new VersionInvalid(`${message}, unable to find the mainFile ${this.mainFile} in the files list`);
-    }
-    if (this.detachedCompiler !== undefined) {
-      validateType(message, this.detachedCompiler, 'detachedCompiler', 'boolean');
-    }
-    if (this.detachedTester !== undefined) {
-      validateType(message, this.detachedTester, 'detachedCompiler', 'boolean');
-    }
-    const duplicateFiles = filesPaths.filter(
-      file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
-    );
-    if (duplicateFiles.length) {
-      throw new VersionInvalid(`${message} the following files are duplicated ${duplicateFiles.join(', ')}`);
-    }
-    _validateEnv(this.compiler);
-    _validateEnv(this.tester);
-    _validatePackageDependencies(this.packageDependencies);
-    _validatePackageDependencies(this.devPackageDependencies);
-    _validatePackageDependencies(this.peerPackageDependencies);
-    _validatePackageDependencies(this.compilerPackageDependencies);
-    _validatePackageDependencies(this.testerPackageDependencies);
-    if (this.dists && this.dists.length) {
-      validateType(message, this.dists, 'dist', 'array');
-      // $FlowFixMe
-      this.dists.forEach((file) => {
-        validateFile(file, true);
-      });
-    }
-    const dependenciesInstances = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
-    dependenciesInstances.forEach((dependenciesType) => {
-      // $FlowFixMe
-      if (!(this[dependenciesType] instanceof Dependencies)) {
-        throw new VersionInvalid(
-          `${message}, ${dependenciesType} must be an instance of Dependencies, got ${typeof this[dependenciesType]}`
-        );
-      }
-    });
-    this.dependencies.validate();
-    this.devDependencies.validate();
-    this.compilerDependencies.validate();
-    this.testerDependencies.validate();
-    if (!this.dependencies.isEmpty() && !this.flattenedDependencies.length) {
-      throw new VersionInvalid(`${message}, it has dependencies but its flattenedDependencies is empty`);
-    }
-    if (!this.devDependencies.isEmpty() && !this.flattenedDevDependencies.length) {
-      throw new VersionInvalid(`${message}, it has devDependencies but its flattenedDevDependencies is empty`);
-    }
-    if (!this.compilerDependencies.isEmpty() && !this.flattenedCompilerDependencies.length) {
-      throw new VersionInvalid(
-        `${message}, it has compilerDependencies but its flattenedCompilerDependencies is empty`
-      );
-    }
-    if (!this.testerDependencies.isEmpty() && !this.flattenedTesterDependencies.length) {
-      throw new VersionInvalid(`${message}, it has testerDependencies but its flattenedTesterDependencies is empty`);
-    }
-    const validateFlattenedDependencies = (dependencies: BitIds) => {
-      validateType(message, dependencies, 'dependencies', 'array');
-      dependencies.forEach((dependency) => {
-        if (!(dependency instanceof BitId)) {
-          throw new VersionInvalid(`${message}, a flattenedDependency expected to be BitId, got ${typeof dependency}`);
-        }
-        if (!dependency.hasVersion()) {
-          throw new VersionInvalid(
-            `${message}, the flattenedDependency ${dependency.toString()} does not have a version`
-          );
-        }
-      });
-    };
-    validateFlattenedDependencies(this.flattenedDependencies);
-    validateFlattenedDependencies(this.flattenedDevDependencies);
-    validateFlattenedDependencies(this.flattenedCompilerDependencies);
-    validateFlattenedDependencies(this.flattenedTesterDependencies);
-    if (!this.log) throw new VersionInvalid(`${message}, the log object is missing`);
-    validateType(message, this.log, 'log', 'object');
-    if (this.bindingPrefix) {
-      validateType(message, this.bindingPrefix, 'bindingPrefix', 'string');
-    }
+    validateVersionInstance(this);
   }
 }
 

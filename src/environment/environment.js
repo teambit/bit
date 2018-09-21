@@ -11,6 +11,7 @@ import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
 import writeComponents from '../consumer/component-ops/write-components';
+import VersionDependencies from '../scope/version-dependencies';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -59,7 +60,7 @@ export default class Environment {
     if (typeof bitId === 'string') {
       bitId = await BitId.parse(bitId, true);
     }
-    const componentsWithDependencies = await this.consumer.importManyComponentsWithDependencies([bitId]);
+    const componentsWithDependencies = await this.consumer.importComponents([bitId]);
     const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {

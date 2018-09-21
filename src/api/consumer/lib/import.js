@@ -13,6 +13,7 @@ import { BitId } from '../../../bit-id';
 import type { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
 import GeneralError from '../../../error/general-error';
+import ImportComponents from '../../../consumer/component-ops/import-components';
 
 const key = R.compose(R.head, R.keys);
 
@@ -77,7 +78,8 @@ export default (async function importAction(
   if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
     return importEnvironment(consumer);
   }
-  const { dependencies, envComponents, importDetails } = await consumer.importComponents(importOptions);
+  const importComponents = new ImportComponents(consumer, importOptions);
+  const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
     const componentMap = consumer.bitMap.getComponentIfExist(bitId);

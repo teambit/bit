@@ -425,9 +425,10 @@ export default class BitMap {
       if (compDir && pathIsInside(configDir, compDir)) {
         return true;
       }
-      const compConfigDir = component.configDir
-        ? component.configDir.getResolved({ componentDir: compDir || '' }).getEnvTypeCleaned().linuxDirPath
-        : null;
+      const compConfigDir =
+        component.configDir && component.configDir instanceof ConfigDir
+          ? component.configDir.getResolved({ componentDir: compDir || '' }).getEnvTypeCleaned().linuxDirPath
+          : null;
       if (compConfigDir && pathIsInside(configDir, compConfigDir)) {
         return true;
       }
@@ -625,7 +626,8 @@ export default class BitMap {
     override,
     detachedCompiler,
     detachedTester,
-    originallySharedDir
+    originallySharedDir,
+    wrapDir
   }: {
     componentId: BitId,
     files: ComponentMapFile[],
@@ -638,7 +640,8 @@ export default class BitMap {
     override: boolean,
     detachedCompiler: ?boolean,
     detachedTester: ?boolean,
-    originallySharedDir?: PathLinux
+    originallySharedDir?: PathLinux,
+    wrapDir?: PathLinux
   }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
@@ -697,6 +700,9 @@ export default class BitMap {
     }
     if (trackDir) {
       this.components[componentIdStr].trackDir = pathNormalizeToLinux(trackDir);
+    }
+    if (wrapDir) {
+      this.components[componentIdStr].wrapDir = wrapDir;
     }
     if (detachedCompiler) {
       this.components[componentIdStr].detachedCompiler = detachedCompiler;

@@ -15,6 +15,7 @@ import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
+import { PathOsBased, PathLinux } from '../../utils/path';
 
 export type ComponentTree = {
   component: ModelComponent,
@@ -144,13 +145,7 @@ export default class SourceRepository {
    *
    * warning: Do not change anything on the consumerComponent instance! Only use its clone.
    *
-   * @param consumerComponent
-   * @param consumer
-   * @param message
-   * @param flattenedDependencies
-   * @param dists
-   * @param specsResults
-   * @return {Promise.<{version: Version, dists: *, files: *}>}
+   * @see consumer-components.stripOriginallySharedDir() where the sharedDir was stripped.
    */
   async consumerComponentToVersion({
     consumerComponent,
@@ -185,10 +180,14 @@ export default class SourceRepository {
       });
       return result;
     };
+    const manipulateDirs = (pathStr: PathOsBased): PathLinux => {
+      const withSharedDir: PathLinux = clonedComponent.addSharedDir(pathStr);
+      return clonedComponent.removeWrapperDir(withSharedDir);
+    };
     const files = consumerComponent.files.map((file) => {
       return {
         name: file.basename,
-        relativePath: clonedComponent.addSharedDir(file.relative),
+        relativePath: manipulateDirs(file.relative),
         file: file.toSourceAsLinuxEOL(),
         test: file.test
       };
@@ -204,15 +203,15 @@ export default class SourceRepository {
     const username = globalConfig.getSync(CFG_USER_NAME_KEY);
     const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
 
-    clonedComponent.mainFile = clonedComponent.addSharedDir(clonedComponent.mainFile);
+    clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
       const depFromBitMap = consumer.bitMap.getComponentIfExist(dependency.id);
       dependency.relativePaths.forEach((relativePath) => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
-          relativePath.sourceRelativePath = clonedComponent.addSharedDir(relativePath.sourceRelativePath);
+          relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
           if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-            relativePath.destinationRelativePath = clonedComponent.addSharedDir(relativePath.destinationRelativePath);
+            relativePath.destinationRelativePath = manipulateDirs(relativePath.destinationRelativePath);
           }
         }
       });

@@ -11,6 +11,7 @@ import ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 import BitMap from '../consumer/bit-map';
+import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
 
 export default class ComponentVersion {
   component: ModelComponent;
@@ -94,8 +95,8 @@ export default class ComponentVersion {
     );
   }
 
-  toConsumer(repo: Repository, bitMap?: BitMap, manipulateDir?: boolean): Promise<ConsumerComponent> {
-    return this.component.toConsumerComponent(this.version, this.component.scope, repo, bitMap, manipulateDir);
+  toConsumer(repo: Repository, manipulateDirData: ?(ManipulateDirItem[])): Promise<ConsumerComponent> {
+    return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 
   async toObjects(repo: Repository): Promise<ComponentObjects> {
