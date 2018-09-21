@@ -181,7 +181,7 @@ export default class SourceRepository {
       return result;
     };
     const manipulateDirs = (pathStr: PathOsBased): PathLinux => {
-      const withSharedDir = clonedComponent.addSharedDir(pathStr);
+      const withSharedDir: PathLinux = clonedComponent.addSharedDir(pathStr);
       return clonedComponent.removeWrapperDir(withSharedDir);
     };
     const files = consumerComponent.files.map((file) => {
@@ -209,9 +209,9 @@ export default class SourceRepository {
       dependency.relativePaths.forEach((relativePath) => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
-          relativePath.sourceRelativePath = clonedComponent.addSharedDir(relativePath.sourceRelativePath);
+          relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
           if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-            relativePath.destinationRelativePath = clonedComponent.addSharedDir(relativePath.destinationRelativePath);
+            relativePath.destinationRelativePath = manipulateDirs(relativePath.destinationRelativePath);
           }
         }
       });
