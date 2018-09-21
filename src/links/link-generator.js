@@ -2,7 +2,6 @@
 import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import symlinkOrCopy from 'symlink-or-copy';
 import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
 import {
