@@ -115,12 +115,8 @@ describe.only('bit add many programmatically', function () {
       expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('files');
       expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.array();
       expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.ofSize(2);
-      expect(nodeStartOutputObj[2].addedComponents[0].files[0].relativePath).to.equal(
-        path.normalize('add_many_test_files/e.js')
-      );
-      expect(nodeStartOutputObj[2].addedComponents[0].files[1].relativePath).to.equal(
-        path.normalize('add_many_test_files/f.js')
-      );
+      expect(nodeStartOutputObj[2].addedComponents[0].files[0].relativePath).to.equal('add_many_test_files/e.js');
+      expect(nodeStartOutputObj[2].addedComponents[0].files[1].relativePath).to.equal('add_many_test_files/f.js');
       expect(status).to.have.string('add_many_test_files/component_with_many_paths ... ok');
     });
     it('should add many components', function () {
