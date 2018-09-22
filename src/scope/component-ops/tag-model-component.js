@@ -121,8 +121,10 @@ async function setFutureVersions(
  *
  * What we can do is calculating the sharedDir from component.componentFromModel
  * then, make sure that calculatedSharedDir + pathFromComponentMap === component.pendingVersion
+ *
+ * Also, make sure that the wrapDir has been removed
  */
-function validateOriginallySharedDir(components: Component[]): void {
+function validateDirManipulation(components: Component[]): void {
   const throwOnError = (expectedPath: PathLinux, actualPath: PathLinux) => {
     if (expectedPath !== actualPath) {
       throw new ValidationError(
@@ -133,20 +135,31 @@ function validateOriginallySharedDir(components: Component[]): void {
   const validateComponent = (component: Component) => {
     if (!component.componentMap) throw new Error(`componentMap is missing from ${component.id.toString()}`);
     if (!component.componentFromModel) return;
-    component.componentFromModel.setOriginallySharedDir();
+    // component.componentFromModel.setOriginallySharedDir();
     const sharedDir = component.componentFromModel.originallySharedDir;
-    const pathWithSharedDir = (pathStr: PathLinux) => {
+    const wrapDir = component.componentFromModel.wrapDir;
+    const pathWithSharedDir = (pathStr: PathLinux): PathLinux => {
       if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         return pathJoinLinux(sharedDir, pathStr);
       }
       return pathStr;
     };
-    const expectedMainFile = pathWithSharedDir(component.componentMap.mainFile);
+    const pathWithoutWrapDir = (pathStr: PathLinux): PathLinux => {
+      if (wrapDir) {
+        return pathStr.replace(`${wrapDir}/`, '');
+      }
+      return pathStr;
+    };
+    const pathAfterDirManipulation = (pathStr: PathLinux): PathLinux => {
+      const withoutWrapDir = pathWithoutWrapDir(pathStr);
+      return pathWithSharedDir(withoutWrapDir);
+    };
+    const expectedMainFile = pathAfterDirManipulation(component.componentMap.mainFile);
     throwOnError(expectedMainFile, component.pendingVersion.mainFile);
     const componentMapFiles = component.componentMap.getAllFilesPaths();
     const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
     componentMapFiles.forEach((file) => {
-      const expectedFile = pathWithSharedDir(file);
+      const expectedFile = pathAfterDirManipulation(file);
       if (!componentFiles.includes(expectedFile)) {
         throw new ValidationError(
           `failed validating the component paths, expected a file ${expectedFile} to be in ${componentFiles.toString()} array`
@@ -310,7 +323,7 @@ export default (async function tagModelComponent({
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
   const autoTaggedComponents = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
-  validateOriginallySharedDir(taggedComponents);
+  validateDirManipulation(taggedComponents);
   await scope.objects.persist();
   return { taggedComponents, autoTaggedComponents };
 });

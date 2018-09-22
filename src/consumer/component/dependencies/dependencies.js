@@ -4,11 +4,12 @@ import { Dependency } from './';
 import type { RelativePath } from './dependency';
 import { BitId, BitIds } from '../../../bit-id';
 import Scope from '../../../scope/scope';
-import BitMap from '../../bit-map';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';
 import type { BitIdStr } from '../../../bit-id/bit-id';
+import type { ManipulateDirItem } from '../../component-ops/manipulate-dir';
+import type { PathLinux } from '../../../utils/path';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -61,9 +62,15 @@ export default class Dependencies {
     });
   }
 
-  stripOriginallySharedDir(bitMap: BitMap, originallySharedDir: string): void {
+  stripOriginallySharedDir(manipulateDirData: ManipulateDirItem[], originallySharedDir: string): void {
     this.dependencies.forEach((dependency) => {
-      Dependency.stripOriginallySharedDir(dependency, bitMap, originallySharedDir);
+      Dependency.stripOriginallySharedDir(dependency, manipulateDirData, originallySharedDir);
+    });
+  }
+
+  addWrapDir(manipulateDirData: ManipulateDirItem[], wrapDir: PathLinux): void {
+    this.dependencies.forEach((dependency) => {
+      Dependency.addWrapDir(dependency, manipulateDirData, wrapDir);
     });
   }
 

@@ -45,7 +45,6 @@ import { installPackages } from '../npm-client/install-packages';
 import { RemovedLocalObjects } from '../scope/removed-components';
 import * as packageJson from './component/package-json';
 import { Dependencies } from './component/dependencies';
-import ImportComponents from './component-ops/import-components';
 import type { ImportOptions, ImportResult } from './component-ops/import-components';
 import CompilerExtension from '../extensions/compiler-extension';
 import TesterExtension from '../extensions/tester-extension';
@@ -61,6 +60,10 @@ import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
 import ComponentVersion from '../scope/component-version';
+import {
+  getManipulateDirWhenImportingComponents,
+  getManipulateDirForExistingComponents
+} from './component-ops/manipulate-dir';
 
 type ConsumerProps = {
   projectPath: string,
@@ -277,7 +280,9 @@ export default class Consumer {
   async loadComponentFromModel(id: BitId): Promise<Component> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
-    return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, this.bitMap);
+    const componentVersion = modelComponent.toComponentVersion(id.version);
+    const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
+    return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, manipulateDirData);
   }
 
   /**
@@ -293,7 +298,12 @@ export default class Consumer {
 
   async loadAllVersionsOfComponentFromModel(id: BitId): Promise<Component[]> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    return modelComponent.collectVersions(this.scope.objects, this.bitMap);
+    const componentsP = modelComponent.listVersions().map(async (versionNum) => {
+      const componentVersion = modelComponent.toComponentVersion(versionNum);
+      const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
+      return modelComponent.toConsumerComponent(versionNum, this.scope.name, this.scope.objects, manipulateDirData);
+    });
+    return Promise.all(componentsP);
   }
 
   /**
@@ -301,27 +311,13 @@ export default class Consumer {
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
   async loadComponentWithDependenciesFromModel(id: BitId): Promise<ComponentWithDependencies> {
-    // const componentFromSources: ModelComponent = await this.scope.sources.get(id);
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
-    // if (!componentFromSources) return null;
     if (!id.version) {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
     const versionDependencies = await modelComponent.toVersionDependencies(id.version, this.scope, this.scope.name);
-    return versionDependencies.toConsumer(this.scope.objects, this.bitMap);
-  }
-
-  /**
-   * if a component wasn't found locally, it imports it from a remote scope.
-   */
-  async importManyComponentsWithDependencies(
-    ids: BitId[],
-    cache?: boolean = true
-  ): Promise<ComponentWithDependencies[]> {
-    const versionDependenciesArr: VersionDependencies[] = await this.scope.getMany(ids, cache);
-    return Promise.all(
-      versionDependenciesArr.map(versionDependencies => versionDependencies.toConsumer(this.scope.objects, this.bitMap))
-    );
+    const manipulateDirData = await getManipulateDirForExistingComponents(this, versionDependencies.component);
+    return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
   }
 
   async loadComponent(id: BitId): Promise<Component> {
@@ -398,6 +394,7 @@ export default class Consumer {
 
       component.loadedFromFileSystem = true;
       component.originallySharedDir = componentMap.originallySharedDir || null;
+      component.wrapDir = componentMap.wrapDir || null;
       // reload component map as it may be changed after calling Component.loadFromFileSystem()
       component.componentMap = this.bitMap.getComponent(idWithConcreteVersion);
       component.componentFromModel = componentFromModel;
@@ -428,13 +425,24 @@ export default class Consumer {
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
-  importComponents(importOptions: ImportOptions): ImportResult {
-    const importComponents = new ImportComponents(this, importOptions);
-    return importComponents.importComponents();
-  }
-
   importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
     return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
+  }
+
+  async importComponents(ids: BitId[], withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+    const versionDependenciesArr: VersionDependencies[] = withAllVersions
+      ? await this.scope.getManyWithAllVersions(ids, false)
+      : await this.scope.getMany(ids);
+    const manipulateDirData = await getManipulateDirWhenImportingComponents(
+      this.bitMap,
+      versionDependenciesArr,
+      this.scope.objects
+    );
+    return Promise.all(
+      versionDependenciesArr.map(versionDependencies =>
+        versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
+      )
+    );
   }
 
   /**
@@ -1053,7 +1061,10 @@ export default class Consumer {
       potentialDependencies
     );
     return Promise.all(
-      componentsVersions.map(componentVersion => componentVersion.toConsumer(this.scope.objects, this.bitMap))
+      componentsVersions.map(async (componentVersion) => {
+        const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
+        return componentVersion.toConsumer(this.scope.objects, manipulateDirData);
+      })
     );
   }
 

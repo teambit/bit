@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
-import { mkdirp, pathNormalizeToLinux, createSymlinkOrCopy, sharedStartOfArray } from '../../utils';
+import { mkdirp, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -36,7 +36,9 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  BIT_WORKSPACE_TMP_DIRNAME
+  BIT_WORKSPACE_TMP_DIRNAME,
+  WRAPPER_DIR,
+  PACKAGE_JSON
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -60,6 +62,7 @@ import InjectNonEjected from './exceptions/inject-non-ejected';
 import ConfigDir from '../bit-map/config-dir';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-not-found';
+import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -134,6 +137,7 @@ export default class Component {
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
+  wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root
   loadedFromFileSystem: boolean = false; // whether a component was loaded from the filesystem or converted from the model
   componentMap: ?ComponentMap; // always populated when the loadedFromFileSystem is true
   componentFromModel: ?Component; // populated when loadedFromFileSystem is true and it exists in the model
@@ -527,7 +531,8 @@ export default class Component {
       detachedTester: this.detachedTester,
       origin,
       parent,
-      originallySharedDir: this.originallySharedDir
+      originallySharedDir: this.originallySharedDir,
+      wrapDir: this.wrapDir
     });
   }
 
@@ -537,10 +542,12 @@ export default class Component {
    *
    * This is relevant for IMPORTED components only as the author may have long paths that are not needed for whoever
    * imports it. NESTED and AUTHORED components are written as is.
+   *
+   * @see sources.consumerComponentToVersion() for the opposite action. meaning, adding back the sharedDir.
    */
-  stripOriginallySharedDir(bitMap: BitMap): void {
+  stripOriginallySharedDir(manipulateDirData: ManipulateDirItem[]): void {
     if (this._wasOriginallySharedDirStripped) return;
-    this.setOriginallySharedDir();
+    this.setOriginallySharedDir(manipulateDirData);
     const originallySharedDir = this.originallySharedDir;
     if (originallySharedDir) {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
@@ -556,10 +563,10 @@ export default class Component {
     });
     this.dists.stripOriginallySharedDir(originallySharedDir, pathWithoutSharedDir);
     this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
-    this.dependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
-    this.devDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
-    this.compilerDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
-    this.testerDependencies.stripOriginallySharedDir(bitMap, originallySharedDir);
+    this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
+    this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
+    this.compilerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
+    this.testerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
         pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
@@ -571,6 +578,31 @@ export default class Component {
   addSharedDir(pathStr: string): PathLinux {
     const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
     return pathNormalizeToLinux(withSharedDir);
+  }
+
+  addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
+    const manipulateDirItem = manipulateDirData.find(m => m.id.isEqual(this.id));
+    if (!manipulateDirItem || !manipulateDirItem.wrapDir) return;
+    this.wrapDir = manipulateDirItem.wrapDir;
+
+    const pathWithWrapDir = (pathStr: PathOsBased): PathOsBased => {
+      return path.join(this.wrapDir, pathStr);
+    };
+    this.files.forEach((file) => {
+      const newRelative = pathWithWrapDir(file.relative);
+      file.updatePaths({ newBase: file.base, newRelative });
+    });
+    // @todo: for dist also.
+    this.mainFile = pathWithWrapDir(this.mainFile);
+    const allDependencies = new Dependencies(this.getAllDependencies());
+    allDependencies.addWrapDir(manipulateDirData, this.wrapDir);
+    this.customResolvedPaths.forEach((customPath) => {
+      customPath.destinationPath = pathNormalizeToLinux(pathWithWrapDir(path.normalize(customPath.destinationPath)));
+    });
+  }
+
+  removeWrapperDir(pathStr: PathLinux): PathLinux {
+    return this.wrapDir ? pathStr.replace(`${this.wrapDir}/`, '') : pathStr;
   }
 
   /**
@@ -984,28 +1016,11 @@ export default class Component {
     this.setDists(dists);
   }
 
-  /**
-   * find a shared directory among the files of the main component and its dependencies
-   */
-  setOriginallySharedDir(): void {
-    if (this.originallySharedDir !== undefined) return;
-    const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
-    const filePaths = this.files.map(file => pathNormalizeToLinux(file.relative));
-    const dependenciesPaths = this.dependencies.getSourcesPaths();
-    const devDependenciesPaths = this.devDependencies.getSourcesPaths();
-    const compilerDependenciesPaths = this.compilerDependencies.getSourcesPaths();
-    const testerDependenciesPaths = this.testerDependencies.getSourcesPaths();
-    const allPaths = [
-      ...filePaths,
-      ...dependenciesPaths,
-      ...devDependenciesPaths,
-      ...compilerDependenciesPaths,
-      ...testerDependenciesPaths
-    ];
-    const sharedStart = sharedStartOfArray(allPaths);
-    if (!sharedStart || !sharedStart.includes(pathSep)) return;
-    const lastPathSeparator = sharedStart.lastIndexOf(pathSep);
-    this.originallySharedDir = sharedStart.substring(0, lastPathSeparator);
+  setOriginallySharedDir(manipulateDirData: ManipulateDirItem[]): void {
+    const manipulateDirItem = manipulateDirData.find(m => m.id.isEqual(this.id));
+    if (manipulateDirItem) {
+      this.originallySharedDir = manipulateDirItem.originallySharedDir;
+    }
   }
 
   static isComponentInvalidByErrorType(err: Error): boolean {

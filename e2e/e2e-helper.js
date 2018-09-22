@@ -411,13 +411,13 @@ export default class Helper {
       id = `${this.envScope}/compilers/babel`;
       this.createCompiler();
     }
-    // Temporary - for checking new serializaion against the stage env
+    // Temporary - for checking new serialization against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
   importTester(id) {
-    // Temporary - for checking new serializaion against the stage env
+    // Temporary - for checking new serialization against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
     this.runCmd(`bit import ${id} --tester`);
   }

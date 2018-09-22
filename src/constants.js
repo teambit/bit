@@ -147,7 +147,6 @@ export const IGNORE_LIST = [
   '**/bit.json',
   '**/bitBindings.js',
   '**/node_modules/**',
-  '**/package.json',
   '**/package-lock.json',
   '**/yarn.lock',
   '**/LICENSE'
@@ -337,3 +336,7 @@ export const LICENSE_FILENAME = 'LICENSE';
 export const ISOLATED_ENV_ROOT = 'environment';
 
 export const NODE_PATH_SEPARATOR = process.platform === 'win32' ? ';' : ':'; // see here https://nodejs.org/api/modules.html#modules_loading_from_the_global_folders
+
+export const WRAPPER_DIR = 'bit_wrapper_dir';
+
+export const PACKAGE_JSON = 'package.json';
