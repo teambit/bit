@@ -33,6 +33,7 @@ export default class Helper {
   cache: Object;
   clonedScopes: string[] = [];
   keepEnvs: boolean;
+  externalDirsArray: string[] = [];
   constructor() {
     this.debugMode = !!process.env.npm_config_debug; // default = false
     this.remoteScope = `${generateRandomStr()}-remote`;
@@ -105,6 +106,21 @@ export default class Helper {
     if (this.clonedScopes && this.clonedScopes.length) {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
     }
+    this.externalDirsArray.forEach((dirPath) => {
+      this.cleanDir(dirPath);
+    });
+  }
+
+  createNewDirectory() {
+    const newDir = `${generateRandomStr()}-dir`;
+    const newDirPath = path.join(this.e2eDir, newDir);
+    fs.ensureDirSync(newDirPath);
+    this.externalDirsArray.push(newDirPath);
+    return newDirPath;
+  }
+
+  cleanDir(dirPath: string) {
+    fs.removeSync(dirPath);
   }
 
   getRequireBitPath(box: string, name: string) {
@@ -126,12 +142,13 @@ export default class Helper {
     return this.runCmd(`node ${mainFilePath}`, cwd);
   }
 
-  linkNpm(libraryName: string) {
-    return this.runCmd(`npm link ${libraryName}`);
+  npmLink(libraryName: string, cwd: string = process.cwd()) {
+    return this.runCmd(`npm link ${libraryName}`, cwd);
   }
   // #endregion
 
   // #region scopes utils (init, remote etc')
+
   setLocalScope(localScope?: string) {
     this.localScope = localScope || `${generateRandomStr()}-local`;
     this.localScopePath = path.join(this.e2eDir, this.localScope);
@@ -286,6 +303,12 @@ export default class Helper {
   createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {
     const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
     const filePath = path.join(this.localScopePath, folder, name);
+    fs.outputFileSync(filePath, fixture);
+  }
+
+  createFileOnRootLevel(name: string = 'foo.js', impl?: string) {
+    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+    const filePath = path.join(this.localScopePath, name);
     fs.outputFileSync(filePath, fixture);
   }
 
