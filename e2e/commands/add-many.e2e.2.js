@@ -39,16 +39,20 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
-  describe('should add many components programatically', function () {
+  describe('should add many components programatically, process.cwd() is inside consumer', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.npmLink('bit-bin');
-      const newDirPath = helper.createNewDirectory();
-      const scriptRelativePath = 'add-many';
-      helper.copyFixtureComponents(scriptRelativePath, newDirPath);
-      helper.npmLink('bit-bin', newDirPath);
-      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
+      const innerScriptPathRelative = 'add_many_test_files/inner_directory';
+      helper.createFile(innerScriptPathRelative, 'g.js');
+      const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
+      helper.copyFixtureComponents('add-many', innerScriptPathAbsolute);
+      helper.npmLink('bit-bin', innerScriptPathAbsolute);
+      const scriptAbsolutePath = path.join(
+        helper.localScopePath,
+        path.join(innerScriptPathRelative, 'add_many_test_files/add_components_programmatically.js')
+      );
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       status = helper.status();
@@ -65,6 +69,26 @@ describe('bit add many programmatically', function () {
       expect(status).to.have.string('add_many_test_files/c ... ok');
       const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/c', { j: '' }));
       expect(compData).to.not.property('Specs');
+    });
+  });
+
+  describe('should add many components programatically, consumer is in inconnected dir', function () {
+    before(function () {
+      helper.reInitLocalScope();
+      const scriptRelativePath = 'add-many';
+      helper.copyFixtureComponents(scriptRelativePath);
+      helper.npmLink('bit-bin');
+      const newDirPath = helper.createNewDirectory();
+      helper.copyFixtureComponents(scriptRelativePath, newDirPath);
+      helper.npmLink('bit-bin', newDirPath);
+      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
+      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
+      nodeStartOutputObj = JSON.parse(nodeStartOutput);
+      status = helper.status();
+    });
+    it('should add many components', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj).to.be.ofSize(5);
     });
     it('should add a component with spec file', function () {
       expect(nodeStartOutputObj).to.be.array();
