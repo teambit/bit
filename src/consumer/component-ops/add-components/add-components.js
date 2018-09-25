@@ -24,7 +24,7 @@ import { Consumer } from '../../../consumer';
 import BitMap from '../../../consumer/bit-map';
 import { BitId } from '../../../bit-id';
 import type { BitIdStr } from '../../../bit-id/bit-id';
-import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER } from '../../../constants';
+import { COMPONENT_ORIGINS, DEFAULT_DIST_DIRNAME, VERSION_DELIMITER, PACKAGE_JSON } from '../../../constants';
 import logger from '../../../logger/logger';
 import {
   PathsNotExist,
@@ -209,13 +209,42 @@ export default class AddComponents {
     componentMap: ComponentMap
   ): Promise<boolean> {
     if (isSupportedExtension(fileRelativePath)) return false;
-    const componentFromModel = await this.consumer.loadComponentFromModel(componentId);
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(componentId);
+    if (!componentFromModel) {
+      throw new GeneralError(
+        `failed finding ${componentId.toString()} in the model although the component is imported, try running "bit import ${componentId.toString()} --objects" to get the component saved in the model`
+      );
+    }
     const dependencies = componentFromModel.getAllDependenciesCloned();
     const sourcePaths = dependencies.getSourcesPaths();
     const sourcePathsRelativeToConsumer = sourcePaths.map(sourcePath =>
       pathJoinLinux(componentMap.rootDir, sourcePath)
     );
     return sourcePathsRelativeToConsumer.includes(fileRelativePath);
+  }
+
+  /**
+   * for imported component, the package.json in the root directory is a bit-generated file and as
+   * such, it should be ignored
+   */
+  _isPackageJsonOnRootDir(pathRelativeToConsumerRoot: PathLinux, componentMap: ComponentMap) {
+    if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
+      throw new Error('_isPackageJsonOnRootDir should not get called on non imported components');
+    }
+    return path.join(componentMap.rootDir, PACKAGE_JSON) === path.normalize(pathRelativeToConsumerRoot);
+  }
+
+  /**
+   * imported components might have wrapDir, when they do, files should not be added outside of
+   * that wrapDir
+   */
+  _isOutsideOfWrapDir(pathRelativeToConsumerRoot: PathLinux, componentMap: ComponentMap) {
+    if (!componentMap.rootDir || componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) {
+      throw new Error('_isOutsideOfWrapDir should not get called on non imported components');
+    }
+    if (!componentMap.wrapDir) return false;
+    const wrapDirRelativeToConsumerRoot = path.join(componentMap.rootDir, componentMap.wrapDir);
+    return !path.normalize(pathRelativeToConsumerRoot).startsWith(wrapDirRelativeToConsumerRoot);
   }
 
   /**
@@ -253,6 +282,11 @@ export default class AddComponents {
           // $FlowFixMe $this.id is not null at this point
           throw new IncorrectIdForImportedComponent(existingIdWithoutVersion, this.id, file.relativePath);
         }
+        if (this._isPackageJsonOnRootDir(file.relativePath, foundComponentFromBitMap)) return null;
+        if (this._isOutsideOfWrapDir(file.relativePath, foundComponentFromBitMap)) {
+          logger.warn(`add-components: ignoring ${file.relativePath} as it is located outside of the wrapDir`);
+          return null;
+        }
         const isGeneratedForUnsupportedFiles = await this._isGeneratedForUnsupportedFiles(
           file.relativePath,
           component.componentId,
@@ -270,7 +304,7 @@ export default class AddComponents {
       return file;
     });
     const componentFiles = (await Promise.all(componentFilesP)).filter(file => file);
-    if (!componentFiles.length) return null;
+    if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
     // $FlowFixMe it can't be null due to the filter function
     component.files = componentFiles;
     return this.addToBitMap(component);
@@ -569,7 +603,7 @@ export default class AddComponents {
         added.map(async (component) => {
           if (!R.isEmpty(component.files)) {
             const addedComponent = await this.addOrUpdateComponentInBitMap(component);
-            if (addedComponent) addedComponents.push(addedComponent);
+            if (addedComponent && addedComponent.files.length) addedComponents.push(addedComponent);
           }
         })
       );
