@@ -70,6 +70,10 @@ describe('bit add many programmatically', function () {
       const compData = JSON.parse(helper.showComponentWithOptions('add_many_test_files/c', { j: '' }));
       expect(compData).to.not.property('Specs');
     });
+    it('should add many components', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj).to.be.ofSize(5);
+    });
   });
 
   describe('should add many components programatically, consumer is in inconnected dir', function () {
