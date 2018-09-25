@@ -852,26 +852,28 @@ export default class Consumer {
     remote: boolean,
     track: boolean,
     deleteFiles: boolean
-  }) {
+  }): Promise<{ localResult: RemovedLocalObjects, remoteResult: Object[] }> {
     logger.debug(`consumer.remove: ${ids.toString()}. force: ${force.toString()}`);
     Analytics.addBreadCrumb(
       'remove',
       `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
     );
-    // added this to remove support for remove version
-    const bitIds = BitIds.fromArray(
+    // added this to remove support for remove only one version from a component
+    const bitIdsLatest = BitIds.fromArray(
       ids.map((id) => {
         return id.changeVersion(LATEST_BIT_VERSION);
       })
     );
-    const [localIds, remoteIds] = partition(bitIds, id => id.isLocal());
+    const [localIds, remoteIds] = partition(bitIdsLatest, id => id.isLocal());
     if (remote && localIds.length) {
       throw new GeneralError(
         `unable to remove the remote components: ${localIds.join(',')} as they don't contain a scope-name`
       );
     }
     const remoteResult = remote && !R.isEmpty(remoteIds) ? await this.removeRemote(remoteIds, force) : [];
-    const localResult = !remote ? await this.removeLocal(bitIds, force, track, deleteFiles) : new RemovedLocalObjects();
+    const localResult = !remote
+      ? await this.removeLocal(bitIdsLatest, force, track, deleteFiles)
+      : new RemovedLocalObjects();
 
     return { localResult, remoteResult };
   }
@@ -898,11 +900,14 @@ export default class Consumer {
   /**
    * delete files from fs according to imported/created
    * @param {BitIds} bitIds - list of remote component ids to delete
-   * @param {boolean} deleteFiles - delete component that are used by other components.
+   * @param {boolean} deleteFiles - delete component files for authored
    */
   async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
     logger.debug(`consumer.removeComponentFromFs, ids: ${bitIds.toString()}`);
     const deletePath = async (pathToDelete) => {
+      if (!path.isAbsolute(pathToDelete)) {
+        throw new Error(`consumer.removeComponentFromFs, expect pathToDelete to be absolute. Got "${pathToDelete}"`);
+      }
       logger.debug(`consumer.removeComponentFromFs deleting the following path: ${pathToDelete}`);
       return fs.remove(pathToDelete);
     };
@@ -918,31 +923,13 @@ export default class Consumer {
         }
         if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
           // $FlowFixMe rootDir is set for non authored
-          return deletePath(path.join(this.getPath(), componentMap.rootDir));
+          return deletePath(this.toAbsolutePath(componentMap.rootDir));
         } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(componentMap.files.map(file => deletePath(file.relativePath)));
+          return Promise.all(componentMap.files.map(file => deletePath(this.toAbsolutePath(file.relativePath))));
         }
         return null;
       })
     );
-  }
-  /**
-   * resolveLocalComponentIds - method is used for resolving local component ids
-   * imported = bit.remote/utils/is-string
-   * local = utils/is-string
-   * if component is imported then cant remove version only component
-   * @param {BitIds} bitIds - list of remote component ids to delete
-   */
-  resolveLocalComponentIds(bitIds: BitIds): BitId[] {
-    return bitIds.map((id) => {
-      const realBitId = this.bitMap.getBitIdIfExist(id, { ignoreVersion: true });
-      if (!realBitId) return id;
-      const componentMap = this.bitMap.getComponent(realBitId);
-      if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        return realBitId.changeVersion(LATEST_BIT_VERSION);
-      }
-      return realBitId;
-    });
   }
 
   /**
@@ -959,7 +946,7 @@ export default class Consumer {
   }
   /**
    * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
-   * @param {BitIds} bitIds - list of remote component ids to delete
+   * @param {BitIds} bitIds - list of component ids to delete
    * @param {boolean} force - delete component that are used by other components.
    * @param {boolean} deleteFiles - delete component that are used by other components.
    */
@@ -971,20 +958,19 @@ export default class Consumer {
   ): Promise<RemovedLocalObjects> {
     // local remove in case user wants to delete tagged components
     const modifiedComponents = new BitIds();
-    const regularComponents = new BitIds();
-    const resolvedIDs = this.resolveLocalComponentIds(bitIds);
-    if (R.isEmpty(resolvedIDs)) return new RemovedLocalObjects();
+    const nonModifiedComponents = new BitIds();
+    if (R.isEmpty(bitIds)) return new RemovedLocalObjects();
     if (!force) {
       await Promise.all(
-        resolvedIDs.map(async (id) => {
+        bitIds.map(async (id) => {
           try {
             const componentStatus = await this.getComponentStatusById(id);
             if (componentStatus.modified) modifiedComponents.push(id);
-            else regularComponents.push(id);
+            else nonModifiedComponents.push(id);
           } catch (err) {
             // if a component has an error, such as, missing main file, we do want to allow removing that component
             if (Component.isComponentInvalidByErrorType(err)) {
-              regularComponents.push(id);
+              nonModifiedComponents.push(id);
             } else {
               throw err;
             }
@@ -993,7 +979,7 @@ export default class Consumer {
       );
     }
     const { removedComponentIds, missingComponents, dependentBits, removedDependencies } = await this.scope.removeMany(
-      force ? resolvedIDs : regularComponents,
+      force ? bitIds : nonModifiedComponents,
       force,
       true,
       this
@@ -1069,9 +1055,8 @@ export default class Consumer {
   }
 
   async eject(componentsIds: BitId[]) {
-    const componentIdsWithoutScope = componentsIds.map(id => id.toStringWithoutScope());
     await this.remove({
-      ids: componentIdsWithoutScope,
+      ids: BitIds.fromArray(componentsIds),
       force: true,
       remote: false,
       track: false,

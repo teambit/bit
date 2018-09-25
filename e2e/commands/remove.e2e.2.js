@@ -28,7 +28,7 @@ describe('bit remove command', function () {
       expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
-  describe('with committed components and -t=false ', () => {
+  describe('with committed components and --track=false ', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -52,8 +52,9 @@ describe('bit remove command', function () {
       expect(status.includes('bar/foo')).to.be.false;
     });
   });
-  describe('local component with dependent', () => {
+  describe('local component with dependency', () => {
     let output;
+    let scopeBeforeRemoving;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
@@ -64,17 +65,41 @@ describe('bit remove command', function () {
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils/is-string.js');
       helper.commitAllComponents();
-      output = helper.removeComponent('utils/is-string', '-d -s');
+      scopeBeforeRemoving = helper.cloneLocalScope();
     });
-    it('should remove local component', () => {
-      expect(output).to.contain.string('removed components');
-      expect(output).to.contain.string('utils/is-string');
+    describe('removing the dependent', () => {
+      before(() => {
+        output = helper.removeComponent('utils/is-string', '--delete-files --silent');
+      });
+      it('should remove local component', () => {
+        expect(output).to.contain.string('removed components');
+        expect(output).to.contain.string('utils/is-string');
+      });
+      it('should remove local component files from fs', () => {
+        assert.notPathExists(path.join(helper.localScopePath, 'utils', 'is-string.js'), 'file should not exist');
+      });
+      it('should not remove local component dependent files from fs', () => {
+        assert.pathExists(path.join(helper.localScopePath, 'utils', 'is-type.js'), 'file should  exist');
+      });
     });
-    it('should remove local component files from fs', () => {
-      assert.notPathExists(path.join(helper.localScopePath, 'utils', 'is-string.js'), 'file should not exist');
-    });
-    it('should not remove local component dependent files from fs', () => {
-      assert.pathExists(path.join(helper.localScopePath, 'utils', 'is-type.js'), 'file should  exist');
+    describe('removing the dependent from an inner directory', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeRemoving);
+        output = helper.runCmd(
+          'bit remove utils/is-string --delete-files --silent',
+          path.join(helper.localScopePath, 'utils')
+        );
+      });
+      it('should remove local component', () => {
+        expect(output).to.contain.string('removed components');
+        expect(output).to.contain.string('utils/is-string');
+      });
+      it('should remove local component files from fs', () => {
+        assert.notPathExists(path.join(helper.localScopePath, 'utils', 'is-string.js'), 'file should not exist');
+      });
+      it('should not remove local component dependent files from fs', () => {
+        assert.pathExists(path.join(helper.localScopePath, 'utils', 'is-type.js'), 'file should  exist');
+      });
     });
   });
   describe('with committed components and -t=true', () => {
