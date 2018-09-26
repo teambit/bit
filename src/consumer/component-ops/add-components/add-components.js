@@ -387,6 +387,9 @@ export default class AddComponents {
       });
     }
     if (!mainFile) return undefined;
+    if (this.overridenConsumer) {
+      mainFile = path.join(this.consumer.getPath(), mainFile);
+    }
     const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
     const mainPath = this.consumer.toAbsolutePath(mainFileRelativeToConsumer);
     if (fs.existsSync(mainPath)) {
