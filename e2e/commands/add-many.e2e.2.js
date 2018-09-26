@@ -9,12 +9,12 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add many programmatically', function () {
+describe.only('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
-  this.timeout(10000);
+  this.timeout(20000);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
