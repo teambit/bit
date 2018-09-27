@@ -43,13 +43,11 @@ describe.only('bit add many programmatically', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
-      helper.npmLink('bit-bin');
       helper.npmLink('bit-bin', path.join(helper.localScopePath, 'add_many_test_files'));
       const innerScriptPathRelative = 'add_many_test_files/inner_folder';
       const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
 
       const scriptAbsolutePath = path.join(innerScriptPathAbsolute, 'add_components_programmatically.js');
-      helper.npmLink('bit-bin', innerScriptPathAbsolute);
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       status = helper.status();
