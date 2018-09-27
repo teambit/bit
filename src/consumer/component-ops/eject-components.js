@@ -9,7 +9,7 @@ import logger from '../../logger/logger';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
-  failedComponents: { modifiedComponents: BitIds, stagedComponents: BitIds }
+  failedComponents: { modifiedComponents: BitIds, stagedComponents: BitIds, notExportedComponents: BitIds }
 };
 
 /**
@@ -18,7 +18,7 @@ export type EjectResults = {
  * 2) installing the component via the NPM client
  * since things may get wrong during these operations, it's better to have a roll back option.
  */
-export default (async function eject(
+export default (async function ejectComponents(
   consumer: Consumer,
   componentsIds: BitId[],
   force: boolean = false
@@ -45,19 +45,19 @@ export default (async function eject(
     error: ${err.message}`);
   }
   try {
-    await packageJson.addComponentsWithVersionToRoot(this, componentsToDelete);
+    await packageJson.removeComponentsFromNodeModules(consumer, componentsToDelete);
   } catch (err) {
     logger.error(err);
-    await packageJson.removeComponentsFromNodeModules(this, componentsToDelete);
-    throw new Error(`eject operation failed removing some or all the component generated data from node_modules.
+    await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
+    throw new Error(`eject operation failed removing some or all the components generated data from node_modules.
     your package.json has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.
     error: ${err.message}`);
   }
   try {
-    await installPackages(this, [], true, true);
+    await installPackages(consumer, [], true, true);
   } catch (err) {
     logger.error(err);
-    await packageJson.removeComponentsFromNodeModules(this, componentsToDelete);
+    await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
     throw new Error(`eject operation failed installing your component using the NPM client.
     your package.json has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.
     error: ${err.message}`);
@@ -79,16 +79,18 @@ export default (async function eject(
 async function getComponentsToDelete(consumer: Consumer, bitIds: BitId[], force: boolean): Promise<Object> {
   const modifiedComponents = new BitIds();
   const stagedComponents = new BitIds();
-  const exportedComponents = new BitIds();
+  const exportedComponents = BitIds.fromArray(bitIds.filter(id => id.hasScope()));
+  const notExportedComponents = BitIds.fromArray(bitIds.filter(id => !id.hasScope()));
+  const componentsToDelete = new BitIds();
   if (R.isEmpty(bitIds)) return {};
   if (!force) {
     await Promise.all(
-      bitIds.map(async (id) => {
+      exportedComponents.map(async (id) => {
         try {
           const componentStatus = await consumer.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else if (componentStatus.staged) stagedComponents.push(id);
-          else exportedComponents.push(id);
+          else componentsToDelete.push(id);
         } catch (err) {
           throw new GeneralError(`eject operation failed getting the status of ${id.toString()}, no action has been done.
           please fix the issue to continue.
@@ -99,9 +101,10 @@ async function getComponentsToDelete(consumer: Consumer, bitIds: BitId[], force:
   }
 
   return {
-    componentsToDelete: force ? bitIds : exportedComponents,
+    componentsToDelete: force ? exportedComponents : componentsToDelete,
     modifiedComponents,
-    stagedComponents
+    stagedComponents,
+    notExportedComponents
   };
 }
 
