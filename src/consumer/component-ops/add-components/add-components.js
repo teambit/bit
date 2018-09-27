@@ -125,14 +125,12 @@ export default class AddComponents {
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
-  alternateCwd: string;
+  alternateCwd: ?string;
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
     this.bitMap = this.consumer.bitMap;
-    this.componentPaths = this.alternateCwd
-      ? addProps.componentPaths.map(file => path.join(this.alternateCwd, file))
-      : addProps.componentPaths;
+    this.componentPaths = this.joinConsumerPathIfNeeded(addProps.componentPaths);
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
@@ -147,8 +145,9 @@ export default class AddComponents {
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
     if (paths.length > 0) {
-      if (this.alternateCwd) {
-        return paths.map(file => path.join(this.alternateCwd, file));
+      if (this.alternateCwd !== undefined && this.alternateCwd !== null) {
+        const alternate = this.alternateCwd;
+        return paths.map(file => path.join(alternate, file));
       }
       return paths;
     }
