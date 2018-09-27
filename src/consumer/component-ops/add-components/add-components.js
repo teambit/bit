@@ -106,7 +106,7 @@ export type AddProps = {
 // Required for determining if the paths are relative to consumer or to process.cwd().
 export type AddContext = {
   consumer: Consumer,
-  overridenConsumer: boolean
+  alternateCwd?: string
 };
 
 export default class AddComponents {
@@ -125,16 +125,14 @@ export default class AddComponents {
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
-  overridenConsumer: boolean;
+  alternateCwd: string;
   constructor(context: AddContext, addProps: AddProps) {
-    this.overridenConsumer = context.overridenConsumer;
+    this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
-    const consumerPath = this.consumer.getPath();
     this.bitMap = this.consumer.bitMap;
-    this.componentPaths =
-      this.overridenConsumer === true
-        ? addProps.componentPaths.map(file => path.join(consumerPath, file))
-        : addProps.componentPaths;
+    this.componentPaths = this.alternateCwd
+      ? addProps.componentPaths.map(file => path.join(this.alternateCwd, file))
+      : addProps.componentPaths;
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
@@ -149,8 +147,8 @@ export default class AddComponents {
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
     if (paths.length > 0) {
-      if (this.overridenConsumer) {
-        return paths.map(file => path.join(this.consumer.getPath(), file));
+      if (this.alternateCwd) {
+        return paths.map(file => path.join(this.alternateCwd, file));
       }
       return paths;
     }
@@ -387,6 +385,9 @@ export default class AddComponents {
       });
     }
     if (!mainFile) return undefined;
+    if (this.alternateCwd) {
+      mainFile = path.join(this.alternateCwd, mainFile);
+    }
     const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
     const mainPath = this.consumer.toAbsolutePath(mainFileRelativeToConsumer);
     if (fs.existsSync(mainPath)) {

@@ -14,7 +14,7 @@ describe('bit add many programmatically', function () {
   after(() => {
     helper.destroyEnv();
   });
-  this.timeout(10000);
+  this.timeout(20000);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
@@ -39,7 +39,58 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
-  describe('should add many components programatically', function () {
+  describe('should add many components programatically, process.cwd() is inside project path', function () {
+    before(function () {
+      helper.reInitLocalScope();
+      helper.copyFixtureComponents('add-many');
+      helper.npmLink('bit-bin');
+      helper.npmLink('bit-bin', path.join(helper.localScopePath, 'add_many_test_files'));
+      const innerScriptPathRelative = 'add_many_test_files/inner_folder';
+      const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
+
+      const scriptAbsolutePath = path.join(innerScriptPathAbsolute, 'add_components_programmatically.js');
+      helper.npmLink('bit-bin', innerScriptPathAbsolute);
+      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
+      nodeStartOutputObj = JSON.parse(nodeStartOutput);
+      status = helper.status();
+    });
+    it('should add a component, with id and no spec', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
+      expect(nodeStartOutputObj[0].addedComponents[0]).to.have.property('id');
+      expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('g');
+      expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.array();
+      expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
+      expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
+      expect(status).to.have.string('g ... ok');
+    });
+    it('should add a components ,with id and with spec', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
+      expect(nodeStartOutputObj[1].addedComponents[0]).to.have.property('files');
+      expect(nodeStartOutputObj[1].addedComponents[0].files).to.be.array();
+      expect(nodeStartOutputObj[1].addedComponents[0].files).to.be.ofSize(2);
+      expect(nodeStartOutputObj[1].addedComponents[0].files[1].test).to.equal(true);
+      expect(nodeStartOutputObj[1].addedComponents[0].files[1].name).to.equal('h.spec.js');
+      expect(status).to.have.string('h ... ok');
+      const compData = JSON.parse(helper.showComponentWithOptions('h', { j: '' }));
+      expect(compData).to.not.property('Specs');
+    });
+    it('should add a component with excluded test file', function () {
+      expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('id');
+      expect(nodeStartOutputObj[2].addedComponents[0].id).to.contains('/i');
+      expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('files');
+      expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.array();
+      expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.ofSize(1);
+      expect(nodeStartOutputObj[2].addedComponents[0].files[0].test).to.equal(false);
+      expect(status).to.have.string('i ... ok');
+    });
+    it('should check array size of added components array', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj).to.be.ofSize(3);
+    });
+  });
+  describe('should add many components programatically, process.cwd() is in inconnected dir to project path', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
