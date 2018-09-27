@@ -9,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add many programmatically', function () {
+describe.only('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
@@ -94,7 +94,6 @@ describe('bit add many programmatically', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
-      helper.npmLink('bit-bin');
       const newDirPath = helper.createNewDirectory();
       const scriptRelativePath = 'add-many';
       helper.copyFixtureComponents(scriptRelativePath, newDirPath);
