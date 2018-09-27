@@ -985,21 +985,13 @@ export default class Consumer {
       this
     );
 
-    const componentsToRemoveFromFs = BitIds.fromArray(
-      removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION)
-    );
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(componentsToRemoveFromFs, deleteFiles);
+      await this.removeComponentFromFs(removedComponentIds, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);
-    }
-    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
-      await packageJson.removeComponentsFromWorkspacesAndDependencies(
-        this,
-        this.getPath(),
-        this.bitMap,
-        componentsToRemoveFromFs
-      );
-      await this.cleanBitMapAndBitJson(componentsToRemoveFromFs, removedDependencies);
+      if (!track) {
+        await packageJson.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
+        await this.cleanBitMapAndBitJson(removedComponentIds, removedDependencies);
+      }
     }
     return new RemovedLocalObjects(
       removedComponentIds,
@@ -1052,21 +1044,6 @@ export default class Consumer {
         return componentVersion.toConsumer(this.scope.objects, manipulateDirData);
       })
     );
-  }
-
-  async eject(componentsIds: BitId[]) {
-    await this.remove({
-      ids: BitIds.fromArray(componentsIds),
-      force: true,
-      remote: false,
-      track: false,
-      deleteFiles: true
-    });
-    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
-    await packageJson.removeComponentsFromNodeModules(this, componentsIds);
-    await installPackages(this, [], true, true);
-
-    return componentsIds;
   }
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {
