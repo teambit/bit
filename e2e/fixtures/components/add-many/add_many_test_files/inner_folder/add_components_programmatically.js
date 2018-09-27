@@ -3,21 +3,21 @@ const runBitBin = require('../run_add_many').runBitBin;
 const components = 
     [
         {
-            'componentPaths' : ['/g.js'],
-            'main' : '/g.js',
+            'componentPaths' : ['../../g.js'],
+            'main' : '../../g.js',
             'id' : 'g'
         },
         {
-            'componentPaths' : ['/h.js'],
-            'main' : 'h.js',
+            'componentPaths' : ['../../h.js'],
+            'main' : '../../h.js',
             'id' : 'h',
-            'tests' : ['/h.spec.js'],
+            'tests' : ['../../h.spec.js'],
         },
         {
-            'componentPaths' : ['/i.js'],
-            'main' : 'i.js',
-            'tests' : ['/i.spec.js'],
-            'exclude' : ['/i.spec.js'],
+            'componentPaths' : ['../../i.js'],
+            'main' : '../../i.js',
+            'tests' : ['../../i.spec.js'],
+            'exclude' : ['../../i.spec.js'],
         },
     ]
 

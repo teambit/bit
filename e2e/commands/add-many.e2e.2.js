@@ -46,9 +46,8 @@ describe('bit add many programmatically', function () {
       helper.npmLink('bit-bin', path.join(helper.localScopePath, 'add_many_test_files'));
       const innerScriptPathRelative = 'add_many_test_files/inner_folder';
       const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
-
       const scriptAbsolutePath = path.join(innerScriptPathAbsolute, 'add_components_programmatically.js');
-      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
+      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${innerScriptPathAbsolute}`);
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
       status = helper.status();
     });
