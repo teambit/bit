@@ -9,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit add many programmatically', function () {
+describe('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
@@ -39,7 +39,7 @@ describe.only('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
-  describe('should add many components programatically, process.cwd() is inside project path', function () {
+  describe('should add many components programmatically, process.cwd() is inside project path', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
@@ -88,7 +88,7 @@ describe.only('bit add many programmatically', function () {
       expect(nodeStartOutputObj).to.be.ofSize(3);
     });
   });
-  describe('should add many components programatically, process.cwd() is in inconnected dir to project path', function () {
+  describe('should add many components programmatically, process.cwd() is in not connected dir to project path', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
@@ -172,7 +172,7 @@ describe.only('bit add many programmatically', function () {
       expect(nodeStartOutputObj).to.be.ofSize(5);
     });
   });
-  describe('make sure gitignore is read from the correct path', function () {
+  describe('make sure .gitignore is read from the correct path', function () {
     let newDirPath;
     before(function () {
       helper.reInitLocalScope();
@@ -191,7 +191,7 @@ describe.only('bit add many programmatically', function () {
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });
-    it('should add a component if its pattern not matches to gitignore', function () {
+    it('should add a component if its pattern not matches to .gitignore', function () {
       helper.writeGitIgnore(['**/add_many_test_files/c.js']);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_git_ignore_unmatch_pattern.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
@@ -201,7 +201,7 @@ describe.only('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].name).to.equal('c.js');
     });
-    it('should add a component on root level if its pattern not matches to gitignore', function () {
+    it('should add a component on root level if its pattern not matches to .gitignore', function () {
       helper.writeGitIgnore(['**/add_many_test_files/c.js']);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_git_ignore_file_on_root_level.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
@@ -217,8 +217,8 @@ describe.only('bit add many programmatically', function () {
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });
-    it('should not add a component if it is one of the ignore files in the contstants list', function () {
-      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_contstants_list.js');
+    it('should not add a component if it is one of the ignore files in the constants list', function () {
+      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_constants_list.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });
