@@ -12,6 +12,7 @@ import { expect } from 'chai';
 import set from 'lodash.set';
 import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
+import * as fixtures from './fixtures/fixtures';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -300,20 +301,18 @@ export default class Helper {
       .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
       .map(x => path.normalize(x));
   }
-  createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string) {
-    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+  createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, folder, name);
-    fs.outputFileSync(filePath, fixture);
+    fs.outputFileSync(filePath, impl);
   }
 
-  createFileOnRootLevel(name: string = 'foo.js', impl?: string) {
-    const fixture = impl || "module.exports = function foo() { return 'got foo'; };";
+  createFileOnRootLevel(name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, name);
-    fs.outputFileSync(filePath, fixture);
+    fs.outputFileSync(filePath, impl);
   }
 
-  readFile(filePath: string): string {
-    return fs.readFileSync(path.join(this.localScopePath, filePath)).toString();
+  readFile(filePathRelativeToLocalScope: string): string {
+    return fs.readFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope)).toString();
   }
 
   /**
@@ -380,6 +379,10 @@ export default class Helper {
     const result = this.runCmd(`bit export ${scope} ${id}`);
     if (assert) expect(result).to.not.have.string('nothing to export');
     return result;
+  }
+
+  ejectComponents(ids: string, flags?: string) {
+    return this.runCmd(`bit eject ${ids} ${flags || ''}`);
   }
 
   exportAllComponents(scope: string = this.remoteScope) {

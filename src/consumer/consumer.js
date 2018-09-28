@@ -938,6 +938,9 @@ export default class Consumer {
    * @param {BitIds} removedDependencies - delete component that are used by other components.
    */
   async cleanBitMapAndBitJson(componentsToRemoveFromFs: BitIds, removedDependencies: BitIds) {
+    logger.debug(
+      `consumer.cleanBitMapAndBitJson, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap and bit.json`
+    );
     const bitJson = this.bitJson;
     this.bitMap.removeComponents(componentsToRemoveFromFs);
     this.bitMap.removeComponents(removedDependencies);

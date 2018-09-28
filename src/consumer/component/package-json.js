@@ -297,6 +297,7 @@ async function getPackageJsonObject(consumer: Consumer): Promise<Object> {
 }
 
 async function writePackageJsonFromObject(consumer: Consumer, data: Object) {
+  if (!data) return null;
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   return PackageJson.saveRawObject(consumer.getPath(), data);

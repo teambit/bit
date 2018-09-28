@@ -1,7 +1,6 @@
 // @flow
 import R from 'ramda';
 import { BitIds, BitId } from '../../bit-id';
-import GeneralError from '../../error/general-error';
 import { Consumer } from '..';
 import * as packageJson from '../component/package-json';
 import { installPackages } from '../../npm-client/install-packages';
@@ -23,56 +22,68 @@ export default (async function ejectComponents(
   componentsIds: BitId[],
   force: boolean = false
 ): Promise<EjectResults> {
-  const { componentsToDelete, modifiedComponents, stagedComponents } = await getComponentsToDelete(
-    consumer,
-    componentsIds,
-    force
-  );
-  const failedComponents = { modifiedComponents, stagedComponents };
+  logger.debug('eject: getting the components status');
+  const {
+    componentsToDelete,
+    modifiedComponents,
+    stagedComponents,
+    notExportedComponents
+  } = await getComponentsToDelete(consumer, componentsIds, force);
+  const failedComponents = { modifiedComponents, stagedComponents, notExportedComponents };
   const ejectResults: EjectResults = {
     ejectedComponents: componentsToDelete,
     failedComponents
   };
   if (!componentsToDelete.length) return ejectResults;
 
-  const originalPackageJson = await packageJson.getPackageJsonObject(consumer);
+  const originalPackageJson = (await packageJson.getPackageJsonObject(consumer)) || {};
   try {
+    logger.debug('eject: removing the existing links/files of the added packages from node_modules');
+    await packageJson.removeComponentsFromWorkspacesAndDependencies(consumer, componentsToDelete);
+  } catch (err) {
+    await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
+    throwEjectError(
+      `eject operation failed removing some or all the components generated data from node_modules.
+your package.json has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.`,
+      err
+    );
+  }
+  try {
+    logger.debug('eject: adding the component packages into package.json');
     await packageJson.addComponentsWithVersionToRoot(consumer, componentsToDelete);
   } catch (err) {
     logger.error(err);
     await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
-    throw new Error(`eject operation failed adding the components to your package.json file. no changes have been done.
-    error: ${err.message}`);
+    throwEjectError(
+      `eject operation failed adding the components to your package.json file. no changes have been done.
+your package.json (if existed) has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.`,
+      err
+    );
   }
   try {
-    await packageJson.removeComponentsFromNodeModules(consumer, componentsToDelete);
-  } catch (err) {
-    logger.error(err);
-    await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
-    throw new Error(`eject operation failed removing some or all the components generated data from node_modules.
-    your package.json has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.
-    error: ${err.message}`);
-  }
-  try {
+    logger.debug('eject: installing NPM packages');
     await installPackages(consumer, [], true, true);
   } catch (err) {
-    logger.error(err);
     await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
-    throw new Error(`eject operation failed installing your component using the NPM client.
-    your package.json has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.
-    error: ${err.message}`);
+    throwEjectError(
+      `eject operation failed installing your component using the NPM client.
+your package.json (if existed) has been restored, however, some bit generated data may have been deleted, please run "bit link" to restore them.`,
+      err
+    );
   }
-
   try {
-    removeLocalComponents(consumer, componentsToDelete);
+    logger.debug('eject: removing the components files from the filesystem');
+    await removeLocalComponents(consumer, componentsToDelete);
   } catch (err) {
-    logger.error(err);
-    throw new Error(`eject operation has installed your components successfully using the NPM client.
-    however, it failed removing the old components from the filesystem.
-    please use bit remove command to remove them.
-    error: ${err.message}`);
+    throwEjectError(
+      `eject operation has installed your components successfully using the NPM client.
+however, it failed removing the old components from the filesystem.
+please use bit remove command to remove them.`,
+      err
+    );
   }
 
+  logger.debug('eject: completed successfully');
   return ejectResults;
 });
 
@@ -92,9 +103,11 @@ async function getComponentsToDelete(consumer: Consumer, bitIds: BitId[], force:
           else if (componentStatus.staged) stagedComponents.push(id);
           else componentsToDelete.push(id);
         } catch (err) {
-          throw new GeneralError(`eject operation failed getting the status of ${id.toString()}, no action has been done.
-          please fix the issue to continue.
-          error: ${err.message}`);
+          throwEjectError(
+            `eject operation failed getting the status of ${id.toString()}, no action has been done.
+          please fix the issue to continue.`,
+            err
+          );
         }
       })
     );
@@ -120,6 +133,15 @@ async function removeLocalComponents(consumer: Consumer, bitIds: BitIds): Promis
   // gets the dependencies as npm packages so we don't need to worry much about have extra
   // dependencies on the filesystem
   await consumer.removeComponentFromFs(bitIds, true);
-  await packageJson.removeComponentsFromWorkspacesAndDependencies(consumer, bitIds);
+  // await packageJson.removeComponentsFromWorkspacesAndDependencies(consumer, bitIds);
   await consumer.cleanBitMapAndBitJson(bitIds, new BitIds());
+}
+
+function throwEjectError(message: string, originalError: Error) {
+  // $FlowFixMe that's right, we don't know whether originalError has 'msg' property, but most has. what other choices do we have?
+  const originalErrorMessage: string = originalError.msg || originalError;
+  logger.error('eject has stopped due to an error', originalErrorMessage);
+  throw new Error(`${message}
+
+got the following error: ${originalErrorMessage}`);
 }

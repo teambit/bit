@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve the stability of `bit export --eject` and provide some kind of rollback in case of failure
+- introduce a new command `bit eject` for removing local components and installing them as packages by an NPM client
 - fix bit-remove to delete authored component files when removing an authored component from an inner directory
 
 ## [13.0.5-dev.7 - 2018-09-23]
