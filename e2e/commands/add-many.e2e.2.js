@@ -14,7 +14,7 @@ describe('bit add many programmatically', function () {
   after(() => {
     helper.destroyEnv();
   });
-  this.timeout(10000);
+  this.timeout(20000);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
@@ -39,11 +39,58 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
     });
   });
-  describe('should add many components programatically', function () {
+  describe('should add many components programmatically, process.cwd() is inside project path', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
-      helper.npmLink('bit-bin');
+      helper.npmLink('bit-bin', path.join(helper.localScopePath, 'add_many_test_files'));
+      const innerScriptPathRelative = 'add_many_test_files/inner_folder';
+      const innerScriptPathAbsolute = path.join(helper.localScopePath, innerScriptPathRelative);
+      const scriptAbsolutePath = path.join(innerScriptPathAbsolute, 'add_components_programmatically.js');
+      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${innerScriptPathAbsolute}`);
+      nodeStartOutputObj = JSON.parse(nodeStartOutput);
+      status = helper.status();
+    });
+    it('should add a component, with id and no spec', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
+      expect(nodeStartOutputObj[0].addedComponents[0]).to.have.property('id');
+      expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('g');
+      expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.array();
+      expect(nodeStartOutputObj[0].addedComponents[0].files).to.be.ofSize(1);
+      expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
+      expect(status).to.have.string('g ... ok');
+    });
+    it('should add a components ,with id and with spec', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
+      expect(nodeStartOutputObj[1].addedComponents[0]).to.have.property('files');
+      expect(nodeStartOutputObj[1].addedComponents[0].files).to.be.array();
+      expect(nodeStartOutputObj[1].addedComponents[0].files).to.be.ofSize(2);
+      expect(nodeStartOutputObj[1].addedComponents[0].files[1].test).to.equal(true);
+      expect(nodeStartOutputObj[1].addedComponents[0].files[1].name).to.equal('h.spec.js');
+      expect(status).to.have.string('h ... ok');
+      const compData = JSON.parse(helper.showComponentWithOptions('h', { j: '' }));
+      expect(compData).to.not.property('Specs');
+    });
+    it('should add a component with excluded test file', function () {
+      expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('id');
+      expect(nodeStartOutputObj[2].addedComponents[0].id).to.contains('/i');
+      expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('files');
+      expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.array();
+      expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.ofSize(1);
+      expect(nodeStartOutputObj[2].addedComponents[0].files[0].test).to.equal(false);
+      expect(status).to.have.string('i ... ok');
+    });
+    it('should check array size of added components array', function () {
+      expect(nodeStartOutputObj).to.be.array();
+      expect(nodeStartOutputObj).to.be.ofSize(3);
+    });
+  });
+  describe('should add many components programmatically, process.cwd() is in not connected dir to project path', function () {
+    before(function () {
+      helper.reInitLocalScope();
+      helper.copyFixtureComponents('add-many');
       const newDirPath = helper.createNewDirectory();
       const scriptRelativePath = 'add-many';
       helper.copyFixtureComponents(scriptRelativePath, newDirPath);
@@ -124,7 +171,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj).to.be.ofSize(5);
     });
   });
-  describe('make sure gitignore is read from the correct path', function () {
+  describe('make sure .gitignore is read from the correct path', function () {
     let newDirPath;
     before(function () {
       helper.reInitLocalScope();
@@ -143,7 +190,7 @@ describe('bit add many programmatically', function () {
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });
-    it('should add a component if its pattern not matches to gitignore', function () {
+    it('should add a component if its pattern not matches to .gitignore', function () {
       helper.writeGitIgnore(['**/add_many_test_files/c.js']);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_git_ignore_unmatch_pattern.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
@@ -153,7 +200,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].name).to.equal('c.js');
     });
-    it('should add a component on root level if its pattern not matches to gitignore', function () {
+    it('should add a component on root level if its pattern not matches to .gitignore', function () {
       helper.writeGitIgnore(['**/add_many_test_files/c.js']);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_git_ignore_file_on_root_level.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
@@ -169,8 +216,8 @@ describe('bit add many programmatically', function () {
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });
-    it('should not add a component if it is one of the ignore files in the contstants list', function () {
-      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_contstants_list.js');
+    it('should not add a component if it is one of the ignore files in the constants list', function () {
+      const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_constants_list.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('NoFiles');
     });

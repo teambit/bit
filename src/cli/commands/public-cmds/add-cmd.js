@@ -23,6 +23,7 @@ export default class Add extends Command {
     ['m', 'main <file>', 'implementation/index file name or dsl (src/{PARENT}/{FILE_NAME})'],
     ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT}/{FILE_NAME})'],
     ['n', 'namespace <namespace>', 'component namespace'],
+    ['s', 'skip-namespace', 'do not add any namespace'],
     ['e', 'exclude <file...>', 'exclude file name or dsl (src/{PARENT}/{FILE_NAME})'],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
@@ -36,6 +37,7 @@ export default class Add extends Command {
       main,
       tests,
       namespace,
+      skipNamespace = false,
       exclude,
       override = false
     }: {
@@ -43,6 +45,7 @@ export default class Add extends Command {
       main: ?string,
       tests: ?(string[]),
       namespace: ?string,
+      skipNamespace: boolean,
       exclude: ?(string[]),
       override: boolean
     }
@@ -67,6 +70,7 @@ export default class Add extends Command {
       id,
       main: main ? path.normalize(main) : undefined,
       namespace,
+      skipNamespace,
       tests: testsArray,
       exclude: excludedFiles,
       override

@@ -1,4 +1,4 @@
-const runBitBin = require('./run_add_many').runBitBin;
+const runBitBin = require('bit-bin/e2e/fixtures/components/add-many/add_many_test_files/run_add_many').runBitBin;
 
 const components = 
     [

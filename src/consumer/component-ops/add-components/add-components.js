@@ -92,6 +92,7 @@ export type AddProps = {
   id?: string,
   main?: PathOsBased,
   namespace?: string,
+  skipNamespace: boolean,
   tests?: PathOrDSL[],
   exclude?: PathOrDSL[],
   override: boolean,
@@ -105,7 +106,7 @@ export type AddProps = {
 // Required for determining if the paths are relative to consumer or to process.cwd().
 export type AddContext = {
   consumer: Consumer,
-  overridenConsumer: boolean
+  alternateCwd?: string
 };
 
 export default class AddComponents {
@@ -115,6 +116,7 @@ export default class AddComponents {
   id: ?string; // id entered by the user
   main: ?PathOsBased;
   namespace: ?string;
+  skipNamespace: boolean;
   tests: PathOrDSL[];
   exclude: PathOrDSL[];
   override: boolean; // (default = false) replace the files array or only add files.
@@ -123,19 +125,16 @@ export default class AddComponents {
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
-  overridenConsumer: boolean;
+  alternateCwd: ?string;
   constructor(context: AddContext, addProps: AddProps) {
-    this.overridenConsumer = context.overridenConsumer;
+    this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
-    const consumerPath = this.consumer.getPath();
     this.bitMap = this.consumer.bitMap;
-    this.componentPaths =
-      this.overridenConsumer === true
-        ? addProps.componentPaths.map(file => path.join(consumerPath, file))
-        : addProps.componentPaths;
+    this.componentPaths = this.joinConsumerPathIfNeeded(addProps.componentPaths);
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
+    this.skipNamespace = addProps.skipNamespace;
     this.tests = addProps.tests ? this.joinConsumerPathIfNeeded(addProps.tests) : [];
     this.exclude = addProps.exclude ? this.joinConsumerPathIfNeeded(addProps.exclude) : [];
     this.override = addProps.override;
@@ -146,8 +145,9 @@ export default class AddComponents {
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
     if (paths.length > 0) {
-      if (this.overridenConsumer) {
-        return paths.map(file => path.join(this.consumer.getPath(), file));
+      if (this.alternateCwd !== undefined && this.alternateCwd !== null) {
+        const alternate = this.alternateCwd;
+        return paths.map(file => path.join(alternate, file));
       }
       return paths;
     }
@@ -384,6 +384,9 @@ export default class AddComponents {
       });
     }
     if (!mainFile) return undefined;
+    if (this.alternateCwd) {
+      mainFile = path.join(this.alternateCwd, mainFile);
+    }
     const mainFileRelativeToConsumer = this.consumer.getPathRelativeToConsumer(mainFile);
     const mainPath = this.consumer.toAbsolutePath(mainFileRelativeToConsumer);
     if (fs.existsSync(mainPath)) {
@@ -460,7 +463,7 @@ export default class AddComponents {
           const splitPath = absoluteComponentPath.split(path.sep);
           const lastDir = splitPath[splitPath.length - 1];
           const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
-          const idFromPath = BitId.getValidBitId(nameSpaceOrDir, lastDir);
+          const idFromPath = BitId.getValidBitId(this.skipNamespace ? undefined : nameSpaceOrDir, lastDir);
           finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
         }
 
@@ -483,7 +486,7 @@ export default class AddComponents {
           dirName = path.dirname(absolutePath);
         }
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
-        const idFromPath = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
+        const idFromPath = BitId.getValidBitId(this.skipNamespace ? undefined : nameSpaceOrLastDir, pathParsed.name);
         finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
       }
 

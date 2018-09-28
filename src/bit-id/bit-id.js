@@ -261,7 +261,7 @@ export default class BitId {
     return cleanName;
   }
 
-  static getValidBitId(box: string, name: string): BitId {
+  static getValidBitId(box?: string, name: string): BitId {
     const getValidIdChunk = (chunk) => {
       if (!isValidIdChunk(chunk)) {
         chunk = chunk.replace(/\./g, '');
@@ -270,7 +270,7 @@ export default class BitId {
       return chunk;
     };
 
-    return new BitId({ name: getValidIdChunk(name), box: getValidIdChunk(box) });
+    return new BitId({ name: getValidIdChunk(name), box: box ? getValidIdChunk(box) : undefined });
   }
 
   static isValidVersion(version: string): boolean {
