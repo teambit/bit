@@ -16,6 +16,7 @@ import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
 import { PathOsBased, PathLinux } from '../../utils/path';
+import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 
 export type ComponentTree = {
   component: ModelComponent,
@@ -181,9 +182,9 @@ export default class SourceRepository {
       return result;
     };
     const manipulateDirs = (pathStr: PathOsBased): PathLinux => {
-      const withSharedDir: PathLinux = clonedComponent.addSharedDir(pathStr);
-      return clonedComponent.removeWrapperDir(withSharedDir);
+      return revertDirManipulationForPath(pathStr, clonedComponent.originallySharedDir, clonedComponent.wrapDir);
     };
+
     const files = consumerComponent.files.map((file) => {
       return {
         name: file.basename,
@@ -211,7 +212,11 @@ export default class SourceRepository {
           // for isCustomResolveUsed it was never stripped
           relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
           if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-            relativePath.destinationRelativePath = manipulateDirs(relativePath.destinationRelativePath);
+            relativePath.destinationRelativePath = revertDirManipulationForPath(
+              relativePath.destinationRelativePath,
+              depFromBitMap.originallySharedDir,
+              depFromBitMap.wrapDir
+            );
           }
         }
       });

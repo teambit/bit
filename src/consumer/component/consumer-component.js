@@ -575,11 +575,6 @@ export default class Component {
     this._wasOriginallySharedDirStripped = true;
   }
 
-  addSharedDir(pathStr: string): PathLinux {
-    const withSharedDir = this.originallySharedDir ? path.join(this.originallySharedDir, pathStr) : pathStr;
-    return pathNormalizeToLinux(withSharedDir);
-  }
-
   addWrapperDir(manipulateDirData: ManipulateDirItem[]): void {
     const manipulateDirItem = manipulateDirData.find(m => m.id.isEqual(this.id));
     if (!manipulateDirItem || !manipulateDirItem.wrapDir) return;
@@ -599,10 +594,6 @@ export default class Component {
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(pathWithWrapDir(path.normalize(customPath.destinationPath)));
     });
-  }
-
-  removeWrapperDir(pathStr: PathLinux): PathLinux {
-    return this.wrapDir ? pathStr.replace(`${this.wrapDir}/`, '') : pathStr;
   }
 
   /**
