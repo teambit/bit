@@ -384,6 +384,12 @@ export default class Helper {
   ejectComponents(ids: string, flags?: string) {
     return this.runCmd(`bit eject ${ids} ${flags || ''}`);
   }
+  ejectComponentsParsed(ids: string, flags?: string) {
+    const result = this.runCmd(`bit eject ${ids} ${flags || ''} --json`);
+    const jsonStart = result.indexOf('{');
+    const jsonResult = result.substring(jsonStart);
+    return JSON.parse(jsonResult);
+  }
 
   exportAllComponents(scope: string = this.remoteScope) {
     return this.runCmd(`bit export ${scope}`);
