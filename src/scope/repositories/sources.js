@@ -212,6 +212,10 @@ export default class SourceRepository {
           // for isCustomResolveUsed it was never stripped
           relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
           if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+            // when a dependency is imported directly, we need to also change the
+            // destinationRelativePath, which is the path written in the link file, however, the
+            // dir manipulation should be according to this dependency component, not the
+            // consumerComponent passed to this function
             relativePath.destinationRelativePath = revertDirManipulationForPath(
               relativePath.destinationRelativePath,
               depFromBitMap.originallySharedDir,
