@@ -1,10 +1,11 @@
 // @flow
+import path from 'path';
 import R from 'ramda';
 import BitMap from '../bit-map/bit-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import { Version } from '../../scope/models';
-import type { PathLinux } from '../../utils/path';
+import type { PathLinux, PathOsBased } from '../../utils/path';
 import VersionDependencies from '../../scope/version-dependencies';
 import { pathNormalizeToLinux, sharedStartOfArray } from '../../utils';
 import { Dependencies } from '../component/dependencies';
@@ -155,4 +156,22 @@ export async function getManipulateDirWhenImportingComponents(
   });
   const manipulateDirData = await Promise.all(manipulateDirDataP);
   return R.flatten(manipulateDirData);
+}
+
+export function revertDirManipulationForPath(
+  pathStr: PathOsBased,
+  originallySharedDir: ?PathLinux,
+  wrapDir: ?PathLinux
+): PathLinux {
+  const withSharedDir: PathLinux = addSharedDirForPath(pathStr, originallySharedDir);
+  return removeWrapperDirFromPath(withSharedDir, wrapDir);
+}
+
+function addSharedDirForPath(pathStr: string, originallySharedDir: ?PathLinux): PathLinux {
+  const withSharedDir = originallySharedDir ? path.join(originallySharedDir, pathStr) : pathStr;
+  return pathNormalizeToLinux(withSharedDir);
+}
+
+function removeWrapperDirFromPath(pathStr: PathLinux, wrapDir: ?PathLinux): PathLinux {
+  return wrapDir ? pathStr.replace(`${wrapDir}/`, '') : pathStr;
 }
