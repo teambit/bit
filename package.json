@@ -76,6 +76,7 @@
     "loud-rejection": "^1.6.0",
     "mkdirp": "^0.5.1",
     "mockery": "^2.0.0",
+    "n-readlines": "^1.0.0",
     "needle": "^2.0.0",
     "normalize-path": "^2.1.1",
     "object-diff": "^0.0.4",
