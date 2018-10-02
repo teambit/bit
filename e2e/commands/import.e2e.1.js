@@ -2105,6 +2105,10 @@ console.log(barFoo.default());`;
       it('should import the dependency successfully', () => {
         expect(output).to.have.string('successfully imported one component');
       });
+      it('bit status should show a clean state', () => {
+        const statusOutput = helper.runCmd('bit status');
+        expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+      });
     });
   });
   describe('import component with dependencies with yarn workspaces', () => {
