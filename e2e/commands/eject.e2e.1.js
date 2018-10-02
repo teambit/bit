@@ -379,7 +379,7 @@ describe('bit eject command', function () {
             });
             it('should be able to require and print the results from v2', () => {
               const result = helper.runCmd('node app.js');
-              expect(result.trim()).to.equal('got is-type and got is-string v2 and got foo');
+              expect(result.trim()).to.have.string('got is-type and got is-string v2 and got foo');
             });
             it('should delete the imported component files from the file-system', () => {
               expect(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js')).not.to.be.a.path();

@@ -9,7 +9,7 @@ import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
-import ejectComponents from '../../../consumer/component-ops/eject-components';
+import EjectComponents from '../../../consumer/component-ops/eject-components';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
@@ -87,7 +87,8 @@ async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
   const consumer: Consumer = await loadConsumer();
   let ejectResults: EjectResults;
   try {
-    ejectResults = await ejectComponents(consumer, componentsIds);
+    const ejectComponents = new EjectComponents(consumer, componentsIds);
+    ejectResults = await ejectComponents.eject();
   } catch (err) {
     logger.error(err);
     const ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.

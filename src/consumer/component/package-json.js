@@ -51,7 +51,7 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
 /**
  * Add given components with their versions to root package.json
  */
-async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitId[]) {
+async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitIds) {
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
 
