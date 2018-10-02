@@ -5,6 +5,7 @@ import { Consumer } from '..';
 import * as packageJson from '../component/package-json';
 import { installPackages } from '../../npm-client/install-packages';
 import logger from '../../logger/logger';
+import defaultErrorHandler from '../../cli/default-error-handler';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
@@ -41,6 +42,7 @@ export default (async function ejectComponents(
     logger.debug('eject: removing the existing links/files of the added packages from node_modules');
     await packageJson.removeComponentsFromWorkspacesAndDependencies(consumer, componentsToDelete);
   } catch (err) {
+    logger.debug('eject: failed removing the existing links/files, restoring package.json');
     await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
     throwEjectError(
       `eject operation failed removing some or all the components generated data from node_modules.
@@ -53,6 +55,7 @@ your package.json has been restored, however, some bit generated data may have b
     await packageJson.addComponentsWithVersionToRoot(consumer, componentsToDelete);
   } catch (err) {
     logger.error(err);
+    logger.debug('eject: failed adding the component packages, restoring package.json');
     await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
     throwEjectError(
       `eject operation failed adding the components to your package.json file. no changes have been done.
@@ -139,7 +142,7 @@ async function removeLocalComponents(consumer: Consumer, bitIds: BitIds): Promis
 
 function throwEjectError(message: string, originalError: Error) {
   // $FlowFixMe that's right, we don't know whether originalError has 'msg' property, but most has. what other choices do we have?
-  const originalErrorMessage: string = originalError.msg || originalError;
+  const originalErrorMessage: string = defaultErrorHandler(originalError) || originalError.msg || originalError;
   logger.error('eject has stopped due to an error', originalErrorMessage);
   throw new Error(`${message}
 

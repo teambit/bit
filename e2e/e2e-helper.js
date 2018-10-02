@@ -776,6 +776,10 @@ export default class Helper {
     const packageJsonPath = path.join(packageJsonFolder, 'package.json');
     return fs.readJSONSync(packageJsonPath) || {};
   }
+  writePackageJson(packageJson: Object, packageJsonFolder: string = this.localScopePath) {
+    const packageJsonPath = path.join(packageJsonFolder, 'package.json');
+    return fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 2 });
+  }
 
   readComponentPackageJson(id: string) {
     const packageJsonFolderPath = path.join(this.localScopePath, 'components', id);

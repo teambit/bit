@@ -1,5 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import fs from 'fs-extra';
+import R from 'ramda';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
@@ -334,8 +336,8 @@ describe('bit eject command', function () {
             expect(listScope[0].id).to.have.string('foo');
           });
         });
-        // @todo: fix
-        describe.skip('importing and ejecting the dependency', () => {
+        describe('importing the dependency directly', () => {
+          let scopeBeforeEjecting;
           before(() => {
             helper.reInitLocalScope();
             helper.runCmd(`bit import ${remoteScopeName}/bar/foo`);
@@ -343,44 +345,129 @@ describe('bit eject command', function () {
             // an intermediate step, make sure the workspace is clean
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
-            helper.createFile('components/utils/is-string/utils/', 'is-string.js', fixtures.isStringV2);
+            helper.createFile('components/utils/is-string/', 'is-string.js', fixtures.isStringV2);
             helper.tagAllWithoutMessage();
             helper.exportAllComponents(remoteScopeName);
-            helper.ejectComponents('utils/is-string');
             helper.createFileOnRootLevel(
               'app.js',
               `const barFoo = require('@bit/${remoteScopeName}.bar.foo'); console.log(barFoo());`
             );
+            scopeBeforeEjecting = helper.cloneLocalScope();
           });
-          it('should bring the modified version (v2) as a package', () => {
-            const packageJson = helper.readPackageJson();
-            expect(packageJson).to.have.property('dependencies');
-            const packageName = `@bit/${remoteScopeName}.utils.is-string`;
-            expect(packageJson.dependencies).to.have.property(packageName);
-            expect(packageJson.dependencies[packageName]).to.equal('0.0.2');
-          });
-          it('should be able to require and print the results from v2', () => {
-            const result = helper.runCmd('node app.js');
-            expect(result.trim()).to.equal('got is-type and got is-string v2 and got foo');
-          });
-          it('should delete the imported component files from the file-system', () => {
-            expect(
-              path.join(helper.localScopePath, 'components/utils/is-string/utils/is-string.js')
-            ).not.to.be.a.path();
-          });
-          it('should delete the component from bit.map', () => {
-            const bitMap = helper.readBitMap();
-            Object.keys(bitMap).forEach((id) => {
-              expect(id).not.to.have.string('is-string');
+          describe('ejecting the dependency successfully', () => {
+            before(() => {
+              helper.ejectComponents('utils/is-string');
+            });
+            it('should bring the modified version (v2) as a package', () => {
+              const packageJson = helper.readPackageJson();
+              expect(packageJson).to.have.property('dependencies');
+              const packageName = `@bit/${remoteScopeName}.utils.is-string`;
+              expect(packageJson.dependencies).to.have.property(packageName);
+              expect(packageJson.dependencies[packageName]).to.equal('0.0.2');
+            });
+            it('should be able to require and print the results from v2', () => {
+              const result = helper.runCmd('node app.js');
+              expect(result.trim()).to.equal('got is-type and got is-string v2 and got foo');
+            });
+            it('should delete the imported component files from the file-system', () => {
+              expect(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js')).not.to.be.a.path();
+            });
+            it('should delete the component from bit.map', () => {
+              const bitMap = helper.readBitMap();
+              Object.keys(bitMap).forEach((id) => {
+                expect(id).not.to.have.string('is-string');
+              });
+            });
+            it('bit status should show a clean state', () => {
+              const output = helper.runCmd('bit status');
+              expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+            });
+            it('should not delete any objects from the scope', () => {
+              const listScope = helper.listLocalScope('--scope');
+              expect(listScope).to.have.string('is-string');
+              expect(listScope).to.have.string('is-type');
+              expect(listScope).to.have.string('bar/foo');
             });
           });
-          it('bit status should show a clean state', () => {
-            const output = helper.runCmd('bit status');
-            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
-          });
-          it('should not delete the objects from the scope', () => {
-            const listScope = helper.listLocalScopeParsed('--scope');
-            expect(listScope[0].id).to.have.string('is-string');
+          describe('failure while ejecting the dependency', () => {
+            let packageJsonBefore;
+            let bitMapBefore;
+            let bitJsonBefore;
+            before(() => {
+              helper.getClonedLocalScope(scopeBeforeEjecting);
+              packageJsonBefore = helper.readPackageJson();
+              bitMapBefore = helper.readBitMap();
+              bitJsonBefore = helper.readBitJson();
+            });
+            describe('when getting the component status has failed', () => {
+              let errorFailure;
+              before(() => {
+                const renameMainComponentFile = () => {
+                  const currentFile = path.join(helper.localScopePath, 'components/utils/is-string/is-string.js');
+                  const renamedFile = path.join(helper.localScopePath, 'components/utils/is-string/is-string2.js');
+                  fs.moveSync(currentFile, renamedFile);
+                };
+                renameMainComponentFile();
+                errorFailure = helper.runWithTryCatch('bit eject utils/is-string');
+              });
+              it('should indicate with the error message that no changes have been done yet', () => {
+                expect(errorFailure).to.have.string('no action has been done');
+              });
+              it('should show the original error message', () => {
+                expect(errorFailure).to.have.string('main file');
+                expect(errorFailure).to.have.string('was removed');
+              });
+              it('should not change the package.json file', () => {
+                const packageJsonNow = helper.readPackageJson();
+                expect(packageJsonNow).to.deep.equal(packageJsonBefore);
+              });
+              it('should not change the .bitmap file', () => {
+                const bitMapNow = helper.readBitMap();
+                expect(bitMapNow).to.deep.equal(bitMapBefore);
+              });
+              it('should not change the bit.json file', () => {
+                const bitJsonNow = helper.readBitJson();
+                expect(bitJsonNow).to.deep.equal(bitJsonBefore);
+              });
+            });
+            describe('when npm install has failed', () => {
+              let errorFailure;
+              let packageJsonWithChanges;
+              before(() => {
+                helper.getClonedLocalScope(scopeBeforeEjecting);
+                packageJsonWithChanges = R.clone(packageJsonBefore);
+                const addNonExistVersionToPackageJson = () => {
+                  packageJsonWithChanges.dependencies[`@bit/${scopeName}.bar.foo`] = '1.1.1';
+                  helper.writePackageJson(packageJsonWithChanges);
+                };
+                addNonExistVersionToPackageJson();
+                errorFailure = helper.runWithTryCatch('bit eject utils/is-string');
+              });
+              it('should indicate with the error message that package.json has been restored', () => {
+                expect(errorFailure).to.have.string('your package.json (if existed) has been restored');
+              });
+              it('should suggest to run bit link', () => {
+                expect(errorFailure).to.have.string('please run "bit link"');
+              });
+              it('should show the original error message', () => {
+                expect(errorFailure).to.have.string('failed running npm install');
+              });
+              it('should not change the package.json file', () => {
+                const packageJsonNow = helper.readPackageJson();
+                expect(packageJsonNow).to.deep.equal(packageJsonWithChanges);
+              });
+              it('should not change the .bitmap file', () => {
+                const bitMapNow = helper.readBitMap();
+                expect(bitMapNow).to.deep.equal(bitMapBefore);
+              });
+              it('should not change the bit.json file', () => {
+                const bitJsonNow = helper.readBitJson();
+                expect(bitJsonNow).to.deep.equal(bitJsonBefore);
+              });
+              it('should not delete the component files from the filesystem', () => {
+                expect(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js')).to.be.a.file();
+              });
+            });
           });
         });
       });
