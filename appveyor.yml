@@ -3,8 +3,8 @@ image: Visual Studio 2015
 
 skip_branch_with_pr: true
 configuration:
-  - Unit
-  - e2e.1
+  # - Unit
+  # - e2e.1
   - e2e.2
   - e2e.3
 
