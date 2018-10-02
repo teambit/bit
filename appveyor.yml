@@ -9,18 +9,18 @@ configuration:
   - e2e.3
 
 for:
-  -
-    matrix:
-      only:
-        - configuration: Unit
-    test_script:
-      - ps: "npm run test:appveyor"
-  -
-    matrix:
-      only:
-        - configuration: e2e.1
-    test_script:
-      - ps: "npm run e2e-test:appveyor1"
+  # -
+  #   matrix:
+  #     only:
+  #       - configuration: Unit
+  #   test_script:
+  #     - ps: "npm run test:appveyor"
+  # -
+  #   matrix:
+  #     only:
+  #       - configuration: e2e.1
+  #   test_script:
+  #     - ps: "npm run e2e-test:appveyor1"
   -
     matrix:
       only:
@@ -83,8 +83,8 @@ install:
   - ps: $pubSshContent = $env:testerBitsrcSSHPublicKey.Replace(' ', "`n")
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa.pub $pubSshContent
   # prod registry
-  - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n"
-  - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n"
+  # - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n"
+  # - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n"
   # stg registry
   - ps: $npmrcContent = "@bit:registry=https://node-stg.bitsrc.io/`n"
   - ps: $npmrcContent += "//node-stg.bitsrc.io/:_authToken=$env:registryStgToken`n"
@@ -123,8 +123,10 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 #artifacts:
-#- path: '%APPDATA%\Local\Bit\logs\debug.log'
-#  name: bitLogs
+- path: '%APPDATA%\Local\Bit\logs\debug.log'
+  name: bitLogs
+- path: 'output.err'
+  name: mochaLogs
 #- path: artifacts\*.msi
 #  name: Installer
 #- path: artifacts\bit.${VERSION}.nupkg
