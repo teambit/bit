@@ -122,11 +122,11 @@ test_script:
 
 #    .\scripts\copyArtifacts.ps1
 
-#artifacts:
-- path: '%APPDATA%\Local\Bit\logs\debug.log'
-  name: bitLogs
-- path: 'output.err'
-  name: mochaLogs
+artifacts:
+  - path: '%APPDATA%\Local\Bit\logs\debug.log'
+    name: bitLogs
+  - path: 'output.err'
+    name: mochaLogs
 #- path: artifacts\*.msi
 #  name: Installer
 #- path: artifacts\bit.${VERSION}.nupkg
