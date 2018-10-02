@@ -7,7 +7,7 @@ import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 
 chai.use(require('chai-fs'));
 
-describe('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
+describe.only('a flow with two components: is-string and pad-left, where is-string is a dependency of pad-left', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();

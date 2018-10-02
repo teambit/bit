@@ -7,7 +7,7 @@ import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-(supportTestingOnBitsrc ? describe : describe.skip)('importing bit components from bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe.only : describe.skip)('importing bit components from bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();

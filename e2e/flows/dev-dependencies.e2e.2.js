@@ -6,7 +6,7 @@ import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester
 
 chai.use(require('chai-fs'));
 
-describe('dev-dependencies functionality', function () {
+describe.only('dev-dependencies functionality', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
