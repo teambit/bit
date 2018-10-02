@@ -9,7 +9,12 @@ import defaultErrorHandler from '../../cli/default-error-handler';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
-  failedComponents: { modifiedComponents: BitIds, stagedComponents: BitIds, notExportedComponents: BitIds }
+  failedComponents: {
+    modifiedComponents: BitIds,
+    stagedComponents: BitIds,
+    notExportedComponents: BitIds,
+    selfHostedExportedComponents: BitIds
+  }
 };
 
 /**
@@ -25,22 +30,31 @@ export default (async function ejectComponents(
 ): Promise<EjectResults> {
   logger.debug('eject: getting the components status');
   const {
-    componentsToDelete,
+    componentsToEject,
     modifiedComponents,
     stagedComponents,
-    notExportedComponents
-  } = await getComponentsToDelete(consumer, componentsIds, force);
-  const failedComponents = { modifiedComponents, stagedComponents, notExportedComponents };
+    notExportedComponents,
+    selfHostedExportedComponents
+  } = await getComponentsToEject(consumer, componentsIds, force);
+  const failedComponents = {
+    modifiedComponents,
+    stagedComponents,
+    notExportedComponents,
+    selfHostedExportedComponents
+  };
   const ejectResults: EjectResults = {
-    ejectedComponents: componentsToDelete,
+    ejectedComponents: componentsToEject,
     failedComponents
   };
-  if (!componentsToDelete.length) return ejectResults;
+  if (!componentsToEject.length) {
+    logger.debug(`eject: nothing to eject. failedComponents: ${JSON.stringify(failedComponents, null, 2)}`);
+    return ejectResults;
+  }
 
   const originalPackageJson = (await packageJson.getPackageJsonObject(consumer)) || {};
   try {
     logger.debug('eject: removing the existing links/files of the added packages from node_modules');
-    await packageJson.removeComponentsFromWorkspacesAndDependencies(consumer, componentsToDelete);
+    await packageJson.removeComponentsFromWorkspacesAndDependencies(consumer, componentsToEject);
   } catch (err) {
     logger.debug('eject: failed removing the existing links/files, restoring package.json');
     await packageJson.writePackageJsonFromObject(consumer, originalPackageJson);
@@ -52,7 +66,7 @@ your package.json has been restored, however, some bit generated data may have b
   }
   try {
     logger.debug('eject: adding the component packages into package.json');
-    await packageJson.addComponentsWithVersionToRoot(consumer, componentsToDelete);
+    await packageJson.addComponentsWithVersionToRoot(consumer, componentsToEject);
   } catch (err) {
     logger.error(err);
     logger.debug('eject: failed adding the component packages, restoring package.json');
@@ -76,7 +90,7 @@ your package.json (if existed) has been restored, however, some bit generated da
   }
   try {
     logger.debug('eject: removing the components files from the filesystem');
-    await removeLocalComponents(consumer, componentsToDelete);
+    await removeLocalComponents(consumer, componentsToEject);
   } catch (err) {
     throwEjectError(
       `eject operation has installed your components successfully using the NPM client.
@@ -90,21 +104,28 @@ please use bit remove command to remove them.`,
   return ejectResults;
 });
 
-async function getComponentsToDelete(consumer: Consumer, bitIds: BitId[], force: boolean): Promise<Object> {
+async function getComponentsToEject(consumer: Consumer, bitIds: BitId[], force: boolean): Promise<Object> {
+  const remotes = await consumer.scope.remotes();
   const modifiedComponents = new BitIds();
   const stagedComponents = new BitIds();
-  const exportedComponents = BitIds.fromArray(bitIds.filter(id => id.hasScope()));
-  const notExportedComponents = BitIds.fromArray(bitIds.filter(id => !id.hasScope()));
-  const componentsToDelete = new BitIds();
+  const selfHostedExportedComponents = new BitIds();
+  const hubExportedComponents = new BitIds();
+  const notExportedComponents = new BitIds();
+  bitIds.forEach((bitId) => {
+    if (!bitId.hasScope) notExportedComponents.push(bitId);
+    else if (remotes.isHub(bitId.scope)) hubExportedComponents.push(bitId);
+    else selfHostedExportedComponents.push(bitId);
+  });
+  const componentsToEject = new BitIds();
   if (R.isEmpty(bitIds)) return {};
   if (!force) {
     await Promise.all(
-      exportedComponents.map(async (id) => {
+      hubExportedComponents.map(async (id) => {
         try {
           const componentStatus = await consumer.getComponentStatusById(id);
           if (componentStatus.modified) modifiedComponents.push(id);
           else if (componentStatus.staged) stagedComponents.push(id);
-          else componentsToDelete.push(id);
+          else componentsToEject.push(id);
         } catch (err) {
           throwEjectError(
             `eject operation failed getting the status of ${id.toString()}, no action has been done.
@@ -117,10 +138,11 @@ async function getComponentsToDelete(consumer: Consumer, bitIds: BitId[], force:
   }
 
   return {
-    componentsToDelete: force ? exportedComponents : componentsToDelete,
+    componentsToEject: force ? hubExportedComponents : componentsToEject,
     modifiedComponents,
     stagedComponents,
-    notExportedComponents
+    notExportedComponents,
+    selfHostedExportedComponents
   };
 }
 

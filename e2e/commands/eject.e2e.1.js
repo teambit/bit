@@ -7,7 +7,7 @@ import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../fixtures/fixtures';
 import { ComponentNotFound } from '../../src/scope/exceptions';
-import { failureEjectMessage, successEjectMessage } from '../../src/cli/commands/public-cmds/eject-cmd';
+import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
 
 chai.use(require('chai-fs'));
 
@@ -37,6 +37,18 @@ describe('bit eject command', function () {
       it('should indicate that local components cannot be ejected as it was not exported', () => {
         expect(output).to.have.string(failureEjectMessage);
         expect(output).to.have.string('not exported yet');
+      });
+      describe('after export', () => {
+        before(() => {
+          helper.reInitRemoteScope();
+          helper.addRemoteScope();
+          helper.exportAllComponents();
+          output = helper.ejectComponents('bar/foo');
+        });
+        it('should indicate that eject is not available on self hosting scope', () => {
+          expect(output).to.have.string(failureEjectMessage);
+          expect(output).to.have.string('self hosted scope');
+        });
       });
     });
   });

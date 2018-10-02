@@ -10,14 +10,22 @@ import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 import ejectComponents from '../../../consumer/component-ops/eject-components';
+import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
+  const componentsIds = await exportComponents(ids, remote, save);
+  let ejectResults;
+  if (eject) ejectResults = await ejectExportedComponents(componentsIds);
+  return { componentsIds, ejectResults };
+});
+
+async function exportComponents(ids?: string[], remote: string, save: ?boolean): Promise<BitId[]> {
   const consumer: Consumer = await loadConsumer();
   const idsToExport = await getComponentsToExport(ids, consumer, remote);
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
   if (R.isEmpty(idsToExport)) return [];
-  const componentsIds = await consumer.scope.exportMany(idsToExport, remote, undefined, eject);
+  const componentsIds = await consumer.scope.exportMany(idsToExport, remote, undefined);
   if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
   await linkComponents(componentsIds, consumer);
@@ -26,20 +34,8 @@ export default (async function exportAction(ids?: string[], remote: string, save
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  if (eject) {
-    try {
-      await ejectComponents(consumer, componentsIds);
-    } catch (err) {
-      logger.error(err);
-      const ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
-      However, the eject operation has failed due to an error: ${err.msg || err}`;
-      throw new Error(ejectErr);
-    }
-    // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
-    await consumer.onDestroy();
-  }
   return componentsIds;
-});
+}
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
   const componentsList = new ComponentsList(consumer);
@@ -85,4 +81,20 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const { components } = await consumer.loadComponents(ids);
   linkComponentsToNodeModules(components, consumer);
+}
+
+async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
+  const consumer: Consumer = await loadConsumer();
+  let ejectResults: EjectResults;
+  try {
+    ejectResults = await ejectComponents(consumer, componentsIds);
+  } catch (err) {
+    logger.error(err);
+    const ejectErr = `The components ${componentsIds.map(c => c.toString()).join(', ')} were exported successfully.
+    However, the eject operation has failed due to an error: ${err.msg || err}`;
+    throw new Error(ejectErr);
+  }
+  // run the consumer.onDestroy() again, to write the changes done by the eject action to .bitmap
+  await consumer.onDestroy();
+  return ejectResults;
 }
