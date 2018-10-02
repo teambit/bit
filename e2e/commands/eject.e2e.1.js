@@ -32,7 +32,7 @@ describe('bit eject command', function () {
         helper.createComponentBarFoo();
         helper.addComponentBarFoo();
         helper.tagAllWithoutMessage();
-        output = helper.ejectComponentsParsed('bar/foo');
+        output = helper.ejectComponents('bar/foo');
       });
       it('should indicate that local components cannot be ejected as it was not exported', () => {
         expect(output).to.have.string(failureEjectMessage);
