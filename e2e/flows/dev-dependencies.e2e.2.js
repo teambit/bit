@@ -6,7 +6,7 @@ import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester
 
 chai.use(require('chai-fs'));
 
-describe.only('dev-dependencies functionality', function () {
+describe('dev-dependencies functionality', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -135,7 +135,7 @@ describe('foo', () => {
           expect(output).to.have.string('tests passed');
         });
       });
-      (supportTestingOnBitsrc ? describe : describe.skip)('export and import dependencies as packages', () => {
+      (supportTestingOnBitsrc ? describe.only : describe.skip)('export and import dependencies as packages', () => {
         let scopeName;
         let scopeId;
         let bitsrcTester;
