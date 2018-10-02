@@ -46,7 +46,7 @@ jobs:
       - run: echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
         #   key: bitsrc-registry2
-          key: bitsrc-registry-stg3
+          key: bitsrc-registry-stg4
           paths:
             - ~/.npmrc
 
@@ -229,7 +229,7 @@ jobs:
           key: bitsrc-ssh-key3
       - restore_cache:
         #   key: bitsrc-registry2
-          key: bitsrc-registry-stg3
+          key: bitsrc-registry-stg4
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
