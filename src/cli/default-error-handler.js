@@ -86,6 +86,7 @@ import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
 import { COMPONENT_DIR } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
+import GitNotFound from '../utils/git/exceptions/git-not-found';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -432,6 +433,11 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       `error: bit failed to require ${err.filePath} due to the following exception:\n${getExternalErrorMessage(
         err.originalError
       )}.\n${err.originalError.stack}`
+  ],
+  [
+    GitNotFound,
+    err =>
+      'error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the \'bit config set git_path <GIT_PATH>\''
   ],
   [
     AuthenticationFailed,
