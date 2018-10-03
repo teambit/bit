@@ -9,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe.only('bit add many programmatically', function () {
+describe('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
