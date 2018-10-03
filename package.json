@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "13.0.5-dev.8",
+  "version": "13.0.5-dev.9",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
