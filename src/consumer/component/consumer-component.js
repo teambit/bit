@@ -47,7 +47,7 @@ import Dists from './sources/dists';
 import type { PathLinux, PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
-import ExternalTestError from './exceptions/external-test-error';
+import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
@@ -881,11 +881,13 @@ export default class Component {
           const specsResultsP = testFilesList.map(oneFileSpecResult);
           specsResults = await Promise.all(specsResultsP);
         }
-      } catch (err) {
+      } catch (e) {
         if (tmpFolderFullPath) {
           fs.removeSync(tmpFolderFullPath);
         }
-        throw new ExternalTestError(err, this.id.toString());
+        const errors = e.errors || [e];
+        const err = new ExternalTestErrors(component.id.toString(), errors);
+        throw err;
       }
 
       this.specsResults = specsResults.map(specRes => SpecsResults.createFromRaw(specRes));

@@ -8,9 +8,9 @@ import type { ForkLevel } from '../api/consumer/lib/test';
 import { TESTS_FORK_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
-import ExternalError from '../error/external-error';
-import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
-import ExternalTestError from '../consumer/component/exceptions/external-test-error';
+import ExternalErrors from '../error/external-errors';
+import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
+import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 import { BitId } from '../bit-id';
 
@@ -147,14 +147,14 @@ function deserializeResults(
   if (results.type === 'error') {
     let deserializedError = deserializeError(results.error);
     // Special desrialization for external errors
-    if (deserializedError.originalError) {
-      const deserializedOriginalError = deserializeError(deserializedError.originalError);
-      if (results.error.name === ExternalBuildError.name) {
-        deserializedError = new ExternalBuildError(deserializedOriginalError, deserializedError.id);
-      } else if (results.error.name === ExternalTestError.name) {
-        deserializedError = new ExternalTestError(deserializedOriginalError, deserializedError.id);
+    if (deserializedError.originalErrors) {
+      const deserializedOriginalErrors = deserializedError.originalErrors.map(deserializeError);
+      if (results.error.name === ExternalBuildErrors.name) {
+        deserializedError = new ExternalBuildErrors(deserializedError.id, deserializedOriginalErrors);
+      } else if (results.error.name === ExternalTestErrors.name) {
+        deserializedError = new ExternalTestErrors(deserializedError.id, deserializedOriginalErrors);
       } else {
-        deserializedError = new ExternalError(deserializedOriginalError);
+        deserializedError = new ExternalErrors(deserializedOriginalErrors);
       }
     }
     const finalResults = {

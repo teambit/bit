@@ -66,8 +66,8 @@ import {
   ExcludedMainFile
 } from '../consumer/component-ops/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
-import ExternalTestError from '../consumer/component/exceptions/external-test-error';
-import ExternalBuildError from '../consumer/component/exceptions/external-build-error';
+import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
+import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import InvalidCompilerInterface from '../consumer/component/exceptions/invalid-compiler-interface';
 import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import ExtensionNameNotValid from '../extensions/exceptions/extension-name-not-valid';
@@ -384,18 +384,18 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [PromptCanceled, err => chalk.yellow('operation aborted')],
   [
-    ExternalTestError,
+    ExternalTestErrors,
     err =>
-      `error: bit failed to test ${err.id} with the following exception:\n${getExternalErrorMessage(
-        err.originalError
-      )}.\n${err.originalError.stack}`
+      `error: bit failed to test ${err.id} with the following exception:\n${getExternalErrorsMessageAndStack(
+        err.originalErrors
+      )}`
   ],
   [
-    ExternalBuildError,
+    ExternalBuildErrors,
     err =>
-      `error: bit failed to build ${err.id} with the following exception:\n${getExternalErrorMessage(
-        err.originalError
-      )}.\n${err.originalError.stack}`
+      `error: bit failed to build ${err.id} with the following exception:\n${getExternalErrorsMessageAndStack(
+        err.originalErrors
+      )}`
   ],
   [
     ExtensionLoadError,
@@ -465,6 +465,11 @@ function getErrorMessage(error: ?Error, func: ?Function): string {
 
 function getExternalErrorMessage(externalError: ?Error): string {
   if (!externalError) return '';
+
+  // In case an error is not a real error
+  if (!(externalError instanceof Error)) {
+    return externalError;
+  }
   // In case it's not a bit error
   if (externalError.message) {
     return externalError.message;
@@ -473,6 +478,17 @@ function getExternalErrorMessage(externalError: ?Error): string {
   const func = getErrorFunc(errorDefinition);
   const errorMessage = getErrorMessage(externalError, func);
   return errorMessage;
+}
+
+function getExternalErrorsMessageAndStack(errors: Error[]): string {
+  const result = errors
+    .map((e) => {
+      const msg = getExternalErrorMessage(e);
+      const stack = e.stack || '';
+      return `${msg}\n${stack}\n`;
+    })
+    .join('~~~~~~~~~~~~~\n');
+  return result;
 }
 
 export default (err: Error): ?string => {
