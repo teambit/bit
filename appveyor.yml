@@ -3,17 +3,9 @@ image: Visual Studio 2015
 
 skip_branch_with_pr: true
 configuration:
-  - Unit
   - e2e.2
 
 for:
-  -
-    matrix:
-      only:
-        - configuration: Unit
-    test_script:
-      - ps: "npm run test:appveyor"
-
   -
     matrix:
       only:
