@@ -9,7 +9,7 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
-describe('bit add many programmatically', function () {
+describe.only('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
@@ -87,7 +87,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj).to.be.ofSize(3);
     });
   });
-  describe('should add many components programmatically, process.cwd() is in not connected dir to project path', function () {
+  describe.only('should add many components programmatically, process.cwd() is in not connected dir to project path', function () {
     before(function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
@@ -98,6 +98,7 @@ describe('bit add many programmatically', function () {
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
+      console.log(`############## ${JSON.stringify(nodeStartOutputObj)}`);
       status = helper.status();
     });
     it('should add a component with no id and no spec', function () {
