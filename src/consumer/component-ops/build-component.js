@@ -10,7 +10,7 @@ import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { DEFAULT_DIST_DIRNAME } from '../../constants';
-import ExternalBuildError from '../component/exceptions/external-build-error';
+import ExternalBuildErrors from '../component/exceptions/external-build-errors';
 import Consumer from '../consumer';
 import type { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
@@ -256,6 +256,8 @@ const _runBuild = async ({
       if (tmpFolderFullPath) {
         fs.removeSync(tmpFolderFullPath);
       }
-      throw new ExternalBuildError(e, component.id.toString());
+      const errors = e.errors || [e];
+      const err = new ExternalBuildErrors(component.id.toString(), errors);
+      throw err;
     });
 };
