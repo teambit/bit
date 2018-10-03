@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.8 - 2018-09-27]
+
 - fix bit-remove to delete authored component files when removing an authored component from an inner directory
 
 ## [13.0.5-dev.7 - 2018-09-23]
