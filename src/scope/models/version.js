@@ -538,7 +538,9 @@ export default class Version extends BitObject {
       if (detachFromFs) return detachFromFs;
       // In case i'm the author and it's not already detached it can't be changed here
       if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
-      return areEnvsDifferent(envModelFromFs, envModelFromModel);
+      const envDiff = areEnvsDifferent(envModelFromFs, envModelFromModel);
+      if (!envDiff) return undefined;
+      return true;
     };
 
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
