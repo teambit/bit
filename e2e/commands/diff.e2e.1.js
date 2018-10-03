@@ -78,6 +78,18 @@ describe('bit diff command', function () {
           const outputInner = helper.runCmd('bit diff bar/foo', path.join(helper.localScopePath, 'bar'));
           expect(outputInner).to.have.string(successDiffMessage);
         });
+        describe('when git path is configured incorrectly', () => {
+          before(() => {
+            helper.runCmd('bit config set git_path /non/exist/location');
+          });
+          after(() => {
+            helper.runCmd('bit config set git_path git');
+          });
+          it('should throw an error GitNotFound', () => {
+            const output = helper.runWithTryCatch('bit diff bar/foo');
+            expect(output).to.have.string('unable to run command because git executable not found');
+          });
+        });
       });
     });
   });
