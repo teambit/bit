@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "1.0.6-dev.4",
+  "version": "1.0.6-dev.5",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
@@ -42,9 +42,6 @@
     "commander": "^2.14.1",
     "debug": "^3.1.0",
     "detective-amd": "^2.4.0",
-    "detective-less": "^1.0.1",
-    "detective-sass": "^2.0.1",
-    "detective-scss": "^1.0.1",
     "detective-stylus": "^1.0.0",
     "enhanced-resolve": "^4.0.0",
     "fs-extra": "^4.0.2",
@@ -56,7 +53,7 @@
     "lodash.set": "^4.3.2",
     "module-definition": "^2.2.4",
     "module-lookup-amd": "^5.0.1",
-    "node-source-walk": "^3.3.0",
+    "node-source-walk": "^4.0.0",
     "object-assign": "^4.1.1",
     "ora": "^1.2.0",
     "parents": "^1.0.1",
