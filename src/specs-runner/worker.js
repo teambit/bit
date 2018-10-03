@@ -2,8 +2,8 @@
 // TODO - move to language specific driver.
 import serializeError from 'serialize-error';
 import { testInProcess } from '../api/consumer/lib/test';
-import ExternalError from '../error/external-error';
 import loader from '../cli/loader';
+import ExternalErrors from '../error/external-errors';
 
 const testOneComponent = verbose => async (id: string) => {
   // $FlowFixMe
@@ -52,9 +52,9 @@ run();
 function serializeResults(results) {
   if (!results) return undefined;
   if (results instanceof Error) {
-    // In case of extenral error also serialize the original error
-    if (results instanceof ExternalError) {
-      results.originalError = serializeError(results.originalError);
+    // In case of external error also serialize the original error
+    if (results instanceof ExternalErrors) {
+      results.originalErrors = results.originalErrors.map(serializeError);
     }
 
     const serializedErr = serializeError(results);

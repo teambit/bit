@@ -168,6 +168,13 @@ export default class ImportComponents {
       const id = component.component.id;
       const idStr = id.toStringWithoutVersion();
       const beforeImportVersions = currentVersions[idStr];
+      if (!beforeImportVersions) {
+        throw new Error(
+          `_getImportDetails failed finding ${idStr} in currentVersions, which has ${Object.keys(currentVersions).join(
+            ', '
+          )}`
+        );
+      }
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(id);
       if (!modelComponent) throw new GeneralError(`imported component ${idStr} was not found in the model`);
       const afterImportVersions = modelComponent.listVersions();
