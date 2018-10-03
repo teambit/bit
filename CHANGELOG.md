@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support configuring Git executable path
+- update bit-javascript to support the new jsx syntax changes by Babel
 
 ## [13.0.5-dev.9 - 2018-10-03]
 
