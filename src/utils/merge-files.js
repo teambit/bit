@@ -1,7 +1,9 @@
 // @flow
 import execa from 'execa';
 import type { PathLinux, PathOsBased } from '../utils/path';
-import GeneralError from '../error/general-error';
+import GitNotFound from './git/exceptions/git-not-found';
+import getGitExecutablePath from './git/git-executable';
+import logger from '../logger/logger';
 
 export type MergeFileResult = { filePath: PathLinux, output: ?string, conflict: ?string };
 export type MergeFileParams = {
@@ -35,6 +37,7 @@ export default (async function mergeFiles({
   otherFile
 }: MergeFileParams): Promise<MergeFileResult> {
   const mergeResult = { filePath, output: null, conflict: null };
+  const gitExecutablePath = getGitExecutablePath();
   try {
     const result = await execa('git', [
       'merge-file',
@@ -57,7 +60,8 @@ export default (async function mergeFiles({
       return mergeResult;
     }
     if (err.code === 'ENOENT') {
-      throw new GeneralError('unable to run git merge-file command, please make sure you have git installed');
+      logger.error(`failed running Git at ${gitExecutablePath}. full command: ${err.cmd}`);
+      throw new GitNotFound(gitExecutablePath, err);
     }
     throw err;
   }
