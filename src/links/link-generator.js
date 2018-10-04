@@ -220,8 +220,14 @@ async function getComponentLinks({
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean
 }): Promise<OutputFileParams[]> {
-  const directDependencies: Dependency[] = component.getAllNonEnvsDependencies();
-  const flattenedDependencies: BitIds = component.getAllNonEnvsFlattenedDependencies();
+  const directDependencies: Dependency[] =
+    componentMap.origin === COMPONENT_ORIGINS.NESTED
+      ? component.dependencies.get()
+      : component.getAllNonEnvsDependencies();
+  const flattenedDependencies: BitIds =
+    componentMap.origin === COMPONENT_ORIGINS.NESTED
+      ? component.flattenedDependencies
+      : component.getAllNonEnvsFlattenedDependencies();
   if (!directDependencies || !directDependencies.length) return [];
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
@@ -234,8 +240,10 @@ async function getComponentLinks({
       return dep.id;
     };
     const dependencyId = getDependencyIdWithResolvedVersion();
-    // Get the real dependency component
-    const dependencyComponent = dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+    const getDependencyComponent = () => {
+      return dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+    };
+    const dependencyComponent = getDependencyComponent();
 
     if (!dependencyComponent) {
       const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${
