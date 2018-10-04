@@ -2,7 +2,7 @@ version: 1.0.{build}
 image: Visual Studio 2015
 
 skip_branch_with_pr: true
-cconfiguration:
+configuration:
   - Unit
   - e2e.1
   - e2e.2
