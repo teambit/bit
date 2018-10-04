@@ -18,7 +18,7 @@ type HookFailures = {
   [string]: Error
 };
 
-/* 
+/*
   * Setting up block level variable to store class state
   * set's to null by default.
 */
@@ -140,7 +140,7 @@ export default class HooksManager {
 }
 
 function _stringifyIfNeeded(val) {
-  return typeof val === 'string' ? val : inspect(val, { depth: null });
+  return typeof val === 'string' ? val : inspect(val, { depth: 5 });
 }
 
 /**

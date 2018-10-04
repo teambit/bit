@@ -142,11 +142,13 @@ export default class SourceRepository {
   /**
    * given a consumer-component object, returns the Version representation.
    * useful for saving into the model or calculation the hash for comparing with other Version object.
-   * among other things, it adds the originallySharedDir for the files, dists and dependencies.
+   * among other things, it reverts the path manipulation that was done when a component was loaded
+   * from the filesystem. it adds the originallySharedDir and strip the wrapDir.
    *
    * warning: Do not change anything on the consumerComponent instance! Only use its clone.
    *
-   * @see consumer-components.stripOriginallySharedDir() where the sharedDir was stripped.
+   * @see model-components.toConsumerComponent() for the opposite action. (converting Version to
+   * ConsumerComponent).
    */
   async consumerComponentToVersion({
     consumerComponent,
@@ -206,7 +208,8 @@ export default class SourceRepository {
 
     clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
-      const depFromBitMap = consumer.bitMap.getComponentIfExist(dependency.id);
+      // ignoreVersion because when persisting the tag is higher than currently exist in .bitmap
+      const depFromBitMap = consumer.bitMap.getComponentIfExist(dependency.id, { ignoreVersion: true });
       dependency.relativePaths.forEach((relativePath) => {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
@@ -225,7 +228,7 @@ export default class SourceRepository {
         }
       });
     });
-    const version = Version.fromComponent({
+    const version: Version = Version.fromComponent({
       component: clonedComponent,
       versionFromModel,
       files,

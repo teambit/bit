@@ -1,7 +1,8 @@
 import requestify from 'requestify';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? 'https://api.bitsrc.io' : 'https://api-stg.bitsrc.io';
-const supportTestingOnBitsrc = !process.env.APPVEYOR;
+const isAppVeyor = process.env.APPVEYOR === 'True';
+const supportTestingOnBitsrc = !isAppVeyor;
 const apiBaseUrl = process.env.BITSRC_ENV === 'stg' ? 'https://api-stg.bitsrc.io' : 'https://api.bitsrc.io';
 const username = process.env.testerBitsrcUsername || 'tester';
 const password = process.env.testerBitsrcPassword;

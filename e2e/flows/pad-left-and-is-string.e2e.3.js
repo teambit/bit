@@ -5,7 +5,6 @@ import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -119,9 +118,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
               helper.runCmd('bit tag -a -s 2.0.0');
 
-              // as an intermediate step, make sure bit status is clean
+              // as an intermediate step, make sure bit status doesn't show them as modified
+              // it's a very important step which covers a few bugs
               const output = helper.runCmd('bit status');
-              expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+              expect(output).to.not.have.a.string('modified');
 
               exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
             });
