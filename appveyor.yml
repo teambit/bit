@@ -32,10 +32,7 @@ for:
       only:
         - configuration: e2e.3
     test_script:
-      - ps: "npm run e2e-test:appveyor3"
-
-  
-
+      - ps: "npm run e2e-test:appveyor3" 
  
 # build cache to preserve files/folders between builds
 cache:
