@@ -164,11 +164,11 @@ function traverse(config) {
       let dependencies = module.exports._getDependencies(localConfig);
       if (config.filter) {
         debug('using filter function to filter out dependencies');
-        debug(`unfiltered number of dependencies: ${dependencies.length}`);
+        debug(`number of dependencies before filtering: ${dependencies.length}`);
         dependencies = dependencies.filter(function (filePath) {
-          return config.filter(filePath, config.filename);
+          return localConfig.filter(filePath, localConfig.filename);
         });
-        debug(`filtered number of dependencies: ${dependencies.length}`);
+        debug(`number of dependencies after filtering: ${dependencies.length}`);
       }
       debug('cabinet-resolved all dependencies: ', dependencies);
       tree[dependency] = dependencies;

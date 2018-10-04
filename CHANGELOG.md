@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.6] - 2018-10-04
+
+- fix resolving npm paths to be linked to the correct file
+
 ## [1.0.6-dev.5] - 2018-10-03
 
 - update node-source-walk package to support `<>` jsx syntax by Babel
