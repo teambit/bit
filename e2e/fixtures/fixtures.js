@@ -67,3 +67,4 @@ describe('group of failed tests', () => {
     expect(true).to.be.false;
   });
 });`
+export const fooFixture = "module.exports = function foo() { return 'got foo'; }";

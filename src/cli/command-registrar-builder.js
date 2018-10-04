@@ -49,6 +49,7 @@ import Merge from './commands/public-cmds/merge-cmd';
 import Diff from './commands/public-cmds/diff-cmd';
 import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
+import Eject from './commands/public-cmds/eject-cmd';
 
 export default function registerCommands(extensionsCommands): CommandRegistrar {
   return new CommandRegistrar(
@@ -103,6 +104,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Diff(),
       new Login(),
       new Logout(),
+      new Eject(),
       new Migrate()
     ],
     extensionsCommands

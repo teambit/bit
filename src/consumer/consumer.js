@@ -480,7 +480,7 @@ export default class Consumer {
     if (!(componentFromModel instanceof Version)) {
       throw new TypeError(
         `isComponentModified expects componentFromModel to be Version, got ${typeof componentFromModel}`
-      ); 
+      );
     }
     if (!(componentFromFileSystem instanceof Component)) {
       throw new TypeError(
@@ -600,7 +600,9 @@ export default class Consumer {
       const versionRef = componentFromModel.versions[versionFromFs];
       if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${idStr}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
-      if (!versionFromModel) { throw new GeneralError(`failed loading version ${versionFromFs} of ${idStr} from the scope`); }
+      if (!versionFromModel) {
+        throw new GeneralError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
+      }
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;
     };
@@ -948,6 +950,9 @@ export default class Consumer {
    * @param {BitIds} removedDependencies - delete component that are used by other components.
    */
   async cleanBitMapAndBitJson(componentsToRemoveFromFs: BitIds, removedDependencies: BitIds) {
+    logger.debug(
+      `consumer.cleanBitMapAndBitJson, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap and bit.json`
+    );
     const bitJson = this.bitJson;
     this.bitMap.removeComponents(componentsToRemoveFromFs);
     this.bitMap.removeComponents(removedDependencies);
@@ -995,21 +1000,13 @@ export default class Consumer {
       this
     );
 
-    const componentsToRemoveFromFs = BitIds.fromArray(
-      removedComponentIds.filter(id => id.version === LATEST_BIT_VERSION)
-    );
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(componentsToRemoveFromFs, deleteFiles);
+      await this.removeComponentFromFs(removedComponentIds, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);
-    }
-    if ((!track || deleteFiles) && !R.isEmpty(removedComponentIds)) {
-      await packageJson.removeComponentsFromWorkspacesAndDependencies(
-        this,
-        this.getPath(),
-        this.bitMap,
-        componentsToRemoveFromFs
-      );
-      await this.cleanBitMapAndBitJson(componentsToRemoveFromFs, removedDependencies);
+      if (!track) {
+        await packageJson.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
+        await this.cleanBitMapAndBitJson(removedComponentIds, removedDependencies);
+      }
     }
     return new RemovedLocalObjects(
       removedComponentIds,
@@ -1062,21 +1059,6 @@ export default class Consumer {
         return componentVersion.toConsumer(this.scope.objects, manipulateDirData);
       })
     );
-  }
-
-  async eject(componentsIds: BitId[]) {
-    await this.remove({
-      ids: BitIds.fromArray(componentsIds),
-      force: true,
-      remote: false,
-      track: false,
-      deleteFiles: true
-    });
-    await packageJson.addComponentsWithVersionToRoot(this, componentsIds);
-    await packageJson.removeComponentsFromNodeModules(this, componentsIds);
-    await installPackages(this, [], true, true);
-
-    return componentsIds;
   }
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {

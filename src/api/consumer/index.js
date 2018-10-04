@@ -29,6 +29,7 @@ import attachEnvs from './lib/envs-attach';
 import ejectConf from './lib/eject-conf';
 import injectConf from './lib/inject-conf';
 import migrate from './lib/migrate';
+import ejectAction from './lib/eject';
 import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
 
@@ -70,5 +71,6 @@ export {
   ejectConf,
   injectConf,
   migrate,
+  ejectAction,
   login
 };

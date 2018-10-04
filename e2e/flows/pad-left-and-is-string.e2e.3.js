@@ -4,6 +4,7 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
+import { failureEjectMessage } from '../../src/cli/templates/eject-template';
 
 chai.use(require('chai-fs'));
 
@@ -114,7 +115,14 @@ describe('a flow with two components: is-string and pad-left, where is-string is
               helper.reInitLocalScope();
               helper.runCmd(`bit import ${username}.${scopeName}/string/is-string`);
               helper.runCmd(`bit import ${username}.${scopeName}/string/pad-left`);
+
               helper.runCmd('bit tag -a -s 2.0.0');
+
+              // as an intermediate step, make sure bit status doesn't show them as modified
+              // it's a very important step which covers a few bugs
+              const output = helper.runCmd('bit status');
+              expect(output).to.not.have.a.string('modified');
+
               exportOutput = helper.exportAllComponents(`${username}.${scopeName} --eject`);
             });
         });
@@ -123,6 +131,9 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         });
         it('should export them successfully', () => {
           expect(exportOutput).to.have.a.string('exported 2 components to scope');
+        });
+        it('should eject them successfully', () => {
+          expect(exportOutput).to.not.have.a.string(failureEjectMessage);
         });
         it('should delete the original component files from the file-system', () => {
           expect(path.join(helper.localScopePath, 'components/string/is-string')).not.to.be.a.path();

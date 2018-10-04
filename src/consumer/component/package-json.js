@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import path from 'path';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import Component from '../component';
@@ -20,7 +19,6 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import BitMap from '../bit-map';
 
 export type PackageJsonInstance = {};
 
@@ -53,7 +51,7 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
 /**
  * Add given components with their versions to root package.json
  */
-async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitId[]) {
+async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitIds) {
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
 
@@ -257,7 +255,7 @@ async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: 
   }
 }
 
-async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitId[]) {
+async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
   logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
   const registryPrefix = getRegistryPrefix();
   // paths without scope name, don't have a symlink in node-modules
@@ -269,15 +267,11 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
 
   logger.debug(`deleting the following paths: ${pathsToRemove.join('\n')}`);
   // $FlowFixMe nulls were removed in the previous filter function
-  return Promise.all(pathsToRemove.map(componentPath => fs.remove(path.join(consumer.getPath(), componentPath))));
+  return Promise.all(pathsToRemove.map(componentPath => fs.remove(consumer.toAbsolutePath(componentPath))));
 }
 
-async function removeComponentsFromWorkspacesAndDependencies(
-  consumer: Consumer,
-  rootDir: string,
-  bitMap: BitMap,
-  componentIds: BitId[]
-) {
+async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
+  const rootDir = consumer.getPath();
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   if (
@@ -285,7 +279,7 @@ async function removeComponentsFromWorkspacesAndDependencies(
     consumer.bitJson.packageManager === 'yarn' &&
     consumer.bitJson.useWorkspaces
   ) {
-    const dirsToRemove = componentIds.map(id => bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
+    const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
   }
   await PackageJson.removeComponentsFromDependencies(
@@ -296,6 +290,19 @@ async function removeComponentsFromWorkspacesAndDependencies(
   await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
+async function getPackageJsonObject(consumer: Consumer): Promise<Object> {
+  const driver = await consumer.driver.getDriver(false);
+  const PackageJson = driver.PackageJson;
+  return PackageJson.getPackageJson(consumer.getPath());
+}
+
+async function writePackageJsonFromObject(consumer: Consumer, data: Object) {
+  if (!data) return null;
+  const driver = await consumer.driver.getDriver(false);
+  const PackageJson = driver.PackageJson;
+  return PackageJson.saveRawObject(consumer.getPath(), data);
+}
+
 export {
   addComponentsToRoot,
   removeComponentsFromNodeModules,
@@ -304,5 +311,7 @@ export {
   addComponentsWithVersionToRoot,
   updateAttribute,
   addWorkspacesToPackageJson,
+  getPackageJsonObject,
+  writePackageJsonFromObject,
   removeComponentsFromWorkspacesAndDependencies
 };
