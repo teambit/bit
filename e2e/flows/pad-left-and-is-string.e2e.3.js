@@ -96,7 +96,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           expect(output).to.have.string('tests passed');
         });
       });
-      (supportTestingOnBitsrc ? describe : describe.skip)('exporting with --eject option', () => {
+      (supportTestingOnBitsrc ? describe.only : describe.skip)('exporting with --eject option', () => {
         let scopeName;
         let exportOutput;
         let isStringId;

@@ -5,7 +5,7 @@ import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester
 
 chai.use(require('chai-fs'));
 
-(supportTestingOnBitsrc ? describe : describe.skip)('export --eject functionality using bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe.only : describe.skip)('export --eject functionality using bitsrc.io', function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();

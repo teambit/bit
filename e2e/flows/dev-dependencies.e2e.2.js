@@ -135,7 +135,7 @@ describe('foo', () => {
           expect(output).to.have.string('tests passed');
         });
       });
-      (supportTestingOnBitsrc ? describe : describe.skip)('export and import dependencies as packages', () => {
+      (supportTestingOnBitsrc ? describe.only : describe.skip)('export and import dependencies as packages', () => {
         let scopeName;
         let scopeId;
         let bitsrcTester;

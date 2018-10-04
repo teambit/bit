@@ -3,24 +3,24 @@ image: Visual Studio 2015
 
 skip_branch_with_pr: true
 configuration:
-  - Unit
-  - e2e.1
+  # - Unit
+  # - e2e.1
   - e2e.2
   - e2e.3
 
 for:
-  -
-    matrix:
-      only:
-        - configuration: Unit
-    test_script:
-      - ps: "npm run test:appveyor"
-  -
-    matrix:
-      only:
-        - configuration: e2e.1
-    test_script:
-      - ps: "npm run e2e-test:appveyor1"
+  # -
+  #   matrix:
+  #     only:
+  #       - configuration: Unit
+  #   test_script:
+  #     - ps: "npm run test:appveyor"
+  # -
+  #   matrix:
+  #     only:
+  #       - configuration: e2e.1
+  #   test_script:
+  #     - ps: "npm run e2e-test:appveyor1"
   -
     matrix:
       only:
@@ -67,7 +67,7 @@ environment:
   registryProdToken:
     secure: PRt6cU+74aoYU+qZrdbRnQn62vTYP786tovlgwUkoA6mMQCypTcXxBubEFiZqFRE
   registryStgToken:
-    secure: O1bUEJWHnT41EkRUdUW2ePxNPO1bCbXkYPMMGJdB7OR8OOHnQYvtssp8cFbLIfAY
+    secure: p+ErTxsMthuFfEPHs37W0aVl6ChM8RcADXy994a5tZAV5jKwLHGQ0ttJ8/hOiHdf
   testerBitsrcPassword:
     secure: tR01IIjMw35fBOFhTQd9jw==
   matrix:
@@ -80,8 +80,11 @@ install:
   - ps: $pubSshContent = $env:testerBitsrcSSHPublicKey.Replace(' ', "`n")
   - ps: Set-Content c:\users\appveyor\.ssh\id_rsa.pub $pubSshContent
   # prod registry
-  - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n"
-  - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n"
+  # - ps: $npmrcContent = "@bit:registry=https://node.bitsrc.io/`n"
+  # - ps: $npmrcContent += "//node.bitsrc.io/:_authToken=$env:registryProdToken`n"
+  # stg registry
+  - ps: $npmrcContent = "@bit:registry=https://node-stg.bitsrc.io/`n"
+  - ps: $npmrcContent += "//node-stg.bitsrc.io/:_authToken=$env:registryStgToken`n"
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
   - ps: Install-Product node 6
@@ -116,9 +119,11 @@ test_script:
 
 #    .\scripts\copyArtifacts.ps1
 
-#artifacts:
-#- path: '%APPDATA%\Local\Bit\logs\debug.log'
-#  name: bitLogs
+artifacts:
+  - path: '%APPDATA%\Local\Bit\logs\debug.log'
+    name: bitLogs
+  - path: 'output.err'
+    name: mochaLogs
 #- path: artifacts\*.msi
 #  name: Installer
 #- path: artifacts\bit.${VERSION}.nupkg

@@ -39,14 +39,14 @@ jobs:
     working_directory: ~/bit
     steps:
       # prod registry
-      - run: npm config set @bit:registry https://node.bitsrc.io
-      - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
+    #   - run: npm config set @bit:registry https://node.bitsrc.io
+    #   - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
-    #   - run: npm config set @bit:registry https://node-stg.bitsrc.io
-    #   - run: echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
+      - run: npm config set @bit:registry https://node-stg.bitsrc.io
+      - run: echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
       - save_cache:
-          key: bitsrc-registry2
-        #   key: bitsrc-registry-stg3
+        #   key: bitsrc-registry2
+          key: bitsrc-registry-stg4
           paths:
             - ~/.npmrc
 
@@ -212,7 +212,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-      BITSRC_ENV: prod
+      BITSRC_ENV: stg
     parallelism: 4
     steps:
       - attach_workspace:
@@ -228,8 +228,8 @@ jobs:
       - restore_cache:
           key: bitsrc-ssh-key3
       - restore_cache:
-          key: bitsrc-registry2
-        #   key: bitsrc-registry-stg3
+        #   key: bitsrc-registry2
+          key: bitsrc-registry-stg4
       - restore_cache:
           keys:
             - builded-{{ checksum ".circle-sha" }}
@@ -248,13 +248,13 @@ jobs:
       - run: bit config set user.name tester
       - run: bit config set user.email ci@bitsrc.io
       # uncomment to configure circle to run against stg enviorment
-    #   - run: bit config set hub_domain hub-stg.bitsrc.io
+      - run: bit config set hub_domain hub-stg.bitsrc.io
 
       - run:
           name: Run e2e tests
-          command: cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
+        #   command: cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
           # command which support only - for debug purpose
-        #   command: cd bit && npm run e2e-test-circle --debug
+          command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
