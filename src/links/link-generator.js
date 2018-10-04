@@ -220,14 +220,8 @@ async function getComponentLinks({
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean
 }): Promise<OutputFileParams[]> {
-  const directDependencies: Dependency[] =
-    componentMap.origin === COMPONENT_ORIGINS.NESTED
-      ? component.dependencies.get()
-      : component.getAllNonEnvsDependencies();
-  const flattenedDependencies: BitIds =
-    componentMap.origin === COMPONENT_ORIGINS.NESTED
-      ? component.flattenedDependencies
-      : component.getAllNonEnvsFlattenedDependencies();
+  const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
+  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
   if (!directDependencies || !directDependencies.length) return [];
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
@@ -250,7 +244,7 @@ async function getComponentLinks({
         component.id
       }.
 The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
-      throw new GeneralError(errorMessage);
+      throw new Error(errorMessage);
     }
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
@@ -279,6 +273,19 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     createSymlinks(symlinks, component.id);
   }
   return linksToWrite;
+}
+
+function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
+  // devDependencies of Nested components are not written to the filesystem, so no need to link them.
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+    ? component.dependencies.get()
+    : component.getAllNonEnvsDependencies();
+}
+
+function _getFlattenedDependencies(component: Component, componentMap: ComponentMap): BitIds {
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+    ? component.flattenedDependencies
+    : component.getAllNonEnvsFlattenedDependencies();
 }
 
 function createSymlinks(symlinks: Symlink[], componentId: string) {

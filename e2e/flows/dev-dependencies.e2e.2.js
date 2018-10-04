@@ -2,6 +2,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 
 chai.use(require('chai-fs'));
@@ -163,6 +164,36 @@ describe('foo', () => {
           expect(packageJson.devDependencies).to.have.property(id);
         });
       });
+    });
+  });
+  describe('dev-dependency of a nested component', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'foo.js', fixtures.barFooFixture);
+      helper.createFile('utils', 'is-string-spec.js', fixtures.isString);
+      helper.createFile('utils', 'is-string.js', '');
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.addComponent('bar/foo.js');
+      helper.addComponent('utils/is-type.js');
+      helper.addComponentWithOptions('utils/is-string.js', {
+        m: 'utils/is-string.js',
+        i: 'utils/is-string',
+        t: 'utils/is-string-spec.js'
+      });
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      output = helper.importComponent('bar/foo');
+    });
+    it('should be able to import with no errors', () => {
+      expect(output).to.have.string('successfully imported');
+    });
+    it('bit status should show a clean state', () => {
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
   });
 });
