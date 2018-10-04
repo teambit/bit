@@ -476,7 +476,17 @@ export default class Consumer {
    * The way how it is done is by converting the file-system representation of the component into
    * a Version object. Once this is done, we have two Version objects, and we can compare their hashes
    */
-  async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): boolean {
+  async isComponentModified(componentFromModel: Version, componentFromFileSystem: Component): Promise<boolean> {
+    if (!(componentFromModel instanceof Version)) {
+      throw new TypeError(
+        `isComponentModified expects componentFromModel to be Version, got ${typeof componentFromModel}`
+      );
+    }
+    if (!(componentFromFileSystem instanceof Component)) {
+      throw new TypeError(
+        `isComponentModified expects componentFromFileSystem to be ConsumerComponent, got ${typeof componentFromFileSystem}`
+      );
+    }
     if (typeof componentFromFileSystem._isModified === 'undefined') {
       const componentMap = this.bitMap.getComponent(componentFromFileSystem.id);
       if (componentMap.originallySharedDir) {
@@ -577,20 +587,22 @@ export default class Consumer {
       }
       status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
+      const idStr = id.toString();
       if (!status.staged && !componentFromFileSystem.id.hasVersion()) {
-        throw new GeneralError(`component ${id} has an invalid state.
-           1) it has a model instance so it's not new.
-           2) it's not in staged state.
-           3) it doesn't have a version in the bitmap file.
-           Maybe the component was interrupted during the export and as a result the bitmap file wasn't updated with the new version
+        throw new GeneralError(`component ${idStr} has an invalid state.
+           it is saved in the scope so it's not new. however, it doesn't have a version in the .bitmap file, indicating that the component is new.
+           if possible, remove the component and re-import or re-create it.
            `);
       }
       // TODO: instead of doing that like this we should use:
       // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.scope.objects);
       // it looks like it's exactly the same code but it's not working from some reason
       const versionRef = componentFromModel.versions[versionFromFs];
-      if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${id}`);
+      if (!versionRef) throw new GeneralError(`version ${versionFromFs} was not found in ${idStr}`);
       const versionFromModel = await this.scope.getObject(versionRef.hash);
+      if (!versionFromModel) {
+        throw new GeneralError(`failed loading version ${versionFromFs} of ${idStr} from the scope`);
+      }
       status.modified = await this.isComponentModified(versionFromModel, componentFromFileSystem);
       return status;
     };

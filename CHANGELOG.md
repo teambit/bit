@@ -9,7 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - improve the stability of `bit export --eject` and provide some kind of rollback in case of failure
 - introduce a new command `bit eject` for removing local components and installing them as packages by an NPM client
+
+## [13.0.5-dev.10 - 2018-10-04]
+
+- support configuring Git executable path
 - update bit-javascript to support the new jsx syntax changes by Babel
+- pass config files and context in getDynamicConfig extension's life cycle
 
 ## [13.0.5-dev.9 - 2018-10-03]
 
