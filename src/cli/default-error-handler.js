@@ -77,6 +77,7 @@ import AbstractError from '../error/abstract-error';
 import { PathToNpmrcNotExist, WriteToNpmrcError } from '../consumer/login/exceptions';
 import ExtensionLoadError from '../extensions/exceptions/extension-load-error';
 import ExtensionGetDynamicPackagesError from '../extensions/exceptions/extension-get-dynamic-packages-error';
+import ExtensionGetDynamicConfigError from '../extensions/exceptions/extension-get-dynamic-config-error';
 import ExtensionInitError from '../extensions/exceptions/extension-init-error';
 import MainFileRemoved from '../consumer/component/exceptions/main-file-removed';
 import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir';
@@ -424,6 +425,13 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       }.\n${err.originalError.stack}`
   ],
   [
+    ExtensionGetDynamicConfigError,
+    err =>
+      `error: bit failed to get the config from ${err.name} with the following exception:\n${
+        err.originalError.message
+      }.\n${err.originalError.stack}`
+  ],
+  [
     InvalidCompilerInterface,
     err => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`
   ],
@@ -437,7 +445,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     GitNotFound,
     err =>
-      'error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the \'bit config set git_path <GIT_PATH>\''
+      "error: unable to run command because git executable not found. please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'"
   ],
   [
     AuthenticationFailed,

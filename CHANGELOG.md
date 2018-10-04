@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - support configuring Git executable path
 - update bit-javascript to support the new jsx syntax changes by Babel
+- pass config files and context in getDynamicConfig extension's life cycle
 
 ## [13.0.5-dev.9 - 2018-10-03]
 

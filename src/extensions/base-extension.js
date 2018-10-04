@@ -12,6 +12,7 @@ import { BitId } from '../bit-id';
 import type { EnvExtensionOptions } from './env-extension';
 import type { ExtensionOptions } from './extension';
 import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
+import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ExtensionLoadError from './exceptions/extension-load-error';
@@ -393,9 +394,6 @@ export default class BaseExtension {
           throw new ExtensionSchemaError(name, ajv.errorsText());
         }
       }
-      if (extensionProps.script.getDynamicConfig && typeof extensionProps.script.getDynamicConfig === 'function') {
-        extensionProps.dynamicConfig = await extensionProps.script.getDynamicConfig({ rawConfig });
-      }
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
       if (err.code === 'MODULE_NOT_FOUND') {
@@ -417,6 +415,23 @@ export default class BaseExtension {
     }
     extensionProps.loaded = true;
     return extensionProps;
+  }
+
+  static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
+    Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
+    logger.debug('base-extension - loadDynamicConfig');
+    const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
+    if (getDynamicConfig && typeof getDynamicConfig === 'function') {
+      try {
+        const dynamicConfig = await getDynamicConfig({
+          rawConfig: extensionProps.rawConfig
+        });
+        return dynamicConfig;
+      } catch (err) {
+        throw new ExtensionGetDynamicConfigError(err, extensionProps.name);
+      }
+    }
+    return undefined;
   }
 }
 

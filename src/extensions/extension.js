@@ -130,6 +130,9 @@ export default class Extension extends BaseExtension {
       newHooks: [],
       ...baseExtensionProps
     };
+    const dynamicConfig = await BaseExtension.loadDynamicConfig(extensionProps);
+    // $FlowFixMe
+    extensionProps.dynamicConfig = dynamicConfig;
     const extension: Extension = new Extension(extensionProps);
     if (extension.loaded) {
       await extension.init();
