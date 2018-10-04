@@ -22,7 +22,6 @@ import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
-import GeneralError from '../error/general-error';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import Dependencies from '../consumer/component/dependencies/dependencies';
 import getLinkContent from './link-content';
