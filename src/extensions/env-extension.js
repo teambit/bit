@@ -26,6 +26,7 @@ import ComponentBitJson from '../consumer/bit-json';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
+import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -237,6 +238,9 @@ export default class EnvExtension extends BaseExtension {
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
+    const dynamicConfig = await EnvExtension.loadDynamicConfig(envExtensionProps);
+    // $FlowFixMe
+    envExtensionProps.dynamicConfig = dynamicConfig;
     return envExtensionProps;
   }
 
@@ -255,6 +259,26 @@ export default class EnvExtension extends BaseExtension {
         return dynamicPackageDependencies;
       } catch (err) {
         throw new ExtensionGetDynamicPackagesError(err, envExtensionProps.name);
+      }
+    }
+    return undefined;
+  }
+
+  // $FlowFixMe
+  static async loadDynamicConfig(envExtensionProps: EnvExtensionProps): Promise<?Object> {
+    Analytics.addBreadCrumb('env-extension', 'loadDynamicConfig');
+    logger.debug('env-extension - loadDynamicConfig');
+    const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
+    if (getDynamicConfig && typeof getDynamicConfig === 'function') {
+      try {
+        const dynamicConfig = await getDynamicConfig({
+          rawConfig: envExtensionProps.rawConfig,
+          configFiles: envExtensionProps.files,
+          context: envExtensionProps.context
+        });
+        return dynamicConfig;
+      } catch (err) {
+        throw new ExtensionGetDynamicConfigError(err, envExtensionProps.name);
       }
     }
     return undefined;
