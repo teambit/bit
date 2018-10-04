@@ -9,6 +9,20 @@ const assertArrays = require('chai-arrays');
 
 chai.use(assertArrays);
 
+function sortComponentsArrayByComponentId(componentsArray) {
+  return componentsArray.sort(function (a, b) {
+    const idA = a.addedComponents[0].id.toLowerCase();
+    const idB = b.addedComponents[0].id.toLowerCase();
+    if (idA < idB) {
+      return -1;
+    }
+    if (idA > idB) {
+      return 1;
+    }
+    return 0;
+  });
+}
+
 describe('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
@@ -34,17 +48,7 @@ describe('bit add many programmatically', function () {
       const scriptPath = path.join(helper.localScopePath, 'add_many_test_files/add_components_programmatically.js');
       nodeStartOutput = helper.nodeStart(`${scriptPath} PROCESS`);
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
-      nodeStartOutputObj = nodeStartOutputObj.sort(function (a, b) {
-        const idA = a.addedComponents[0].id.toLowerCase();
-        const idB = b.addedComponents[0].id.toLowerCase();
-        if (idA < idB) {
-          return -1;
-        }
-        if (idA > idB) {
-          return 1;
-        }
-        return 0;
-      });
+      nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
       expect(nodeStartOutputObj[0]).to.have.property('addedComponents');
       expect(nodeStartOutputObj[0].addedComponents[0]).to.have.property('id');
       expect(nodeStartOutputObj[0].addedComponents[0].id).to.equal('add_many_test_files/c');
@@ -109,17 +113,7 @@ describe('bit add many programmatically', function () {
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/add_components_programmatically.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       nodeStartOutputObj = JSON.parse(nodeStartOutput);
-      nodeStartOutputObj = nodeStartOutputObj.sort(function (a, b) {
-        const idA = a.addedComponents[0].id.toLowerCase();
-        const idB = b.addedComponents[0].id.toLowerCase();
-        if (idA < idB) {
-          return -1;
-        }
-        if (idA > idB) {
-          return 1;
-        }
-        return 0;
-      });
+      nodeStartOutputObj = sortComponentsArrayByComponentId(nodeStartOutputObj);
       status = helper.status();
     });
     it('should add a component with no id and no spec', function () {
