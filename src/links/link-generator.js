@@ -22,7 +22,6 @@ import { getSync } from '../api/consumer/lib/global-config';
 import { Consumer } from '../consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
-import GeneralError from '../error/general-error';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import Dependencies from '../consumer/component/dependencies/dependencies';
 import getLinkContent from './link-content';
@@ -220,8 +219,8 @@ async function getComponentLinks({
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean
 }): Promise<OutputFileParams[]> {
-  const directDependencies: Dependency[] = component.getAllNonEnvsDependencies();
-  const flattenedDependencies: BitIds = component.getAllNonEnvsFlattenedDependencies();
+  const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
+  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
   if (!directDependencies || !directDependencies.length) return [];
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
@@ -234,15 +233,17 @@ async function getComponentLinks({
       return dep.id;
     };
     const dependencyId = getDependencyIdWithResolvedVersion();
-    // Get the real dependency component
-    const dependencyComponent = dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+    const getDependencyComponent = () => {
+      return dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+    };
+    const dependencyComponent = getDependencyComponent();
 
     if (!dependencyComponent) {
       const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${
         component.id
       }.
 The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
-      throw new GeneralError(errorMessage);
+      throw new Error(errorMessage);
     }
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
@@ -271,6 +272,19 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     createSymlinks(symlinks, component.id);
   }
   return linksToWrite;
+}
+
+function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
+  // devDependencies of Nested components are not written to the filesystem, so no need to link them.
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+    ? component.dependencies.get()
+    : component.getAllNonEnvsDependencies();
+}
+
+function _getFlattenedDependencies(component: Component, componentMap: ComponentMap): BitIds {
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+    ? component.flattenedDependencies
+    : component.getAllNonEnvsFlattenedDependencies();
 }
 
 function createSymlinks(symlinks: Symlink[], componentId: string) {
