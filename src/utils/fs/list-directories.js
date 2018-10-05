@@ -1,6 +1,6 @@
 /** @flow */
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 
 /**
  * synchronous component for listing directory contents.

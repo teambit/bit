@@ -1,5 +1,5 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
 import * as pathlib from 'path';
 
 export default function rmDir(path: string) {

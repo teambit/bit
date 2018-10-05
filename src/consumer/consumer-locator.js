@@ -4,7 +4,7 @@
  * @TODO deprecated and should be removed from here and use fs-propogate-until instead...
  */
 import * as pathlib from 'path';
-import * as fs from 'fs';
+import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
 
 function composeBitHiddenDirPath(path: string) {
