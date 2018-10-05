@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve performance by caching objects after loading them
 - fix error "link-generation: failed finding .. in the dependencies array" when a dependency has a devDependency installed as a component
 - improve the stability of `bit export --eject` and provide some kind of rollback in case of failure
 - introduce a new command `bit eject` for removing local components and installing them as packages by an NPM client
