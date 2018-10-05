@@ -36,16 +36,13 @@ import BitMap from './bit-map/bit-map';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
-import { getLatestVersionNumber, pathNormalizeToLinux, sortObject } from '../utils';
-import { DependencyResolver, updateDependenciesVersions } from './component/dependencies/dependency-resolver';
+import { pathNormalizeToLinux, sortObject } from '../utils';
 import { Version, ModelComponent } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
-import { installPackages } from '../npm-client/install-packages';
 import { RemovedLocalObjects } from '../scope/removed-components';
 import * as packageJson from './component/package-json';
 import { Dependencies } from './component/dependencies';
-import type { ImportOptions, ImportResult } from './component-ops/import-components';
 import CompilerExtension from '../extensions/compiler-extension';
 import TesterExtension from '../extensions/tester-extension';
 import type { PathOsBased, PathRelative, PathAbsolute, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
@@ -64,6 +61,7 @@ import {
   getManipulateDirWhenImportingComponents,
   getManipulateDirForExistingComponents
 } from './component-ops/manipulate-dir';
+import ComponentLoader from './component/component-loader';
 
 type ConsumerProps = {
   projectPath: string,
@@ -99,6 +97,7 @@ export default class Consumer {
   _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
+  componentLoader: ComponentLoader;
 
   constructor({
     projectPath,
@@ -119,6 +118,7 @@ export default class Consumer {
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
     this.warnForMissingDriver();
+    this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<?CompilerExtension> {
     return this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
@@ -329,100 +329,7 @@ export default class Consumer {
     ids: BitIds,
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
-    logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb(
-      'load components',
-      `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
-    );
-    const alreadyLoadedComponents = [];
-    const idsToProcess: BitId[] = [];
-    const invalidComponents: InvalidComponent[] = [];
-    ids.forEach((id: BitId) => {
-      if (!(id instanceof BitId)) {
-        throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
-      }
-      const idWithoutVersion = id.toStringWithoutVersion();
-      if (this._componentsCache[idWithoutVersion]) {
-        logger.debug(`the component ${idWithoutVersion} has been already loaded, use the cached component`);
-        Analytics.addBreadCrumb(
-          'load components',
-          `the component ${Analytics.hashData(idWithoutVersion)} has been already loaded, use the cached component`
-        );
-        alreadyLoadedComponents.push(this._componentsCache[idWithoutVersion]);
-      } else {
-        idsToProcess.push(id);
-      }
-    });
-    if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
-
-    const driverExists = this.warnForMissingDriver(
-      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
-    );
-
-    const components = idsToProcess.map(async (id: BitId) => {
-      const idWithConcreteVersion: BitId = getLatestVersionNumber(this.bitmapIds, id);
-
-      const componentMap = this.bitMap.getComponent(idWithConcreteVersion);
-      let bitDir = this.getPath();
-      if (componentMap.rootDir) {
-        bitDir = path.join(bitDir, componentMap.rootDir);
-      }
-      const componentFromModel = await this.loadComponentFromModelIfExist(idWithConcreteVersion);
-      let component;
-      try {
-        component = await Component.loadFromFileSystem({
-          bitDir,
-          componentMap,
-          id: idWithConcreteVersion,
-          consumer: this,
-          componentFromModel
-        });
-      } catch (err) {
-        if (throwOnFailure) throw err;
-
-        logger.error(`failed loading ${id.toString()} from the file-system`);
-        Analytics.addBreadCrumb(
-          'load components',
-          `failed loading ${Analytics.hashData(id.toString())} from the file-system`
-        );
-        if (Component.isComponentInvalidByErrorType(err)) {
-          invalidComponents.push({ id, error: err });
-          return null;
-        }
-        throw err;
-      }
-
-      component.loadedFromFileSystem = true;
-      component.originallySharedDir = componentMap.originallySharedDir || null;
-      component.wrapDir = componentMap.wrapDir || null;
-      // reload component map as it may be changed after calling Component.loadFromFileSystem()
-      component.componentMap = this.bitMap.getComponent(idWithConcreteVersion);
-      component.componentFromModel = componentFromModel;
-
-      if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-        // no need to resolve dependencies
-        return component;
-      }
-      // @todo: check if the files were changed, and if so, skip the next line.
-      const dependencyResolver = new DependencyResolver(component, this, idWithConcreteVersion);
-      await dependencyResolver.loadDependenciesForComponent(bitDir);
-      await updateDependenciesVersions(this, component);
-      return component;
-    });
-
-    const allComponents = [];
-    for (const componentP of components) {
-      // load the components one after another (not in parallel).
-      const component = await componentP; // eslint-disable-line no-await-in-loop
-      if (component) {
-        this._componentsCache[component.id.toStringWithoutVersion()] = component;
-        logger.debug(`Finished loading the component, ${component.id.toString()}`);
-        Analytics.addBreadCrumb(`Finished loading the component, ${Analytics.hashData(component.id.toString())}`);
-        allComponents.push(component);
-      }
-    }
-
-    return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
+    return this.componentLoader.loadMany(ids, throwOnFailure);
   }
 
   importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {

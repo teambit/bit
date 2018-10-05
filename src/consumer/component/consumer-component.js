@@ -1078,6 +1078,20 @@ export default class Component {
     });
   }
 
+  copyAllDependenciesAndPackagesFromModel() {
+    const componentFromModel = this.componentFromModel;
+    if (!componentFromModel) { throw new Error('copyAllDependenciesAndPackagesFromModel: component is missing from the model'); }
+    this.setDependencies(componentFromModel.dependencies.getClone());
+    this.setDevDependencies(componentFromModel.devDependencies.getClone());
+    this.setCompilerDependencies(componentFromModel.compilerDependencies.getClone());
+    this.setTesterDependencies(componentFromModel.testerDependencies.getClone());
+    this.packageDependencies = R.clone(componentFromModel.packageDependencies);
+    this.devPackageDependencies = R.clone(componentFromModel.devPackageDependencies);
+    this.peerPackageDependencies = R.clone(componentFromModel.peerPackageDependencies);
+    this.compilerPackageDependencies = R.clone(componentFromModel.compilerPackageDependencies);
+    this.testerPackageDependencies = R.clone(componentFromModel.testerPackageDependencies);
+  }
+
   static async fromObject(object: Object): Component {
     const {
       name,
