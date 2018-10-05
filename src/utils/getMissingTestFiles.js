@@ -1,7 +1,7 @@
 // @flow
 import R from 'ramda';
 import isGlob from 'is-glob';
-import fs from 'fs';
+import fs from 'fs-extra';
 import { pathNormalizeToLinux } from './index';
 import type { PathOsBased } from './path';
 

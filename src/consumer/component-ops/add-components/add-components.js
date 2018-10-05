@@ -13,7 +13,6 @@ import {
   glob,
   isDir,
   calculateFileInfo,
-  existsSync,
   pathNormalizeToLinux,
   getMissingTestFiles,
   retrieveIgnoreList,
@@ -65,7 +64,7 @@ const REGEX_DSL_PATTERN = /{([^}]+)}/g;
 function validatePaths(fileArray: string[]): PathsStats {
   const componentPathsStats = {};
   fileArray.forEach((componentPath) => {
-    if (!existsSync(componentPath)) {
+    if (!fs.existsSync(componentPath)) {
       throw new PathsNotExist([componentPath]);
     }
     componentPathsStats[componentPath] = {

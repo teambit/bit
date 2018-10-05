@@ -1,5 +1,5 @@
 /** @flow */
-import fs from 'fs';
+import fs from 'fs-extra';
 
 export default function chown(path: string, uid: number, gid: number): Promise<void> {
   return new Promise((resolve, reject) => {

@@ -6,7 +6,7 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, removeFile, readFile, glob } from '../../utils';
+import { resolveGroupId, mkdirp, writeFile, removeFile, glob } from '../../utils';
 import { Scope } from '../../scope';
 import { ModelComponent, Symlink, ScopeMeta } from '../models';
 import logger from '../../logger/logger';
@@ -59,7 +59,8 @@ export default class Repository {
   load(ref: Ref): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
 
-    return readFile(this.objectPath(ref))
+    return fs
+      .readFile(this.objectPath(ref))
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
       })
@@ -134,7 +135,7 @@ export default class Repository {
   }
 
   loadRaw(ref: Ref): Promise<Buffer> {
-    return readFile(this.objectPath(ref));
+    return fs.readFile(this.objectPath(ref));
   }
 
   async loadRawObject(ref: Ref): Promise<BitRawObject> {
