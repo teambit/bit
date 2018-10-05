@@ -58,11 +58,14 @@ export default class Repository {
 
   load(ref: Ref): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
-
     return fs
       .readFile(this.objectPath(ref))
       .then((fileContents) => {
         return BitObject.parseObject(fileContents, this.types);
+      })
+      .then((parsedObject: BitObject) => {
+        this.setCache(parsedObject);
+        return parsedObject;
       })
       .catch((err) => {
         if (err.code === 'ENOENT') {
@@ -161,7 +164,7 @@ export default class Repository {
     return this;
   }
 
-  getCache(ref: Ref) {
+  getCache(ref: Ref): BitObject {
     return this._cache[ref.toString()];
   }
 
