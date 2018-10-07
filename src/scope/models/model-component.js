@@ -298,6 +298,8 @@ export default class Component extends BitObject {
    * when it's being called from the Consumer, some manipulation are done on the component, such
    * as stripping the originallySharedDir and adding wrapDir.
    * when it's being called from the Scope, no manipulations are done.
+   *
+   * @see sources.consumerComponentToVersion() for the opposite action.
    */
   async toConsumerComponent(
     versionStr: string,

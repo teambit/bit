@@ -1,5 +1,5 @@
 /** @flow */
-import * as fs from 'fs';
+import fs from 'fs-extra';
 import { identityFile } from '../../../utils';
 
 function readKey(keyPath: ?string) {

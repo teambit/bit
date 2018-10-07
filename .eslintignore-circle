@@ -38,7 +38,6 @@ src/scope/component-objects.js
 src/scope/models/source.js
 src/scope/repositories/source.js
 src/search/indexer.js
-src/utils/fs-exists-sync.js
 src/utils/is-file-auto-generated.js
 src/utils/object-to-stringified-tuple-array.js
 src/utils/promise-to-result-object.js

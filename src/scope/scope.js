@@ -1022,14 +1022,11 @@ export default class Scope {
     return this.objects.add(symlink);
   }
 
-  async exportMany(ids: BitIds, remoteName: string, context: Object = {}, eject: boolean): Promise<BitId[]> {
+  async exportMany(ids: BitIds, remoteName: string, context: Object = {}): Promise<BitId[]> {
     logger.debug(`exportMany, ids: ${ids.toString()}`);
     Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.toString())}`);
 
     const remotes = await this.remotes();
-    if (eject && !remotes.isHub(remoteName)) {
-      return Promise.reject('--eject flag is relevant only when the remote is a hub');
-    }
     const remote = await remotes.resolve(remoteName, this);
     const componentObjectsP = ids.map(id => this.sources.getObjects(id));
     const componentObjects = await Promise.all(componentObjectsP);

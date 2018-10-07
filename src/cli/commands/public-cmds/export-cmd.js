@@ -4,6 +4,8 @@ import Command from '../../command';
 import { exportAction } from '../../../api/consumer';
 import { BitId } from '../../../bit-id';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import type { EjectResults } from '../../../consumer/component-ops/eject-components';
+import ejectTemplate from '../../templates/eject-template';
 
 const chalk = require('chalk');
 
@@ -19,15 +21,32 @@ export default class Export extends Command {
   migration = true;
 
   action([remote, ids]: [string, string[]], { forget, eject }: any): Promise<*> {
-    return exportAction(ids, remote, !forget, eject).then(componentId => ({ componentId, remote }));
+    return exportAction(ids, remote, !forget, eject).then(({ componentsIds, ejectResults }) => ({
+      componentsIds,
+      ejectResults,
+      remote
+    }));
   }
 
-  report({ componentId, remote }: { componentId: BitId | BitId[], remote: string }): string {
-    if (R.isEmpty(componentId)) return chalk.yellow('nothing to export');
-    if (Array.isArray(componentId)) {
-      return chalk.green(`exported ${componentId.length} components to scope ${chalk.bold(remote)}`);
-    }
+  report({
+    componentsIds,
+    ejectResults,
+    remote
+  }: {
+    componentsIds: BitId[],
+    ejectResults: ?EjectResults,
+    remote: string
+  }): string {
+    if (R.isEmpty(componentsIds)) return chalk.yellow('nothing to export');
+    const exportOutput = () => {
+      return chalk.green(`exported ${componentsIds.length} components to scope ${chalk.bold(remote)}`);
+    };
+    const ejectOutput = () => {
+      if (!ejectResults) return '';
+      const output = ejectTemplate(ejectResults);
+      return `\n${output}`;
+    };
 
-    return chalk.green(`exported component ${chalk.bold(componentId.toString())} to scope ${chalk.bold(remote)}`);
+    return exportOutput() + ejectOutput();
   }
 }

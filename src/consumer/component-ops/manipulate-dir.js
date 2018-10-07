@@ -65,7 +65,7 @@ function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLin
 }
 
 /**
- * use this method when loading an existing component. don't use it while the import process
+ * use this method when loading an existing component. don't use it during the import process
  */
 export async function getManipulateDirForExistingComponents(
   consumer: Consumer,
@@ -73,10 +73,12 @@ export async function getManipulateDirForExistingComponents(
 ): Promise<ManipulateDirItem[]> {
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
-  const componentMap: ComponentMap = consumer.bitMap.getComponent(id, { ignoreVersion: true });
+  // in case this is a dependency that was installed via NPM, the file is in the scope but not on
+  // the filesystem, in that case, no need for wrapDir or sharedDir
+  const componentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
-  const originallySharedDir = getOriginallySharedDirIfNeeded(componentMap.origin, version);
-  const wrapDir = getWrapDirIfNeeded(componentMap.origin, version);
+  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
+  const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
   dependencies.forEach((dependency) => {

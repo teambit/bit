@@ -31,10 +31,8 @@ import isDirEmpty from './fs/is-dir-empty';
 import removeEmptyDir from './fs/remove-empty-dir';
 import isDir from './is-dir';
 import writeFile from './fs-write-file';
-import readFile from './fs-read-file';
 import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
-import existsSync from './fs-exists-sync';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './fs/current-dir-name';
 import removeFile from './fs-remove-file';
@@ -112,11 +110,9 @@ export {
   resolveBoolean,
   empty,
   filter,
-  readFile,
   cleanChar,
   writeFile,
   mkdirp,
-  existsSync,
   cleanObject,
   cleanBang,
   prependBang,

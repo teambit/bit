@@ -1,8 +1,8 @@
 /** @flow */
 import path from 'path';
-import fs from 'fs';
+import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
-import { mapToObject, objectToTupleArray, writeFile, readFile } from '../utils';
+import { mapToObject, objectToTupleArray, writeFile } from '../utils';
 
 function getPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
@@ -38,7 +38,8 @@ export default class Config extends Map<string, string> {
   }
 
   static load(): Promise<Config> {
-    return readFile(getPath())
+    return fs
+      .readFile(getPath())
       .then(contents => new Config(objectToTupleArray(JSON.parse(contents.toString()))))
       .catch((err) => {
         if (err.code !== 'ENOENT') return err;
