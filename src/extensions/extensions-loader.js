@@ -2,7 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
-import Extension from './extension';
+import ExtensionWrapper from './extension-wrapper';
 import type { LoadArgsProps } from './extension';
 import { loadConsumer, Consumer } from '../consumer';
 import logger from '../logger/logger';
@@ -63,12 +63,11 @@ const _loadExtension = (consumerPath: ?string, scopePath: ?string) => (
 ): Promise<Extension> => {
   const loadArgs: LoadArgsProps = {
     name,
-    rawConfig: rawConfig.config,
-    options: rawConfig.options,
+    rawConfig,
     consumerPath,
     scopePath
   };
-  return Extension.load(loadArgs);
+  return ExtensionWrapper.load(loadArgs);
 };
 
 /**
