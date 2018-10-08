@@ -9,7 +9,6 @@ import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
-import areVinylArrayEqual from './sources/compare-vinyl-array';
 
 export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
@@ -119,14 +118,9 @@ export default class ComponentLoader {
       return component;
     }
     const loadDependencies = async () => {
-      if (componentFromModel && areVinylArrayEqual(componentFromModel.files, component.files)) {
-        // if the files from the model were not changed, no need to calculate dependencies
-        component.copyAllDependenciesAndPackagesFromModel();
-      } else {
-        const dependencyResolver = new DependencyResolver(component, this.consumer, idWithConcreteVersion);
-        await dependencyResolver.loadDependenciesForComponent(bitDir);
-        await updateDependenciesVersions(this.consumer, component);
-      }
+      const dependencyResolver = new DependencyResolver(component, this.consumer, idWithConcreteVersion);
+      await dependencyResolver.loadDependenciesForComponent(bitDir);
+      await updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
     return component;
