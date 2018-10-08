@@ -304,7 +304,7 @@ export default class BitMap {
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {
     const allComponents = R.values(this.components);
-    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id.clone()));
+    const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id));
     if (!origin) return ids(allComponents);
     // $FlowFixMe we know origin is an array in that case
     const components = allComponents.filter(c => origin.includes(c.origin));
@@ -558,7 +558,7 @@ export default class BitMap {
     const componentWithScope = components.find((componentMap: ComponentMap) => {
       return idHasVersion ? componentMap.id.toString() === id : componentMap.id.toStringWithoutVersion() === id;
     });
-    if (componentWithScope) return componentWithScope.id.clone();
+    if (componentWithScope) return componentWithScope.id;
 
     // continue with searching without the scope name
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
@@ -567,7 +567,7 @@ export default class BitMap {
         ? componentMap.id.toStringWithoutScope() === id
         : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
     });
-    if (componentWithoutScope) return componentWithoutScope.id.clone();
+    if (componentWithoutScope) return componentWithoutScope.id;
     if (shouldThrow) {
       throw new MissingBitMapComponent(id);
     }
