@@ -52,8 +52,9 @@ export default class Driver {
     consumerPath: string,
     filePaths: string[],
     bindingPrefix: string,
-    resolveModulesConfig: ResolveModulesConfig
-  ): Promise<{ missing: Object[], tree: Tree }> {
+    resolveModulesConfig: ResolveModulesConfig,
+    visited: Object
+  ): Promise<{ tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
     const fullPaths = filePaths.map(filePath => path.join(cwd, filePath));
@@ -64,7 +65,8 @@ export default class Driver {
       consumerPath,
       filePaths: fullPaths,
       bindingPrefix,
-      resolveModulesConfig
+      resolveModulesConfig,
+      visited
     });
   }
 
