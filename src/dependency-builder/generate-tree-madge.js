@@ -104,7 +104,6 @@ function convertTreePaths(depTree, pathCache, baseDir) {
  */
 export default function generateTree(files = [], config) {
   const depTree = {};
-  const visited = {};
   const nonExistent = {};
   const npmPaths = {};
   const pathCache = {};
@@ -124,7 +123,7 @@ export default function generateTree(files = [], config) {
         requireConfig: config.requireConfig,
         webpackConfig: config.webpackConfig,
         resolveConfig: config.resolveConfig,
-        visited,
+        visited: config.visited,
         errors,
         filter: (dependencyFilePath, traversedFilePath) => {
           let dependencyFilterRes = true;

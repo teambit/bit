@@ -367,7 +367,8 @@ export async function getDependencyTree({
   consumerPath,
   filePaths,
   bindingPrefix,
-  resolveModulesConfig
+  resolveModulesConfig,
+  visited = {}
 }: DependencyTreeParams): Promise<{ tree: Tree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(consumerPath, resolveModulesConfig);
   const config = {
@@ -375,7 +376,7 @@ export async function getDependencyTree({
     includeNpm: true,
     requireConfig: null,
     webpackConfig: null,
-    visited: {},
+    visited,
     nonExistent: [],
     resolveConfig: resolveConfigAbsolute
   };
