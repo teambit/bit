@@ -30,6 +30,7 @@ const baseTemplate = (extensionsTemplate) => {
     ${chalk.cyan('install')}    install node packages of all components and calls the link command.
     ${chalk.cyan('remote')}     manage set of tracked bit scope(s).
     ${chalk.cyan('remove')}     remove component(s) from your working area, or a remote scope.
+    ${chalk.cyan('eject')}      remove components from the local scope and install them by the NPM client.
     ${chalk.cyan('link')}       generate symlinks for sourced components absolute path resolution.
 
   ${chalk.underline('discover components')}

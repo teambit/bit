@@ -563,7 +563,7 @@ export default class BitMap {
     const componentWithScope = components.find((componentMap: ComponentMap) => {
       return idHasVersion ? componentMap.id.toString() === id : componentMap.id.toStringWithoutVersion() === id;
     });
-    if (componentWithScope) return componentWithScope.id.clone();
+    if (componentWithScope) return componentWithScope.id;
 
     // continue with searching without the scope name
     const idWithoutVersion = BitId.getStringWithoutVersion(id);
@@ -572,7 +572,7 @@ export default class BitMap {
         ? componentMap.id.toStringWithoutScope() === id
         : componentMap.id.toStringWithoutScopeAndVersion() === idWithoutVersion;
     });
-    if (componentWithoutScope) return componentWithoutScope.id.clone();
+    if (componentWithoutScope) return componentWithoutScope.id;
     if (shouldThrow) {
       throw new MissingBitMapComponent(id);
     }
