@@ -26,9 +26,9 @@ export default class BitId {
   +version: ?string;
 
   constructor({ scope, box, name, version }: BitIdProps) {
-    if (!isValidIdChunk(name)) throw new InvalidName(name);
-    if (scope && !isValidScopeName(scope)) throw new InvalidScopeName(scope);
-
+    // don't validate the id parts using isValidIdChunk here. we instance this class tons of times
+    // and running regex so many times impact the performance
+    if (!name) throw new InvalidName(name);
     this.scope = scope || null;
     this.box = null;
     this.name = box ? `${box}/${name}` : name;
@@ -159,20 +159,30 @@ export default class BitId {
       version = newVersion;
     }
 
-    if (hasScope) {
-      const delimiterIndex = id.indexOf('/');
-      if (delimiterIndex < 0) throw new InvalidBitId();
-      const scope = id.substring(0, delimiterIndex);
-      const name = id.substring(delimiterIndex + 1);
-      return new BitId({
-        scope,
-        name,
-        version
-      });
-    }
+    const getScopeAndName = () => {
+      if (hasScope) {
+        const delimiterIndex = id.indexOf('/');
+        if (delimiterIndex < 0) throw new InvalidBitId();
+        const scope = id.substring(0, delimiterIndex);
+        const name = id.substring(delimiterIndex + 1);
+        return {
+          scope,
+          name
+        };
+      }
 
-    const name = id;
+      return {
+        scope: null,
+        name: id
+      };
+    };
+    const { scope, name } = getScopeAndName();
+
+    if (!isValidIdChunk(name)) throw new InvalidName(name);
+    if (scope && !isValidScopeName(scope)) throw new InvalidScopeName(scope);
+
     return new BitId({
+      scope,
       name,
       version
     });

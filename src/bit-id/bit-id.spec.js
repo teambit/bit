@@ -10,13 +10,13 @@ describe('Bit-id', () => {
     expect(() => (bitId.version = 'name')).to.throw();
   });
   describe('constructor', () => {
-    it('should throw for an invalid scope', () => {
+    it('should not throw for an invalid scope as it hurts performance (it is done on .parse() instead)', () => {
       const invalidScope = () => new BitId({ scope: 123, name: 'my-name' });
-      expect(invalidScope).to.throw(InvalidScopeName);
+      expect(invalidScope).to.not.throw(InvalidScopeName);
     });
-    it('should throw for an invalid name', () => {
+    it('should not throw for an invalid name as it hurts performance (it is done on .parse() instead)', () => {
       const invalidName = () => new BitId({ name: ['a', 'b'] });
-      expect(invalidName).to.throw(InvalidName);
+      expect(invalidName).to.not.throw(InvalidName);
     });
     it('should accept an empty scope', () => {
       const invalidScope = () => new BitId({ scope: null, name: 'my-name' });
