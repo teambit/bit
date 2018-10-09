@@ -12,11 +12,6 @@ please read the [code of conduct](CODE_OF_CONDUCT.md).
   $ npm i
 ```
 
-- you can use yarn instead
-```bash
-  $ yarn
-```
-
 - install command globally and link (in order to use the "bit-dev" command globaly and always use the
   latest development build)
 ```bash
