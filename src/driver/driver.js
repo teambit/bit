@@ -53,20 +53,20 @@ export default class Driver {
     filePaths: string[],
     bindingPrefix: string,
     resolveModulesConfig: ResolveModulesConfig,
-    visited: Object
+    cacheResolvedDependencies: Object
   ): Promise<{ tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
     const fullPaths = filePaths.map(filePath => path.join(cwd, filePath));
     const driver = this.getDriver(false);
-
+    // $FlowFixMe driver must be set
     return driver.getDependencyTree({
       baseDir: cwd,
       consumerPath,
       filePaths: fullPaths,
       bindingPrefix,
       resolveModulesConfig,
-      visited
+      visited: cacheResolvedDependencies
     });
   }
 

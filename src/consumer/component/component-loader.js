@@ -13,10 +13,10 @@ import { DependencyResolver, updateDependenciesVersions } from './dependencies/d
 export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
   consumer: Consumer;
-  visited: Object;
+  cacheResolvedDependencies: Object;
   constructor(consumer: Consumer) {
     this.consumer = consumer;
-    this.visited = {};
+    this.cacheResolvedDependencies = {};
   }
 
   async loadMany(
@@ -121,7 +121,7 @@ export default class ComponentLoader {
     }
     const loadDependencies = async () => {
       const dependencyResolver = new DependencyResolver(component, this.consumer, idWithConcreteVersion);
-      await dependencyResolver.loadDependenciesForComponent(bitDir, this.visited);
+      await dependencyResolver.loadDependenciesForComponent(bitDir, this.cacheResolvedDependencies);
       await updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
