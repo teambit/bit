@@ -18,9 +18,11 @@ import { Analytics } from '../analytics/analytics';
 import ExtensionLoadError from './exceptions/extension-load-error';
 import Environment from '../environment';
 import ExtensionSchemaError from './exceptions/extension-schema-error';
+import ExtensionEntry from './extension-entry';
 
+const CORE_EXTENSIONS_PATH = './core-extensions';
 export default class ExtensionWrapper {
-  name: string;
+  name: ExtensionEntry;
   loaded: boolean;
   initialized: boolean;
   disabled: boolean;
@@ -196,46 +198,24 @@ export default class ExtensionWrapper {
     Analytics.addBreadCrumb('extension-wrapper', 'load extension');
     logger.debug(`extension-wrapper loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
-    if (options.file) {
-      let absPath = options.file;
-      const file = options.file || '';
-      if (!path.isAbsolute(options.file) && consumerPath) {
-        absPath = path.resolve(consumerPath, file);
-      }
-      const staticExtensionProps: StaticProps = await BaseExtension.loadFromFile({
-        name,
-        filePath: absPath,
-        rawConfig,
-        options,
-        throws
-      });
-      const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
-      extensionProps.api = concreteBaseAPI;
+    const extensionEntry = new ExtensionEntry(name);
+    // TODO: Make sure the extension already exists
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
+    //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
+    // Skip disabled extensions
+    if (options.disabled) {
+      extensionProps.disabled = true;
+      logger.info(`skip extension ${extensionProps.name} because it is disabled`);
+      extensionProps.loaded = false;
       return extensionProps;
     }
-    let staticExtensionProps: StaticProps = {
+    const staticExtensionProps = await _loadFromFile({
       name,
-      rawConfig,
-      dynamicConfig: rawConfig,
-      options,
-      disabled: false,
-      loaded: false,
-      filePath: ''
-    };
-    // Require extension from scope
-    if (scopePath) {
-      // $FlowFixMe
-      const { resolvedPath, componentPath } = _getExtensionPath(name, scopePath, options.core);
-      const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
-      staticExtensionProps = await BaseExtension.loadFromFile({
-        name: nameWithVersion,
-        filePath: resolvedPath,
-        rootDir: componentPath,
-        rawConfig,
-        options,
-        throws
-      });
-    }
+      filePath: resolvedPath,
+      rootDir: componentPath,
+      rawPropTypes,
+      throws
+    });
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
     return extensionProps;
   }
@@ -270,85 +250,6 @@ export default class ExtensionWrapper {
     return extensionProps;
   }
 
-  static async loadFromFile({
-    name,
-    filePath,
-    rootDir,
-    rawConfig = {},
-    // $FlowFixMe
-    options = {},
-    throws = false
-  }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
-    logger.debug(`loading extension ${name} from ${filePath}`);
-    Analytics.addBreadCrumb('base-extension', 'load extension from file');
-    const extensionProps: StaticProps = {
-      name,
-      rawConfig,
-      dynamicConfig: rawConfig,
-      options,
-      disabled: false,
-      loaded: false,
-      filePath: '',
-      rootDir: ''
-    };
-    // Skip disabled extensions
-    if (options.disabled) {
-      extensionProps.disabled = true;
-      logger.info(`skip extension ${extensionProps.name} because it is disabled`);
-      extensionProps.loaded = false;
-      return extensionProps;
-    }
-    extensionProps.filePath = filePath;
-    extensionProps.rootDir = rootDir;
-    const isFileExist = await fs.exists(filePath);
-    if (!isFileExist) {
-      // Do not throw an error if the file not exist since we will install it later
-      // unless you specify the options.file which means you want a specific file which won't be installed automatically later
-      if (throws && options.file) {
-        const err = new Error(`the file ${filePath} not found`);
-        throw new ExtensionLoadError(err, extensionProps.name);
-      }
-      extensionProps.loaded = false;
-      return extensionProps;
-    }
-    if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
-      extensionProps.loaded = false;
-      return extensionProps;
-    }
-    try {
-      // $FlowFixMe
-      const script = require(filePath); // eslint-disable-line
-      extensionProps.script = script.default ? script.default : script;
-      if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {
-        extensionProps.schema = await extensionProps.script.getSchema();
-        const valid = ajv.validate(extensionProps.schema, rawConfig);
-        if (!valid) {
-          throw new ExtensionSchemaError(name, ajv.errorsText());
-        }
-      }
-      // Make sure to not kill the process if an extension didn't load correctly
-    } catch (err) {
-      if (err.code === 'MODULE_NOT_FOUND') {
-        const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
-        logger.warn(msg);
-        // console.error(msg); // eslint-disable-line no-console
-      }
-      logger.error(`loading extension ${extensionProps.name} failed`);
-      logger.error(err);
-      extensionProps.loaded = false;
-      if (throws) {
-        let printStack = true;
-        if (err instanceof ExtensionSchemaError) {
-          printStack = false;
-        }
-        throw new ExtensionLoadError(err, extensionProps.name, printStack);
-      }
-      return extensionProps;
-    }
-    extensionProps.loaded = true;
-    return extensionProps;
-  }
-
   static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
     Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
     logger.debug('base-extension - loadDynamicConfig');
@@ -367,14 +268,35 @@ export default class ExtensionWrapper {
   }
 }
 
-const _getExtensionPath = (name: string, scopePath: ?string, isCore: boolean = false): ExtensionPath => {
-  if (isCore) {
-    return _getCoreExtensionPath(name);
+const _getExtensionPath = (
+  extensionEntry: ExtensionEntry,
+  scopePath: ?string,
+  consumerPath: ?string
+): ExtensionPath => {
+  if (extensionEntry.source === 'FILE') {
+    return _getFileExtensionPath(extensionEntry.val, consumerPath);
+  }
+  if (extensionEntry.source === 'BIT') {
+    return _getCoreExtensionPath(extensionEntry.val);
   }
   if (!scopePath) {
     throw new ScopeNotFound();
   }
-  return _getRegularExtensionPath(name, scopePath);
+  return _getRegularExtensionPath(extensionEntry.val, scopePath);
+};
+
+const _getFileExtensionPath = (filePath: string, consumerPath: ?string): ExtensionPath => {
+  let absPath = filePath;
+  if (!path.isAbsolute(filePath) && consumerPath) {
+    if (!consumerPath) {
+      throw new Error('consumer path is not defined');
+    }
+    absPath = path.resolve(consumerPath, filePath);
+  }
+  return {
+    resolvedPath: absPath,
+    componentPath: absPath
+  };
 };
 
 const _getCoreExtensionPath = (name: string): ExtensionPath => {
@@ -452,4 +374,65 @@ const _getConcreteBaseAPI = ({ name }: { name: string }) => {
   const concreteBaseAPI = R.clone(baseApi);
   concreteBaseAPI.getLogger = baseApi.getLogger(name);
   return concreteBaseAPI;
+};
+
+const _loadFromFile = async ({
+  name,
+  filePath,
+  rootDir,
+  rawPropTypes = {},
+  throws = false
+}: BaseLoadFromFileArgsProps): Promise<StaticProps> => {
+  logger.debug(`loading extension ${name} from ${filePath}`);
+  Analytics.addBreadCrumb('extension-wrapper', 'load extension from file');
+  const extensionProps: StaticProps = {
+    name,
+    rawPropTypes,
+    propTypes: rawPropTypes,
+    loaded: false
+  };
+
+  const isFileExist = await fs.exists(filePath);
+  if (!isFileExist) {
+    // Do not throw an error if the file not exist since we will install it later
+    // unless you specify the options.file which means you want a specific file which won't be installed automatically later
+    if (throws) {
+      const err = new Error(`the file ${filePath} not found`);
+      throw new ExtensionLoadError(err, extensionProps.name);
+    }
+    extensionProps.loaded = false;
+    return extensionProps;
+  }
+  if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
+    extensionProps.loaded = false;
+    return extensionProps;
+  }
+  try {
+    // $FlowFixMe
+    const script = require(filePath); // eslint-disable-line
+    extensionProps.script = script.default ? script.default : script;
+    // TODO: validate prop types
+    // TODO: load default prop types
+
+    // Make sure to not kill the process if an extension didn't load correctly
+  } catch (err) {
+    if (err.code === 'MODULE_NOT_FOUND') {
+      const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
+      logger.warn(msg);
+      // console.error(msg); // eslint-disable-line no-console
+    }
+    logger.error(`loading extension ${extensionProps.name} failed`);
+    logger.error(err);
+    extensionProps.loaded = false;
+    if (throws) {
+      let printStack = true;
+      if (err instanceof ExtensionSchemaError) {
+        printStack = false;
+      }
+      throw new ExtensionLoadError(err, extensionProps.name, printStack);
+    }
+    return extensionProps;
+  }
+  extensionProps.loaded = true;
+  return extensionProps;
 };
