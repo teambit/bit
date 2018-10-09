@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve performance by caching resolved dependencies
 
 ## [13.0.5-dev.11 - 2018-10-07]
 
