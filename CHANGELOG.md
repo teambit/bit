@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.12 - 2018-10-09]
+
+- fix loading extension programmatically
+
 ## [13.0.5-dev.11 - 2018-10-07]
 
 - improve performance by caching objects after loading them
