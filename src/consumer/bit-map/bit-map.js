@@ -44,6 +44,7 @@ export default class BitMap {
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
+  allIds: ?BitIds;
 
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
@@ -303,9 +304,13 @@ export default class BitMap {
   }
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {
+    if (!origin && this.allIds) return this.allIds;
     const allComponents = R.values(this.components);
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id));
-    if (!origin) return ids(allComponents);
+    if (!origin) {
+      this.allIds = ids(allComponents);
+      return this.allIds;
+    }
     // $FlowFixMe we know origin is an array in that case
     const components = allComponents.filter(c => origin.includes(c.origin));
     return ids(components);
@@ -746,6 +751,7 @@ export default class BitMap {
   _invalidateCache = () => {
     this.paths = {};
     this.pathsLowerCase = {};
+    this.allIds = undefined;
   };
 
   _removeFromComponentsArray(componentId: BitId) {
