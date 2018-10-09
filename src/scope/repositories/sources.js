@@ -203,8 +203,10 @@ export default class SourceRepository {
     const compilerFiles = setEol(R.path(['compiler', 'files'], consumerComponent));
     const testerFiles = setEol(R.path(['tester', 'files'], consumerComponent));
 
-    const username = globalConfig.getSync(CFG_USER_NAME_KEY);
-    const email = globalConfig.getSync(CFG_USER_EMAIL_KEY);
+    const [username, email] = await Promise.all([
+      globalConfig.get(CFG_USER_NAME_KEY),
+      globalConfig.get(CFG_USER_EMAIL_KEY)
+    ]);
 
     clonedComponent.mainFile = manipulateDirs(clonedComponent.mainFile);
     clonedComponent.getAllDependencies().forEach((dependency) => {
@@ -306,16 +308,20 @@ export default class SourceRepository {
     return component;
   }
 
-  putAdditionalVersion(
+  async putAdditionalVersion(
     component: ModelComponent,
     version: Version,
-    message,
+    message: string,
     releaseType: string = DEFAULT_BIT_RELEASE_TYPE
-  ): ModelComponent {
+  ): Promise<ModelComponent> {
+    const [username, email] = await Promise.all([
+      globalConfig.get(CFG_USER_NAME_KEY),
+      globalConfig.get(CFG_USER_EMAIL_KEY)
+    ]);
     version.log = {
       message,
-      username: globalConfig.getSync(CFG_USER_NAME_KEY),
-      email: globalConfig.getSync(CFG_USER_EMAIL_KEY),
+      username,
+      email,
       date: Date.now().toString()
     };
     component.addVersion(version, releaseType);
