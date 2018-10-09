@@ -538,17 +538,13 @@ export default class Scope {
       'exportManyBareScope',
       'exportManyBareScope: will try to importMany in case there are missing dependencies'
     );
-    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true, false); // resolve dependencies
+    await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true, false); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     Analytics.addBreadCrumb('exportManyBareScope', 'exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
-    await Promise.all(versions.map(version => version.toObjects(this.objects)));
-    const manyConsumerComponent = await Promise.all(
-      manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects))
-    );
-    // await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
-    const ids = manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString());
-    await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
+    logger.debug('exportManyBareScope: objects were written successfully to the filesystem');
+    const ids = manyCompVersions.map(compVersion => compVersion.id.toString());
+    logger.debug('exportManyBareScope: completed. exit.');
     return ids;
   }
 
