@@ -27,11 +27,13 @@ module.exports = {
     extensionName: string,
     extensionFilePath: string,
     extensionConfig: Object,
-    extensionOptions: Object
+    extensionOptions: Object = {}
   ): Promise<Extension> => {
-    const extension = await Extension.loadFromFile({
+    if (extensionFilePath) {
+      extensionOptions.file = extensionFilePath;
+    }
+    const extension = await Extension.load({
       name: extensionName,
-      filePath: extensionFilePath,
       rawConfig: extensionConfig,
       options: extensionOptions
     });
