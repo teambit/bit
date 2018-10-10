@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve `bit export` performance by avoid calling some readSync methods when not needed
+- improve performance when converting to objects and validating components
+
 ## [13.0.5-dev.13 - 2018-10-10]
 
 - improve `bit export` performance by removing obsolete steps
