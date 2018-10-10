@@ -92,6 +92,11 @@ logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
   });
 };
 
+logger.debugAndAddBreadCrumb = (category: string, message: string) => {
+  logger.debug(`${category}, ${message}`);
+  Analytics.addBreadCrumb(category, message);
+};
+
 if (process.env.BIT_LOG) {
   const level = process.env.BIT_LOG;
   logger.add(winston.transports.Console, { level });
