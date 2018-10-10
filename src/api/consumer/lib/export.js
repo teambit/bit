@@ -3,7 +3,7 @@ import R from 'ramda';
 import { Consumer, loadConsumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
-import { BEFORE_EXPORT, BEFORE_EXPORTS } from '../../../cli/loader/loader-messages';
+import { BEFORE_EXPORT, BEFORE_EXPORTS, BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 import { BitId, BitIds } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
 import { linkComponentsToNodeModules } from '../../../links';
@@ -41,9 +41,10 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   const componentsList = new ComponentsList(consumer);
   if (!ids || !ids.length) {
     // export all
+    loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = await componentsList.listExportPendingComponentsIds();
-    if (exportPendingComponents.length > 1) loader.start(BEFORE_EXPORTS);
-    else loader.start(BEFORE_EXPORT);
+    const loaderMsg = exportPendingComponents.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
+    loader.start(loaderMsg);
     return exportPendingComponents;
   }
   const idsToExportP = ids.map(async (id) => {
