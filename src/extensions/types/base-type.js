@@ -44,7 +44,7 @@ export default class BaseType {
   /**
    * Validate the user input (as written in the bit.json)
    */
-  static validate(): boolean {
+  static validate(val): boolean {
     throw new Error('validate must be implemented');
   }
 }

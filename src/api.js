@@ -3,8 +3,9 @@
 import { getScopeComponent, addMany } from './api/consumer/index';
 import type { AddProps } from './consumer/component-ops/add-components/add-components';
 import { scopeList } from './api/scope/index';
-import Extension from './extensions/extension';
+// import Extension from './extensions/extension';
 import HooksManager from './hooks';
+import * as types from './extensions/types';
 
 HooksManager.init();
 
@@ -20,23 +21,25 @@ module.exports = {
   addMany: async (components: AddProps[], alternateCwd?: string) => {
     return addMany(components, alternateCwd);
   },
+  types,
+  Extension: class Extension {}
   /**
    * Load extension programmatically
    */
-  loadExtension: async (
-    extensionName: string,
-    extensionFilePath: string,
-    extensionConfig: Object,
-    extensionOptions: Object = {}
-  ): Promise<Extension> => {
-    if (extensionFilePath) {
-      extensionOptions.file = extensionFilePath;
-    }
-    const extension = await Extension.load({
-      name: extensionName,
-      rawConfig: extensionConfig,
-      options: extensionOptions
-    });
-    return Promise.resolve(extension);
-  }
+  // loadExtension: async (
+  //   extensionName: string,
+  //   extensionFilePath: string,
+  //   extensionConfig: Object,
+  //   extensionOptions: Object = {}
+  // ): Promise<Extension> => {
+  //   if (extensionFilePath) {
+  //     extensionOptions.file = extensionFilePath;
+  //   }
+  //   const extension = await Extension.load({
+  //     name: extensionName,
+  //     rawConfig: extensionConfig,
+  //     options: extensionOptions
+  //   });
+  //   return Promise.resolve(extension);
+  // }
 };

@@ -19,6 +19,7 @@ import ExtensionLoadError from './exceptions/extension-load-error';
 import Environment from '../environment';
 import ExtensionSchemaError from './exceptions/extension-schema-error';
 import ExtensionEntry from './extension-entry';
+import ExtensionConfig from './extension-config';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 export default class ExtensionWrapper {
@@ -33,7 +34,7 @@ export default class ExtensionWrapper {
   options: Object;
   dynamicConfig: Object;
   context: ?Object;
-  script: ?Function; // Store the required plugin
+  extensionConstructor: ?Function; // Store the required plugin
   _initOptions: ?InitOptions; // Store the required plugin
   api = _getConcreteBaseAPI({ name: this.name });
 
@@ -44,7 +45,7 @@ export default class ExtensionWrapper {
     this.options = extensionProps.options;
     this.dynamicConfig = extensionProps.dynamicConfig || extensionProps.rawConfig;
     this.context = extensionProps.context;
-    this.script = extensionProps.script;
+    this.extensionConstructor = extensionProps.extensionConstructor;
     this.disabled = extensionProps.disabled;
     this.filePath = extensionProps.filePath;
     this.rootDir = extensionProps.rootDir || '';
@@ -85,8 +86,12 @@ export default class ExtensionWrapper {
     Analytics.addBreadCrumb('base-extension', 'initialize extension');
     try {
       let initOptions = {};
-      if (this.script && this.script.init && typeof this.script.init === 'function') {
-        initOptions = await this.script.init({
+      if (
+        this.extensionConstructor &&
+        this.extensionConstructor.init &&
+        typeof this.extensionConstructor.init === 'function'
+      ) {
+        initOptions = await this.extensionConstructor.init({
           rawConfig: this.rawConfig,
           dynamicConfig: this.dynamicConfig,
           api: this.api
@@ -157,7 +162,7 @@ export default class ExtensionWrapper {
     });
     if (baseProps.loaded) {
       this.loaded = baseProps.loaded;
-      this.script = baseProps.script;
+      this.extensionConstructor = baseProps.extensionConstructor;
       this.dynamicConfig = baseProps.dynamicConfig;
       this.init();
     }
@@ -200,10 +205,11 @@ export default class ExtensionWrapper {
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
     // TODO: Make sure the extension already exists
+    const config = ExtensionConfig.fromRawConfig(rawConfig);
     const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
     // Skip disabled extensions
-    if (options.disabled) {
+    if (config.disabled) {
       extensionProps.disabled = true;
       logger.info(`skip extension ${extensionProps.name} because it is disabled`);
       extensionProps.loaded = false;
@@ -213,7 +219,7 @@ export default class ExtensionWrapper {
       name,
       filePath: resolvedPath,
       rootDir: componentPath,
-      rawPropTypes,
+      config,
       throws
     });
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
@@ -253,7 +259,7 @@ export default class ExtensionWrapper {
   static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
     Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
     logger.debug('base-extension - loadDynamicConfig');
-    const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
+    const getDynamicConfig = R.path(['extensionConstructor', 'getDynamicConfig'], extensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
         const dynamicConfig = await getDynamicConfig({
@@ -295,7 +301,7 @@ const _getFileExtensionPath = (filePath: string, consumerPath: ?string): Extensi
   }
   return {
     resolvedPath: absPath,
-    componentPath: absPath
+    componentPath: undefined
   };
 };
 
@@ -380,15 +386,14 @@ const _loadFromFile = async ({
   name,
   filePath,
   rootDir,
-  rawPropTypes = {},
+  config,
   throws = false
 }: BaseLoadFromFileArgsProps): Promise<StaticProps> => {
   logger.debug(`loading extension ${name} from ${filePath}`);
   Analytics.addBreadCrumb('extension-wrapper', 'load extension from file');
   const extensionProps: StaticProps = {
     name,
-    rawPropTypes,
-    propTypes: rawPropTypes,
+    config,
     loaded: false
   };
 
@@ -403,21 +408,27 @@ const _loadFromFile = async ({
     extensionProps.loaded = false;
     return extensionProps;
   }
+
   if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
     extensionProps.loaded = false;
     return extensionProps;
   }
   try {
     // $FlowFixMe
-    const script = require(filePath); // eslint-disable-line
-    extensionProps.script = script.default ? script.default : script;
+    const extensionConstructor = require(filePath); // eslint-disable-line
+    extensionProps.extensionConstructor = extensionConstructor.default
+      ? extensionConstructor.default
+      : extensionConstructor;
     // TODO: validate prop types
     // TODO: load default prop types
+    config.loadProps(extensionProps.extensionConstructor.propTypes, extensionProps.extensionConstructor.defaultProps);
+
+    // const extension =
 
     // Make sure to not kill the process if an extension didn't load correctly
   } catch (err) {
     if (err.code === 'MODULE_NOT_FOUND') {
-      const msg = `loading extension ${extensionProps.name} failed, the file ${extensionProps.filePath} not found`;
+      const msg = `loading extension ${extensionProps.name} failed, the file ${filePath} not found`;
       logger.warn(msg);
       // console.error(msg); // eslint-disable-line no-console
     }

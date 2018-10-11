@@ -2,6 +2,8 @@
 
 // import Source from '../scope/models/source';
 // import Scope, { BitObject } from  '../context-classes/Scope';
+import isValidPath from 'is-valid-path';
+import { BaseType } from '.';
 
 type RelativePath = {
   sourceRelativePath: string,
@@ -18,7 +20,7 @@ type FileContext = {
   file?: ?Vinyl
 };
 
-class File extends Type {
+export default class File extends BaseType {
   file: Vinyl;
 
   constructor(relativePath: string, context: FileContext) {
@@ -65,7 +67,7 @@ class File extends Type {
   static loadFromStore(val: ModelStore): File {}
 
   static validate(filePath): boolean {
-    return isPath(filePath);
+    return isValidPath(filePath);
   }
 }
 

@@ -1,4 +1,4 @@
-import Component from './Component';
+import Component from './component';
 import type { ComponentId } from './Component';
 
 type ExtensionProps = {
@@ -11,7 +11,7 @@ type ExtensionLoadProps = {
   config: Object
 };
 
-class Extension extends Component {
+export default class Extension extends Component {
   constructor(extensionProps: ExtensionProps) {
     super(extensionProps.componentId);
     this._name = 'extension';
