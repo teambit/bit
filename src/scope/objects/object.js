@@ -35,8 +35,8 @@ export default class BitObject {
     return [];
   }
 
-  get header(): string {
-    return `${this.constructor.name} ${this.hash().toString()} ${this.toBuffer().toString().length}${NULL_BYTE}`;
+  getHeader(buffer: Buffer): string {
+    return `${this.constructor.name} ${this.hash().toString()} ${buffer.toString().length}${NULL_BYTE}`;
   }
 
   collectRefs(repo: Repository, throws: boolean = true): Ref[] {
@@ -116,7 +116,8 @@ export default class BitObject {
   }
 
   serialize(): Buffer {
-    return Buffer.concat([Buffer.from(this.header), this.toBuffer()]);
+    const buffer = this.toBuffer();
+    return Buffer.concat([Buffer.from(this.getHeader(buffer)), buffer]);
   }
 
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {

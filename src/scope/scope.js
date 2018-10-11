@@ -538,21 +538,23 @@ export default class Scope {
       'exportManyBareScope',
       'exportManyBareScope: will try to importMany in case there are missing dependencies'
     );
-    const versions = await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true, false); // resolve dependencies
+    await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true, false); // resolve dependencies
     logger.debug('exportManyBareScope: successfully ran importMany');
     Analytics.addBreadCrumb('exportManyBareScope', 'exportManyBareScope: successfully ran importMany');
     await this.objects.persist();
-    await Promise.all(versions.map(version => version.toObjects(this.objects)));
-    const manyConsumerComponent = await Promise.all(
-      manyCompVersions.map(compVersion => compVersion.toConsumer(this.objects))
-    );
-    // await Promise.all(manyConsumerComponent.map(consumerComponent => index(consumerComponent, this.getPath())));
-    const ids = manyConsumerComponent.map(consumerComponent => consumerComponent.id.toString());
-    await Promise.all(manyConsumerComponent.map(consumerComponent => performCIOps(consumerComponent, this.getPath())));
+    logger.debug('exportManyBareScope: objects were written successfully to the filesystem');
+    const ids = manyCompVersions.map(compVersion => compVersion.id.toString());
+    logger.debug('exportManyBareScope: completed. exit.');
     return ids;
   }
 
-  getExternalOnes(ids: BitId[], remotes: Remotes, localFetch: boolean = false, context: Object = {}) {
+  getExternalOnes(
+    ids: BitId[],
+    remotes: Remotes,
+    localFetch: boolean = false,
+    context: Object = {}
+  ): Promise<ComponentVersion[]> {
+    if (!ids.length) return Promise.resolve([]);
     logger.debug(`getExternalOnes, ids: ${ids.join(', ')}, localFetch: ${localFetch.toString()}`);
     Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes, ids: ${Analytics.hashData(ids)}`);
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
@@ -564,16 +566,17 @@ export default class Scope {
       });
 
       if (left.length === 0) {
-        logger.debug('getExternalOnes: no more ids left, all found locally, existing the method');
-        Analytics.addBreadCrumb(
-          'getExternalOnes',
-          'getExternalOnes: no more ids left, all found locally, existing the method'
+        logger.debugAndAddBreadCrumb(
+          'scope.getExternalOnes',
+          'no more ids left, all found locally, exiting the method'
         );
         return Promise.all(defs.map(def => def.component.toComponentVersion(def.id.version)));
       }
 
-      logger.debug(`getExternalOnes: ${left.length} left. Fetching them from a remote`);
-      Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes: ${left.length} left. Fetching them from a remote`);
+      logger.debugAndAddBreadCrumb(
+        'getExternalOnes',
+        `getExternalOnes: ${left.length} left. Fetching them from a remote`
+      );
       return remotes
         .fetch(left.map(def => def.id), this, true, context)
         .then((componentObjects) => {
@@ -594,11 +597,14 @@ export default class Scope {
     persist: boolean = true,
     context: Object = {}
   ): Promise<VersionDependencies[]> {
+    if (!ids.length) return Promise.resolve([]);
     logger.debug(
-      `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${ids.join(', ')}`
+      `scope.getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${ids.join(
+        ', '
+      )}`
     );
     Analytics.addBreadCrumb(
-      'getExternalMany',
+      'scope.getExternalMany',
       `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${Analytics.hashData(
         ids.join(', ')
       )}`
@@ -612,22 +618,22 @@ export default class Scope {
       });
 
       if (left.length === 0) {
-        logger.debug('getExternalMany: no more ids left, all found locally, exiting the method');
-        Analytics.addBreadCrumb(
-          'getExternalMany',
+        logger.debugAndAddBreadCrumb(
+          'scope.getExternalMany',
           'getExternalMany: no more ids left, all found locally, exiting the method'
         );
         // $FlowFixMe - there should be a component because there no defs without components left.
         return Promise.all(defs.map(def => def.component.toVersionDependencies(def.id.version, this, def.id.scope)));
       }
 
-      logger.debug(`getExternalMany: ${left.length} left. Fetching them from a remote`);
-      Analytics.addBreadCrumb('getExternalMany', `getExternalMany: ${left.length} left. Fetching them from a remote`);
+      logger.debugAndAddBreadCrumb(
+        'scope.getExternalMany',
+        `getExternalMany: ${left.length} left. Fetching them from a remote`
+      );
       return remotes
         .fetch(left.map(def => def.id), this, undefined, context)
         .then((componentObjects) => {
-          logger.debug('getExternalMany: writing them to the model');
-          Analytics.addBreadCrumb('getExternalMany', 'getExternalMany: writing them to the model');
+          logger.debugAndAddBreadCrumb('scope.getExternalMany', 'getExternalMany: writing them to the model');
           return this.writeManyComponentsToModel(componentObjects, persist);
         })
         .then(() => this.getExternalMany(ids, remotes));
@@ -649,6 +655,7 @@ export default class Scope {
     localFetch: boolean,
     context: Object
   }): Promise<VersionDependencies> {
+    if (!id) return Promise.resolve();
     enrichContextFromGlobal(context);
     return this.sources.get(id).then((component) => {
       if (component && localFetch) {
@@ -731,6 +738,7 @@ export default class Scope {
   }
 
   async importManyOnes(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
+    if (!ids.length) return [];
     logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
     Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
 

@@ -19,7 +19,8 @@ export default class ComponentsList {
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
   _fromBitMap: { [cacheKey: string]: BitId[] } = {};
-  _fromObjects: BitId[];
+  _fromObjectsIds: BitId[];
+  _modelComponents: ModelComponent[];
   _invalidComponents: string[];
   _modifiedComponents: Component[];
   constructor(consumer: Consumer) {
@@ -28,13 +29,20 @@ export default class ComponentsList {
     this.bitMap = consumer.bitMap;
   }
 
+  async getModelComponents(): Promise<ModelComponent[]> {
+    if (!this._modelComponents) {
+      this._modelComponents = await this.scope.objects.listComponents(false);
+    }
+    return this._modelComponents;
+  }
+
   /**
    * List all bit ids stored in the model
    */
   async getFromObjects(): Promise<BitId[]> {
-    if (!this._fromObjects) {
-      const componentsObjects: ModelComponent[] = await this.scope.objects.listComponents(false);
-      this._fromObjects = componentsObjects.map((componentObjects) => {
+    if (!this._fromObjectsIds) {
+      const modelComponents: ModelComponent[] = await this.getModelComponents();
+      this._fromObjectsIds = modelComponents.map((componentObjects) => {
         return new BitId({
           scope: componentObjects.scope,
           name: componentObjects.name,
@@ -42,7 +50,7 @@ export default class ComponentsList {
         });
       });
     }
-    return this._fromObjects;
+    return this._fromObjectsIds;
   }
 
   async _getAuthoredAndImportedFromFS(): Promise<Component[]> {
@@ -75,7 +83,7 @@ export default class ComponentsList {
 
   async listOutdatedComponents(): Promise<Component[]> {
     const fileSystemComponents = await this._getAuthoredAndImportedFromFS();
-    const componentsFromModel = await this.scope.objects.listComponents(false);
+    const componentsFromModel = await this.getModelComponents();
     return fileSystemComponents.filter((component) => {
       const modelComponent = componentsFromModel.find(c => c.toBitId().isEqualWithoutVersion(component.id));
       if (!modelComponent) return false;
@@ -186,23 +194,10 @@ export default class ComponentsList {
     return BitIds.fromArray([...newComponents, ...modifiedComponents]);
   }
 
-  /**
-   * Components from the model where the scope is local are pending for export
-   * Also, components that their model version is higher than their bit.map version.
-   */
   async listExportPendingComponentsIds(): Promise<BitIds> {
-    const idsFromObjects = await this.idsFromObjects();
-    // $FlowFixMe BitIds is an array type
-    const ids = await filterAsync(idsFromObjects, async (componentId) => {
-      try {
-        const status = await this.consumer.getComponentStatusById(componentId);
-        return status.staged;
-      } catch (err) {
-        // if a component has an error, such as, missing main file, we don't want the status to break
-        if (!Component.isComponentInvalidByErrorType(err)) throw err;
-      }
-    });
-    return BitIds.fromArray(ids);
+    const modelComponents = await this.getModelComponents();
+    const pendingExportComponents = modelComponents.filter(component => component.isLocallyChanged());
+    return BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
   }
 
   async listExportPendingComponents(): Promise<ModelComponent[]> {
