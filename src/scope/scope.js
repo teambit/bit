@@ -719,12 +719,10 @@ export default class Scope {
     const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
-    const versionDeps = await Promise.all(
-      localDefs.map((def) => {
-        if (!def.component) throw new ComponentNotFound(def.id.toString());
-        return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
-      })
-    );
+    const versionDeps = await pMapSeries(localDefs, (def) => {
+      if (!def.component) throw new ComponentNotFound(def.id.toString());
+      return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
+    });
     logger.debug(
       'scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals'
     );
@@ -1036,8 +1034,7 @@ export default class Scope {
 
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
-    const componentObjectsP = ids.map(id => this.sources.getObjects(id));
-    const componentObjects = await Promise.all(componentObjectsP);
+    const componentObjects = await pMapSeries(ids, id => this.sources.getObjects(id));
     const componentsAndObjects = [];
     enrichContextFromGlobal(context);
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
