@@ -653,7 +653,7 @@ export default class Scope {
     id: BitId,
     remotes: Remotes,
     localFetch: boolean,
-    context: Object
+    context?: Object
   }): Promise<VersionDependencies> {
     if (!id) return Promise.resolve();
     enrichContextFromGlobal(context);
@@ -680,14 +680,17 @@ export default class Scope {
     id: BitId,
     remotes: Remotes,
     localFetch: boolean,
-    context: Object
-  }) {
+    context?: Object
+  }): Promise<ComponentVersion> {
     return this.sources.get(id).then((component) => {
-      if (component && localFetch) return component.toComponentVersion(id.version);
+      if (component && localFetch) {
+        return component.toComponentVersion(id.version);
+      }
       return remotes
         .fetch([id], this, true, context)
         .then(([componentObjects]) => this.writeComponentToModel(componentObjects))
-        .then(() => this.getExternal({ id, remotes, localFetch: true }));
+        .then(() => this.getExternal({ id, remotes, localFetch: true }))
+        .then((versionDependencies: VersionDependencies) => versionDependencies.component);
     });
   }
 
@@ -955,7 +958,8 @@ export default class Scope {
 
   async getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.name)) {
-      return this.remotes().then(remotes => this.getExternalOne({ id, remotes, localFetch: true }));
+      const remotes = await this.remotes();
+      return this.getExternalOne({ id, remotes, localFetch: true });
     }
 
     return this.sources.get(id).then((component) => {

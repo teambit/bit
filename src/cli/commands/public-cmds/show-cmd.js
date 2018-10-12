@@ -36,7 +36,7 @@ export default class Show extends Command {
     function getBitComponent(allVersions: ?boolean) {
       if (remote) {
         loader.start(BEFORE_SHOW_REMOTE);
-        return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
+        return getScopeComponent({ id, allVersions, showRemoteVersions: outdated }).then(component => ({ component }));
       }
       return getConsumerComponent({ id, compare, allVersions, showRemoteVersions: outdated });
     }

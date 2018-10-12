@@ -210,35 +210,52 @@ describe('bit show command', function () {
     it.skip('should throw an error if the -v flag provided', () => {});
   });
 
-  // TODO: Implement after export is working
-  describe.skip('remote components', () => {
+  describe('remote components', () => {
+    let scopeBeforeShow;
     let output;
-
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      scopeBeforeShow = helper.cloneLocalScope();
+      output = helper.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+    });
     describe('single version as cli output (no -v or -j flags)', () => {
-      it('should render the id correctly', () => {});
-
-      it('should render the language correctly', () => {});
-
-      it('should render the language correctly', () => {});
-
-      it('should render the tester correctly', () => {});
-
-      it('should render the dependencies correctly', () => {});
-
-      it('should render the package dependencies correctly', () => {});
-
+      it('should render the id correctly', () => {
+        expect(output).to.have.string('bar/foo@0.0.1');
+      });
+      it('should render the language correctly', () => {
+        expect(output).to.have.string('javascript');
+      });
       it('should render the files correctly', () => {
-        expect(output).to.have.string('Files', 'Files row is missing');
-        expect(output).to.have.string('src/mainFile.js', 'Files are wrong');
-        expect(output).to.have.string('src/utils/utilFile.js', 'Files are wrong');
+        expect(output).to.have.string('Files');
+        expect(output).to.have.string('bar/foo.js');
       });
-
-      it.skip('should render the main file correctly', () => {
-        expect(output).to.have.string('Main File', 'Main file row is missing');
-        expect(output).to.have.string('src/mainFile.js', 'Main file is wrong');
+      it('should render the main file correctly', () => {
+        expect(output).to.have.string('Main File');
+        expect(output).to.have.string('bar/foo.js');
+      });
+      describe('run bit show after bit show was running previously', () => {
+        // we had a bug when the first 'bit show' save the component locally and the second one
+        // triggered an error
+        before(() => {
+          helper.getClonedLocalScope(scopeBeforeShow);
+          output = helper.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+          expect(output).to.have.string('Id');
+          expect(output).to.have.string('bar/foo@0.0.1');
+          output = helper.showComponent(`${helper.remoteScope}/bar/foo --remote`);
+        });
+        it('should still work and show the component with no errors', () => {
+          expect(output).to.have.string('Id');
+          expect(output).to.have.string('bar/foo@0.0.1');
+        });
       });
     });
-    describe('all versions as cli output (without -j flag)', () => {
+    describe.skip('all versions as cli output (without -j flag)', () => {
       it('should render the id correctly', () => {});
 
       it('should render the language correctly', () => {});
@@ -252,12 +269,12 @@ describe('bit show command', function () {
       it('should render the package dependencies correctly', () => {});
     });
 
-    describe('single version as json output', () => {
+    describe.skip('single version as json output', () => {
       // TODO: Make more test cases here
       it('should return correct json', () => {});
     });
 
-    describe('all versions as json output', () => {
+    describe.skip('all versions as json output', () => {
       // TODO: Make more test cases here
       it('should return correct json', () => {});
     });

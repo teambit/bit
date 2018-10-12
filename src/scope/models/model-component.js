@@ -11,8 +11,7 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION,
-  COMPONENT_ORIGINS
+  DEFAULT_BIT_VERSION
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
@@ -24,12 +23,11 @@ import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
-import { BitIds } from '../../bit-id';
 import GeneralError from '../../error/general-error';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
-import BitMap from '../../consumer/bit-map/bit-map';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
+import VersionDependencies from '../version-dependencies';
 
 type State = {
   versions?: {
@@ -402,7 +400,7 @@ export default class Component extends BitObject {
     return Buffer.from(str);
   }
 
-  toVersionDependencies(version: string, scope: Scope, source: string) {
+  toVersionDependencies(version: string, scope: Scope, source: string): Promise<VersionDependencies> {
     const versionComp = this.toComponentVersion(version);
     return versionComp.toVersionDependencies(scope, source);
   }
