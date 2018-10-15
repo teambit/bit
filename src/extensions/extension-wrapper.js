@@ -192,21 +192,14 @@ export default class ExtensionWrapper {
    * @param {string} consumerPath - path to the consumer folder (to load the file relatively)
    * @param {string} scopePath - scope which stores the extension code
    */
-  static async load({
-    name,
-    rawConfig = {},
-    consumerPath,
-    scopePath,
-    throws = false,
-    context
-  }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
+  static async load({ name, rawConfig = {}, context, throws = false }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     Analytics.addBreadCrumb('extension-wrapper', 'load extension');
     logger.debug(`extension-wrapper loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromRawConfig(rawConfig);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.scopePath, context.consumerPath);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
     // Skip disabled extensions
     if (config.disabled) {
@@ -220,6 +213,7 @@ export default class ExtensionWrapper {
       filePath: resolvedPath,
       rootDir: componentPath,
       config,
+      context,
       throws
     });
     const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
@@ -387,6 +381,7 @@ const _loadFromFile = async ({
   filePath,
   rootDir,
   config,
+  context,
   throws = false
 }: BaseLoadFromFileArgsProps): Promise<StaticProps> => {
   logger.debug(`loading extension ${name} from ${filePath}`);
@@ -416,12 +411,17 @@ const _loadFromFile = async ({
   try {
     // $FlowFixMe
     const extensionConstructor = require(filePath); // eslint-disable-line
-    extensionProps.extensionConstructor = extensionConstructor.default
+    extensionProps.ExtensionConstructor = extensionConstructor.default
       ? extensionConstructor.default
       : extensionConstructor;
-    // TODO: validate prop types
-    // TODO: load default prop types
-    config.loadProps(extensionProps.extensionConstructor.propTypes, extensionProps.extensionConstructor.defaultProps);
+    await config.loadProps(
+      extensionProps.ExtensionConstructor.propTypes,
+      extensionProps.ExtensionConstructor.defaultProps,
+      context
+    );
+    const extension = await new extensionProps.ExtensionConstructor(config.props, context);
+    extensionProps.extension = extension;
+    extensionProps.loaded = true;
 
     // const extension =
 

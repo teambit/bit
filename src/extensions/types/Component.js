@@ -1,6 +1,7 @@
 /** @flow */
 
-import BaseType, { ModelStore } from './BaseType';
+// import BaseType, { ModelStore } from './base-type';
+import BaseType from './base-type';
 
 export type ComponentId = string;
 

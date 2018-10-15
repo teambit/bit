@@ -36,7 +36,7 @@ export default class ExtensionPropTypes {
     this.types = types;
   }
 
-  parseRaw(rawProps: RawProps, propsSchema: PropsSchema, defaultProps: DefaultProps) {
+  async parseRaw(rawProps: RawProps, propsSchema: PropsSchema, defaultProps: DefaultProps, context: Object = {}) {
     const addDefaultValToProps = userDefinedProps => (value, key) => {
       if (!R.has(key, userDefinedProps)) {
         userDefinedProps[key] = typeof value === 'function' ? value(userDefinedProps) : value;
@@ -44,12 +44,16 @@ export default class ExtensionPropTypes {
     };
 
     R.forEachObjIndexed(addDefaultValToProps(rawProps), defaultProps);
-    this.validateRaw(rawProps, propsSchema);
+    await this.validateRaw(rawProps, propsSchema);
+    const loadedProps = await _loadRaw(rawProps, propsSchema, context);
+    return loadedProps;
   }
 
   parseModel(modelProps: ModelProps) {}
 
-  validateRaw(rawProps: RawProps, propsSchema: PropsSchema) {
+  async validateRaw(rawProps: RawProps, propsSchema: PropsSchema) {
+    const promises = [];
+
     const validateVal = (value, key) => {
       if (!R.has(key, propsSchema)) {
         // TODO: make a nice error
@@ -57,12 +61,52 @@ export default class ExtensionPropTypes {
       }
       const validateFunc = propsSchema[key].validate;
       const typeName = propsSchema[key].name;
-      if (!validateFunc(value)) {
-        // TODO: make a nice error
-        throw new Error(`the prop ${key} has an invalid value of type ${typeName}`);
-      }
+      const validateFuncP = Promise.resolve()
+        .then(() => {
+          return validateFunc(value);
+        })
+        .then((isValid) => {
+          if (!isValid) {
+            // TODO: make a nice error
+            throw new Error(`the prop ${key} has an invalid value of type ${typeName}`);
+          }
+        });
+      promises.push(validateFuncP);
     };
 
     R.forEachObjIndexed(validateVal, rawProps);
+    await Promise.all(promises);
   }
+}
+
+/**
+ *
+ * This function dosn't not validate, the validation should be done during the public function - parseRaw
+ * @param {*} rawProps
+ * @param {*} propsSchema
+ */
+async function _loadRaw(rawProps: RawProps, propsSchema: PropsSchema, context: Object = {}) {
+  const loadedProps = {};
+  const promises = [];
+  const loadOne = (value, key) => {
+    const ConstructorFunc = propsSchema[key];
+    const ConstructorFuncP = Promise.resolve()
+      .then(() => {
+        return new ConstructorFunc(value, context);
+      })
+      .then((loadedProp) => {
+        loadedProps[key] = loadedProp;
+      });
+    promises.push(ConstructorFuncP);
+    // loadedProps[key] = await
+  };
+
+  R.forEachObjIndexed(loadOne, rawProps);
+  // TODO: don't catch it here but in a better place
+  try {
+    await Promise.all(promises);
+  } catch (e) {
+    console.log('errrrr', e);
+  }
+  return loadedProps;
 }

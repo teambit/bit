@@ -61,11 +61,14 @@ const _loadExtension = (consumerPath: ?string, scopePath: ?string) => (
   rawConfig: Object = {},
   name: string
 ): Promise<Extension> => {
+  const context = {
+    consumerPath,
+    scopePath
+  };
   const loadArgs: LoadArgsProps = {
     name,
     rawConfig,
-    consumerPath,
-    scopePath
+    context
   };
   return ExtensionWrapper.load(loadArgs);
 };

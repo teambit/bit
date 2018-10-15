@@ -1,4 +1,4 @@
-import BaseType from './BaseType';
+import BaseType from './base-type';
 
 export default class String extends BaseType {
   constructor(val) {

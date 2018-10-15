@@ -2,6 +2,8 @@
 
 // import Source from '../scope/models/source';
 // import Scope, { BitObject } from  '../context-classes/Scope';
+import path from 'path';
+import vinylFile from 'vinyl-file';
 import isValidPath from 'is-valid-path';
 import { BaseType } from '.';
 
@@ -23,11 +25,11 @@ type FileContext = {
 export default class File extends BaseType {
   file: Vinyl;
 
-  constructor(relativePath: string, context: FileContext) {
+  constructor(relativePath: string, context: FileContext = {}) {
     super(relativePath);
     this.name = 'file';
     if (context.file) {
-      this.file = file;
+      this.file = context.file;
     } else {
       this.file = _loadFile(relativePath, context);
     }
@@ -72,7 +74,8 @@ export default class File extends BaseType {
 }
 
 function _loadFile(relativePath: string, context: FileContext): File {
-  const fullPath = path.join(context.base, relativePath);
+  // TODO: support load from bitjson path / ejected config path
+  const fullPath = path.join(context.consumerPath, relativePath);
   const file = vinylFile.readSync(fullPath, { base: context.base, cwd: context.base });
-  return new File(file);
+  return file;
 }

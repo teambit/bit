@@ -86,8 +86,8 @@ export default class ExtensionConfig {
 
   static fromModels(config: Object): ExtensionConfig {}
 
-  loadProps(propsSchema: PropsSchema, defaultProps: DefaultProps) {
-    const props = _getPropsFromRaw(this.rawProps, propsSchema, defaultProps);
+  async loadProps(propsSchema: PropsSchema, defaultProps: DefaultProps, context: Object) {
+    const props = await _getPropsFromRaw(this.rawProps, propsSchema, defaultProps, context);
     this.props = props;
   }
 
@@ -111,7 +111,12 @@ const _getRawPropsFromRawConfig = (rawConfig: Object): Object => {
   return rawProps;
 };
 
-const _getPropsFromRaw = (rawProps: Object, propsSchema: PropsSchema, defaultProps: DefaultProps): Object => {
-  const props = ExtensionPropTypesIsntance.parseRaw(rawProps, propsSchema, defaultProps);
+const _getPropsFromRaw = async (
+  rawProps: Object,
+  propsSchema: PropsSchema,
+  defaultProps: DefaultProps,
+  context: Object = {}
+): Object => {
+  const props = await ExtensionPropTypesIsntance.parseRaw(rawProps, propsSchema, defaultProps, context);
   return props;
 };
