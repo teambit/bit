@@ -11,7 +11,7 @@ export type ComponentObjectsInput = {
   componentObjects: string | ComponentObjects[]
 };
 
-export default function put(
+export default (async function put(
   { path, componentObjects }: ComponentObjectsInput,
   headers: ?Object
 ): Promise<ComponentObjects[]> {
@@ -19,21 +19,18 @@ export default function put(
     componentObjects = ComponentObjects.manyFromString(componentObjects);
   }
 
-  HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
-
-  return loadScope(path).then((scope) => {
-    return scope.exportManyBareScope(((componentObjects: any): ComponentObjects[])).then(async (componentsIds) => {
-      await HooksManagerInstance.triggerHook(
-        POST_RECEIVE_OBJECTS,
-        {
-          componentObjects,
-          componentsIds,
-          scopePath: path,
-          scopeName: scope.scopeJson.name
-        },
-        headers
-      );
-      return (componentsIds: any);
-    });
-  });
-}
+  await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
+  const scope = await loadScope(path);
+  const componentsIds = await scope.exportManyBareScope(componentObjects);
+  await HooksManagerInstance.triggerHook(
+    POST_RECEIVE_OBJECTS,
+    {
+      componentObjects,
+      componentsIds,
+      scopePath: path,
+      scopeName: scope.scopeJson.name
+    },
+    headers
+  );
+  return componentsIds;
+});

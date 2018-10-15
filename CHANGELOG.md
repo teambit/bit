@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.16 - 2018-10-14]
+
+- improve `bit export` performance by avoid loading components from the filesystem to generate links
+
+## [13.0.5-dev.15 - 2018-10-11]
+
+- fix errors "JavaScript heap out of memory" and "Error: EMFILE: too many open files" when exporting a huge number of components
+
 ## [13.0.5-dev.14 - 2018-10-11]
 
 - improve `bit export` performance by avoid calling some readSync methods when not needed

@@ -6,6 +6,8 @@ import paintComponent from '../../templates/component-template';
 import ConsumerComponent from '../../../consumer/component';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { BEFORE_SHOW_REMOTE } from '../../../cli/loader/loader-messages';
+import loader from '../../../cli/loader';
 
 export default class Show extends Command {
   name = 'show <id>';
@@ -32,7 +34,10 @@ export default class Show extends Command {
     }: { json?: boolean, versions: ?boolean, remote: boolean, outdated?: boolean, compare?: boolean }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
-      if (remote) return getScopeComponent({ id, allVersions, showRemoteVersions: outdated });
+      if (remote) {
+        loader.start(BEFORE_SHOW_REMOTE);
+        return getScopeComponent({ id, allVersions, showRemoteVersions: outdated }).then(component => ({ component }));
+      }
       return getConsumerComponent({ id, compare, allVersions, showRemoteVersions: outdated });
     }
 

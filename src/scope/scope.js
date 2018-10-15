@@ -187,16 +187,14 @@ export default class Scope {
    * @memberof Consumer
    */
   async migrate(verbose: boolean): Promise<MigrationResult> {
-    logger.debug('running migration process for scope');
-    Analytics.addBreadCrumb('migrate', 'running migration process for scope');
+    logger.debugAndAddBreadCrumb('scope.migrate', 'running migration process for scope');
     if (verbose) console.log('running migration process for scope'); // eslint-disable-line
     // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
     const scopeVersion = this.scopeJson.get('version') || '0.10.9';
     if (semver.gte(scopeVersion, BIT_VERSION)) {
       const upToDateMsg = 'scope version is up to date';
       if (verbose) console.log(upToDateMsg); // eslint-disable-line
-      logger.debug(upToDateMsg);
-      Analytics.addBreadCrumb('migrate', upToDateMsg);
+      logger.debugAndAddBreadCrumb('scope.migrate', upToDateMsg);
       return {
         run: false
       };
@@ -213,8 +211,7 @@ export default class Scope {
     await this.objects.persist(validateBeforePersist);
     // Update the scope version
     this.scopeJson.set('version', BIT_VERSION);
-    logger.debug(`updating scope version to version ${BIT_VERSION}`);
-    Analytics.addBreadCrumb('migrate', `updating scope version to version ${BIT_VERSION}`);
+    logger.debugAndAddBreadCrumb('scope.migrate', `updating scope version to version ${BIT_VERSION}`);
     await this.scopeJson.write(this.getPath());
     loader.stop();
     return {
@@ -315,8 +312,7 @@ export default class Scope {
     noCache: boolean,
     verbose: boolean
   ): Promise<{ component: string, buildResults: Object }> {
-    logger.debug('scope.buildMultiple: sequentially build multiple components');
-    Analytics.addBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
+    logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_BUILD);
@@ -376,8 +372,7 @@ export default class Scope {
     verbose: boolean,
     rejectOnFailure?: boolean
   }): Promise<SpecsResultsWithComponentId> {
-    logger.debug('scope.testMultiple: sequentially test multiple components');
-    Analytics.addBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
+    logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
     // Make sure not starting the loader when there is nothing to test
     if (components && components.length) {
       loader.start(BEFORE_RUNNING_SPECS);
@@ -403,14 +398,10 @@ export default class Scope {
    */
   writeComponentToModel(componentObjects: ComponentObjects): Promise<any> {
     const objects = componentObjects.toObjects(this.objects);
-    logger.debug(
-      `writeComponentToModel, writing into the model, Main id: ${objects.component.id()}. It might have dependencies which are going to be written too`
-    );
-    Analytics.addBreadCrumb(
+    logger.debugAndAddBreadCrumb(
       'writeComponentToModel',
-      `writeComponentToModel, writing into the model, Main id: ${Analytics.hashData(
-        objects.component.id().toString()
-      )}. It might have dependencies which are going to be written too`
+      'writing into the model, Main id: {id}. It might have dependencies which are going to be written too',
+      { id: objects.component.id().toString() }
     );
     return this.sources.merge(objects).then(() => this.objects.persist());
   }
@@ -420,16 +411,10 @@ export default class Scope {
    */
   async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    logger.debug(
-      `writeComponentToModel, writing into the model, ids: ${manyObjects
-        .map(objects => objects.component.id())
-        .join(', ')}. They might have dependencies which are going to be written too`
-    );
-    Analytics.addBreadCrumb(
-      'writeManyComponentsToModel',
-      `writeComponentToModel, writing into the model, ids: ${Analytics.hashData(
-        manyObjects.map(objects => objects.component.id()).join(', ')
-      )}. They might have dependencies which are going to be written too`
+    logger.debugAndAddBreadCrumb(
+      'scope.writeManyComponentsToModel',
+      'writing into the model, ids: {ids}. They might have dependencies which are going to be written too',
+      { ids: manyObjects.map(objects => objects.component.id()).join(', ') }
     );
     await Promise.all(manyObjects.map(objects => this.sources.merge(objects)));
     return persist ? this.objects.persist() : Promise.resolve();
@@ -473,12 +458,10 @@ export default class Scope {
         object.flattenedTesterDependencies = getBitIdsWithUpdatedScope(object.flattenedTesterDependencies);
         const hashAfter = object.hash().toString();
         if (hashBefore !== hashAfter) {
-          logger.debug(`switching ${componentsObjects.component.id()} version hash from ${hashBefore} to ${hashAfter}`);
-          Analytics.addBreadCrumb(
-            '_convertNonScopeToCorrectScope',
-            `switching ${Analytics.hashData(
-              componentsObjects.component.id().toString()
-            )} version hash from ${Analytics.hashData(hashBefore)} to ${Analytics.hashData(hashAfter)}`
+          logger.debugAndAddBreadCrumb(
+            'scope._convertNonScopeToCorrectScope',
+            `switching {id} version hash from ${hashBefore} to ${hashAfter}`,
+            { id: componentsObjects.component.id().toString() }
           );
           const versions = componentsObjects.component.versions;
           Object.keys(versions).forEach((version) => {
@@ -523,26 +506,20 @@ export default class Scope {
    * environment.
    */
   async exportManyBareScope(componentsObjects: ComponentObjects[]): Promise<string[]> {
-    logger.debug(`exportManyBareScope: Going to save ${componentsObjects.length} components`);
-    Analytics.addBreadCrumb(
-      'exportManyBareScope',
-      `exportManyBareScope: Going to save ${componentsObjects.length} components`
-    );
+    logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
     const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     await this._mergeObjects(manyObjects);
     const manyCompVersions = await Promise.all(
       manyObjects.map(objects => objects.component.toComponentVersion(LATEST))
     );
-    logger.debug('exportManyBareScope: will try to importMany in case there are missing dependencies');
-    Analytics.addBreadCrumb(
+    logger.debugAndAddBreadCrumb(
       'exportManyBareScope',
-      'exportManyBareScope: will try to importMany in case there are missing dependencies'
+      'will try to importMany in case there are missing dependencies'
     );
     await this.importMany(manyCompVersions.map(compVersion => compVersion.id), true, false); // resolve dependencies
-    logger.debug('exportManyBareScope: successfully ran importMany');
-    Analytics.addBreadCrumb('exportManyBareScope', 'exportManyBareScope: successfully ran importMany');
+    logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
     await this.objects.persist();
-    logger.debug('exportManyBareScope: objects were written successfully to the filesystem');
+    logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
     const ids = manyCompVersions.map(compVersion => compVersion.id.toString());
     logger.debug('exportManyBareScope: completed. exit.');
     return ids;
@@ -555,8 +532,11 @@ export default class Scope {
     context: Object = {}
   ): Promise<ComponentVersion[]> {
     if (!ids.length) return Promise.resolve([]);
-    logger.debug(`getExternalOnes, ids: ${ids.join(', ')}, localFetch: ${localFetch.toString()}`);
-    Analytics.addBreadCrumb('getExternalOnes', `getExternalOnes, ids: ${Analytics.hashData(ids)}`);
+    logger.debugAndAddBreadCrumb(
+      'getExternalOnes',
+      `getExternalOnes, ids: {ids}, localFetch: ${localFetch.toString()}`,
+      { ids: ids.join(', ') }
+    );
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
     return this.sources.getMany(ids).then((defs) => {
       const left = defs.filter((def) => {
@@ -598,16 +578,10 @@ export default class Scope {
     context: Object = {}
   ): Promise<VersionDependencies[]> {
     if (!ids.length) return Promise.resolve([]);
-    logger.debug(
-      `scope.getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${ids.join(
-        ', '
-      )}`
-    );
-    Analytics.addBreadCrumb(
-      'scope.getExternalMany',
-      `getExternalMany, planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: ${Analytics.hashData(
-        ids.join(', ')
-      )}`
+    logger.debugAndAddBreadCrumb(
+      'scope.getExternalMan',
+      `planning on fetching from ${localFetch ? 'local' : 'remote'} scope. Ids: {ids}`,
+      { ids: ids.join(', ') }
     );
     enrichContextFromGlobal(Object.assign(context, { requestedBitIds: ids.map(id => id.toString()) }));
     return this.sources.getMany(ids).then((defs) => {
@@ -620,20 +594,17 @@ export default class Scope {
       if (left.length === 0) {
         logger.debugAndAddBreadCrumb(
           'scope.getExternalMany',
-          'getExternalMany: no more ids left, all found locally, exiting the method'
+          'no more ids left, all found locally, exiting the method'
         );
         // $FlowFixMe - there should be a component because there no defs without components left.
         return Promise.all(defs.map(def => def.component.toVersionDependencies(def.id.version, this, def.id.scope)));
       }
 
-      logger.debugAndAddBreadCrumb(
-        'scope.getExternalMany',
-        `getExternalMany: ${left.length} left. Fetching them from a remote`
-      );
+      logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);
       return remotes
         .fetch(left.map(def => def.id), this, undefined, context)
         .then((componentObjects) => {
-          logger.debugAndAddBreadCrumb('scope.getExternalMany', 'getExternalMany: writing them to the model');
+          logger.debugAndAddBreadCrumb('scope.getExternalMany', 'writing them to the model');
           return this.writeManyComponentsToModel(componentObjects, persist);
         })
         .then(() => this.getExternalMany(ids, remotes));
@@ -653,7 +624,7 @@ export default class Scope {
     id: BitId,
     remotes: Remotes,
     localFetch: boolean,
-    context: Object
+    context?: Object
   }): Promise<VersionDependencies> {
     if (!id) return Promise.resolve();
     enrichContextFromGlobal(context);
@@ -680,14 +651,17 @@ export default class Scope {
     id: BitId,
     remotes: Remotes,
     localFetch: boolean,
-    context: Object
-  }) {
+    context?: Object
+  }): Promise<ComponentVersion> {
     return this.sources.get(id).then((component) => {
-      if (component && localFetch) return component.toComponentVersion(id.version);
+      if (component && localFetch) {
+        return component.toComponentVersion(id.version);
+      }
       return remotes
         .fetch([id], this, true, context)
         .then(([componentObjects]) => this.writeComponentToModel(componentObjects))
-        .then(() => this.getExternal({ id, remotes, localFetch: true }));
+        .then(() => this.getExternal({ id, remotes, localFetch: true }))
+        .then((versionDependencies: VersionDependencies) => versionDependencies.component);
     });
   }
 
@@ -719,12 +693,10 @@ export default class Scope {
     const [externals, locals] = splitWhen(id => id.isLocal(this.name), idsWithoutNils);
 
     const localDefs = await this.sources.getMany(locals);
-    const versionDeps = await Promise.all(
-      localDefs.map((def) => {
-        if (!def.component) throw new ComponentNotFound(def.id.toString());
-        return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
-      })
-    );
+    const versionDeps = await pMapSeries(localDefs, (def) => {
+      if (!def.component) throw new ComponentNotFound(def.id.toString());
+      return def.component.toVersionDependencies(def.id.version, this, def.id.scope);
+    });
     logger.debug(
       'scope.importMany: successfully fetched local components and their dependencies. Going to fetch externals'
     );
@@ -957,7 +929,8 @@ export default class Scope {
 
   async getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.name)) {
-      return this.remotes().then(remotes => this.getExternalOne({ id, remotes, localFetch: true }));
+      const remotes = await this.remotes();
+      return this.getExternalOne({ id, remotes, localFetch: true });
     }
 
     return this.sources.get(id).then((component) => {
@@ -1031,13 +1004,10 @@ export default class Scope {
   }
 
   async exportMany(ids: BitIds, remoteName: string, context: Object = {}): Promise<BitId[]> {
-    logger.debug(`exportMany, ids: ${ids.toString()}`);
-    Analytics.addBreadCrumb('exportMany', `exportMany, ids: ${Analytics.hashData(ids.toString())}`);
-
+    logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
     const remotes = await this.remotes();
     const remote = await remotes.resolve(remoteName, this);
-    const componentObjectsP = ids.map(id => this.sources.getObjects(id));
-    const componentObjects = await Promise.all(componentObjectsP);
+    const componentObjects = await pMapSeries(ids, id => this.sources.getObjects(id));
     const componentsAndObjects = [];
     enrichContextFromGlobal(context);
     const manyObjectsP = componentObjects.map(async (componentObject: ComponentObjects) => {
@@ -1053,10 +1023,9 @@ export default class Scope {
     let exportedIds;
     try {
       exportedIds = await remote.pushMany(manyObjects, context);
-      logger.debug('exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope');
-      Analytics.addBreadCrumb(
+      logger.debugAndAddBreadCrumb(
         'exportMany',
-        'exportMany: successfully pushed all ids to the bare-scope, going to save them back to local scope'
+        'successfully pushed all ids to the bare-scope, going to save them back to local scope'
       );
     } catch (err) {
       logger.warn('exportMany: failed pushing ids to the bare-scope');
