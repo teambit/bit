@@ -1,4 +1,5 @@
 /** @flow */
+import format from 'string-format';
 import winston from 'winston';
 import path from 'path';
 import { GLOBAL_LOGS } from '../constants';
@@ -92,9 +93,17 @@ logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
   });
 };
 
-logger.debugAndAddBreadCrumb = (category: string, message: string) => {
-  logger.debug(`${category}, ${message}`);
-  Analytics.addBreadCrumb(category, message);
+function addBreakCrumb(category: string, message: string, data: Object = {}) {
+  const hashedData = {};
+  Object.keys(data).forEach(key => (hashedData[key] = Analytics.hashData(data[key])));
+  const messageWithHashedData = format(message, hashedData);
+  Analytics.addBreadCrumb(category, messageWithHashedData);
+}
+
+logger.debugAndAddBreadCrumb = (category: string, message: string, data: Object) => {
+  const messageWithData = data ? format(message, data) : message;
+  logger.debug(category, messageWithData);
+  addBreakCrumb(category, message, data);
 };
 
 if (process.env.BIT_LOG) {
