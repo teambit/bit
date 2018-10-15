@@ -130,9 +130,11 @@ export default (async function writeToComponentsDir({
   const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
     const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
       const dependencyId = dep.id.toString();
-      const depFromBitMap = consumer.bitMap.getComponentIfExist(dep.id);
-      if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
-        // when depFromBitMap is true, it means that this component was imported as a component already before
+      const componentMapWithoutVersion = consumer.bitMap.getComponentIfExist(dep.id, { ignoreVersion: true });
+      const componentMapWithVersion = consumer.bitMap.getComponentIfExist(dep.id);
+      if (!componentWithDeps.component.dependenciesSavedAsComponents && !componentMapWithoutVersion) {
+        // when componentMapWithoutVersion is true, it means that this component was imported as a
+        // component already before or it was authored.
         // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
         logger.debug(
           `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
@@ -145,7 +147,7 @@ export default (async function writeToComponentsDir({
         );
         return Promise.resolve(null);
       }
-      if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      if (componentMapWithVersion && componentMapWithVersion.origin === COMPONENT_ORIGINS.AUTHORED) {
         dep.writtenPath = consumer.getPath();
         logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
         Analytics.addBreadCrumb(
@@ -155,8 +157,8 @@ export default (async function writeToComponentsDir({
         consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
         return Promise.resolve(dep);
       }
-      if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
-        dep.writtenPath = depFromBitMap.rootDir;
+      if (componentMapWithVersion && fs.existsSync(componentMapWithVersion.rootDir)) {
+        dep.writtenPath = componentMapWithVersion.rootDir;
         logger.debug(
           `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
         );
@@ -182,14 +184,18 @@ export default (async function writeToComponentsDir({
       const depBitPath = consumer.composeDependencyPath(dep.id);
       dep.writtenPath = depBitPath;
       dependenciesIdsCache[dependencyId] = depBitPath;
+      const origin =
+        componentMapWithoutVersion && componentMapWithoutVersion.origin !== COMPONENT_ORIGINS.NESTED
+          ? componentMapWithoutVersion.origin
+          : COMPONENT_ORIGINS.NESTED;
       // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
       // and namespace can co-exist with different versions.
-      const componentMap = consumer.bitMap.getComponentIfExist(dep.id);
+      const componentMap = origin === COMPONENT_ORIGINS.NESTED ? componentMapWithVersion : componentMapWithoutVersion;
       return dep.write({
         bitDir: depBitPath,
         override: true,
         writePackageJson,
-        origin: COMPONENT_ORIGINS.NESTED,
+        origin,
         parent: componentWithDeps.component.id,
         consumer,
         componentMap,
