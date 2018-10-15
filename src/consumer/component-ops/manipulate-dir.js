@@ -82,7 +82,7 @@ export async function getManipulateDirForExistingComponents(
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
   dependencies.forEach((dependency) => {
-    const depComponentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(dependency.id);
+    const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
     const manipulateDirDep: ManipulateDirItem = {
       id: dependency.id,
       originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
@@ -91,6 +91,18 @@ export async function getManipulateDirForExistingComponents(
     manipulateDirData.push(manipulateDirDep);
   });
   return manipulateDirData;
+}
+
+/**
+ * a dependency might be imported with a different version.
+ * e.g. is-string@0.0.1 has a dependency is-type@0.0.1, however is-type@0.0.2 has been imported directly
+ * in this case, we should ignore the version when looking for it in .bitmap
+ * on the other hand, a dependency might be nested, and as a nested it's ok to have multiple
+ * components with different versions, in this case, we look for the exact version.
+ * so we do prefer an exact version, but if it doesn't find one try without a version.
+ */
+function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
+  return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
 }
 
 /**
