@@ -1722,6 +1722,7 @@ console.log(barFoo.default());`;
   });
 
   describe('creating two components: "is-type" and "is-string" while "is-string" depends on "is-type"', () => {
+    let scopeAfterExport;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -1730,6 +1731,7 @@ console.log(barFoo.default());`;
       helper.addComponent(path.normalize('utils/is-string.js'));
       helper.commitAllComponents();
       helper.exportAllComponents();
+      scopeAfterExport = helper.cloneLocalScope();
     });
     describe('import is-type as a dependency and then import it directly', () => {
       let localConsumerFiles;
@@ -1812,6 +1814,24 @@ console.log(barFoo.default());`;
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type v2 and got is-string');
+      });
+    });
+    describe('import is-type as a dependency and then import it directly with a newer version', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterExport);
+        helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+        helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
+        helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string@0.0.1'); // imports is-type@0.0.1 as a dependency
+        helper.importComponent('utils/is-type@0.0.2');
+      });
+      it('should not show the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.a.string('modified');
       });
     });
   });

@@ -467,7 +467,7 @@ export default class Consumer {
   async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
-      const componentFromModel: ModelComponent = await this.scope.sources.get(id);
+      const componentFromModel: ?ModelComponent = await this.scope.sources.get(id);
       let componentFromFileSystem;
       try {
         componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
@@ -484,14 +484,15 @@ export default class Consumer {
         }
         throw err;
       }
-      if (!componentFromModel) {
-        status.newlyCreated = true;
-        return status;
-      }
       if (componentFromFileSystem.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
         status.nested = true;
         return status;
       }
+      if (!componentFromModel) {
+        status.newlyCreated = true;
+        return status;
+      }
+
       status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
       const idStr = id.toString();
