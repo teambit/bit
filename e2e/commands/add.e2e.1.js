@@ -9,6 +9,7 @@ import {
   IncorrectIdForImportedComponent,
   TestIsDirectory,
   VersionShouldBeRemoved,
+  MissingMainFileMultipleComponents,
   MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
@@ -623,6 +624,16 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
+    });
+
+    it('should indicate in the error message which components are missing the main file', () => {
+      helper.createFile('bar', 'baz1/foo.js');
+      helper.createFile('bar', 'baz1/foo2.js');
+      helper.createFile('bar', 'baz2/foo.js');
+      helper.createFile('bar', 'baz2/foo2.js');
+      const addFunc = () => helper.addComponent('bar/**');
+      const error = new MissingMainFileMultipleComponents(['bar/baz1, bar/baz2']);
+      helper.expectToThrow(addFunc, error);
     });
 
     // TODO: we need to implement the feature preventing -e without wrapping in quotes.

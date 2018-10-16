@@ -63,6 +63,7 @@ import {
   VersionShouldBeRemoved,
   TestIsDirectory,
   MainFileIsDir,
+  MissingMainFileMultipleComponents,
   ExcludedMainFile
 } from '../consumer/component-ops/add-components/exceptions';
 import { Analytics, LEVEL } from '../analytics/analytics';
@@ -289,7 +290,16 @@ once your changes are merged with the new remote version, please tag and export 
   [
     MissingMainFile,
     err =>
-      'error: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file'
+      `error: the component ${chalk.bold(
+        err.componentId
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+  ],
+  [
+    MissingMainFileMultipleComponents,
+    err =>
+      `error: the components ${chalk.bold(
+        err.componentIds.join(', ')
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file`
   ],
   [
     InvalidBitMap,
