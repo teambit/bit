@@ -118,7 +118,9 @@ async function getManipulateDirItemFromComponentVersion(
   // however, the opposite is not true, if it is now nested and was imported before, we can have them both.
   // (see 'when imported component has lower dependencies versions than local' in import.e2e for such a case).
   // we might change this behavior as it is confusing.
-  const componentMap: ?ComponentMap = bitMap.getComponentIfExist(id, { ignoreVersion: !isDependency });
+  const componentMap: ?ComponentMap = isDependency
+    ? bitMap.getComponentIfExist(id)
+    : bitMap.getComponentPreferNonNested(id);
   const bitmapOrigin = componentMap ? componentMap.origin : null;
   const origin = getComponentOrigin(bitmapOrigin, isDependency);
   const version: Version = await componentVersion.getVersion(repository);

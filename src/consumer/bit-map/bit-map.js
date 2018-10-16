@@ -415,6 +415,17 @@ export default class BitMap {
     }
   }
 
+  getNonNestedComponentIfExist(bitId: BitId): ?ComponentMap {
+    const nonNestedIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const id: ?BitId = nonNestedIds.searchWithoutScopeAndVersion(bitId);
+    if (!id) return null;
+    return this.getComponent(id);
+  }
+
+  getComponentPreferNonNested(bitId: BitId): ?ComponentMap {
+    return this.getNonNestedComponentIfExist(bitId) || this.getComponentIfExist(bitId, { ignoreVersion: true });
+  }
+
   getAuthoredExportedComponents(): BitId[] {
     const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter(id => id.hasScope());
