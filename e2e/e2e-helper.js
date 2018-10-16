@@ -306,6 +306,11 @@ export default class Helper {
     fs.outputFileSync(filePath, impl);
   }
 
+  createJsonFile(filePathRelativeToLocalScope: string, jsonContent: string) {
+    const filePath = path.join(this.localScopePath, filePathRelativeToLocalScope);
+    ensureAndWriteJson(filePath, jsonContent);
+  }
+
   createFileOnRootLevel(name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, name);
     fs.outputFileSync(filePath, impl);
@@ -313,6 +318,10 @@ export default class Helper {
 
   readFile(filePathRelativeToLocalScope: string): string {
     return fs.readFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope)).toString();
+  }
+
+  readJsonFile(filePathRelativeToLocalScope: string): string {
+    return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
   /**
