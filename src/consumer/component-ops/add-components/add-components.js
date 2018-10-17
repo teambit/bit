@@ -42,6 +42,8 @@ import ComponentMap from '../../bit-map/component-map';
 import GeneralError from '../../../error/general-error';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';
+import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
+import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
@@ -599,14 +601,23 @@ export default class AddComponents {
 
       const added = await Promise.all(addedP);
       validateNoDuplicateIds(added);
+      const missingMainFiles = [];
       await Promise.all(
         added.map(async (component) => {
           if (!R.isEmpty(component.files)) {
-            const addedComponent = await this.addOrUpdateComponentInBitMap(component);
-            if (addedComponent && addedComponent.files.length) addedComponents.push(addedComponent);
+            try {
+              const addedComponent = await this.addOrUpdateComponentInBitMap(component);
+              if (addedComponent && addedComponent.files.length) addedComponents.push(addedComponent);
+            } catch (err) {
+              if (!(err instanceof MissingMainFile)) throw err;
+              missingMainFiles.push(err);
+            }
           }
         })
       );
+      if (missingMainFiles.length) {
+        throw new MissingMainFileMultipleComponents(missingMainFiles.map(err => err.componentId).sort());
+      }
     } else {
       logger.debug('bit add - one component');
       // when a user enters more than one directory, he would like to keep the directories names

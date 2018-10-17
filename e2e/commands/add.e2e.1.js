@@ -9,10 +9,12 @@ import {
   IncorrectIdForImportedComponent,
   TestIsDirectory,
   VersionShouldBeRemoved,
+  MissingMainFileMultipleComponents,
   MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -346,11 +348,8 @@ describe('bit add command', function () {
       helper.createFile('bar', file2);
 
       const addCmd = () => helper.addComponentWithOptions('bar', { n: 'test' });
-      expect(addCmd).to.throw(
-        `Command failed: ${
-          helper.bitBin
-        } add bar -n test\nerror: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file\n`
-      );
+      const error = new MissingMainFile('test/bar');
+      helper.expectToThrow(addCmd, error);
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.createFile('bar', 'foo2.js');
@@ -623,6 +622,16 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo2.spec.js', test: true, name: 'foo2.spec.js' });
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
+    });
+
+    it('should indicate in the error message which components are missing the main file', () => {
+      helper.createFile('bar', 'baz1/foo.js');
+      helper.createFile('bar', 'baz1/foo2.js');
+      helper.createFile('bar', 'baz2/foo.js');
+      helper.createFile('bar', 'baz2/foo2.js');
+      const addFunc = () => helper.addComponent('bar/*');
+      const error = new MissingMainFileMultipleComponents(['bar/baz1, bar/baz2']);
+      helper.expectToThrow(addFunc, error);
     });
 
     // TODO: we need to implement the feature preventing -e without wrapping in quotes.
