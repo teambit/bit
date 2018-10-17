@@ -244,24 +244,13 @@ export default class Scope {
     );
   }
 
-  async list(showRemoteVersion?: boolean = false): Promise<ConsumerComponent[]> {
-    const components = await this.objects.listComponents();
-    const consumerComponents = await this.toConsumerComponents(components);
-    if (showRemoteVersion) {
-      const componentsIds = consumerComponents.map(component => component.id);
-      const latestVersionsInfo = await this.fetchRemoteVersions(componentsIds);
-      latestVersionsInfo.forEach((componentId) => {
-        const component = consumerComponents.find(c => c.id.isEqualWithoutVersion(componentId));
-        component.latest = componentId.version;
-      });
-    }
-    return ComponentsList.sortComponentsByName(consumerComponents);
+  async list(): Promise<ModelComponent[]> {
+    return this.objects.listComponents(false);
   }
 
-  async listStage(): Promise<ConsumerComponent[]> {
-    const components = await this.objects.listComponents(false);
-    const scopeComponents = await this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
-    return ComponentsList.sortComponentsByName(scopeComponents);
+  async listLocal(): Promise<ModelComponent[]> {
+    const listResults = await this.list();
+    return listResults.filter(result => !result.id.scope || result.id.scope === this.name);
   }
 
   async fetchRemoteVersions(componentIds: BitId[]): Promise<BitId[]> {
