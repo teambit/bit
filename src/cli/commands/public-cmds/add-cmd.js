@@ -79,16 +79,26 @@ export default class Add extends Command {
 
   report({ addedComponents, warnings }: AddActionResults): string {
     const paintWarning = () => {
-      if (warnings) {
-        const warn = Object.keys(warnings)
+      const alreadyUsedOutput = () => {
+        const alreadyUsedWarning = Object.keys(warnings.alreadyUsed)
           .map(key =>
-            chalk.yellow(`warning: files ${chalk.bold(warnings[key].join(', '))} already used by component: ${key}`)
+            chalk.yellow(
+              `warning: files ${chalk.bold(warnings.alreadyUsed[key].join(', '))} already used by component: ${key}`
+            )
           )
           .filter(x => x)
           .join('\n');
-        if (!R.isEmpty(warn)) return `${warn}\n`;
-      }
-      return '';
+        return R.isEmpty(alreadyUsedWarning) ? '' : `${alreadyUsedWarning}\n`;
+      };
+      const emptyDirectoryOutput = () => {
+        if (!warnings.emptyDirectory.length) return '';
+        return chalk.yellow(
+          `warning: the following directories are empty or all their files were excluded\n${chalk.bold(
+            warnings.emptyDirectory.join('\n')
+          )}\n`
+        );
+      };
+      return alreadyUsedOutput() + emptyDirectoryOutput();
     };
 
     if (addedComponents.length > 1) {
