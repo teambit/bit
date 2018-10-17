@@ -46,7 +46,11 @@ import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
-export type AddActionResults = { addedComponents: AddResult[], warnings: Object };
+type Warnings = {
+  alreadyUsed: Object,
+  emptyDirectory: string[]
+};
+export type AddActionResults = { addedComponents: AddResult[], warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
 type PathsStats = { [PathOsBased]: { isDir: boolean } };
 type AddedComponent = {
@@ -122,7 +126,7 @@ export default class AddComponents {
   exclude: PathOrDSL[];
   override: boolean; // (default = false) replace the files array or only add files.
   trackDirFeature: ?boolean;
-  warnings: Object;
+  warnings: Warnings;
   ignoreList: string[];
   gitIgnore: any;
   origin: ComponentOrigin;
@@ -141,7 +145,10 @@ export default class AddComponents {
     this.override = addProps.override;
     this.trackDirFeature = addProps.trackDirFeature;
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
-    this.warnings = {};
+    this.warnings = {
+      alreadyUsed: {},
+      emptyDirectory: []
+    };
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -298,8 +305,7 @@ export default class AddComponents {
         delete component.trackDir;
       } else if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
-        if (this.warnings[existingIdOfFile]) this.warnings[existingIdOfFile].push(file.relativePath);
-        else this.warnings[existingIdOfFile] = [file.relativePath];
+        if (this.warnings.alreadyUsed[existingIdOfFile]) { this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath); } else this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
         // $FlowFixMe null is removed later on
         return null;
       }
@@ -594,12 +600,20 @@ export default class AddComponents {
         ? await this.getFilesAccordingToDsl(Object.keys(componentPathsStats), this.tests)
         : [];
       testToRemove.forEach(test => delete componentPathsStats[path.normalize(test)]);
-      const addedP = Object.keys(componentPathsStats).map((onePath) => {
+      const addedP = Object.keys(componentPathsStats).map(async (onePath) => {
         const oneComponentPathStat = { [onePath]: componentPathsStats[onePath] };
-        return this.addOneComponent(oneComponentPathStat);
+        try {
+          const addedComponent = await this.addOneComponent(oneComponentPathStat);
+          return addedComponent;
+        } catch (err) {
+          if (!(err instanceof EmptyDirectory)) throw err;
+          this.warnings.emptyDirectory.push(onePath);
+          return null;
+        }
       });
 
-      const added = await Promise.all(addedP);
+      const addedWithNulls = await Promise.all(addedP);
+      const added = R.reject(R.isNil, addedWithNulls);
       validateNoDuplicateIds(added);
       const missingMainFiles = [];
       await Promise.all(

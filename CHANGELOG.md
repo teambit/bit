@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- suppress an exception of directory-is-empty when adding multiple components and some of them are empty, show a warning instead
 - improve "missing a main file" error when adding multiple components to print the problematic components
 
 ## [13.0.5-dev.16 - 2018-10-14]
