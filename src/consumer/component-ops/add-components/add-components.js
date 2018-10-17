@@ -61,37 +61,6 @@ type AddedComponent = {
 };
 const REGEX_DSL_PATTERN = /{([^}]+)}/g;
 
-/**
- * validatePaths - validate if paths entered by user exist and if not throw an error
- *
- * @param {string[]} fileArray - array of paths
- * @returns {PathsStats} componentPathsStats
- */
-function validatePaths(fileArray: string[]): PathsStats {
-  const componentPathsStats = {};
-  fileArray.forEach((componentPath) => {
-    if (!fs.existsSync(componentPath)) {
-      throw new PathsNotExist([componentPath]);
-    }
-    componentPathsStats[componentPath] = {
-      isDir: isDir(componentPath)
-    };
-  });
-  return componentPathsStats;
-}
-
-/**
- * validate that no two files where added with the same id in the same bit add command
- */
-const validateNoDuplicateIds = (addComponents: Object[]) => {
-  const duplicateIds = {};
-  const newGroupedComponents = groupby(addComponents, 'componentId');
-  Object.keys(newGroupedComponents).forEach((key) => {
-    if (newGroupedComponents[key].length > 1) duplicateIds[key] = newGroupedComponents[key];
-  });
-  if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);
-};
-
 export type AddProps = {
   componentPaths: PathOsBased[],
   id?: string,
@@ -131,6 +100,7 @@ export default class AddComponents {
   gitIgnore: any;
   origin: ComponentOrigin;
   alternateCwd: ?string;
+  addedComponents: AddResult[];
   constructor(context: AddContext, addProps: AddProps) {
     this.alternateCwd = context.alternateCwd;
     this.consumer = context.consumer;
@@ -149,6 +119,7 @@ export default class AddComponents {
       alreadyUsed: {},
       emptyDirectory: []
     };
+    this.addedComponents = [];
   }
 
   joinConsumerPathIfNeeded(paths: PathOrDSL[]): PathOrDSL[] {
@@ -305,7 +276,11 @@ export default class AddComponents {
         delete component.trackDir;
       } else if (idOfFileIsDifferent) {
         // not imported component file but exists in bitmap
-        if (this.warnings.alreadyUsed[existingIdOfFile]) { this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath); } else this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
+        if (this.warnings.alreadyUsed[existingIdOfFile]) {
+          this.warnings.alreadyUsed[existingIdOfFile].push(file.relativePath);
+        } else {
+          this.warnings.alreadyUsed[existingIdOfFile] = [file.relativePath];
+        }
         // $FlowFixMe null is removed later on
         return null;
       }
@@ -593,45 +568,8 @@ export default class AddComponents {
     // if a user entered multiple paths and entered an id, he wants all these paths to be one component
     // conversely, if a user entered multiple paths without id, he wants each dir as an individual component
     const isMultipleComponents = Object.keys(componentPathsStats).length > 1 && !this.id;
-    const addedComponents: AddResult[] = [];
     if (isMultipleComponents) {
-      logger.debug('bit add - multiple components');
-      const testToRemove = !R.isEmpty(this.tests)
-        ? await this.getFilesAccordingToDsl(Object.keys(componentPathsStats), this.tests)
-        : [];
-      testToRemove.forEach(test => delete componentPathsStats[path.normalize(test)]);
-      const addedP = Object.keys(componentPathsStats).map(async (onePath) => {
-        const oneComponentPathStat = { [onePath]: componentPathsStats[onePath] };
-        try {
-          const addedComponent = await this.addOneComponent(oneComponentPathStat);
-          return addedComponent;
-        } catch (err) {
-          if (!(err instanceof EmptyDirectory)) throw err;
-          this.warnings.emptyDirectory.push(onePath);
-          return null;
-        }
-      });
-
-      const addedWithNulls = await Promise.all(addedP);
-      const added = R.reject(R.isNil, addedWithNulls);
-      validateNoDuplicateIds(added);
-      const missingMainFiles = [];
-      await Promise.all(
-        added.map(async (component) => {
-          if (!R.isEmpty(component.files)) {
-            try {
-              const addedComponent = await this.addOrUpdateComponentInBitMap(component);
-              if (addedComponent && addedComponent.files.length) addedComponents.push(addedComponent);
-            } catch (err) {
-              if (!(err instanceof MissingMainFile)) throw err;
-              missingMainFiles.push(err);
-            }
-          }
-        })
-      );
-      if (missingMainFiles.length) {
-        throw new MissingMainFileMultipleComponents(missingMainFiles.map(err => err.componentId).sort());
-      }
+      await this.addMultipleComponents(componentPathsStats);
     } else {
       logger.debug('bit add - one component');
       // when a user enters more than one directory, he would like to keep the directories names
@@ -639,10 +577,88 @@ export default class AddComponents {
       const addedOne = await this.addOneComponent(componentPathsStats);
       if (!R.isEmpty(addedOne.files)) {
         const addedResult = await this.addOrUpdateComponentInBitMap(addedOne);
-        if (addedResult) addedComponents.push(addedResult);
+        if (addedResult) this.addedComponents.push(addedResult);
       }
     }
-    Analytics.setExtraData('num_components', addedComponents.length);
-    return { addedComponents, warnings: this.warnings };
+    Analytics.setExtraData('num_components', this.addedComponents.length);
+    return { addedComponents: this.addedComponents, warnings: this.warnings };
   }
+
+  async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {
+    logger.debug('bit add - multiple components');
+    const testToRemove = !R.isEmpty(this.tests)
+      ? await this.getFilesAccordingToDsl(Object.keys(componentPathsStats), this.tests)
+      : [];
+    testToRemove.forEach(test => delete componentPathsStats[path.normalize(test)]);
+    const added = await this._tryAddingMultiple(componentPathsStats);
+    validateNoDuplicateIds(added);
+    await this._addMultipleToBitMap(added);
+  }
+
+  async _addMultipleToBitMap(added: AddedComponent[]): Promise<void> {
+    const missingMainFiles = [];
+    await Promise.all(
+      added.map(async (component) => {
+        if (!R.isEmpty(component.files)) {
+          try {
+            const addedComponent = await this.addOrUpdateComponentInBitMap(component);
+            if (addedComponent && addedComponent.files.length) this.addedComponents.push(addedComponent);
+          } catch (err) {
+            if (!(err instanceof MissingMainFile)) throw err;
+            missingMainFiles.push(err);
+          }
+        }
+      })
+    );
+    if (missingMainFiles.length) {
+      throw new MissingMainFileMultipleComponents(missingMainFiles.map(err => err.componentId).sort());
+    }
+  }
+
+  async _tryAddingMultiple(componentPathsStats: PathsStats): Promise<AddedComponent[]> {
+    const addedP = Object.keys(componentPathsStats).map(async (onePath) => {
+      const oneComponentPathStat = { [onePath]: componentPathsStats[onePath] };
+      try {
+        const addedComponent = await this.addOneComponent(oneComponentPathStat);
+        return addedComponent;
+      } catch (err) {
+        if (!(err instanceof EmptyDirectory)) throw err;
+        this.warnings.emptyDirectory.push(onePath);
+        return null;
+      }
+    });
+    const added = await Promise.all(addedP);
+    return R.reject(R.isNil, added);
+  }
+}
+
+/**
+ * validatePaths - validate if paths entered by user exist and if not throw an error
+ *
+ * @param {string[]} fileArray - array of paths
+ * @returns {PathsStats} componentPathsStats
+ */
+function validatePaths(fileArray: string[]): PathsStats {
+  const componentPathsStats = {};
+  fileArray.forEach((componentPath) => {
+    if (!fs.existsSync(componentPath)) {
+      throw new PathsNotExist([componentPath]);
+    }
+    componentPathsStats[componentPath] = {
+      isDir: isDir(componentPath)
+    };
+  });
+  return componentPathsStats;
+}
+
+/**
+ * validate that no two files where added with the same id in the same bit add command
+ */
+function validateNoDuplicateIds(addComponents: Object[]) {
+  const duplicateIds = {};
+  const newGroupedComponents = groupby(addComponents, 'componentId');
+  Object.keys(newGroupedComponents).forEach((key) => {
+    if (newGroupedComponents[key].length > 1) duplicateIds[key] = newGroupedComponents[key];
+  });
+  if (!R.isEmpty(duplicateIds) && !R.isNil(duplicateIds)) throw new DuplicateIds(duplicateIds);
 }
