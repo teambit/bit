@@ -18,7 +18,7 @@ describe('api', function () {
     });
     it('should list the ids of the remote scope', async () => {
       const result = await api.list(helper.remoteScopePath);
-      expect(result).to.be.an.array();
+      expect(result).to.be.an('array');
       expect(result).to.have.lengthOf(1);
       expect(result[0]).to.equal(`${helper.remoteScope}/bar/foo@0.0.1`);
     });
