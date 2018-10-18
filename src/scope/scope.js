@@ -250,7 +250,7 @@ export default class Scope {
 
   async listLocal(): Promise<ModelComponent[]> {
     const listResults = await this.list();
-    return listResults.filter(result => !result.id.scope || result.id.scope === this.name);
+    return listResults.filter(result => !result.scope || result.scope === this.name);
   }
 
   async fetchRemoteVersions(componentIds: BitId[]): Promise<BitId[]> {
