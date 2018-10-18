@@ -26,9 +26,9 @@ import MergeConflictOnRemote from '../../exceptions/merge-conflict-on-remote';
 import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import GeneralError from '../../../error/general-error';
+import type { ListScopeResult } from '../../../consumer/component/components-list';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
-const rejectNils = R.reject(R.isNil);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
 
@@ -219,18 +219,14 @@ export default class SSH implements Network {
       });
   }
 
-  async list() {
+  async list(): Promise<ListScopeResult[]> {
     return this.exec('_list').then(async (str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
-      const componentsP = [];
-      payload.forEach((c) => {
-        if (c) {
-          componentsP.push(ConsumerComponent.fromString(c));
-        }
+      payload.forEach((result) => {
+        result.id = new BitId(result.id);
       });
-      const components = await Promise.all(componentsP);
-      return components;
+      return payload;
     });
   }
 
