@@ -98,7 +98,7 @@ export default (async function writeToComponentsDir({
       saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
     // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
     // find the component in bit.map
-    const componentMap = consumer.bitMap.getComponentIfExist(componentWithDeps.component.id, { ignoreVersion: true });
+    const componentMap = consumer.bitMap.getComponentPreferNonNested(componentWithDeps.component.id);
     const origin =
       componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
         ? COMPONENT_ORIGINS.AUTHORED

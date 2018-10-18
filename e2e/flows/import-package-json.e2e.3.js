@@ -4,8 +4,8 @@ import Helper from '../e2e-helper';
 import { WRAPPER_DIR } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
-const fixturePackageJson = '{ "name": "nice-package" }';
-const fixturePackageJsonV2 = '{ "name": "nice-package V2" }';
+const fixturePackageJson = { name: 'nice-package' };
+const fixturePackageJsonV2 = { name: 'nice-package V2' };
 
 chai.use(require('chai-fs'));
 
@@ -21,7 +21,7 @@ describe('component with package.json as a file of the component', function () {
     let componentMap;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('', 'package.json', fixturePackageJson);
+      helper.createJsonFile('package.json', fixturePackageJson);
       const addOutput = helper.addComponentWithOptions('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
       helper.tagAllWithoutMessage();
@@ -84,7 +84,7 @@ describe('component with package.json as a file of the component', function () {
     let componentMap;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('bar', 'package.json', fixturePackageJson);
+      helper.createJsonFile('bar/package.json', fixturePackageJson);
       helper.createFile('bar', 'foo.js');
       const addOutput = helper.addComponentWithOptions('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
@@ -128,7 +128,7 @@ describe('component with package.json as a file of the component', function () {
     const fooFixture = 'require("./package.json");';
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.createFile('', 'package.json', fixturePackageJson);
+      helper.createJsonFile('package.json', fixturePackageJson);
       helper.addComponentWithOptions('package.json', { i: 'foo/pkg' });
       helper.createFile('', 'foo.js', fooFixture);
       helper.addComponentWithOptions('foo.js', { i: 'bar/foo' });
@@ -157,8 +157,8 @@ describe('component with package.json as a file of the component', function () {
     it('should generate a link to the correct path of its dependency package.json file', () => {
       const linkPath = path.join('components/bar/foo', WRAPPER_DIR, 'package.json');
       expect(path.join(helper.localScopePath, linkPath)).to.be.a.path();
-      const linkContent = helper.readFile(linkPath);
-      expect(linkContent).to.be.equal(fixturePackageJson);
+      const linkContent = helper.readJsonFile(linkPath);
+      expect(linkContent).to.be.deep.equal(fixturePackageJson);
     });
     it('should save the wrapDir attribute of the dependency', () => {
       expect(componentMapFooPkg).to.have.property('wrapDir');
@@ -186,7 +186,7 @@ describe('component with package.json as a file of the component', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
 
-        helper.createFile(`components/foo/pkg/${WRAPPER_DIR}`, 'package.json', fixturePackageJsonV2);
+        helper.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
         helper.tagAllWithoutMessage();
       });
       it('should strip the wrap dir when saving the component into the scope', () => {
@@ -204,20 +204,21 @@ describe('component with package.json as a file of the component', function () {
         expect(barFoo.dependencies[0].relativePaths[0].sourceRelativePath).to.equal('package.json');
         expect(barFoo.dependencies[0].relativePaths[0].destinationRelativePath).to.equal('package.json');
       });
-      describe.skip('export the updated components and re-import them for author', () => {
+      describe('export the updated components and re-import them for author', () => {
         before(() => {
           helper.exportAllComponents();
           helper.getClonedLocalScope(afterExportScope);
 
-          // scenario 1: import bar/foo then foo/pkg. we have a bug here. it imports bar/foo as
+          // scenario 1: import bar/foo then foo/pkg. we had a bug here. it imported bar/foo as
           // authored (as expected) but foo/pkg as nested. then, after running the import for
-          // foo/pkg it changes the record to imported.
-          // helper.importComponent('bar/foo');
-          // helper.importComponent('foo/pkg');
+          // foo/pkg it changed the record to imported. Now, it doesn't change it to imported
+          // but leave it as authored
+          helper.importComponent('bar/foo');
+          helper.importComponent('foo/pkg');
 
           // scenario 2: import all components from .bitmap, we have a bug as well, for some
           // reason, it imports the objects but doesn't update the file system.
-          helper.importAllComponents(true);
+          // helper.importAllComponents(true);
         });
         it('should not add wrapDir for the author', () => {
           expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();

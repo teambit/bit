@@ -415,6 +415,17 @@ export default class BitMap {
     }
   }
 
+  getNonNestedComponentIfExist(bitId: BitId): ?ComponentMap {
+    const nonNestedIds = this.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const id: ?BitId = nonNestedIds.searchWithoutScopeAndVersion(bitId);
+    if (!id) return null;
+    return this.getComponent(id);
+  }
+
+  getComponentPreferNonNested(bitId: BitId): ?ComponentMap {
+    return this.getNonNestedComponentIfExist(bitId) || this.getComponentIfExist(bitId, { ignoreVersion: true });
+  }
+
   getAuthoredExportedComponents(): BitId[] {
     const authoredIds = this.getAllBitIds([COMPONENT_ORIGINS.AUTHORED]);
     return authoredIds.filter(id => id.hasScope());
@@ -473,13 +484,14 @@ export default class BitMap {
     return mainFileFromFiles.relativePath;
   }
 
-  _getMainFile(mainFile?: PathLinux, componentMap: ComponentMap): PathLinux {
+  _getMainFile(mainFile?: PathLinux, componentIdStr: string): PathLinux {
+    const componentMap: ComponentMap = this.components[componentIdStr];
     const files = componentMap.files.filter(file => !file.test);
     // scenario 1) user entered mainFile => search the mainFile in the files array
     if (mainFile) {
       const foundMainFile = this._searchMainFile(mainFile, files, componentMap.rootDir);
       if (foundMainFile) return foundMainFile;
-      throw new MissingMainFile(mainFile, files.map(file => path.normalize(file.relativePath)));
+      throw new MissingMainFile(componentIdStr, mainFile, files.map(file => path.normalize(file.relativePath)));
     }
     // scenario 2) user didn't enter mainFile and the component has only one file => use that file as the main file.
     if (files.length === 1) return files[0].relativePath;
@@ -494,7 +506,7 @@ export default class BitMap {
     });
     if (searchResult) return searchResult;
     const mainFileString = `${DEFAULT_INDEX_NAME}.[${DEFAULT_INDEX_EXTS.join(', ')}]`;
-    throw new MissingMainFile(mainFileString, files.map(file => path.normalize(file.relativePath)));
+    throw new MissingMainFile(componentIdStr, mainFileString, files.map(file => path.normalize(file.relativePath)));
   }
 
   addDependencyToParent(parent: BitId, dependency: string): void {
@@ -673,10 +685,7 @@ export default class BitMap {
         );
       }
       if (mainFile) {
-        this.components[componentIdStr].mainFile = this._getMainFile(
-          pathNormalizeToLinux(mainFile),
-          this.components[componentIdStr]
-        );
+        this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
       }
     } else {
       if (origin === COMPONENT_ORIGINS.IMPORTED || origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -687,10 +696,7 @@ export default class BitMap {
       const componentMap = new ComponentMap({ files, origin });
       componentMap.setMarkAsChangedCb(this.markAsChangedBinded);
       this.setComponent(componentId, componentMap);
-      this.components[componentIdStr].mainFile = this._getMainFile(
-        pathNormalizeToLinux(mainFile),
-        this.components[componentIdStr]
-      );
+      this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
     }
     if (rootDir) {
       // when rootDir is from the cli, it is changed to be absolute first (see write-components.writeToComponentsDir)

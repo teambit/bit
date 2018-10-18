@@ -9,10 +9,12 @@ import {
   IncorrectIdForImportedComponent,
   TestIsDirectory,
   VersionShouldBeRemoved,
+  MissingMainFileMultipleComponents,
   MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -346,11 +348,8 @@ describe('bit add command', function () {
       helper.createFile('bar', file2);
 
       const addCmd = () => helper.addComponentWithOptions('bar', { n: 'test' });
-      expect(addCmd).to.throw(
-        `Command failed: ${
-          helper.bitBin
-        } add bar -n test\nerror: one or more of the added components does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file\n`
-      );
+      const error = new MissingMainFile('test/bar');
+      helper.expectToThrow(addCmd, error);
     });
     it('Should throw error msg if -i and -n flag are used with bit add', () => {
       helper.createFile('bar', 'foo2.js');
@@ -383,59 +382,6 @@ describe('bit add command', function () {
       helper.expectToThrow(addFunc, error);
     });
     it.skip('Bitmap mainFile should point to correct mainFile', () => {});
-  });
-  describe('adding file to existing tagged component', () => {
-    let bitMap;
-    let files;
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createFile('bar', 'foo.js');
-      helper.createFile('bar', 'boo1.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
-      helper.addComponentWithOptions('bar/boo1.js', { i: 'bar/foo' });
-      bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo@0.0.1'); // should not change the component ID
-      files = bitMap['bar/foo@0.0.1'].files;
-    });
-    it('Should show component as modified', () => {
-      const output = helper.runCmd('bit s');
-      expect(output).to.have.string(
-        'modified components\n(use "bit tag --all [version]" to lock a version with all your changes)\n(use "bit diff" to compare changes)\n\n     > bar/foo'
-      );
-    });
-    it('Should be added to the existing component', () => {
-      expect(files).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
-      expect(files).to.be.ofSize(2);
-      expect(bitMap).to.not.have.property('bar/boo1');
-    });
-  });
-  describe('add multiple components', () => {
-    beforeEach(() => {
-      helper.reInitLocalScope();
-    });
-    it('Should add all components with correct namespace and return message to user', () => {
-      const basePath = path.normalize('bar/*');
-      helper.createFile('bar', 'foo2.js');
-      helper.createFile('bar', 'foo1.js');
-      const output = helper.addComponentWithOptions(basePath, { n: 'test' });
-      const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('test/foo1');
-      expect(bitMap).to.have.property('test/foo2');
-      expect(output).to.have.string('tracking 2 new components');
-    });
-    it('Should return error for missing namespace', () => {
-      const basePath = path.normalize('bar/*');
-      let errorMessage;
-      helper.createFile('bar', 'foo2.js');
-      helper.createFile('bar', 'foo1.js');
-      try {
-        helper.addComponentWithOptions(basePath, { n: '' });
-      } catch (err) {
-        errorMessage = err.message;
-      }
-      expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
-    });
     it('Define dynamic main file ', () => {
       const mainFileOs = path.normalize('{PARENT}/{PARENT}.js');
       helper.createFile('bar', 'bar.js');
@@ -483,7 +429,6 @@ describe('bit add command', function () {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.not.have.property('test/foo.spec');
     });
-
     it('Should add dir files with spec from dsl when test files are flattened', () => {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
@@ -588,7 +533,6 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-
     // TODO: we need to implement the feature preventing the use of -t without wrapping in quotes.
     it.skip('Should output message preventing user from adding files with spec from dsl and glob pattern without using quotes', () => {
       let errMsg = '';
@@ -603,7 +547,6 @@ describe('bit add command', function () {
       }
       expect(errMsg).to.have.string('Please wrap tests with quotes');
     });
-
     it('Should add dir files with spec from dsl and glob pattern and exclude', () => {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
@@ -624,7 +567,6 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'test/bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(bitMap).to.have.property('bar/foo');
     });
-
     // TODO: we need to implement the feature preventing -e without wrapping in quotes.
     it.skip('Should prevent using exclude flag without wrapping in quotes', () => {
       let errMsg = '';
@@ -637,7 +579,6 @@ describe('bit add command', function () {
       }
       expect(errMsg).to.have.string('Please wrap excluded files with quotes');
     });
-    // TODO: we need to implement the feature preventing -e without wrapping in quotes.
     it('should throw an error when main file is excluded', () => {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
@@ -662,7 +603,6 @@ describe('bit add command', function () {
       expect(files2).to.be.array();
       expect(files2).to.be.ofSize(3);
     });
-
     it('Should modify bitmap when adding component again without id', () => {
       helper.createFile('bar/foo', 'foo.js');
       helper.createFile('bar/foo', 'index.js');
@@ -702,6 +642,85 @@ describe('bit add command', function () {
       expect(files).to.deep.include({ relativePath: 'bar/foo.spec.js', test: true, name: 'foo.spec.js' });
       expect(files).to.deep.not.include({ relativePath: 'bar/a.example.js', test: true, name: 'a.example.js' });
       expect(bitMap).to.have.property('bar/foo');
+    });
+  });
+  describe('adding file to existing tagged component', () => {
+    let bitMap;
+    let files;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'boo1.js');
+      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.tagAllWithoutMessage();
+      helper.addComponentWithOptions('bar/boo1.js', { i: 'bar/foo' });
+      bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar/foo@0.0.1'); // should not change the component ID
+      files = bitMap['bar/foo@0.0.1'].files;
+    });
+    it('Should show component as modified', () => {
+      const output = helper.runCmd('bit s');
+      expect(output).to.have.string(
+        'modified components\n(use "bit tag --all [version]" to lock a version with all your changes)\n(use "bit diff" to compare changes)\n\n     > bar/foo'
+      );
+    });
+    it('Should be added to the existing component', () => {
+      expect(files).to.deep.include({ relativePath: 'bar/boo1.js', test: false, name: 'boo1.js' });
+      expect(files).to.be.ofSize(2);
+      expect(bitMap).to.not.have.property('bar/boo1');
+    });
+  });
+  describe('add multiple components', () => {
+    it('Should add all components with correct namespace and return message to user', () => {
+      helper.reInitLocalScope();
+      const basePath = path.normalize('bar/*');
+      helper.createFile('bar', 'foo2.js');
+      helper.createFile('bar', 'foo1.js');
+      const output = helper.addComponentWithOptions(basePath, { n: 'test' });
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('test/foo1');
+      expect(bitMap).to.have.property('test/foo2');
+      expect(output).to.have.string('tracking 2 new components');
+    });
+    it('Should return error for missing namespace', () => {
+      helper.reInitLocalScope();
+      const basePath = path.normalize('bar/*');
+      let errorMessage;
+      helper.createFile('bar', 'foo2.js');
+      helper.createFile('bar', 'foo1.js');
+      try {
+        helper.addComponentWithOptions(basePath, { n: '' });
+      } catch (err) {
+        errorMessage = err.message;
+      }
+      expect(errorMessage).to.have.string("error: option `-n, --namespace <namespace>' argument missing");
+    });
+    it('should indicate in the error message which components are missing the main file', () => {
+      helper.reInitLocalScope();
+      helper.createFile('bar', 'baz1/foo.js');
+      helper.createFile('bar', 'baz1/foo2.js');
+      helper.createFile('bar', 'baz2/foo.js');
+      helper.createFile('bar', 'baz2/foo2.js');
+      const addFunc = () => helper.addComponent('bar/*');
+      const error = new MissingMainFileMultipleComponents(['bar/baz1, bar/baz2']);
+      helper.expectToThrow(addFunc, error);
+    });
+    describe('when some of the components have empty directory as a result of excluding their files', () => {
+      let output;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createFile('bar', 'baz1/foo.js');
+        helper.createFile('bar', 'baz2/foo3.js');
+        output = helper.addComponentWithOptions('bar/*', { e: 'bar/baz2/foo3.js' });
+      });
+      it('should not break the operation if some of the components have empty directory', () => {
+        expect(output).to.have.string('tracking component bar/baz1');
+      });
+      it('should show a warning indicating the directories that were not added', () => {
+        expect(output).to.have.string('warning');
+        expect(output).to.have.string('the following directories are empty');
+        expect(output).to.have.string(path.normalize('bar/baz2'));
+      });
     });
   });
   describe('add component with exclude', () => {
