@@ -38,7 +38,7 @@ export default class ComponentsList {
 
   async getModelComponents(): Promise<ModelComponent[]> {
     if (!this._modelComponents) {
-      this._modelComponents = await this.scope.objects.listComponents(false);
+      this._modelComponents = await this.scope.list();
     }
     return this._modelComponents;
   }
@@ -263,6 +263,9 @@ export default class ComponentsList {
     return this._fromBitMap[cacheKeyName];
   }
 
+  /**
+   * get called when the Consumer is available, shows also components from remote scopes
+   */
   async listScope(showRemoteVersion: boolean, includeNested: boolean): Promise<ListScopeResult[]> {
     const components: ModelComponent[] = await this.getModelComponents();
     const componentsSorted = ComponentsList.sortComponentsByName(components);
@@ -294,6 +297,9 @@ export default class ComponentsList {
     });
   }
 
+  /**
+   * get called from a bare-scope, shows only components of that scope
+   */
   static async listLocalScope(scope: Scope): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
     const componentsSorted = ComponentsList.sortComponentsByName(components);

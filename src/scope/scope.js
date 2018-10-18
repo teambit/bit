@@ -803,7 +803,7 @@ export default class Scope {
    * foreach component in array find the componnet that uses that component
    */
   async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
-    const allComponents = await this.objects.listComponents(false);
+    const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
         const loadedVersions = await Promise.all(
@@ -951,7 +951,7 @@ export default class Scope {
     if (component) return component;
     if (!id.scope) {
       // search for the complete ID
-      const components: ModelComponent[] = await this.objects.listComponents(false); // don't fetch Symlinks
+      const components: ModelComponent[] = await this.list();
       const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
       // $FlowFixMe
       if (foundComponent.length) return first(foundComponent);

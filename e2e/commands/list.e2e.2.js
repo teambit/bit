@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
