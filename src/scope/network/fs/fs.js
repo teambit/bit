@@ -9,6 +9,8 @@ import { flatten } from '../../../utils';
 import type { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
 import type { Network } from '../network';
+import ComponentsList from '../../../consumer/component/components-list';
+import type { ListScopeResult } from '../../../consumer/component/components-list';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -61,8 +63,8 @@ export default class Fs implements Network {
       .then(componentsIds => componentsIds.map(componentId => componentId.toString()));
   }
 
-  list(): Promise<[]> {
-    return this.getScope().listStage();
+  list(): Promise<ListScopeResult[]> {
+    return ComponentsList.listLocalScope(this.getScope());
   }
 
   search(query: string, reindex: boolean): Promise<[]> {

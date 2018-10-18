@@ -6,6 +6,7 @@ import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
 import type { Network } from '../scope/network/network';
 import Component from '../consumer/component';
+import type { ListScopeResult } from '../consumer/component/components-list';
 
 /**
  * @ctx bit, primary, remote
@@ -42,7 +43,7 @@ export default class Remote {
     });
   }
 
-  list(): Promise<[]> {
+  list(): Promise<ListScopeResult[]> {
     return this.connect().then(network => network.list());
   }
 

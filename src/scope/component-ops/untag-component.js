@@ -61,7 +61,7 @@ export async function removeLocalVersionsForAllComponents(
   force?: boolean = false
 ): Promise<untagResult[]> {
   // $FlowFixMe
-  const components: ModelComponent[] = await scope.objects.listComponents(false);
+  const components: ModelComponent[] = await scope.list();
   const candidateComponents = components.filter((component: ModelComponent) => {
     const localVersions = component.getLocalVersions();
     if (!localVersions.length) return false;

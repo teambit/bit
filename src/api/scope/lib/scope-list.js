@@ -1,6 +1,8 @@
 // @flow
 import { loadScope } from '../../../scope';
+import ComponentsList from '../../../consumer/component/components-list';
+import type { ListScopeResult } from '../../../consumer/component/components-list';
 
-export default function list(path: string): Promise<any> {
-  return loadScope(path).then(scope => scope.listStage());
+export default function list(path: string): Promise<ListScopeResult[]> {
+  return loadScope(path).then(scope => ComponentsList.listLocalScope(scope));
 }
