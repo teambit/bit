@@ -15,7 +15,7 @@ export default (async function list({
   scopeName?: string,
   showAll: boolean,
   showRemoteVersion: boolean
-}): Promise<ListScopeResult> {
+}): Promise<ListScopeResult[]> {
   const consumer: Consumer = await loadConsumer();
   const scope: Scope = consumer.scope;
   if (scopeName) {
@@ -27,12 +27,12 @@ export default (async function list({
   return scopeList(consumer, showAll, showRemoteVersion);
 });
 
-function remoteList(remote: Remote): Promise<ListScopeResult> {
+function remoteList(remote: Remote): Promise<ListScopeResult[]> {
   loader.start(BEFORE_REMOTE_LIST);
   return remote.list();
 }
 
-async function scopeList(consumer: Consumer, showAll: boolean, showRemoteVersion: boolean): Promise<ListScopeResult> {
+async function scopeList(consumer: Consumer, showAll: boolean, showRemoteVersion: boolean): Promise<ListScopeResult[]> {
   loader.start(BEFORE_LOCAL_LIST);
   const componentsList = new ComponentsList(consumer);
   return componentsList.listScope(showRemoteVersion, showAll);
