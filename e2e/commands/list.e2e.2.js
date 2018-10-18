@@ -56,25 +56,6 @@ describe('bit list command', function () {
       expect(output).to.contain.string('bar/foo [Deprecated]');
     });
   });
-  // @todo: find out why it should display the last found and the last mentioned in the component object
-  describe.skip("when a component's last version object is missing", () => {
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
-      const objectFiles = helper.getConsumerFiles('.bit/objects/*/*');
-      helper.commitComponent('bar/foo', 'mes', '-f');
-      const objectFilesWithV2 = helper.getConsumerFiles('.bit/objects/*/*');
-      // find new objects (the v2 object)
-      const v2Object = R.difference(objectFilesWithV2, objectFiles);
-      helper.deleteFile(v2Object[0]);
-    });
-    it('should display the last found version', () => {
-      const output = JSON.parse(helper.listLocalScope('-j'));
-      expect(output).to.deep.includes({ id: 'bar/foo', localVersion: '0.0.1', currentVersion: '0.0.2' });
-    });
-  });
   describe('with --outdated flag', () => {
     describe('when a remote component has a higher version than the local component', () => {
       let output;
