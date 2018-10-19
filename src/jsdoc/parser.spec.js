@@ -238,6 +238,15 @@ describe('JSDoc Parser', () => {
         const anyArg = args.find(arg => arg.name === 'arrayOfUnion');
         expect(anyArg.type).to.equal('Array<(number | Object)>');
       });
+      it('should recognize Optional Parameter', () => {
+        const anyArg = args.find(arg => arg.name === 'optionalParameter');
+        expect(anyArg.type).to.equal('string=');
+      });
+      it('should recognize Optional Parameter with Default Value', () => {
+        const anyArg = args.find(arg => arg.name === 'optionalParameterWithDefaultValue');
+        expect(anyArg.type).to.equal('string=');
+        expect(anyArg.default).to.equal('value');
+      });
     });
 
     describe('Flow Type File', () => {

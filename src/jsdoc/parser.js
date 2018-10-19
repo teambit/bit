@@ -31,7 +31,7 @@ function formatTag(tag: Object): Object {
 }
 
 function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsBased) {
-  const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true });
+  const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true, sloppy: true });
   if (!commentsAst) return;
 
   const args = [];
