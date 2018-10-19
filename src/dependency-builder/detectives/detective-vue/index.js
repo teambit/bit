@@ -16,11 +16,15 @@ module.exports = function (src, options = {}) {
     });
   };
 
-  options.useContent = true;
   const { script, styles } = compiler.parseComponent(src, { pad: 'line' });
   // it must be required here, otherwise, it'll be a cyclic dependency
   const precinct = require('../../precinct');
   if (script) {
+    if (script.lang) {
+      options.type = script.lang;
+    } else {
+      options.useContent = true;
+    }
     const dependencies = precinct(script.content, options);
     addDependencies(dependencies, true);
   }
