@@ -377,7 +377,7 @@ export default class Scope {
         consumer,
         verbose
       });
-      const pass = specs.every(spec => spec.pass);
+      const pass = specs ? specs.every(spec => spec.pass) : true;
       return { componentId: component.id, specs, pass };
     };
     return pMapSeries(components, test);
