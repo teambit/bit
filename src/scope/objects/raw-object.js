@@ -114,7 +114,7 @@ export default class BitRawObject {
   }
 
   /**
-   * Build a real object (model) from a parsed content (can be the original parsed conents or a provided one)
+   * Build a real object (model) from a parsed content (can be the original parsed contents or a provided one)
    * We use the provided version during the migration process when we change the parsed content outside
    * @param {Any} parsedContent
    */

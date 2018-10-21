@@ -49,6 +49,38 @@ export default class ExtensionPropTypes {
     return loadedProps;
   }
 
+  async store(props) {
+    const storeData = {
+      models: {},
+      files: []
+    };
+
+    const promises = [];
+
+    const addPropToStoreData = store => (propVal, propName) => {
+      const storeFunc = propVal.store.bind(propVal);
+      // const storeFunc = propVal.store;
+      const storeFuncP = Promise.resolve()
+        .then(() => {
+          return storeFunc();
+        })
+        .then((data) => {
+          // store[propName] = data;
+          store.models[propName] = {
+            val: data.val,
+            __type: propVal.name
+          };
+          // store[propName].val = data;
+          // store[propName].__type = propVal.name;
+        });
+      promises.push(storeFuncP);
+    };
+
+    R.forEachObjIndexed(addPropToStoreData(storeData), props);
+    await Promise.all(promises);
+    return storeData;
+  }
+
   parseModel(modelProps: ModelProps) {}
 
   async validateRaw(rawProps: RawProps, propsSchema: PropsSchema) {

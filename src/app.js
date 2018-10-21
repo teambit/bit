@@ -1,7 +1,7 @@
 /** @flow */
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
-import loadExtensions from './extensions/extensions-loader';
+import extensionRegistry from './extensions/extension-registry';
 import HooksManager from './hooks';
 
 // un-comment the next line to get more than 10 lines in the error stacktrace
@@ -11,18 +11,20 @@ loudRejection();
 HooksManager.init();
 
 // Load extensions
-loadExtensions().then((extensions) => {
+extensionRegistry.init().then(async () => {
+  // const storeData = await extensionRegistry.store();
   // Make sure to register all the hooks actions in the global hooks manager
-  extensions.forEach((extension) => {
-    extension.registerHookActionsOnHooksManager();
-  });
-  const extensionsCommands = extensions.reduce((acc, curr) => {
-    if (curr.commands && curr.commands.length) {
-      acc = acc.concat(curr.commands);
-    }
-    return acc;
-  }, []);
-  const registrar = buildRegistrar(extensionsCommands);
+  // extensions.forEach((extension) => {
+  //   extension.registerHookActionsOnHooksManager();
+  // });
+  // const extensionsCommands = extensions.reduce((acc, curr) => {
+  //   if (curr.commands && curr.commands.length) {
+  //     acc = acc.concat(curr.commands);
+  //   }
+  //   return acc;
+  // }, []);
+  // const registrar = buildRegistrar(extensionsCommands);
+  const registrar = buildRegistrar([]);
 
   try {
     registrar.run();

@@ -43,7 +43,22 @@ export default class File extends BaseType {
 
   writeDeps(basePath: ?string) {}
 
-  store(): ModelStore {
+  async store(): ModelStore {
+    // TODO: this is mock return
+    return {
+      val: {
+        name: this.file.base,
+        relativePath: this.file.relative,
+        file: 'thisFile',
+        dependencies: {}
+      },
+      files: {
+        thisFile: 'content',
+        'deps[0]': 'content2',
+        'deps[1]': 'content3'
+      }
+    };
+
     const deps: FileDependency[] = this.getDeps();
     const depsObject = _generateObjectsForDeps(deps);
 

@@ -23,6 +23,9 @@ export default class ExtensionConfig {
   _bitConfig: ?ExtensionOptions;
   rawProps: ?Object;
   props: ?Object;
+  // Used to cache the workspace extension store data (used in bit tag command)
+  // It's main purpose is to not run over all the extensions and apply the store function for each prop every time
+  propsStore: ?Object;
 
   constructor({
     rawConfig,
@@ -91,6 +94,14 @@ export default class ExtensionConfig {
     this.props = props;
   }
 
+  async storeProps() {
+    if (this.propsStore) {
+      return this.propsStore;
+    }
+    this.propsStore = _getPropsStore(this.props);
+    return this.propsStore;
+  }
+
   toBitJsonObject() {
     return {
       ...this.extensionRawConfig,
@@ -119,4 +130,9 @@ const _getPropsFromRaw = async (
 ): Object => {
   const props = await ExtensionPropTypesIsntance.parseRaw(rawProps, propsSchema, defaultProps, context);
   return props;
+};
+
+const _getPropsStore = async (props: Object): Object => {
+  const propsStore = await ExtensionPropTypesIsntance.store(props);
+  return propsStore;
 };

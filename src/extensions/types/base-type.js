@@ -29,7 +29,7 @@ export default class BaseType {
   }
 
   // Called before saving type to models
-  store(): ModelStore {
+  async store(): ModelStore {
     return {
       val: this.val
     };

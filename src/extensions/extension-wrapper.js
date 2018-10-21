@@ -130,10 +130,8 @@ export default class ExtensionWrapper {
   }
 
   toModelObject() {
-    return {
-      name: this.name,
-      config: this.dynamicConfig
-    };
+    const res = {};
+    R.mapObjIndexed(this.extension.propTypes);
   }
 
   toObject() {
