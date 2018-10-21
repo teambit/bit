@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.17 - 2018-10-21]
+
 - update bit-javascript to support Vue files with typescript
 - improve `bit list` performance by retrieving only the information needed
 - suppress an exception of directory-is-empty when adding multiple components and some of them are empty, show a warning instead
