@@ -60,7 +60,14 @@ describe('bit test command', function () {
     });
     it('Should not be able to run tests with wrong tester env', () => {
       helper.importTester('bit.envs/testers/jest@0.0.18');
-      const output = helper.testComponent('utils/is-type');
+      let output;
+      let statusCode;
+      try {
+        helper.testComponent('utils/is-type');
+      } catch (err) {
+        output = err.stdout.toString();
+      }
+      expect(statusCode).to.not.equal(0);
       expect(output).to.have.string('❌   Jest failure');
     });
   });
@@ -106,11 +113,27 @@ describe('bit test command', function () {
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should print the exception message when running bit test --verbose', () => {
-      const output = helper.testComponent('utils/is-type --verbose');
+      let output;
+      let statusCode;
+      try {
+        helper.testComponent('utils/is-type --verbose');
+      } catch (err) {
+        output = err.stdout.toString();
+        statusCode = err.status;
+      }
       expect(output).to.have.string('exception occurred with this spec file');
+      expect(statusCode).to.not.equal(0);
     });
     it('should print the exception message also when running bit test without --verbose flag', () => {
-      const output = helper.testComponent('utils/is-type');
+      let output;
+      let statusCode;
+      try {
+        helper.testComponent('utils/is-type');
+      } catch (err) {
+        output = err.stdout.toString();
+        statusCode = err.status;
+      }
+      expect(statusCode).to.not.equal(0);
       expect(output).to.have.string('exception occurred with this spec file');
     });
     describe('tagging the component without --force flag and without --verbose flag', () => {
@@ -153,6 +176,7 @@ describe('bit test command', function () {
   });
   describe('when there is before hook which fail', () => {
     let output;
+    let statusCode;
     let outputLines;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
@@ -163,8 +187,16 @@ describe('bit test command', function () {
       helper.addComponentWithOptions('utils/is-type.js', {
         t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js'
       });
-      output = helper.testComponent('utils/is-type');
+      try {
+        helper.testComponent('utils/is-type');
+      } catch (err) {
+        output = err.stdout.toString();
+        statusCode = err.status;
+      }
       outputLines = output.split('\n');
+    });
+    it('should exit with non zero status code', () => {
+      expect(statusCode).to.not.equal(0);
     });
     it('should print the error for the before hook failure', () => {
       expect(output).to.have.string('undefinedObj is not defined');
@@ -283,7 +315,15 @@ describe('bit test command', function () {
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('Should not be able to test without building first', () => {
-      const output = helper.testComponent('utils/is-type -v');
+      let output;
+      let statusCode;
+      try {
+        helper.testComponent('utils/is-type -v');
+      } catch (err) {
+        output = err.stdout.toString();
+        statusCode = err.status;
+      }
+      expect(statusCode).to.not.equal(0);
       expect(output).to.have.string('Unexpected token import');
     });
     it('Should be able to test after building', () => {

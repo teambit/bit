@@ -332,13 +332,29 @@ describe('envs', function () {
         });
         describe('with default fork level', () => {
           it('should show results without define fork level', () => {
-            const output = helper.testComponent('comp/my-comp');
+            let output;
+            let statusCode;
+            try {
+              helper.testComponent('comp/my-comp');
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
           });
           it('should write config files to tmp directory', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             const alignedOuput = Helper.alignOutput(output);
             const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
             const writingRegEx = new RegExp('writing config files to', 'g');
@@ -374,7 +390,15 @@ describe('envs', function () {
             helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
@@ -400,7 +424,15 @@ describe('envs', function () {
             helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
@@ -426,7 +458,15 @@ describe('envs', function () {
             helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
@@ -619,7 +659,15 @@ describe('envs', function () {
           });
           describe('with default fork level', () => {
             it('should show results without define fork level', () => {
-              const output = helper.testComponent('comp/my-comp');
+              let output;
+              let statusCode;
+              try {
+                helper.testComponent('comp/my-comp');
+              } catch (err) {
+                output = err.stdout.toString();
+                statusCode = err.status;
+              }
+              expect(statusCode).to.not.equal(0);
               expect(output).to.have.string('tests failed');
               expect(output).to.have.string('✔   group of passed tests');
               expect(output).to.have.string('❌   group of failed tests');
@@ -1061,7 +1109,15 @@ describe('envs', function () {
             });
             describe('with default fork level', () => {
               it('should show results without define fork level', () => {
-                const output = helper.testComponent('comp/my-comp');
+                let output;
+                let statusCode;
+                try {
+                  helper.testComponent('comp/my-comp');
+                } catch (err) {
+                  output = err.stdout.toString();
+                  statusCode = err.status;
+                }
+                expect(statusCode).to.not.equal(0);
                 expect(output).to.have.string('tests failed');
                 expect(output).to.have.string('✔   group of passed tests');
                 expect(output).to.have.string('❌   group of failed tests');
