@@ -9,6 +9,7 @@ import { TESTS_FORK_LEVEL } from '../constants';
 import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
 import ExternalErrors from '../error/external-errors';
+import ExternalError from '../error/external-error';
 import ExternalBuildErrors from '../consumer/component/exceptions/external-build-errors';
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
@@ -156,6 +157,10 @@ function deserializeResults(
       } else {
         deserializedError = new ExternalErrors(deserializedOriginalErrors);
       }
+    }
+    if (deserializedError.originalError) {
+      const deserializedOriginalError = deserializeError(deserializedError.originalError);
+      deserializedError = new ExternalTestErrors(deserializedError.compName || '', [deserializedOriginalError]);
     }
     const finalResults = {
       type: 'error',
