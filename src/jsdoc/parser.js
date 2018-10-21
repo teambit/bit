@@ -4,6 +4,8 @@ import exampleTagParser from './example-tag-parser';
 import type { PathLinux, PathOsBased } from '../utils/path';
 import { pathNormalizeToLinux } from '../utils';
 
+const docgen = require('react-docgen');
+
 export type Doclet = {
   filePath: PathLinux,
   name: string,
@@ -12,6 +14,7 @@ export type Doclet = {
   returns?: Object,
   access?: string,
   examples?: Array,
+  methods?: Array,
   properties?: Array,
   static?: Boolean
 };
@@ -101,8 +104,59 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
   doclets.push(doclet);
 }
 
+function formatProperties(props) {
+  return Object.keys(props).map((name) => {
+    const { type, description, required } = props[name];
+    return {
+      name,
+      description,
+      required,
+      type: stringifyType(type)
+    };
+  });
+}
+
+function formatMethods(methods) {
+  return Object.keys(methods).map((name) => {
+    const { returns, modifiers, params, docblock } = methods[name];
+    return {
+      description: docblock,
+      returns,
+      modifiers,
+      params
+    };
+  });
+}
+
+function fromReactDocs({ description, displayName, props, methods }, filePath): Doclet {
+  return {
+    filePath: pathNormalizeToLinux(filePath),
+    name: displayName,
+    description,
+    properties: formatProperties(props),
+    access: 'public',
+    methods: formatMethods(methods)
+  };
+}
+
+function stringifyType({ name }: { name: string }): string {
+  let transformed = name;
+  if (name === 'func') transformed = 'function';
+
+  return transformed;
+}
+
 export default function parse(data: string, filePath: PathOsBased): Doclet | [] {
   const doclets: Array<Doclet> = [];
+  try {
+    const reactDocs = docgen.parse(data);
+    if (reactDocs) {
+      const formatted = fromReactDocs(reactDocs, filePath);
+      formatted.args = [];
+      return formatted;
+    }
+  } catch (err) {}
+
   try {
     /**
      * [ \t]*  => can start with any number of tabs
