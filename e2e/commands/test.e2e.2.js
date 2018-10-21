@@ -65,6 +65,7 @@ describe('bit test command', function () {
     });
   });
   describe('when tests are failed', () => {
+    let statusCode;
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -72,9 +73,18 @@ describe('bit test command', function () {
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
     });
     it('should indicate that tests are failed', () => {
-      const output = helper.testComponent('utils/is-type');
+      let output;
+      try {
+        helper.testComponent('utils/is-type');
+      } catch (err) {
+        output = err.stdout.toString();
+        statusCode = err.status;
+      }
       expect(output).to.have.string('tests failed');
       expect(output).to.have.string('file: utils/is-type.spec.js');
+    });
+    it('should exit with non zero status code', () => {
+      expect(statusCode).to.not.equal(0);
     });
     it('should indicate that this component does not exist when testing a non exist component', () => {
       let output;
