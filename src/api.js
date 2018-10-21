@@ -16,7 +16,8 @@ module.exports = {
       }
       return c.toObject();
     }),
-  list: (scopePath: string) => scopeList(scopePath).then(components => components.map(c => c.id.toString())),
+  list: (scopePath: string) =>
+    scopeList(scopePath).then(listScopeResult => listScopeResult.map(result => result.id.toString())),
   addMany: async (components: AddProps[], alternateCwd?: string) => {
     return addMany(components, alternateCwd);
   },

@@ -11,7 +11,7 @@ async function searchLocally(queryStr: string, reindex: boolean = false): Promis
     return loadConsumer()
       .then((consumer) => {
         scopePath = consumer.scope.path;
-        return consumer.scope.listStage();
+        return consumer.scope.listLocal();
       })
       .then((components) => {
         return indexer.indexAll(scopePath, components);
@@ -40,7 +40,7 @@ async function scopeSearch(path: string, query: string, reindex: boolean): Promi
   if (reindex) {
     return loadScope(path)
       .then((scope) => {
-        return scope.listStage();
+        return scope.listLocal();
       })
       .then((components) => {
         return indexer.indexAll(path, components);

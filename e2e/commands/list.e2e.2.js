@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -31,6 +30,7 @@ describe('bit list command', function () {
       helper.cleanEnv();
       helper.runCmd('bit init');
       helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
     });
     it('should display "found 0 components"', () => {
       const output = helper.runCmd('bit list');
@@ -53,24 +53,6 @@ describe('bit list command', function () {
       helper.deprecateComponent('bar/foo');
       const output = helper.runCmd('bit list');
       expect(output).to.contain.string('bar/foo [Deprecated]');
-    });
-  });
-  describe("when a component's last version object is missing", () => {
-    before(() => {
-      helper.reInitLocalScope();
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
-      const objectFiles = helper.getConsumerFiles('.bit/objects/*/*');
-      helper.commitComponent('bar/foo', 'mes', '-f');
-      const objectFilesWithV2 = helper.getConsumerFiles('.bit/objects/*/*');
-      // find new objects (the v2 object)
-      const v2Object = R.difference(objectFilesWithV2, objectFiles);
-      helper.deleteFile(v2Object[0]);
-    });
-    it('should display the last found version', () => {
-      const output = JSON.parse(helper.listLocalScope('-j'));
-      expect(output).to.deep.includes({ id: 'bar/foo', localVersion: '0.0.1', currentVersion: '0.0.2' });
     });
   });
   describe('with --outdated flag', () => {

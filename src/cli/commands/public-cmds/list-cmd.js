@@ -3,10 +3,10 @@ import R from 'ramda';
 import chalk from 'chalk';
 import Command from '../../command';
 import { listScope } from '../../../api/consumer';
-import Component from '../../../consumer/component';
 import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
+import type { ListScopeResult } from '../../../consumer/component/components-list';
 
 export default class List extends Command {
   name = 'list [scope]';
@@ -26,14 +26,14 @@ export default class List extends Command {
     [scopeName]: string[],
     {
       ids,
-      scope,
-      bare,
-      json,
-      outdated
+      scope = false,
+      bare = false,
+      json = false,
+      outdated = false
     }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
   ): Promise<any> {
-    return listScope({ scopeName, cache: true, showAll: scope, showRemoteVersion: outdated }).then(components => ({
-      components,
+    return listScope({ scopeName, showAll: scope, showRemoteVersion: outdated }).then(listScopeResults => ({
+      listScopeResults,
       scope: scopeName,
       ids,
       bare,
@@ -43,14 +43,14 @@ export default class List extends Command {
   }
 
   report({
-    components,
+    listScopeResults,
     scope,
     ids,
     bare,
     json,
     outdated
   }: {
-    components: Component[],
+    listScopeResults: ListScopeResult[],
     scope: ?string,
     ids?: boolean,
     bare?: boolean,
@@ -59,16 +59,19 @@ export default class List extends Command {
   }): string {
     function decideHeaderSentence() {
       if (json) return '';
-      if (!scope) return `found ${components.length} components in local scope\n`;
-      return chalk.white(`found ${components.length} components in ${chalk.bold(scope)}\n`);
+      if (!scope) return `found ${listScopeResults.length} components in local scope\n`;
+      return chalk.white(`found ${listScopeResults.length} components in ${chalk.bold(scope)}\n`);
     }
 
-    if (R.isEmpty(components)) {
+    if (R.isEmpty(listScopeResults)) {
       return chalk.white(`${decideHeaderSentence()}`);
     }
 
-    if (ids) return JSON.stringify(components.map(c => c.id.toString()));
+    if (ids) return JSON.stringify(listScopeResults.map(result => result.id.toString()));
     // TODO - use a cheaper list for ids flag (do not fetch versions at all) @!IMPORTANT
-    return decideHeaderSentence() + (bare ? bareListTemplate(components) : listTemplate(components, json, outdated));
+    return (
+      decideHeaderSentence() +
+      (bare ? bareListTemplate(listScopeResults) : listTemplate(listScopeResults, json, outdated))
+    );
   }
 }

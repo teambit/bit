@@ -13,6 +13,13 @@ import { COMPONENT_ORIGINS } from '../../constants';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
+export type ListScopeResult = {
+  id: BitId,
+  currentlyUsedVersion?: ?string,
+  remoteVersion?: string,
+  deprecated?: boolean
+};
+
 export default class ComponentsList {
   consumer: Consumer;
   scope: Scope;
@@ -31,7 +38,7 @@ export default class ComponentsList {
 
   async getModelComponents(): Promise<ModelComponent[]> {
     if (!this._modelComponents) {
-      this._modelComponents = await this.scope.objects.listComponents(false);
+      this._modelComponents = await this.scope.list();
     }
     return this._modelComponents;
   }
@@ -254,6 +261,52 @@ export default class ComponentsList {
       this._fromBitMap[cacheKeyName] = this.bitMap.getAllBitIds(originParam);
     }
     return this._fromBitMap[cacheKeyName];
+  }
+
+  /**
+   * get called when the Consumer is available, shows also components from remote scopes
+   */
+  async listScope(showRemoteVersion: boolean, includeNested: boolean): Promise<ListScopeResult[]> {
+    const components: ModelComponent[] = await this.getModelComponents();
+    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    const listScopeResults: ListScopeResult[] = componentsSorted.map((component: ModelComponent) => ({
+      id: component.toBitIdWithLatestVersion(),
+      deprecated: component.deprecated
+    }));
+    const componentsIds = listScopeResults.map(result => result.id);
+    if (showRemoteVersion) {
+      const latestVersionsInfo: BitId[] = await this.scope.fetchRemoteVersions(componentsIds);
+      latestVersionsInfo.forEach((componentId) => {
+        const listResult = listScopeResults.find(c => c.id.isEqualWithoutVersion(componentId));
+        if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
+        // $FlowFixMe version must be set as it came from a remote
+        listResult.remoteVersion = componentId.version;
+      });
+    }
+    const authoredAndImportedIds = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    listScopeResults.forEach((listResult) => {
+      const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(listResult.id);
+      if (existingBitMapId) {
+        listResult.currentlyUsedVersion = existingBitMapId.version;
+      }
+    });
+    if (includeNested) return listScopeResults;
+    return listScopeResults.filter((listResult) => {
+      const componentMap = this.bitMap.getComponentIfExist(listResult.id, { ignoreVersion: true });
+      return componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
+    });
+  }
+
+  /**
+   * get called from a bare-scope, shows only components of that scope
+   */
+  static async listLocalScope(scope: Scope): Promise<ListScopeResult[]> {
+    const components = await scope.listLocal();
+    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    return componentsSorted.map((component: ModelComponent) => ({
+      id: component.toBitIdWithLatestVersion(),
+      deprecated: component.deprecated
+    }));
   }
 
   // components can be one of the following: Component[] | ModelComponent[] | string[]
