@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix missing context in getDynamicPackageDependencies
+- fix bug with bit show when scope path provided
 
 ## [13.0.5-dev.22 - 2018-10-22]
 
