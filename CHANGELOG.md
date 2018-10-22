@@ -7,9 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.22 - 2018-10-22]
+
 - return status code 1 when bit test has failing tests
 
-## [13.0.5-dev.17 - 2018-10-21]
+## [13.0.5-dev.21 - 2018-10-21]
 
 - update bit-javascript to support Vue files with typescript
 - improve `bit list` performance by retrieving only the information needed
