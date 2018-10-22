@@ -157,6 +157,12 @@ function deserializeResults(
         deserializedError = new ExternalErrors(deserializedOriginalErrors);
       }
     }
+    if (deserializedError.originalError) {
+      const deserializedOriginalError = deserializeError(deserializedError.originalError);
+      const compName =
+        deserializedError.compName && typeof deserializedError.compName === 'string' ? deserializedError.compName : '';
+      deserializedError = new ExternalTestErrors(compName, [deserializedOriginalError]);
+    }
     const finalResults = {
       type: 'error',
       error: deserializedError
