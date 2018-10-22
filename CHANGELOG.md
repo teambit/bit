@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix missing context in getDynamicPackageDependencies
+
 ## [13.0.5-dev.22 - 2018-10-22]
 
 - return status code 1 when bit test has failing tests
