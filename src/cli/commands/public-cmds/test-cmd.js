@@ -20,7 +20,7 @@ export default class Test extends Command {
   loader = true;
   migration = true;
 
-  action(
+  async action(
     [id]: [string],
     {
       all,
@@ -31,7 +31,7 @@ export default class Test extends Command {
       verbose: ?boolean,
       forkLevel: ?string
     }
-  ): Promise<SpecsResultsWithComponentId> {
+  ): Promise<{ __code: number, data: SpecsResultsWithComponentId }> {
     if (id && all) {
       throw new GeneralError(
         'use "--all" to test all components or use a component ID to test a specific component. run tests to all new and modified components by removing all flags and parameters'
@@ -40,7 +40,13 @@ export default class Test extends Command {
     if (forkLevel && !validForkLevels.includes(forkLevel)) {
       return Promise.reject(new GeneralError(`fork level must be one of: ${validForkLevels.join()}`));
     }
-    return test(id, forkLevel, all, verbose);
+    const testRes = await test(id, forkLevel, all, verbose);
+    const pass = testRes.every(comp => comp.pass);
+    const res = {
+      data: testRes,
+      __code: pass ? 0 : 1
+    };
+    return res;
   }
 
   report(results: SpecsResultsWithComponentId): string {

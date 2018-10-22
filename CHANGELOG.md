@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix missing context in getDynamicPackageDependencies
+
+## [13.0.5-dev.22 - 2018-10-22]
+
+- return status code 1 when bit test has failing tests
+
+## [13.0.5-dev.21 - 2018-10-21]
+
 - update bit-javascript to support Vue files with typescript
 - improve `bit list` performance by retrieving only the information needed
 - suppress an exception of directory-is-empty when adding multiple components and some of them are empty, show a warning instead

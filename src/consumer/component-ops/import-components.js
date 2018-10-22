@@ -129,11 +129,12 @@ export default class ImportComponents {
       compiler = compiler || (await this.consumer.compiler);
       tester = tester || (await this.consumer.tester);
       const envsPromises = [];
+      const context = { workspaceDir: this.consumer.getPath() };
       if (compiler) {
-        envsPromises.push(compiler.install(this.consumer.scope, { verbose: this.options.verbose }));
+        envsPromises.push(compiler.install(this.consumer.scope, { verbose: this.options.verbose }, context));
       }
       if (tester) {
-        envsPromises.push(tester.install(this.consumer.scope, { verbose: this.options.verbose }));
+        envsPromises.push(tester.install(this.consumer.scope, { verbose: this.options.verbose }, context));
       }
       const envComponents = await Promise.all(envsPromises);
       return {

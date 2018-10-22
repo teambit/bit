@@ -11,8 +11,8 @@ import loader from './loader';
 import logger from '../logger/logger';
 import { Analytics } from '../analytics/analytics';
 
-function logAndExit(msg: string, commandName) {
-  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(0, commandName));
+function logAndExit(msg: string, commandName, code = 0) {
+  process.stdout.write(`${msg}\n`, () => logger.exitAfterFlush(code, commandName));
 }
 
 function logErrAndExit(msg: Error | string, commandName: string) {
@@ -74,9 +74,15 @@ function execAction(command, concrete, args) {
 
   migrateWrapper(command.migration)
     .then(() => {
-      return command.action(relevantArgs, flags, packageManagerArgs).then((data) => {
+      return command.action(relevantArgs, flags, packageManagerArgs).then((res) => {
         loader.off();
-        return logAndExit(command.report(data), command.name);
+        let data = res;
+        let code = 0;
+        if (res && res.__code !== undefined) {
+          data = res.data;
+          code = res.__code;
+        }
+        return logAndExit(command.report(data), command.name, code);
       });
     })
     .catch((err) => {
