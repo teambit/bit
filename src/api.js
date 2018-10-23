@@ -5,6 +5,7 @@ import type { AddProps } from './consumer/component-ops/add-components/add-compo
 import { scopeList } from './api/scope/index';
 import Extension from './extensions/extension';
 import HooksManager from './hooks';
+import type { BaseLoadArgsProps } from './extensions/base-extension';
 
 HooksManager.init();
 
@@ -24,20 +25,8 @@ module.exports = {
   /**
    * Load extension programmatically
    */
-  loadExtension: async (
-    extensionName: string,
-    extensionFilePath: string,
-    extensionConfig: Object,
-    extensionOptions: Object = {}
-  ): Promise<Extension> => {
-    if (extensionFilePath) {
-      extensionOptions.file = extensionFilePath;
-    }
-    const extension = await Extension.load({
-      name: extensionName,
-      rawConfig: extensionConfig,
-      options: extensionOptions
-    });
+  loadExtension: async (args: BaseLoadArgsProps): Promise<Extension> => {
+    const extension = await Extension.load(args);
     return Promise.resolve(extension);
   }
 };
