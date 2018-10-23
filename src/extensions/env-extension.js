@@ -214,9 +214,6 @@ export default class EnvExtension extends BaseExtension {
     const throws = true;
     await super.reload(scopePath, { throws });
     // $FlowFixMe
-    if (!this.context.workspaceDir) {
-      console.log('this.context1111', this.context);
-    }
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
@@ -239,9 +236,6 @@ export default class EnvExtension extends BaseExtension {
       props.envType
     );
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
-    if (!envExtensionProps.context.workspaceDir) {
-      console.log('envExtensionProps.context1111', envExtensionProps.context);
-    }
     const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
     const dynamicConfig = await EnvExtension.loadDynamicConfig(envExtensionProps);
@@ -256,9 +250,6 @@ export default class EnvExtension extends BaseExtension {
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       try {
-        if (!envExtensionProps.context.workspaceDir) {
-          console.log('envExtensionProps.context', envExtensionProps.context);
-        }
         const dynamicPackageDependencies = await getDynamicPackageDependencies({
           rawConfig: envExtensionProps.rawConfig,
           dynamicConfig: envExtensionProps.dynamicConfig,
