@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.25 - 2018-10-23]
+
+- fix context for testers during ci-update
+
+## [13.0.5-dev.24 - 2018-10-23]
+
+- fix loading extension programmatically
+
 ## [13.0.5-dev.23 - 2018-10-22]
 
 - fix missing context in getDynamicPackageDependencies
