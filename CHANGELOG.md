@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix link content generation for authored components on bit install
+
 ## [13.0.5-dev.25 - 2018-10-23]
 
 - fix context for testers during ci-update
