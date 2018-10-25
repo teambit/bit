@@ -244,24 +244,13 @@ export default class Scope {
     );
   }
 
-  async list(showRemoteVersion?: boolean = false): Promise<ConsumerComponent[]> {
-    const components = await this.objects.listComponents();
-    const consumerComponents = await this.toConsumerComponents(components);
-    if (showRemoteVersion) {
-      const componentsIds = consumerComponents.map(component => component.id);
-      const latestVersionsInfo = await this.fetchRemoteVersions(componentsIds);
-      latestVersionsInfo.forEach((componentId) => {
-        const component = consumerComponents.find(c => c.id.isEqualWithoutVersion(componentId));
-        component.latest = componentId.version;
-      });
-    }
-    return ComponentsList.sortComponentsByName(consumerComponents);
+  async list(): Promise<ModelComponent[]> {
+    return this.objects.listComponents(false);
   }
 
-  async listStage(): Promise<ConsumerComponent[]> {
-    const components = await this.objects.listComponents(false);
-    const scopeComponents = await this.toConsumerComponents(components.filter(c => !c.scope || c.scope === this.name));
-    return ComponentsList.sortComponentsByName(scopeComponents);
+  async listLocal(): Promise<ModelComponent[]> {
+    const listResults = await this.list();
+    return listResults.filter(result => !result.scope || result.scope === this.name);
   }
 
   async fetchRemoteVersions(componentIds: BitId[]): Promise<BitId[]> {
@@ -380,7 +369,7 @@ export default class Scope {
     this.injectNodePathIfNeeded(consumer, components);
     const test = async (component: Component) => {
       if (!component.tester) {
-        return { componentId: component.id, missingTester: true };
+        return { componentId: component.id, missingTester: true, pass: true };
       }
       const specs = await component.runSpecs({
         scope: this,
@@ -388,7 +377,8 @@ export default class Scope {
         consumer,
         verbose
       });
-      return { componentId: component.id, specs };
+      const pass = specs ? specs.every(spec => spec.pass) : true;
+      return { componentId: component.id, specs, pass };
     };
     return pMapSeries(components, test);
   }
@@ -814,7 +804,7 @@ export default class Scope {
    * foreach component in array find the componnet that uses that component
    */
   async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
-    const allComponents = await this.objects.listComponents(false);
+    const allComponents = await this.list();
     const allComponentVersions = await Promise.all(
       allComponents.map(async (component: ModelComponent) => {
         const loadedVersions = await Promise.all(
@@ -962,7 +952,7 @@ export default class Scope {
     if (component) return component;
     if (!id.scope) {
       // search for the complete ID
-      const components: ModelComponent[] = await this.objects.listComponents(false); // don't fetch Symlinks
+      const components: ModelComponent[] = await this.list();
       const foundComponent = components.filter(c => c.toBitId().isEqualWithoutScopeAndVersion(id));
       // $FlowFixMe
       if (foundComponent.length) return first(foundComponent);

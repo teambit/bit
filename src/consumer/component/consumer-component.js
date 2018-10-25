@@ -782,8 +782,10 @@ export default class Component {
     Analytics.addBreadCrumb('runSpecs', 'tester found, start running tests');
     const tester = this.tester;
     if (!tester.loaded) {
+      const componentDir = this.componentMap ? this.componentMap.getComponentDir() : undefined;
+      const context = { dependentId: this.id, workspaceDir: consumerPath, componentDir };
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
-      await tester.install(scope, { verbose }, { dependentId: this.id });
+      await tester.install(scope, { verbose }, context);
       logger.debug('Environment components are installed');
     }
 
@@ -803,13 +805,16 @@ export default class Component {
       let specsResults: RawTestsResults[];
       let tmpFolderFullPath;
 
-      let contextPaths;
+      let contextPaths = {};
       if (this.tester && this.tester.context) {
         contextPaths = this.tester.context;
       } else if (consumer && consumer.bitMap) {
         contextPaths = {
           workspaceDir: consumer.bitMap.projectRoot
         };
+      }
+      if (!contextPaths.componentDir && component.writtenPath) {
+        contextPaths.componentDir = component.writtenPath;
       }
       try {
         if (tester && tester.action) {

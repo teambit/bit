@@ -244,8 +244,11 @@ describe('bit export command', function () {
     });
     it('should fetch the dependency from a different scope and successfully export the component', () => {
       const output = helper.runCmd(`bit list ${anotherScope}`);
-      expect(output.includes('found 1 components')).to.be.true;
-      expect(output.includes('utils/is-string')).to.be.true;
+      expect(output).to.have.string('utils/is-string');
+      // this is a test for bit-list, it makes sure bit-list of remote-scope doesn't show
+      // components from a different scope. here, it should not show is-type
+      expect(output).to.not.have.string('utils/is-type');
+      expect(output).to.have.string('found 1 components');
     });
   });
 
