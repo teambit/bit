@@ -191,7 +191,6 @@ export default function parse(data: string, filePath: PathOsBased): Doclet | [] 
     if (reactDocs) {
       const formatted = fromReactDocs(reactDocs, filePath);
       formatted.args = [];
-      console.log(formatted);
       return formatted;
     }
   } catch (err) {}
