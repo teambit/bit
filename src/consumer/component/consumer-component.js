@@ -489,7 +489,7 @@ export default class Component {
     excludeRegistryPrefix?: boolean
   }) {
     if (deleteBitDirContent) {
-      fs.emptyDirSync(bitDir);
+      await fs.emptyDir(bitDir);
     } else {
       await mkdirp(bitDir);
     }
