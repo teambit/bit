@@ -5,6 +5,7 @@ import * as path from 'path';
 import Repository from '../repository';
 import { BIT_TMP_DIRNAME } from '../../constants';
 import type { PathOsBased } from '../../utils/path';
+import logger from '../../logger/logger';
 
 export default class Tmp extends Repository {
   getPath(): string {
@@ -34,27 +35,28 @@ export default class Tmp extends Repository {
   }
 
   remove(fileNameOrPath: string, ext: string = '.js'): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const fileName = path.parse(fileNameOrPath).name;
-      const filePath = this.composePath(`${fileName}${ext}`);
-      fs.remove(filePath, (err) => {
-        if (err) return reject(err);
-        return resolve();
-      });
-    });
+    const fileName = path.parse(fileNameOrPath).name;
+    const filePath = this.composePath(`${fileName}${ext}`);
+    logger.info(`tmp, deleting ${filePath}`);
+    return fs.remove(filePath);
   }
 
   removeSync(fileNameOrPath: string, ext: string = '.js'): any {
     const fileName = path.parse(fileNameOrPath).name;
     const filePath = this.composePath(`${fileName}${ext}`);
+    logger.info(`tmp, deleting ${filePath}`);
     return fs.removeSync(filePath);
   }
 
   clear(): Promise<any> {
-    return fs.emptyDir(this.getPath());
+    const dirToDelete = this.getPath();
+    logger.info(`tmp, deleting ${dirToDelete}`);
+    return fs.emptyDir(dirToDelete);
   }
 
   clearSync(): any {
-    return fs.emptyDirSync(this.getPath());
+    const dirToDelete = this.getPath();
+    logger.info(`tmp, deleting ${dirToDelete}`);
+    return fs.emptyDirSync(dirToDelete);
   }
 }

@@ -489,6 +489,7 @@ export default class Component {
     excludeRegistryPrefix?: boolean
   }) {
     if (deleteBitDirContent) {
+      logger.info(`consumer-component._writeToComponentDir, deleting ${bitDir}`);
       await fs.emptyDir(bitDir);
     } else {
       await mkdirp(bitDir);
@@ -856,6 +857,7 @@ export default class Component {
             if (verbose) {
               console.log(`deleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
             }
+            logger.info(`consumer-component.runSpecs, deleting ${tmpFolderFullPath}`);
             await fs.remove(tmpFolderFullPath);
           }
         } else {
@@ -888,6 +890,7 @@ export default class Component {
         }
       } catch (e) {
         if (tmpFolderFullPath) {
+          logger.info(`consumer-component.runSpecs, deleting ${tmpFolderFullPath}`);
           fs.removeSync(tmpFolderFullPath);
         }
         const errors = e.errors || [e];

@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
 import { removeEmptyDir } from '..';
+import logger from '../../logger/logger';
 
 /**
  * This function will remove the list of files from fs
@@ -15,6 +16,7 @@ export default (async function removeFilesAndEmptyDirsRecursively(filesPaths: st
     dirs.push(path.dirname(filePath));
     deleteP.push(fs.remove(filePath));
   });
+  logger.info(`remove-files-and-empty-dirs-recursively deleting the following paths: ${filesPaths.join(', ')}`);
   await Promise.all(deleteP);
   // Sorting it to make sure we will delete the inner dirs first
   const sortedDirs = dirs.sort().reverse();
