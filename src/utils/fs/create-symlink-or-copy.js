@@ -12,6 +12,7 @@ import GeneralError from '../../error/general-error';
  * @param componentId
  */
 export default function createSymlinkOrCopy(srcPath: PathOsBased, destPath: PathOsBased, componentId: string = '') {
+  logger.info(`create-symlink-or-copy, deleting ${destPath}`);
   fs.removeSync(destPath); // in case a symlink already generated or when linking a component, when a component has been moved
   fs.ensureDirSync(path.dirname(destPath));
   try {

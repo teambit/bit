@@ -19,6 +19,7 @@ import {
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS
 } from '../../constants';
+import logger from '../../logger/logger';
 
 export type RegularExtensionObject = {
   rawConfig: Object,
@@ -248,8 +249,10 @@ export default class AbstractBitJson {
   }
 
   static async removeIfExist(bitPath: string): Promise<boolean> {
-    if (fs.exists(this.composePath(bitPath))) {
-      return fs.remove(this.composePath(bitPath));
+    const dirToRemove = this.composePath(bitPath);
+    if (fs.exists(dirToRemove)) {
+      logger.info(`abstract-bit-json, deleting ${dirToRemove}`);
+      return fs.remove(dirToRemove);
     }
     return false;
   }

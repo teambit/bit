@@ -1126,7 +1126,7 @@ export default class Scope {
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       // Destroying environment to make sure there is no left over
-      env.destroyIfExist();
+      await env.destroyIfExist();
       await env.create();
       try {
         const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);
