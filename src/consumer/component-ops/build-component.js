@@ -239,6 +239,7 @@ const _runBuild = async ({
           if (verbose) {
             console.log(`\ndeleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
           }
+          logger.info(`build-components, deleting ${tmpFolderFullPath}`);
           await fs.remove(tmpFolderFullPath);
         }
         // TODO: Gilad - handle return of main dist file
@@ -254,6 +255,7 @@ const _runBuild = async ({
     })
     .catch((e) => {
       if (tmpFolderFullPath) {
+        logger.info(`build-components, deleting ${tmpFolderFullPath}`);
         fs.removeSync(tmpFolderFullPath);
       }
       const errors = e.errors || [e];
