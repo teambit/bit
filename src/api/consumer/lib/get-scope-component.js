@@ -55,10 +55,13 @@ export default (async function getScopeComponent({
     return scope.loadRemoteComponent(bitId);
   };
 
-  const consumer: ?Consumer = await getConsumer();
-  if (consumer) {
-    return showComponentUsingConsumer(consumer);
+  if (!scopePath) {
+    const consumer: ?Consumer = await getConsumer();
+    if (consumer) {
+      return showComponentUsingConsumer(consumer);
+    }
   }
+
   const scope: ?Scope = await getScope();
   if (scope) {
     return showComponentUsingScope(scope);

@@ -805,13 +805,16 @@ export default class Component {
       let specsResults: RawTestsResults[];
       let tmpFolderFullPath;
 
-      let contextPaths;
+      let contextPaths = {};
       if (this.tester && this.tester.context) {
         contextPaths = this.tester.context;
       } else if (consumer && consumer.bitMap) {
         contextPaths = {
           workspaceDir: consumer.bitMap.projectRoot
         };
+      }
+      if (!contextPaths.componentDir && component.writtenPath) {
+        contextPaths.componentDir = component.writtenPath;
       }
       try {
         if (tester && tester.action) {

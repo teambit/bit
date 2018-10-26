@@ -202,7 +202,7 @@ function _linkAuthoredComponents(consumer: Consumer, component: Component, compo
   const bound = filesToBind.map((file) => {
     const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
     const destRelative = pathRelativeLinux(path.dirname(dest), file);
-    const fileContent = `module.exports = require('${destRelative}');`;
+    const fileContent = getLinkContent(destRelative);
     fs.outputFileSync(dest, fileContent);
     return { from: dest, to: file };
   });
