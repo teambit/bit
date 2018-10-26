@@ -10,7 +10,7 @@ export default class Create extends Command {
   description = `generate symlinks for sourced components absolute path resolution.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-link.html`;
   alias = 'b';
   opts = [];
-  private = true;
+  private = false;
   loader = true;
 
   action(): Promise<*> {
