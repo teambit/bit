@@ -683,11 +683,7 @@ export default class Component {
       // when a user imports a component that was a dependency before, write the component directly into the components
       // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
       const oldLocation = path.join(consumerPath, componentMap.rootDir);
-      logger.debug(
-        `deleting the old directory of a component at ${oldLocation}, the new directory is ${calculatedBitDir}`
-      );
-      fs.removeSync(oldLocation);
-      bitMap.removeComponent(this.id);
+      await this._cleanOldNestedComponent(consumer, oldLocation, calculatedBitDir);
       componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
     }
     logger.debug('component is in bit.map, write the files according to bit.map');
@@ -728,6 +724,27 @@ export default class Component {
     });
 
     return this;
+  }
+
+  async _cleanOldNestedComponent(consumer: Consumer, oldLocation: PathOsBased) {
+    logger.debug(`deleting the old directory of a component at ${oldLocation}`);
+    fs.removeSync(oldLocation);
+    const fsComponents = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
+    const potentialDependenciesIds = BitIds.fromArray([this.id]);
+    const directDependentComponents = await consumer.findDirectDependentComponents(
+      fsComponents,
+      potentialDependenciesIds
+    );
+    directDependentComponents.forEach((dependent) => {
+      const dependentComponentMap = consumer.bitMap.getComponent(dependent.id);
+      const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, this.id);
+      const nodeModulesLinkAbs = consumer.toAbsolutePath(
+        path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
+      );
+      logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
+      fs.removeSync(nodeModulesLinkAbs);
+    });
+    consumer.bitMap.removeComponent(this.id);
   }
 
   async build({

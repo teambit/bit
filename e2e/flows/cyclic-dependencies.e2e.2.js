@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixtureA = `const b = require('./b');
 console.log('got ' + b() + ' and got A')`;
@@ -45,20 +46,33 @@ describe('cyclic dependencies', function () {
         expect(exportOutput).to.have.string('exported');
       });
       describe('importing to a new environment', () => {
+        let importOutput;
         before(() => {
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.importComponent('comp/a');
-          helper.importComponent('comp/b');
+          importOutput = helper.importComponent('comp/b');
         });
-        it('should bring in the components', () => {});
+        it('should import successfully and not throw any error', () => {
+          // a previous bug caused to throw an error 'failed running npm install'
+          expect(importOutput).to.have.string('successfully imported');
+        });
+        it('should bring in the components', () => {
+          const list = helper.listLocalScope();
+          expect(list).to.have.string('comp/a');
+          expect(list).to.have.string('comp/b');
+        });
+        it('should not show a clean workspace', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
       });
     });
   });
   describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       // isString => isType
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-string.js', fixtures.isString);
@@ -169,6 +183,35 @@ describe('cyclic dependencies', function () {
       expect(B4.flattenedDependencies).to.have.lengthOf(2);
       expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
       expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+    });
+    describe('exporting the component', () => {
+      let exportOutput;
+      before(() => {
+        exportOutput = helper.exportAllComponents();
+      });
+      it('should export successfully with no errors', () => {
+        expect(exportOutput).to.have.string('exported');
+      });
+      describe('importing to a new environment', () => {
+        let importOutput;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          importOutput = helper.importComponent('comp/a1');
+        });
+        it('should import successfully and not throw any error', () => {
+          // a previous bug caused to throw an error 'failed running npm install'
+          expect(importOutput).to.have.string('successfully imported');
+        });
+        it('should bring in the components', () => {
+          const list = helper.listLocalScope();
+          expect(list).to.have.string('comp/a1');
+        });
+        it('should not show a clean workspace', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
+      });
     });
   });
 });
