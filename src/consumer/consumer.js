@@ -161,6 +161,7 @@ export default class Consumer {
     const tmpPath = this.getTmpFolder(true);
     const exists = await fs.exists(tmpPath);
     if (exists) {
+      logger.info(`consumer.cleanTmpFolder, deleting ${tmpPath}`);
       return fs.remove(tmpPath);
     }
     return null;
