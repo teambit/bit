@@ -1838,6 +1838,7 @@ console.log(barFoo.default());`;
 
   describe('import component with dependencies from scope A, modify and export them to scope B, then import to a new local scope', () => {
     let scopeB;
+    let scopeAfterExport;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -1847,36 +1848,65 @@ console.log(barFoo.default());`;
       helper.commitAllComponents();
       // export to scope A
       helper.exportAllComponents();
-      // import to a new local scope
-      helper.initNewLocalScope();
-      helper.addRemoteScope();
-      helper.importComponent('utils/is-string');
-      // modify the component
-      const isStringModifiedFixture =
-        "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
-      const componentPath = path.join('components', 'utils', 'is-string');
-      helper.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
-      helper.commitComponent('utils/is-string');
-      // export to scope B
-      const { scopeName, scopePath } = helper.getNewBareScope();
-      scopeB = scopeName;
-      helper.addRemoteScope(scopePath);
-      helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`, scopeB);
-      // import to a new local scope
-      helper.initNewLocalScope();
-      helper.addRemoteScope(scopePath);
-      helper.runCmd(`bit import ${scopeB}/utils/is-string`);
+      scopeAfterExport = helper.cloneLocalScope();
     });
-    it('should export the component successfully to scope B', () => {
-      const output = helper.runCmd(`bit list ${scopeB}`);
-      expect(output.includes('found 1 components')).to.be.true;
-      expect(output.includes('utils/is-string')).to.be.true;
+    describe('as imported', () => {
+      before(() => {
+        // import to a new local scope
+        helper.initNewLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('utils/is-string');
+        // modify the component
+        const isStringModifiedFixture =
+          "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
+        const componentPath = path.join('components', 'utils', 'is-string');
+        helper.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
+        helper.commitComponent('utils/is-string');
+        // export to scope B
+        const { scopeName, scopePath } = helper.getNewBareScope();
+        scopeB = scopeName;
+        helper.addRemoteScope(scopePath);
+        helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`, scopeB);
+        // import to a new local scope
+        helper.initNewLocalScope();
+        helper.addRemoteScope(scopePath);
+        helper.runCmd(`bit import ${scopeB}/utils/is-string`);
+      });
+      it('should export the component successfully to scope B', () => {
+        const output = helper.runCmd(`bit list ${scopeB}`);
+        expect(output.includes('found 1 components')).to.be.true;
+        expect(output.includes('utils/is-string')).to.be.true;
+      });
+      it('should import the component successfully from scope B to a new local scope', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string v2');
+      });
     });
-    it('should import the component successfully from scope B to a new local scope', () => {
-      const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-      const result = helper.runCmd('node app.js');
-      expect(result.trim()).to.equal('got is-type and got is-string v2');
+    describe('as authored', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterExport);
+        helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
+        helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
+        helper.tagAllWithoutMessage();
+
+        // export to scope B
+        const { scopeName, scopePath } = helper.getNewBareScope();
+        scopeB = scopeName;
+        helper.addRemoteScope(scopePath);
+        helper.exportAllComponents(scopeB);
+        // import to a new local scope
+        helper.initNewLocalScope();
+        helper.addRemoteScope(scopePath);
+        helper.runCmd(`bit import ${scopeB}/utils/is-string`);
+      });
+      it('should export the component successfully to scope B', () => {
+        const output = helper.runCmd(`bit list ${scopeB}`);
+        expect(output.includes('found 2 components')).to.be.true;
+        expect(output.includes('utils/is-string')).to.be.true;
+        expect(output.includes('utils/is-type')).to.be.true;
+      });
     });
   });
 

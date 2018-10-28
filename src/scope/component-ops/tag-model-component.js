@@ -85,7 +85,10 @@ async function getFlattenedDependencies(
 function updateDependenciesVersions(componentsToTag: Component[]): void {
   const updateDependencyVersion = (dependency: Dependency) => {
     const foundDependency = componentsToTag.find(component => component.id.isEqualWithoutVersion(dependency.id));
-    if (foundDependency) dependency.id = dependency.id.changeVersion(foundDependency.version);
+    if (foundDependency) {
+      dependency.id = dependency.id.changeVersion(foundDependency.version);
+      dependency.id = dependency.id.changeScope(null);
+    }
   };
   componentsToTag.forEach((oneComponentToTag) => {
     oneComponentToTag.getAllDependencies().forEach(dependency => updateDependencyVersion(dependency));

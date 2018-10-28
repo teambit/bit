@@ -426,7 +426,7 @@ export default class Scope {
       // todo: use 'load' for async and switch the foreach with map.
       const dependencyObject = this.objects.loadSync(depId.hash());
       if (dependencyObject instanceof Symlink) {
-        return dependencyId.changeScope(dependencyObject.realScope);
+        return dependencyId.changeScope(remoteScope);
       }
       return dependencyId.changeScope(remoteScope);
     };
