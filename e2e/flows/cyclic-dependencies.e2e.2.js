@@ -16,7 +16,7 @@ describe('cyclic dependencies', function () {
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createFile('comp', 'a.js', fixtureA);
       helper.createFile('comp', 'b.js', fixtureB);
       helper.addComponent('comp/a.js');
@@ -35,6 +35,24 @@ describe('cyclic dependencies', function () {
       const compA = helper.catComponent('comp/b@0.0.1');
       expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
       expect(compA.flattenedDependencies[0]).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
+    });
+    describe('exporting the component', () => {
+      let exportOutput;
+      before(() => {
+        exportOutput = helper.exportAllComponents();
+      });
+      it('should export successfully with no errors', () => {
+        expect(exportOutput).to.have.string('exported');
+      });
+      describe('importing to a new environment', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('comp/a');
+          helper.importComponent('comp/b');
+        });
+        it('should bring in the components', () => {});
+      });
     });
   });
   describe('a complex case with a long chain of dependencies', () => {
