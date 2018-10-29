@@ -5,7 +5,7 @@ import type { Network } from './network';
 import { ProtocolNotSupported } from './exceptions';
 import { parseSSHUrl } from '../../utils';
 import logger from '../../logger/logger';
-import { FILE_PROTOCOL_PREFIX, BIT_PROTOCOL_PREFIX } from '../../constants';
+import { FILE_PROTOCOL_PREFIX, BIT_PROTOCOL_PREFIX, SSH_PROTOCOL_PREFIX } from '../../constants';
 
 export default function connect(host: string): Promise<Network> {
   if (host.startsWith(SSH_PROTOCOL_PREFIX) || host.startsWith(BIT_PROTOCOL_PREFIX)) {
