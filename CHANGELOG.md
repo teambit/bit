@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.26 - 2018-10-29]
+
 - fix link content generation for authored components on bit install
+- React docs support
 
 ## [13.0.5-dev.25 - 2018-10-23]
 
