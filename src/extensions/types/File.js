@@ -52,11 +52,12 @@ export default class File extends BaseType {
         file: 'thisFile',
         dependencies: {}
       },
-      files: {
-        thisFile: 'content',
-        'deps[0]': 'content2',
-        'deps[1]': 'content3'
-      }
+      files: ['f1', 'f2']
+      // files: {
+      //   thisFile: 'content',
+      //   'deps[0]': 'content2',
+      //   'deps[1]': 'content3'
+      // }
     };
 
     const deps: FileDependency[] = this.getDeps();

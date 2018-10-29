@@ -98,7 +98,7 @@ export default class ExtensionConfig {
     if (this.propsStore) {
       return this.propsStore;
     }
-    this.propsStore = _getPropsStore(this.props);
+    this.propsStore = await _getPropsStore(this.props);
     return this.propsStore;
   }
 

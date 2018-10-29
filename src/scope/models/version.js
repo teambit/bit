@@ -81,6 +81,7 @@ export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   dists: ?Array<DistFileModel>;
+  extensions;
   compiler: ?CompilerExtensionModel;
   tester: ?TesterExtensionModel;
   detachedCompiler: ?boolean;
@@ -110,6 +111,7 @@ export default class Version extends BitObject {
     this.mainFile = props.mainFile;
     this.files = props.files;
     this.dists = props.dists;
+    this.extensions = props.extensions;
     this.compiler = props.compiler;
     this.tester = props.tester;
     this.log = props.log;
@@ -468,6 +470,7 @@ export default class Version extends BitObject {
     versionFromModel,
     files,
     dists,
+    extensions,
     flattenedDependencies,
     flattenedDevDependencies,
     flattenedCompilerDependencies,
@@ -583,6 +586,7 @@ export default class Version extends BitObject {
       mainFile: component.mainFile,
       files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
+      extensions,
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,

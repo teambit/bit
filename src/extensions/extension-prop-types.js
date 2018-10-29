@@ -70,6 +70,7 @@ export default class ExtensionPropTypes {
             val: data.val,
             __type: propVal.name
           };
+          store.files = store.files.concat(data.files);
           // store[propName].val = data;
           // store[propName].__type = propVal.name;
         });

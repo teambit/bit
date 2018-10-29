@@ -187,6 +187,22 @@ export default class SourceRepository {
       return revertDirManipulationForPath(pathStr, clonedComponent.originallySharedDir, clonedComponent.wrapDir);
     };
 
+    const getExtensionsData = async (extensions) => {
+      const storeData = {};
+      const extensionObjects = [];
+      const promises = extensions.map(async (extension) => {
+        return extension.config.storeProps().then((val) => {
+          storeData[extension.name] = val;
+          extensionObjects.push(val.files);
+        });
+      });
+      await Promise.all(promises);
+      return {
+        extensions: storeData,
+        extensionObjects
+      };
+    };
+
     const files = consumerComponent.files.map((file) => {
       return {
         name: file.basename,
@@ -230,11 +246,13 @@ export default class SourceRepository {
         }
       });
     });
+    const { extensions, extensionsObjects } = await getExtensionsData(consumerComponent.extensions);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       versionFromModel,
       files,
       dists,
+      extensions,
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,
@@ -247,7 +265,7 @@ export default class SourceRepository {
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
 
-    return { version, files, dists, compilerFiles, testerFiles };
+    return { version, files, dists, compilerFiles, testerFiles, extensionsObjects };
   }
 
   async addSource({
@@ -286,7 +304,14 @@ export default class SourceRepository {
     if (versionRef) {
       versionFromModel = await this.scope.getObject(versionRef.hash);
     }
-    const { version, files, dists, compilerFiles, testerFiles } = await this.consumerComponentToVersion({
+    const {
+      version,
+      files,
+      dists,
+      compilerFiles,
+      testerFiles,
+      extensionsObjects
+    } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
       versionFromModel,

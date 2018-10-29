@@ -29,6 +29,7 @@ import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
+import ExtensionRegistry from '../../extensions/extension-registry';
 import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -63,10 +64,15 @@ import ConfigDir from '../bit-map/config-dir';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-not-found';
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
+import ExtensionWrapper from '../../extensions/extension-wrapper';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
 export type InvalidComponent = { id: BitId, error: Error };
+
+export type ComponentExtensions = {
+  [string]: ExtensionWrapper
+};
 
 export type ComponentProps = {
   name: string,
@@ -77,6 +83,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
+  extensions: ComponentExtensions,
   bitJson?: ComponentBitJson,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
@@ -188,6 +195,7 @@ export default class Component {
     mainFile,
     compiler,
     tester,
+    extensions,
     bitJson,
     dependencies,
     devDependencies,
@@ -222,6 +230,7 @@ export default class Component {
     this.mainFile = path.normalize(mainFile);
     this.compiler = compiler;
     this.tester = tester;
+    this.extensions = extensions;
     this.bitJson = bitJson;
     this.setDependencies(dependencies);
     this.setDevDependencies(devDependencies);
@@ -1295,6 +1304,10 @@ export default class Component {
       ...testerDynamicPackageDependencies
     };
 
+    const propsToLoadExtensions = propsToLoadEnvs;
+    propsToLoadExtensions.componentId = id;
+    const extensions = await ExtensionRegistry.getComponentExtensions(propsToLoadExtensions);
+
     return new Component({
       name: id.name,
       scope: id.scope,
@@ -1303,6 +1316,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       tester,
+      extensions,
       bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
