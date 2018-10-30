@@ -11,6 +11,7 @@ import twoWayMergeVersions from './two-way-merge';
 import type { MergeResultsTwoWay } from './two-way-merge';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
+import ComponentWriter from '../../component-ops/component-writer';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -129,18 +130,22 @@ async function applyVersion(
   // update files according to the merge results
   const modifiedStatus = await applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
 
-  await component.write({
+  const componentWriter = ComponentWriter.getInstance({
+    component,
     override: true,
     writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
     deleteBitDirContent: false,
     origin: componentMap.origin,
     consumer,
-    componentMap
+    existingComponentMap: componentMap
   });
+  await componentWriter.write();
 
   consumer.bitMap.removeComponent(component.id);
-  component._addComponentToBitMap(consumer.bitMap, componentMap.rootDir, componentMap.origin, componentMap.configDir);
+  componentWriter.origin = componentMap.origin;
+  componentWriter.resolvedConfigDir = componentMap.resolvedConfigDir;
+  componentWriter.addComponentToBitMap(componentMap.rootDir);
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
