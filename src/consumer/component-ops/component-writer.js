@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
