@@ -112,7 +112,7 @@ export default (async function writeToComponentsDir({
     return {
       writeParams: {
         component: componentWithDeps.component,
-        bitDir,
+        writeToPath: bitDir,
         override: true,
         writeConfig,
         configDir: configDir || configDirFromComponentMap,
@@ -183,15 +183,15 @@ export default (async function writeToComponentsDir({
         consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
         return Promise.resolve(dep);
       }
-      const depBitPath = consumer.composeDependencyPath(dep.id);
-      dep.writtenPath = depBitPath;
-      dependenciesIdsCache[dependencyId] = depBitPath;
+      const depRootPath = consumer.composeDependencyPath(dep.id);
+      dep.writtenPath = depRootPath;
+      dependenciesIdsCache[dependencyId] = depRootPath;
       // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
       // and namespace can co-exist with different versions.
       const componentMap = consumer.bitMap.getComponentIfExist(dep.id);
       const componentWriter = ComponentWriter.getInstance({
         component: dep,
-        bitDir: depBitPath,
+        writeToPath: depRootPath,
         override: true,
         writePackageJson,
         origin: COMPONENT_ORIGINS.NESTED,
