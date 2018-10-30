@@ -31,7 +31,7 @@ export const paintDoc = (doc: Doclet) => {
   const table = new Table(header, [], opts);
 
   const painArg = (arg) => {
-    if (!arg.type && !arg.name) {
+    if (!arg && !arg.type && !arg.name) {
       return '';
     }
     if (!arg.type) {
@@ -41,10 +41,11 @@ export const paintDoc = (doc: Doclet) => {
   };
 
   const painDescription = (arg) => {
+    if (!arg) return '';
     if (!arg.type) {
       return '';
     }
-    if (arg.type && !arg.description) {
+    if (arg && arg.type && !arg.description) {
       return arg.type;
     }
     return `${arg.type} -> ${arg.description}`;
