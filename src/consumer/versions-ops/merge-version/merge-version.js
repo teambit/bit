@@ -145,7 +145,7 @@ async function applyVersion(
 
   consumer.bitMap.removeComponent(component.id);
   componentWriter.origin = componentMap.origin;
-  componentWriter.resolvedConfigDir = componentMap.resolvedConfigDir;
+  componentWriter.configDir = componentMap.resolvedConfigDir;
   componentWriter.addComponentToBitMap(componentMap.rootDir);
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };

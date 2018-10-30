@@ -7,7 +7,6 @@ import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import BitMap from '../bit-map';
 import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS } from '../../constants';
 import mkdirp from '../../utils/mkdirp';
