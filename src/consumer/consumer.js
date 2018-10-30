@@ -954,6 +954,15 @@ export default class Consumer {
     await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
+  async getAuthoredAndImportedDependentsOfComponents(components: Component[]): Promise<Component[]> {
+    const authoredAndImportedComponents = this.bitMap.getAllBitIds([
+      COMPONENT_ORIGINS.IMPORTED,
+      COMPONENT_ORIGINS.AUTHORED
+    ]);
+    const componentsIds = BitIds.fromArray(components.map(c => c.id));
+    return this.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
+  }
+
   /**
    * find the components in componentsPool which one of their dependencies include in potentialDependencies
    */

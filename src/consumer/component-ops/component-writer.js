@@ -87,12 +87,18 @@ export default class ComponentWriter {
     logger.debug(`component-writer.write, id: ${this.component.id.toString()}`);
     const consumerPath: string = this.consumer.getPath();
     const bitMap: BitMap = this.consumer.bitMap;
-    if (!this.component.files) { throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`); }
+    if (!this.component.files) {
+      throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
+    }
     // Take the bitdir from the files (it will be the same for all the files of course)
     this.dirToWrite = this.bitDir || this.component.files[0].base;
     // Update files base dir according to this.bitDir
-    if (this.component.files && this.bitDir) { this.component.files.forEach(file => file.updatePaths({ newBase: this.bitDir })); }
-    if (!this.component.dists.isEmpty() && this.bitDir) { this.component.dists.get().forEach(dist => dist.updatePaths({ newBase: this.bitDir })); }
+    if (this.component.files && this.bitDir) {
+      this.component.files.forEach(file => file.updatePaths({ newBase: this.bitDir }));
+    }
+    if (!this.component.dists.isEmpty() && this.bitDir) {
+      this.component.dists.get().forEach(dist => dist.updatePaths({ newBase: this.bitDir }));
+    }
 
     // if there is no componentMap, the component is new to this project and should be written to bit.map
     this.componentMap = this.existingComponentMap || this.addComponentToBitMap();
@@ -178,7 +184,9 @@ export default class ComponentWriter {
         this.excludeRegistryPrefix
       );
     }
-    if (this.component.license && this.component.license.src) { await this.component.license.write(this.dirToWrite, this.override); }
+    if (this.component.license && this.component.license.src) {
+      await this.component.license.write(this.dirToWrite, this.override);
+    }
     logger.debug('component has been written successfully');
     return this;
   }
@@ -207,25 +215,28 @@ export default class ComponentWriter {
     // $FlowFixMe this function gets called when it was previously NESTED, so the rootDir is set
     const oldLocation = path.join(this.consumer.getPath(), this.componentMap.rootDir);
     logger.debug(`deleting the old directory of a component at ${oldLocation}`);
-    fs.removeSync(oldLocation);
-    const fsComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-    const potentialDependenciesIds = BitIds.fromArray([this.component.id]);
-    const directDependentComponents = await this.consumer.findDirectDependentComponents(
-      fsComponents,
-      potentialDependenciesIds
-    );
-    directDependentComponents.forEach((dependent) => {
-      const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-      const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(
-        this.consumer.bitJson.bindingPrefix,
-        this.component.id
-      );
-      const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
-        path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
-      );
-      logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
-      fs.removeSync(nodeModulesLinkAbs);
-    });
+    await fs.remove(oldLocation);
+    await this._removeNodeModulesLinksFromDependents();
     this.consumer.bitMap.removeComponent(this.component.id);
+  }
+
+  async _removeNodeModulesLinksFromDependents() {
+    const directDependentComponents = await this.consumer.getAuthoredAndImportedDependentsOfComponents([
+      this.component
+    ]);
+    await Promise.all(
+      directDependentComponents.map((dependent) => {
+        const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
+        const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(
+          this.consumer.bitJson.bindingPrefix,
+          this.component.id
+        );
+        const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
+          path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
+        );
+        logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
+        return fs.remove(nodeModulesLinkAbs);
+      })
+    );
   }
 }

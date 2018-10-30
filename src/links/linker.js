@@ -1,7 +1,6 @@
 /** @flow */
 import R from 'ramda';
 import Component from '../consumer/component';
-import { COMPONENT_ORIGINS } from '../constants';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
@@ -12,7 +11,6 @@ import * as packageJson from '../consumer/component/package-json';
 import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
-import { BitIds } from '../bit-id';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -29,12 +27,6 @@ export async function writeLinksInDist(component: Component, componentMap: Compo
   await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
   await linkComponentsToNodeModules([component], consumer);
   return linkGenerator.writeEntryPointsForComponent(component, consumer);
-}
-
-function findDirectDependentComponents(potentialDependencies: Component[], consumer: Consumer): Promise<Component[]> {
-  const fsComponents = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED, COMPONENT_ORIGINS.AUTHORED]);
-  const potentialDependenciesIds = BitIds.fromArray(potentialDependencies.map(c => c.id));
-  return consumer.findDirectDependentComponents(fsComponents, potentialDependenciesIds);
 }
 
 async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {
@@ -55,7 +47,7 @@ async function reLinkDirectlyImportedDependencies(components: Component[], consu
  */
 export async function reLinkDependents(consumer: Consumer, components: Component[]): Promise<void> {
   logger.debug('linker: check whether there are direct dependents for re-linking');
-  const directDependentComponents = await findDirectDependentComponents(components, consumer);
+  const directDependentComponents = await consumer.getAuthoredAndImportedDependentsOfComponents(components);
   if (directDependentComponents.length) {
     await reLinkDirectlyImportedDependencies(directDependentComponents, consumer);
     await packageJson.changeDependenciesToRelativeSyntax(consumer, directDependentComponents, components);

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
-import { mkdirp, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
+import { pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -36,9 +36,7 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  WRAPPER_DIR,
-  PACKAGE_JSON
+  BIT_WORKSPACE_TMP_DIRNAME
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
