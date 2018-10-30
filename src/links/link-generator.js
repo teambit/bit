@@ -371,11 +371,13 @@ async function writeComponentsDependenciesLinks(
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
+          const dependencies = componentWithDeps.allDependencies;
+          dependencies.push(componentWithDeps.component);
           return getComponentLinks({
             consumer,
             component: dep,
             componentMap: depComponentMap,
-            dependencies: componentWithDeps.allDependencies,
+            dependencies,
             createNpmLinkFiles
           });
         })

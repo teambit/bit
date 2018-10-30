@@ -651,7 +651,7 @@ export default class BitMap {
     mainFile?: PathOsBased,
     origin: ComponentOrigin,
     parent?: BitId,
-    rootDir?: string,
+    rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ConfigDir,
     trackDir?: PathOsBased,
     override: boolean,
