@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- shorten the generated component ID to the minimum possible
+
 ## [13.0.5-dev.27 - 2018-10-31]
 
 - fix import of components with circular dependencies

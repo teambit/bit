@@ -552,7 +552,7 @@ export default class Helper {
   }
 
   addComponentBarFoo() {
-    return this.addComponent();
+    return this.runCmd('bit add bar/foo.js --id bar/foo');
   }
 
   commitComponentBarFoo() {

@@ -57,7 +57,11 @@ type AddedComponent = {
   componentId: BitId,
   files: ComponentMapFile[],
   mainFile?: ?PathOsBased,
-  trackDir?: PathOsBased // set only when one directory is added by author
+  trackDir?: PathOsBased, // set only when one directory is added by author
+  idFromPath: ?{
+    name: string,
+    namespace: string
+  }
 };
 const REGEX_DSL_PATTERN = /{([^}]+)}/g;
 
@@ -66,7 +70,6 @@ export type AddProps = {
   id?: string,
   main?: PathOsBased,
   namespace?: string,
-  skipNamespace: boolean,
   tests?: PathOrDSL[],
   exclude?: PathOrDSL[],
   override: boolean,
@@ -90,7 +93,6 @@ export default class AddComponents {
   id: ?string; // id entered by the user
   main: ?PathOsBased;
   namespace: ?string;
-  skipNamespace: boolean;
   tests: PathOrDSL[];
   exclude: PathOrDSL[];
   override: boolean; // (default = false) replace the files array or only add files.
@@ -109,7 +111,6 @@ export default class AddComponents {
     this.id = addProps.id;
     this.main = addProps.main;
     this.namespace = addProps.namespace;
-    this.skipNamespace = addProps.skipNamespace;
     this.tests = addProps.tests ? this.joinConsumerPathIfNeeded(addProps.tests) : [];
     this.exclude = addProps.exclude ? this.joinConsumerPathIfNeeded(addProps.exclude) : [];
     this.override = addProps.override;
@@ -255,8 +256,9 @@ export default class AddComponents {
         (foundComponentFromBitMap && foundComponentFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) ||
         (existingComponentOfFile && existingComponentOfFile.origin === COMPONENT_ORIGINS.IMPORTED);
       if (isImported) {
+        const idFromBitMap = foundComponentFromBitMap ? foundComponentFromBitMap.id : existingComponentOfFile.id;
         // throw error in case user didn't add id to imported component or the id is incorrect
-        if (!this.id) throw new MissingComponentIdForImportedComponent(parsedBitId.toStringWithoutVersion());
+        if (!this.id) throw new MissingComponentIdForImportedComponent(idFromBitMap.toStringWithoutVersion());
         if (idOfFileIsDifferent) {
           const existingIdWithoutVersion = existingIdOfFile.toStringWithoutVersion();
           // $FlowFixMe $this.id is not null at this point
@@ -416,6 +418,7 @@ export default class AddComponents {
    */
   async addOneComponent(componentPathsStats: PathsStats): Promise<AddedComponent> {
     let finalBitId: BitId; // final id to use for bitmap file
+    let idFromPath;
     if (this.id) {
       finalBitId = this._getIdAccordingToExistingComponent(this.id);
     }
@@ -446,8 +449,8 @@ export default class AddComponents {
           const splitPath = absoluteComponentPath.split(path.sep);
           const lastDir = splitPath[splitPath.length - 1];
           const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
-          const idFromPath = BitId.getValidBitId(this.skipNamespace ? undefined : nameSpaceOrDir, lastDir);
-          finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
+          idFromPath = { namespace: BitId.getValidIdChunk(nameSpaceOrDir), name: BitId.getValidIdChunk(lastDir) };
+          finalBitId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
         }
 
         const trackDir =
@@ -457,7 +460,13 @@ export default class AddComponents {
             ? relativeComponentPath
             : undefined;
 
-        return { componentId: finalBitId, files: filteredMatchedFiles, mainFile: resolvedMainFile, trackDir };
+        return {
+          componentId: finalBitId,
+          files: filteredMatchedFiles,
+          mainFile: resolvedMainFile,
+          trackDir,
+          idFromPath
+        };
       }
       // is file
       const absolutePath = path.resolve(componentPath);
@@ -469,8 +478,11 @@ export default class AddComponents {
           dirName = path.dirname(absolutePath);
         }
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
-        const idFromPath = BitId.getValidBitId(this.skipNamespace ? undefined : nameSpaceOrLastDir, pathParsed.name);
-        finalBitId = this._getIdAccordingToExistingComponent(idFromPath.toString());
+        idFromPath = {
+          namespace: BitId.getValidIdChunk(nameSpaceOrLastDir),
+          name: BitId.getValidIdChunk(pathParsed.name)
+        };
+        finalBitId = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
       }
 
       let files = [
@@ -479,7 +491,7 @@ export default class AddComponents {
 
       files = await this._mergeTestFilesWithFiles(files);
       const resolvedMainFile = this._addMainFileToFiles(files);
-      return { componentId: finalBitId, files, mainFile: resolvedMainFile };
+      return { componentId: finalBitId, files, mainFile: resolvedMainFile, idFromPath };
     });
 
     let componentsWithFiles: AddedComponent[] = await Promise.all(componentsWithFilesP);
@@ -506,7 +518,8 @@ export default class AddComponents {
       componentId,
       files: uniqComponents,
       mainFile: R.head(componentsWithFiles).mainFile,
-      trackDir: R.head(componentsWithFiles).trackDir
+      trackDir: R.head(componentsWithFiles).trackDir,
+      idFromPath
     };
   }
 
@@ -575,6 +588,7 @@ export default class AddComponents {
       // when a user enters more than one directory, he would like to keep the directories names
       // so then when a component is imported, it will write the files into the original directories
       const addedOne = await this.addOneComponent(componentPathsStats);
+      this._removeNamespaceIfNotNeeded([addedOne]);
       if (!R.isEmpty(addedOne.files)) {
         const addedResult = await this.addOrUpdateComponentInBitMap(addedOne);
         if (addedResult) this.addedComponents.push(addedResult);
@@ -592,6 +606,7 @@ export default class AddComponents {
     testToRemove.forEach(test => delete componentPathsStats[path.normalize(test)]);
     const added = await this._tryAddingMultiple(componentPathsStats);
     validateNoDuplicateIds(added);
+    this._removeNamespaceIfNotNeeded(added);
     await this._addMultipleToBitMap(added);
   }
 
@@ -613,6 +628,21 @@ export default class AddComponents {
     if (missingMainFiles.length) {
       throw new MissingMainFileMultipleComponents(missingMainFiles.map(err => err.componentId).sort());
     }
+  }
+
+  _removeNamespaceIfNotNeeded(addedComponents: AddedComponent[]): void {
+    const allIds = this.bitMap.getAllBitIds();
+    addedComponents.forEach((addedComponent) => {
+      if (!addedComponent.idFromPath) return; // when the id was not generated from the path do nothing.
+      const componentsWithSameName = addedComponents // $FlowFixMe
+        .filter(a => a.idFromPath && a.idFromPath.name === addedComponent.idFromPath.name);
+      // $FlowFixMe
+      const bitIdFromNameOnly = new BitId({ name: addedComponent.idFromPath.name });
+      const existingComponentWithSameName = allIds.searchWithoutScopeAndVersion(bitIdFromNameOnly);
+      if (componentsWithSameName.length === 1 && !existingComponentWithSameName) {
+        addedComponent.componentId = bitIdFromNameOnly;
+      }
+    });
   }
 
   async _tryAddingMultiple(componentPathsStats: PathsStats): Promise<AddedComponent[]> {

@@ -10,6 +10,7 @@ import {
   TestIsDirectory,
   VersionShouldBeRemoved,
   MissingMainFileMultipleComponents,
+  MissingComponentIdForImportedComponent,
   MainFileIsDir
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
@@ -58,32 +59,27 @@ describe('bit add command', function () {
   describe('add before running "bit init" with .bit.map.json', () => {
     it('Should init consumer add then add component', () => {
       helper.createBitMap();
-      helper.createFile('bar', 'foo.js');
-      const output = helper.addComponent(path.normalize('bar/foo.js'));
+      helper.createComponentBarFoo();
+      const output = helper.addComponentBarFoo();
       expect(output).to.contain('tracking component bar/foo');
     });
   });
   describe('add to imported component', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      const remote = helper.remoteScopePath;
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
-      helper.importCompiler();
       helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo ' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
       helper.reInitLocalScope();
-      helper.addRemoteScope(remote);
+      helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
     it('Should throw error when trying to add files to imported component without specifying id', () => {
       const addCmd = () => helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
-      expect(addCmd).to.throw(
-        `error: unable to add new files to the component "${
-          helper.remoteScope
-        }/bar/foo" without specifying a component ID. please define the component ID using the --id flag.`
-      );
+      const error = new MissingComponentIdForImportedComponent(`${helper.remoteScope}/bar/foo`);
+      helper.expectToThrow(addCmd, error);
     });
     it('Should throw error when trying to add files to imported component without specifying correct id', () => {
       const addCmd = () =>
@@ -720,6 +716,36 @@ describe('bit add command', function () {
         expect(output).to.have.string('warning');
         expect(output).to.have.string('the following directories are empty');
         expect(output).to.have.string(path.normalize('bar/baz2'));
+      });
+    });
+    describe('two component with the same file name but different directory name', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createFile('bar', 'baz1/foo.js');
+        helper.createFile('bar', 'baz2/foo.js');
+      });
+      describe('adding them as directories so the name are not conflicting', () => {
+        before(() => {
+          helper.addComponent('bar/*');
+        });
+        it('should generate a short id out of the directory only', () => {
+          const bitMap = helper.readBitMapWithoutVersion();
+          const ids = Object.keys(bitMap);
+          expect(ids).to.include('baz1');
+          expect(ids).to.include('baz2');
+        });
+      });
+      describe('adding them as files so the file names are conflicting', () => {
+        before(() => {
+          helper.deleteFile('.bitmap');
+          helper.addComponent('bar/baz1/foo.js bar/baz2/foo.js');
+        });
+        it('should generate id out of the directory and the filename to not have a conflict', () => {
+          const bitMap = helper.readBitMapWithoutVersion();
+          const ids = Object.keys(bitMap);
+          expect(ids).to.include('baz1/foo');
+          expect(ids).to.include('baz2/foo');
+        });
       });
     });
   });
