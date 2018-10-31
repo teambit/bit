@@ -106,6 +106,7 @@ export default class ExtensionFile extends AbstractVinyl {
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath, contents: content.contents });
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
+    extensionFile.relativePath = file.relativePath;
     extensionFile.fromModel = true;
     return extensionFile;
   }
