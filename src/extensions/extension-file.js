@@ -18,6 +18,14 @@ export type ExtensionFileModel = {
   file: Ref
 };
 
+export type ExtensionFileSerializedModel = {
+  name: string,
+  relativePath: PathLinux,
+  file: {
+    contents: Buffer
+  }
+};
+
 export type ExtensionFileObject = {
   name: string,
   relativePath: PathLinux,
@@ -104,6 +112,21 @@ export default class ExtensionFile extends AbstractVinyl {
     // $FlowFixMe
     const content = await file.file.load(repository);
     const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath, contents: content.contents });
+    extensionFile.file = Source.from(extensionFile.contents);
+    extensionFile.name = file.name;
+    extensionFile.relativePath = file.relativePath;
+    extensionFile.fromModel = true;
+    return extensionFile;
+  }
+
+  /**
+   * Used when running bit show against remote scope
+   * @param {*} file
+   * @param {*} repository
+   */
+  static async loadFromExtensionFileSerializedModel(file: ExtensionFileSerializedModel): Promise<ExtensionFile> {
+    const contents = Buffer.from(file.file.contents);
+    const extensionFile = new ExtensionFile({ base: '.', path: file.relativePath || '', contents });
     extensionFile.file = Source.from(extensionFile.contents);
     extensionFile.name = file.name;
     extensionFile.relativePath = file.relativePath;
