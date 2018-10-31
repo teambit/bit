@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix import of components with circular dependencies
+- fix bug with bit show when the remote component has config file
 
 ## [13.0.5-dev.26 - 2018-10-29]
 
