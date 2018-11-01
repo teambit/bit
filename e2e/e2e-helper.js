@@ -717,6 +717,9 @@ export default class Helper {
     const bitMapPath = path.join(this.localScopePath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
+  deleteBitMap() {
+    return this.deleteFile(BIT_MAP);
+  }
   createBitMap(
     cwd: string = this.localScopePath,
     componentObject = {

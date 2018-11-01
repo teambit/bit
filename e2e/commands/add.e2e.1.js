@@ -47,7 +47,7 @@ describe('bit add command', function () {
     it('Should find local scope inside .git/bit and add component', () => {
       helper.reInitLocalScope();
       helper.initNewGitRepo();
-      helper.deleteFile('.bitmap');
+      helper.deleteBitMap();
       helper.deleteFile('.bit');
       helper.deleteFile('bit.json');
       helper.initLocalScope('bit init');
@@ -695,7 +695,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'baz2/foo.js');
       helper.createFile('bar', 'baz2/foo2.js');
       const addFunc = () => helper.addComponent('bar/*');
-      const error = new MissingMainFileMultipleComponents(['bar/baz1, bar/baz2']);
+      const error = new MissingMainFileMultipleComponents(['baz1, baz2']);
       helper.expectToThrow(addFunc, error);
     });
     describe('when some of the components have empty directory as a result of excluding their files', () => {
@@ -707,7 +707,7 @@ describe('bit add command', function () {
         output = helper.addComponentWithOptions('bar/*', { e: 'bar/baz2/foo3.js' });
       });
       it('should not break the operation if some of the components have empty directory', () => {
-        expect(output).to.have.string('tracking component bar/baz1');
+        expect(output).to.have.string('tracking component baz1');
       });
       it('should show a warning indicating the directories that were not added', () => {
         expect(output).to.have.string('warning');
@@ -734,7 +734,7 @@ describe('bit add command', function () {
       });
       describe('adding them as files so the file names are conflicting', () => {
         before(() => {
-          helper.deleteFile('.bitmap');
+          helper.deleteBitMap();
           helper.addComponent('bar/baz1/foo.js bar/baz2/foo.js');
         });
         it('should generate id out of the directory and the filename to not have a conflict', () => {
@@ -776,13 +776,13 @@ describe('bit add command', function () {
       const files = bitMap['bar/foo'].files;
       expect(files).to.deep.equal(expectedArray);
     });
-    it('bitMap should only contain bits that have files', () => {
+    it('bitMap should only contain components that have files', () => {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       helper.addComponentWithOptions('bar/foo1.js bar/foo2.js', { e: 'bar/foo2.js' });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo1');
-      expect(bitMap).not.to.have.property('bar/foo2');
+      expect(bitMap).to.have.property('foo1');
+      expect(bitMap).not.to.have.property('foo2');
     });
     it('When adding folder bitMap should not contain excluded glob *.exclude.js', () => {
       helper.createFile('bar', 'foo1.js');
@@ -790,9 +790,9 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo2.exclude.js');
       helper.addComponentWithOptions('bar/*.js', { e: 'bar/*.exclude.js' });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo1');
-      expect(bitMap).to.have.property('bar/foo2');
-      expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
+      expect(bitMap).to.have.property('foo1');
+      expect(bitMap).to.have.property('foo2');
+      expect(bitMap).not.to.have.property('foo2exclude');
     });
     it('Bitmap should not contain all files in excluded list', () => {
       helper.createFile('bar', 'foo1.js');
@@ -800,9 +800,9 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo2.exclude.js');
       helper.addComponentWithOptions('bar/*.js', { e: 'bar/*.exclude.js,bar/foo2.js' });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo1');
-      expect(bitMap).not.to.have.property('bar/foo2');
-      expect(bitMap).not.to.have.property('bar/foo2.exclude.js');
+      expect(bitMap).to.have.property('foo1');
+      expect(bitMap).not.to.have.property('foo2');
+      expect(bitMap).not.to.have.property('foo2exclude');
     });
     it('When excluding dir ,bit component should not appear in bitmap', () => {
       helper.createFile('bar', 'foo1.js');
@@ -810,9 +810,9 @@ describe('bit add command', function () {
       helper.createFile('bar/x', 'foo2.exclude.js');
       helper.addComponentWithOptions('bar/*', { e: 'bar/x/' });
       const bitMap = helper.readBitMap();
-      expect(bitMap).to.have.property('bar/foo1');
-      expect(bitMap).to.have.property('bar/foo2');
-      expect(bitMap).not.to.have.property('bar/x');
+      expect(bitMap).to.have.property('foo1');
+      expect(bitMap).to.have.property('foo2');
+      expect(bitMap).not.to.have.property('x');
     });
     it('bitMap should contain files that are not excluded ', () => {
       helper.createFile('bar', 'foo1.js');
@@ -840,8 +840,8 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo2.spec.js');
       helper.addComponentWithOptions('bar/foo1.js', { t: 'bar/foo2.spec.js', e: 'bar/foo2.spec.js' });
       const bitMap = helper.readBitMap();
-      const files = bitMap['bar/foo1'].files;
-      expect(bitMap).to.have.property('bar/foo1');
+      const files = bitMap.foo1.files;
+      expect(bitMap).to.have.property('foo1');
       expect(files).to.be.ofSize(1);
     });
     it('bit should add components and exclude files', () => {
@@ -874,7 +874,6 @@ describe('bit add command', function () {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
-      helper.importCompiler();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
@@ -948,9 +947,8 @@ describe('bit add command', function () {
     it('Should show warning msg in case there are no files to add because of gitignore', () => {
       helper.createFile('bar', 'foo2.js');
       helper.writeGitIgnore(['bar/foo2.js']);
-
       try {
-        helper.addComponent(path.normalize('bar/foo2.js'));
+        helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       } catch (err) {
         errorMessage = err.message;
       }
@@ -963,7 +961,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo3.js');
       helper.createFile('bar', 'boo.js');
       helper.writeGitIgnore(['bar/f*']);
-      const output = helper.addComponent(path.normalize('bar/*.js'));
+      const output = helper.addComponentWithOptions(path.normalize('bar/*.js'), { i: 'bar/boo' });
       expect(output).to.contain('tracking component bar/boo');
     });
     it('Should contain only unfiltered components inside bitmap', () => {
@@ -1012,7 +1010,7 @@ describe('bit add command', function () {
       // we don't expect this pattern to do anything. it just makes sure we don't repeat the bug we
       // had before where having ANY entry in .gitignore with "!", the test file was ignored.
       helper.writeGitIgnore(['!bar']);
-      output = helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js' });
+      output = helper.addComponentWithOptions('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
     });
     it('should track the component', () => {
       expect(output).to.contain('tracking component bar/foo');
@@ -1033,7 +1031,7 @@ describe('bit add command', function () {
   describe('add one component to project with existing .bit.map.json file', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.deleteFile('.bitmap');
+      helper.deleteBitMap();
       helper.createBitMap(
         helper.localScopePath,
         {
@@ -1053,7 +1051,7 @@ describe('bit add command', function () {
       );
 
       helper.createFile('bar', 'foo2.js');
-      helper.addComponent(path.normalize('bar/foo2.js'));
+      helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
     });
     it('Should update .bit.map.json file and not create ', () => {
       const oldBitMap = helper.readBitMap(path.join(helper.localScopePath, '.bit.map.json'));
