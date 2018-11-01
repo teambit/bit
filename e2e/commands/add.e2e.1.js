@@ -1128,7 +1128,7 @@ describe('bit add command', function () {
       helper.addComponentBarFoo();
       fs.removeSync(path.join(helper.localScopePath, 'bar'));
       helper.createFile('Bar', 'foo.js');
-      helper.addComponent('Bar/foo.js');
+      helper.addComponentWithOptions('Bar/foo.js', { i: 'bar/foo' });
     });
     it('should update the files and the mainFile with the new case', () => {
       const bitMap = helper.readBitMap();
