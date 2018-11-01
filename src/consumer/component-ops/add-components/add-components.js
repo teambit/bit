@@ -339,6 +339,13 @@ export default class AddComponents {
     return existingComponentId || BitId.parse(currentId, false);
   }
 
+  _getIdAccordingToTrackDir(dir: PathOsBased): ?BitId {
+    const dirNormalizedToLinux = pathNormalizeToLinux(dir);
+    const trackDirs = this.bitMap.getAllTrackDirs();
+    if (!trackDirs) return null;
+    return trackDirs[dirNormalizedToLinux];
+  }
+
   /**
    * used for updating main file if exists or doesn't exists
    */
@@ -423,7 +430,7 @@ export default class AddComponents {
       finalBitId = this._getIdAccordingToExistingComponent(this.id);
     }
 
-    const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath) => {
+    const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath: PathOsBased) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
 
@@ -445,12 +452,19 @@ export default class AddComponents {
         const resolvedMainFile = this._addMainFileToFiles(filteredMatchedFiles);
 
         if (!finalBitId) {
-          const absoluteComponentPath = path.resolve(componentPath);
-          const splitPath = absoluteComponentPath.split(path.sep);
-          const lastDir = splitPath[splitPath.length - 1];
-          const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
-          idFromPath = { namespace: BitId.getValidIdChunk(nameSpaceOrDir), name: BitId.getValidIdChunk(lastDir) };
-          finalBitId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
+          const idOfTrackDir = this._getIdAccordingToTrackDir(componentPath);
+          if (idOfTrackDir) {
+            finalBitId = idOfTrackDir;
+          } else {
+            const absoluteComponentPath = path.resolve(componentPath);
+            const splitPath = absoluteComponentPath.split(path.sep);
+            const lastDir = splitPath[splitPath.length - 1];
+            const nameSpaceOrDir = this.namespace || splitPath[splitPath.length - 2];
+            if (!this.namespace) {
+              idFromPath = { namespace: BitId.getValidIdChunk(nameSpaceOrDir), name: BitId.getValidIdChunk(lastDir) };
+            }
+            finalBitId = BitId.getValidBitId(nameSpaceOrDir, lastDir);
+          }
         }
 
         const trackDir =
@@ -478,10 +492,12 @@ export default class AddComponents {
           dirName = path.dirname(absolutePath);
         }
         const nameSpaceOrLastDir = this.namespace || R.last(dirName.split(path.sep));
-        idFromPath = {
-          namespace: BitId.getValidIdChunk(nameSpaceOrLastDir),
-          name: BitId.getValidIdChunk(pathParsed.name)
-        };
+        if (!this.namespace) {
+          idFromPath = {
+            namespace: BitId.getValidIdChunk(nameSpaceOrLastDir),
+            name: BitId.getValidIdChunk(pathParsed.name)
+          };
+        }
         finalBitId = BitId.getValidBitId(nameSpaceOrLastDir, pathParsed.name);
       }
 
