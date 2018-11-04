@@ -155,7 +155,7 @@ describe('bit untag command', function () {
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.createFile('bar', 'foo3.js');
-      helper.addComponent('bar/foo3.js');
+      helper.addComponent('bar/foo3.js', { i: 'bar/foo3' });
       helper.commitAllComponents();
       helper.exportComponent('bar/foo3');
       localScope = helper.cloneLocalScope();
