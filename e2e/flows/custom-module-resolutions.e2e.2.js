@@ -92,7 +92,7 @@ describe('custom module resolutions', function () {
       helper.createFile('src/utils', 'is-string.js', isStringFixture);
       helper.createFile('src/bar', 'foo.js', barFooFixture);
       helper.addComponent('src/utils/is-type.js');
-      helper.addComponentWithOptions('src/bar/foo.js src/utils/is-string.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      helper.addComponent('src/bar/foo.js src/utils/is-string.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.runCmd('bit status');

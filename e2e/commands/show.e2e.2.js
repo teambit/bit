@@ -408,7 +408,7 @@ function add(a, b) {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
       helper.createFile('bar', 'index.js');
-      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+      helper.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
       const beforeRemoveBitMap = helper.readBitMap();
@@ -440,7 +440,7 @@ function add(a, b) {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
       helper.createFile('bar', 'index.js');
-      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+      helper.addComponent('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without committing it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {

@@ -30,7 +30,7 @@ describe('bit untrack command', function () {
     // the rest use readBitMapWithoutVersion() which removes it from the .bit.mpa.json file.
     it('Should remove new component that was added from bitmap', () => {
       helper.createFile('bar', 'foo2.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo' });
+      helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMap();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
@@ -42,9 +42,9 @@ describe('bit untrack command', function () {
     });
     it('Should remove specific component and keep all other new components', () => {
       helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
+      helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
@@ -52,7 +52,7 @@ describe('bit untrack command', function () {
     });
     it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
       helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.commitComponent('bar/foo');
       const output = helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMapWithoutVersion();
@@ -62,19 +62,19 @@ describe('bit untrack command', function () {
     });
     it('Should resolve and untrack component and add global as prefix component ', () => {
       helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar' });
+      helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar' });
       helper.untrackComponent('bar');
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(0);
     });
     it('Should remove 2 new components and keep tagged component', () => {
       helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
+      helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.commitComponent('bar/foo2');
       helper.createFile('bar', 'foo3.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
+      helper.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent('bar/foo bar/foo3');
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);
@@ -82,12 +82,12 @@ describe('bit untrack command', function () {
     });
     it('Should remove all new components and keep tagged component', () => {
       helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo.js'), { i: 'bar/foo' });
+      helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
+      helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
       helper.commitComponent('bar/foo2');
       helper.createFile('bar', 'foo3.js');
-      helper.addComponentWithOptions(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
+      helper.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent('', true);
       const bitMap = helper.readBitMapWithoutVersion();
       expect(Object.keys(bitMap)).to.be.ofSize(1);

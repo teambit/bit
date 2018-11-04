@@ -435,7 +435,7 @@ describe('bit remove command', function () {
       helper.reInitLocalScope();
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo-main.js');
-      helper.addComponentWithOptions('bar', { m: 'foo-main.js', i: 'bar/foo' });
+      helper.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
       helper.tagAllWithoutMessage();
       helper.deleteFile('bar/foo-main.js');
       const status = helper.status();

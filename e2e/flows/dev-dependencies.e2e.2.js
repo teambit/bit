@@ -33,7 +33,7 @@ describe('dev-dependencies functionality', function () {
 
         helper.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
         helper.installNpmPackage('chai', '4.1.2');
-        helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+        helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();
         barFoo = helper.catComponent('bar/foo@0.0.1');
@@ -90,7 +90,7 @@ describe('foo', () => {
 });`
         );
         helper.installNpmPackage('chai', '4.1.2');
-        helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+        helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();
         localScope = helper.cloneLocalScope();
@@ -176,7 +176,7 @@ describe('foo', () => {
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.addComponentBarFoo();
       helper.addComponentUtilsIsType();
-      helper.addComponentWithOptions('utils/is-string.js', {
+      helper.addComponent('utils/is-string.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js'

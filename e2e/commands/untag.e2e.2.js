@@ -153,7 +153,7 @@ describe('bit untag command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.createFile('bar', 'foo2.js');
-      helper.addComponent('bar/foo2.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.createFile('bar', 'foo3.js');
       helper.addComponent('bar/foo3.js');
       helper.commitAllComponents();

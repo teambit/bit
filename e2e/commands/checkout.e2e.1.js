@@ -348,7 +348,7 @@ describe('bit checkout command', function () {
       helper.addComponentBarFoo();
       helper.tagAllWithoutMessage();
       helper.createFile('bar', 'foo2.js');
-      helper.addComponentWithOptions('bar', { i: 'bar/foo' });
+      helper.addComponent('bar', { i: 'bar/foo' });
       helper.tagAllWithoutMessage();
 
       helper.checkoutVersion('0.0.1', 'bar/foo');
@@ -471,7 +471,7 @@ describe('bit checkout command', function () {
       before(() => {
         helper.getClonedLocalScope(localScope);
         helper.createFile('bar', 'foo2.js');
-        helper.addComponentWithOptions('bar/foo2.js', { i: 'bar/foo' });
+        helper.addComponent('bar/foo2.js', { i: 'bar/foo' });
         scopeWithAddedFile = helper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
@@ -638,7 +638,7 @@ describe('bit checkout command', function () {
       helper.addComponentBarFoo();
 
       helper.createFile('bar', 'foo2.js');
-      helper.addComponent('bar/foo2.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
       helper.commitAllComponents('v1', '-s 0.0.1');
       helper.commitAllComponents('v2', '-s 0.0.2');

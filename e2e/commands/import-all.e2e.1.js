@@ -64,7 +64,7 @@ describe('bit import command with no ids', function () {
       helper.exportComponent('bar/foo');
       const bitMap = helper.readBitMap();
       helper.createFile('bar', 'foo2.js');
-      helper.addComponent('bar/foo2.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();

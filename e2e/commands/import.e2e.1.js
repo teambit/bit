@@ -502,13 +502,13 @@ describe('bit import', function () {
         helper.createFile('', 'level1.js');
         const level0Fixture = "import a from './level1'";
         helper.createFile('', 'level0.js', level0Fixture);
-        helper.addComponentWithOptions('level0.js', { i: 'dep/level0' });
-        helper.addComponentWithOptions('level1.js', { i: 'dep/level1' });
+        helper.addComponent('level0.js', { i: 'dep/level0' });
+        helper.addComponent('level1.js', { i: 'dep/level1' });
         const fileFixture = "import a from './level0'";
         helper.createFile('', 'file1.js', fileFixture);
         helper.createFile('', 'file2.js', fileFixture);
-        helper.addComponentWithOptions('file1.js', { i: 'comp/comp1' });
-        helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+        helper.addComponent('file1.js', { i: 'comp/comp1' });
+        helper.addComponent('file2.js', { i: 'comp/comp2' });
         helper.commitAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
@@ -633,7 +633,7 @@ describe('bit import', function () {
         helper.createFile('utils', 'is-type-internal.js', fixtures.isType);
         const isTypeMainFixture = "module.exports = require('./is-type-internal');";
         helper.createFile('utils', 'is-type-main.js', isTypeMainFixture);
-        helper.addComponentWithOptions('utils/is-type-internal.js utils/is-type-main.js', {
+        helper.addComponent('utils/is-type-internal.js utils/is-type-main.js', {
           m: 'utils/is-type-main.js',
           i: 'utils/is-type'
         });
@@ -644,7 +644,7 @@ describe('bit import', function () {
         const isStringMainFixture =
           "const isType = require('./is-type-main.js'); module.exports = require('./is-string-internal');";
         helper.createFile('utils', 'is-string-main.js', isStringMainFixture);
-        helper.addComponentWithOptions('utils/is-string-internal.js utils/is-string-main.js', {
+        helper.addComponent('utils/is-string-internal.js utils/is-string-main.js', {
           m: 'utils/is-string-main.js',
           i: 'utils/is-string'
         });
@@ -676,14 +676,14 @@ describe('bit import', function () {
       helper.addNpmPackage('lodash.isboolean', '3.0.0');
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
-      helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
 
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
-      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.addComponent('with-deps.js', { i: 'comp/with-deps' });
       helper.commitAllComponents();
       helper.exportComponent('comp/with-deps');
     });
@@ -2147,13 +2147,13 @@ console.log(barFoo.default());`;
       helper.addNpmPackage('lodash.isboolean', '3.0.0');
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
-      helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
-      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.addComponent('with-deps.js', { i: 'comp/with-deps' });
       helper.commitAllComponents();
       helper.exportComponent('comp/with-deps');
       helper.reInitLocalScope();

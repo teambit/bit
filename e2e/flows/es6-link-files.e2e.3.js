@@ -350,7 +350,7 @@ describe('es6 components with link files', function () {
         "export { default as isArray } from './is-array'; export { default as isString } from './is-string'; ";
       helper.createFile('utils', 'index.js', utilIndexFixture);
       // notice that in this case, the index.js file (link-file) is part of the component
-      helper.addComponentWithOptions('utils', { i: 'utils/misc' });
+      helper.addComponent('utils', { i: 'utils/misc' });
       const fooBarFixture =
         "import { isString, isArray } from '../utils'; export default function foo() { return isString() + ' and ' + isArray() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);

@@ -160,7 +160,7 @@ describe('bit eject command', function () {
         before(() => {
           helper.getClonedLocalScope(scopeBeforeEject);
           helper.createFile('bar', 'foo2.js');
-          helper.addComponent('bar/foo2.js');
+          helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.tagAllWithoutMessage();
           ejectOutput = helper.ejectComponentsParsed('bar/foo bar/foo2');
         });
@@ -174,7 +174,7 @@ describe('bit eject command', function () {
         before(() => {
           helper.getClonedLocalScope(scopeBeforeEject);
           helper.createFile('bar', 'foo2.js');
-          helper.addComponent('bar/foo2.js');
+          helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.tagAllWithoutMessage();
           helper.exportAllComponents(`${username}.${scopeName}`);
           helper.createFile('bar', 'foo2.js', 'console.log("v2");'); // modify bar/foo2

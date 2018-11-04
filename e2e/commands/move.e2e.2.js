@@ -66,7 +66,7 @@ describe('bit move command', function () {
       helper.createFile('bar', 'foo1.js');
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'foo1.spec.js');
-      helper.addComponentWithOptions('bar', {
+      helper.addComponent('bar', {
         i: 'bar/foo',
         t: path.normalize('bar/foo1.spec.js'),
         m: path.normalize('bar/foo1.js')

@@ -165,7 +165,7 @@ describe('track directories functionality', function () {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.createFile('utils/bar', 'foo.spec.js');
-      helper.addComponentWithOptions('utils/bar', { t: 'utils/bar/foo.spec.js' });
+      helper.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js' });
       helper.createFile('utils/bar', 'foo2.js');
       helper.runCmd('bit status');
     });
@@ -189,7 +189,7 @@ describe('track directories functionality', function () {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.createFile('utils/bar', 'foo2.js');
-      helper.addComponentWithOptions('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js' });
+      helper.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js' });
       helper.runCmd('bit status');
     });
     it('should not add the trackDir property', () => {
