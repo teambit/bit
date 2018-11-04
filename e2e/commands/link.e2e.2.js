@@ -116,7 +116,7 @@ console.log(isType());`;
       helper.createComponentBarFoo();
       helper.createFile('bar2', 'foo2.js');
       helper.addComponentBarFoo();
-      helper.addComponent('bar2/foo2.js');
+      helper.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -193,7 +193,7 @@ console.log(isType());`;
         helper.remoteScope
       }.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.createFile('test', 'is-string2.js', isStringFixture2);
-      helper.addComponent('test/is-string2.js');
+      helper.addComponent('test/is-string2.js', { i: 'test/is-string2' });
       helper.commitAllComponents();
       helper.exportAllComponents();
 
