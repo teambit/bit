@@ -1019,7 +1019,7 @@ describe('bit import', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('style', 'style.css', '.main {}');
-      helper.addComponent('style/style.css');
+      helper.addComponent('style/style.css', { i: 'style/style' });
       const fooBarFixture = "const style = require('../style/style.css');";
       helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponentBarFoo();
@@ -1099,15 +1099,15 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixtureTS = "export = isType; function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.ts', isTypeFixtureTS);
-      helper.addComponent('utils/is-type.ts');
+      helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
       const isStringFixtureTS =
         "import * as isType from './is-type'; export = isString; function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.ts', isStringFixtureTS);
-      helper.addComponent('utils/is-string.ts');
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
       const fooBarFixture =
         "import * as isString from '../utils/is-string'; export = foo; function foo() { return isString() + ' and got foo'; };";
       helper.createFile('bar', 'foo.ts', fooBarFixture);
-      helper.addComponent('bar/foo.ts');
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1634,9 +1634,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent(path.normalize('utils/is-type.js'));
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1686,9 +1686,9 @@ console.log(barFoo.default());`;
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV1);
-      helper.addComponent(path.normalize('utils/is-type.js'));
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -1726,9 +1726,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent(path.normalize('utils/is-type.js'));
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       scopeAfterExport = helper.cloneLocalScope();
@@ -2023,14 +2023,14 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile(path.join('src', 'utils'), 'is-type.js', fixtures.isType);
-      helper.addComponent('src/utils/is-type.js');
+      helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.createFile(path.join('src', 'utils'), 'is-string.js', fixtures.isString);
-      helper.addComponent('src/utils/is-string.js');
+      helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.createFile(path.join('src', 'bar'), 'foo.js', fooBarFixture);
-      helper.addComponent('src/bar/foo.js');
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
