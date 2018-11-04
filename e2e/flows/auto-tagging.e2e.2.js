@@ -124,7 +124,7 @@ describe('auto tagging functionality', function () {
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
-        helper.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js' });
+        helper.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js', i: 'utils/is-string' });
         helper.tagAllWithoutMessage(); // tests are passing at this point
         helper.exportAllComponents();
 

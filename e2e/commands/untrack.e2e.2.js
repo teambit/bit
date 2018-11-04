@@ -30,7 +30,7 @@ describe('bit untrack command', function () {
     // the rest use readBitMapWithoutVersion() which removes it from the .bit.mpa.json file.
     it('Should remove new component that was added from bitmap', () => {
       helper.createFile('bar', 'foo2.js');
-      helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo' });
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo' });
       helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMap();
       expect(Object.keys(bitMap)).to.be.ofSize(1);

@@ -54,15 +54,15 @@ describe('typescript', function () {
         helper.importCompiler('bit.envs/compilers/react-typescript');
         const isTypeFixture = "export default function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.ts', isTypeFixture);
-        helper.addComponent('utils/is-type.ts');
+        helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
         const isStringFixture =
           "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
         helper.createFile('utils', 'is-string.ts', isStringFixture);
-        helper.addComponent('utils/is-string.ts');
+        helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
         const fooBarFixture =
           "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('bar', 'foo.ts', fooBarFixture);
-        helper.addComponent('bar/foo.ts');
+        helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
         helper.commitAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
@@ -226,8 +226,8 @@ export class List extends React.Component {
         const itemFixture = '';
         helper.createFile('list', 'list.tsx', listFixture);
         helper.createFile('item', 'item.tsx', itemFixture);
-        helper.addComponent('list/list.tsx');
-        helper.addComponent('item/item.tsx');
+        helper.addComponent('list/list.tsx', { i: 'list/list' });
+        helper.addComponent('item/item.tsx', { i: 'item/item' });
       });
       it.skip('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
         const output = helper.showComponent('list/list --json');
@@ -243,16 +243,16 @@ export class List extends React.Component {
       helper.importCompiler('bit.envs/compilers/react-typescript');
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.ts', isArrayFixture);
-      helper.addComponent('utils/is-array.ts');
+      helper.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
       const isStringFixture =
         "export function isString() { return 'got is-string'; }; export function isString2() { return 'got is-string2'; };";
       helper.createFile('utils', 'is-string.ts', isStringFixture);
-      helper.addComponent('utils/is-string.ts');
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
       const fooBarFixture = `import isArray from '../utils/is-array';
 import { isString, isString2 } from '../utils/is-string';
 export default function foo() { return isArray() +  ' and ' + isString() +  ' and ' + isString2() + ' and got foo'; };`;
       helper.createFile('bar', 'foo.ts', fooBarFixture);
-      helper.addComponent('bar/foo.ts');
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -297,15 +297,15 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
         helper.writeBitJson(bitJson);
         const isTypeFixture = "export default function isType() { return 'got is-type'; };";
         helper.createFile('src/utils', 'is-type.ts', isTypeFixture);
-        helper.addComponent('src/utils/is-type.ts');
+        helper.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
         const isStringFixture =
           "import isType from 'utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
         helper.createFile('src/utils', 'is-string.ts', isStringFixture);
-        helper.addComponent('src/utils/is-string.ts');
+        helper.addComponent('src/utils/is-string.ts', { i: 'utils/is-string' });
         const fooBarFixture =
           "import isString from 'utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('src/bar', 'foo.ts', fooBarFixture);
-        helper.addComponent('src/bar/foo.ts');
+        helper.addComponent('src/bar/foo.ts', { i: 'bar/foo' });
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.runCmd('bit status');
@@ -346,15 +346,15 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
 
         const isTypeFixture = "export default function isType() { return 'got is-type'; };";
         helper.createFile('src/utils', 'is-type.ts', isTypeFixture);
-        helper.addComponent('src/utils/is-type.ts');
+        helper.addComponent('src/utils/is-type.ts', { i: 'utils/is-type' });
         const isStringFixture =
           "import isType from '@/utils/is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
         helper.createFile('src/utils', 'is-string.ts', isStringFixture);
-        helper.addComponent('src/utils/is-string.ts');
+        helper.addComponent('src/utils/is-string.ts', { i: 'utils/is-string' });
         const fooBarFixture =
           "import isString from '@/utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('src/bar', 'foo.ts', fooBarFixture);
-        helper.addComponent('src/bar/foo.ts');
+        helper.addComponent('src/bar/foo.ts', { i: 'bar/foo' });
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.runCmd('bit status');

@@ -27,17 +27,17 @@ describe('typescript components with link files', function () {
       helper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.ts', isArrayFixture);
-      helper.addComponent('utils/is-array.ts');
+      helper.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.ts', isStringFixture);
-      helper.addComponent('utils/is-string.ts');
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
       const utilFixture =
         "import isArray from './is-array'; import isString from './is-string'; export { isArray, isString }; ";
       helper.createFile('utils', 'index.ts', utilFixture);
       const fooBarFixture =
         "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createFile('bar', 'foo.ts', fooBarFixture);
-      helper.addComponent('bar/foo.ts');
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
     });
     it('should not consider that index file as a dependency', () => {
       output = helper.runCmd('bit status');
@@ -52,17 +52,17 @@ describe('typescript components with link files', function () {
       helper.importCompiler('bit.envs/compilers/react-typescript');
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.ts', isArrayFixture);
-      helper.addComponent('utils/is-array.ts');
+      helper.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.ts', isStringFixture);
-      helper.addComponent('utils/is-string.ts');
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
       const utilFixture =
         "import isArray from './is-array'; import isString from './is-string'; export { isArray, isString }; ";
       helper.createFile('utils', 'index.ts', utilFixture);
       const fooBarFixture =
         "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createFile('bar', 'foo.ts', fooBarFixture);
-      helper.addComponent('bar/foo.ts');
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -84,14 +84,14 @@ describe('typescript components with link files', function () {
       helper.importCompiler('bit.envs/compilers/react-typescript');
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.ts', isArrayFixture);
-      helper.addComponent('utils/is-array.ts');
+      helper.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.ts', isStringFixture);
-      helper.addComponent('utils/is-string.ts');
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
       const isBooleanFixture = `export function isBoolean() { return 'got is-boolean'; };
 export function isBoolean2() { return 'got is-boolean2'; };`;
       helper.createFile('utils', 'is-boolean.ts', isBooleanFixture);
-      helper.addComponent('utils/is-boolean.ts');
+      helper.addComponent('utils/is-boolean.ts', { i: 'utils/is-boolean' });
       const utilFixture = `import isArray from './is-array';
 import isString from './is-string';
 import { isBoolean, isBoolean2 } from './is-boolean';
@@ -101,7 +101,7 @@ export { isString, isBoolean, isBoolean2 }; `;
       const fooBarFixture = `import isArray, { isString, isBoolean, isBoolean2 } from '../utils';
 export default function foo() { return isArray() + ' and ' + isString() + ' and ' + isBoolean() + ' and ' + isBoolean2() + ' and got foo'; };`;
       helper.createFile('bar', 'foo.ts', fooBarFixture);
-      helper.addComponent('bar/foo.ts');
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
       helper.commitAllComponents();
       helper.exportAllComponents();

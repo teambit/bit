@@ -27,7 +27,7 @@ describe('es6 components with link files', function () {
       helper.reInitLocalScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
@@ -61,7 +61,7 @@ describe('es6 components with link files', function () {
       helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
       helper.createFile('utils/is-string', 'index.js', "export { default as isString } from './is-string';");
       helper.createFile('utils', 'index.js', "export { default as isString } from './is-string';");
-      helper.addComponent('utils/is-string/is-string.js');
+      helper.addComponent('utils/is-string/is-string.js', { i: 'is-string/is-string' });
       const fooBarFixture =
         "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
@@ -100,7 +100,7 @@ describe('es6 components with link files', function () {
       helper.createFile('utils/is-string', 'is-string.js', isStringFixture);
       helper.createFile('utils/is-string', 'index.js', "import isString from './is-string'; export { isString }; ");
       helper.createFile('utils', 'index.js', "import { isString } from './is-string'; export { isString }; ");
-      helper.addComponent('utils/is-string/is-string.js');
+      helper.addComponent('utils/is-string/is-string.js', { i: 'is-string/is-string' });
       const fooBarFixture =
         "import { isString } from '../utils'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
@@ -136,7 +136,7 @@ describe('es6 components with link files', function () {
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
@@ -194,17 +194,17 @@ describe('es6 components with link files', function () {
 
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('src/utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('src/utils/is-array.js');
+      helper.addComponent('src/utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('src/utils', 'is-string.js', isStringFixture);
-      helper.addComponent('src/utils/is-string.js');
+      helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
       utilIndexFixture =
         "import isArray from 'utils/is-array'; import isString from 'utils/is-string'; export { isArray, isString }; ";
       helper.createFile('src/utils', 'index.js', utilIndexFixture);
       const fooBarFixture =
         "import { isString } from 'utils'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src/bar', 'foo.js', fooBarFixture);
-      helper.addComponent('src/bar/foo.js');
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
 
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -237,7 +237,7 @@ describe('es6 components with link files', function () {
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
@@ -291,7 +291,7 @@ describe('es6 components with link files', function () {
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
@@ -380,13 +380,13 @@ describe('es6 components with link files', function () {
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
       const isBooleanFixture = "export default function isBoolean() { return 'got is-boolean'; };";
       helper.createFile('utils', 'is-boolean.js', isBooleanFixture);
-      helper.addComponent('utils/is-boolean.js');
+      helper.addComponent('utils/is-boolean.js', { i: 'utils/is-boolean' });
       const utilFixture = `import isArray from './is-array';
 import isString from './is-string';
 import isBoolean from './is-boolean';
@@ -419,13 +419,13 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
       const isBooleanFixture = "export default function isBoolean() { return 'got is-boolean'; };";
       helper.createFile('utils', 'is-boolean.js', isBooleanFixture);
-      helper.addComponent('utils/is-boolean.js');
+      helper.addComponent('utils/is-boolean.js', { i: 'utils/is-boolean' });
       const utilFixture = `import isArray from './is-array';
 import isString from './is-string';
 import isBoolean from './is-boolean';
@@ -458,14 +458,14 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
       const isBooleanFixture = `export function isBoolean() { return 'got is-boolean'; };
 export function isBoolean2() { return 'got is-boolean2'; };`;
       helper.createFile('utils', 'is-boolean.js', isBooleanFixture);
-      helper.addComponent('utils/is-boolean.js');
+      helper.addComponent('utils/is-boolean.js', { i: 'utils/is-boolean' });
       const fooBarFixture = `import isArray from '../utils/is-array';
 import isString from '../utils/is-string';
 import { isBoolean, isBoolean2 } from '../utils/is-boolean';
@@ -496,7 +496,7 @@ console.log(barFoo.default());`;
       helper.importCompiler();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.js', isArrayFixture);
-      helper.addComponent('utils/is-array.js');
+      helper.addComponent('utils/is-array.js', { i: 'utils/is-array' });
       const isStringFixture = "export default function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
@@ -504,7 +504,7 @@ console.log(barFoo.default());`;
 export function isBoolean2() { return 'got is-boolean2'; };
 export default function isBooleanDefault() { return 'got is-boolean-default'; }; `;
       helper.createFile('utils', 'is-boolean.js', isBooleanFixture);
-      helper.addComponent('utils/is-boolean.js');
+      helper.addComponent('utils/is-boolean.js', { i: 'utils/is-boolean' });
       const utilFixture = `import isArray from './is-array';
 import isString from './is-string';
 export default isArray;

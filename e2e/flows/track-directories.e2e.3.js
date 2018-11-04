@@ -16,7 +16,7 @@ describe('track directories functionality', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
-      helper.addComponent('utils/bar');
+      helper.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.cloneLocalScope();
     });
     it('should add the directory as trackDir in bitmap file', () => {
@@ -165,7 +165,7 @@ describe('track directories functionality', function () {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.createFile('utils/bar', 'foo.spec.js');
-      helper.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js' });
+      helper.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
       helper.createFile('utils/bar', 'foo2.js');
       helper.runCmd('bit status');
     });
@@ -189,7 +189,7 @@ describe('track directories functionality', function () {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.createFile('utils/bar', 'foo2.js');
-      helper.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js' });
+      helper.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
       helper.runCmd('bit status');
     });
     it('should not add the trackDir property', () => {

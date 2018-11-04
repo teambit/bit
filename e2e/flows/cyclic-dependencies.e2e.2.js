@@ -20,8 +20,8 @@ describe('cyclic dependencies', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('comp', 'a.js', fixtureA);
       helper.createFile('comp', 'b.js', fixtureB);
-      helper.addComponent('comp/a.js');
-      helper.addComponent('comp/b.js');
+      helper.addComponent('comp/a.js', { i: 'comp/a' });
+      helper.addComponent('comp/b.js', { i: 'comp/b' });
       output = helper.tagAllWithoutMessage();
     });
     it('should be able to tag both with no errors', () => {

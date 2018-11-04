@@ -38,8 +38,8 @@ describe('support vue files', function () {
       it('should display that component as a new component', () => {
         const output = helper.runCmd('bit s');
         expect(output.includes('new components')).to.be.true;
-        expect(output.includes(`${helper.localScope}/ui-autocomplete`)).to.be.true;
-        expect(output.includes(`${helper.localScope}/ui-autocomplete-suggestion`)).to.be.true;
+        expect(output.includes('ui-autocomplete')).to.be.true;
+        expect(output.includes('ui-autocomplete-suggestion')).to.be.true;
       });
       it('should not display that component as modified', () => {
         const output = helper.runCmd('bit s');

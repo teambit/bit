@@ -26,9 +26,9 @@ describe('custom module resolutions', function () {
         "const isString = require('utils/is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src/utils', 'is-string.js', isStringFixture);
       helper.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.addComponent('src/utils/is-type.js');
-      helper.addComponent('src/utils/is-string.js');
-      helper.addComponent('src/bar/foo.js');
+      helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
+      helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.runCmd('bit status');
@@ -91,7 +91,7 @@ describe('custom module resolutions', function () {
         "const isString = require('utils/is-string');\n module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src/utils', 'is-string.js', isStringFixture);
       helper.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.addComponent('src/utils/is-type.js');
+      helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.addComponent('src/bar/foo.js src/utils/is-string.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
     });
     it('bit status should not warn about missing packages', () => {
@@ -147,9 +147,9 @@ describe('custom module resolutions', function () {
         "const isString = require('@/utils/is-string'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src/utils', 'is-string.js', isStringFixture);
       helper.createFile('src/bar', 'foo.js', barFooFixture);
-      helper.addComponent('src/utils/is-type.js');
-      helper.addComponent('src/utils/is-string.js');
-      helper.addComponent('src/bar/foo.js');
+      helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
+      helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.runCmd('bit status');
