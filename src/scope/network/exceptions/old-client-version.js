@@ -8,7 +8,6 @@ export default class OldClientVersion extends AbstractError {
   constructor(message: string) {
     super();
     this.code = 133;
-    this.serverVersion;
     this.message = message;
   }
 }
