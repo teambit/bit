@@ -71,7 +71,7 @@ describe('bit status command', function () {
       helper.reInitLocalScope();
       helper.createFile();
       helper.createFile('bar', 'foo2.js', 'var foo = require("./foo.js")');
-      helper.addComponent('bar/foo2.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
     });
     it('Should show missing dependencies', () => {
       output = helper.runCmd('bit status');

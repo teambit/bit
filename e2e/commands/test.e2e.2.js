@@ -52,7 +52,7 @@ describe('bit test command', function () {
       helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
-      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
     });
     it('should indicate that testes are passed', () => {
       const output = helper.testComponent('utils/is-type');
@@ -77,7 +77,7 @@ describe('bit test command', function () {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(false));
-      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
     });
     it('should indicate that tests are failed', () => {
       let output;
@@ -110,7 +110,7 @@ describe('bit test command', function () {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', "throw new Error('exception occurred with this spec file');");
-      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+      helper.addComponent('utils/is-type.js', { i: 'utils/is-type', t: 'utils/is-type.spec.js' });
     });
     it('should print the exception message when running bit test --verbose', () => {
       let output;
@@ -185,6 +185,7 @@ describe('bit test command', function () {
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.createFile('utils', 'is-type-before-fail.spec.js', isTypeBeforeFailSpecFixture);
       helper.addComponent('utils/is-type.js', {
+        i: 'utils/is-type',
         t: 'utils/is-type.spec.js,utils/is-type-before-fail.spec.js'
       });
       try {
@@ -222,7 +223,7 @@ describe('bit test command', function () {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
-      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
       helper.installNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
 
@@ -312,7 +313,7 @@ describe('bit test command', function () {
       helper.installNpmPackage('chai', '4.1.2');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', testWithEs6);
-      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js');
+      helper.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
     });
     it('Should not be able to test without building first', () => {
       let output;
@@ -337,7 +338,7 @@ describe('bit test command', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.createFile('bar', 'foo.js');
-      helper.addComponent(path.join('bar', 'foo.js'));
+      helper.addComponentBarFoo();
     });
     it('should return not tester message when running test on all components', () => {
       const output = helper.testComponent();
@@ -354,7 +355,7 @@ describe('bit test command', function () {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
-      helper.addComponent('utils/is-type.js', { t: 'utils/is-type.spec.js' });
+      helper.addComponent('utils/is-type.js', { t: 'utils/is-type.spec.js', i: 'utils/is-type' });
       helper.installNpmPackage('chai', '4.1.2');
       helper.commitComponent('utils/is-type');
 
@@ -371,7 +372,7 @@ describe('bit test command', function () {
       // Set authored component
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', fixtures.passTest);
-      helper.addComponent('bar/foo.js', { t: 'bar/foo.spec.js' });
+      helper.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
       helper.commitComponentBarFoo();
     });
     it('should show there is nothing to test', () => {
