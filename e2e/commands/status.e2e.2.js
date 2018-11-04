@@ -84,7 +84,7 @@ describe('bit status command', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.createFile('bar', 'foo.js', 'var React = require("react")');
-      helper.addComponent('bar/foo.js');
+      helper.addComponentBarFoo();
     });
     it('Should show missing package dependencies', () => {
       output = helper.runCmd('bit status');
@@ -305,11 +305,11 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       output = helper.runCmd('bit status');
     });
@@ -331,7 +331,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitComponent('utils/is-type');
       helper.exportComponent('utils/is-type');
       helper.reInitLocalScope();
@@ -341,7 +341,7 @@ describe('bit status command', function () {
       const isStringFixture =
         "import isType from '../components/utils/is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       output = helper.runCmd('bit status');
     });
     it('should not display missing files for the imported component', () => {
@@ -356,7 +356,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitComponent('utils/is-type');
 
       const isStringInternalFixture =

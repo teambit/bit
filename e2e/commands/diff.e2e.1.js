@@ -99,9 +99,9 @@ describe('bit diff command', function () {
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
 
       // modify only bar/foo and utils/is-type, not utils/is-string
@@ -322,7 +322,7 @@ describe('bit diff command', function () {
       helper.reInitLocalScope();
       helper.createFile('utils', 'is-string.js');
       helper.createComponentBarFoo('import isString from "../utils/is-string"');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.addComponentBarFoo();
       helper.tagAllWithoutMessage();
       helper.runCmd('bit move utils utility');

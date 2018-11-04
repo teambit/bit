@@ -39,7 +39,7 @@ describe('bit test command', function () {
     before(() => {
       helper.getClonedLocalScope(clonedScopePath);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
     });
     it('should indicate that there are no tests', () => {
       const output = helper.testComponent('utils/is-type');

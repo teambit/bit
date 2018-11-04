@@ -76,8 +76,8 @@ describe('cyclic dependencies', function () {
       // isString => isType
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-type.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsType();
+      helper.addComponentUtilsIsString();
       helper.tagAllWithoutMessage();
 
       // A1 => A2 => A3 (leaf)

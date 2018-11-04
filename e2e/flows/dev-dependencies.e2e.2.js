@@ -25,9 +25,9 @@ describe('dev-dependencies functionality', function () {
       let barFoo;
       before(() => {
         helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooES6);
         helper.addComponentBarFoo();
 
@@ -71,9 +71,9 @@ describe('dev-dependencies functionality', function () {
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.getClonedLocalScope(clonedScope);
         helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo('console.log("got foo")');
         helper.addComponentBarFoo();
 
@@ -174,8 +174,8 @@ describe('foo', () => {
       helper.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.createFile('utils', 'is-string.js', '');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('bar/foo.js');
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentBarFoo();
+      helper.addComponentUtilsIsType();
       helper.addComponentWithOptions('utils/is-string.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string',

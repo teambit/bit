@@ -555,6 +555,14 @@ export default class Helper {
     return this.runCmd('bit add bar/foo.js --id bar/foo');
   }
 
+  addComponentUtilsIsType() {
+    return this.runCmd('bit add utils/is-type.js --id utils/is-type');
+  }
+
+  addComponentUtilsIsString() {
+    return this.runCmd('bit add utils/is-string.js --id utils/is-string');
+  }
+
   commitComponentBarFoo() {
     return this.commitComponent('bar/foo');
   }

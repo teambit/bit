@@ -59,11 +59,11 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       const isStringFixture = "const a = require('./is-type');";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       scopeBeforeRemoving = helper.cloneLocalScope();
     });
@@ -168,11 +168,11 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
     });
@@ -214,7 +214,7 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.createFile(
         'utils',
@@ -257,13 +257,13 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
     });
     it('should not remove component version when component is modified', () => {
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.createFile(
         'utils',
@@ -311,7 +311,7 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       helper.createFile('copy', 'is-type.js', isTypeFixture);
       helper.addComponent('copy/is-type.js');
@@ -319,7 +319,7 @@ describe('bit remove command', function () {
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.createFile(
         'utils',
@@ -368,11 +368,11 @@ describe('bit remove command', function () {
       helper.addRemoteScope(helper2.remoteScopePath, helper.remoteScopePath);
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       let isStringFixture = "const a = require('./is-type');";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
 
       const isString2Fixture = "const a = require('./is-type');";
       helper.createFile('utils', 'is-string2.js', isString2Fixture);

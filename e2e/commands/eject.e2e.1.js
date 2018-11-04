@@ -236,9 +236,9 @@ describe('bit eject command', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.tagAllWithoutMessage();

@@ -570,7 +570,7 @@ describe('bit tag command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -581,7 +581,7 @@ describe('bit tag command', function () {
       const isStringFixture =
         "const isType = require('../components/utils/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       try {
         helper.commitAllComponents();
       } catch (err) {
@@ -740,11 +740,11 @@ describe('bit tag command', function () {
       helper.reInitLocalScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
 
       const mainFileFixture =
         "const isString = require('./utils/is-string.js'); const second = require('./second.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
@@ -775,11 +775,11 @@ describe('bit tag command', function () {
       helper.reInitLocalScope();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
 
       const mainFileFixture =
         "const isString = require('./utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
@@ -863,11 +863,11 @@ describe('bit tag command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
 
       helper.commitAllComponents();
       helper.exportAllComponents();

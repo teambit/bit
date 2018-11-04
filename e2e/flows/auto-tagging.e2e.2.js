@@ -32,9 +32,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.commitAllComponents();
 
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -78,9 +78,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.commitAllComponents();
         helper.exportAllComponents();
 
@@ -120,7 +120,7 @@ describe('auto tagging functionality', function () {
         helper.importTester('bit.envs/testers/mocha@0.0.12');
         helper.installNpmPackage('chai', '4.1.2');
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
@@ -206,9 +206,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.commitAllComponents();
@@ -268,9 +268,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.commitAllComponents();
