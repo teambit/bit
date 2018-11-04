@@ -363,7 +363,7 @@ describe('bit export command', function () {
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-string1.js', fixtures.isString);
       helper.addComponentUtilsIsType();
-      helper.addComponent('utils/is-string1.js');
+      helper.addComponent('utils/is-string1.js', { i: 'utils/is-string1' });
       helper.tagAllWithoutMessage('', '0.0.1');
       helper.exportAllComponents();
 
@@ -379,7 +379,7 @@ describe('bit export command', function () {
         'is-string2.js',
         `const isType = require('${isType}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`
       );
-      helper.addComponent('utils/is-string2.js');
+      helper.addComponent('utils/is-string2.js', { i: 'utils/is-string2' });
       const bitShowOutput = helper.showComponentParsed('utils/is-string2');
       expect(bitShowOutput.dependencies[0].id).to.have.string('utils/is-type@0.0.2');
       helper.commitComponent('utils/is-string2');

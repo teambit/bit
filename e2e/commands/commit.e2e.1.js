@@ -145,11 +145,11 @@ describe('bit tag command', function () {
       it('Should print same output for flaged tag and non flaged tag', () => {
         helper.reInitLocalScope();
         helper.createFile('components', 'major.js');
-        helper.addComponent('components/major.js');
+        helper.addComponent('components/major.js', { i: 'components/major' });
         const majorOutput = helper.commitComponent('components/major', 'message', '--major');
         helper.reInitLocalScope();
         helper.createFile('components', 'major.js');
-        helper.addComponent('components/major.js');
+        helper.addComponent('components/major.js', { i: 'components/major' });
         const nonFlagedCommit = helper.commitComponent('components/major');
         expect(majorOutput).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
         expect(nonFlagedCommit).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
@@ -220,7 +220,8 @@ describe('bit tag command', function () {
       it('Should set the exact version when specified on new component', () => {
         helper.createFile('components', 'c.js');
         helper.createFile('components', 'd.js');
-        helper.addComponent('components/c.js components/d.js');
+        helper.addComponent('components/c.js', { i: 'components/c' });
+        helper.addComponent('components/d.js', { i: 'components/d' });
         output = helper.commitAllComponents('message', '-f', '5.12.10');
         expect(output).to.have.string('components/c@5.12.10');
         expect(output).to.have.string('components/d@5.12.10');
@@ -624,7 +625,7 @@ describe('bit tag command', function () {
         helper.createFile('src', 'untracked2.js');
 
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
-        helper.addComponent('src/b.js');
+        helper.addComponent('src/b.js', { i: 'src/b' });
 
         const commitAll = () => helper.commitAllComponents();
         try {
@@ -679,7 +680,7 @@ describe('bit tag command', function () {
         helper.createFile('src', 'untracked2.js');
 
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
-        helper.addComponent('src/b.js');
+        helper.addComponent('src/b.js', { i: 'src/b' });
 
         const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore-unresolved-dependencies');
         try {
@@ -710,7 +711,7 @@ describe('bit tag command', function () {
         helper.createFile('src', 'untracked2.js');
 
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
-        helper.addComponent('src/b.js');
+        helper.addComponent('src/b.js', { i: 'src/b' });
 
         const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore-unresolved-dependencies');
         try {

@@ -29,7 +29,7 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.createFile('global', 'simple.js');
-      helper.addComponent(path.normalize('global/simple.js'));
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
 
