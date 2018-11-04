@@ -10,23 +10,23 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bit_src&url=https://bitsrc.io&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Website](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bitsrc.io/) • [Examples](https://bitsrc.io/bit/movie-app)
+[Component Hub](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bitsrc.io/) • [Examples](https://bitsrc.io/bit/movie-app)
 
-## About
+## About  
 
 **Bit works with Git and NPM to improve the workflow around code-sharing**.
 
-It detects and isolates components from existing source code.  
+It **detects and isolates components** in existing projects.  
 
-It organizes components in visual catalogs for your team to choose from.
+It **makes components discoverable** in a hub with visual features, docs, test results and more.
 
-It makes all your components available to discover, develop and sync from any project in your codebase.  
+It makes components available to **install with package managers**.
+
+You can import and develop component source code from any project, **make changes** and **sync updates**.
 
 While code sharing speeds your development, it can also generate a lot of overhead when you have to split your repositories and work hard to make changes between them.
 
-Bit eliminates this overhead by making it painless to share reusable code, collaborate on shared components and sync changes from multiple repositories and projects.   
-
-Any team member can discover, use and develop components from any project, suggest updates and stay in sync.
+Bit eliminates this overhead by making it painless to share and reuse code at scale. Any team member can share, discover, use and develop components in any project, suggest updates and stay in sync.
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.
 
