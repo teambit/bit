@@ -7,7 +7,7 @@ const setServerVersion = (serverVersion) => {
   constants.BIT_VERSION = serverVersion;
 };
 
-describe.only('check-version-compatibility', () => {
+describe('check-version-compatibility', () => {
   describe('checkVersionCompatibilityOnTheServer', () => {
     it('should not throw any error when the major versions of the server and the client are the same', () => {
       setServerVersion('14.0.0');
