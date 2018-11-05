@@ -40,10 +40,10 @@ describe('bit export command', function () {
       createFile('bar', 'foo2');
       createFile('baz', 'foo1');
       createFile('baz', 'foo2');
-      helper.runCmd('bit add bar/foo1.js');
-      helper.runCmd('bit add bar/foo2.js');
-      helper.runCmd('bit add baz/foo1.js');
-      helper.runCmd('bit add baz/foo2.js');
+      helper.addComponent('bar/foo1.js', { i: 'bar/foo1' });
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
+      helper.addComponent('baz/foo1.js', { i: 'baz/foo1' });
+      helper.addComponent('baz/foo2.js', { i: 'baz/foo2' });
       helper.commitAllComponents();
       helper.exportAllComponents();
     });
@@ -82,8 +82,8 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       createFile('bar', 'foo1');
       createFile('bar', 'foo2');
-      helper.runCmd('bit add bar/foo1.js');
-      helper.runCmd('bit add bar/foo2.js');
+      helper.addComponent('bit add bar/foo1.js', { i: 'bar/foo1' });
+      helper.addComponent('bit add bar/foo2.js', { i: 'bar/foo2' });
       helper.commitAllComponents();
       helper.exportComponent('bar/foo1 bar/foo2');
     });

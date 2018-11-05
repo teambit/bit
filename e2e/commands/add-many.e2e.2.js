@@ -90,7 +90,7 @@ describe('bit add many programmatically', function () {
     });
     it('should add a component with excluded test file', function () {
       expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('id');
-      expect(nodeStartOutputObj[2].addedComponents[0].id).to.contains('/i');
+      expect(nodeStartOutputObj[2].addedComponents[0].id).to.contains('i');
       expect(nodeStartOutputObj[2].addedComponents[0]).to.have.property('files');
       expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.array();
       expect(nodeStartOutputObj[2].addedComponents[0].files).to.be.ofSize(1);
