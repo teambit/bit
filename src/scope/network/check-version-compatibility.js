@@ -7,12 +7,12 @@ import { OldClientVersion } from './exceptions';
 
 const createMajorMessage = (remoteVersion, currentVersion) =>
   chalk.red(
-    `Fatal: There is a mismatch between the remote scope version - "${remoteVersion}" and your bit version - "${currentVersion}", please update\n`
+    `Fatal: There is a mismatch between the remote server version - "${remoteVersion}" and your bit version - "${currentVersion}", please update\n`
   );
 
 const createMinorMessage = (remoteVersion, currentVersion) =>
   chalk.yellow(
-    `Warning: There is a mismatch between the remote scope version - "${remoteVersion}" and your bit version - "${currentVersion}", please update\n`
+    `Warning: There is a mismatch between the remote server version - "${remoteVersion}" and your bit version - "${currentVersion}", please update\n`
   );
 
 /**
