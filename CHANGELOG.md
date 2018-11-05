@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix dev-dependency that requires prod-dependency to include the dependency in the flattenedDevDependencies array
+
 ## [13.0.5-dev.27 - 2018-10-31]
 
 - fix import of components with circular dependencies
