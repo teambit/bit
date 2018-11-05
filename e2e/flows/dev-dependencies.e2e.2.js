@@ -196,4 +196,27 @@ describe('foo', () => {
       expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
   });
+  describe('dev-dependency that requires prod-dependency', () => {
+    let barFoo;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
+      helper.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.addComponent('bar -i bar/foo -m bar/foo.js -t bar/foo.spec.js');
+      helper.addComponentWithOptions('utils/is-string.js', { i: 'utils/is-string' });
+      helper.addComponentWithOptions('utils/is-type.js', { i: 'utils/is-type' });
+      helper.tagAllWithoutMessage();
+      barFoo = helper.catComponent('bar/foo@latest');
+
+      // as an intermediate step, make sure barFoo has is-string as a dev dependency only
+      expect(barFoo.dependencies).to.have.lengthOf(0);
+      expect(barFoo.devDependencies).to.have.lengthOf(1);
+      expect(barFoo.devDependencies[0].id.name).to.equal('utils/is-string');
+    });
+    it('should include the prod dependencies inside flattenedDevDependencies', () => {
+      expect(barFoo.flattenedDevDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
+    });
+  });
 });

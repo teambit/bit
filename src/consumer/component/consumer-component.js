@@ -755,7 +755,7 @@ export default class Component {
       if (!keep) await isolatedEnvironment.destroy();
       return results;
     } catch (e) {
-      await isolatedEnvironment.destroy();
+      if (!keep) await isolatedEnvironment.destroy();
       return Promise.reject(e);
     }
   }
