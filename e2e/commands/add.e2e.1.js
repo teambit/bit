@@ -77,17 +77,14 @@ describe('bit add command', function () {
       helper.importComponent('bar/foo');
     });
     it('Should throw error when trying to add files to imported component without specifying id', () => {
-      const addCmd = () => helper.addComponent('.', path.join(helper.localScopePath, 'components', 'bar', 'foo'));
+      const addCmd = () =>
+        helper.addComponent('.', undefined, path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       const error = new MissingComponentIdForImportedComponent(`${helper.remoteScope}/bar/foo`);
       helper.expectToThrow(addCmd, error);
     });
     it('Should throw error when trying to add files to imported component without specifying correct id', () => {
       const addCmd = () =>
-        helper.addComponent(
-          '.',
-          { i: 'test/test' },
-          path.join(helper.localScopePath, 'components', 'bar', 'foo')
-        );
+        helper.addComponent('.', { i: 'test/test' }, path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       const error = new IncorrectIdForImportedComponent(
         `${helper.remoteScope}/bar/foo`,
         'test/test',
@@ -101,11 +98,7 @@ describe('bit add command', function () {
       helper.expectToThrow(addFunc, error);
     });
     it('Should not add files and dists to imported component', () => {
-      helper.addComponent(
-        '.',
-        { i: 'bar/foo' },
-        path.join(helper.localScopePath, 'components', 'bar', 'foo')
-      );
+      helper.addComponent('.', { i: 'bar/foo' }, path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       const expectTestFile = { relativePath: 'foo.js', test: false, name: 'foo.js' };
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
@@ -117,11 +110,7 @@ describe('bit add command', function () {
     });
     it('Should only add new files to imported component', () => {
       helper.createFile(path.join('components', 'bar', 'foo', 'testDir'), 'newFile.js', 'console.log("test");');
-      helper.addComponent(
-        '.',
-        { i: 'bar/foo' },
-        path.join(helper.localScopePath, 'components', 'bar', 'foo')
-      );
+      helper.addComponent('.', { i: 'bar/foo' }, path.join(helper.localScopePath, 'components', 'bar', 'foo'));
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@0.0.1`);
       const component = bitMap[`${helper.remoteScope}/bar/foo@0.0.1`];

@@ -19,9 +19,9 @@ describe('support vue files', function () {
     });
     describe('add vue files', () => {
       before(() => {
-        helper.addComponent(path.normalize('directives/*.js'));
-        helper.addComponent(path.normalize('styles/*'));
-        helper.addComponent(path.normalize('UiAutocomplete.vue'));
+        helper.addComponent('directives/*.js');
+        helper.addComponent('styles/*');
+        helper.addComponent('UiAutocomplete.vue');
         helper.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
