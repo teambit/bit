@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- do not delete isolated environment when running ci-update with keep flag and it throws exception
+
 ## [13.0.5-dev.27 - 2018-10-31]
 
 - fix import of components with circular dependencies
