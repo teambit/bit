@@ -65,7 +65,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'minor.js');
         helper.createFile('components', 'major.js');
         helper.createFile('components', 'exact.js');
-        helper.addComponent('components/*.js');
+        helper.addComponent('components/*.js', { n: 'components' });
         helper.commitAllComponents();
       });
       it('Should not allow invalid semver', () => {
@@ -118,7 +118,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'dependency.js');
         const fixture = "import foo from './dependency'";
         helper.createFile('components', 'dependent.js', fixture);
-        helper.addComponent('components/dependency.js components/dependent.js', { i: 'components/dependency' });
+        helper.addComponent('components/dependency.js components/dependent.js', { n: 'components' });
         helper.commitAllComponents();
         helper.commitComponent('components/dependency', 'message', '-f --major');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
@@ -162,7 +162,7 @@ describe('bit tag command', function () {
         helper.reInitLocalScope();
         helper.createFile('components', 'a.js');
         helper.createFile('components', 'b.js');
-        helper.addComponent('components/*.js');
+        helper.addComponent('components/*.js', { n: 'components' });
       });
       it('Should not allow invalid semver', () => {
         const version = 'invalidVersion';

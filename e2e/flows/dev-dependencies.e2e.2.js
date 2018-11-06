@@ -204,9 +204,9 @@ describe('foo', () => {
       helper.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('bar -i bar/foo -m bar/foo.js -t bar/foo.spec.js');
-      helper.addComponentWithOptions('utils/is-string.js', { i: 'utils/is-string' });
-      helper.addComponentWithOptions('utils/is-type.js', { i: 'utils/is-type' });
+      helper.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
+      helper.addComponentUtilsIsString();
+      helper.addComponentUtilsIsType();
       helper.tagAllWithoutMessage();
       barFoo = helper.catComponent('bar/foo@latest');
 

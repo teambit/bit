@@ -315,7 +315,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'c.js', 'require("./d")');
       helper.createFile('bar', 'd.js', 'require("./e")');
       helper.createFile('bar', 'e.js', 'console.log("I am E v1")');
-      helper.addComponent('bar/*.js');
+      helper.addComponent('bar/*.js', { n: 'bar' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
 
@@ -394,7 +394,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'a.js', 'require("./b")');
       helper.createFile('bar', 'b.js', 'require("./c")');
       helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
-      helper.addComponent('bar/*.js');
+      helper.addComponent('bar/*.js', { n: 'bar' });
       helper.tagAllWithoutMessage();
       helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
     });
@@ -447,7 +447,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'a.js', 'require("./b"); require("./c");');
       helper.createFile('bar', 'b.js', 'require("./c")');
       helper.createFile('bar', 'c.js', 'console.log("I am C v1")');
-      helper.addComponent('bar/*.js');
+      helper.addComponent('bar/*.js', { n: 'bar' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
 
