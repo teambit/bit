@@ -10,7 +10,8 @@ import {
   UnexpectedNetworkError,
   AuthenticationFailed,
   PermissionDenied,
-  SSHInvalidResponse
+  SSHInvalidResponse,
+  OldClientVersion
 } from '../exceptions';
 import { BitIds, BitId } from '../../../bit-id';
 import { toBase64, packCommand, buildCommandMessage, unpackCommand } from '../../../utils';
@@ -27,6 +28,7 @@ import { Analytics } from '../../../analytics/analytics';
 import { getSync } from '../../../api/consumer/lib/global-config';
 import GeneralError from '../../../error/general-error';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
+import CustomError from '../../../error/custom-error';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
@@ -156,6 +158,10 @@ export default class SSH implements Network {
         return new PermissionDenied(`${this.host}:${this.path}`);
       case 131:
         return new MergeConflictOnRemote(parsedError && parsedError.idsAndVersions ? parsedError.idsAndVersions : []);
+      case 132:
+        return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
+      case 133:
+        return new OldClientVersion(parsedError && parsedError.message ? parsedError.message : err);
     }
   }
 

@@ -4,6 +4,7 @@ import { fromBase64, buildCommandMessage, packCommand, unpackCommand } from '../
 import { put } from '../../../api/scope';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
+import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 
 export default class Put extends Command {
   name = '_put <path> <args>';
@@ -15,6 +16,7 @@ export default class Put extends Command {
   action([path, args]: [string, string]): Promise<any> {
     let data = '';
     const { headers } = unpackCommand(args);
+    checkVersionCompatibilityOnTheServer(headers.version);
     return new Promise((resolve, reject) => {
       process.stdin
         .on('data', (chunk) => {

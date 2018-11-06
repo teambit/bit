@@ -46,7 +46,7 @@ type PrepareLinkFileParams = {
   linkPath: string,
   relativePathInDependency: PathOsBased,
   relativePath: Object,
-  depRootDir: ?PathOsBased,
+  depRootDir: ?PathOsBasedAbsolute,
   isNpmLink: boolean
 };
 
@@ -150,13 +150,23 @@ function _getLinksForOneDependencyFile({
     ? consumer.bitMap.getComponent(dependencyId)
     : undefined;
 
-  const depRootDir: ?PathOsBased =
-    depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+  const getRelativeDepRootDir = (): ?PathOsBased => {
+    if (!depComponentMap) return undefined;
+    return depComponentMap.rootDir || '.';
+  };
+
+  const getDepRootDir = (): ?PathOsBasedAbsolute => {
+    const rootDir = getRelativeDepRootDir();
+    return rootDir ? path.join(consumerPath, rootDir) : undefined;
+  };
+  const getDepRootDirDist = (): ?PathOsBasedAbsolute => {
+    const rootDir = getRelativeDepRootDir();
+    return rootDir ? dependencyComponent.dists.getDistDirForConsumer(consumer, rootDir) : undefined;
+  };
+  const depRootDir: ?PathOsBasedAbsolute = getDepRootDir();
   const isNpmLink = createNpmLinkFiles || !component.dependenciesSavedAsComponents;
-  const depRootDirDist =
-    depComponentMap && depComponentMap.rootDir
-      ? dependencyComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
-      : undefined;
+  const depRootDirDist = getDepRootDirDist();
+
   const isCustomResolvedWithDistInside =
     relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist;
 

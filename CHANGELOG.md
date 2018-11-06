@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - shorten the generated component ID to the minimum possible
+
+## [13.0.5-dev.28 - 2018-11-06]
+
 - fix dev-dependency that requires prod-dependency to include the dependency in the flattenedDevDependencies array
 - do not delete isolated environment when running ci-update with keep flag and it throws exception
+- throw an exception from the server if a client has an older major version
 
 ## [13.0.5-dev.27 - 2018-10-31]
 
