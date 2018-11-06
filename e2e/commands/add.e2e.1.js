@@ -16,6 +16,7 @@ import {
 import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingMainFile } from '../../src/consumer/bit-map/exceptions';
+import AddTestsWithoutId from '../../src/cli/commands/exceptions/add-tests-without-id';
 
 chai.use(require('chai-fs'));
 
@@ -211,11 +212,8 @@ describe('bit add command', function () {
       helper.addComponent(normalizedPath);
       const specNormalizedPath = path.normalize('bar/foo2.spec.js');
       const addCmd = () => helper.addComponent(` -t ${specNormalizedPath}`);
-      expect(addCmd).to.throw(
-        `Command failed: ${
-          helper.bitBin
-        } add  -t ${specNormalizedPath}\nplease specify a component ID to add test files to an existing component. \nexample: bit add --tests [test_file_path] --id [component_id]\n`
-      );
+      const error = new AddTestsWithoutId(specNormalizedPath);
+      helper.expectToThrow(addCmd, error);
     });
 
     it('Should add component to bitmap with folder as default namespace', () => {
@@ -294,7 +292,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo2.js');
       helper.createFile('bar', 'foo2.spec.js');
       helper.createFile('bar/x', 'foo1.js');
-      helper.addComponent('../foo2.js -t ../foo2.spec.js', barPath);
+      helper.addComponent('../foo2.js', { t: '../foo2.spec.js' }, barPath);
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('foo2');
 

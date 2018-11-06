@@ -146,7 +146,7 @@ describe('track directories functionality', function () {
       helper.createFile('utils/foo', 'index.js');
       helper.createFile('utils/bar', 'index.js');
       helper.createFile('utils/baz', 'index.js');
-      helper.addComponent('utils/*');
+      helper.addComponent('utils/*', { n: 'utils' });
     });
     it('should add trackDir property for each one of the directories', () => {
       const bitMap = helper.readBitMap();
