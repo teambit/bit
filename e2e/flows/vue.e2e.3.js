@@ -76,8 +76,8 @@ describe('support vue files', function () {
         const output = helper.runCmd('bit s');
         expect(output.includes('new components')).to.be.true;
         expect(output.includes('stylus-example')).to.be.true;
-        expect(output.includes('stylus/main')).to.be.true;
-        expect(output.includes('stylus/second')).to.be.true;
+        expect(output.includes('main')).to.be.true;
+        expect(output.includes('second')).to.be.true;
       });
       it('should not display that component as modified', () => {
         const output = helper.runCmd('bit s');
