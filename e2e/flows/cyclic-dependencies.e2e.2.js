@@ -91,7 +91,7 @@ describe('cyclic dependencies', function () {
       helper.createFile('comp', 'B2.js', "const B3 = require('./B3'); const A1 = require ('./A1');");
       helper.createFile('comp', 'B3.js', "const B4 = require('./B4')");
       helper.createFile('comp', 'B4.js', "const isString = require('../utils/is-string')");
-      helper.addComponent('comp/*.js');
+      helper.addComponent('comp/*.js', { n: 'comp' });
       output = helper.tagAllWithoutMessage();
     });
     it('should be able to tag with no errors', () => {
