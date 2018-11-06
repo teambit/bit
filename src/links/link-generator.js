@@ -167,16 +167,21 @@ function _getLinksForOneDependencyFile({
   const isNpmLink = createNpmLinkFiles || !component.dependenciesSavedAsComponents;
   const depRootDirDist = getDepRootDirDist();
 
-  const isCustomResolvedWithDistInside =
-    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist;
+  const isCustomResolvedWithDistInside = Boolean(
+    relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist
+  );
+  const isCustomResolvedWithDistAndNpmLink = Boolean(
+    relativePath.isCustomResolveUsed && consumer.shouldDistsBeInsideTheComponent() && hasDist && isNpmLink
+  );
 
   const prepareLinkFileParams: PrepareLinkFileParams = {
     componentId: dependencyId,
     mainFile,
     linkPath,
-    relativePathInDependency: isCustomResolvedWithDistInside
-      ? `${getWithoutExt(relativePathInDependency)}.${relativeDistExtInDependency}`
-      : relativePathInDependency,
+    relativePathInDependency:
+      isCustomResolvedWithDistInside || isCustomResolvedWithDistAndNpmLink
+        ? `${getWithoutExt(relativePathInDependency)}.${relativeDistExtInDependency}`
+        : relativePathInDependency,
     relativePath,
     depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir,
     isNpmLink
