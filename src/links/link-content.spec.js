@@ -1,18 +1,13 @@
 import { expect } from 'chai';
-import getLinkContent from './link-content';
+import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 
 describe('getLinkContent', () => {
   it('should generate content for simple js file', () => {
-    const result = getLinkContent('my-path.js');
+    const result = getLinkToFileContent('my-path.js');
     expect(result).to.equal("module.exports = require('./my-path');");
   });
   it('should generate correct content for npm vue package without .vue extension', () => {
-    const result = getLinkContent(
-      '../../../src/pages/my-page.vue',
-      undefined,
-      true,
-      '@bit/david.scope.components.vue-page'
-    );
+    const result = getLinkToPackageContent('../../../src/pages/my-page.vue', '@bit/david.scope.components.vue-page');
     expect(result).to.have.string("module.exports = require('@bit/david.scope.components.vue-page');");
     expect(result).to.not.have.string("module.exports = require('@bit/david.scope.components.vue-page.vue');");
   });
@@ -30,7 +25,7 @@ describe('getLinkContent', () => {
             linkFile: { isDefault: true, name: 'isString' }
           }
         ];
-        linkContent = getLinkContent('is-string.js', importSpecifier);
+        linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
       it('the generated link should export non-default', () => {
         expect(linkContent).to.have.string(exportNonDefaultForm);
@@ -50,7 +45,7 @@ describe('getLinkContent', () => {
             linkFile: { isDefault: true, name: 'isString' }
           }
         ];
-        linkContent = getLinkContent('is-string.js', importSpecifier);
+        linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
       it('the generated link should export default', () => {
         expect(linkContent).to.have.string(exportDefaultForm);
@@ -70,7 +65,7 @@ describe('getLinkContent', () => {
             linkFile: { isDefault: false, name: 'isString' }
           }
         ];
-        linkContent = getLinkContent('is-string.js', importSpecifier);
+        linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
       it('the generated link should export non-default', () => {
         expect(linkContent).to.have.string(exportNonDefaultForm);
@@ -90,7 +85,7 @@ describe('getLinkContent', () => {
             linkFile: { isDefault: false, name: 'isString' }
           }
         ];
-        linkContent = getLinkContent('is-string.js', importSpecifier);
+        linkContent = getLinkToFileContent('is-string.js', importSpecifier);
       });
       it('the generated link should export default', () => {
         expect(linkContent).to.have.string(exportDefaultForm);

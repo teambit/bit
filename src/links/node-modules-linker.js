@@ -12,7 +12,7 @@ import logger from '../logger/logger';
 import { pathRelativeLinux, first, createSymlinkOrCopy } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getIndexFileName, writeComponentsDependenciesLinks } from './link-generator';
-import getLinkContent from './link-content';
+import { getLinkToFileContent } from './link-content';
 import type { PathOsBased } from '../utils/path';
 import { Dependency } from '../consumer/component/dependencies';
 
@@ -106,7 +106,7 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   const indexFileName = getIndexFileName(mainFile);
   const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
   const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
-  const fileContent = getLinkContent(destRelative);
+  const fileContent = getLinkToFileContent(destRelative);
   if (fileContent) {
     // otherwise, the file type is not supported, no need to write anything
     fs.outputFileSync(dest, fileContent);
@@ -202,7 +202,7 @@ function _linkAuthoredComponents(consumer: Consumer, component: Component, compo
   const bound = filesToBind.map((file) => {
     const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
     const destRelative = pathRelativeLinux(path.dirname(dest), file);
-    const fileContent = getLinkContent(destRelative);
+    const fileContent = getLinkToFileContent(destRelative);
     fs.outputFileSync(dest, fileContent);
     return { from: dest, to: file };
   });

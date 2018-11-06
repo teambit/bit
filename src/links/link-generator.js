@@ -18,7 +18,7 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import Dependencies from '../consumer/component/dependencies/dependencies';
-import getLinkContent from './link-content';
+import { getLinkToFileContent } from './link-content';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFile } from './dependency-file-link-generator';
@@ -253,7 +253,7 @@ function getInternalCustomResolvedLinks(
     const dest = getDestination(customPath.importSource);
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
-    const linkContent = getLinkContent(destRelative);
+    const linkContent = getLinkToFileContent(destRelative);
     return { linkPath: createNpmLinkFiles ? dest : destAbs, linkContent, postInstallLink: createNpmLinkFiles };
   });
 }
@@ -291,7 +291,7 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
-  const entryPointFileContent = getLinkContent(`./${mainFile}`);
+  const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
   if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
     const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);

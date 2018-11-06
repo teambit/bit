@@ -27,15 +27,7 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
   vue: "<script>\nmodule.exports = require('{filePath}');\n</script>"
 };
 
-const fileExtentionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
-
-function getSupportedExtensions(): string[] {
-  const extensions = Object.keys(LINKS_CONTENT_TEMPLATES);
-  fileTypesPlugins.forEach((plugin) => {
-    extensions.push(plugin.getExtension());
-  });
-  return extensions;
-}
+const fileExtensionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
 export function isSupportedExtension(filePath: string) {
   const ext = getExt(filePath);
@@ -43,29 +35,31 @@ export function isSupportedExtension(filePath: string) {
   return supportedExtensions.includes(ext);
 }
 
-export default function getLinkContent(
-  filePath: PathOsBased,
-  importSpecifiers?: ImportSpecifier[],
-  createNpmLinkFiles?: boolean,
-  bitPackageName?: string
-): string {
+export function getLinkToFileContent(filePath: PathOsBased, importSpecifiers?: ImportSpecifier[]): string {
   const fileExt = getExt(filePath);
-
   if (!filePath.startsWith('.')) {
     filePath = `./${filePath}`; // it must be relative, otherwise, it'll search it in node_modules
   }
+  const filePathWithoutExt = getWithoutExt(filePath);
+  const template = getTemplateForFile(fileExt, filePath, importSpecifiers);
 
-  let filePathWithoutExt = getWithoutExt(filePath);
-  const template = getTemplate(fileExt, filePath, importSpecifiers, createNpmLinkFiles);
-  if (createNpmLinkFiles) {
-    filePathWithoutExt = bitPackageName;
-  }
-
-  if (!template) {
-    logger.debug(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
-    return '';
-  }
+  if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
+}
+
+export function getLinkToPackageContent(filePath: PathOsBased, bitPackageName: string): string {
+  const fileExt = getExt(filePath);
+  const template = getTemplateForPackage(fileExt);
+  if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
+  return template.replace(/{filePath}/g, bitPackageName);
+}
+
+function getSupportedExtensions(): string[] {
+  const extensions = Object.keys(LINKS_CONTENT_TEMPLATES);
+  fileTypesPlugins.forEach((plugin) => {
+    extensions.push(plugin.getExtension());
+  });
+  return extensions;
 }
 
 /**
@@ -77,12 +71,7 @@ export default function getLinkContent(
  * The importSpecifier.linkFile attribute exists when the main-file doesn't require the variable directly, but uses a
  * link-file to require it indirectly. E.g. src/bar.js: `import foo from './utils;` utils/index.js: `import foo from './foo';`
  */
-function getTemplate(
-  fileExt: string,
-  filePath: PathOsBased,
-  importSpecifiers?: ImportSpecifier[],
-  createNpmLinkFiles?: boolean
-) {
+function getTemplateForFile(fileExt: string, filePath: PathOsBased, importSpecifiers?: ImportSpecifier[]) {
   if (importSpecifiers && importSpecifiers.length) {
     if (fileExt === 'js' || fileExt === 'jsx') {
       // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
@@ -91,14 +80,30 @@ function getTemplate(
       return tsTemplateWithImportSpecifiers(importSpecifiers);
     }
   }
+  return _getTemplate(fileExt, importSpecifiers);
+}
+
+function getTemplateForPackage(fileExt: string) {
+  if (!fileExtensionsForNpmLinkGenerator.includes(fileExt)) {
+    return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
+  }
+  return _getTemplate(fileExt);
+}
+
+function _getTemplate(fileExt: string, importSpecifiers?: ImportSpecifier[]) {
+  _addPluginsTemplatesToLinkContentTemplates(importSpecifiers);
+  return LINKS_CONTENT_TEMPLATES[fileExt];
+}
+
+function _addPluginsTemplatesToLinkContentTemplates(importSpecifiers?: ImportSpecifier[]) {
   fileTypesPlugins.forEach((plugin) => {
     LINKS_CONTENT_TEMPLATES[plugin.getExtension()] = plugin.getTemplate(importSpecifiers);
   });
+}
 
-  if (createNpmLinkFiles && !fileExtentionsForNpmLinkGenerator.includes(fileExt)) {
-    return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
-  }
-  return LINKS_CONTENT_TEMPLATES[fileExt];
+function _logWhenNoTemplateWasFound(filePath: string, fileExt: string) {
+  logger.debug(`no template was found for ${filePath}, because .${fileExt} extension is not supported`);
+  return '';
 }
 
 function tsTemplateWithImportSpecifiers(importSpecifiers) {
