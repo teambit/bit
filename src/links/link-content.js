@@ -4,6 +4,7 @@ import fileTypesPlugins from '../plugins/file-types-plugins';
 import { getWithoutExt, getExt } from '../utils';
 import logger from '../logger/logger';
 import type { PathOsBased } from '../utils/path';
+import type { ImportSpecifier } from '../consumer/component/dependencies/dependency-resolver/types/dependency-tree-type';
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
@@ -44,7 +45,7 @@ export function isSupportedExtension(filePath: string) {
 
 export default function getLinkContent(
   filePath: PathOsBased,
-  importSpecifiers?: Object,
+  importSpecifiers?: ImportSpecifier[],
   createNpmLinkFiles?: boolean,
   bitPackageName?: string
 ): string {
@@ -76,7 +77,12 @@ export default function getLinkContent(
  * The importSpecifier.linkFile attribute exists when the main-file doesn't require the variable directly, but uses a
  * link-file to require it indirectly. E.g. src/bar.js: `import foo from './utils;` utils/index.js: `import foo from './foo';`
  */
-function getTemplate(fileExt: string, filePath: PathOsBased, importSpecifiers?: Object, createNpmLinkFiles?: boolean) {
+function getTemplate(
+  fileExt: string,
+  filePath: PathOsBased,
+  importSpecifiers?: ImportSpecifier[],
+  createNpmLinkFiles?: boolean
+) {
   if (importSpecifiers && importSpecifiers.length) {
     if (fileExt === 'js' || fileExt === 'jsx') {
       // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
