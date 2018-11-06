@@ -13,9 +13,9 @@ describe('bit dependency status', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.reInitLocalScope();
       helper.copyFixtureComponents('dependency-status');
-      helper.addComponent(path.normalize('dependency-status-test-files/a.js'));
-      helper.addComponent(path.normalize('dependency-status-test-files/b.js'));
-      helper.addComponent(path.normalize('dependency-status-test-files/c.js'));
+      helper.addComponent('dependency-status-test-files/a.js', { i: 'dependency-status-test-files/a' });
+      helper.addComponent('dependency-status-test-files/b.js', { i: 'dependency-status-test-files/b' });
+      helper.addComponent('dependency-status-test-files/c.js', { i: 'dependency-status-test-files/c' });
     });
     it('Should print no missing files as all files are mapped', () => {
       const output = helper.runCmd('bit dependency-status dependency-status-test-files/b.js');
@@ -27,8 +27,8 @@ describe('bit dependency status', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.reInitLocalScope();
       helper.copyFixtureComponents('dependency-status');
-      helper.addComponent(path.normalize('dependency-status-test-files/a.js'));
-      helper.addComponent(path.normalize('dependency-status-test-files/b.js'));
+      helper.addComponent('dependency-status-test-files/a.js', { i: 'dependency-status-test-files/a' });
+      helper.addComponent('dependency-status-test-files/b.js', { i: 'dependency-status-test-files/b' });
     });
     it('Should print missing files which are not mapped to bit components', () => {
       const output = helper.runCmd('bit dependency-status dependency-status-test-files/b.js');

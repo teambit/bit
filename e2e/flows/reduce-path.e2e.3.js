@@ -36,7 +36,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       expect(fs.existsSync(authorLocation)).to.be.true;
       expect(fs.readFileSync(authorLocation).toString()).to.equal(barFooV2);
       helper.createFile('', 'foo2.js');
-      helper.addComponentWithOptions('foo2.js', { i: 'bar/foo' });
+      helper.addComponent('foo2.js', { i: 'bar/foo' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.getClonedLocalScope(importedScope);

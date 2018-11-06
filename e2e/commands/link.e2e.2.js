@@ -20,7 +20,7 @@ describe('bit link', function () {
         helper.reInitLocalScope();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         linkOutput = helper.runCmd('bit link');
       });
       it('should not create any link because there is no scope yet (until export)', () => {
@@ -33,7 +33,7 @@ describe('bit link', function () {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.commitAllComponents();
         helper.exportAllComponents();
 
@@ -41,7 +41,7 @@ describe('bit link', function () {
         const isStringFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type/utils/is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         const appJsFixture = "const isString = require('./utils/is-string'); console.log(isString());";
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
 
@@ -115,8 +115,8 @@ console.log(isType());`;
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.createFile('bar2', 'foo2.js');
-      helper.addComponent('bar/foo.js');
-      helper.addComponent('bar2/foo2.js');
+      helper.addComponentBarFoo();
+      helper.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -138,7 +138,7 @@ console.log(isType());`;
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -149,7 +149,7 @@ console.log(isType());`;
         'is-type'
       )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -167,7 +167,7 @@ console.log(isType());`;
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.exportAllComponents();
 
@@ -180,7 +180,7 @@ console.log(isType());`;
         helper.remoteScope
       }.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
 
@@ -193,7 +193,7 @@ console.log(isType());`;
         helper.remoteScope
       }.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.createFile('test', 'is-string2.js', isStringFixture2);
-      helper.addComponent('test/is-string2.js');
+      helper.addComponent('test/is-string2.js', { i: 'test/is-string2' });
       helper.commitAllComponents();
       helper.exportAllComponents();
 

@@ -30,7 +30,7 @@ describe('flow of a long-dependencies-chain', function () {
             const previousFile = `foo${i - 1}`;
             const previousDir = `bar${i - 1}`;
             helper.importComponent(`${previousDir}/${previousFile}`);
-            impl = `const foo = require('${helper.getRequireBitPath(previousDir, previousFile)}'); 
+            impl = `const foo = require('${helper.getRequireBitPath(previousDir, previousFile)}');
           module.exports = function ${file}() { return foo() + ' and got ${file}'; };
           `;
           } else {
@@ -38,7 +38,7 @@ describe('flow of a long-dependencies-chain', function () {
           }
 
           helper.createFile(dir, `${file}.js`, impl);
-          helper.addComponent(path.join(dir, `${file}.js`));
+          helper.addComponent(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
           helper.commitComponent(`${dir}/${file}`);
           helper.exportComponent(`${dir}/${file}`);
         }

@@ -25,15 +25,15 @@ describe('dev-dependencies functionality', function () {
       let barFoo;
       before(() => {
         helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooES6);
         helper.addComponentBarFoo();
 
         helper.createFile('bar', 'foo.spec.js', fixtures.barFooSpecES6(true));
         helper.installNpmPackage('chai', '4.1.2');
-        helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+        helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();
         barFoo = helper.catComponent('bar/foo@0.0.1');
@@ -71,9 +71,9 @@ describe('dev-dependencies functionality', function () {
         // foo.js doesn't have any dependencies. foo.spec.js does have dependencies.
         helper.getClonedLocalScope(clonedScope);
         helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo('console.log("got foo")');
         helper.addComponentBarFoo();
 
@@ -90,7 +90,7 @@ describe('foo', () => {
 });`
         );
         helper.installNpmPackage('chai', '4.1.2');
-        helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
+        helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
         helper.commitAllComponents();
         localScope = helper.cloneLocalScope();
@@ -174,9 +174,9 @@ describe('foo', () => {
       helper.createFile('utils', 'is-string-spec.js', fixtures.isString);
       helper.createFile('utils', 'is-string.js', '');
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('bar/foo.js');
-      helper.addComponent('utils/is-type.js');
-      helper.addComponentWithOptions('utils/is-string.js', {
+      helper.addComponentBarFoo();
+      helper.addComponentUtilsIsType();
+      helper.addComponent('utils/is-string.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js'
@@ -204,9 +204,9 @@ describe('foo', () => {
       helper.createFile('bar', 'foo.spec.js', fixtures.barFooFixture);
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('bar -i bar/foo -m bar/foo.js -t bar/foo.spec.js');
-      helper.addComponentWithOptions('utils/is-string.js', { i: 'utils/is-string' });
-      helper.addComponentWithOptions('utils/is-type.js', { i: 'utils/is-type' });
+      helper.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
+      helper.addComponentUtilsIsString();
+      helper.addComponentUtilsIsType();
       helper.tagAllWithoutMessage();
       barFoo = helper.catComponent('bar/foo@latest');
 

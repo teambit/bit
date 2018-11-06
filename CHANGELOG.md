@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- shorten the generated component ID to the minimum possible
+
 ## [13.0.5-dev.28 - 2018-11-06]
 
 - fix dev-dependency that requires prod-dependency to include the dependency in the flattenedDevDependencies array

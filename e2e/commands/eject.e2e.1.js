@@ -160,7 +160,7 @@ describe('bit eject command', function () {
         before(() => {
           helper.getClonedLocalScope(scopeBeforeEject);
           helper.createFile('bar', 'foo2.js');
-          helper.addComponent('bar/foo2.js');
+          helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.tagAllWithoutMessage();
           ejectOutput = helper.ejectComponentsParsed('bar/foo bar/foo2');
         });
@@ -174,7 +174,7 @@ describe('bit eject command', function () {
         before(() => {
           helper.getClonedLocalScope(scopeBeforeEject);
           helper.createFile('bar', 'foo2.js');
-          helper.addComponent('bar/foo2.js');
+          helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
           helper.tagAllWithoutMessage();
           helper.exportAllComponents(`${username}.${scopeName}`);
           helper.createFile('bar', 'foo2.js', 'console.log("v2");'); // modify bar/foo2
@@ -236,9 +236,9 @@ describe('bit eject command', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.tagAllWithoutMessage();

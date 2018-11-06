@@ -32,9 +32,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.commitAllComponents();
 
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -78,9 +78,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.commitAllComponents();
         helper.exportAllComponents();
 
@@ -120,11 +120,11 @@ describe('auto tagging functionality', function () {
         helper.importTester('bit.envs/testers/mocha@0.0.12');
         helper.installNpmPackage('chai', '4.1.2');
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
-        helper.addComponentWithOptions('utils/is-string.js', { t: 'utils/is-string.spec.js' });
+        helper.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js', i: 'utils/is-string' });
         helper.tagAllWithoutMessage(); // tests are passing at this point
         helper.exportAllComponents();
 
@@ -206,9 +206,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.commitAllComponents();
@@ -268,9 +268,9 @@ describe('auto tagging functionality', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.commitAllComponents();
@@ -315,7 +315,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'c.js', 'require("./d")');
       helper.createFile('bar', 'd.js', 'require("./e")');
       helper.createFile('bar', 'e.js', 'console.log("I am E v1")');
-      helper.addComponent('bar/*.js');
+      helper.addComponent('bar/*.js', { n: 'bar' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
 
@@ -394,7 +394,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'a.js', 'require("./b")');
       helper.createFile('bar', 'b.js', 'require("./c")');
       helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
-      helper.addComponent('bar/*.js');
+      helper.addComponent('bar/*.js', { n: 'bar' });
       helper.tagAllWithoutMessage();
       helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
     });
@@ -447,7 +447,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'a.js', 'require("./b"); require("./c");');
       helper.createFile('bar', 'b.js', 'require("./c")');
       helper.createFile('bar', 'c.js', 'console.log("I am C v1")');
-      helper.addComponent('bar/*.js');
+      helper.addComponent('bar/*.js', { n: 'bar' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
 

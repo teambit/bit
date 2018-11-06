@@ -1,6 +1,6 @@
 const runBitBin = require('./run_add_many').runBitBin;
 
-const components = 
+const components =
     [
         {
             'componentPaths' : ['add_many_test_files/a.js'],
@@ -10,8 +10,9 @@ const components =
         },
         {
             'componentPaths' : ['add_many_test_files/c.js'],
-            'main' : 'add_many_test_files/c.js'
-        }, 
+            'main' : 'add_many_test_files/c.js',
+            'id': 'add_many_test_files/c'
+        },
         {
             'componentPaths' : ['add_many_test_files/b.js'],
             'namespace' : 'my_namespace',
@@ -35,5 +36,5 @@ const components =
     // Support special arg name PROCESS to pass the current working directory
     const cwd = process.argv.length === 3 ? (process.argv[2] === 'PROCESS' ? process.cwd() : process.argv[2]) : undefined;
     runBitBin(components, cwd);
-    
+
 
