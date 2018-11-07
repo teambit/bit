@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- update bit-javascript to support mix syntax of typescript and javascript inside .ts file
+
 ## [13.0.5-dev.29 - 2018-11-07]
 
 - shorten the generated component ID to the minimum possible
