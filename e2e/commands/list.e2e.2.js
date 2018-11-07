@@ -89,8 +89,8 @@ describe('bit list command', function () {
       let output;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.createFile('bar/baz');
-        helper.addComponent('bar/baz', { i: 'bar/baz' });
+        helper.createFile('bar', 'baz.js');
+        helper.addComponent('bar/baz.js', { i: 'bar/baz' });
         helper.commitComponent('bar/baz');
         helper.exportAllComponents();
         helper.reInitLocalScope();
@@ -108,7 +108,7 @@ describe('bit list command', function () {
       let output;
       before(() => {
         helper.reInitLocalScope();
-        helper.createFile('bar/local');
+        helper.createFile('bar', 'local');
         helper.addComponent('bar/local', { i: 'bar/local' });
         helper.commitComponent('bar/local');
         const stringOutput = helper.runCmd('bit list -o -j');

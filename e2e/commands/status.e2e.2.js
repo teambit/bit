@@ -70,7 +70,7 @@ describe('bit status command', function () {
     let output;
     before(() => {
       helper.reInitLocalScope();
-      helper.createFile();
+      helper.createComponentBarFoo();
       helper.createFile('bar', 'foo2.js', 'var foo = require("./foo.js")');
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
     });
