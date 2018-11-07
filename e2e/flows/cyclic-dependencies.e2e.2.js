@@ -1,6 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixtureA = `const b = require('./b');
 console.log('got ' + b() + ' and got A')`;
@@ -16,11 +17,11 @@ describe('cyclic dependencies', function () {
   describe('a => b, b => a (component A requires B, component B requires A)', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createFile('comp', 'a.js', fixtureA);
       helper.createFile('comp', 'b.js', fixtureB);
-      helper.addComponent('comp/a.js');
-      helper.addComponent('comp/b.js');
+      helper.addComponent('comp/a.js', { i: 'comp/a' });
+      helper.addComponent('comp/b.js', { i: 'comp/b' });
       output = helper.tagAllWithoutMessage();
     });
     it('should be able to tag both with no errors', () => {
@@ -36,16 +37,47 @@ describe('cyclic dependencies', function () {
       expect(compA.dependencies[0].id).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
       expect(compA.flattenedDependencies[0]).to.deep.equal({ name: 'comp/a', version: '0.0.1' });
     });
+    describe('exporting the component', () => {
+      let exportOutput;
+      before(() => {
+        exportOutput = helper.exportAllComponents();
+      });
+      it('should export successfully with no errors', () => {
+        expect(exportOutput).to.have.string('exported');
+      });
+      describe('importing to a new environment', () => {
+        let importOutput;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('comp/a');
+          importOutput = helper.importComponent('comp/b');
+        });
+        it('should import successfully and not throw any error', () => {
+          // a previous bug caused to throw an error 'failed running npm install'
+          expect(importOutput).to.have.string('successfully imported');
+        });
+        it('should bring in the components', () => {
+          const list = helper.listLocalScope();
+          expect(list).to.have.string('comp/a');
+          expect(list).to.have.string('comp/b');
+        });
+        it('should not show a clean workspace', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
+      });
+    });
   });
   describe('a complex case with a long chain of dependencies', () => {
     let output;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       // isString => isType
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-type.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsType();
+      helper.addComponentUtilsIsString();
       helper.tagAllWithoutMessage();
 
       // A1 => A2 => A3 (leaf)
@@ -59,7 +91,7 @@ describe('cyclic dependencies', function () {
       helper.createFile('comp', 'B2.js', "const B3 = require('./B3'); const A1 = require ('./A1');");
       helper.createFile('comp', 'B3.js', "const B4 = require('./B4')");
       helper.createFile('comp', 'B4.js', "const isString = require('../utils/is-string')");
-      helper.addComponent('comp/*.js');
+      helper.addComponent('comp/*.js', { n: 'comp' });
       output = helper.tagAllWithoutMessage();
     });
     it('should be able to tag with no errors', () => {
@@ -151,6 +183,35 @@ describe('cyclic dependencies', function () {
       expect(B4.flattenedDependencies).to.have.lengthOf(2);
       expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-type', version: '0.0.1' });
       expect(B4.flattenedDependencies).to.deep.include({ name: 'utils/is-string', version: '0.0.1' });
+    });
+    describe('exporting the component', () => {
+      let exportOutput;
+      before(() => {
+        exportOutput = helper.exportAllComponents();
+      });
+      it('should export successfully with no errors', () => {
+        expect(exportOutput).to.have.string('exported');
+      });
+      describe('importing to a new environment', () => {
+        let importOutput;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          importOutput = helper.importComponent('comp/a1');
+        });
+        it('should import successfully and not throw any error', () => {
+          // a previous bug caused to throw an error 'failed running npm install'
+          expect(importOutput).to.have.string('successfully imported');
+        });
+        it('should bring in the components', () => {
+          const list = helper.listLocalScope();
+          expect(list).to.have.string('comp/a1');
+        });
+        it('should not show a clean workspace', () => {
+          const statusOutput = helper.runCmd('bit status');
+          expect(statusOutput).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
+      });
     });
   });
 });

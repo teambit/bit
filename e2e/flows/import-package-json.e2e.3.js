@@ -22,7 +22,7 @@ describe('component with package.json as a file of the component', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createJsonFile('package.json', fixturePackageJson);
-      const addOutput = helper.addComponentWithOptions('package.json', { i: 'foo/pkg' });
+      const addOutput = helper.addComponent('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
@@ -64,7 +64,7 @@ describe('component with package.json as a file of the component', function () {
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
       });
       it('should prevent users from deliberately adding them', () => {
-        const output = helper.addComponentWithOptions('components/foo/pkg/bar.js', { i: 'foo/pkg' });
+        const output = helper.addComponent('components/foo/pkg/bar.js', { i: 'foo/pkg' });
         expect(output).to.have.string('no files to track');
       });
     });
@@ -86,7 +86,7 @@ describe('component with package.json as a file of the component', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createJsonFile('bar/package.json', fixturePackageJson);
       helper.createFile('bar', 'foo.js');
-      const addOutput = helper.addComponentWithOptions('bar', { i: 'bar/foo', m: 'foo.js' });
+      const addOutput = helper.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
@@ -129,9 +129,9 @@ describe('component with package.json as a file of the component', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createJsonFile('package.json', fixturePackageJson);
-      helper.addComponentWithOptions('package.json', { i: 'foo/pkg' });
+      helper.addComponent('package.json', { i: 'foo/pkg' });
       helper.createFile('', 'foo.js', fooFixture);
-      helper.addComponentWithOptions('foo.js', { i: 'bar/foo' });
+      helper.addComponent('foo.js', { i: 'bar/foo' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
       afterExportScope = helper.cloneLocalScope();

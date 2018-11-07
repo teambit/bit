@@ -1,6 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import pathlib from 'path';
+import logger from '../logger/logger';
 
 export default (async function removeFile(path: string, propogateDirs: boolean = false): Promise<boolean> {
   const res = await fs.unlink(path);
@@ -8,6 +9,7 @@ export default (async function removeFile(path: string, propogateDirs: boolean =
   const { dir } = pathlib.parse(path);
   const files = await fs.readdir(dir);
   if (files.length !== 0) return res;
+  logger.info(`fs-remove-file, deleting ${dir}`);
   await fs.remove(dir);
   return res;
 });

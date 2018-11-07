@@ -369,7 +369,7 @@ export default class Scope {
     this.injectNodePathIfNeeded(consumer, components);
     const test = async (component: Component) => {
       if (!component.tester) {
-        return { componentId: component.id, missingTester: true };
+        return { componentId: component.id, missingTester: true, pass: true };
       }
       const specs = await component.runSpecs({
         scope: this,
@@ -377,7 +377,8 @@ export default class Scope {
         consumer,
         verbose
       });
-      return { componentId: component.id, specs };
+      const pass = specs ? specs.every(spec => spec.pass) : true;
+      return { componentId: component.id, specs, pass };
     };
     return pMapSeries(components, test);
   }
@@ -1125,7 +1126,7 @@ export default class Scope {
       const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
       const env = new IsolatedEnvironment(this, dir);
       // Destroying environment to make sure there is no left over
-      env.destroyIfExist();
+      await env.destroyIfExist();
       await env.create();
       try {
         const isolatedComponent = await env.isolateComponent(concreteId, isolateOpts);

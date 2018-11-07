@@ -161,6 +161,7 @@ export default class Consumer {
     const tmpPath = this.getTmpFolder(true);
     const exists = await fs.exists(tmpPath);
     if (exists) {
+      logger.info(`consumer.cleanTmpFolder, deleting ${tmpPath}`);
       return fs.remove(tmpPath);
     }
     return null;
@@ -951,6 +952,15 @@ export default class Consumer {
     await component.devDependencies.addRemoteAndLocalVersions(this.scope, modelDevDependencies);
     await component.compilerDependencies.addRemoteAndLocalVersions(this.scope, modelCompilerDependencies);
     await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
+  }
+
+  async getAuthoredAndImportedDependentsOfComponents(components: Component[]): Promise<Component[]> {
+    const authoredAndImportedComponents = this.bitMap.getAllBitIds([
+      COMPONENT_ORIGINS.IMPORTED,
+      COMPONENT_ORIGINS.AUTHORED
+    ]);
+    const componentsIds = BitIds.fromArray(components.map(c => c.id));
+    return this.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }
 
   /**

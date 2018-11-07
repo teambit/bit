@@ -59,11 +59,11 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       const isStringFixture = "const a = require('./is-type');";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       scopeBeforeRemoving = helper.cloneLocalScope();
     });
@@ -168,11 +168,11 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
     });
@@ -193,7 +193,7 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.createFile('global', 'simple.js');
-      helper.addComponent(path.normalize('global/simple.js'));
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
 
@@ -214,7 +214,7 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.createFile(
         'utils',
@@ -233,7 +233,7 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.createFile('global', 'simple.js');
-      helper.addComponent(path.normalize('global/simple.js'));
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
 
@@ -257,13 +257,13 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
     });
     it('should not remove component version when component is modified', () => {
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.createFile(
         'utils',
@@ -311,15 +311,15 @@ describe('bit remove command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       helper.createFile('copy', 'is-type.js', isTypeFixture);
-      helper.addComponent('copy/is-type.js');
+      helper.addComponent('copy/is-type.js', { i: 'copy/is-type' });
 
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.createFile(
         'utils',
@@ -368,15 +368,15 @@ describe('bit remove command', function () {
       helper.addRemoteScope(helper2.remoteScopePath, helper.remoteScopePath);
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
 
       let isStringFixture = "const a = require('./is-type');";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
 
       const isString2Fixture = "const a = require('./is-type');";
       helper.createFile('utils', 'is-string2.js', isString2Fixture);
-      helper.addComponent('utils/is-string2.js');
+      helper.addComponent('utils/is-string2.js', { i: 'utils/is-string2' });
 
       helper.commitAllComponents();
 
@@ -435,7 +435,7 @@ describe('bit remove command', function () {
       helper.reInitLocalScope();
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo-main.js');
-      helper.addComponentWithOptions('bar', { m: 'foo-main.js', i: 'bar/foo' });
+      helper.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
       helper.tagAllWithoutMessage();
       helper.deleteFile('bar/foo-main.js');
       const status = helper.status();

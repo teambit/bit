@@ -19,35 +19,37 @@ describe('support vue files', function () {
     });
     describe('add vue files', () => {
       before(() => {
-        helper.addComponent(path.normalize('directives/*.js'));
-        helper.addComponent(path.normalize('styles/*'));
-        helper.addComponent(path.normalize('UiAutocomplete.vue'));
+        helper.addComponent('directives/*.js');
+        helper.addComponent('styles/*');
+        helper.addComponent('UiAutocomplete.vue');
         helper.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
         const output = helper.runCmd('bit s');
-        expect(output).to.have.string(' untracked file dependencies');
+        expect(output).to.have.string('untracked file dependencies');
         expect(output).to.have.string('UiAutocomplete.vue -> UiAutocompleteSuggestion.vue, UiIcon.vue');
       });
-      it('should say that all is resolved', () => {
-        helper.addComponent('UiAutocompleteSuggestion.vue');
-        helper.addComponent('UiIcon.vue');
-        const output = helper.runCmd('bit s');
-        expect(output.includes('no new components')).to.be.false;
-      });
-      it('should display that component as a new component', () => {
-        const output = helper.runCmd('bit s');
-        expect(output.includes('new components')).to.be.true;
-        expect(output.includes(`${helper.localScope}/ui-autocomplete`)).to.be.true;
-        expect(output.includes(`${helper.localScope}/ui-autocomplete-suggestion`)).to.be.true;
-      });
-      it('should not display that component as modified', () => {
-        const output = helper.runCmd('bit s');
-        expect(output.includes('modified components')).to.be.false;
-      });
-      it('should not display that component as staged', () => {
-        const output = helper.runCmd('bit s');
-        expect(output.includes('staged components')).to.be.false;
+      describe('after adding the missing files', () => {
+        let output;
+        before(() => {
+          helper.addComponent('UiAutocompleteSuggestion.vue');
+          helper.addComponent('UiIcon.vue');
+          output = helper.status();
+        });
+        it('should say that all is resolved', () => {
+          expect(output.includes('no new components')).to.be.false;
+        });
+        it('should display that component as a new component', () => {
+          expect(output.includes('new components')).to.be.true;
+          expect(output.includes('ui-autocomplete')).to.be.true;
+          expect(output.includes('ui-autocomplete-suggestion')).to.be.true;
+        });
+        it('should not display that component as modified', () => {
+          expect(output.includes('modified components')).to.be.false;
+        });
+        it('should not display that component as staged', () => {
+          expect(output.includes('staged components')).to.be.false;
+        });
       });
     });
     describe('add vue files that import stylus files ', () => {
@@ -73,9 +75,9 @@ describe('support vue files', function () {
       it('should display that component as a new component', () => {
         const output = helper.runCmd('bit s');
         expect(output.includes('new components')).to.be.true;
-        expect(output.includes(`${helper.localScope}/stylus-example`)).to.be.true;
-        expect(output.includes('stylus/main')).to.be.true;
-        expect(output.includes('stylus/second')).to.be.true;
+        expect(output.includes('stylus-example')).to.be.true;
+        expect(output.includes('main')).to.be.true;
+        expect(output.includes('second')).to.be.true;
       });
       it('should not display that component as modified', () => {
         const output = helper.runCmd('bit s');
@@ -125,8 +127,8 @@ import autofocus from '@/autofocus';
 </script>`;
       helper.createFile('UI', 'Autocomplete.vue', autocompleteFixture);
       helper.createFile('directives', 'autofocus.js', 'export default {}');
-      helper.addComponent('UI/Autocomplete.vue');
-      helper.addComponent('directives/autofocus.js');
+      helper.addComponent('UI/Autocomplete.vue', { i: 'ui/autocomplete' });
+      helper.addComponent('directives/autofocus.js', { i: 'directives/autofocus' });
     });
     it('should recognize dependencies using "@" as an alias', () => {
       const output = helper.showComponentParsed('ui/autocomplete');

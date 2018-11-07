@@ -412,7 +412,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ExtensionLoadError,
     err =>
-      `error: bit failed to load ${err.name} with the following exception:\n${getExternalErrorMessage(
+      `error: bit failed to load ${err.compName} with the following exception:\n${getExternalErrorMessage(
         err.originalError
       )}.\n${err.printStack ? err.originalError.stack : ''}`
   ],
@@ -423,21 +423,21 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ExtensionInitError,
     err =>
-      `error: bit failed to initialized ${err.name} with the following exception:\n${getExternalErrorMessage(
+      `error: bit failed to initialized ${err.compName} with the following exception:\n${getExternalErrorMessage(
         err.originalError
       )}.\n${err.originalError.stack}`
   ],
   [
     ExtensionGetDynamicPackagesError,
     err =>
-      `error: bit failed to get the dynamic packages from ${err.name} with the following exception:\n${
+      `error: bit failed to get the dynamic packages from ${err.compName} with the following exception:\n${
         err.originalError.message
       }.\n${err.originalError.stack}`
   ],
   [
     ExtensionGetDynamicConfigError,
     err =>
-      `error: bit failed to get the config from ${err.name} with the following exception:\n${
+      `error: bit failed to get the config from ${err.compName} with the following exception:\n${
         err.originalError.message
       }.\n${err.originalError.stack}`
   ],

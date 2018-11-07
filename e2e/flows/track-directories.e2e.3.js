@@ -16,7 +16,7 @@ describe('track directories functionality', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
-      helper.addComponent('utils/bar');
+      helper.addComponent('utils/bar', { i: 'utils/bar' });
       localScope = helper.cloneLocalScope();
     });
     it('should add the directory as trackDir in bitmap file', () => {
@@ -146,7 +146,7 @@ describe('track directories functionality', function () {
       helper.createFile('utils/foo', 'index.js');
       helper.createFile('utils/bar', 'index.js');
       helper.createFile('utils/baz', 'index.js');
-      helper.addComponent('utils/*');
+      helper.addComponent('utils/*', { n: 'utils' });
     });
     it('should add trackDir property for each one of the directories', () => {
       const bitMap = helper.readBitMap();
@@ -165,7 +165,7 @@ describe('track directories functionality', function () {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.createFile('utils/bar', 'foo.spec.js');
-      helper.addComponentWithOptions('utils/bar', { t: 'utils/bar/foo.spec.js' });
+      helper.addComponent('utils/bar', { t: 'utils/bar/foo.spec.js', i: 'utils/bar' });
       helper.createFile('utils/bar', 'foo2.js');
       helper.runCmd('bit status');
     });
@@ -189,7 +189,7 @@ describe('track directories functionality', function () {
       helper.reInitLocalScope();
       helper.createFile('utils/bar', 'foo.js');
       helper.createFile('utils/bar', 'foo2.js');
-      helper.addComponentWithOptions('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js' });
+      helper.addComponent('utils/bar', { e: 'utils/bar/foo2.js', m: 'foo.js', i: 'utils/bar' });
       helper.runCmd('bit status');
     });
     it('should not add the trackDir property', () => {
@@ -208,9 +208,9 @@ describe('track directories functionality', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
       helper.commitAllComponents();

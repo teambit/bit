@@ -101,7 +101,7 @@ describe('binary files', function () {
       helper.runCmd('bit add bar -m png_fixture.png -i bar/png');
       const fixture = 'require("./png_fixture.png")';
       helper.createFile('bar', 'foo.js', fixture);
-      helper.addComponentWithOptions('bar/foo.js', { i: 'bar/foo' });
+      helper.addComponent('bar/foo.js', { i: 'bar/foo' });
       helper.commitAllComponents();
       helper.exportAllComponents();
 

@@ -3,10 +3,10 @@
 import ExternalError from '../../error/external-error';
 
 export default class ExtensionInitError extends ExternalError {
-  name: string;
+  compName: string;
 
-  constructor(originalError: Error, name: string) {
+  constructor(originalError: Error, compName: string) {
     super(originalError);
-    this.name = name;
+    this.compName = compName;
   }
 }

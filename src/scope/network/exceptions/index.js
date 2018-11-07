@@ -7,6 +7,7 @@ import NetworkError from './network-error';
 import UnexpectedNetworkError from './unexpected-network-error';
 import SSHInvalidResponse from './ssh-invalid-response';
 import AuthenticationFailed from './authentication-failed';
+import OldClientVersion from './old-client-version';
 
 export {
   AuthenticationFailed,
@@ -17,5 +18,6 @@ export {
   FsScopeNotLoaded,
   RemoteScopeNotFound,
   SSHConnectionError,
-  SSHInvalidResponse
+  SSHInvalidResponse,
+  OldClientVersion
 };

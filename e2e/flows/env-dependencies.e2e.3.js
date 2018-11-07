@@ -18,7 +18,7 @@ describe('environments with dependencies', function () {
     helper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
     helper.copyFixtureFile(compiler);
-    helper.addComponentWithOptions('compiler.js', {
+    helper.addComponent('compiler.js', {
       i: compilerId
     });
     helper.reInitEnvsScope();
@@ -88,7 +88,7 @@ describe('environments with dependencies', function () {
       helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
 
       helper.addNpmPackage('webpack', '4.16.4');
-      helper.addComponentWithOptions('base.config.js', { i: 'webpack/base' });
+      helper.addComponent('base.config.js', { i: 'webpack/base' });
     });
     it('bit status should not show any missing', () => {
       const output = helper.runCmd('bit status');

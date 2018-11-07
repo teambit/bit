@@ -46,7 +46,7 @@ type PrepareLinkFileParams = {
   linkPath: string,
   relativePathInDependency: PathOsBased,
   relativePath: Object,
-  depRootDir: ?PathOsBased,
+  depRootDir: ?PathOsBasedAbsolute,
   isNpmLink: boolean
 };
 
@@ -150,13 +150,23 @@ function _getLinksForOneDependencyFile({
     ? consumer.bitMap.getComponent(dependencyId)
     : undefined;
 
-  const depRootDir: ?PathOsBased =
-    depComponentMap && depComponentMap.rootDir ? path.join(consumerPath, depComponentMap.rootDir) : undefined;
+  const getRelativeDepRootDir = (): ?PathOsBased => {
+    if (!depComponentMap) return undefined;
+    return depComponentMap.rootDir || '.';
+  };
+
+  const getDepRootDir = (): ?PathOsBasedAbsolute => {
+    const rootDir = getRelativeDepRootDir();
+    return rootDir ? path.join(consumerPath, rootDir) : undefined;
+  };
+  const getDepRootDirDist = (): ?PathOsBasedAbsolute => {
+    const rootDir = getRelativeDepRootDir();
+    return rootDir ? dependencyComponent.dists.getDistDirForConsumer(consumer, rootDir) : undefined;
+  };
+  const depRootDir: ?PathOsBasedAbsolute = getDepRootDir();
   const isNpmLink = createNpmLinkFiles || !component.dependenciesSavedAsComponents;
-  const depRootDirDist =
-    depComponentMap && depComponentMap.rootDir
-      ? dependencyComponent.dists.getDistDirForConsumer(consumer, depComponentMap.rootDir)
-      : undefined;
+  const depRootDirDist = getDepRootDirDist();
+
   const isCustomResolvedWithDistInside =
     relativePath.isCustomResolveUsed && depRootDirDist && consumer.shouldDistsBeInsideTheComponent() && hasDist;
 
@@ -371,11 +381,13 @@ async function writeComponentsDependenciesLinks(
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
+          const dependencies = componentWithDeps.allDependencies;
+          dependencies.push(componentWithDeps.component);
           return getComponentLinks({
             consumer,
             component: dep,
             componentMap: depComponentMap,
-            dependencies: componentWithDeps.allDependencies,
+            dependencies,
             createNpmLinkFiles
           });
         })

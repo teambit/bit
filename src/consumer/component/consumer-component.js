@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
-import { mkdirp, pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
+import { pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import ConsumerBitJson from '../bit-json/consumer-bit-json';
@@ -36,9 +36,7 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
-  BIT_WORKSPACE_TMP_DIRNAME,
-  WRAPPER_DIR,
-  PACKAGE_JSON
+  BIT_WORKSPACE_TMP_DIRNAME
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -467,75 +465,6 @@ export default class Component {
     return [...this.flattenedDependencies, ...this.flattenedDevDependencies];
   }
 
-  async _writeToComponentDir({
-    bitDir,
-    writeConfig,
-    configDir,
-    writePackageJson,
-    consumer,
-    override = true,
-    writeBitDependencies = false,
-    deleteBitDirContent = false,
-    excludeRegistryPrefix = false
-  }: {
-    bitDir: string,
-    writeConfig: boolean,
-    configDir?: string,
-    writePackageJson: boolean,
-    consumer?: Consumer,
-    override?: boolean,
-    writeBitDependencies?: boolean,
-    deleteBitDirContent?: boolean,
-    excludeRegistryPrefix?: boolean
-  }) {
-    if (deleteBitDirContent) {
-      fs.emptyDirSync(bitDir);
-    } else {
-      await mkdirp(bitDir);
-    }
-    if (this.files) await Promise.all(this.files.map(file => file.write(undefined, override)));
-    await this.dists.writeDists(this, consumer, false);
-    if (writeConfig && consumer) {
-      const resolvedConfigDir = configDir || consumer.dirStructure.ejectedEnvsDirStructure;
-      await this.writeConfig(consumer, resolvedConfigDir, override);
-    }
-    // make sure the project's package.json is not overridden by Bit
-    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
-    // of compilers / testers / extensions)
-    if (writePackageJson && (consumer.isolated || bitDir !== consumer.getPath())) {
-      await this.writePackageJson(consumer, bitDir, override, writeBitDependencies, excludeRegistryPrefix);
-    }
-    if (this.license && this.license.src) await this.license.write(bitDir, override);
-    logger.debug('component has been written successfully');
-    return this;
-  }
-
-  _addComponentToBitMap(
-    bitMap: BitMap,
-    rootDir: string,
-    origin: string,
-    parent?: string,
-    configDir?: string
-  ): ComponentMap {
-    const filesForBitMap = this.files.map((file) => {
-      return { name: file.basename, relativePath: pathNormalizeToLinux(file.relative), test: file.test };
-    });
-
-    return bitMap.addComponent({
-      componentId: this.id,
-      files: filesForBitMap,
-      mainFile: this.mainFile,
-      rootDir,
-      configDir,
-      detachedCompiler: this.detachedCompiler,
-      detachedTester: this.detachedTester,
-      origin,
-      parent,
-      originallySharedDir: this.originallySharedDir,
-      wrapDir: this.wrapDir
-    });
-  }
-
   /**
    * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
    * and its dependencies. It helps to avoid large file-system paths.
@@ -596,139 +525,6 @@ export default class Component {
     });
   }
 
-  /**
-   * When using this function please check if you really need to pass the bitDir or not
-   * It's better to init the files with the correct base, cwd and path than pass it here
-   * It's mainly here for cases when we write from the model so this is the first point we actually have the dir
-   */
-  async write({
-    bitDir,
-    writeConfig = false,
-    configDir,
-    writePackageJson = true,
-    override = true,
-    origin,
-    parent,
-    consumer,
-    writeBitDependencies = false,
-    deleteBitDirContent,
-    componentMap,
-    excludeRegistryPrefix = false
-  }: {
-    bitDir?: string,
-    writeConfig?: boolean,
-    configDir?: boolean,
-    writePackageJson?: boolean,
-    override?: boolean,
-    origin?: string,
-    parent?: BitId,
-    consumer?: Consumer,
-    writeBitDependencies?: boolean,
-    deleteBitDirContent?: boolean,
-    componentMap?: ComponentMap,
-    excludeRegistryPrefix?: boolean
-  }): Promise<Component> {
-    logger.debug(`consumer-component.write, id: ${this.id.toString()}`);
-    const consumerPath: ?string = consumer ? consumer.getPath() : undefined;
-    const bitMap: ?BitMap = consumer ? consumer.bitMap : undefined;
-    if (!this.files) throw new GeneralError(`Component ${this.id.toString()} is invalid as it has no files`);
-    // Take the bitdir from the files (it will be the same for all the files of course)
-    const calculatedBitDir = bitDir || this.files[0].base;
-    // Update files base dir according to bitDir
-    if (this.files && bitDir) this.files.forEach(file => file.updatePaths({ newBase: bitDir }));
-    if (!this.dists.isEmpty() && bitDir) this.dists.get().forEach(dist => dist.updatePaths({ newBase: bitDir }));
-
-    // if bitMap parameter is empty, for instance, when it came from the scope, ignore bitMap altogether.
-    // otherwise, check whether this component is in bitMap:
-    // if it's there, write the files according to the paths in bit.map.
-    // Otherwise, write to bitDir and update bitMap with the new paths.
-    if (!bitMap) {
-      return this._writeToComponentDir({
-        bitDir: calculatedBitDir,
-        writeConfig,
-        writePackageJson,
-        consumer,
-        override,
-        writeBitDependencies,
-        excludeRegistryPrefix
-      });
-    }
-    if (!componentMap) {
-      // if there is no componentMap, the component is new to this project and should be written to bit.map
-      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
-    }
-    if (!consumer.shouldDistsBeInsideTheComponent() && this.dists.isEmpty()) {
-      // since the dists are set to be outside the components dir, the source files must be saved there
-      // otherwise, other components in dists won't be able to link to this component
-      this.copyFilesIntoDists();
-    }
-    // For IMPORTED component we have to delete the content of the directory before importing.
-    // Otherwise, when the author adds new files outside of the previous originallySharedDir and this user imports them
-    // the environment will contain both copies, the old one with the old originallySharedDir and the new one.
-    // If a user made changes to the imported component, it will show a warning and stop the process.
-    if (typeof deleteBitDirContent === 'undefined') {
-      deleteBitDirContent = origin === COMPONENT_ORIGINS.IMPORTED;
-    }
-    // when there is componentMap, this component (with this version or other version) is already part of the project.
-    // There are several options as to what was the origin before and what is the origin now and according to this,
-    // we update/remove/don't-touch the record in bit.map.
-    // The current origin can't be AUTHORED because when the author creates a component for the first time,
-    // 1) current origin is AUTHORED - If the version is the same as before, don't update bit.map. Otherwise, update.
-    // 2) current origin is IMPORTED - If the version is the same as before, don't update bit.map. Otherwise, update.
-    // one exception is where the origin was NESTED before, in this case, remove the current record and add a new one.
-    // 3) current origin is NESTED - the version can't be the same as before (otherwise it would be ignored before and
-    // never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
-    if (origin === COMPONENT_ORIGINS.IMPORTED && componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-      // when a user imports a component that was a dependency before, write the component directly into the components
-      // directory for an easy access/change. Then, remove the current record from bit.map and add an updated one.
-      const oldLocation = path.join(consumerPath, componentMap.rootDir);
-      logger.debug(
-        `deleting the old directory of a component at ${oldLocation}, the new directory is ${calculatedBitDir}`
-      );
-      fs.removeSync(oldLocation);
-      bitMap.removeComponent(this.id);
-      componentMap = this._addComponentToBitMap(bitMap, calculatedBitDir, origin, parent, configDir);
-    }
-    logger.debug('component is in bit.map, write the files according to bit.map');
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) writeConfig = false;
-    const newBase = componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : consumerPath;
-    this.writtenPath = newBase;
-    this.files.forEach(file => file.updatePaths({ newBase }));
-    const rootDir = componentMap.rootDir;
-    const resolvedConfigDir = configDir || componentMap.configDir;
-
-    const componentMapExistWithSameVersion = bitMap.isExistWithSameVersion(this.id);
-    const updateBitMap =
-      !componentMapExistWithSameVersion || componentMap.originallySharedDir !== this.originallySharedDir;
-    // update bitMap before writing the files to the filesystem, because as part of writing the
-    // package-json file, the componentMap is needed to be stored with the updated version
-    if (updateBitMap) {
-      if (componentMapExistWithSameVersion) {
-        // originallySharedDir has been changed. it affects also the relativePath of the files
-        // so it's better to just remove the old record and add a new one
-        bitMap.removeComponent(this.id);
-      }
-      this._addComponentToBitMap(bitMap, rootDir, origin, parent, resolvedConfigDir);
-    }
-
-    // Don't write the package.json for an authored component, because it's dependencies probably managed
-    // By the root package.json
-    const actualWithPackageJson = writePackageJson && origin !== COMPONENT_ORIGINS.AUTHORED;
-    await this._writeToComponentDir({
-      bitDir: newBase,
-      writeConfig,
-      configDir: resolvedConfigDir,
-      writePackageJson: actualWithPackageJson,
-      consumer,
-      override,
-      writeBitDependencies,
-      deleteBitDirContent,
-      excludeRegistryPrefix
-    });
-
-    return this;
-  }
-
   async build({
     scope,
     save,
@@ -782,8 +578,10 @@ export default class Component {
     Analytics.addBreadCrumb('runSpecs', 'tester found, start running tests');
     const tester = this.tester;
     if (!tester.loaded) {
+      const componentDir = this.componentMap ? this.componentMap.getComponentDir() : undefined;
+      const context = { dependentId: this.id, workspaceDir: consumerPath, componentDir };
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
-      await tester.install(scope, { verbose }, { dependentId: this.id });
+      await tester.install(scope, { verbose }, context);
       logger.debug('Environment components are installed');
     }
 
@@ -803,13 +601,16 @@ export default class Component {
       let specsResults: RawTestsResults[];
       let tmpFolderFullPath;
 
-      let contextPaths;
+      let contextPaths = {};
       if (this.tester && this.tester.context) {
         contextPaths = this.tester.context;
       } else if (consumer && consumer.bitMap) {
         contextPaths = {
           workspaceDir: consumer.bitMap.projectRoot
         };
+      }
+      if (!contextPaths.componentDir && component.writtenPath) {
+        contextPaths.componentDir = component.writtenPath;
       }
       try {
         if (tester && tester.action) {
@@ -851,6 +652,7 @@ export default class Component {
             if (verbose) {
               console.log(`deleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
             }
+            logger.info(`consumer-component.runSpecs, deleting ${tmpFolderFullPath}`);
             await fs.remove(tmpFolderFullPath);
           }
         } else {
@@ -883,6 +685,7 @@ export default class Component {
         }
       } catch (e) {
         if (tmpFolderFullPath) {
+          logger.info(`consumer-component.runSpecs, deleting ${tmpFolderFullPath}`);
           fs.removeSync(tmpFolderFullPath);
         }
         const errors = e.errors || [e];
@@ -952,7 +755,7 @@ export default class Component {
       if (!keep) await isolatedEnvironment.destroy();
       return results;
     } catch (e) {
-      await isolatedEnvironment.destroy();
+      if (!keep) await isolatedEnvironment.destroy();
       return Promise.reject(e);
     }
   }
@@ -1113,8 +916,8 @@ export default class Component {
       scope,
       lang,
       bindingPrefix,
-      compiler: compiler ? await CompilerExtension.loadFromModelObject(compiler) : null,
-      tester: tester ? await TesterExtension.loadFromModelObject(tester) : null,
+      compiler: compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null,
+      tester: tester ? await TesterExtension.loadFromSerializedModelObject(tester) : null,
       detachedCompiler,
       detachedTester,
       dependencies,

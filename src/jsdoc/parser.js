@@ -4,6 +4,16 @@ import exampleTagParser from './example-tag-parser';
 import type { PathLinux, PathOsBased } from '../utils/path';
 import { pathNormalizeToLinux } from '../utils';
 
+const docgen = require('react-docgen');
+
+export type Method = {
+  name: string,
+  description: string,
+  args: [],
+  returns: {},
+  modifiers: []
+};
+
 export type Doclet = {
   filePath: PathLinux,
   name: string,
@@ -12,6 +22,7 @@ export type Doclet = {
   returns?: Object,
   access?: string,
   examples?: Array,
+  methods?: Method[],
   properties?: Array,
   static?: Boolean
 };
@@ -101,8 +112,89 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
   doclets.push(doclet);
 }
 
+function formatProperties(props) {
+  return Object.keys(props).map((name) => {
+    const { type, description, required } = props[name];
+    return {
+      name,
+      description,
+      required,
+      type: stringifyType(type)
+    };
+  });
+}
+
+function formatMethods(methods) {
+  return Object.keys(methods).map((key) => {
+    const { returns, modifiers, params, docblock, name } = methods[key];
+    return {
+      name,
+      description: docblock,
+      returns,
+      modifiers,
+      params
+    };
+  });
+}
+
+function fromReactDocs({ description, displayName, props, methods }, filePath): Doclet {
+  return {
+    filePath: pathNormalizeToLinux(filePath),
+    name: displayName,
+    description,
+    properties: formatProperties(props),
+    access: 'public',
+    methods: formatMethods(methods)
+  };
+}
+
+function stringifyType(prop: { name: string, value?: any }): string {
+  const { name } = prop;
+  let transformed;
+
+  switch (name) {
+    default:
+      transformed = name;
+      break;
+    case 'func':
+      transformed = 'function';
+      break;
+    case 'shape':
+      transformed = JSON.stringify(
+        Object.keys(prop.value).reduce((acc = {}, current) => {
+          acc[current] = stringifyType(prop.value[current]);
+          return acc;
+        }, {})
+      );
+      break;
+    case 'enum':
+      transformed = prop.value.map(enumProp => enumProp.value).join(' | ');
+      break;
+    case 'instanceOf':
+      transformed = prop.value;
+      break;
+    case 'union':
+      transformed = prop.value.map(prop => stringifyType(prop)).join(' | ');
+      break;
+    case 'arrayOf':
+      transformed = `${stringifyType(prop.value)}[]`;
+      break;
+  }
+
+  return transformed;
+}
+
 export default function parse(data: string, filePath: PathOsBased): Doclet | [] {
   const doclets: Array<Doclet> = [];
+  try {
+    const reactDocs = docgen.parse(data);
+    if (reactDocs) {
+      const formatted = fromReactDocs(reactDocs, filePath);
+      formatted.args = [];
+      return formatted;
+    }
+  } catch (err) {}
+
   try {
     /**
      * [ \t]*  => can start with any number of tabs

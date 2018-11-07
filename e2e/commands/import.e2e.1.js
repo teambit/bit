@@ -29,7 +29,7 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
       // export a new simple component
       helper.createFile('global', 'simple.js');
-      helper.addComponent(path.normalize('global/simple.js'));
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
 
@@ -502,13 +502,13 @@ describe('bit import', function () {
         helper.createFile('', 'level1.js');
         const level0Fixture = "import a from './level1'";
         helper.createFile('', 'level0.js', level0Fixture);
-        helper.addComponentWithOptions('level0.js', { i: 'dep/level0' });
-        helper.addComponentWithOptions('level1.js', { i: 'dep/level1' });
+        helper.addComponent('level0.js', { i: 'dep/level0' });
+        helper.addComponent('level1.js', { i: 'dep/level1' });
         const fileFixture = "import a from './level0'";
         helper.createFile('', 'file1.js', fileFixture);
         helper.createFile('', 'file2.js', fileFixture);
-        helper.addComponentWithOptions('file1.js', { i: 'comp/comp1' });
-        helper.addComponentWithOptions('file2.js', { i: 'comp/comp2' });
+        helper.addComponent('file1.js', { i: 'comp/comp1' });
+        helper.addComponent('file2.js', { i: 'comp/comp2' });
         helper.commitAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
@@ -633,7 +633,7 @@ describe('bit import', function () {
         helper.createFile('utils', 'is-type-internal.js', fixtures.isType);
         const isTypeMainFixture = "module.exports = require('./is-type-internal');";
         helper.createFile('utils', 'is-type-main.js', isTypeMainFixture);
-        helper.addComponentWithOptions('utils/is-type-internal.js utils/is-type-main.js', {
+        helper.addComponent('utils/is-type-internal.js utils/is-type-main.js', {
           m: 'utils/is-type-main.js',
           i: 'utils/is-type'
         });
@@ -644,7 +644,7 @@ describe('bit import', function () {
         const isStringMainFixture =
           "const isType = require('./is-type-main.js'); module.exports = require('./is-string-internal');";
         helper.createFile('utils', 'is-string-main.js', isStringMainFixture);
-        helper.addComponentWithOptions('utils/is-string-internal.js utils/is-string-main.js', {
+        helper.addComponent('utils/is-string-internal.js utils/is-string-main.js', {
           m: 'utils/is-string-main.js',
           i: 'utils/is-string'
         });
@@ -676,14 +676,14 @@ describe('bit import', function () {
       helper.addNpmPackage('lodash.isboolean', '3.0.0');
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
-      helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
 
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
-      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.addComponent('with-deps.js', { i: 'comp/with-deps' });
       helper.commitAllComponents();
       helper.exportComponent('comp/with-deps');
     });
@@ -829,9 +829,9 @@ describe('bit import', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
       helper.commitAllComponents();
@@ -1019,10 +1019,10 @@ describe('bit import', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('style', 'style.css', '.main {}');
-      helper.addComponent('style/style.css');
+      helper.addComponent('style/style.css', { i: 'style/style' });
       const fooBarFixture = "const style = require('../style/style.css');";
       helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponent('bar/foo.js');
+      helper.addComponentBarFoo();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1099,15 +1099,15 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixtureTS = "export = isType; function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.ts', isTypeFixtureTS);
-      helper.addComponent('utils/is-type.ts');
+      helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
       const isStringFixtureTS =
         "import * as isType from './is-type'; export = isString; function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.ts', isStringFixtureTS);
-      helper.addComponent('utils/is-string.ts');
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
       const fooBarFixture =
         "import * as isString from '../utils/is-string'; export = foo; function foo() { return isString() + ' and got foo'; };";
       helper.createFile('bar', 'foo.ts', fooBarFixture);
-      helper.addComponent('bar/foo.ts');
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1242,11 +1242,11 @@ describe('bit import', function () {
       helper.importCompiler();
       const isTypeFixtureES6 = "export default function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureES6);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixtureES6 =
         "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixtureES6);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       const fooBarFixture =
         "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
@@ -1464,9 +1464,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -1524,7 +1524,7 @@ console.log(barFoo.default());`;
 
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV1);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitComponent('utils/is-type');
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
@@ -1568,7 +1568,7 @@ console.log(barFoo.default());`;
       helper.setNewLocalAndRemoteScopes();
       const isStringWithNoDepsFixture = "module.exports = function isString() { return 'got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringWithNoDepsFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1576,7 +1576,7 @@ console.log(barFoo.default());`;
       helper.importComponent('utils/is-string');
 
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringWithDepsFixture =
         "const isType = require('../../../utils/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('components/utils/is-string', 'is-string.js', isStringWithDepsFixture); // modify utils/is-string
@@ -1606,7 +1606,7 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1615,7 +1615,7 @@ console.log(barFoo.default());`;
       const isStringWithDepsFixture =
         "const isType = require('../components/utils/is-type/is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringWithDepsFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       try {
         output = helper.commitAllComponents();
       } catch (err) {
@@ -1634,9 +1634,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent(path.normalize('utils/is-type.js'));
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -1686,9 +1686,9 @@ console.log(barFoo.default());`;
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV1);
-      helper.addComponent(path.normalize('utils/is-type.js'));
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
 
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
@@ -1726,9 +1726,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent(path.normalize('utils/is-type.js'));
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent(path.normalize('utils/is-string.js'));
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       scopeAfterExport = helper.cloneLocalScope();
@@ -1841,9 +1841,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       // export to scope A
       helper.exportAllComponents();
@@ -1885,9 +1885,9 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
       const authorScope = helper.localScope;
@@ -2023,14 +2023,14 @@ console.log(barFoo.default());`;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile(path.join('src', 'utils'), 'is-type.js', fixtures.isType);
-      helper.addComponent('src/utils/is-type.js');
+      helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.createFile(path.join('src', 'utils'), 'is-string.js', fixtures.isString);
-      helper.addComponent('src/utils/is-string.js');
+      helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
       helper.createFile(path.join('src', 'bar'), 'foo.js', fooBarFixture);
-      helper.addComponent('src/bar/foo.js');
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -2147,13 +2147,13 @@ console.log(barFoo.default());`;
       helper.addNpmPackage('lodash.isboolean', '3.0.0');
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
-      helper.addComponentWithOptions('global/simple.js', { i: 'global/simple' });
+      helper.addComponent('global/simple.js', { i: 'global/simple' });
       helper.commitComponent('global/simple');
       helper.exportComponent('global/simple');
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';
       helper.createFile('', 'with-deps.js', withDepsFixture);
-      helper.addComponentWithOptions('with-deps.js', { i: 'comp/with-deps' });
+      helper.addComponent('with-deps.js', { i: 'comp/with-deps' });
       helper.commitAllComponents();
       helper.exportComponent('comp/with-deps');
       helper.reInitLocalScope();
@@ -2285,8 +2285,8 @@ console.log(barFoo.default());`;
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-type.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsType();
+      helper.addComponentUtilsIsString();
       helper.tagAllWithoutMessage();
       const exportOutput = helper.exportAllComponents();
 

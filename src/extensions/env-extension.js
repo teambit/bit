@@ -8,7 +8,7 @@ import Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
-import type { ExtensionFileModel } from './extension-file';
+import type { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
 import { Repository } from '../scope/objects';
 import { pathJoinLinux, removeFilesAndEmptyDirsRecursively } from '../utils';
 import type { PathOsBased } from '../utils/path';
@@ -52,6 +52,10 @@ export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps & { 
 export type EnvExtensionModel = BaseExtensionModel & {
   files?: ExtensionFileModel[]
 };
+export type EnvExtensionSerializedModel = BaseExtensionModel & {
+  files?: ExtensionFileSerializedModel[]
+};
+
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
   dynamicPackageDependencies: ?Object;
@@ -299,6 +303,23 @@ export default class EnvExtension extends BaseExtension {
     let files = [];
     if (modelObject.files && !R.isEmpty(modelObject.files)) {
       const loadFilesP = modelObject.files.map(file => ExtensionFile.loadFromExtensionFileModel(file, repository));
+      files = await Promise.all(loadFilesP);
+    }
+    const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, files, ...baseExtensionProps };
+    return envExtensionProps;
+  }
+
+  static async loadFromSerializedModelObject(
+    // $FlowFixMe
+    modelObject: EnvExtensionSerializedModel & { envType: EnvType }
+  ): Promise<EnvExtensionProps> {
+    Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
+    logger.debug('env-extension - loadFromModelObject');
+    // $FlowFixMe
+    const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
+    let files = [];
+    if (modelObject.files && !R.isEmpty(modelObject.files)) {
+      const loadFilesP = modelObject.files.map(file => ExtensionFile.loadFromExtensionFileSerializedModel(file));
       files = await Promise.all(loadFilesP);
     }
     const envExtensionProps: EnvExtensionProps = { envType: modelObject.envType, files, ...baseExtensionProps };

@@ -106,6 +106,7 @@ export default class Environment {
 
   destroy(): Promise<*> {
     logger.debug(`destroying the isolated environment at ${this.path}`);
+    logger.info(`environment, deleting ${this.path}`);
     return fs.remove(this.path);
   }
 

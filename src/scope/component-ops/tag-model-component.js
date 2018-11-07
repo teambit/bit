@@ -22,6 +22,7 @@ import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
+import type { BitIdStr } from '../../bit-id/bit-id';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
@@ -52,16 +53,18 @@ async function getFlattenedDependencies(
   scope: Scope,
   component: Component,
   graph: Object,
-  cache: Object
+  cache: Object,
+  prodGraph?: Object
 ): Promise<BitIds> {
   const id = component.id.toString();
-  if (!graph.hasNode(id)) return new BitIds();
-  const edges = graphlib.alg.preorder(graph, id);
-  const dependencies = R.tail(edges); // the first item is the component itself
+  const edges = getEdges(graph, id);
+  if (!edges) return new BitIds();
+  const dependencies = getEdgesWithProdGraph(prodGraph, edges);
   if (!dependencies.length) return new BitIds();
   const flattenedP = dependencies.map(async (dependency) => {
     if (cache[dependency]) return cache[dependency];
-    const dependencyBitId: BitId = graph.node(dependency);
+    // $FlowFixMe if graph doesn't have the node, prodGraph must have it
+    const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
     let versionDependencies;
     try {
       versionDependencies = await scope.importDependencies([dependencyBitId]);
@@ -80,6 +83,27 @@ async function getFlattenedDependencies(
   const flattenedUnique = BitIds.fromArray(R.flatten(flattened)).getUniq();
   // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
   return flattenedUnique.removeIfExistWithoutVersion(component.id);
+}
+
+function getEdges(graph: Object, id: BitIdStr): ?(BitIdStr[]) {
+  if (!graph.hasNode(id)) return null;
+  const edges = graphlib.alg.preorder(graph, id);
+  return R.tail(edges); // the first item is the component itself
+}
+
+/**
+ * for non-prod files, such as test files, we're interested also with its prod dependency.
+ * for example, a test file foo.spec.js of component 'foo', requires bar.js from component
+ * 'bar'. 'bar.js' requires 'baz.js' from component 'baz'.
+ * when calculating the edges of foo.spec.js by devGraph only, we'll get bar.js but not
+ * baz.js because the relationship between bar and baz are set on prodGraph only.
+ * @see dev-dependencies.e2e, 'dev-dependency that requires prod-dependency' case.
+ */
+function getEdgesWithProdGraph(prodGraph: ?Object, dependencies: BitIdStr[]): BitIdStr[] {
+  if (!prodGraph) return dependencies;
+  // $FlowFixMe
+  const prodDependencies = R.flatten(dependencies.map(dependency => getEdges(prodGraph, dependency))).filter(x => x);
+  return R.uniq([...dependencies, ...prodDependencies]);
 }
 
 function updateDependenciesVersions(componentsToTag: Component[]): void {
@@ -289,19 +313,22 @@ export default (async function tagModelComponent({
       scope,
       consumerComponent,
       graphDevDeps,
-      dependenciesCache
+      dependenciesCache,
+      graphDeps
     );
     const flattenedCompilerDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,
       graphCompilerDeps,
-      dependenciesCache
+      dependenciesCache,
+      graphDeps
     );
     const flattenedTesterDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,
       graphTesterDeps,
-      dependenciesCache
+      dependenciesCache,
+      graphDeps
     );
     await scope.sources.addSource({
       source: consumerComponent,

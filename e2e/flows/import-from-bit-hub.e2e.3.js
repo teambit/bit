@@ -25,9 +25,9 @@ chai.use(require('chai-fs'));
         scopeId = `${username}.${scopeName}`;
         helper.reInitLocalScope();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
         helper.commitAllComponents();
@@ -37,19 +37,19 @@ chai.use(require('chai-fs'));
         helper.reInitLocalScope();
         helper.importCompiler('bit.envs/compilers/babel');
         helper.createFile('utils', 'is-type-es6.js', fixtures.isTypeES6);
-        helper.addComponent('utils/is-type-es6.js');
+        helper.addComponent('utils/is-type-es6.js', { i: 'utils/is-type-es6' });
         helper.createFile(
           'utils',
           'is-string-es6.js',
           "import isType from './is-type-es6.js'; export default function isString() { return isType() +  ' and got is-string'; };"
         );
-        helper.addComponent('utils/is-string-es6.js');
+        helper.addComponent('utils/is-string-es6.js', { i: 'utils/is-string-es6' });
         helper.createFile(
           'bar',
           'foo-es6.js',
           "import isString from '../utils/is-string-es6.js'; export default function foo() { return isString() + ' and got foo'; };"
         );
-        helper.addComponent('bar/foo-es6.js');
+        helper.addComponent('bar/foo-es6.js', { i: 'bar/foo-es6' });
 
         helper.commitAllComponents();
         helper.exportAllComponents(scopeId);

@@ -20,7 +20,7 @@ describe('big text file', function () {
       const windowsFormatContent = bigFileContent.replace(/\r\n|\r|\n/g, '\r\n');
       fs.outputFileSync(path.join(helper.localScopePath, 'bar', 'big-text-file.txt'), windowsFormatContent);
       helper.createComponentBarFoo();
-      helper.addComponentWithOptions('bar', { i: 'bar/text', m: 'bar/foo.js' });
+      helper.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
       tagOutput = helper.commitComponent('bar/text');
     });
     it('tagging the component should not throw any error', () => {

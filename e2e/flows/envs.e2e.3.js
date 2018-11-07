@@ -42,12 +42,12 @@ describe('envs', function () {
     helper.setNewLocalAndRemoteScopes();
     const compiler = path.join('compilers', 'new-babel', 'compiler.js');
     helper.copyFixtureFile(compiler);
-    helper.addComponentWithOptions('compiler.js', {
+    helper.addComponent('compiler.js', {
       i: compilerId
     });
     const tester = path.join('testers', 'new-mocha', 'tester.js');
     helper.copyFixtureFile(tester);
-    helper.addComponentWithOptions('tester.js', {
+    helper.addComponent('tester.js', {
       i: testerId
     });
     helper.reInitEnvsScope();
@@ -76,9 +76,9 @@ describe('envs', function () {
     helper.addToRawConfigOfEnvInBitJson(undefined, 'valToDynamic', 'valToDynamic', TESTER_ENV_TYPE);
     helper.createFile('', 'objRestSpread.js', fixtures.objectRestSpread);
     helper.createFile('', 'pass.spec.js', fixtures.passTest);
-    helper.addComponentWithOptions('objRestSpread.js', { i: 'comp/my-comp', t: '"*.spec.js"', m: 'objRestSpread.js' });
+    helper.addComponent('objRestSpread.js', { i: 'comp/my-comp', t: '"*.spec.js"', m: 'objRestSpread.js' });
     helper.createFile('', 'comp2.js');
-    helper.addComponentWithOptions('comp2.js', { i: 'comp/my-comp2' });
+    helper.addComponent('comp2.js', { i: 'comp/my-comp2' });
     helper.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.installNpmPackage('babel-preset-env', '1.6.1');
     helper.installNpmPackage('chai', '4.1.2');
@@ -328,17 +328,33 @@ describe('envs', function () {
       describe('with failing tests', () => {
         before(() => {
           helper.createFile('', 'fail.spec.js', fixtures.failTest);
-          helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+          helper.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
         });
         describe('with default fork level', () => {
           it('should show results without define fork level', () => {
-            const output = helper.testComponent('comp/my-comp');
+            let output;
+            let statusCode;
+            try {
+              helper.testComponent('comp/my-comp');
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
           });
           it('should write config files to tmp directory', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { v: '' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             const alignedOuput = Helper.alignOutput(output);
             const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
             const writingRegEx = new RegExp('writing config files to', 'g');
@@ -357,7 +373,7 @@ describe('envs', function () {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.testComponent('comp/my-comp');
             } catch (e) {
               output = e.message;
@@ -371,10 +387,18 @@ describe('envs', function () {
           before(() => {
             helper.getClonedLocalScope(authorScopeBeforeChanges);
             helper.createFile('', 'fail.spec.js', fixtures.failTest);
-            helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+            helper.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
@@ -383,7 +407,7 @@ describe('envs', function () {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'NONE' });
             } catch (e) {
               output = e.message;
@@ -397,10 +421,18 @@ describe('envs', function () {
           before(() => {
             helper.getClonedLocalScope(authorScopeBeforeChanges);
             helper.createFile('', 'fail.spec.js', fixtures.failTest);
-            helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+            helper.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
@@ -409,7 +441,7 @@ describe('envs', function () {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'ONE' });
             } catch (e) {
               output = e.message;
@@ -423,10 +455,18 @@ describe('envs', function () {
           before(() => {
             helper.getClonedLocalScope(authorScopeBeforeChanges);
             helper.createFile('', 'fail.spec.js', fixtures.failTest);
-            helper.addComponentWithOptions('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
+            helper.addComponent('fail.spec.js', { i: 'comp/my-comp', t: 'fail.spec.js' });
           });
           it('should show results with failing tests', () => {
-            const output = helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
+            let output;
+            let statusCode;
+            try {
+              helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
+            } catch (err) {
+              output = err.stdout.toString();
+              statusCode = err.status;
+            }
+            expect(statusCode).to.not.equal(0);
             expect(output).to.have.string('tests failed');
             expect(output).to.have.string('✔   group of passed tests');
             expect(output).to.have.string('❌   group of failed tests');
@@ -435,7 +475,7 @@ describe('envs', function () {
             helper.createFile('', 'exception.spec.js', fixtures.exceptionTest);
             let output;
             try {
-              helper.addComponentWithOptions('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
+              helper.addComponent('exception.spec.js', { i: 'comp/my-comp', t: 'exception.spec.js' });
               helper.testComponentWithOptions('comp/my-comp', { '-fork-level': 'COMPONENT' });
             } catch (e) {
               output = e.message;
@@ -615,11 +655,19 @@ describe('envs', function () {
           before(() => {
             helper.createFile(componentFolder, 'fail.spec.js', fixtures.failTest);
             const failSpecPath = path.join(componentFolder, 'fail.spec.js');
-            helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
+            helper.addComponent(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
           });
           describe('with default fork level', () => {
             it('should show results without define fork level', () => {
-              const output = helper.testComponent('comp/my-comp');
+              let output;
+              let statusCode;
+              try {
+                helper.testComponent('comp/my-comp');
+              } catch (err) {
+                output = err.stdout.toString();
+                statusCode = err.status;
+              }
+              expect(statusCode).to.not.equal(0);
               expect(output).to.have.string('tests failed');
               expect(output).to.have.string('✔   group of passed tests');
               expect(output).to.have.string('❌   group of failed tests');
@@ -630,7 +678,7 @@ describe('envs', function () {
 
               let output;
               try {
-                helper.addComponentWithOptions(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
+                helper.addComponent(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
                 helper.testComponent('comp/my-comp');
               } catch (e) {
                 output = e.message;
@@ -1057,11 +1105,19 @@ describe('envs', function () {
               helper.getClonedLocalScope(importedScopeBeforeChanges);
               helper.createFile(componentFolder, 'fail.spec.js', fixtures.failTest);
               const failSpecPath = path.join(componentFolder, 'fail.spec.js');
-              helper.addComponentWithOptions(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
+              helper.addComponent(failSpecPath, { i: 'comp/my-comp', t: failSpecPath });
             });
             describe('with default fork level', () => {
               it('should show results without define fork level', () => {
-                const output = helper.testComponent('comp/my-comp');
+                let output;
+                let statusCode;
+                try {
+                  helper.testComponent('comp/my-comp');
+                } catch (err) {
+                  output = err.stdout.toString();
+                  statusCode = err.status;
+                }
+                expect(statusCode).to.not.equal(0);
                 expect(output).to.have.string('tests failed');
                 expect(output).to.have.string('✔   group of passed tests');
                 expect(output).to.have.string('❌   group of failed tests');
@@ -1069,7 +1125,7 @@ describe('envs', function () {
               it('should show results when there is exception on a test file', () => {
                 helper.createFile(componentFolder, 'exception.spec.js', fixtures.exceptionTest);
                 const exceptionSpecPath = path.join(componentFolder, 'exception.spec.js');
-                helper.addComponentWithOptions(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
+                helper.addComponent(exceptionSpecPath, { i: 'comp/my-comp', t: exceptionSpecPath });
                 let output;
                 try {
                   helper.testComponent('comp/my-comp');

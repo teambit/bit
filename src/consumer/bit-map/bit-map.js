@@ -45,6 +45,7 @@ export default class BitMap {
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
   allIds: ?BitIds;
+  allTrackDirs: ?{ [trackDir: PathLinux]: BitId };
 
   constructor(projectRoot: string, mapPath: string, version: string) {
     this.projectRoot = projectRoot;
@@ -651,7 +652,7 @@ export default class BitMap {
     mainFile?: PathOsBased,
     origin: ComponentOrigin,
     parent?: BitId,
-    rootDir?: string,
+    rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ConfigDir,
     trackDir?: PathOsBased,
     override: boolean,
@@ -758,6 +759,7 @@ export default class BitMap {
     this.paths = {};
     this.pathsLowerCase = {};
     this.allIds = undefined;
+    this.allTrackDirs = undefined;
   };
 
   _removeFromComponentsArray(componentId: BitId) {
@@ -890,6 +892,19 @@ export default class BitMap {
         });
       });
     }
+  }
+
+  getAllTrackDirs() {
+    if (!this.allTrackDirs) {
+      this.allTrackDirs = {};
+      Object.keys(this.components).forEach((componentId) => {
+        const component = this.components[componentId];
+        if (!component.trackDir) return;
+        // $FlowFixMe
+        this.allTrackDirs[component.trackDir] = component.id;
+      });
+    }
+    return this.allTrackDirs;
   }
 
   updatePathLocation(
