@@ -92,7 +92,7 @@ export default class DependencyFileLinkGenerator {
 
     const linkFiles = [];
     if (this.component.dependenciesSavedAsComponents) {
-      this.consumer.bitMap.getComponent(this.dependencyId);
+      this.dependencyComponentMap = this.consumer.bitMap.getComponent(this.dependencyId);
     }
 
     const depRootDir: ?PathOsBasedAbsolute = this.getDepRootDir();

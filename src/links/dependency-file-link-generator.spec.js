@@ -56,7 +56,7 @@ describe('DependencyFileLinkGenerator', () => {
       });
       describe('when createNpmLinkFiles is set to true', () => {
         before(() => {
-          dependencyFileLinkGenerator.createNpmLinkFiles = true;
+          dependencyFileLinkGenerator.isLinkToPackage = true;
           const linkResults = dependencyFileLinkGenerator.generate();
           linkResult = linkResults[0];
         });
@@ -150,7 +150,7 @@ describe('DependencyFileLinkGenerator', () => {
         });
         describe('when createNpmLinkFiles is set to true', () => {
           before(() => {
-            dependencyFileLinkGenerator.createNpmLinkFiles = true;
+            dependencyFileLinkGenerator.isLinkToPackage = true;
             linkResults = dependencyFileLinkGenerator.generate();
           });
           it('should generate two link files, one for the source and one for the dist', () => {
@@ -261,7 +261,7 @@ describe('DependencyFileLinkGenerator', () => {
         });
         describe('when createNpmLinkFiles is set to true', () => {
           before(() => {
-            dependencyFileLinkGenerator.createNpmLinkFiles = true;
+            dependencyFileLinkGenerator.isLinkToPackage = true;
             linkResults = dependencyFileLinkGenerator.generate();
           });
           it('should generate two link files, one for the source and one for the dist', () => {
