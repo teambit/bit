@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
 import { statusInvalidComponentsMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import * as fixtures from '../fixtures/fixtures';
 
 const assertArrays = require('chai-arrays');
 
@@ -551,6 +552,38 @@ describe('bit status command', function () {
     it('should show the missing component as missing', () => {
       expect(output).to.have.string('missing components');
       expect(output).to.have.string('bar/foo.js -> scope.bar/baz');
+    });
+  });
+  /**
+   * this has been written due to the following bug:
+   * when Bit resolves dependencies of a component, the data is saved in the cache for the next
+   * component, in case it uses some files from the previous components.
+   * the bug with the cache was that it didn't save the missing files only the found dependencies.
+   * as a result, if a component has missing files and it has been retrieved from the cache, bit
+   * status didn't show the component with the missing data.
+   */
+  describe('when a component has missing files and its dependencies are resolved from the cache', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentUtilsIsString();
+      helper.createComponentBarFoo(fixtures.barFooFixture);
+      helper.addComponentBarFoo();
+      helper.addComponentUtilsIsString();
+
+      // an intermediate step, make sure bar/foo is before utils/is-string
+      // so then when bit-javascript resolves dependencies of utils/is-string it finds them in the
+      // cache
+      const bitMap = helper.readBitMapWithoutVersion();
+      const components = Object.keys(bitMap);
+      expect(components[0]).to.equal('bar/foo');
+      expect(components[1]).to.equal('utils/is-string');
+
+      output = helper.status();
+    });
+    it('should show missing utils/is-type', () => {
+      expect(output).to.have.string('non-existing dependency files');
+      expect(output).to.have.string('utils/is-string.js -> ./is-type.js');
     });
   });
 });
