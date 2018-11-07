@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.29 - 2018-11-07]
+
 - shorten the generated component ID to the minimum possible
 
 ## [13.0.5-dev.28 - 2018-11-06]
