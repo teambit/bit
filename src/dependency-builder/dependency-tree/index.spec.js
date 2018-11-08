@@ -411,7 +411,9 @@ describe('dependencyTree', function () {
       const cache = {};
 
       cache[path.normalize(`${fixtures}/amd/b.js`)] = {
-        dependencies: [path.normalize(`${fixtures}/amd/b.js`), path.normalize(`${fixtures}/amd/c.js`)]
+        pathMap: {
+          dependencies: [path.normalize(`${fixtures}/amd/b.js`), path.normalize(`${fixtures}/amd/c.js`)]
+        }
       };
 
       const tree = dependencyTree({
@@ -430,7 +432,7 @@ describe('dependencyTree', function () {
 
       const cache = {
         // Shouldn't process the first file's tree
-        [filename]: { dependencies: [] }
+        [filename]: { pathMap: { dependencies: [] } }
       };
 
       const tree = dependencyTree({
