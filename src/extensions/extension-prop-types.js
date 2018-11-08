@@ -103,12 +103,15 @@ export default class ExtensionPropTypes {
             // TODO: make a nice error
             throw new Error(`the prop ${key} has an invalid value of type ${typeName}`);
           }
+          return isValid;
+        })
+        .catch((e) => {
+          throw e;
         });
       promises.push(validateFuncP);
     };
-
     R.forEachObjIndexed(validateVal, rawProps);
-    await Promise.all(promises);
+    return Promise.all(promises);
   }
 }
 

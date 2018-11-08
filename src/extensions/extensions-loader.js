@@ -57,7 +57,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
  * @param {string} consumerPath
  * @param {string} scopePath
  */
-const _loadExtension = (consumerPath: ?string, scopePath: ?string) => (
+const _loadExtension = (consumerPath: ?string, scopePath: ?string) => async (
   rawConfig: Object = {},
   name: string
 ): Promise<Extension> => {

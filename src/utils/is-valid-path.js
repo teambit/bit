@@ -8,6 +8,9 @@ const MAX_LENGTH = 4096;
  */
 const INVALID_CHARS = ['<', '>', '|', '?', '*', ':', '"'];
 
+// TODO: // rename this function, it's very confusing!
+// it's not check if path is valid but if path follow specific rules.
+// We have also installed the is-valid-path package (which really check if path is valid - like not number and not start with !)
 /**
  * relevant for mainFile, rootDir and files relative-paths. Either in bitmap or in the model.
  * 1) it can't be absolute
