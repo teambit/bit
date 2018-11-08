@@ -9,6 +9,8 @@
  * @param {Function} functionType The function to attempt.
  * @param {string[]} arrayOfType
  * @param {Array<number|Object>} arrayOfUnion
+ * @param {string} [optionalParameter] my optional parameter
+ * @param {string} [optionalParameterWithDefaultValue=value] my optional parameter with default value
  *
  */
 function foo(anyType, arrayType, unionType, myCustomType, objectType, functionType, arrayOfType, arrayOfUnion) {

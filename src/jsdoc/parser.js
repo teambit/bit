@@ -36,13 +36,18 @@ function formatTag(tag: Object): Object {
     // see here for more info: https://github.com/eslint/doctrine/issues/185
     formattedType = formattedType.replace('.<', '<');
   }
+  if (tag.type.type === doctrine.type.Syntax.OptionalType) {
+    // Doctrine shows an optional type with a suffix `=` (e.g. `string=`), we prefer the more
+    // common syntax `?` (e.g. `string?`)
+    formattedType = formattedType.replace('=', '?');
+  }
   tag.type = formattedType;
 
   return tag;
 }
 
 function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsBased) {
-  const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true });
+  const commentsAst = doctrine.parse(doc.trim(), { unwrap: true, recoverable: true, sloppy: true });
   if (!commentsAst) return;
 
   const args = [];
