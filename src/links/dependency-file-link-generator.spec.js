@@ -9,8 +9,37 @@ import utilsIsStringEs6 from '../../fixtures/consumer-components/es6/utils-is-st
 import barFooCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/bar-foo.json';
 import utilsIsStringCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/utils-is-string.json';
 import { pathRelativeLinux } from '../utils/path';
+import * as globalConfig from '../api/consumer/lib/global-config';
+
+const mockBitMap = () => {
+  return {
+    getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
+  };
+};
+
+const mockConsumer = (distIsInsideTheComponent = true) => {
+  const consumer = {
+    bitMap: mockBitMap(),
+    getPath: () => '/root',
+    shouldDistsBeInsideTheComponent: () => true,
+    toAbsolutePath: str => `/root/${str}`
+  };
+  if (!distIsInsideTheComponent) {
+    consumer.bitJson = { distEntry: 'src', distTarget: 'dist' };
+    consumer.shouldDistsBeInsideTheComponent = () => false;
+  }
+
+  return consumer;
+};
+
+const mockGetSync = () => {
+  globalConfig.getSync = () => '@bit';
+};
 
 describe('DependencyFileLinkGenerator', () => {
+  before(() => {
+    mockGetSync();
+  });
   describe('generate()', async () => {
     describe('using plain javascript', () => {
       let dependencyFileLinkGenerator;
@@ -18,16 +47,8 @@ describe('DependencyFileLinkGenerator', () => {
       before(async () => {
         const component = await Component.fromString(JSON.stringify(barFoo));
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsString));
-        const bitMap = {
-          getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
-        };
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-          consumer: {
-            bitMap,
-            getPath: () => '/root',
-            shouldDistsBeInsideTheComponent: () => true,
-            toAbsolutePath: str => `/root/${str}`
-          },
+          consumer: mockConsumer(),
           component,
           componentMap: {
             rootDir: 'components/bar/foo'
@@ -81,16 +102,8 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooEs6));
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
-          const bitMap = {
-            getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
-          };
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-            consumer: {
-              bitMap,
-              getPath: () => '/root',
-              shouldDistsBeInsideTheComponent: () => true,
-              toAbsolutePath: str => `/root/${str}`
-            },
+            consumer: mockConsumer(),
             component,
             componentMap: {
               rootDir: 'components/bar/foo'
@@ -191,17 +204,8 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooEs6));
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
-          const bitMap = {
-            getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
-          };
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-            consumer: {
-              bitMap,
-              bitJson: { distEntry: 'src', distTarget: 'dist' },
-              getPath: () => '/root',
-              shouldDistsBeInsideTheComponent: () => false,
-              toAbsolutePath: str => `/root/${str}`
-            },
+            consumer: mockConsumer(false),
             component,
             componentMap: {
               rootDir: 'components/bar/foo'
@@ -305,16 +309,8 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
-          const bitMap = {
-            getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
-          };
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-            consumer: {
-              bitMap,
-              getPath: () => '/root',
-              shouldDistsBeInsideTheComponent: () => true,
-              toAbsolutePath: str => `/root/${str}`
-            },
+            consumer: mockConsumer(),
             component,
             componentMap: {
               rootDir: 'components/bar/foo'
@@ -374,17 +370,8 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
-          const bitMap = {
-            getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
-          };
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-            consumer: {
-              bitMap,
-              bitJson: { distEntry: 'src', distTarget: 'dist' },
-              getPath: () => '/root',
-              shouldDistsBeInsideTheComponent: () => false,
-              toAbsolutePath: str => `/root/${str}`
-            },
+            consumer: mockConsumer(false),
             component,
             componentMap: {
               rootDir: 'components/bar/foo'
