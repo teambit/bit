@@ -66,6 +66,33 @@ module.exports = function (src, options = {}) {
           addDependency(node.expression.value);
         }
         break;
+      case 'CallExpression':
+        if (node.callee.type === 'Import' && node.arguments.length) {
+          addDependency(node.arguments[0].value);
+        }
+        if (
+          node.callee.type === 'Identifier' && // taken from detective-cjs
+          node.callee.name === 'require' &&
+          node.arguments &&
+          node.arguments.length &&
+          (node.arguments[0].type === 'Literal' || node.arguments[0].type === 'StringLiteral')
+        ) {
+          addDependency(node.arguments[0].value);
+        }
+        break;
+      case 'MemberExpression':
+        if (
+          node.object.type === 'CallExpression' &&
+          node.object.callee.type === 'Identifier' &&
+          node.object.callee.name === 'require' &&
+          node.object.arguments &&
+          node.object.arguments.length &&
+          (node.object.arguments[0].type === 'Literal' || node.object.arguments[0].type === 'StringLiteral')
+        ) {
+          const depValue = node.object.arguments[0].value;
+          addDependency(depValue);
+        }
+        break;
       default:
         break;
     }

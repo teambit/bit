@@ -63,6 +63,14 @@ describe('detective-typescript', () => {
     expect(deps).to.have.property('mylib2');
   });
 
+  it('handles mixed imports of typescript and javascript', () => {
+    const deps = detective('import {foo, bar} from "mylib";\nconst mylib2 = require("mylib2");');
+    const depsKeys = Object.keys(deps);
+    assert(depsKeys.length === 2);
+    expect(deps).to.have.property('mylib');
+    expect(deps).to.have.property('mylib2');
+  });
+
   it('handles default imports', () => {
     const deps = detective('import foo from "foo";');
     const depsKeys = Object.keys(deps);
@@ -77,10 +85,11 @@ describe('detective-typescript', () => {
     expect(deps).to.have.property('mylib');
   });
 
-  it('returns an empty list for non modules', () => {
+  it('retrieves dependencies when using javascript syntax', () => {
     const deps = detective('var foo = require("foo");');
     const depsKeys = Object.keys(deps);
-    assert(!depsKeys.length);
+    assert(depsKeys.length === 1);
+    expect(deps).to.have.property('foo');
   });
 
   it('returns an empty list for empty files', () => {
