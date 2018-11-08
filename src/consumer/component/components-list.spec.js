@@ -52,4 +52,59 @@ describe('ComponentList', () => {
       expect(result.id).to.be.an.instanceOf(BitId);
     });
   });
+  describe('filterComponentsByWildcard', () => {
+    describe('passing bit ids', () => {
+      let bitIds;
+      before(() => {
+        bitIds = [
+          BitId.parse('utils/is/string'),
+          BitId.parse('utils/is/type'),
+          BitId.parse('utils/fs/read'),
+          BitId.parse('utils/fs/write'),
+          BitId.parse('bar/foo'),
+          BitId.parse('vuz/vuz')
+        ];
+      });
+      const expectToMatch = (idWithWildCard, expectedResults) => {
+        const results = ComponentsList.filterComponentsByWildcard(bitIds, idWithWildCard);
+        const resultsStr = results.map(result => result.toString());
+        expectedResults.forEach(expectedResult => expect(resultsStr).to.include(expectedResult));
+        expect(results.length).to.equal(expectedResults.length);
+      };
+      it('should match utils/is/*', () => {
+        expectToMatch('utils/is/*', ['utils/is/string', 'utils/is/type']);
+      });
+      it('should match utils/*', () => {
+        expectToMatch('utils/*', ['utils/is/string', 'utils/is/type', 'utils/fs/read', 'utils/fs/write']);
+      });
+      it('should match *', () => {
+        expectToMatch('*', [
+          'utils/is/string',
+          'utils/is/type',
+          'utils/fs/read',
+          'utils/fs/write',
+          'bar/foo',
+          'vuz/vuz'
+        ]);
+      });
+      it('should match */fs/*', () => {
+        expectToMatch('*/fs/*', ['utils/fs/read', 'utils/fs/write']);
+      });
+      it('should match utils/*/read', () => {
+        expectToMatch('utils/*/read', ['utils/fs/read']);
+      });
+      it('should match v*', () => {
+        expectToMatch('v*', ['vuz/vuz']);
+      });
+      it('should not match non-exist*', () => {
+        expectToMatch('non-exist*', []);
+      });
+      it('should match bit ids also without the scope name', () => {
+        expectToMatch('fs*', ['utils/fs/read', 'utils/fs/write']);
+      });
+      it('should not match s* as non of the ids starts with "s" (with and without scope names)', () => {
+        expectToMatch('s*', []);
+      });
+    });
+  });
 });

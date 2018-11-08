@@ -90,7 +90,9 @@ export default class Export extends Command {
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
 
-    if (all || scope) {
+    const idHasWildcard = id && id.includes('*');
+
+    if (all || scope || idHasWildcard) {
       return commitAllAction({
         message: message || '',
         exactVersion: getVersion(),
@@ -101,7 +103,8 @@ export default class Export extends Command {
         ignoreNewestVersion,
         skipTests,
         scope,
-        includeImported
+        includeImported,
+        idWithWildcard: id
       });
     }
     return commitAction({

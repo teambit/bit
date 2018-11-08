@@ -333,4 +333,31 @@ export default class ComponentsList {
       return 0;
     });
   }
+
+  static filterComponentsByWildcard<T>(components: T, idWithWildcard: string): T {
+    const getBitId = (component): BitId => {
+      let name;
+      if (R.is(ModelComponent, component)) name = component.toBitId();
+      else if (R.is(Component, component)) name = component.id;
+      else if (R.is(BitId, component)) name = component;
+      else if (R.is(String)) name = component;
+      else throw new Error(`filterComponentsByWildcard get component with the wrong type: ${typeof component}`);
+      return name;
+    };
+
+    // replace "*" with ".*" to match any character
+    const rule = idWithWildcard.replace(/\*/g, '.*');
+    const regex = new RegExp(`^${rule}$`);
+    const isNameMatchByWildcard = (name): boolean => {
+      return regex.test(name);
+    };
+    // $FlowFixMe
+    return components.filter((component) => {
+      const bitId: BitId = getBitId(component);
+      return (
+        isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||
+        isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
+      );
+    });
+  }
 }
