@@ -134,8 +134,8 @@ export default class DependencyFileLinkGenerator {
           // when isCustomResolvedUsed, the link is generated inside node_module directory, so for
           // dist inside the component, only one link is needed at the parentRootDir. for dist
           // outside the component dir, another link is needed for the dist/parentRootDir.
-          // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
-          prepareLinkFileParams.linkPath = path.join(distRoot, 'node_modules', this.relativePath.importSource);
+          const importSourcePath = this._getImportSourcePathForCustomResolve(relativeDistExtInDependency);
+          prepareLinkFileParams.linkPath = path.join(distRoot, importSourcePath);
           const linkFileInNodeModules = this.prepareLinkFile(prepareLinkFileParams);
           linkFiles.push(linkFileInNodeModules);
         }
@@ -162,17 +162,23 @@ export default class DependencyFileLinkGenerator {
   getLinkPath(relativeDistExtInDependency: string): string {
     const sourceRelativePath = this.relativePath.sourceRelativePath;
     const parentDir = this.getTargetDir();
-    if (!this.relativePath.isCustomResolveUsed) return path.join(parentDir, sourceRelativePath);
+    if (this.relativePath.isCustomResolveUsed) {
+      const importSourcePath = this._getImportSourcePathForCustomResolve(relativeDistExtInDependency);
+      // if createNpmLinkFiles, the path will be part of the postinstall script, so it shouldn't be absolute
+      return this.createNpmLinkFiles ? importSourcePath : path.join(parentDir, importSourcePath);
+    }
+    return path.join(parentDir, sourceRelativePath);
+  }
+
+  _getImportSourcePathForCustomResolve(relativeDistExtInDependency: string): PathOsBased {
     // $FlowFixMe relativePath.importSource is set when isCustomResolveUsed
     const importSource: string = this.relativePath.importSource;
-    const importSourceFileExt = relativeDistExtInDependency || path.extname(sourceRelativePath);
+    const importSourceFileExt = relativeDistExtInDependency || path.extname(this.relativePath.sourceRelativePath);
     // e.g. for require('utils/is-string'), the link should be at node_modules/utils/is-string/index.js
     const importSourceFile = path.extname(importSource)
       ? importSource
       : path.join(importSource, `${DEFAULT_INDEX_NAME}.${importSourceFileExt}`);
-    const importSourcePath = path.join('node_modules', importSourceFile);
-    // if createNpmLinkFiles, the path will be part of the postinstall script, so it shouldn't be absolute
-    return this.createNpmLinkFiles ? importSourcePath : path.join(parentDir, importSourcePath);
+    return path.join('node_modules', importSourceFile);
   }
 
   prepareLinkFile({ linkPath, relativePathInDependency, depRootDir }: PrepareLinkFileParams): LinkFile {
