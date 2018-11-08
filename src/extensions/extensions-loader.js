@@ -14,7 +14,7 @@ import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
  */
 export default (async function loadExtensions(): Promise<Extension[]> {
   try {
-    logger.debug('start loading extensions');
+    logger.debug('start loading workspace extensions');
     const getConsumer = async (): Promise<?Consumer> => {
       try {
         const consumer = await loadConsumer();
