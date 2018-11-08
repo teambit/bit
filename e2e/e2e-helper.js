@@ -301,7 +301,7 @@ export default class Helper {
       .sync(path.normalize(`**/${ext}`), { cwd: this.localScopePath, dot: includeDot })
       .map(x => path.normalize(x));
   }
-  createFile(folder: string = 'bar', name: string = 'foo.js', impl?: string = fixtures.fooFixture) {
+  createFile(folder: string, name: string, impl?: string = fixtures.fooFixture) {
     const filePath = path.join(this.localScopePath, folder, name);
     fs.outputFileSync(filePath, impl);
   }
@@ -542,8 +542,16 @@ export default class Helper {
   // #endregion
 
   // #region bit commands on templates (like add BarFoo / create compiler)
-  createComponentBarFoo(impl?: string) {
-    this.createFile(undefined, undefined, impl);
+  createComponentBarFoo(impl?: string = fixtures.fooFixture) {
+    this.createFile('bar', 'foo.js', impl);
+  }
+
+  createComponentUtilsIsType(impl?: string = fixtures.isType) {
+    this.createFile('utils', 'is-type.js', impl);
+  }
+
+  createComponentUtilsIsString(impl?: string = fixtures.isString) {
+    this.createFile('utils', 'is-string.js', impl);
   }
 
   addComponentBarFoo() {
