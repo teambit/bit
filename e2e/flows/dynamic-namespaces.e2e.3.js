@@ -20,7 +20,7 @@ describe('dynamic namespaces', function () {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('bar', 'foo.js');
-        const addOutput = helper.addComponentWithOptions('bar/foo.js', { i: componentName });
+        const addOutput = helper.addComponent('bar/foo.js', { i: componentName });
         expect(addOutput).to.have.string('added');
         tagOutput = helper.tagAllWithoutMessage();
         catComp = helper.catComponent(componentName);
@@ -71,14 +71,14 @@ describe('dynamic namespaces', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('', 'foo.js');
-      helper.addComponentWithOptions('foo.js', { i: 'foo' });
+      helper.addComponent('foo.js', { i: 'foo' });
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.createFile('bar', 'foo.js');
-      helper.addComponentWithOptions('bar/foo.js', { i: `${helper.remoteScope}/foo` });
+      helper.addComponent('bar/foo.js', { i: `${helper.remoteScope}/foo` });
     });
     it('should throw an error and not allow the import', () => {
       const output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/foo`);

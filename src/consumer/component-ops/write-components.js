@@ -15,6 +15,7 @@ import { Consumer } from '..';
 import { isDir, isDirEmptySync } from '../../utils';
 import GeneralError from '../../error/general-error';
 import ComponentMap from '../bit-map/component-map';
+import ComponentWriter from './component-writer';
 
 function throwErrorWhenDirectoryNotEmpty(
   componentDir: string,
@@ -109,9 +110,9 @@ export default (async function writeToComponentsDir({
     // also, don't write dists file for imported component, unless the user used '--dist' flag
     componentWithDeps.component.dists.writeDistsFiles = writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
     return {
-      component: componentWithDeps.component,
       writeParams: {
-        bitDir,
+        component: componentWithDeps.component,
+        writeToPath: bitDir,
         override: true,
         writeConfig,
         configDir: configDir || configDirFromComponentMap,
@@ -119,12 +120,15 @@ export default (async function writeToComponentsDir({
         origin,
         consumer,
         writeBitDependencies: writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-        componentMap,
+        existingComponentMap: componentMap,
         excludeRegistryPrefix
       }
     };
   });
-  const writeComponentsP = writeComponentsParams.map(({ component, writeParams }) => component.write(writeParams));
+  const writeComponentsP = writeComponentsParams.map(({ writeParams }) => {
+    const componentWriter = ComponentWriter.getInstance(writeParams);
+    return componentWriter.write();
+  });
   const writtenComponents = await Promise.all(writeComponentsP);
 
   const allDependenciesP = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
@@ -179,22 +183,24 @@ export default (async function writeToComponentsDir({
         consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
         return Promise.resolve(dep);
       }
-      const depBitPath = consumer.composeDependencyPath(dep.id);
-      dep.writtenPath = depBitPath;
-      dependenciesIdsCache[dependencyId] = depBitPath;
+      const depRootPath = consumer.composeDependencyPath(dep.id);
+      dep.writtenPath = depRootPath;
+      dependenciesIdsCache[dependencyId] = depRootPath;
       // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
       // and namespace can co-exist with different versions.
       const componentMap = consumer.bitMap.getComponentIfExist(dep.id);
-      return dep.write({
-        bitDir: depBitPath,
+      const componentWriter = ComponentWriter.getInstance({
+        component: dep,
+        writeToPath: depRootPath,
         override: true,
         writePackageJson,
         origin: COMPONENT_ORIGINS.NESTED,
         parent: componentWithDeps.component.id,
         consumer,
-        componentMap,
+        existingComponentMap: componentMap,
         excludeRegistryPrefix
       });
+      return componentWriter.write();
     });
 
     return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));

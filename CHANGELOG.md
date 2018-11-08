@@ -7,7 +7,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.5-dev.29 - 2018-11-07]
+
+- shorten the generated component ID to the minimum possible
+
+## [13.0.5-dev.28 - 2018-11-06]
+
+- fix dev-dependency that requires prod-dependency to include the dependency in the flattenedDevDependencies array
+- do not delete isolated environment when running ci-update with keep flag and it throws exception
+- throw an exception from the server if a client has an older major version
+
+## [13.0.5-dev.27 - 2018-10-31]
+
+- fix import of components with circular dependencies
+- fix bug with bit show when the remote component has config file
+
+## [13.0.5-dev.26 - 2018-10-29]
+
 - fix link content generation for authored components on bit install
+- React docs support
 
 ## [13.0.5-dev.25 - 2018-10-23]
 

@@ -17,7 +17,7 @@ describe('merge functionality', function () {
       helper.commitComponentBarFoo();
 
       helper.createFile('bar2', 'foo2.js');
-      helper.addComponent('bar2/foo2.js');
+      helper.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
       helper.commitComponent('bar2/foo2');
 
       helper.exportAllComponents();
@@ -55,9 +55,9 @@ describe('merge functionality', function () {
       helper.setNewLocalAndRemoteScopes();
 
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
 
       helper.commitAllComponents();
       helper.exportAllComponents();
@@ -85,10 +85,10 @@ describe('merge functionality', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitAllComponents();
       helper.exportAllComponents();
 

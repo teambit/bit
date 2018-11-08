@@ -271,16 +271,16 @@ export default class BitId {
     return cleanName;
   }
 
-  static getValidBitId(box?: string, name: string): BitId {
-    const getValidIdChunk = (chunk) => {
-      if (!isValidIdChunk(chunk)) {
-        chunk = chunk.replace(/\./g, '');
-        chunk = decamelize(chunk, '-');
-      }
-      return chunk;
-    };
+  static getValidIdChunk(chunk: string): string {
+    if (!isValidIdChunk(chunk)) {
+      chunk = chunk.replace(/\./g, '');
+      chunk = decamelize(chunk, '-');
+    }
+    return chunk;
+  }
 
-    return new BitId({ name: getValidIdChunk(name), box: box ? getValidIdChunk(box) : undefined });
+  static getValidBitId(box?: string, name: string): BitId {
+    return new BitId({ name: BitId.getValidIdChunk(name), box: box ? BitId.getValidIdChunk(box) : undefined });
   }
 
   static isValidVersion(version: string): boolean {

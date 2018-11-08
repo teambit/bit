@@ -5,6 +5,7 @@ import { fetch } from '../../../api/scope';
 import ComponentObjects from '../../../scope/component-objects';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
+import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 
 export default class Fetch extends Command {
   name = '_fetch <path> <args>';
@@ -15,6 +16,7 @@ export default class Fetch extends Command {
 
   action([path, args]: [string, string], { noDependencies }: any): Promise<any> {
     const { payload, headers } = unpackCommand(args);
+    checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {

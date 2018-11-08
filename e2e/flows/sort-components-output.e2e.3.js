@@ -22,11 +22,11 @@ describe('basic flow with dependencies', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       const fooBarFixture =
         "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createComponentBarFoo(fooBarFixture);
@@ -138,8 +138,8 @@ describe('basic flow with dependencies', function () {
       const fooBarFixture =
         "const isString = require('./non-existsC.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
       helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponent('utils/is-type.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsType();
+      helper.addComponentUtilsIsString();
       helper.addComponentBarFoo();
     });
     describe('bit status', () => {
@@ -163,8 +163,8 @@ describe('basic flow with dependencies', function () {
       const fooBarFixture =
         "const isString = require('../utils/is-type.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
       helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponent('utils/is-type.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsType();
+      helper.addComponentUtilsIsString();
       helper.addComponentBarFoo();
       helper.commitAllComponents();
       const isTypeFixtureV2 = "console.log('got is-type v2')";

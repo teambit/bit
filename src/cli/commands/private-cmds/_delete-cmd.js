@@ -4,6 +4,7 @@ import { remove } from '../../../api/scope';
 import { fromBase64, unpackCommand, packCommand, buildCommandMessage } from '../../../utils';
 import { migrate } from '../../../api/consumer';
 import logger from '../../../logger/logger';
+import { checkVersionCompatibilityOnTheServer } from '../../../scope/network/check-version-compatibility';
 
 export default class Delete extends Command {
   name = '_delete <path> <args>';
@@ -14,6 +15,7 @@ export default class Delete extends Command {
 
   action([path, args]: [string, string]): Promise<any> {
     const { payload, headers } = unpackCommand(args);
+    checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {

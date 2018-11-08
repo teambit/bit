@@ -30,7 +30,7 @@ describe('bit show command', function () {
       helper.importCompiler();
 
       helper.createFile('utils', 'is-string.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitComponent('utils/is-string');
 
       helper.addNpmPackage();
@@ -363,7 +363,7 @@ function add(a, b) {
       helper.importCompiler();
 
       helper.createFile('utils', 'is-string.js');
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitComponent('utils/is-string');
     });
 
@@ -408,7 +408,7 @@ function add(a, b) {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
       helper.createFile('bar', 'index.js');
-      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+      helper.addComponent('bar/', { i: 'bar/foo' });
     });
     it('Should show component only with the left files', () => {
       const beforeRemoveBitMap = helper.readBitMap();
@@ -440,7 +440,7 @@ function add(a, b) {
       helper.initNewLocalScope();
       helper.createComponentBarFoo();
       helper.createFile('bar', 'index.js');
-      helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+      helper.addComponent('bar/', { i: 'bar/foo' });
     });
     describe('when adding a component without committing it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
@@ -497,7 +497,7 @@ function add(a, b) {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.commitComponent('utils/is-type');
         helper.commitComponent('utils/is-type', 'msg', '-f');
         helper.exportAllComponents();
@@ -511,7 +511,7 @@ function add(a, b) {
           'is-type'
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.commitAllComponents();
       });
       describe('when a component uses an old version of a dependency', () => {
@@ -553,7 +553,7 @@ function add(a, b) {
         helper.setNewLocalAndRemoteScopes();
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
-        helper.addComponent('utils/is-type.js');
+        helper.addComponentUtilsIsType();
         helper.commitComponent('utils/is-type');
         helper.commitComponent('utils/is-type', 'msg', '-f');
         helper.exportAllComponents();
@@ -567,7 +567,7 @@ function add(a, b) {
           'is-type'
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
-        helper.addComponent('utils/is-string.js');
+        helper.addComponentUtilsIsString();
         helper.commitAllComponents();
         helper.exportAllComponents();
 

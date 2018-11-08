@@ -19,7 +19,7 @@ describe('run bit install', function () {
       const isStringFixture = `const lodashIsString = require('lodash.isstring');
 module.exports = function isString() { return 'isString: ' + lodashIsString() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       helper.exportAllComponents();
 
@@ -28,7 +28,7 @@ module.exports = function isString() { return 'isString: ' + lodashIsString() + 
 module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.createFile('bar', 'foo.js', fooBarFixture);
-      helper.addComponent('bar/foo.js');
+      helper.addComponentBarFoo();
       helper.commitAllComponents();
       helper.exportAllComponents();
 

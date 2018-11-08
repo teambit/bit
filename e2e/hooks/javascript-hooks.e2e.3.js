@@ -53,7 +53,7 @@ describe('javascript-hooks', function () {
       const isStringFixture =
         "const isType = require('./internals/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponentWithOptions('utils', { m: 'utils/is-string.js', i: 'utils/is-string' });
+      helper.addComponent('utils', { m: 'utils/is-string.js', i: 'utils/is-string' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();

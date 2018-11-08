@@ -353,10 +353,12 @@ export default class Helper {
     const result = this.runCmd(`bit cat-component ${id}`, cwd);
     return JSON.parse(result);
   }
-  addComponent(filePaths: string = path.normalize('bar/foo.js'), cwd: string = this.localScopePath) {
-    return this.runCmd(`bit add ${filePaths}`, cwd);
+  addComponent(filePaths: string, options: Object = {}, cwd: string = this.localScopePath) {
+    const value = Object.keys(options)
+      .map(key => `-${key} ${options[key]}`)
+      .join(' ');
+    return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
-
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
@@ -449,13 +451,6 @@ export default class Helper {
       .map(key => `-${key} ${options[key]}`)
       .join(' ');
     return this.runCmd(`bit build ${id} ${value}`, cwd);
-  }
-
-  addComponentWithOptions(filePaths: string = 'bar/foo.js', options: ?Object, cwd: string = this.localScopePath) {
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit add ${filePaths} ${value}`, cwd);
   }
 
   testComponent(id: string = '') {
@@ -552,7 +547,15 @@ export default class Helper {
   }
 
   addComponentBarFoo() {
-    return this.addComponent();
+    return this.runCmd('bit add bar/foo.js --id bar/foo');
+  }
+
+  addComponentUtilsIsType() {
+    return this.runCmd('bit add utils/is-type.js --id utils/is-type');
+  }
+
+  addComponentUtilsIsString() {
+    return this.runCmd('bit add utils/is-string.js --id utils/is-string');
   }
 
   commitComponentBarFoo() {
@@ -716,6 +719,9 @@ export default class Helper {
   writeBitMap(bitMap: Object) {
     const bitMapPath = path.join(this.localScopePath, BIT_MAP);
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
+  }
+  deleteBitMap() {
+    return this.deleteFile(BIT_MAP);
   }
   createBitMap(
     cwd: string = this.localScopePath,

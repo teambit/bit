@@ -71,7 +71,7 @@ describe('bit status command', function () {
       helper.reInitLocalScope();
       helper.createFile();
       helper.createFile('bar', 'foo2.js', 'var foo = require("./foo.js")');
-      helper.addComponent('bar/foo2.js');
+      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
     });
     it('Should show missing dependencies', () => {
       output = helper.runCmd('bit status');
@@ -84,7 +84,7 @@ describe('bit status command', function () {
     before(() => {
       helper.reInitLocalScope();
       helper.createFile('bar', 'foo.js', 'var React = require("react")');
-      helper.addComponent('bar/foo.js');
+      helper.addComponentBarFoo();
     });
     it('Should show missing package dependencies', () => {
       output = helper.runCmd('bit status');
@@ -275,7 +275,7 @@ describe('bit status command', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('', 'file.js');
-      helper.addComponentWithOptions('file.js', { i: 'comp/comp' });
+      helper.addComponent('file.js', { i: 'comp/comp' });
       helper.commitAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -305,11 +305,11 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       helper.commitAllComponents();
       output = helper.runCmd('bit status');
     });
@@ -331,7 +331,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitComponent('utils/is-type');
       helper.exportComponent('utils/is-type');
       helper.reInitLocalScope();
@@ -341,7 +341,7 @@ describe('bit status command', function () {
       const isStringFixture =
         "import isType from '../components/utils/is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponent('utils/is-string.js');
+      helper.addComponentUtilsIsString();
       output = helper.runCmd('bit status');
     });
     it('should not display missing files for the imported component', () => {
@@ -356,7 +356,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
-      helper.addComponent('utils/is-type.js');
+      helper.addComponentUtilsIsType();
       helper.commitComponent('utils/is-type');
 
       const isStringInternalFixture =
@@ -364,7 +364,7 @@ describe('bit status command', function () {
       helper.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
       const isStringFixture = "import iString from './is-string-internal';";
       helper.createFile('utils', 'is-string.js', isStringFixture);
-      helper.addComponentWithOptions('utils/is-string.js utils/is-string-internal.js', {
+      helper.addComponent('utils/is-string.js utils/is-string-internal.js', {
         m: 'utils/is-string.js',
         i: 'utils/is-string'
       });
@@ -430,7 +430,7 @@ describe('bit status command', function () {
         helper.initNewLocalScope();
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
-        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.addComponent('bar/', { i: 'bar/foo' });
         helper.deleteFile('bar/foo.js');
       });
       it('should remove the files from bit.map', () => {
@@ -446,7 +446,7 @@ describe('bit status command', function () {
       it('Should show "non-existing dependency" when deleting a file that is required by other files', () => {
         helper.createFile('bar', 'foo1.js');
         helper.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
-        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.addComponent('bar/', { i: 'bar/foo' });
         helper.deleteFile('bar/foo1.js');
         const output = helper.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
@@ -457,7 +457,7 @@ describe('bit status command', function () {
           helper.reInitLocalScope();
           helper.createFile('bar', 'index.js');
           helper.createFile('bar', 'foo.js');
-          helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+          helper.addComponent('bar/', { i: 'bar/foo' });
           helper.deleteFile('bar/index.js');
         });
         it('should show an error indicating the mainFile was deleting', () => {
@@ -473,7 +473,7 @@ describe('bit status command', function () {
         helper.initNewLocalScope();
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
-        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.addComponent('bar/', { i: 'bar/foo' });
         helper.deleteFile('bar/index.js');
         helper.deleteFile('bar/foo.js');
         output = helper.runCmd('bit status');
@@ -509,7 +509,7 @@ describe('bit status command', function () {
         helper.initNewLocalScope();
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
-        helper.addComponentWithOptions('bar/', { i: 'bar/foo' });
+        helper.addComponent('bar/', { i: 'bar/foo' });
         helper.deleteFile('bar');
         output = helper.runCmd('bit status');
       });
