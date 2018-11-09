@@ -3,6 +3,9 @@ import { loadConsumer, Consumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_REMOVE } from '../../../cli/loader/loader-messages';
 import { BitId, BitIds } from '../../../bit-id';
+import hasWildcard from '../../../utils/string/has-wildcard';
+import ComponentsList from '../../../consumer/component/components-list';
+import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
 export default (async function remove({
   ids,
@@ -19,10 +22,20 @@ export default (async function remove({
 }): Promise<any> {
   loader.start(BEFORE_REMOVE);
   const consumer: Consumer = await loadConsumer();
-  const bitIds = ids.map((id) => {
-    return remote ? BitId.parse(id, true) : consumer.getParsedId(id);
-  });
+  const bitIds = getBitIdsToRemove(consumer, ids, remote);
   const removeResults = await consumer.remove({ ids: BitIds.fromArray(bitIds), force, remote, track, deleteFiles });
   await consumer.onDestroy();
   return removeResults;
 });
+
+function getBitIdsToRemove(consumer: Consumer, ids: string[], remote: boolean): BitId[] {
+  if (hasWildcard(ids)) {
+    const allIds = consumer.bitMap.getAllBitIds();
+    const bitIds = ComponentsList.filterComponentsByWildcard(allIds, ids);
+    if (!bitIds.length) throw new NoIdMatchWildcard(ids);
+    return bitIds;
+  }
+  return ids.map((id) => {
+    return remote ? BitId.parse(id, true) : consumer.getParsedId(id);
+  });
+}

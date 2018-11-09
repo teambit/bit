@@ -1,5 +1,6 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import NoIdMatchWildcard from '../../src/api/consumer/lib/exceptions/no-id-match-wildcard';
 
 describe('component id with wildcard', function () {
   this.timeout(0);
@@ -10,7 +11,7 @@ describe('component id with wildcard', function () {
   describe('adding components with various namespaces', () => {
     let scopeAfterAdd;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils/is', 'string.js');
       helper.createFile('utils/is', 'type.js');
       helper.createFile('utils/fs', 'read.js');
@@ -21,7 +22,7 @@ describe('component id with wildcard', function () {
       helper.addComponent('utils/fs/*', { n: 'utils/fs' });
       scopeAfterAdd = helper.cloneLocalScope();
     });
-    describe('tagging with wildcard', () => {
+    describe('tag with wildcard', () => {
       describe('when wildcard does not match any component', () => {
         it('should not tag any component', () => {
           const output = helper.commitComponent('none/*');
@@ -67,6 +68,69 @@ describe('component id with wildcard', function () {
         it('should untrack only the matched components', () => {
           const status = helper.statusJson();
           expect(status.newComponents).to.have.lengthOf(3);
+        });
+      });
+    });
+    describe('remove with wildcard', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllWithoutMessage();
+      });
+      describe('when wildcard does not match any component', () => {
+        it('should throw an error saying the wildcard does not match any id', () => {
+          const removeFunc = () => helper.removeComponent('none/* -s');
+          const error = new NoIdMatchWildcard(['none/*']);
+          helper.expectToThrow(removeFunc, error);
+        });
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          // as an intermediate step, make sure all components are staged
+          const status = helper.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(5);
+
+          output = helper.removeComponent('"utils/fs/*" -s');
+        });
+        it('should indicate the removed components', () => {
+          expect(output).to.have.string('utils/fs/read');
+          expect(output).to.have.string('utils/fs/write');
+        });
+        it('should remove only the matched components', () => {
+          const status = helper.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(3);
+        });
+      });
+    });
+    describe('remove from remote with wildcard', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllWithoutMessage();
+        helper.exportAllComponents();
+
+        // as an intermediate step, make sure the remote scope has all components
+        const ls = helper.listRemoteScopeParsed();
+        expect(ls).to.have.lengthOf(5);
+      });
+      describe('when wildcard does not match any component', () => {
+        it('should throw an error saying the wildcard does not match any id', () => {
+          const removeFunc = () => helper.removeComponent('none/* --silent --remote');
+          const error = new NoIdMatchWildcard(['none/*']);
+          helper.expectToThrow(removeFunc, error);
+        });
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          output = helper.removeComponent('"utils/fs/*" --silent --remote');
+        });
+        it('should indicate the removed components', () => {
+          expect(output).to.have.string('utils/fs/read');
+          expect(output).to.have.string('utils/fs/write');
+        });
+        it('should remove only the matched components', () => {
+          const ls = helper.listRemoteScopeParsed();
+          expect(ls).to.have.lengthOf(3);
         });
       });
     });
