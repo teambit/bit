@@ -204,5 +204,44 @@ describe('component id with wildcard', function () {
         });
       });
     });
+    describe('checkout with wildcard', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllWithoutMessage();
+        helper.tagScope('0.0.5');
+
+        // as an intermediate step, make sure all components are staged
+        const status = helper.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(5);
+      });
+      describe('when wildcard does not match any component', () => {
+        it('should throw an error saying the wildcard does not match any id', () => {
+          const removeFunc = () => helper.checkout('0.0.1 "none/*"');
+          const error = new NoIdMatchWildcard(['none/*']);
+          helper.expectToThrow(removeFunc, error);
+        });
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          output = helper.checkout('0.0.1 "utils/is/*"');
+        });
+        it('should indicate the checked out components', () => {
+          expect(output).to.have.string('utils/is/string');
+          expect(output).to.have.string('utils/is/type');
+        });
+        it('should checkout only the matched components', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('utils/is/string@0.0.1');
+          expect(bitMap).to.have.property('utils/is/type@0.0.1');
+        });
+        it('should not checkout the unmatched components', () => {
+          const bitMap = helper.readBitMap();
+          expect(bitMap).to.have.property('utils/fs/read@0.0.5');
+          expect(bitMap).to.have.property('utils/fs/write@0.0.5');
+          expect(bitMap).to.have.property('bar/foo@0.0.5');
+        });
+      });
+    });
   });
 });

@@ -9,20 +9,18 @@ import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { BitId } from '../../../bit-id';
 import GeneralError from '../../../error/general-error';
 import { LATEST, COMPONENT_ORIGINS } from '../../../constants';
+import hasWildcard from '../../../utils/string/has-wildcard';
+import ComponentsList from '../../../consumer/component/components-list';
+import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
-/**
- * when user didn't enter any id and used '--all' flag, populate all ids.
- */
-async function populateIds(consumer: Consumer, checkoutProps: CheckoutProps) {
-  if (!checkoutProps.all) {
-    throw new GeneralError('please specify [ids...] or use --all flag');
-  }
-  const idsFromBitMap = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
-  checkoutProps.ids = idsFromBitMap.map((bitId) => {
-    const version = checkoutProps.latestVersion ? LATEST : bitId.version;
-    return bitId.changeVersion(version);
-  });
-}
+export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
+  loader.start(BEFORE_CHECKOUT);
+  const consumer: Consumer = await loadConsumer();
+  await parseValues(consumer, values, checkoutProps);
+  const checkoutResults = await checkoutVersion(consumer, checkoutProps);
+  await consumer.onDestroy();
+  return checkoutResults;
+});
 
 async function parseValues(consumer: Consumer, values: string[], checkoutProps: CheckoutProps) {
   const firstValue = R.head(values);
@@ -47,15 +45,38 @@ async function parseValues(consumer: Consumer, values: string[], checkoutProps: 
   if (ids.length && checkoutProps.all) {
     throw new GeneralError('please specify either [ids...] or --all, not both');
   }
-  if (!ids.length) await populateIds(consumer, checkoutProps);
-  else checkoutProps.ids = ids.map(id => consumer.getParsedId(id));
+
+  if (!ids.length) {
+    populateAllIds(consumer, checkoutProps);
+  } else {
+    const idsHasWildcard = hasWildcard(ids);
+    checkoutProps.ids = idsHasWildcard
+      ? getIdsMatchedByWildcard(consumer, checkoutProps, ids)
+      : ids.map(id => consumer.getParsedId(id));
+  }
 }
 
-export default (async function checkout(values: string[], checkoutProps: CheckoutProps): Promise<ApplyVersionResults> {
-  loader.start(BEFORE_CHECKOUT);
-  const consumer: Consumer = await loadConsumer();
-  await parseValues(consumer, values, checkoutProps);
-  const checkoutResults = await checkoutVersion(consumer, checkoutProps);
-  await consumer.onDestroy();
-  return checkoutResults;
-});
+/**
+ * when user didn't enter any id and used '--all' flag, populate all ids.
+ */
+function populateAllIds(consumer: Consumer, checkoutProps: CheckoutProps) {
+  if (!checkoutProps.all) {
+    throw new GeneralError('please specify [ids...] or use --all flag');
+  }
+  checkoutProps.ids = getCandidateIds(consumer, checkoutProps);
+}
+
+function getIdsMatchedByWildcard(consumer: Consumer, checkoutProps: CheckoutProps, ids: string[]): BitId[] {
+  const candidateIds = getCandidateIds(consumer, checkoutProps);
+  const matchedIds = ComponentsList.filterComponentsByWildcard(candidateIds, ids);
+  if (!matchedIds.length) throw new NoIdMatchWildcard(ids);
+  return matchedIds;
+}
+
+function getCandidateIds(consumer: Consumer, checkoutProps: CheckoutProps): BitId[] {
+  const idsFromBitMap = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  return idsFromBitMap.map((bitId) => {
+    const version = checkoutProps.latestVersion ? LATEST : bitId.version;
+    return bitId.changeVersion(version);
+  });
+}
