@@ -5,7 +5,6 @@ import { mergeVersion } from '../../../consumer/versions-ops/merge-version';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId } from '../../../bit-id';
-import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';
 
 export default (async function merge(
   version: string,
@@ -21,10 +20,8 @@ export default (async function merge(
 
 function getComponentsToMerge(consumer: Consumer, ids: string[]): BitId[] {
   if (hasWildcard(ids)) {
-    const allIds = consumer.bitMap.getAuthoredAndImportedBitIds();
-    const matchedIds = ComponentsList.filterComponentsByWildcard(allIds, ids);
-    if (!matchedIds.length) throw new NoIdMatchWildcard(ids);
-    return matchedIds;
+    const componentsList = new ComponentsList(consumer);
+    return componentsList.listComponentsByIdsWithWildcard(ids);
   }
   return ids.map(id => consumer.getParsedId(id));
 }

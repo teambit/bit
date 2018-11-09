@@ -255,7 +255,7 @@ describe('component id with wildcard', function () {
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
-          const mergeFunc = () => helper.checkout('0.0.1 "none/*"');
+          const mergeFunc = () => helper.mergeVersion('0.0.1 "none/*"');
           const error = new NoIdMatchWildcard(['none/*']);
           helper.expectToThrow(mergeFunc, error);
         });
@@ -270,6 +270,44 @@ describe('component id with wildcard', function () {
           expect(output).to.have.string('utils/is/type');
         });
         it('should not merge the unmatched components', () => {
+          expect(output).to.not.have.string('utils/fs/read');
+          expect(output).to.not.have.string('utils/fs/write');
+          expect(output).to.not.have.string('bar/foo');
+        });
+      });
+    });
+    describe('diff with wildcard', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllWithoutMessage();
+        helper.createFile('utils/is', 'string.js', '');
+        helper.createFile('utils/is', 'type.js', '');
+        helper.createFile('utils/fs', 'read.js', '');
+        helper.createFile('utils/fs', 'write.js', '');
+        helper.createComponentBarFoo('');
+
+        // as an intermediate step, make sure all components are modified (so then they should show
+        // an output for diff command)
+        const status = helper.statusJson();
+        expect(status.modifiedComponent).to.have.lengthOf(5);
+      });
+      describe('when wildcard does not match any component', () => {
+        it('should throw an error saying the wildcard does not match any id', () => {
+          const diffFunc = () => helper.diff('"none/*"');
+          const error = new NoIdMatchWildcard(['none/*']);
+          helper.expectToThrow(diffFunc, error);
+        });
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          output = helper.diff('"utils/is/*"');
+        });
+        it('should show diff only for the matched components', () => {
+          expect(output).to.have.string('utils/is/string');
+          expect(output).to.have.string('utils/is/type');
+        });
+        it('should not show diff for unmatched unmatched components', () => {
           expect(output).to.not.have.string('utils/fs/read');
           expect(output).to.not.have.string('utils/fs/write');
           expect(output).to.not.have.string('bar/foo');

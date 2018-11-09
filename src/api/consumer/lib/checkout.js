@@ -8,7 +8,7 @@ import loader from '../../../cli/loader';
 import { BEFORE_CHECKOUT } from '../../../cli/loader/loader-messages';
 import { BitId } from '../../../bit-id';
 import GeneralError from '../../../error/general-error';
-import { LATEST, COMPONENT_ORIGINS } from '../../../constants';
+import { LATEST } from '../../../constants';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import ComponentsList from '../../../consumer/component/components-list';
 import NoIdMatchWildcard from './exceptions/no-id-match-wildcard';

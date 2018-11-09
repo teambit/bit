@@ -10,6 +10,7 @@ import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
+import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -363,5 +364,13 @@ export default class ComponentsList {
         isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
       );
     });
+  }
+
+  listComponentsByIdsWithWildcard(idsWithWildcard: string[]): BitId[] {
+    const allIds = this.bitMap.getAuthoredAndImportedBitIds();
+    const matchedIds = ComponentsList.filterComponentsByWildcard(allIds, idsWithWildcard);
+    if (!matchedIds.length) throw new NoIdMatchWildcard(idsWithWildcard);
+    // $FlowFixMe filterComponentsByWildcard got BitId so it returns BitId
+    return matchedIds;
   }
 }
