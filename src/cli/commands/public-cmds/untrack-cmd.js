@@ -8,7 +8,9 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 
 export default class Untrack extends Command {
   name = 'untrack [ids...]';
-  description = `untrack a new component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/cli-untrack.html`;
+  description = `untrack a new component(s)
+  https://${BASE_DOCS_DOMAIN}/docs/cli-untrack.html
+  the id can be used with wildcards (e.g. bit untrack "utils/*")`;
   alias = 'u';
   opts = [['a', 'all', 'revert add for all tracked components']];
   loader = true;

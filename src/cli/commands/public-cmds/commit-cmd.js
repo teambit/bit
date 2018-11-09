@@ -12,7 +12,9 @@ const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'tag [id] [version]';
-  description = `record component changes and lock versions.\n  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html`;
+  description = `record component changes and lock versions.
+  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
+  the id can be used with wildcards (e.g. bit tag "utils/*")`;
   alias = 't';
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
