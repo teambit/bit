@@ -134,5 +134,42 @@ describe('component id with wildcard', function () {
         });
       });
     });
+    describe('export with wildcard', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllWithoutMessage();
+
+        // as an intermediate step, make sure all components are staged
+        const status = helper.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(5);
+      });
+      describe('when wildcard does not match any component', () => {
+        it('should not export any component', () => {
+          const output = helper.exportComponent('"none/*"', undefined, false);
+          expect(output).to.have.string('nothing to export');
+        });
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          output = helper.exportComponent('"*/fs/*"');
+        });
+        it('should indicate the exported components', () => {
+          expect(output).to.have.string('exported 2 components');
+        });
+        it('should export only the matched components', () => {
+          const ls = helper.listRemoteScopeParsed();
+          expect(ls).to.have.lengthOf(2);
+        });
+        it('should not export the non matched components', () => {
+          const status = helper.statusJson();
+          // (staged components were not exported)
+          expect(status.stagedComponents).to.have.lengthOf(3);
+          expect(status.stagedComponents).to.include('bar/foo');
+          expect(status.stagedComponents).to.include('utils/is/string');
+          expect(status.stagedComponents).to.include('utils/is/type');
+        });
+      });
+    });
   });
 });
