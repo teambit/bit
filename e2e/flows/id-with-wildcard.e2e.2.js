@@ -137,6 +137,7 @@ describe('component id with wildcard', function () {
     describe('export with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
+        helper.reInitRemoteScope();
         helper.tagAllWithoutMessage();
 
         // as an intermediate step, make sure all components are staged
