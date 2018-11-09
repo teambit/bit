@@ -105,6 +105,15 @@ describe('ComponentList', () => {
       it('should not match s* as non of the ids starts with "s" (with and without scope names)', () => {
         expectToMatch('s*', []);
       });
+      it('when no wildcard is specified, it should match an exact id with a scope name', () => {
+        expectToMatch('utils/fs/read', ['utils/fs/read']);
+      });
+      it('when no wildcard is specified, it should match an exact id without a scope name', () => {
+        expectToMatch('fs/read', ['utils/fs/read']);
+      });
+      it('should match multiple different ids when using an array of ids with wildcard', () => {
+        expectToMatch(['vuz/*', 'utils/fs/*'], ['vuz/vuz', 'utils/fs/read', 'utils/fs/write']);
+      });
     });
   });
 });

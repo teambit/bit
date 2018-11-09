@@ -6,6 +6,7 @@ import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/model-component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 const chalk = require('chalk');
 
@@ -90,7 +91,7 @@ export default class Export extends Command {
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
 
-    const idHasWildcard = id && id.includes('*');
+    const idHasWildcard = hasWildcard(id);
 
     if (all || scope || idHasWildcard) {
       return commitAllAction({

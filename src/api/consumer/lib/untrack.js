@@ -2,6 +2,7 @@
 import { loadConsumer, Consumer } from '../../../consumer';
 import ComponentsList from '../../../consumer/component/components-list';
 import { BitId, BitIds } from '../../../bit-id';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default (async function untrack(componentIds: string[], all: ?boolean): Promise<Object> {
   const untrackedComponents: BitId[] = [];
@@ -11,11 +12,14 @@ export default (async function untrack(componentIds: string[], all: ?boolean): P
   const componentsList = new ComponentsList(consumer);
   // $FlowFixMe
   const newComponents: BitIds = await componentsList.listNewComponents(false);
-
-  if (all) {
-    newComponents.forEach(componentId => consumer.bitMap.removeComponent(componentId));
+  const idsHaveWildcard = hasWildcard(componentIds);
+  if (all || idsHaveWildcard) {
+    const componentsToUntrack = hasWildcard(componentIds)
+      ? ComponentsList.filterComponentsByWildcard(newComponents, componentIds)
+      : newComponents;
+    componentsToUntrack.forEach(componentId => consumer.bitMap.removeComponent(componentId));
     await consumer.onDestroy();
-    return { untrackedComponents: newComponents, unRemovableComponents, missingComponents: missing };
+    return { untrackedComponents: componentsToUntrack, unRemovableComponents, missingComponents: missing };
   }
   componentIds.forEach((componentId) => {
     const bitId = consumer.getParsedIdIfExist(componentId);

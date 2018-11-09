@@ -334,7 +334,8 @@ export default class ComponentsList {
     });
   }
 
-  static filterComponentsByWildcard<T>(components: T, idWithWildcard: string): T {
+  static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
+    if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
     const getBitId = (component): BitId => {
       let name;
       if (R.is(ModelComponent, component)) name = component.toBitId();
@@ -344,12 +345,13 @@ export default class ComponentsList {
       else throw new Error(`filterComponentsByWildcard get component with the wrong type: ${typeof component}`);
       return name;
     };
-
-    // replace "*" with ".*" to match any character
-    const rule = idWithWildcard.replace(/\*/g, '.*');
-    const regex = new RegExp(`^${rule}$`);
+    const getRegex = (idWithWildcard) => {
+      const rule = idWithWildcard.replace(/\*/g, '.*');
+      return new RegExp(`^${rule}$`);
+    };
+    const regexPatterns = idsWithWildcard.map(id => getRegex(id));
     const isNameMatchByWildcard = (name): boolean => {
-      return regex.test(name);
+      return regexPatterns.some(regex => regex.test(name));
     };
     // $FlowFixMe
     return components.filter((component) => {
