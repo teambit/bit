@@ -74,7 +74,7 @@ function getIdsMatchedByWildcard(consumer: Consumer, checkoutProps: CheckoutProp
 }
 
 function getCandidateIds(consumer: Consumer, checkoutProps: CheckoutProps): BitId[] {
-  const idsFromBitMap = consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+  const idsFromBitMap = consumer.bitMap.getAuthoredAndImportedBitIds();
   return idsFromBitMap.map((bitId) => {
     const version = checkoutProps.latestVersion ? LATEST : bitId.version;
     return bitId.changeVersion(version);

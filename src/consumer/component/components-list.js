@@ -283,7 +283,7 @@ export default class ComponentsList {
         listResult.remoteVersion = componentId.version;
       });
     }
-    const authoredAndImportedIds = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
     listScopeResults.forEach((listResult) => {
       const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(listResult.id);
       if (existingBitMapId) {
@@ -337,13 +337,10 @@ export default class ComponentsList {
   static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
     if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
     const getBitId = (component): BitId => {
-      let name;
-      if (R.is(ModelComponent, component)) name = component.toBitId();
-      else if (R.is(Component, component)) name = component.id;
-      else if (R.is(BitId, component)) name = component;
-      else if (R.is(String, component)) name = component;
-      else throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
-      return name;
+      if (R.is(ModelComponent, component)) return component.toBitId();
+      if (R.is(Component, component)) return component.id;
+      if (R.is(BitId, component)) return component;
+      throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
     const getRegex = (idWithWildcard) => {
       if (!R.is(String, idWithWildcard)) {

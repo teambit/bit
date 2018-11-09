@@ -39,7 +39,7 @@ describe('ComponentList', () => {
     let componentList;
     const scope = {};
     before(() => {
-      const bitMap = { getAllBitIds: () => new BitIds() };
+      const bitMap = { getAuthoredAndImportedBitIds: () => new BitIds() };
       const consumer = { scope, bitMap };
       componentList = new ComponentsList(consumer);
     });
