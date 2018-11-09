@@ -11,7 +11,9 @@ const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'export <remote> [id...]';
-  description = `export components to a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html`;
+  description = `export components to a remote scope.
+  https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
+  the id can be used with wildcards (e.g. bit export remote-scope "utils/*")`;
   alias = 'e';
   opts = [
     ['f', 'forget', 'do not save to bit.json after export'],

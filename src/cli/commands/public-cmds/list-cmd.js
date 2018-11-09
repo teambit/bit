@@ -13,7 +13,7 @@ export default class List extends Command {
   description = `list components on a local or a remote scope.\n  https://${BASE_DOCS_DOMAIN}/docs/cli-link.html`;
   alias = 'ls';
   opts = [
-    ['ids', 'ids', 'components ids to list'],
+    ['ids', 'ids', 'show only component ids unformatted'],
     ['s', 'scope', 'show all components of the scope, including indirect dependencies'],
     ['b', 'bare', 'show bare output (more details, less pretty)'],
     ['o', 'outdated', 'show latest versions from remotes'],

@@ -10,10 +10,11 @@ import type { ApplyVersionResults } from '../../../consumer/versions-ops/merge-v
 
 export default class Checkout extends Command {
   name = 'checkout [values...]';
-  description = `switch between component versions
+  description = `switch between component versions or remove local changes
   bit checkout <version> [ids...] => checkout the specified ids (or all components when --all is used) to the specified version
   bit checkout latest [ids...] => checkout the specified ids (or all components when --all is used) to their latest versions
-  bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)`;
+  bit checkout [ids...] --reset => remove local modifications from the specified ids (or all components when --all is used)
+  the id can be used with wildcards (e.g. bit checkout 0.0.1 "utils/*")`;
   alias = 'U';
   opts = [
     [

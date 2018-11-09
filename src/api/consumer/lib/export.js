@@ -11,6 +11,7 @@ import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 import EjectComponents from '../../../consumer/component-ops/eject-components';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
   const componentsIds = await exportComponents(ids, remote, save);
@@ -39,13 +40,16 @@ async function exportComponents(ids?: string[], remote: string, save: ?boolean):
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
   const componentsList = new ComponentsList(consumer);
-  if (!ids || !ids.length) {
-    // export all
+  const idsHaveWildcard = hasWildcard(ids);
+  if (!ids || !ids.length || idsHaveWildcard) {
     loader.start(BEFORE_LOADING_COMPONENTS);
     const exportPendingComponents: BitIds = await componentsList.listExportPendingComponentsIds();
-    const loaderMsg = exportPendingComponents.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
+    const componentsToExport = idsHaveWildcard // $FlowFixMe ids are set at this point
+      ? ComponentsList.filterComponentsByWildcard(exportPendingComponents, ids)
+      : exportPendingComponents;
+    const loaderMsg = componentsToExport.length > 1 ? BEFORE_EXPORTS : BEFORE_EXPORT;
     loader.start(loaderMsg);
-    return exportPendingComponents;
+    return componentsToExport;
   }
   const idsToExportP = ids.map(async (id) => {
     const parsedId = consumer.getParsedId(id);
