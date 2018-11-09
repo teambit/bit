@@ -341,11 +341,16 @@ export default class ComponentsList {
       if (R.is(ModelComponent, component)) name = component.toBitId();
       else if (R.is(Component, component)) name = component.id;
       else if (R.is(BitId, component)) name = component;
-      else if (R.is(String)) name = component;
-      else throw new Error(`filterComponentsByWildcard get component with the wrong type: ${typeof component}`);
+      else if (R.is(String, component)) name = component;
+      else throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
       return name;
     };
     const getRegex = (idWithWildcard) => {
+      if (!R.is(String, idWithWildcard)) {
+        throw new TypeError(
+          `filterComponentsByWildcard expects idWithWildcard to be string, got ${typeof idWithWildcard}`
+        );
+      }
       const rule = idWithWildcard.replace(/\*/g, '.*');
       return new RegExp(`^${rule}$`);
     };

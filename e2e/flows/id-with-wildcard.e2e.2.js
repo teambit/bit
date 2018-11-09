@@ -171,5 +171,37 @@ describe('component id with wildcard', function () {
         });
       });
     });
+    describe('untag with wildcard', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.tagAllWithoutMessage();
+
+        // as an intermediate step, make sure all components are staged
+        const status = helper.statusJson();
+        expect(status.stagedComponents).to.have.lengthOf(5);
+      });
+      describe('when wildcard does not match any component', () => {
+        it('should throw an error saying that no components found', () => {
+          const output = helper.runWithTryCatch('bit untag "none/*"');
+          expect(output).to.have.string('no components found');
+        });
+      });
+      describe('when wildcard match some of the components', () => {
+        let output;
+        before(() => {
+          output = helper.untag('"*/is/*"');
+        });
+        it('should indicate the untagged components', () => {
+          expect(output).to.have.string('2 component(s) were untagged');
+          expect(output).to.have.string('utils/is/string');
+          expect(output).to.have.string('utils/is/type');
+        });
+        it('should untag only the matched components', () => {
+          const status = helper.statusJson();
+          expect(status.stagedComponents).to.have.lengthOf(3);
+          expect(status.newComponents).to.have.lengthOf(2);
+        });
+      });
+    });
   });
 });
