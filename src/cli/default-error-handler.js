@@ -43,6 +43,7 @@ import {
 } from '../scope/exceptions';
 import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
+import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
 import PromptCanceled from '../prompts/exceptions/prompt-canceled';
 import IdExportedAlready from '../api/consumer/lib/exceptions/id-exported-already';
@@ -388,6 +389,10 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     InvalidVersion,
     err => `error: version ${chalk.bold(err.version)} is not a valid semantic version. learn more: https://semver.org`
+  ],
+  [
+    NoIdMatchWildcard,
+    err => `unable to find component ids that match the following: ${err.idsWithWildcards.join(', ')}`
   ],
   [NothingToCompareTo, err => 'no previous versions to compare'],
   [

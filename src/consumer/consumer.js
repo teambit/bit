@@ -362,7 +362,7 @@ export default class Consumer {
   }
 
   async potentialComponentsForAutoTagging(modifiedComponents: BitIds): Promise<BitIds> {
-    const candidateComponents = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const candidateComponents = this.bitMap.getAuthoredAndImportedBitIds();
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
     );

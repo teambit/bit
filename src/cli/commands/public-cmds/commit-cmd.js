@@ -6,12 +6,15 @@ import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/model-component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 const chalk = require('chalk');
 
 export default class Export extends Command {
   name = 'tag [id] [version]';
-  description = `record component changes and lock versions.\n  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html`;
+  description = `record component changes and lock versions.
+  https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
+  the id can be used with wildcards (e.g. bit tag "utils/*")`;
   alias = 't';
   opts = [
     ['m', 'message <message>', 'log message describing the user changes'],
@@ -90,7 +93,9 @@ export default class Export extends Command {
 
     if (ignoreMissingDependencies) ignoreUnresolvedDependencies = true;
 
-    if (all || scope) {
+    const idHasWildcard = hasWildcard(id);
+
+    if (all || scope || idHasWildcard) {
       return commitAllAction({
         message: message || '',
         exactVersion: getVersion(),
@@ -101,7 +106,8 @@ export default class Export extends Command {
         ignoreNewestVersion,
         skipTests,
         scope,
-        includeImported
+        includeImported,
+        idWithWildcard: id
       });
     }
     return commitAction({

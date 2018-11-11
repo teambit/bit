@@ -1,8 +1,13 @@
 // @flow
 import { loadConsumer, Consumer } from '../../../consumer';
 import { BitId } from '../../../bit-id';
-import { removeLocalVersion, removeLocalVersionsForAllComponents } from '../../../scope/component-ops/untag-component';
+import {
+  removeLocalVersion,
+  removeLocalVersionsForAllComponents,
+  removeLocalVersionsForComponentsMatchedByWildcard
+} from '../../../scope/component-ops/untag-component';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 /**
  * in case the untagged version is the current version in bitmap, update to the latest version
@@ -23,6 +28,10 @@ function updateBitMap(consumer: Consumer, untagResults: untagResult[]): void {
 export default (async function unTagAction(version?: string, force: boolean, id?: string): Promise<untagResult[]> {
   const consumer: Consumer = await loadConsumer();
   const untag = async (): Promise<untagResult[]> => {
+    const idHasWildcard = hasWildcard(id);
+    if (idHasWildcard) {
+      return removeLocalVersionsForComponentsMatchedByWildcard(consumer.scope, version, force, id);
+    }
     if (id) {
       const bitId = consumer.getParsedId(id);
       // a user might run the command `bit untag id@version` instead of `bit untag id version`

@@ -94,7 +94,8 @@ export async function commitAllAction(args: {
   ignoreNewestVersion: boolean,
   skipTests: boolean,
   scope?: boolean,
-  includeImported?: boolean
+  includeImported?: boolean,
+  idWithWildcard?: string
 }): Promise<TagResults> {
   const {
     message,
@@ -106,7 +107,8 @@ export async function commitAllAction(args: {
     ignoreNewestVersion,
     skipTests,
     scope,
-    includeImported
+    includeImported,
+    idWithWildcard
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
   HooksManagerInstance.triggerHook(PRE_TAG_ALL_HOOK, args);
@@ -120,8 +122,12 @@ export async function commitAllAction(args: {
     includeImported
   );
   if (R.isEmpty(commitPendingComponents)) return null;
+  const componentsToTag = idWithWildcard
+    ? ComponentsList.filterComponentsByWildcard(commitPendingComponents, idWithWildcard)
+    : commitPendingComponents;
+
   const commitResults = await consumer.tag(
-    commitPendingComponents,
+    componentsToTag,
     message,
     validExactVersion,
     releaseType,

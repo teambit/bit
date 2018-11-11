@@ -5,6 +5,7 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import normalize from 'normalize-path';
 import Helper from '../e2e-helper';
+import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 
 const helper = new Helper();
 
@@ -289,6 +290,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
   });
   describe('with custom module resolution', () => {
     describe('using module directories', () => {
+      let localScope;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.importCompiler('bit.envs/compilers/react-typescript');
@@ -306,6 +308,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
           "import isString from 'utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('src/bar', 'foo.ts', fooBarFixture);
         helper.addComponent('src/bar/foo.ts', { i: 'bar/foo' });
+        localScope = helper.cloneLocalScope();
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.runCmd('bit status');
@@ -334,6 +337,43 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+      (supportTestingOnBitsrc ? describe : describe.skip)('using bitsrc', () => {
+        let scopeName;
+        let fullScopeName;
+        const bitsrcTester = new BitsrcTester();
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          return bitsrcTester
+            .loginToBitSrc()
+            .then(() => bitsrcTester.createScope())
+            .then((scope) => {
+              scopeName = scope;
+              fullScopeName = `${username}.${scopeName}`;
+            });
+        });
+        after(() => {
+          helper.destroyEnv();
+          return bitsrcTester.deleteScope(scopeName);
+        });
+        describe('exporting to bitsrc and importing locally', () => {
+          before(() => {
+            helper.tagAllWithoutMessage();
+            helper.exportAllComponents(fullScopeName);
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.runCmd(`bit import ${fullScopeName}/utils/is-string`);
+          });
+          it('should be able to require its direct dependency and print results from all dependencies', () => {
+            // this makes sure that when generating npm links with custom-resolved-modules
+            // and there are dist files, it doesn't generate an un-compiled .ts file, but a .js file
+            const appJsFixture =
+              "const isString = require('./components/utils/is-string'); console.log(isString.default());";
+            fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string');
+          });
         });
       });
     });

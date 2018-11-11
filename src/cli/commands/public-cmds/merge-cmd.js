@@ -30,7 +30,8 @@ export const applyVersionReport = (
 
 export default class Merge extends Command {
   name = 'merge <version> <ids...>';
-  description = 'merge changes of different component versions';
+  description = `merge changes of different component versions
+  the id can be used with wildcards (e.g. bit merge 0.0.1 "utils/*")`;
   alias = '';
   opts = [
     ['o', 'ours', 'in case of a conflict, override the used version with the current modification'],

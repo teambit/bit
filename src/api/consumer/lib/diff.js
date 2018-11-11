@@ -4,6 +4,7 @@ import { BitId } from '../../../bit-id';
 import ComponentsList from '../../../consumer/component/components-list';
 import GeneralError from '../../../error/general-error';
 import componentsDiff from '../../../consumer/component-ops/components-diff';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default (async function diff(values: string[]): Promise<any> {
   const consumer: Consumer = await loadConsumer();
@@ -35,7 +36,7 @@ async function parseValues(
   // option #2: bit diff [ids...]
   // all arguments are ids
   if (!isLastItemVersion) {
-    return { bitIds: values.map(id => consumer.getParsedId(id)) };
+    return { bitIds: getBitIdsForDiff(consumer, values) };
   }
   // option #3: bit diff [id] [version]
   // last argument is a version, first argument is id
@@ -45,7 +46,7 @@ async function parseValues(
         `bit diff [id] [version] syntax was used, however, ${values.length} arguments were given instead of 2`
       );
     }
-    return { bitIds: [consumer.getParsedId(firstValue)], version: lastValue };
+    return { bitIds: getBitIdsForDiff(consumer, [firstValue]), version: lastValue };
   }
   // option #4: bit diff [id] [version] [to_version]
   // last argument and one before the last are versions, first argument is id
@@ -56,5 +57,13 @@ async function parseValues(
       } arguments were given instead of 3`
     );
   }
-  return { bitIds: [consumer.getParsedId(firstValue)], version: oneBeforeLastValue, toVersion: lastValue };
+  return { bitIds: getBitIdsForDiff(consumer, [firstValue]), version: oneBeforeLastValue, toVersion: lastValue };
+}
+
+function getBitIdsForDiff(consumer: Consumer, ids: string[]): BitId[] {
+  if (hasWildcard(ids)) {
+    const componentsList = new ComponentsList(consumer);
+    return componentsList.listComponentsByIdsWithWildcard(ids);
+  }
+  return ids.map(id => consumer.getParsedId(id));
 }

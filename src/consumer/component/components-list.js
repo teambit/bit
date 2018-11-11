@@ -10,6 +10,7 @@ import BitMap from '../bit-map/bit-map';
 import Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
+import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -283,7 +284,7 @@ export default class ComponentsList {
         listResult.remoteVersion = componentId.version;
       });
     }
-    const authoredAndImportedIds = this.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const authoredAndImportedIds = this.bitMap.getAuthoredAndImportedBitIds();
     listScopeResults.forEach((listResult) => {
       const existingBitMapId = authoredAndImportedIds.searchWithoutVersion(listResult.id);
       if (existingBitMapId) {
@@ -332,5 +333,44 @@ export default class ComponentsList {
       // names must be equal
       return 0;
     });
+  }
+
+  static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
+    if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
+    const getBitId = (component): BitId => {
+      if (R.is(ModelComponent, component)) return component.toBitId();
+      if (R.is(Component, component)) return component.id;
+      if (R.is(BitId, component)) return component;
+      throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
+    };
+    const getRegex = (idWithWildcard) => {
+      if (!R.is(String, idWithWildcard)) {
+        throw new TypeError(
+          `filterComponentsByWildcard expects idWithWildcard to be string, got ${typeof idWithWildcard}`
+        );
+      }
+      const rule = idWithWildcard.replace(/\*/g, '.*');
+      return new RegExp(`^${rule}$`);
+    };
+    const regexPatterns = idsWithWildcard.map(id => getRegex(id));
+    const isNameMatchByWildcard = (name): boolean => {
+      return regexPatterns.some(regex => regex.test(name));
+    };
+    // $FlowFixMe
+    return components.filter((component) => {
+      const bitId: BitId = getBitId(component);
+      return (
+        isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||
+        isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
+      );
+    });
+  }
+
+  listComponentsByIdsWithWildcard(idsWithWildcard: string[]): BitId[] {
+    const allIds = this.bitMap.getAuthoredAndImportedBitIds();
+    const matchedIds = ComponentsList.filterComponentsByWildcard(allIds, idsWithWildcard);
+    if (!matchedIds.length) throw new NoIdMatchWildcard(idsWithWildcard);
+    // $FlowFixMe filterComponentsByWildcard got BitId so it returns BitId
+    return matchedIds;
   }
 }

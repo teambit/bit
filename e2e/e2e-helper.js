@@ -242,6 +242,10 @@ export default class Helper {
     const output = this.runCmd(`bit list --json ${options}`);
     return JSON.parse(output);
   }
+  listRemoteScopeParsed(options: string = '') {
+    const output = this.runCmd(`bit list ${this.remoteScope} --json ${options}`);
+    return JSON.parse(output);
+  }
 
   getNewBareScope(scopeNameSuffix?: string = '-remote2') {
     const scopeName = generateRandomStr() + scopeNameSuffix;
@@ -384,6 +388,10 @@ export default class Helper {
 
   tagScope(version: string, message: string = 'commit-message', options: string = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
+  }
+
+  untag(id: string) {
+    return this.runCmd(`bit untag ${id}`);
   }
 
   exportComponent(id: string, scope: string = this.remoteScope, assert: boolean = true) {
