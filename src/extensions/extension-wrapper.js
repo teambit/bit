@@ -20,6 +20,7 @@ import Environment from '../environment';
 import ExtensionSchemaError from './exceptions/extension-schema-error';
 import ExtensionEntry from './extension-entry';
 import ExtensionConfig from './extension-config';
+import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 export default class ExtensionWrapper {
@@ -433,6 +434,10 @@ const _loadFromFile = async ({
     logger.error(`loading extension ${extensionProps.name} failed`);
     logger.error(err);
     extensionProps.loaded = false;
+    if (err instanceof ExtensionInvalidConfig) {
+      // TODO: Make sure it printed correctly
+      throw new ExtensionLoadError(err, extensionProps.name, false);
+    }
     if (throws) {
       let printStack = true;
       if (err instanceof ExtensionSchemaError) {

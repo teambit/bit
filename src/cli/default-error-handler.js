@@ -90,6 +90,7 @@ import { COMPONENT_DIR, FILE_PROTOCOL_PREFIX, SSH_PROTOCOL_PREFIX, BIT_PROTOCOL_
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
+import ExtensionInvalidConfig from '../extensions/exceptions/extension-invalid-config';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -425,6 +426,10 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     ExtensionSchemaError,
     err => `error: configuration passed to extension ${chalk.bold(err.extensionName)} is invalid:\n${err.errors}`
+  ],
+  [
+    ExtensionInvalidConfig,
+    err => `the prop ${chalk.bold(err.key)} has an invalid value of type ${chalk.bold(err.typeName)}`
   ],
   [
     ExtensionInitError,

@@ -2,6 +2,7 @@
 
 import R from 'ramda';
 import { BaseType } from './types';
+import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
 
 type TypeName = string;
 type TypeImplementation = Class<Types.BaseType>;
@@ -101,12 +102,9 @@ export default class ExtensionPropTypes {
         .then((isValid) => {
           if (!isValid) {
             // TODO: make a nice error
-            throw new Error(`the prop ${key} has an invalid value of type ${typeName}`);
+            throw new ExtensionInvalidConfig(key, typeName);
           }
           return isValid;
-        })
-        .catch((e) => {
-          throw e;
         });
       promises.push(validateFuncP);
     };
