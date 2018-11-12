@@ -1,7 +1,7 @@
 /** @flow */
 
 import R from 'ramda';
-import { BaseType } from './types';
+import * as Types from './types';
 import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
 
 type TypeName = string;

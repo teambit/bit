@@ -382,7 +382,9 @@ const _loadFromFile = async ({
   config,
   context,
   throws = false
-}: BaseLoadFromFileArgsProps): Promise<StaticProps> => {
+}: {
+  config: ExtensionConfig
+}): Promise<StaticProps> => {
   logger.debug(`loading extension ${name} from ${filePath}`);
   Analytics.addBreadCrumb('extension-wrapper', 'load extension from file');
   const extensionProps: StaticProps = {
