@@ -18,6 +18,7 @@ export default class Extension extends BitObject {
   }
 
   id() {
+    this.sort();
     return this.toString();
   }
 
@@ -46,7 +47,7 @@ export default class Extension extends BitObject {
   }
 
   validateBeforePersisting(content: string): void {
-    logger.debug('validating version object: ', this.hash().hash);
+    logger.debug('validating extension object: ', this.hash().hash);
     const extension = Extension.parse(content);
     extension.validate();
   }

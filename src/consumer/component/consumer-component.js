@@ -29,7 +29,7 @@ import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
-import ExtensionRegistry from '../../extensions/extension-registry';
+import extensionRegistry from '../../extensions/extension-registry';
 import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -1101,7 +1101,7 @@ export default class Component {
 
     const propsToLoadExtensions = propsToLoadEnvs;
     propsToLoadExtensions.componentId = id;
-    const extensions = await ExtensionRegistry.getComponentExtensions(propsToLoadExtensions);
+    const extensions = await extensionRegistry.getComponentExtensions(propsToLoadExtensions);
 
     return new Component({
       name: id.name,

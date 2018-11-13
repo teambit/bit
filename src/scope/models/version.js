@@ -49,6 +49,7 @@ export type VersionProps = {
   mainFile: PathLinux,
   files: Array<SourceFileModel>,
   dists?: ?Array<DistFileModel>,
+  extensions: Object[],
   compiler?: ?CompilerExtensionModel,
   tester?: ?TesterExtensionModel,
   detachedCompiler?: ?boolean,
@@ -81,7 +82,7 @@ export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   dists: ?Array<DistFileModel>;
-  extensions;
+  extensions: Object[];
   compiler: ?CompilerExtensionModel;
   tester: ?TesterExtensionModel;
   detachedCompiler: ?boolean;
@@ -270,6 +271,13 @@ export default class Version extends BitObject {
       };
     };
 
+    const _convertExtensionToObject = (extension) => {
+      return {
+        id: extension.id,
+        data: extension.data.toString()
+      };
+    };
+
     const _convertEnvToObject = (env) => {
       if (typeof env === 'string') {
         return env;
@@ -292,6 +300,7 @@ export default class Version extends BitObject {
     return filterObject(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
+        extension: this.extensions ? this.extensions.map(_convertExtensionToObject) : null,
         mainFile: this.mainFile,
         dists: this.dists ? this.dists.map(_convertFileToObject) : null,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
@@ -349,6 +358,7 @@ export default class Version extends BitObject {
       mainFile,
       dists,
       files,
+      extensions,
       compiler,
       bindingPrefix,
       tester,
@@ -416,9 +426,17 @@ export default class Version extends BitObject {
       };
     };
 
+    const parseExtension = (extension) => {
+      return {
+        id: extension.id,
+        data: Ref.from(extension.data)
+      };
+    };
+
     return new Version({
       mainFile,
       files: files ? files.map(parseFile) : null,
+      extensions: extensions ? extensions.map(parseExtension) : null,
       dists: dists ? dists.map(parseFile) : null,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
@@ -481,6 +499,7 @@ export default class Version extends BitObject {
     email
   }: {
     component: ConsumerComponent,
+    extensions: Object,
     versionFromModel: Version,
     files: Array<SourceFileModel>,
     flattenedDependencies: BitIds,
@@ -499,6 +518,13 @@ export default class Version extends BitObject {
         relativePath: file.relativePath,
         name: file.name,
         test: file.test
+      };
+    };
+
+    const parseExtension = (extension) => {
+      return {
+        id: extension.id,
+        data: extension.data.hash()
       };
     };
 
@@ -586,7 +612,7 @@ export default class Version extends BitObject {
       mainFile: component.mainFile,
       files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
-      extensions,
+      extensions: extensions.map(parseExtension),
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,

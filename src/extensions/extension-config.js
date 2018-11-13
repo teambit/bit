@@ -154,6 +154,6 @@ const _getPropsFromRaw = async (
 };
 
 const _getPropsStore = async (props: Object): Object => {
-  const propsStore = await ExtensionPropTypesInstance.store(props);
+  const propsStore = await ExtensionPropTypesInstance.getFromStore(props);
   return propsStore;
 };

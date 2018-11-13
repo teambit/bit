@@ -6,7 +6,7 @@ import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
-import { ModelComponent, Version, Source, Symlink } from '../models';
+import { ModelComponent, Version, Source, Symlink, Extension } from '../models';
 import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/model-component';
 import ConsumerComponent from '../../consumer/component';
@@ -15,7 +15,7 @@ import logger from '../../logger/logger';
 import Repository from '../objects/repository';
 import AbstractVinyl from '../../consumer/component/sources/abstract-vinyl';
 import Consumer from '../../consumer/consumer';
-import { PathOsBased, PathLinux } from '../../utils/path';
+import type { PathOsBased, PathLinux } from '../../utils/path';
 import { revertDirManipulationForPath } from '../../consumer/component-ops/manipulate-dir';
 
 export type ComponentTree = {
@@ -188,13 +188,15 @@ export default class SourceRepository {
     };
 
     const getExtensionsData = async (extensions) => {
-      const storeData = {};
+      const storeData = [];
       const extensionObjects = [];
       const promises = extensions.map(async (extension) => {
-        return extension.config.storeProps().then((val) => {
-          storeData[extension.name] = val;
-          extensionObjects.push(val.files);
-        });
+        const val = await extension.config.storeProps();
+        const extensionModel = Extension.from(val.models);
+        storeData.push({ id: extension.name, data: extensionModel });
+        // @todo: add val.files
+        // extensionObjects.push(val.files);
+        extensionObjects.push(extensionModel);
       });
       await Promise.all(promises);
       return {
@@ -246,13 +248,14 @@ export default class SourceRepository {
         }
       });
     });
-    const { extensions, extensionsObjects } = await getExtensionsData(consumerComponent.extensions);
+    const { extensions, extensionObjects } = await getExtensionsData(consumerComponent.extensions);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       versionFromModel,
       files,
       dists,
       extensions,
+      extensionObjects,
       flattenedDependencies,
       flattenedDevDependencies,
       flattenedCompilerDependencies,
@@ -265,7 +268,7 @@ export default class SourceRepository {
     // $FlowFixMe it's ok to override the pendingVersion attribute
     consumerComponent.pendingVersion = version; // helps to validate the version against the consumer-component
 
-    return { version, files, dists, compilerFiles, testerFiles, extensionsObjects };
+    return { version, files, dists, compilerFiles, testerFiles, extensionObjects };
   }
 
   async addSource({
@@ -310,7 +313,7 @@ export default class SourceRepository {
       dists,
       compilerFiles,
       testerFiles,
-      extensionsObjects
+      extensionObjects
     } = await this.consumerComponentToVersion({
       consumerComponent: source,
       consumer,
@@ -329,6 +332,7 @@ export default class SourceRepository {
     if (dists) dists.forEach(dist => objectRepo.add(dist.file));
     if (compilerFiles) compilerFiles.forEach(file => objectRepo.add(file.file));
     if (testerFiles) testerFiles.forEach(file => objectRepo.add(file.file));
+    if (extensionObjects) extensionObjects.forEach(extension => objectRepo.add(extension));
 
     return component;
   }

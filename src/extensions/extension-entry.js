@@ -3,11 +3,6 @@
 import R from 'ramda';
 import { FILE_PROTOCOL_PREFIX, BIT_PROTOCOL_PREFIX } from '../constants';
 
-export type ExtensionOptions = {
-  core?: boolean,
-  disabled?: boolean
-};
-
 export default class ExtensionEntry {
   // The extension source (where to load it from)
   source: 'FILE' | 'BIT' | 'COMPONENT';

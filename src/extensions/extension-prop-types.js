@@ -50,9 +50,9 @@ export default class ExtensionPropTypes {
     return loadedProps;
   }
 
-  async store(props) {
+  async getFromStore(props) {
     const storeData = {
-      models: {},
+      models: [],
       files: []
     };
 
@@ -60,22 +60,16 @@ export default class ExtensionPropTypes {
 
     const addPropToStoreData = store => (propVal, propName) => {
       const storeFunc = propVal.store.bind(propVal);
-      // const storeFunc = propVal.store;
-      const storeFuncP = Promise.resolve()
-        .then(() => {
-          return storeFunc();
-        })
-        .then((data) => {
-          // store[propName] = data;
-          store.models[propName] = {
-            val: data.val,
-            __type: propVal.name
-          };
-          store.files = store.files.concat(data.files);
-          // store[propName].val = data;
-          // store[propName].__type = propVal.name;
+      const storeFuncP = async () => {
+        const data = await storeFunc();
+        store.models.push({
+          name: propName,
+          value: data.val,
+          type: propVal.name
         });
-      promises.push(storeFuncP);
+        store.files = store.files.concat(data.files);
+      };
+      promises.push(storeFuncP());
     };
 
     R.forEachObjIndexed(addPropToStoreData(storeData), props);

@@ -2,7 +2,7 @@
 import ExtensionWrapper from './extension-wrapper';
 import loadExtensions from './extensions-loader';
 import { COMPONENT_ORIGINS } from '../constants';
-import { Analytics } from '../analytics/analytics';
+import logger from '../logger/logger';
 
 // {componentId: array of extensions}
 type ComponentExtensions = {
@@ -71,9 +71,9 @@ class ExtensionRegistry {
     context?: Object
   }): Promise<?CompilerExtension | ?TesterExtension> {
     const stringId = componentId.toStringWithoutVersion();
-    Analytics.addBreadCrumb('extension-registry', `getComponentExtensions for ${stringId}`);
+    logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId}`);
     if (this.componentExtensions[stringId]) {
-      Analytics.addBreadCrumb('extension-registry', `getComponentExtensions for ${stringId} - found in cache`);
+      logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId} - found in cache`);
       return this.componentExtensions[stringId];
     }
     // Authored component

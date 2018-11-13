@@ -75,8 +75,7 @@ export default class ExtensionWrapper {
    * @param {string} scopePath - scope which stores the extension code
    */
   static async load({ name, rawConfig = {}, context, throws = false }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
-    Analytics.addBreadCrumb('extension-wrapper', 'load extension');
-    logger.debug(`extension-wrapper loading ${name}`);
+    logger.debugAndAddBreadCrumb('extension-wrapper', `loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
     // TODO: Make sure the extension already exists
