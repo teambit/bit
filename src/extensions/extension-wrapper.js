@@ -3,17 +3,12 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
-import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
-import type { EnvExtensionOptions } from './env-extension';
-import type { ExtensionOptions } from './extension';
 import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
-import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
-import type { PathOsBased } from '../utils/path';
 import { Analytics } from '../analytics/analytics';
 import ExtensionLoadError from './exceptions/extension-load-error';
 import Environment from '../environment';
@@ -21,100 +16,30 @@ import ExtensionSchemaError from './exceptions/extension-schema-error';
 import ExtensionEntry from './extension-entry';
 import ExtensionConfig from './extension-config';
 import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
+import { Extension } from 'typescript';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 export default class ExtensionWrapper {
   name: ExtensionEntry;
   loaded: boolean;
-  initialized: boolean;
   disabled: boolean;
   filePath: string;
   rootDir: string;
-  rawConfig: Object;
+  config: ExtensionConfig;
   schema: ?Object;
-  options: Object;
-  dynamicConfig: Object;
   context: ?Object;
   extensionConstructor: ?Function; // Store the required plugin
-  _initOptions: ?InitOptions; // Store the required plugin
-  api = _getConcreteBaseAPI({ name: this.name });
 
   constructor(extensionProps: BaseExtensionProps) {
     this.name = extensionProps.name;
-    this.rawConfig = extensionProps.rawConfig;
+    this.config = extensionProps.config;
     this.schema = extensionProps.schema;
-    this.options = extensionProps.options;
-    this.dynamicConfig = extensionProps.dynamicConfig || extensionProps.rawConfig;
     this.context = extensionProps.context;
     this.extensionConstructor = extensionProps.extensionConstructor;
     this.disabled = extensionProps.disabled;
     this.filePath = extensionProps.filePath;
     this.rootDir = extensionProps.rootDir || '';
     this.loaded = extensionProps.loaded;
-    this.api = extensionProps.api;
-  }
-
-  get writeConfigFilesOnAction() {
-    if (!this.initOptions) {
-      return false;
-    }
-    return this.initOptions.writeConfigFilesOnAction;
-  }
-
-  get initOptions() {
-    return this._initOptions;
-  }
-
-  set initOptions(opts: ?Object) {
-    const defaultInitOpts = {
-      writeConfigFilesOnAction: false
-    };
-    if (!opts) {
-      this._initOptions = defaultInitOpts;
-      return;
-    }
-    const res = {};
-    if (opts.write) {
-      res.writeConfigFilesOnAction = true;
-    }
-    this._initOptions = res;
-  }
-
-  /**
-   * Run the extension's init function
-   */
-  async init(throws: boolean = false): Promise<boolean> {
-    Analytics.addBreadCrumb('base-extension', 'initialize extension');
-    try {
-      let initOptions = {};
-      if (
-        this.extensionConstructor &&
-        this.extensionConstructor.init &&
-        typeof this.extensionConstructor.init === 'function'
-      ) {
-        initOptions = await this.extensionConstructor.init({
-          rawConfig: this.rawConfig,
-          dynamicConfig: this.dynamicConfig,
-          api: this.api
-        });
-      }
-      this.initOptions = initOptions;
-      this.initialized = true;
-      // Make sure to not kill the process if an extension didn't load correctly
-    } catch (err) {
-      logger.error(`initialized extension ${this.name} failed`);
-      logger.error(err);
-      if (throws) {
-        throw new ExtensionLoadError(err, this.name);
-      }
-      this.initialized = false;
-      return false;
-    }
-    return true;
-  }
-
-  extendAPI(baseApi: Object, api: Object): void {
-    this.api = R.merge(baseApi, api);
   }
 
   toString(): string {
@@ -130,55 +55,13 @@ export default class ExtensionWrapper {
     };
   }
 
-  toModelObject() {
-    const res = {};
-    R.mapObjIndexed(this.extension.propTypes);
-  }
+  // TODO: try to not really implement both toModelObject and toObject
+  // (gilad) There is reason beyond having both i don't remember exactly but can find if needed
+  toModelObject() {}
 
-  toObject() {
-    return this.toModelObject();
-  }
+  toObject() {}
 
-  /**
-   * Reload the extension, this mainly contain the process of going to the extension file requiring it and get the dynamic config
-   * It mostly used for env extension when sometime on the first load the env didn't installed yet (only during build / test) phase
-   */
-  async reload(scopePath: string, { throws }: Object): Promise<void> {
-    Analytics.addBreadCrumb('base-extension', 'reload extension');
-    if (!this.filePath && !this.options.core) {
-      const { resolvedPath, componentPath } = _getExtensionPath(this.name, scopePath, this.options.core);
-      this.filePath = resolvedPath;
-      this.rootDir = componentPath;
-    }
-    this.name = _addVersionToNameFromPathIfMissing(this.name, this.rootDir, this.options);
-    const baseProps = await BaseExtension.loadFromFile({
-      name: this.name,
-      filePath: this.filePath,
-      rootDir: this.rootDir,
-      rawConfig: this.rawConfig,
-      options: this.options,
-      throws
-    });
-    if (baseProps.loaded) {
-      this.loaded = baseProps.loaded;
-      this.extensionConstructor = baseProps.extensionConstructor;
-      this.dynamicConfig = baseProps.dynamicConfig;
-      this.init();
-    }
-  }
-
-  setExtensionPathInScope(scopePath: string): void {
-    const { resolvedPath, componentPath } = _getExtensionPath(this.name, scopePath, this.options.core);
-    this.filePath = resolvedPath;
-    this.rootDir = componentPath;
-  }
-
-  static transformStringToModelObject(name: string): BaseExtensionModel {
-    return {
-      name,
-      config: {}
-    };
-  }
+  static transformStringToModelObject(name: string): BaseExtensionModel {}
 
   /**
    * Load extension by name
@@ -215,55 +98,13 @@ export default class ExtensionWrapper {
       context,
       throws
     });
-    const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, context, ...staticExtensionProps };
-    return extensionProps;
+    const extensionProps: BaseExtensionProps = { ...staticExtensionProps, context };
+    // return extensionProps;
+    return new ExtensionWrapper(extensionProps);
   }
 
   static loadFromModelObject(modelObject: string | BaseExtensionModel) {
-    Analytics.addBreadCrumb('base-extension', 'load extension from model object');
-    let staticExtensionProps: StaticProps;
-    if (typeof modelObject === 'string') {
-      staticExtensionProps = {
-        name: modelObject,
-        rawConfig: {},
-        dynamicConfig: {},
-        options: {},
-        disabled: false,
-        loaded: false,
-        filePath: ''
-      };
-    } else {
-      staticExtensionProps = {
-        name: modelObject.name,
-        rawConfig: modelObject.config,
-        dynamicConfig: modelObject.config,
-        options: {},
-        disabled: false,
-        loaded: false,
-        filePath: ''
-      };
-    }
-
-    const concreteBaseAPI = _getConcreteBaseAPI({ name: staticExtensionProps.name });
-    const extensionProps: BaseExtensionProps = { api: concreteBaseAPI, ...staticExtensionProps };
-    return extensionProps;
-  }
-
-  static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
-    Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
-    logger.debug('base-extension - loadDynamicConfig');
-    const getDynamicConfig = R.path(['extensionConstructor', 'getDynamicConfig'], extensionProps);
-    if (getDynamicConfig && typeof getDynamicConfig === 'function') {
-      try {
-        const dynamicConfig = await getDynamicConfig({
-          rawConfig: extensionProps.rawConfig
-        });
-        return dynamicConfig;
-      } catch (err) {
-        throw new ExtensionGetDynamicConfigError(err, extensionProps.name);
-      }
-    }
-    return undefined;
+    logger.debugAndAddBreadCrumb('extension wrapper', 'load extension from model object');
   }
 }
 
@@ -428,6 +269,7 @@ const _loadFromFile = async ({
 
     // Make sure to not kill the process if an extension didn't load correctly
   } catch (err) {
+    console.log(err);
     if (err.code === 'MODULE_NOT_FOUND') {
       const msg = `loading extension ${extensionProps.name} failed, the file ${filePath} not found`;
       logger.warn(msg);
