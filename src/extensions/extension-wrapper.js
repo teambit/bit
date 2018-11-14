@@ -17,8 +17,21 @@ import ExtensionEntry from './extension-entry';
 import ExtensionConfig from './extension-config';
 import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
 import { Extension } from 'typescript';
+import Workspace from './context/workspace';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
+
+export type ExtensionLoadContext = {
+  workspace: ?Workspace
+};
+
+export type ExtensionLoadProps = {
+  name: string,
+  rawConfig: Object,
+  context: ExtensionLoadContext,
+  throws: boolean
+};
+
 export default class ExtensionWrapper {
   name: ExtensionEntry;
   loaded: boolean;
@@ -70,17 +83,18 @@ export default class ExtensionWrapper {
    * The file path is relative to the bit.json of the project or absolute
    * @param {string} name - name of the extension
    * @param {Object} rawConfig - raw config for the extension
-   * @param {Object} options - extension options such as - disabled, file, core
-   * @param {string} consumerPath - path to the consumer folder (to load the file relatively)
-   * @param {string} scopePath - scope which stores the extension code
+   * @param {Object} rawConfig - raw config for the extension
+   * @param {Object} context - additional context for extension loading (Workspace, Scope)
+   * @param {boolean} throws - throw exception if load failed
    */
   static async load({ name, rawConfig = {}, context, throws = false }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
     logger.debugAndAddBreadCrumb('extension-wrapper', `loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
+    const consumerPath = context.workspace && context.workspace.workspacePath;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromRawConfig(rawConfig);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.scopePath, context.consumerPath);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.scopePath, consumerPath);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
     // Skip disabled extensions
     if (config.disabled) {
@@ -258,7 +272,7 @@ const _loadFromFile = async ({
     await config.loadProps(
       extensionProps.ExtensionConstructor.propTypes,
       extensionProps.ExtensionConstructor.defaultProps,
-      context
+      { consumerPath: context.workspace.workspacePath }
     );
     const extension = await new extensionProps.ExtensionConstructor(config.props, context);
     extensionProps.extension = extension;

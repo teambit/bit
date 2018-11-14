@@ -3,10 +3,12 @@ import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
 import ExtensionWrapper from './extension-wrapper';
+import type { ExtensionLoadContext } from './extension-wrapper';
 import type { LoadArgsProps } from './extension';
 import { loadConsumer, Consumer } from '../consumer';
 import logger from '../logger/logger';
 import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
+import Workspace from './context/workspace';
 
 /**
  * Load all extensions
@@ -24,14 +26,15 @@ export default (async function loadExtensions(): Promise<Extension[]> {
       }
     };
     const consumer: ?Consumer = await getConsumer();
-    let consumerPath = null;
+    const consumerPath = null;
     let scopePath = null;
+    let workspace = null;
 
     let rawExtensions = {};
     if (consumer) {
       rawExtensions = consumer.bitJson.extensions || {};
-      consumerPath = consumer.getPath();
       scopePath = consumer.scope.path;
+      workspace = await Workspace.load(consumer);
     }
 
     // Load global extensions
@@ -43,7 +46,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     if (globalRawExtensions) {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
-    const extensions = R.values(R.mapObjIndexed(_loadExtension(consumerPath, scopePath), rawExtensions));
+    const extensions = R.values(R.mapObjIndexed(_loadExtension({ workspace, scopePath }), rawExtensions));
     return Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed');
@@ -57,14 +60,10 @@ export default (async function loadExtensions(): Promise<Extension[]> {
  * @param {string} consumerPath
  * @param {string} scopePath
  */
-const _loadExtension = (consumerPath: ?string, scopePath: ?string) => async (
+const _loadExtension = (context: ExtensionLoadContext) => async (
   rawConfig: Object = {},
   name: string
 ): Promise<Extension> => {
-  const context = {
-    consumerPath,
-    scopePath
-  };
   const loadArgs: LoadArgsProps = {
     name,
     rawConfig,

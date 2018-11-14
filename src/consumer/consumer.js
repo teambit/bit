@@ -74,7 +74,7 @@ type ConsumerProps = {
   existingGitHooks: ?(string[])
 };
 
-type ComponentStatus = {
+export type ComponentStatus = {
   modified: boolean,
   newlyCreated: boolean,
   deleted: boolean,
@@ -984,6 +984,7 @@ export default class Consumer {
     return component.writeConfig(this, ejectPath || this.dirStructure.ejectedEnvsDirStructure);
   }
 
+  // TODO: change the second arg to be opts object
   async injectConf(componentId: BitId, force: boolean) {
     const component = await this.loadComponent(componentId);
     return component.injectConfig(this.getPath(), this.bitMap, force);
