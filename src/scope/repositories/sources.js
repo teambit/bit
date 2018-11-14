@@ -6,7 +6,7 @@ import ComponentObjects from '../component-objects';
 import Scope from '../scope';
 import { CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY, DEFAULT_BIT_RELEASE_TYPE, COMPONENT_ORIGINS } from '../../constants';
 import { MergeConflict, ComponentNotFound } from '../exceptions';
-import { ModelComponent, Version, Source, Symlink, Extension } from '../models';
+import { ModelComponent, Version, Source, Symlink, ExtensionDataModel } from '../models';
 import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/model-component';
 import ConsumerComponent from '../../consumer/component';
@@ -192,7 +192,7 @@ export default class SourceRepository {
       const extensionObjects = [];
       const promises = extensions.map(async (extension) => {
         const val = await extension.config.storeProps();
-        const extensionModel = Extension.from(val.models);
+        const extensionModel = ExtensionDataModel.from(val.models);
         storeData.push({ id: extension.name, data: extensionModel });
         // @todo: add val.files
         // extensionObjects.push(val.files);

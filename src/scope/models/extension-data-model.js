@@ -9,7 +9,7 @@ export type ExtensionField = {
   value: any
 };
 
-export default class Extension extends BitObject {
+export default class ExtensionDataModel extends BitObject {
   data: ExtensionField[];
 
   constructor(data: ExtensionField[]) {
@@ -34,12 +34,12 @@ export default class Extension extends BitObject {
     return bufferFrom(str);
   }
 
-  static parse(content: string): Extension {
-    return new Extension(JSON.parse(content));
+  static parse(content: string): ExtensionDataModel {
+    return new ExtensionDataModel(JSON.parse(content));
   }
 
-  static from(data: Object[]): Extension {
-    return new Extension(data);
+  static from(data: Object[]): ExtensionDataModel {
+    return new ExtensionDataModel(data);
   }
 
   sort() {
@@ -48,7 +48,7 @@ export default class Extension extends BitObject {
 
   validateBeforePersisting(content: string): void {
     logger.debug('validating extension object: ', this.hash().hash);
-    const extension = Extension.parse(content);
+    const extension = ExtensionDataModel.parse(content);
     extension.validate();
   }
 

@@ -5,6 +5,6 @@ import ScopeMeta from './scopeMeta';
 import Source from './source';
 import Version from './version';
 import Symlink from './symlink';
-import Extension from './extension';
+import ExtensionDataModel from './extension-data-model';
 
-export { ModelComponent, ScopeMeta, Source, Version, Symlink, Extension };
+export { ModelComponent, ScopeMeta, Source, Version, Symlink, ExtensionDataModel };
