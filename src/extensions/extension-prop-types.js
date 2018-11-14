@@ -50,7 +50,7 @@ export default class ExtensionPropTypes {
     return loadedProps;
   }
 
-  async getFromStore(props) {
+  async toStore(props) {
     const storeData = {
       models: [],
       files: []

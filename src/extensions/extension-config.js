@@ -87,7 +87,15 @@ export default class ExtensionConfig {
     return extensionConfig;
   }
 
-  static fromModels(config: Object): ExtensionConfig {}
+  static fromModels(config: Object): ExtensionConfig {
+    const props = config.map((configItem) => {
+      const typeClass = ExtensionConfig.getTypeClassByString(configItem.type);
+      return {
+        [configItem.name]: typeClass.loadFromStore(configItem.value)
+      };
+    });
+    return new ExtensionConfig({ props });
+  }
 
   async loadProps(propsSchema: PropsSchema, defaultProps: DefaultProps, context: Object) {
     this._loadPropsSchema(propsSchema);
@@ -102,14 +110,14 @@ export default class ExtensionConfig {
   _loadPropsSchema(propsSchema: PropsSchema) {
     Object.keys(propsSchema).forEach((prop) => {
       if (R.is(String, propsSchema[prop])) {
-        const typeClass = this._getTypeClassByString(propsSchema[prop]);
+        const typeClass = ExtensionConfig.getTypeClassByString(propsSchema[prop]);
         // $FlowFixMe
         propsSchema[prop] = typeClass;
       }
     });
   }
 
-  _getTypeClassByString(typeStr: string): Class<Types.BaseType> {
+  static getTypeClassByString(typeStr: string): Class<Types.BaseType> {
     const typeClassName = Object.keys(Types).find(type => Types[type].name.toLowerCase() === typeStr.toLowerCase());
     if (!typeClassName) throw new Error(`extension prop type ${typeStr} is not supported`);
     return Types[typeClassName];
@@ -154,6 +162,6 @@ const _getPropsFromRaw = async (
 };
 
 const _getPropsStore = async (props: Object): Object => {
-  const propsStore = await ExtensionPropTypesInstance.getFromStore(props);
+  const propsStore = await ExtensionPropTypesInstance.toStore(props);
   return propsStore;
 };

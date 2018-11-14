@@ -9,4 +9,8 @@ export default class String extends BaseType {
   static validate(val): boolean {
     return typeof val === 'string';
   }
+
+  static loadFromStore(modelVal): String {
+    return new String(modelVal);
+  }
 }

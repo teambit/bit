@@ -127,7 +127,8 @@ export default class ExtensionWrapper {
 
     const extensionData = await modelObject.data.load(repository);
     if (!extensionData) throw new GeneralError(`failed loading extension ${modelObject.id} from the model`);
-    const extensionEntry = new ExtensionEntry(modelObject.id);
+    const name = modelObject.id;
+    const extensionEntry = new ExtensionEntry(name);
     const context = {};
     if (extensionEntry.source === 'FILE') {
       // file source should not be saved in the model unless it's being used for developing a new
@@ -137,7 +138,21 @@ export default class ExtensionWrapper {
       context.scopePath = consumer.scope.path;
       context.workspace = await Workspace.load(consumer);
     }
-    return ExtensionWrapper.load({ name: modelObject.id, rawConfig: extensionData.data, context });
+    const consumerPath = context.workspace && context.workspace.workspacePath;
+    // TODO: Make sure the extension already exists
+    const config = ExtensionConfig.fromModels(extensionData.data);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.scopePath, consumerPath);
+    const staticExtensionProps = await _loadFromFile({
+      name,
+      filePath: resolvedPath,
+      rootDir: componentPath,
+      config,
+      context,
+      loadConfigProps: false,
+      throws: true
+    });
+    const extensionProps: BaseExtensionProps = { ...staticExtensionProps, context };
+    return new ExtensionWrapper(extensionProps);
   }
 }
 
@@ -255,9 +270,14 @@ const _loadFromFile = async ({
   rootDir,
   config,
   context,
+  loadConfigProps = true,
   throws = false
 }: {
-  config: ExtensionConfig
+  filePath: string,
+  rootDir: string,
+  loadConfigProps: boolean,
+  config: ExtensionConfig,
+  throws: boolean
 }): Promise<StaticProps> => {
   logger.debug(`loading extension ${name} from ${filePath}`);
   Analytics.addBreadCrumb('extension-wrapper', 'load extension from file');
@@ -289,11 +309,13 @@ const _loadFromFile = async ({
     extensionProps.ExtensionConstructor = extensionConstructor.default
       ? extensionConstructor.default
       : extensionConstructor;
-    await config.loadProps(
-      extensionProps.ExtensionConstructor.propTypes,
-      extensionProps.ExtensionConstructor.defaultProps,
-      { consumerPath: context.workspace.workspacePath }
-    );
+    if (loadConfigProps) {
+      await config.loadProps(
+        extensionProps.ExtensionConstructor.propTypes,
+        extensionProps.ExtensionConstructor.defaultProps,
+        { consumerPath: context.workspace.workspacePath }
+      );
+    }
     const extension = await new extensionProps.ExtensionConstructor(config.props, context);
     extensionProps.extension = extension;
     extensionProps.loaded = true;
