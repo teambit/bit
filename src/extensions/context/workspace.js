@@ -7,19 +7,27 @@ import type { PathOsBased } from '../../utils/path';
 import Component from '../../consumer/component';
 import type { InvalidComponent } from '../../consumer/component/consumer-component';
 import { ComponentWithDependencies } from '../../scope';
+import ContextBitMap from './bit-map';
+import ConsumerBitJson from '../../consumer/bit-json/consumer-bit-json';
 
 export type WorkspaceProps = {
+  consumer: Consumer,
   workspacePath: string,
-  consumer: Consumer
+  bitJson: ConsumerBitJson,
+  bitMap: ContextBitMap
 };
 
 export default class Workspace {
   __consumer: Consumer;
   workspacePath: string;
+  bitJson: ConsumerBitJson;
+  bitMap: ContextBitMap;
 
   constructor(props: WorkspaceProps) {
     this.__consumer = props.consumer;
     this.workspacePath = props.workspacePath;
+    this.bitJson = props.bitJson;
+    this.bitMap = props.bitMap;
   }
 
   static async load(consumer: ?Consumer): Promise<?Workspace> {
@@ -33,7 +41,7 @@ export default class Workspace {
     // TODO: wrap bit json class with better API
     props.bitJson = consumer.bitJson;
     // TODO: wrap bit map class with better API
-    props.bitMap = consumer.bitMap;
+    props.bitMap = await ContextBitMap.load(consumer.bitMap);
     return new Workspace(props);
   }
 
