@@ -1,8 +1,8 @@
 /** @flow */
-import { Source, ModelComponent, Version, ScopeMeta, Symlink } from './models';
+import { Source, ModelComponent, Version, ScopeMeta, Symlink, ExtensionDataModel } from './models';
 
 export default function types() {
-  return [Source, ModelComponent, Version, ScopeMeta, Symlink];
+  return [Source, ModelComponent, Version, ScopeMeta, Symlink, ExtensionDataModel];
 }
 
 function typesToObject(typesArr: Function[]) {

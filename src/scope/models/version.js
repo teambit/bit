@@ -300,7 +300,7 @@ export default class Version extends BitObject {
     return filterObject(
       {
         files: this.files ? this.files.map(_convertFileToObject) : null,
-        extension: this.extensions ? this.extensions.map(_convertExtensionToObject) : null,
+        extensions: this.extensions ? this.extensions.map(_convertExtensionToObject) : null,
         mainFile: this.mainFile,
         dists: this.dists ? this.dists.map(_convertFileToObject) : null,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,

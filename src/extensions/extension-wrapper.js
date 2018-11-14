@@ -18,6 +18,9 @@ import ExtensionConfig from './extension-config';
 import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
 import { Extension } from 'typescript';
 import Workspace from './context/workspace';
+import GeneralError from '../error/general-error';
+import { Ref, Repository } from '../scope/objects';
+import { loadConsumer } from '../consumer';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -87,7 +90,7 @@ export default class ExtensionWrapper {
    * @param {Object} context - additional context for extension loading (Workspace, Scope)
    * @param {boolean} throws - throw exception if load failed
    */
-  static async load({ name, rawConfig = {}, context, throws = false }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
+  static async load({ name, rawConfig = {}, context, throws = false }: BaseLoadArgsProps): Promise<ExtensionWrapper> {
     logger.debugAndAddBreadCrumb('extension-wrapper', `loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
@@ -116,8 +119,25 @@ export default class ExtensionWrapper {
     return new ExtensionWrapper(extensionProps);
   }
 
-  static loadFromModelObject(modelObject: string | BaseExtensionModel) {
+  static async loadFromModelObject(
+    modelObject: { id: any, data: Ref },
+    repository: Repository
+  ): Promise<ExtensionWrapper> {
     logger.debugAndAddBreadCrumb('extension wrapper', 'load extension from model object');
+
+    const extensionData = await modelObject.data.load(repository);
+    if (!extensionData) throw new GeneralError(`failed loading extension ${modelObject.id} from the model`);
+    const extensionEntry = new ExtensionEntry(modelObject.id);
+    const context = {};
+    if (extensionEntry.source === 'FILE') {
+      // file source should not be saved in the model unless it's being used for developing a new
+      // extension. as a workaround, load the consumer here to populate the context.
+      // @todo: find a better approach. it doesn't make sense to load the consumer so many times
+      const consumer = await loadConsumer();
+      context.scopePath = consumer.scope.path;
+      context.workspace = await Workspace.load(consumer);
+    }
+    return ExtensionWrapper.load({ name: modelObject.id, rawConfig: extensionData.data, context });
   }
 }
 

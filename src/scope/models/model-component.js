@@ -28,6 +28,7 @@ import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import VersionDependencies from '../version-dependencies';
+import ExtensionWrapper from '../../extensions/extension-wrapper';
 
 type State = {
   versions?: {
@@ -320,10 +321,14 @@ export default class Component extends BitObject {
     const log = version.log || null;
     const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
     const testerP = TesterExtension.loadFromModelObject(version.tester, repository);
-    const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
+    const extensionsP = version.extensions
+      ? Promise.all(version.extensions.map(extension => ExtensionWrapper.loadFromModelObject(extension, repository)))
+      : null;
+    const [files, dists, scopeMeta, extensions, compiler, tester] = await Promise.all([
       filesP,
       distsP,
       scopeMetaP,
+      extensionsP,
       compilerP,
       testerP
     ]);
@@ -341,6 +346,7 @@ export default class Component extends BitObject {
       mainFile: version.mainFile || null,
       compiler,
       tester,
+      extensions,
       detachedCompiler: version.detachedCompiler,
       detachedTester: version.detachedTester,
       dependencies: version.dependencies.getClone(),

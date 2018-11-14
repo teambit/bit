@@ -11,7 +11,11 @@ function parse(buffer: Buffer, types: { [string]: Function }): BitObject {
   const headers = buffer.slice(0, firstNullByteLocation).toString();
   const contents = buffer.slice(firstNullByteLocation + 1, buffer.length);
   const [type] = headers.split(SPACE_DELIMITER);
-
+  if (!types[type]) {
+    throw new Error(
+      `failed to recognize an object type ${type}. the only known types are ${Object.keys(types).join(',')}`
+    );
+  }
   return types[type].parse(contents);
 }
 
