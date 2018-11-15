@@ -37,7 +37,7 @@ import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
 import ConsumerComponent from '../consumer/component';
 import ComponentVersion from './component-version';
-import { Repository, Ref, BitObject } from './objects';
+import { Repository, Ref, BitObject, BitRawObject } from './objects';
 import ComponentWithDependencies from './component-dependencies';
 import VersionDependencies from './version-dependencies';
 import SourcesRepository from './repositories/sources';
@@ -731,10 +731,6 @@ export default class Scope {
     );
   }
 
-  async getModelComponentIfExist(id: BitId): Promise<?ModelComponent> {
-    return this.sources.get(id);
-  }
-
   /**
    * get multiple components from a scope, if not found in the local scope, fetch from a remote
    * scope. Then, write them to the local scope.
@@ -801,7 +797,7 @@ export default class Scope {
 
   /**
    * findDependentBits
-   * foreach component in array find the componnet that uses that component
+   * foreach component in array find the component that uses that component
    */
   async findDependentBits(bitIds: BitIds, returnResultsWithVersion: boolean = false): Promise<{ [string]: BitId[] }> {
     const allComponents = await this.list();
@@ -939,6 +935,10 @@ export default class Scope {
     const component = await this.sources.get(id);
     if (component) return component;
     throw new ComponentNotFound(id.toString());
+  }
+
+  async getModelComponentIfExist(id: BitId): Promise<?ModelComponent> {
+    return this.sources.get(id);
   }
 
   /**

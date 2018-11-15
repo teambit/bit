@@ -95,9 +95,10 @@ export default class ExtensionWrapper {
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
     const consumerPath = context.workspace && context.workspace.workspacePath;
+    const scopePath = context.store && context.store.storePath;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromRawConfig(rawConfig);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.scopePath, consumerPath);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
     // Skip disabled extensions
     if (config.disabled) {

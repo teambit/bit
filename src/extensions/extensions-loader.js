@@ -9,6 +9,7 @@ import { loadConsumer, Consumer } from '../consumer';
 import logger from '../logger/logger';
 import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 import Workspace from './context/workspace';
+import Store from './context/store';
 
 /**
  * Load all extensions
@@ -29,12 +30,14 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     const consumerPath = null;
     let scopePath = null;
     let workspace = null;
+    let store = null;
 
     let rawExtensions = {};
     if (consumer) {
       rawExtensions = consumer.bitJson.extensions || {};
       scopePath = consumer.scope.path;
       workspace = await Workspace.load(consumer);
+      store = await Store.load(consumer.scope);
     }
 
     // Load global extensions
@@ -46,7 +49,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     if (globalRawExtensions) {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
-    const extensions = R.values(R.mapObjIndexed(_loadExtension({ workspace, scopePath }), rawExtensions));
+    const extensions = R.values(R.mapObjIndexed(_loadExtension({ workspace, store }), rawExtensions));
     return Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed');
