@@ -163,15 +163,15 @@ const _getExtensionPath = (
   consumerPath: ?string
 ): ExtensionPath => {
   if (extensionEntry.source === 'FILE') {
-    return _getFileExtensionPath(extensionEntry.val, consumerPath);
+    return _getFileExtensionPath(extensionEntry.value, consumerPath);
   }
   if (extensionEntry.source === 'BIT') {
-    return _getCoreExtensionPath(extensionEntry.val);
+    return _getCoreExtensionPath(extensionEntry.value);
   }
   if (!scopePath) {
     throw new ScopeNotFound();
   }
-  return _getRegularExtensionPath(extensionEntry.val, scopePath);
+  return _getRegularExtensionPath(extensionEntry.value, scopePath);
 };
 
 const _getFileExtensionPath = (filePath: string, consumerPath: ?string): ExtensionPath => {
