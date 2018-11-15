@@ -24,15 +24,23 @@ describe('extension', () => {
     let extension;
     it('should throw an error when the name field is missing', () => {
       extension = new ExtensionDataModel([{ value: 'A', type: 'string' }]);
-      expect(extension.validate).to.throw();
+      const validateFunc = () => extension.validate();
+      expect(validateFunc).to.throw();
     });
     it('should throw an error when the value field is missing', () => {
       extension = new ExtensionDataModel([{ name: 'A', type: 'string' }]);
-      expect(extension.validate).to.throw();
+      const validateFunc = () => extension.validate();
+      expect(validateFunc).to.throw();
+    });
+    it('should not throw an error when the value false', () => {
+      extension = new ExtensionDataModel([{ name: 'A', type: 'boolean', value: false }]);
+      const validateFunc = () => extension.validate();
+      expect(validateFunc).to.not.throw();
     });
     it('should throw an error when the type field is missing', () => {
       extension = new ExtensionDataModel([{ name: 'A', value: 'A' }]);
-      expect(extension.validate).to.throw();
+      const validateFunc = () => extension.validate();
+      expect(validateFunc).to.throw();
     });
   });
 });

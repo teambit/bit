@@ -11,7 +11,7 @@ export default class BaseType {
 
   // Called to create instance from the bit.json value
   constructor(val: ?any) {
-    this._val = val || undefined;
+    this._val = val;
   }
 
   get name(): string {

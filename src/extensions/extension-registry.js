@@ -69,7 +69,7 @@ class ExtensionRegistry {
     detached: ?boolean,
     envType: EnvType,
     context?: Object
-  }): Promise<?CompilerExtension | ?TesterExtension> {
+  }): Promise<?(ExtensionWrapper[])> {
     const stringId = componentId.toStringWithoutVersion();
     logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId}`);
     if (this.componentExtensions[stringId]) {

@@ -54,9 +54,13 @@ export default class ExtensionDataModel extends BitObject {
 
   validate() {
     this.data.forEach((field) => {
-      if (!field.name) throw new Error('extension.validate, name property is missing');
-      if (!field.type) throw new Error('extension.validate, type property is missing');
-      if (!field.value) throw new Error('extension.validate, value property is missing');
+      const keys = Object.keys(field);
+      const expectedKeys = ['name', 'type', 'value'];
+      expectedKeys.forEach((expectedKey) => {
+        if (!keys.includes(expectedKey)) {
+          throw new Error(`extension.validate, ${expectedKey} property is missing`);
+        }
+      });
     });
   }
 }
