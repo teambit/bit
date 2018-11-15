@@ -5,7 +5,7 @@ import * as Types from './types';
 import ExtensionPropTypes from './extension-prop-types';
 import type { DefaultProps, PropsSchema } from './extension-prop-types';
 
-const ExtensionPropTypesInstance = new ExtensionPropTypes({ types: Types });
+const extensionPropTypes = new ExtensionPropTypes({ types: Types });
 const bitConfigPrefix = '__';
 
 export type ExtensionOptions = {
@@ -89,7 +89,7 @@ export default class ExtensionConfig {
 
   static fromModels(config: Object): ExtensionConfig {
     const props = config.map((configItem) => {
-      const typeClass = ExtensionConfig.getTypeClassByString(configItem.type);
+      const typeClass = extensionPropTypes.getTypeClassByString(configItem.type);
       return {
         [configItem.name]: typeClass.loadFromStore(configItem.value)
       };
@@ -98,29 +98,9 @@ export default class ExtensionConfig {
   }
 
   async loadProps(propsSchema: PropsSchema, defaultProps: DefaultProps, context: Object) {
-    this._loadPropsSchema(propsSchema);
+    extensionPropTypes.loadPropsSchema(propsSchema);
     const props = await _getPropsFromRaw(this.rawProps, propsSchema, defaultProps, context);
     this.props = props;
-  }
-
-  /**
-   * props type can be of Bit.types or strings.
-   * when the type is a string, replace it with the Type class that matches that string
-   */
-  _loadPropsSchema(propsSchema: PropsSchema) {
-    Object.keys(propsSchema).forEach((prop) => {
-      if (R.is(String, propsSchema[prop])) {
-        const typeClass = ExtensionConfig.getTypeClassByString(propsSchema[prop]);
-        // $FlowFixMe
-        propsSchema[prop] = typeClass;
-      }
-    });
-  }
-
-  static getTypeClassByString(typeStr: string): Class<Types.BaseType> {
-    const typeClassName = Object.keys(Types).find(type => Types[type].name.toLowerCase() === typeStr.toLowerCase());
-    if (!typeClassName) throw new Error(`extension prop type ${typeStr} is not supported`);
-    return Types[typeClassName];
   }
 
   async storeProps() {
@@ -157,11 +137,11 @@ const _getPropsFromRaw = async (
   defaultProps: DefaultProps,
   context: Object = {}
 ): Object => {
-  const props = await ExtensionPropTypesInstance.parseRaw(rawProps, propsSchema, defaultProps, context);
+  const props = await extensionPropTypes.parseRaw(rawProps, propsSchema, defaultProps, context);
   return props;
 };
 
 const _getPropsStore = async (props: Object): Object => {
-  const propsStore = await ExtensionPropTypesInstance.toStore(props);
+  const propsStore = await extensionPropTypes.toStore(props);
   return propsStore;
 };

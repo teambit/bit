@@ -37,6 +37,28 @@ export default class ExtensionPropTypes {
     this.types = types;
   }
 
+  /**
+   * props type can be of this.types or strings.
+   * when the type is a string, replace it with the Type class that matches that string
+   */
+  loadPropsSchema(propsSchema: PropsSchema) {
+    Object.keys(propsSchema).forEach((prop) => {
+      if (R.is(String, propsSchema[prop])) {
+        const typeClass = this.getTypeClassByString(propsSchema[prop]);
+        // $FlowFixMe
+        propsSchema[prop] = typeClass;
+      }
+    });
+  }
+
+  getTypeClassByString(typeStr: string): Class<Types.BaseType> {
+    const typeClassName = Object.keys(this.types).find(
+      type => this.types[type].name.toLowerCase() === typeStr.toLowerCase()
+    );
+    if (!typeClassName) throw new Error(`extension prop type ${typeStr} is not supported`);
+    return this.types[typeClassName];
+  }
+
   async parseRaw(rawProps: RawProps, propsSchema: PropsSchema, defaultProps: DefaultProps, context: Object = {}) {
     const addDefaultValToProps = userDefinedProps => (value, key) => {
       if (!R.has(key, userDefinedProps)) {
