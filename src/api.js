@@ -7,6 +7,7 @@ import { scopeList } from './api/scope/index';
 import HooksManager from './hooks';
 import * as types from './extensions/types';
 import type { BaseLoadArgsProps } from './extensions/base-extension';
+import Command from './cli/command';
 
 HooksManager.init();
 
@@ -24,7 +25,8 @@ module.exports = {
     return addMany(components, alternateCwd);
   },
   types,
-  Extension: class Extension {}
+  Extension: class Extension {},
+  Command
   /**
    * Load extension programmatically
    */
