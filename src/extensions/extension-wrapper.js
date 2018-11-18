@@ -165,7 +165,7 @@ const _getExtensionPath = (
   if (extensionEntry.source === 'FILE') {
     return _getFileExtensionPath(extensionEntry.value, consumerPath);
   }
-  if (extensionEntry.source === 'BIT') {
+  if (extensionEntry.source === 'BIT_CORE') {
     return _getCoreExtensionPath(extensionEntry.value);
   }
   if (!scopePath) {
@@ -189,10 +189,10 @@ const _getFileExtensionPath = (filePath: string, consumerPath: ?string): Extensi
 };
 
 const _getCoreExtensionPath = (name: string): ExtensionPath => {
-  const componentPath = path.join(__dirname, CORE_EXTENSIONS_PATH, name);
+  const componentPath = `${path.join(__dirname, CORE_EXTENSIONS_PATH, name)}.js`;
   return {
     resolvedPath: componentPath,
-    componentPath
+    componentPath: undefined
   };
 };
 
@@ -287,7 +287,6 @@ const _loadFromFile = async ({
     config,
     loaded: false
   };
-
   const isFileExist = await fs.exists(filePath);
   if (!isFileExist) {
     // Do not throw an error if the file not exist since we will install it later
