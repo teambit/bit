@@ -75,7 +75,7 @@ export default class ExtensionPropTypes {
   async toStore(props) {
     const storeData = {
       models: [],
-      files: []
+      bitObjects: []
     };
 
     const promises = [];
@@ -86,10 +86,10 @@ export default class ExtensionPropTypes {
         const data = await storeFunc();
         store.models.push({
           name: propName,
-          value: data.val,
+          value: data.value,
           type: propVal.name
         });
-        store.files = store.files.concat(data.files);
+        if (data.bitObjects) store.bitObjects.push(...data.bitObjects);
       };
       promises.push(storeFuncP());
     };

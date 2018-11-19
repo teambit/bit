@@ -24,14 +24,14 @@ export default class BaseType {
   }
 
   // Called when writing the component bit.json to FS
-  get val() {
+  get value() {
     return this._val;
   }
 
   // Called before saving type to models
   async store(): ModelStore {
     return {
-      val: this.val
+      value: this.value
     };
   }
 
