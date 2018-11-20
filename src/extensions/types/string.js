@@ -1,16 +1,17 @@
+// @flow
 import BaseType from './base-type';
 
 export default class String extends BaseType {
-  constructor(val) {
-    super(val);
+  constructor(value: string) {
+    super(value);
     this.name = 'string';
   }
 
-  static validate(val): boolean {
-    return typeof val === 'string';
+  static validate(value: any): boolean {
+    return typeof value === 'string';
   }
 
-  static loadFromStore(modelVal): String {
-    return new String(modelVal);
+  static loadFromStore(modelVal: string): String {
+    return new String(modelVal); // eslint-disable-line no-new-wrappers
   }
 }
