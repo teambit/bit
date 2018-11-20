@@ -21,6 +21,7 @@ import Workspace from './context/workspace';
 import GeneralError from '../error/general-error';
 import { Ref, Repository } from '../scope/objects';
 import { loadConsumer } from '../consumer';
+import { COMPONENT_ORIGINS } from '../constants';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -94,11 +95,10 @@ export default class ExtensionWrapper {
     logger.debugAndAddBreadCrumb('extension-wrapper', `loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
-    const consumerPath = context.workspace && context.workspace.workspacePath;
     const scopePath = context.store && context.store.storePath;
-    // TODO: Make sure the extension already exists
+    // TODO: Make sure the extension already exists and if not, install it here
     const config = ExtensionConfig.fromRawConfig(rawConfig);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, context.workspace);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
     // Skip disabled extensions
     if (config.disabled) {
@@ -160,8 +160,9 @@ export default class ExtensionWrapper {
 const _getExtensionPath = (
   extensionEntry: ExtensionEntry,
   scopePath: ?string,
-  consumerPath: ?string
+  workspace: ?Workspace
 ): ExtensionPath => {
+  const consumerPath = workspace ? workspace.workspacePath : '';
   if (extensionEntry.source === 'FILE') {
     return _getFileExtensionPath(extensionEntry.value, consumerPath);
   }
@@ -171,7 +172,7 @@ const _getExtensionPath = (
   if (!scopePath) {
     throw new ScopeNotFound();
   }
-  return _getRegularExtensionPath(extensionEntry.value, scopePath);
+  return _getRegularExtensionPath(extensionEntry.value, workspace, scopePath);
 };
 
 const _getFileExtensionPath = (filePath: string, consumerPath: ?string): ExtensionPath => {
@@ -196,7 +197,7 @@ const _getCoreExtensionPath = (name: string): ExtensionPath => {
   };
 };
 
-const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPath => {
+const _getRegularExtensionPath = (name: string, workspace: ?Workspace, scopePath: string): ExtensionPath => {
   let bitId: BitId;
   try {
     bitId = BitId.parse(name, true); // todo: make sure it always has a scope
@@ -204,6 +205,29 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
     throw new ExtensionNameNotValid(name);
   }
   if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(name);
+
+  // Check if the component exists in the workspace as regular component and if yes load it from there
+  const componentMap =
+    workspace &&
+    workspace.bitMap.getComponent(bitId, { ignoreVersion: false, ignoreScopeAndVersion: false }, { throws: false });
+  if (componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED && workspace) {
+    const compRootDir = componentMap.getComponentDir();
+    // Check if the component has root dir or it should be loaded from the main file
+    if (compRootDir) {
+      const componentPath = path.join(workspace.workspacePath, compRootDir);
+      const resolved = require.resolve(componentPath);
+      return {
+        resolvedPath: resolved,
+        componentPath
+      };
+    }
+    const componentPath = path.join(workspace.workspacePath, componentMap.mainDistFile || componentMap.mainFile);
+    const resolved = require.resolve(componentPath);
+    return {
+      resolvedPath: resolved,
+      componentPath: undefined
+    };
+  }
 
   const internalComponentsPath = Scope.getComponentsRelativePath();
   const internalComponentPath = Scope.getComponentRelativePath(bitId, scopePath);
@@ -288,6 +312,7 @@ const _loadFromFile = async ({
     loaded: false
   };
   const isFileExist = await fs.exists(filePath);
+
   if (!isFileExist) {
     // Do not throw an error if the file not exist since we will install it later
     // unless you specify the options.file which means you want a specific file which won't be installed automatically later
@@ -299,10 +324,10 @@ const _loadFromFile = async ({
     return extensionProps;
   }
 
-  if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
-    extensionProps.loaded = false;
-    return extensionProps;
-  }
+  // if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
+  //   extensionProps.loaded = false;
+  //   return extensionProps;
+  // }
   try {
     // $FlowFixMe
     const extensionConstructor = require(filePath); // eslint-disable-line
