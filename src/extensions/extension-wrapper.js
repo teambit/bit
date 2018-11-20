@@ -22,6 +22,7 @@ import GeneralError from '../error/general-error';
 import { Ref, Repository } from '../scope/objects';
 import { loadConsumer } from '../consumer';
 import { COMPONENT_ORIGINS } from '../constants';
+import Store from './context/store';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -136,13 +137,14 @@ export default class ExtensionWrapper {
       // extension. as a workaround, load the consumer here to populate the context.
       // @todo: find a better approach. it doesn't make sense to load the consumer so many times
       const consumer = await loadConsumer();
-      context.scopePath = consumer.scope.path;
       context.workspace = await Workspace.load(consumer);
     }
+    context.store = await Store.load(repository.scope);
+    const scopePath = repository.scope.path;
     const consumerPath = context.workspace && context.workspace.workspacePath;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromModels(extensionData.data);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.scopePath, consumerPath);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
     const staticExtensionProps = await _loadFromFile({
       name,
       filePath: resolvedPath,
