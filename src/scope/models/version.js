@@ -612,7 +612,7 @@ export default class Version extends BitObject {
       mainFile: component.mainFile,
       files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
-      extensions: extensions.map(parseExtension),
+      extensions: extensions ? extensions.map(parseExtension) : undefined,
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,

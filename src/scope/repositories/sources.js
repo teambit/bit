@@ -188,6 +188,13 @@ export default class SourceRepository {
     };
 
     const getExtensionsData = async (extensions) => {
+      if (!extensions) {
+        return {
+          extensions: undefined,
+          extensionObjects: undefined
+        };
+      }
+
       const storeData = [];
       const extensionObjects = [];
       const promises = extensions.map(async (extension) => {
