@@ -46,6 +46,7 @@ export default class ExtensionWrapper {
   config: ExtensionConfig;
   schema: ?Object;
   context: ?Object;
+  persist: boolean;
   extensionConstructor: ?Function; // Store the required plugin
 
   constructor(extensionProps: BaseExtensionProps) {
@@ -58,6 +59,11 @@ export default class ExtensionWrapper {
     this.filePath = extensionProps.filePath;
     this.rootDir = extensionProps.rootDir || '';
     this.loaded = extensionProps.loaded;
+    this.persist = true;
+    // Make sure the default is true even when not defined
+    if (extensionProps.persist === false) {
+      this.persist = false;
+    }
   }
 
   toString(): string {
@@ -346,6 +352,12 @@ const _loadFromFile = async ({
     const extension = await new extensionProps.ExtensionConstructor(config.props, context);
     extensionProps.extension = extension;
     extensionProps.loaded = true;
+    extensionProps.persist = true;
+    // checking that it's false and not undefined because by default if it's not defined it should be true
+    // for example when loading form models it should always be true
+    if (extensionProps.ExtensionConstructor.persist === false) {
+      extensionProps.persist = false;
+    }
 
     // const extension =
 
