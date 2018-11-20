@@ -198,11 +198,13 @@ export default class SourceRepository {
       const storeData = [];
       const extensionObjects = [];
       const promises = extensions.map(async (extension) => {
-        const value = await extension.config.storeProps();
-        const extensionModel = ExtensionDataModel.from(value.models);
-        storeData.push({ id: extension.name, data: extensionModel });
-        extensionObjects.push(extensionModel);
-        extensionObjects.push(...value.bitObjects);
+        if (extension.persist) {
+          const value = await extension.config.storeProps();
+          const extensionModel = ExtensionDataModel.from(value.models);
+          storeData.push({ id: extension.name, data: extensionModel });
+          extensionObjects.push(extensionModel);
+          extensionObjects.push(...value.bitObjects);
+        }
       });
       await Promise.all(promises);
       return {
