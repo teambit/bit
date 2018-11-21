@@ -1,4 +1,4 @@
-// todo: fix according to the build changes. buildInlineAll no longer exists
+/** @flow */
 
 import chokidar from 'chokidar';
 import chalk from 'chalk';
@@ -15,12 +15,11 @@ import loader from '../../../cli/loader';
  * @param {boolean} verbose - showing verbose output for inspection
  * @returns
  */
-export default (async function watchAll(verbose) {
+export default (async function watchAll(verbose: boolean) {
   // TODO: run build in the begining of process (it's work like this in other envs)
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const bitMapComponentsPaths = componentsList.getPathsForAllFilesOfAllComponents(undefined, true);
-  console.log('bitMapComponentsPaths', bitMapComponentsPaths);
   const watcher = chokidar.watch(bitMapComponentsPaths, {
     ignoreInitial: true,
     ignored: '**/dist/**'
