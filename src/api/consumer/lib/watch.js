@@ -1,10 +1,11 @@
 // todo: fix according to the build changes. buildInlineAll no longer exists
 
 import chokidar from 'chokidar';
-import R from 'ramda';
+import chalk from 'chalk';
 import { loadConsumer } from '../../../consumer';
 import { buildAll } from '../index';
 import ComponentsList from '../../../consumer/component/components-list';
+import loader from '../../../cli/loader';
 
 /**
  * Watch all components specified in bit.map.
@@ -17,17 +18,15 @@ import ComponentsList from '../../../consumer/component/components-list';
 export default (async function watchAll(verbose) {
   // TODO: run build in the begining of process (it's work like this in other envs)
   const consumer = await loadConsumer();
-  const consumerPath = consumer.getPath();
   const componentsList = new ComponentsList(consumer);
-  const bitMapComponentsValues = await componentsList.idsFromBitMap();
-  const addConsumerPath = x => `${consumerPath}/${x.path}`;
-  const bitMapComponentsPaths = R.map(addConsumerPath, bitMapComponentsValues);
+  const bitMapComponentsPaths = componentsList.getPathsForAllFilesOfAllComponents(undefined, true);
+  console.log('bitMapComponentsPaths', bitMapComponentsPaths);
   const watcher = chokidar.watch(bitMapComponentsPaths, {
     ignoreInitial: true,
     ignored: '**/dist/**'
   });
 
-  console.log('Starting watch for changes'); // eslint-disable-line no-console
+  console.log(chalk.yellow('Starting watch for changes')); // eslint-disable-line no-console
 
   if (verbose) {
     // Print all watched paths
@@ -41,6 +40,8 @@ export default (async function watchAll(verbose) {
     buildAll()
       .then((buildResult) => {
         console.log(buildResult); // eslint-disable-line no-console
+        loader.stop();
+        console.log(chalk.yellow('watching for changes'));
       })
       .catch((err) => {
         log(err); // eslint-disable-line
