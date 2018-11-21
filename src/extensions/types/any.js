@@ -2,16 +2,12 @@
 import BaseType from './base-type';
 
 export default class Any extends BaseType {
-  constructor(value: any) {
-    super(value);
+  constructor() {
+    super();
     this.name = 'any';
   }
 
-  static validate(): boolean {
+  validate(): boolean {
     return true;
-  }
-
-  static loadFromStore(modelValue: any): Any {
-    return new Any(modelValue);
   }
 }

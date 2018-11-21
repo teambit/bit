@@ -24,18 +24,24 @@ type FileContext = {
 
 export default class File extends BaseType {
   file: SourceFile;
-  dependencies: SourceFile[];
+  dependencies: SourceFile[] = [];
 
-  constructor(relativePath: string, context: FileContext = {}) {
-    super(relativePath);
+  constructor() {
+    super();
     this.name = 'file';
+  }
+
+  setValue(value: any, context: ?Object) {
+    this._val = value;
+    this.loadFile(context);
+  }
+
+  loadFile(context: FileContext = {}) {
     if (context.file) {
       this.file = context.file;
     } else {
-      this.file = _loadFile(relativePath, context);
+      this.file = _loadFile(this.value, context);
     }
-    // @todo implement
-    this.dependencies = [];
   }
 
   getContents(): string {
@@ -46,7 +52,7 @@ export default class File extends BaseType {
 
   writeDeps(basePath: ?string) {}
 
-  async store(): ModelStore {
+  async toStore(): ModelStore {
     const source = this.file.toSourceAsLinuxEOL();
     const dependenciesSources = this.dependencies.map(dependency => dependency.toSourceAsLinuxEOL());
     return {
@@ -58,32 +64,15 @@ export default class File extends BaseType {
       },
       bitObjects: [source, ...dependenciesSources]
     };
-
-    // const deps: FileDependency[] = this.getDeps();
-    // const depsObject = _generateObjectsForDeps(deps);
-
-    // const name: string = this._file.basename;
-    // const relative: string = this._file.relative;
-    // const object: BitObject = Scope.createObject(this._file.contents);
-
-    // return {
-    //   val: {
-    //     name: string,
-    //     relativePath: PathLinux,
-    //     file: Ref('thisFile'),
-    //     dependencies: deps
-    //   },
-    //   files: {
-    //     thisFile: 'content',
-    //     'deps[0]': 'content2',
-    //     'deps[1]': 'content3'
-    //   }
-    // };
   }
 
-  static loadFromStore(val: ModelStore): File {}
+  fromStore(modelValue: any) {
+    // @todo: implement
+    this.setValue(modelValue.relativePath, modelValue);
+    return this;
+  }
 
-  static validate(filePath): boolean {
+  validate(filePath): boolean {
     return isValidPath(filePath);
   }
 }

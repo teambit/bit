@@ -90,8 +90,8 @@ export default class ExtensionConfig {
   static fromModels(config: Object): ExtensionConfig {
     const props = {};
     config.forEach((configItem) => {
-      const typeClass = extensionPropTypes.getTypeClassByString(configItem.type);
-      props[configItem.name] = typeClass.loadFromStore(configItem.value);
+      const typeInstance = extensionPropTypes.getTypeClassByString(configItem.type);
+      props[configItem.name] = typeInstance.fromStore(configItem.value);
     });
     return new ExtensionConfig({ props });
   }

@@ -2,16 +2,12 @@
 import BaseType from './base-type';
 
 export default class Boolean extends BaseType {
-  constructor(value: boolean) {
-    super(value);
+  constructor() {
+    super();
     this.name = 'boolean';
   }
 
-  static validate(value: any): boolean {
+  validate(value: any): boolean {
     return typeof value === 'boolean';
-  }
-
-  static loadFromStore(modelVal: boolean): Boolean {
-    return new Boolean(modelVal); // eslint-disable-line no-new-wrappers
   }
 }

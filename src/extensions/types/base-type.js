@@ -1,18 +1,14 @@
 /** @flow */
+import { BitObject } from '../../scope/objects';
 
 export type ModelStore = {
-  val: any,
-  files?: ?(string[])
+  value: any,
+  bitObjects?: ?(BitObject[])
 };
 
 export default class BaseType {
   _name: string;
   _val: any;
-
-  // Called to create instance from the bit.json value
-  constructor(val: ?any) {
-    this._val = val;
-  }
 
   get name(): string {
     // return the type of val to support primitives without further implementation
@@ -28,8 +24,12 @@ export default class BaseType {
     return this._val;
   }
 
-  // Called before saving type to models
-  async store(): ModelStore {
+  setValue(value: any, context: ?Object) {
+    this._val = value;
+  }
+
+  // get called before saving type to models
+  async toStore(): Promise<ModelStore> {
     return {
       value: this.value
     };
@@ -37,14 +37,16 @@ export default class BaseType {
 
   // Called when loading the value from the model
   // Return an instance of the Type
-  static loadFromStore(modelVal): BaseType {
-    return new BaseType(modelVal);
+  fromStore(modelValue: any) {
+    this.setValue(modelValue);
+    return this;
   }
 
   /**
    * Validate the user input (as written in the bit.json)
    */
-  static validate(val): boolean {
+  validate(value: any): boolean {
+    // eslint-disable-line no-unused-vars
     throw new Error('validate must be implemented');
   }
 }

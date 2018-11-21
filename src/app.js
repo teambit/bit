@@ -12,7 +12,7 @@ HooksManager.init();
 
 // Load extensions
 extensionRegistry.init().then(async () => {
-  const storeData = await extensionRegistry.store();
+  const storeData = await extensionRegistry.toStore();
   console.log(JSON.stringify(storeData, null, 2));
   // Make sure to register all the hooks actions in the global hooks manager
   // extensions.forEach((extension) => {

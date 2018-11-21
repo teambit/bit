@@ -91,6 +91,7 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ExtensionInvalidConfig from '../extensions/exceptions/extension-invalid-config';
+import PropTypeNotSupported from '../extensions/exceptions/prop-type-not-supported';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -456,6 +457,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     InvalidCompilerInterface,
     err => `"${err.compilerName}" does not have a valid compiler interface, it has to expose a compile method`
   ],
+  [PropTypeNotSupported, err => `extension prop type ${err.type} is not supported`],
   [
     ResolutionException,
     err =>

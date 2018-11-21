@@ -8,5 +8,6 @@ import String from './string';
 import Boolean from './boolean';
 import Number from './number';
 import Any from './any';
+import ArrayOf from './arrayOf';
 
-export { BaseType, Component, Extension, File, String, Boolean, Number, Any };
+export { BaseType, Component, Extension, File, String, Boolean, Number, Any, ArrayOf };

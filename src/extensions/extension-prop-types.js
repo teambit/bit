@@ -2,7 +2,9 @@
 
 import R from 'ramda';
 import * as Types from './types';
+import typesFactory from './types/type-factory';
 import ExtensionInvalidConfig from './exceptions/extension-invalid-config';
+import PropTypeNotSupported from './exceptions/prop-type-not-supported';
 
 type TypeName = string;
 type TypeImplementation = Class<Types.BaseType>;
@@ -52,11 +54,24 @@ export default class ExtensionPropTypes {
   }
 
   getTypeClassByString(typeStr: string): Class<Types.BaseType> {
-    const typeClassName = Object.keys(this.types).find(
-      type => this.types[type].name.toLowerCase() === typeStr.toLowerCase()
-    );
-    if (!typeClassName) throw new Error(`extension prop type ${typeStr} is not supported`);
-    return this.types[typeClassName];
+    const typeInstance = typesFactory[typeStr];
+    if (typeInstance) return typeInstance;
+    if (typeStr.includes('<') && typeStr.includes('>')) {
+      return this._getTypeClassOfTypeOf(typeStr);
+    }
+    throw new PropTypeNotSupported(typeStr);
+  }
+
+  /**
+   * some types are super types, such as Array. Array can be array of strings or numbers and so on.
+   * the string representation of such a type is: superType<subType>. For example, array<boolean>.
+   */
+  _getTypeClassOfTypeOf(typeStr: string): Class<Types.BaseType> {
+    const [type, typeOf] = typeStr.replace('>', '').split('<');
+    if (typesFactory[type] && typesFactory[typeOf]) {
+      return typesFactory[type](typesFactory[typeOf]);
+    }
+    throw new PropTypeNotSupported(typeStr);
   }
 
   async parseRaw(rawProps: RawProps, propsSchema: PropsSchema, defaultProps: DefaultProps, context: Object = {}) {
@@ -81,9 +96,8 @@ export default class ExtensionPropTypes {
     const promises = [];
 
     const addPropToStoreData = store => (propVal, propName) => {
-      const storeFunc = propVal.store.bind(propVal);
       const storeFuncP = async () => {
-        const data = await storeFunc();
+        const data = await propVal.toStore();
         store.models.push({
           name: propName,
           value: data.value,
@@ -101,54 +115,40 @@ export default class ExtensionPropTypes {
 
   parseModel(modelProps: ModelProps) {}
 
+  /**
+   * throws an error for an invalid config
+   */
   async validateRaw(rawProps: RawProps, propsSchema: PropsSchema) {
-    const promises = [];
-
-    const validateVal = (value, key) => {
+    const validateVal = async (value, key) => {
       if (!R.has(key, propsSchema)) {
         // TODO: make a nice error
         throw new Error(`unknown prop - the prop ${key} is not defined in the extension propTypes`);
       }
-      const validateFunc = propsSchema[key].validate;
       const typeName = propsSchema[key].name;
-      const validateFuncP = Promise.resolve()
-        .then(() => {
-          return validateFunc(value);
-        })
-        .then((isValid) => {
-          if (!isValid) {
-            // TODO: make a nice error
-            throw new ExtensionInvalidConfig(key, typeName);
-          }
-          return isValid;
-        });
-      promises.push(validateFuncP);
+      const isValid = await propsSchema[key].validate(value);
+      if (!isValid) {
+        // TODO: make a nice error
+        throw new ExtensionInvalidConfig(key, typeName);
+      }
+      return isValid;
     };
     R.forEachObjIndexed(validateVal, rawProps);
-    return Promise.all(promises);
   }
 }
 
 /**
  *
- * This function dosn't not validate, the validation should be done during the public function - parseRaw
+ * This function doesn't validate, the validation should be done during the public function - parseRaw
  * @param {*} rawProps
  * @param {*} propsSchema
  */
 async function _loadRaw(rawProps: RawProps, propsSchema: PropsSchema, context: Object = {}) {
   const loadedProps = {};
   const promises = [];
-  const loadOne = (value, key) => {
-    const ConstructorFunc = propsSchema[key];
-    const ConstructorFuncP = Promise.resolve()
-      .then(() => {
-        return new ConstructorFunc(value, context);
-      })
-      .then((loadedProp) => {
-        loadedProps[key] = loadedProp;
-      });
-    promises.push(ConstructorFuncP);
-    // loadedProps[key] = await
+  const loadOne = async (value, key) => {
+    const typeInstance: Types.BaseType = propsSchema[key];
+    await typeInstance.setValue(value, context);
+    loadedProps[key] = typeInstance;
   };
 
   R.forEachObjIndexed(loadOne, rawProps);

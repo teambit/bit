@@ -55,13 +55,13 @@ export default class Component extends BaseType {
   }
 
   // Called before saving type to models
-  store(): ModelStore {
+  toStore(): ModelStore {
     return this.toObject();
   }
 
   // Called when loading the value from the model
   // Return an instance of the Component
-  static loadFromStore(componentId: ComponentId): Component {
+  fromStore(componentId: ComponentId): Component {
     return new Component(componentId);
   }
 

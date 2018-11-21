@@ -27,7 +27,7 @@ class ExtensionRegistry {
     this.componentExtensions = {};
   }
 
-  async store() {
+  async toStore() {
     const storeData = {};
     const promises = this.workspaceExtensions.map(async (extension) => {
       return extension.config.storeProps().then((val) => {
