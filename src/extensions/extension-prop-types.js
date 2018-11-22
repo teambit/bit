@@ -43,7 +43,7 @@ export default class ExtensionPropTypes {
    * props type can be of this.types or strings.
    * when the type is a string, replace it with the Type class that matches that string
    */
-  loadPropsSchema(propsSchema: PropsSchema) {
+  loadPropsSchema(propsSchema: PropsSchema = {}) {
     Object.keys(propsSchema).forEach((prop) => {
       if (R.is(String, propsSchema[prop])) {
         const typeClass = this.getTypeClassByString(propsSchema[prop]);

@@ -338,24 +338,25 @@ const _loadFromFile = async ({
   // }
   try {
     // $FlowFixMe
-    const extensionConstructor = require(filePath); // eslint-disable-line
-    extensionProps.ExtensionConstructor = extensionConstructor.default
-      ? extensionConstructor.default
-      : extensionConstructor;
-    if (loadConfigProps) {
+    const extensionFile = require(filePath); // eslint-disable-line
+
+    extensionProps.ExtensionConstructor = _getConstructor(extensionFile);
+    if (loadConfigProps && extensionProps.ExtensionConstructor) {
       await config.loadProps(
         extensionProps.ExtensionConstructor.propTypes,
         extensionProps.ExtensionConstructor.defaultProps,
         { consumerPath: context.workspace.workspacePath }
       );
     }
-    const extension = await new extensionProps.ExtensionConstructor(config.props, context);
+    const extension = extensionProps.ExtensionConstructor
+      ? await new extensionProps.ExtensionConstructor(config.props, context)
+      : extensionFile;
     extensionProps.extension = extension;
     extensionProps.loaded = true;
     extensionProps.persist = true;
     // checking that it's false and not undefined because by default if it's not defined it should be true
     // for example when loading form models it should always be true
-    if (extensionProps.ExtensionConstructor.persist === false) {
+    if (extensionProps.ExtensionConstructor && extensionProps.ExtensionConstructor.persist === false) {
       extensionProps.persist = false;
     }
 
@@ -388,3 +389,13 @@ const _loadFromFile = async ({
   extensionProps.loaded = true;
   return extensionProps;
 };
+
+function _getConstructor(extensionFile): ?Function {
+  const isConstructor = (obj: any) => {
+    // not perfect, but works for most cases
+    return Boolean(typeof obj === 'function' && obj.prototype && obj.prototype.constructor.name);
+  };
+  if (isConstructor(extensionFile.default)) return extensionFile.default;
+  if (isConstructor(extensionFile)) return extensionFile;
+  return undefined;
+}
