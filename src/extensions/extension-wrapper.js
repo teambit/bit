@@ -47,7 +47,16 @@ export default class ExtensionWrapper {
   schema: ?Object;
   context: ?Object;
   persist: boolean;
-  extensionConstructor: ?Function; // Store the required plugin
+  /**
+   * an extension can be written as an ES6 class or ES5 pseudo-class, which have a constructor
+   * or as a simple object, which doesn't have any constructor
+   */
+  extensionConstructor: ?Function;
+  /**
+   * when the extension is written as an ES6 class or ES5 pseudo-class, this variable is the
+   * instantiated object, otherwise, it is the object itself.
+   */
+  extensionInstance: Object;
 
   constructor(extensionProps: BaseExtensionProps) {
     this.name = extensionProps.name;
@@ -55,6 +64,7 @@ export default class ExtensionWrapper {
     this.schema = extensionProps.schema;
     this.context = extensionProps.context;
     this.extensionConstructor = extensionProps.extensionConstructor;
+    this.extensionInstance = extensionProps.extensionInstance;
     this.disabled = extensionProps.disabled;
     this.filePath = extensionProps.filePath;
     this.rootDir = extensionProps.rootDir || '';
@@ -147,7 +157,6 @@ export default class ExtensionWrapper {
     }
     context.store = await Store.load(repository.scope);
     const scopePath = repository.scope.path;
-    const consumerPath = context.workspace && context.workspace.workspacePath;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromModels(extensionData.data);
     const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, context.workspace);
@@ -160,7 +169,7 @@ export default class ExtensionWrapper {
       loadConfigProps: false,
       throws: true
     });
-    const extensionProps: BaseExtensionProps = { ...staticExtensionProps, context };
+    const extensionProps: BaseExtensionProps = { context, ...staticExtensionProps };
     return new ExtensionWrapper(extensionProps);
   }
 }
@@ -340,23 +349,23 @@ const _loadFromFile = async ({
     // $FlowFixMe
     const extensionFile = require(filePath); // eslint-disable-line
 
-    extensionProps.ExtensionConstructor = _getConstructor(extensionFile);
-    if (loadConfigProps && extensionProps.ExtensionConstructor) {
+    extensionProps.extensionConstructor = _getConstructor(extensionFile);
+    if (loadConfigProps && extensionProps.extensionConstructor) {
       await config.loadProps(
-        extensionProps.ExtensionConstructor.propTypes,
-        extensionProps.ExtensionConstructor.defaultProps,
+        extensionProps.extensionConstructor.propTypes,
+        extensionProps.extensionConstructor.defaultProps,
         { consumerPath: context.workspace.workspacePath }
       );
     }
-    const extension = extensionProps.ExtensionConstructor
-      ? await new extensionProps.ExtensionConstructor(config.props, context)
+    const extensionInstance = extensionProps.extensionConstructor
+      ? await new extensionProps.extensionConstructor(config.props, context) // eslint-disable-line new-cap
       : extensionFile;
-    extensionProps.extension = extension;
+    extensionProps.extensionInstance = extensionInstance;
     extensionProps.loaded = true;
     extensionProps.persist = true;
     // checking that it's false and not undefined because by default if it's not defined it should be true
     // for example when loading form models it should always be true
-    if (extensionProps.ExtensionConstructor && extensionProps.ExtensionConstructor.persist === false) {
+    if (extensionProps.extensionConstructor && extensionProps.extensionConstructor.persist === false) {
       extensionProps.persist = false;
     }
 
