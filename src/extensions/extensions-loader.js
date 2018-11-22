@@ -10,6 +10,7 @@ import logger from '../logger/logger';
 import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 import Workspace from './context/workspace';
 import Store from './context/store';
+import * as hooks from './extension-hook';
 
 /**
  * Load all extensions
@@ -49,7 +50,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     if (globalRawExtensions) {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
-    const extensions = R.values(R.mapObjIndexed(_loadExtension({ workspace, store }), rawExtensions));
+    const extensions = R.values(R.mapObjIndexed(_loadExtension({ workspace, store, hooks }), rawExtensions));
     return Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed');
