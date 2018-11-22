@@ -150,7 +150,7 @@ export default class ExtensionWrapper {
     const consumerPath = context.workspace && context.workspace.workspacePath;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromModels(extensionData.data);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, consumerPath);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, context.workspace);
     const staticExtensionProps = await _loadFromFile({
       name,
       filePath: resolvedPath,
