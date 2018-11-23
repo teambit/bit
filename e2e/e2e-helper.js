@@ -13,6 +13,7 @@ import set from 'lodash.set';
 import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, FILE_PROTOCOL_PREFIX } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
+import GeneralError from '../src/error/general-error';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -91,6 +92,7 @@ export default class Helper {
     const errorString = defaultErrorHandler(error);
     expect(Helper.alignOutput(output)).to.have.string(Helper.alignOutput(errorString));
   }
+
   cleanEnv() {
     fs.emptyDirSync(this.localScopePath);
     fs.emptyDirSync(this.remoteScopePath);

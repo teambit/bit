@@ -43,6 +43,7 @@ export default class BitRawObject {
       case 'Component':
       case 'Symlink':
       case 'ScopeMeta':
+      case 'ExtensionDataModel':
         parsedContent = JSON.parse(this.content.toString());
         break;
 
@@ -59,8 +60,8 @@ export default class BitRawObject {
       case 'Component':
       case 'Symlink':
       case 'ScopeMeta':
+      case 'ExtensionDataModel':
         return JSON.stringify(this.parsedContent, ...args);
-
       default:
         return this.content;
     }
@@ -78,6 +79,8 @@ export default class BitRawObject {
     switch (this.type) {
       case 'Version':
         return 'component version';
+      case 'ExtensionDataModel':
+        return 'extension data';
       case 'Component':
         return this.parsedContent.scope
           ? [this.parsedContent.scope, this.parsedContent.name].join('/')

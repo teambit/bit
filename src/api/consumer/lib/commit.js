@@ -112,6 +112,7 @@ export async function commitAllAction(args: {
     skipTests,
     scope,
     includeImported,
+    devMode,
     idWithWildcard
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
