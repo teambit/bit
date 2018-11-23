@@ -38,7 +38,8 @@ export type ExtensionLoadProps = {
 };
 
 export default class ExtensionWrapper {
-  name: ExtensionEntry;
+  name: string;
+  extensionEntry: ExtensionEntry;
   loaded: boolean;
   disabled: boolean;
   filePath: string;
@@ -60,6 +61,7 @@ export default class ExtensionWrapper {
 
   constructor(extensionProps: BaseExtensionProps) {
     this.name = extensionProps.name;
+    this.extensionEntry = extensionProps.extensionEntry;
     this.config = extensionProps.config;
     this.schema = extensionProps.schema;
     this.context = extensionProps.context;
@@ -132,7 +134,7 @@ export default class ExtensionWrapper {
       context,
       throws
     });
-    const extensionProps: BaseExtensionProps = { ...staticExtensionProps, context };
+    const extensionProps: BaseExtensionProps = { ...staticExtensionProps, context, extensionEntry };
     // return extensionProps;
     return new ExtensionWrapper(extensionProps);
   }
@@ -169,7 +171,7 @@ export default class ExtensionWrapper {
       loadConfigProps: false,
       throws: true
     });
-    const extensionProps: BaseExtensionProps = { context, ...staticExtensionProps };
+    const extensionProps: BaseExtensionProps = { context, ...staticExtensionProps, extensionEntry };
     return new ExtensionWrapper(extensionProps);
   }
 }

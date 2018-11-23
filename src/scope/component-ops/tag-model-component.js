@@ -23,6 +23,7 @@ import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
+import ExtensionWrapper from '../../extensions/extension-wrapper';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
@@ -204,6 +205,7 @@ export default (async function tagModelComponent({
   consumer,
   ignoreNewestVersion = false,
   skipTests = false,
+  devMode,
   verbose = false
 }: {
   consumerComponents: Component[],
@@ -215,6 +217,7 @@ export default (async function tagModelComponent({
   consumer: Consumer,
   ignoreNewestVersion: boolean,
   skipTests: boolean,
+  devMode: boolean,
   verbose?: boolean
 }): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
@@ -283,6 +286,10 @@ export default (async function tagModelComponent({
         throw err;
       }
     }
+  }
+
+  if (!devMode) {
+    _throwErrorForFileExtensions(componentsToBuildAndTest);
   }
 
   logger.debug('scope.putMany: sequentially persist all components');
@@ -354,3 +361,18 @@ export default (async function tagModelComponent({
   await scope.objects.persist();
   return { taggedComponents, autoTaggedComponents };
 });
+
+function _throwErrorForFileExtensions(components: Component[]) {
+  components.forEach((component) => {
+    if (!component.extensions) return;
+    component.extensions.forEach((extension: ExtensionWrapper) => {
+      if (extension.extensionEntry.source === 'FILE') {
+        throw new GeneralError(`a component "${component.id.toString()}" has an extension "${
+          extension.name
+        }", which is a file.
+        to be able to import the component later, please add the extension as a component.
+        to bypass this error for development purposes, use "--dev-mode" flag`);
+      }
+    });
+  });
+}

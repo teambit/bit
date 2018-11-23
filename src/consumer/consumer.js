@@ -530,7 +530,8 @@ export default class Consumer {
     verbose: ?boolean,
     ignoreUnresolvedDependencies: ?boolean,
     ignoreNewestVersion: boolean,
-    skipTests: boolean = false
+    skipTests: boolean = false,
+    devMode: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
     logger.debug(`committing the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
@@ -554,6 +555,7 @@ export default class Consumer {
       consumer: this,
       ignoreNewestVersion,
       skipTests,
+      devMode,
       verbose
     });
 

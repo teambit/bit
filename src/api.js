@@ -6,7 +6,6 @@ import { scopeList } from './api/scope/index';
 // import Extension from './extensions/extension';
 import HooksManager from './hooks';
 import types from './extensions/types/type-factory';
-import type { BaseLoadArgsProps } from './extensions/base-extension';
 import Command from './cli/command';
 
 HooksManager.init();

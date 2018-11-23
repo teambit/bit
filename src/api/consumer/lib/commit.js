@@ -29,6 +29,7 @@ export async function commitAction(args: {
   verbose?: boolean,
   ignoreUnresolvedDependencies?: boolean,
   ignoreNewestVersion: boolean,
+  devMode: boolean,
   skipTests: boolean
 }): Promise<TagResults> {
   const {
@@ -40,6 +41,7 @@ export async function commitAction(args: {
     verbose,
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
+    devMode,
     skipTests
   } = args;
   const validExactVersion = _validateVersion(exactVersion);
@@ -61,7 +63,8 @@ export async function commitAction(args: {
     verbose,
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
-    skipTests
+    skipTests,
+    devMode
   );
   commitResults.newComponents = newComponents;
   HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
@@ -95,6 +98,7 @@ export async function commitAllAction(args: {
   skipTests: boolean,
   scope?: boolean,
   includeImported?: boolean,
+  devMode: boolean,
   idWithWildcard?: string
 }): Promise<TagResults> {
   const {
@@ -135,7 +139,8 @@ export async function commitAllAction(args: {
     verbose,
     ignoreUnresolvedDependencies,
     ignoreNewestVersion,
-    skipTests
+    skipTests,
+    devMode
   );
   commitResults.warnings = warnings;
 

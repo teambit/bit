@@ -28,7 +28,12 @@ export default class Export extends Command {
     ['', 'ignore-missing-dependencies', 'DEPRECATED. use --ignore-unresolved-dependencies instead'],
     ['i', 'ignore-unresolved-dependencies', 'ignore missing dependencies (default = false)'],
     ['I', 'ignore-newest-version', 'ignore existing of newer versions (default = false)'],
-    ['', 'skip-tests', 'skip running component tests during tag process']
+    ['', 'skip-tests', 'skip running component tests during tag process'],
+    [
+      '',
+      'dev-mode',
+      'allow tagging extensions as files (do not require them to be components). warning: the tagged component will be unusable'
+    ]
   ];
   loader = true;
   migration = true;
@@ -47,6 +52,7 @@ export default class Export extends Command {
       ignoreUnresolvedDependencies = false,
       ignoreNewestVersion = false,
       skipTests = false,
+      devMode = false,
       scope
     }: {
       message: string,
@@ -60,6 +66,7 @@ export default class Export extends Command {
       ignoreUnresolvedDependencies?: boolean,
       ignoreNewestVersion?: boolean,
       skipTests?: boolean,
+      devMode?: boolean,
       scope: ?string
     }
   ): Promise<any> {
@@ -107,6 +114,7 @@ export default class Export extends Command {
         skipTests,
         scope,
         includeImported,
+        devMode,
         idWithWildcard: id
       });
     }
@@ -119,6 +127,7 @@ export default class Export extends Command {
       verbose,
       ignoreUnresolvedDependencies,
       ignoreNewestVersion,
+      devMode,
       skipTests
     });
   }
