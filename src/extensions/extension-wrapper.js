@@ -150,9 +150,8 @@ export default class ExtensionWrapper {
     const name = modelObject.id;
     const extensionEntry = new ExtensionEntry(name);
     const context = {};
-    if (extensionEntry.source === 'FILE') {
-      // file source should not be saved in the model unless it's being used for developing a new
-      // extension. as a workaround, load the consumer here to populate the context.
+    if (extensionEntry.source === 'FILE' || extensionEntry.source === 'COMPONENT') {
+      // workspace is needed to find imported/authored extension components and extensions that are files
       // @todo: find a better approach. it doesn't make sense to load the consumer so many times
       const consumer = await loadConsumer();
       context.workspace = await Workspace.load(consumer);
@@ -191,7 +190,7 @@ const _getExtensionPath = (
   if (!scopePath) {
     throw new ScopeNotFound();
   }
-  return _getRegularExtensionPath(extensionEntry.value, workspace, scopePath);
+  return _getComponentExtensionPath(extensionEntry.value, workspace, scopePath);
 };
 
 const _getFileExtensionPath = (filePath: string, consumerPath: ?string): ExtensionPath => {
@@ -216,7 +215,7 @@ const _getCoreExtensionPath = (name: string): ExtensionPath => {
   };
 };
 
-const _getRegularExtensionPath = (name: string, workspace: ?Workspace, scopePath: string): ExtensionPath => {
+const _getComponentExtensionPath = (name: string, workspace: ?Workspace, scopePath: string): ExtensionPath => {
   let bitId: BitId;
   try {
     bitId = BitId.parse(name, true); // todo: make sure it always has a scope

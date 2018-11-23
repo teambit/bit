@@ -75,6 +75,10 @@ describe('bit extension system', function () {
         helper.commitComponentBarFoo();
         barFoo = helper.catComponent('bar/foo@latest');
       });
+      it('should not throw an error on bit status', () => {
+        const output = helper.status();
+        expect(output).to.have.string('bar/foo');
+      });
       it('should save a new property "extension" into the scope', () => {
         expect(barFoo).to.have.property('extensions');
       });
