@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import { NothingToImport } from '../exceptions';
 import { BitId, BitIds } from '../../bit-id';
@@ -16,6 +17,7 @@ import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import writeComponents from './write-components';
+import ExtensionEntry from '../../extensions/extension-entry';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -350,6 +352,23 @@ export default class ImportComponents {
       saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
       override: this.options.override
+    });
+
+    await this._installExtensions(componentsToWrite);
+  }
+
+  async _installExtensions(componentsWithDependencies: ComponentWithDependencies[]) {
+    await pMapSeries(componentsWithDependencies, (componentWithDependencies) => {
+      const extensionIds = componentWithDependencies.component.extensions.map(extension => extension.name);
+      if (!extensionIds.length) return Promise.resolve();
+      const ids = extensionIds.reduce((accumulator, extensionId) => {
+        const extensionEntry = new ExtensionEntry(extensionId);
+        if (extensionEntry.source === 'COMPONENT') {
+          accumulator.push({ componentId: extensionEntry.value, type: 'extension' });
+        }
+        return accumulator;
+      }, []);
+      return this.scope.installEnvironment({ ids, dependentId: componentWithDependencies.component.id });
     });
   }
 }

@@ -168,7 +168,7 @@ export default class ExtensionWrapper {
       config,
       context,
       loadConfigProps: false,
-      throws: true
+      throws: false // the extension might not be there yet (e.g. in case of importing a component)
     });
     const extensionProps: BaseExtensionProps = { context, ...staticExtensionProps, extensionEntry };
     return new ExtensionWrapper(extensionProps);
@@ -215,15 +215,7 @@ const _getCoreExtensionPath = (name: string): ExtensionPath => {
   };
 };
 
-const _getComponentExtensionPath = (name: string, workspace: ?Workspace, scopePath: string): ExtensionPath => {
-  let bitId: BitId;
-  try {
-    bitId = BitId.parse(name, true); // todo: make sure it always has a scope
-  } catch (err) {
-    throw new ExtensionNameNotValid(name);
-  }
-  if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(name);
-
+const _getComponentExtensionPath = (bitId: BitId, workspace: ?Workspace, scopePath: string): ExtensionPath => {
   // Check if the component exists in the workspace as regular component and if yes load it from there
   const componentMap =
     workspace &&

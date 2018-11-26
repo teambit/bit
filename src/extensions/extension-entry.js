@@ -3,6 +3,7 @@
 import R from 'ramda';
 import { FILE_PROTOCOL_PREFIX, BIT_PROTOCOL_PREFIX } from '../constants';
 import { BitId } from '../bit-id';
+import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 
 export default class ExtensionEntry {
   // The extension source (where to load it from)
@@ -21,7 +22,14 @@ export default class ExtensionEntry {
       this.value = val;
     } else {
       this.source = 'COMPONENT';
-      this.value = extensionName;
+      let bitId: BitId;
+      try {
+        bitId = BitId.parse(extensionName, true); // todo: make sure it always has a scope
+      } catch (err) {
+        throw new ExtensionNameNotValid(extensionName);
+      }
+      if (!bitId || !bitId.scope) throw new ExtensionNameNotValid(extensionName);
+      this.value = bitId;
     }
   }
 }

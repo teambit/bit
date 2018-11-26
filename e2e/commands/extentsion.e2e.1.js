@@ -146,6 +146,18 @@ describe('bit extension system', function () {
           expect(field).to.be.undefined;
         });
       });
+      describe('importing the component', () => {
+        let importOutput;
+        before(() => {
+          helper.exportAllComponents();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          importOutput = helper.importComponent('bar/foo');
+        });
+        it('should import the component with no errors', () => {
+          expect(importOutput).to.have.string('successfully imported');
+        });
+      });
     });
   });
   it.skip('Exception from hook should not affect others which are registers for that hook', () => {});
