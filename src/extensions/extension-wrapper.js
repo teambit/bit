@@ -23,6 +23,7 @@ import { Ref, Repository } from '../scope/objects';
 import { loadConsumer } from '../consumer';
 import { COMPONENT_ORIGINS } from '../constants';
 import Store from './context/store';
+import GlobalScope from '../scope/global-scope';
 
 const CORE_EXTENSIONS_PATH = './core-extensions';
 
@@ -114,10 +115,9 @@ export default class ExtensionWrapper {
     logger.debugAndAddBreadCrumb('extension-wrapper', `loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
-    const scopePath = context.store && context.store.storePath;
     // TODO: Make sure the extension already exists and if not, install it here
     const config = ExtensionConfig.fromRawConfig(rawConfig);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, context.workspace);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.globalScope, context.workspace);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
     // Skip disabled extensions
     if (config.disabled) {
@@ -177,7 +177,7 @@ export default class ExtensionWrapper {
 
 const _getExtensionPath = (
   extensionEntry: ExtensionEntry,
-  scopePath: ?string,
+  globalScope: ?GlobalScope,
   workspace: ?Workspace
 ): ExtensionPath => {
   const consumerPath = workspace ? workspace.workspacePath : '';
@@ -187,10 +187,7 @@ const _getExtensionPath = (
   if (extensionEntry.source === 'BIT_CORE') {
     return _getCoreExtensionPath(extensionEntry.value);
   }
-  if (!scopePath) {
-    throw new ScopeNotFound();
-  }
-  return _getComponentExtensionPath(extensionEntry.value, workspace, scopePath);
+  return _getComponentExtensionPath(extensionEntry.value, workspace, globalScope);
 };
 
 const _getFileExtensionPath = (filePath: string, consumerPath: ?string): ExtensionPath => {
@@ -215,7 +212,7 @@ const _getCoreExtensionPath = (name: string): ExtensionPath => {
   };
 };
 
-const _getComponentExtensionPath = (bitId: BitId, workspace: ?Workspace, scopePath: string): ExtensionPath => {
+const _getComponentExtensionPath = (bitId: BitId, workspace: ?Workspace, globalScope: GlobalScope): ExtensionPath => {
   // Check if the component exists in the workspace as regular component and if yes load it from there
   const componentMap =
     workspace &&
@@ -239,9 +236,7 @@ const _getComponentExtensionPath = (bitId: BitId, workspace: ?Workspace, scopePa
     };
   }
 
-  const internalComponentsPath = Scope.getComponentsRelativePath();
-  const internalComponentPath = Scope.getComponentRelativePath(bitId, scopePath);
-  const componentPath = path.join(scopePath, internalComponentsPath, internalComponentPath);
+  const componentPath = globalScope.getExtensionPath(bitId);
   try {
     // This might throw an error in case of imported component when the env
     // isn't installed yet

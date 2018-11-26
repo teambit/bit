@@ -62,11 +62,14 @@ import {
   getManipulateDirForExistingComponents
 } from './component-ops/manipulate-dir';
 import ComponentLoader from './component/component-loader';
+import GlobalScope from '../scope/global-scope';
+import type { InstallExtensionsResult } from '../scope/global-scope';
 
 type ConsumerProps = {
   projectPath: string,
   bitJson: ConsumerBitJson,
   scope: Scope,
+  globalScope: GlobalScope,
   created?: boolean,
   isolated?: boolean,
   bitMap: BitMap,
@@ -88,6 +91,7 @@ export default class Consumer {
   created: boolean;
   bitJson: ConsumerBitJson;
   scope: Scope;
+  globalScope: GlobalScope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
   addedGitHooks: ?(string[]); // list of git hooks added during init process
@@ -103,6 +107,7 @@ export default class Consumer {
     projectPath,
     bitJson,
     scope,
+    globalScope,
     created = false,
     isolated = false,
     bitMap,
@@ -114,6 +119,7 @@ export default class Consumer {
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
+    this.globalScope = globalScope;
     this.bitMap = bitMap || BitMap.load(projectPath);
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
@@ -333,8 +339,8 @@ export default class Consumer {
     return this.componentLoader.loadMany(ids, throwOnFailure);
   }
 
-  importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
-    return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
+  importExtension(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<InstallExtensionsResult> {
+    return this.globalScope.installExtensions({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
   }
 
   async importComponents(ids: BitId[], withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
@@ -667,12 +673,14 @@ export default class Consumer {
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
-    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    const globalScopeP = GlobalScope.load();
+    const [scope, bitJson, globalScope] = await Promise.all([scopeP, bitJsonP, globalScopeP]);
     return new Consumer({
       projectPath,
       created: true,
       scope,
       bitJson,
+      globalScope,
       bitMap,
       existingGitHooks
     });
@@ -697,11 +705,13 @@ export default class Consumer {
   ): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
+    const globalScope = await GlobalScope.load();
     const bitJson = await ConsumerBitJson.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
+      globalScope,
       isolated,
       bitJson
     });
@@ -724,12 +734,14 @@ export default class Consumer {
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
+    const globalScopeP = GlobalScope.load();
     const bitJsonP = ConsumerBitJson.load(projectPath);
-    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    const [scope, bitJson, globalScope] = await Promise.all([scopeP, bitJsonP, globalScopeP]);
     return new Consumer({
       projectPath,
       bitJson,
-      scope
+      scope,
+      globalScope
     });
   }
 

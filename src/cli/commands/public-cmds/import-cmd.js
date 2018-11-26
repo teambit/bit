@@ -5,7 +5,6 @@ import Command from '../../command';
 import { importAction } from '../../../api/consumer';
 import { immutableUnshift } from '../../../utils';
 import { formatPlainComponentItem, formatPlainComponentItemWithVersions } from '../../chalk-box';
-import Component from '../../../consumer/component';
 import { ComponentWithDependencies } from '../../../scope';
 import type { ImportOptions, ImportDetails } from '../../../consumer/component-ops/import-components';
 import type { EnvironmentOptions } from '../../../api/consumer/lib/import';
@@ -13,6 +12,7 @@ import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import { MergeOptions } from '../../../consumer/versions-ops/merge-version/merge-version';
 import type { MergeStrategy } from '../../../consumer/versions-ops/merge-version/merge-version';
+import type { InstallExtensionsResult } from '../../../scope/global-scope';
 
 export default class Import extends Command {
   name = 'import [ids...]';
@@ -140,13 +140,13 @@ export default class Import extends Command {
 
   report({
     dependencies,
-    envComponents,
+    extComponents,
     importDetails,
     warnings,
     displayDependencies
   }: {
     dependencies?: ComponentWithDependencies[],
-    envComponents?: Component[],
+    extComponents?: InstallExtensionsResult,
     importDetails: ImportDetails[],
     warnings?: {
       notInPackageJson: [],
@@ -156,7 +156,7 @@ export default class Import extends Command {
     displayDependencies?: boolean
   }): string {
     let dependenciesOutput;
-    let envComponentsOutput;
+    let extComponentsOutput;
 
     if (dependencies && !R.isEmpty(dependencies)) {
       const components = dependencies.map(R.prop('component'));
@@ -187,18 +187,31 @@ export default class Import extends Command {
       dependenciesOutput = componentDependenciesOutput + peerDependenciesOutput;
     }
 
-    if (envComponents && !R.isEmpty(envComponents)) {
-      envComponentsOutput = immutableUnshift(
-        envComponents.map(envDependency => formatPlainComponentItem(envDependency.component)),
-        chalk.green('the following component environments were installed')
-      ).join('\n');
+    if (extComponents && (!R.isEmpty(extComponents.installed) || !R.isEmpty(extComponents.skipped))) {
+      let extInstalledComponentsOutput = '';
+      if (!R.isEmpty(extComponents.installed)) {
+        extInstalledComponentsOutput = immutableUnshift(
+          extComponents.installed.map(extDependency => formatPlainComponentItem(extDependency)),
+          chalk.green('the following component extensions were installed')
+        ).join('\n');
+      }
+      let extSkippedComponentsOutput = '';
+
+      if (!R.isEmpty(extComponents.skipped)) {
+        extSkippedComponentsOutput = immutableUnshift(
+          extComponents.skipped.map(extDependency => formatPlainComponentItem(extDependency)),
+          chalk.green('the following component extensions were skipped')
+        ).join('\n');
+      }
+
+      extComponentsOutput = `${extInstalledComponentsOutput}\n${extSkippedComponentsOutput}`;
     }
 
     const getImportOutput = () => {
-      if (dependenciesOutput && !envComponentsOutput) return dependenciesOutput;
-      if (!dependenciesOutput && envComponentsOutput) return envComponentsOutput;
-      if (dependenciesOutput && envComponentsOutput) {
-        return `${dependenciesOutput}\n\n${envComponentsOutput}`;
+      if (dependenciesOutput && !extComponentsOutput) return dependenciesOutput;
+      if (!dependenciesOutput && extComponentsOutput) return extComponentsOutput;
+      if (dependenciesOutput && extComponentsOutput) {
+        return `${dependenciesOutput}\n\n${extComponentsOutput}`;
       }
 
       return chalk.yellow('nothing to import');

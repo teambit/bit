@@ -5,7 +5,6 @@ import * as RA from 'ramda-adjunct';
 import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
-import type { ExtensionOptions } from '../../extensions/extension';
 import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
 import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
@@ -21,11 +20,6 @@ import {
 } from '../../constants';
 import logger from '../../logger/logger';
 
-export type RegularExtensionObject = {
-  rawConfig: Object,
-  options: ExtensionOptions
-};
-
 export type EnvFile = {
   [string]: PathLinux
 };
@@ -40,7 +34,7 @@ export type TesterExtensionObject = EnvExtensionObject;
 
 export type CompilerExtensionObject = EnvExtensionObject;
 
-export type Extensions = { [extensionName: string]: RegularExtensionObject };
+export type Extensions = { [extensionName: string]: Object };
 export type Envs = { [envName: string]: CompilerExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
@@ -78,7 +72,7 @@ export default class AbstractBitJson {
     this.testerDependencies = props.testerDependencies || DEFAULT_DEPENDENCIES;
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
-    this.extensions = props.extensions || DEFAULT_EXTENSIONS;
+    this.extensions = props.extensions || R.clone(DEFAULT_EXTENSIONS);
   }
 
   get compiler(): ?Compilers {

@@ -28,15 +28,13 @@ export default (async function importAction(
   importOptions: ImportOptions,
   packageManagerArgs: string[]
 ) {
-  async function importEnvironment(consumer: Consumer): Promise<any> {
+  async function importExtension(consumer: Consumer): Promise<any> {
     loader.start(BEFORE_IMPORT_ENVIRONMENT);
     if (!importOptions.ids.length) throw new GeneralError('you must specify component id for importing an environment');
     const idToImport = importOptions.ids[0];
     const bitIdToImport = BitId.parse(idToImport, true); // import without id is not supported
-    const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
-    if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
-    const id = envComponents[0].component.id.toString();
-    function writeToBitJsonIfNeeded() {
+    const extComponents = await consumer.importExtension(bitIdToImport, importOptions.verbose, true);
+    function writeToBitJsonIfNeeded(id: string) {
       if (environmentOptions.compiler) {
         consumer.bitJson.compiler = id;
         Analytics.setExtraData('build_env', id);
@@ -60,26 +58,26 @@ export default (async function importAction(
           delete consumer.bitJson.extensions[oldVersion];
           return consumer.bitJson.write({ bitDir: consumer.getPath() });
         }
-        consumer.bitJson.extensions[id] = {
-          options: {},
-          config: {}
-        };
+        consumer.bitJson.extensions[id] = {};
         return consumer.bitJson.write({ bitDir: consumer.getPath() });
       }
 
       return Promise.resolve(true);
     }
-    await writeToBitJsonIfNeeded();
-    return { envComponents };
+    const writToBitJsonP = extComponents.installed.map((extComponent) => {
+      return writeToBitJsonIfNeeded(extComponent.toString());
+    });
+    await Promise.all(writToBitJsonP);
+    return { extComponents };
   }
 
   const consumer: Consumer = await loadConsumer();
   consumer.packageManagerArgs = packageManagerArgs;
   if (environmentOptions.tester || environmentOptions.compiler || environmentOptions.extension) {
-    return importEnvironment(consumer);
+    return importExtension(consumer);
   }
   const importComponents = new ImportComponents(consumer, importOptions);
-  const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
+  const { dependencies, extComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
   const notAuthored = (bitId) => {
     const componentMap = consumer.bitMap.getComponentIfExist(bitId);
@@ -93,13 +91,13 @@ export default (async function importAction(
 
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
-    envComponents,
+    extComponents,
     consumer,
     installNpmPackages: importOptions.installNpmPackages
   });
   Analytics.setExtraData('num_components', bitIds.length);
   await consumer.onDestroy();
-  return { dependencies, envComponents, importDetails, warnings };
+  return { dependencies, extComponents, importDetails, warnings };
 });
 
 // TODO: refactor to better use of semver
