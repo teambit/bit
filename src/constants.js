@@ -78,12 +78,7 @@ export const DEFAULT_TESTER_ID = NO_PLUGIN_TYPE;
 export const DEFAULT_PACKAGE_MANAGER = 'npm';
 
 export const DEFAULT_EXTENSIONS = {
-  'ext-docs-parser': {
-    rawConfig: {},
-    options: {
-      core: true
-    }
-  }
+  'bit://ext-docs-parser': {}
 };
 
 export const EXTENSION_DEBUG_FILE_PREFIX = FILE_PROTOCOL_PREFIX;
@@ -289,6 +284,8 @@ export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
  * glboal config directories
  */
 export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
+
+export const GLOBAL_SCOPE: PathOsBased = path.join(CACHE_ROOT, 'scope');
 
 export const GLOBAL_LOGS: PathOsBased = path.join(CACHE_ROOT, 'logs');
 

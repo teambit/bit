@@ -30,6 +30,7 @@ export type IsolateOptions = {
 };
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
+const EXTENSION_IS_INSTALLED_FILENAME = '.bit_ext_has_installed';
 
 export default class Environment {
   path: PathOsBased;
@@ -82,7 +83,7 @@ export default class Environment {
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
     await writeComponents(concreteOpts);
-    await Environment.markEnvironmentAsInstalled(writeToPath);
+    await Environment.markExtensionAsInstalled(writeToPath);
     return componentWithDependencies;
   }
 
@@ -90,14 +91,16 @@ export default class Environment {
    * It helps to make sure an environment is installed. Otherwise, in case a user interrupts the environment
    * installation process, it won't be installed again.
    */
-  static markEnvironmentAsInstalled(dir) {
-    const filePath = path.join(dir, ENV_IS_INSTALLED_FILENAME);
+  static markExtensionAsInstalled(dir) {
+    const filePath = path.join(dir, EXTENSION_IS_INSTALLED_FILENAME);
     return outputFile({ filePath, content: '' });
   }
 
-  static isEnvironmentInstalled(dir) {
-    const filePath = path.join(dir, ENV_IS_INSTALLED_FILENAME);
-    return fs.existsSync(filePath);
+  static isExtensionInstalled(dir) {
+    const oldFilePath = path.join(dir, ENV_IS_INSTALLED_FILENAME);
+    const filePath = path.join(dir, EXTENSION_IS_INSTALLED_FILENAME);
+    const installed = fs.existsSync(filePath) || fs.existsSync(oldFilePath);
+    return installed;
   }
 
   getPath(): string {

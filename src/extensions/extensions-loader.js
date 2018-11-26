@@ -11,6 +11,7 @@ import { GLOBAL_CONFIG, BIT_JSON } from '../constants';
 import Workspace from './context/workspace';
 import Store from './context/store';
 import * as hooks from './extension-hook';
+import GlobalScope from '../scope/global-scope';
 
 /**
  * Load all extensions
@@ -44,13 +45,16 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     // Load global extensions
     const globalBitJson = await _getGlobalBitJson(false);
     const globalRawExtensions = globalBitJson && globalBitJson.extensions;
+    const globalScope = await GlobalScope.load();
     // Merge the global with the local extensions only if exists
     // The local extension is higher priority than the global ones since they are closer to the user
     // This mechanism is for internal use by bitsrc server and should not be used by the users
     if (globalRawExtensions) {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
-    const extensions = R.values(R.mapObjIndexed(_loadExtension({ workspace, store, hooks }), rawExtensions));
+    const extensions = R.values(
+      R.mapObjIndexed(_loadExtension({ workspace, store, hooks, globalScope }), rawExtensions)
+    );
     return Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed');
