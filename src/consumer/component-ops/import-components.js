@@ -368,7 +368,7 @@ export default class ImportComponents {
         }
         return accumulator;
       }, []);
-      return this.scope.installEnvironment({ ids, dependentId: componentWithDependencies.component.id });
+      return this.consumer.globalScope.installExtensions({ ids, dependentId: componentWithDependencies.component.id });
     });
   }
 }

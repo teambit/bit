@@ -155,12 +155,13 @@ export default class ExtensionWrapper {
       // @todo: find a better approach. it doesn't make sense to load the consumer so many times
       const consumer = await loadConsumer();
       context.workspace = await Workspace.load(consumer);
+      context.globalScope = await GlobalScope.load();
     }
     context.store = await Store.load(repository.scope);
     const scopePath = repository.scope.path;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromModels(extensionData.data);
-    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, scopePath, context.workspace);
+    const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.globalScope, context.workspace);
     const staticExtensionProps = await _loadFromFile({
       name,
       filePath: resolvedPath,
