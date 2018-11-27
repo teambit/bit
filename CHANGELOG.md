@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add new bit watch command
+
 ## [13.0.5-dev.30 - 2018-11-11]
 
 - support ids with wildcards (e.g. `bit tag "utils/*"`) for the following commands: `tag`, `untag`, `remove`, `untrack`, `checkout`, `merge`, `diff` and `export`.
