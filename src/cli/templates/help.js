@@ -125,6 +125,10 @@ const allCommands = [
         description: 'test any set of components with configured tester (component tester or as defined in bit.json)'
       },
       {
+        name: 'watch',
+        description: 'watch components and perform `build` on changes'
+      },
+      {
         name: 'envs-attach',
         description: 'attach workspace environments to components'
       },

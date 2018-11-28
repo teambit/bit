@@ -1,4 +1,5 @@
 /** @flow */
+import path from 'path';
 import semver from 'semver';
 import R from 'ramda';
 import { Version, ModelComponent } from '../../scope/models';
@@ -262,6 +263,24 @@ export default class ComponentsList {
       this._fromBitMap[cacheKeyName] = this.bitMap.getAllBitIds(originParam);
     }
     return this._fromBitMap[cacheKeyName];
+  }
+
+  getPathsForAllFilesOfAllComponents(origin?: string, absolute: boolean = false): string[] {
+    // TODO: maybe cache this as well
+    const componentsFromBitMap = this.bitMap.getAllComponents(origin);
+    const res = [];
+    const getPaths = (agg, isAbsolute) => (componentMap, componentId) => {
+      const relativePaths = componentMap.getFilesRelativeToConsumer();
+      if (!isAbsolute) {
+        agg.push(...relativePaths);
+        return;
+      }
+      const consumerPath = this.consumer.getPath();
+      const absPaths = relativePaths.map(relativePath => path.join(consumerPath, relativePath));
+      agg.push(...absPaths);
+    };
+    R.forEachObjIndexed(getPaths(res, absolute), componentsFromBitMap);
+    return res;
   }
 
   /**

@@ -51,7 +51,6 @@ async function getComponentLinks({
 }): Promise<OutputFileParams[]> {
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
   const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
-  if (!directDependencies || !directDependencies.length) return [];
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
     const getDependencyIdWithResolvedVersion = (): BitId => {
