@@ -1,4 +1,4 @@
-/** @flow */
+// @flow
 
 // import BaseType, { ModelStore } from './base-type';
 import BaseType from './base-type';

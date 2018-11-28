@@ -1,4 +1,4 @@
-/** @flow */
+// @flow
 
 // import Source from '../scope/models/source';
 // import Scope, { BitObject } from  '../context-classes/Scope';

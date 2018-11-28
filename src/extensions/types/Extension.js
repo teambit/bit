@@ -1,3 +1,5 @@
+// @flow
+
 import Component from './component';
 import type { ComponentId } from './Component';
 
