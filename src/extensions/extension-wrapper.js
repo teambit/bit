@@ -116,6 +116,11 @@ export default class ExtensionWrapper {
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     const extensionEntry = new ExtensionEntry(name);
     // TODO: Make sure the extension already exists and if not, install it here
+    if (extensionEntry.source === 'COMPONENT') {
+      const globalScope = await GlobalScope.load();
+      const bitId = BitId.parse(name, true);
+      await globalScope.installExtensions({ ids: [{ componentId: bitId, type: 'extension' }] });
+    }
     const config = ExtensionConfig.fromRawConfig(rawConfig);
     const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.globalScope, context.workspace);
     //   const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
@@ -157,8 +162,12 @@ export default class ExtensionWrapper {
       context.workspace = await Workspace.load(consumer);
       context.globalScope = await GlobalScope.load();
     }
+    if (extensionEntry.source === 'COMPONENT') {
+      const globalScope = await GlobalScope.load();
+      const bitId = BitId.parse(name, true);
+      await globalScope.installExtensions({ ids: [{ componentId: bitId, type: 'extension' }] });
+    }
     context.store = await Store.load(repository.scope);
-    const scopePath = repository.scope.path;
     // TODO: Make sure the extension already exists
     const config = ExtensionConfig.fromModels(extensionData.data);
     const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.globalScope, context.workspace);
