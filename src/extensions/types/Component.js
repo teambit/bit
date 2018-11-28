@@ -2,6 +2,8 @@
 
 // import BaseType, { ModelStore } from './base-type';
 import BaseType from './base-type';
+import ConsumerComponent from '../../consumer/component';
+import ExtensionWrapper from '../extension-wrapper';
 
 export type ComponentId = string;
 
@@ -41,6 +43,7 @@ export default class Component extends BaseType {
   // detachedCompiler: ?boolean;
   // detachedTester: ?boolean;
   customResolvedPaths: customResolvedPath[];
+  extensions: ExtensionWrapper[];
   // _driver: Driver;
   // _isModified: boolean;
   // packageJsonInstance: PackageJsonInstance;
@@ -68,12 +71,16 @@ export default class Component extends BaseType {
   /**
    * Validate the user input (as written in the bit.json)
    */
-  static validate(): boolean {
+  validate(): boolean {
     // validate component id is valid
   }
 
   // Return an instance of isolated env for that component
   createIsolatedEnv(envOptions: EnvOptions): Environment {}
+
+  static fromConsumerComponent(consumerComponent: ConsumerComponent): Component {
+    return new Component(consumerComponent);
+  }
 }
 
 // Called to create instance from the bit.json value

@@ -8,7 +8,7 @@ import { Analytics } from '../../../analytics/analytics';
 import loader from '../../../cli/loader';
 import { BEFORE_STATUS } from '../../../cli/loader/loader-messages';
 import { BitId } from '../../../bit-id';
-import { triggerHook } from '../../../extensions/extension-hook';
+import { triggerWorkspaceHook } from '../../../extensions/extension-hook';
 
 export type StatusResult = {
   newComponents: Component[],
@@ -23,7 +23,7 @@ export type StatusResult = {
 
 export default (async function status(): Promise<StatusResult> {
   loader.start(BEFORE_STATUS);
-  await triggerHook('preStatusHook');
+  await triggerWorkspaceHook('preStatusHook');
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newAndImportPendingComponents = await componentsList.listNewComponentsAndImportPending();
