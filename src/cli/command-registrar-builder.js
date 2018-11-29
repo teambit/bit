@@ -51,6 +51,7 @@ import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
+import Extension from './commands/public-cmds/extension-cmd';
 
 export default function registerCommands(extensionsCommands): CommandRegistrar {
   return new CommandRegistrar(
@@ -107,6 +108,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Logout(),
       new Eject(),
       new Migrate(),
+      new Extension(),
       new Watch()
     ],
     extensionsCommands
