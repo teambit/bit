@@ -319,7 +319,7 @@ async function writeDependencyLinks(
   ): Promise<Array<{ filePath: string, content: string }>> => {
     const directDependencies: Dependency[] = parentComponent.getAllDependencies();
     const flattenedDependencies: BitIds = parentComponent.getAllFlattenedDependencies();
-    if (!directDependencies || !directDependencies.length) return [];
+    // if (!directDependencies || !directDependencies.length) return [];
     const links = directDependencies.map((dep: Dependency) => {
       if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
       let resolveDepVersion = dep.id;
