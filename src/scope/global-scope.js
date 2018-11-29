@@ -38,9 +38,15 @@ export default class GlobalScope {
     return this.path;
   }
 
-  static async load(scopePath: string = GLOBAL_SCOPE) {
+  static async load(scopePath?: string = GLOBAL_SCOPE): Promise<GlobalScope> {
     const scope = await Scope.ensure(scopePath);
     return new GlobalScope({ scope, path: scopePath });
+  }
+
+  static async loadWithLocalRemotes(localScope: Scope, scopePath?: string = GLOBAL_SCOPE): Promise<GlobalScope> {
+    const scope = await GlobalScope.load(scopePath);
+    scope.scope.scopeJson.remotes = localScope.scopeJson.remotes;
+    return scope;
   }
 
   /**

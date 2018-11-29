@@ -117,9 +117,8 @@ export default class ExtensionWrapper {
     const extensionEntry = new ExtensionEntry(name);
     // TODO: Make sure the extension already exists and if not, install it here
     if (extensionEntry.source === 'COMPONENT') {
-      const globalScope = await GlobalScope.load();
       const bitId = BitId.parse(name, true);
-      await globalScope.installExtensions({ ids: [{ componentId: bitId, type: 'extension' }] });
+      await context.globalScope.installExtensions({ ids: [{ componentId: bitId, type: 'extension' }] });
     }
     const config = ExtensionConfig.fromRawConfig(rawConfig);
     const { resolvedPath, componentPath } = _getExtensionPath(extensionEntry, context.globalScope, context.workspace);
@@ -160,12 +159,11 @@ export default class ExtensionWrapper {
       // @todo: find a better approach. it doesn't make sense to load the consumer so many times
       const consumer = await loadConsumer();
       context.workspace = await Workspace.load(consumer);
-      context.globalScope = await GlobalScope.load();
+      context.globalScope = await GlobalScope.loadWithLocalRemotes(consumer.scope);
     }
     if (extensionEntry.source === 'COMPONENT') {
-      const globalScope = await GlobalScope.load();
       const bitId = BitId.parse(name, true);
-      await globalScope.installExtensions({ ids: [{ componentId: bitId, type: 'extension' }] });
+      await context.globalScope.installExtensions({ ids: [{ componentId: bitId, type: 'extension' }] });
     }
     context.store = await Store.load(repository.scope);
     // TODO: Make sure the extension already exists

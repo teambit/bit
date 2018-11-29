@@ -45,7 +45,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     // Load global extensions
     const globalBitJson = await _getGlobalBitJson(false);
     const globalRawExtensions = globalBitJson && globalBitJson.extensions;
-    const globalScope = await GlobalScope.load();
+    const globalScope = consumer ? await GlobalScope.loadWithLocalRemotes(consumer.scope) : await GlobalScope.load();
     // Merge the global with the local extensions only if exists
     // The local extension is higher priority than the global ones since they are closer to the user
     // This mechanism is for internal use by bitsrc server and should not be used by the users

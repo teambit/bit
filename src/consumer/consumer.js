@@ -673,8 +673,8 @@ export default class Consumer {
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
     const bitJsonP = ConsumerBitJson.ensure(projectPath);
-    const globalScopeP = GlobalScope.load();
-    const [scope, bitJson, globalScope] = await Promise.all([scopeP, bitJsonP, globalScopeP]);
+    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    const globalScope = await GlobalScope.loadWithLocalRemotes(scope);
     return new Consumer({
       projectPath,
       created: true,
@@ -705,7 +705,7 @@ export default class Consumer {
   ): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
-    const globalScope = await GlobalScope.load();
+    const globalScope = await GlobalScope.loadWithLocalRemotes(scope);
     const bitJson = await ConsumerBitJson.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
@@ -734,9 +734,9 @@ export default class Consumer {
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
-    const globalScopeP = GlobalScope.load();
     const bitJsonP = ConsumerBitJson.load(projectPath);
-    const [scope, bitJson, globalScope] = await Promise.all([scopeP, bitJsonP, globalScopeP]);
+    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    const globalScope = await GlobalScope.loadWithLocalRemotes(scope);
     return new Consumer({
       projectPath,
       bitJson,
