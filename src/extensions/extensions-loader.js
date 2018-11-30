@@ -13,6 +13,13 @@ import Store from './context/store';
 import * as hooks from './extension-hook';
 import GlobalScope from '../scope/global-scope';
 
+export type ExtensionContext = {
+  workspace: Workspace,
+  store: Store,
+  hooks: Object,
+  globalScope: GlobalScope
+};
+
 /**
  * Load all extensions
  * Regular, core, globals
@@ -49,9 +56,8 @@ export default (async function loadExtensions(): Promise<Extension[]> {
     if (globalRawExtensions) {
       rawExtensions = R.mergeDeepLeft(rawExtensions, globalRawExtensions);
     }
-    const extensions = R.values(
-      R.mapObjIndexed(_loadExtension({ workspace, store, hooks, globalScope }), rawExtensions)
-    );
+    const extensionContext: ExtensionContext = { workspace, store, hooks, globalScope };
+    const extensions = R.values(R.mapObjIndexed(_loadExtension(extensionContext), rawExtensions));
     return Promise.all(extensions);
   } catch (err) {
     logger.error('loading extensions failed');

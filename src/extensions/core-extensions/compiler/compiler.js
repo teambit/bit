@@ -1,8 +1,12 @@
 // @flow
+import { build, buildAll } from './build';
+import type { ExtensionContext } from '../../extensions-loader';
 
 export default class Compiler {
   dists: { [id: string]: files[] };
-  constructor(props, context) {
+  props: Object;
+  context: ExtensionContext;
+  constructor(props, context: ExtensionContext) {
     this.props = props;
     this.context = context;
   }
@@ -28,8 +32,8 @@ export default class Compiler {
       verbose: boolean
     }
   ): Promise<any> {
-    if (!id) return buildAll(noCache, verbose);
-    return build(id, noCache, verbose);
+    if (!id) return buildAll(this.context.workspace, noCache, verbose);
+    return build(this.context.workspace, id, noCache, verbose);
   }
   report(result) {}
   compileComponent(component) {

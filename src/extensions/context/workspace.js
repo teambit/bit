@@ -47,7 +47,7 @@ export default class Workspace {
 
   // TODO: write docs
   async loadComponents(
-    ids: BitIds,
+    ids: BitIds | BitId[],
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
     // TODO: Make it return the new component type rather than consumer component
@@ -104,4 +104,12 @@ export default class Workspace {
   // TODO: APIs to consider
   // async tag(id: BitId)
   // static async reset(projectPath: PathOsBasedAbsolute, resetHard: boolean, noGit: boolean = false)
+
+  getBitIdFromString(id: string) {
+    return this.__consumer.getParsedId(id);
+  }
+
+  async getComponentStatusById(id: BitId) {
+    return this.__consumer.getComponentStatusById(id);
+  }
 }
