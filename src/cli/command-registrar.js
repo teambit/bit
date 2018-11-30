@@ -50,7 +50,7 @@ function getOpts(c, opts: [[string, string, string]]): { [string]: boolean | str
   return options;
 }
 
-function execAction(command, concrete, args) {
+async function execAction(command, concrete, args) {
   // $FlowFixMe
   const flags = getOpts(concrete, command.opts);
   const relevantArgs = args.slice(0, args.length - 1);
@@ -72,33 +72,31 @@ function execAction(command, concrete, args) {
     return Promise.resolve();
   };
 
-  migrateWrapper(command.migration)
-    .then(() => {
-      return command.action(relevantArgs, flags, packageManagerArgs).then((res) => {
-        loader.off();
-        let data = res;
-        let code = 0;
-        if (res && res.__code !== undefined) {
-          data = res.data;
-          code = res.__code;
-        }
-        return logAndExit(command.report(data), command.name, code);
-      });
-    })
-    .catch((err) => {
-      logger.error(
-        `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
-          err,
-          Object.getOwnPropertyNames(err)
-        )}`
-      );
-      loader.off();
-      const errorHandled = defaultHandleError(err) || command.handleError(err);
+  try {
+    await migrateWrapper(command.migration);
+    const res = await command.action(relevantArgs, flags, packageManagerArgs);
+    loader.off();
+    let data = res;
+    let code = 0;
+    if (res && res.__code !== undefined) {
+      data = res.data;
+      code = res.__code;
+    }
+    return logAndExit(command.report(data), command.name, code);
+  } catch (err) {
+    logger.error(
+      `got an error from command ${command.name}: ${err}. Error serialized: ${JSON.stringify(
+        err,
+        Object.getOwnPropertyNames(err)
+      )}`
+    );
+    loader.off();
+    const errorHandled = defaultHandleError(err) || command.handleError(err);
 
-      if (command.private) return serializeErrAndExit(err, command.name);
-      if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
-      return logErrAndExit(err, command.name);
-    });
+    if (command.private) return serializeErrAndExit(err, command.name);
+    if (!command.private && errorHandled) return logErrAndExit(errorHandled, command.name);
+    return logErrAndExit(err, command.name);
+  }
 }
 
 function serializeErrAndExit(err, commandName) {
