@@ -8,7 +8,7 @@ export default class Compiler {
   }
   addCommandHook(): Object {
     return {
-      name: 'compile',
+      name: 'compile [id]',
       description: 'compile component files using other extensions',
       opts: [
         ['v', 'verbose', 'showing npm verbose output for inspection'],
@@ -18,9 +18,18 @@ export default class Compiler {
       report: this.report
     };
   }
-  action() {
-    // const components = this.context.workspace.getModifiedComponents();
-    // components.map(component => this.compileComponent(component));
+  action(
+    [id]: [string],
+    {
+      noCache = false,
+      verbose = false
+    }: {
+      noCache: boolean,
+      verbose: boolean
+    }
+  ): Promise<any> {
+    if (!id) return buildAll(noCache, verbose);
+    return build(id, noCache, verbose);
   }
   report(result) {}
   compileComponent(component) {
