@@ -32,7 +32,7 @@ import migrate from './lib/migrate';
 import ejectAction from './lib/eject';
 import dependencyStatus from './lib/dependency_status';
 import login from './lib/login';
-import extensionsList from './lib/extensions-list';
+import { extensionsList, extensionsHooks } from './lib/extensions';
 
 export {
   init,
@@ -74,5 +74,6 @@ export {
   migrate,
   ejectAction,
   extensionsList,
+  extensionsHooks,
   login
 };

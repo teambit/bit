@@ -1,5 +1,6 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
+import { triggerWorkspaceHook } from '../extensions/extension-hook';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
@@ -53,7 +54,10 @@ import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Extension from './commands/public-cmds/extension-cmd';
 
-export default function registerCommands(extensionsCommands): CommandRegistrar {
+export default (async function registerCommands(extensionsCommands): Promise<CommandRegistrar> {
+  const newExtensionsCommands = await getNewExtensionsCommands();
+  extensionsCommands.push(...newExtensionsCommands);
+
   return new CommandRegistrar(
     BIT_USAGE,
     BIT_DESCRIPTION,
@@ -113,4 +117,9 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
     ],
     extensionsCommands
   );
+});
+
+async function getNewExtensionsCommands() {
+  const newExtensionsCommands = await triggerWorkspaceHook('addCommandHook');
+  return newExtensionsCommands.filter(extension => extension);
 }

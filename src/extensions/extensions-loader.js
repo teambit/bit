@@ -29,15 +29,12 @@ export default (async function loadExtensions(): Promise<Extension[]> {
       }
     };
     const consumer: ?Consumer = await getConsumer();
-    const consumerPath = null;
-    let scopePath = null;
     let workspace = null;
     let store = null;
 
     let rawExtensions = {};
     if (consumer) {
       rawExtensions = consumer.bitJson.extensions || {};
-      scopePath = consumer.scope.path;
       workspace = await Workspace.load(consumer);
       store = await Store.load(consumer.scope);
     }

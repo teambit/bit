@@ -25,7 +25,7 @@ extensionRegistry.init().then(async () => {
   //   return acc;
   // }, []);
   // const registrar = buildRegistrar(extensionsCommands);
-  const registrar = buildRegistrar([]);
+  const registrar = await buildRegistrar([]);
 
   try {
     registrar.run();
