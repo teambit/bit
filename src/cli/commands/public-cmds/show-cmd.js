@@ -16,6 +16,7 @@ export default class Show extends Command {
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['r', 'remote', 'show a remote component'],
+    ['k', 'specifickeys <specifickeys>', 'get specific keys from json'],
     ['v', 'versions', 'return a json of all the versions of the component'],
     ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
     ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
@@ -30,8 +31,16 @@ export default class Show extends Command {
       versions,
       remote = false,
       outdated = false,
-      compare = false
-    }: { json?: boolean, versions: ?boolean, remote: boolean, outdated?: boolean, compare?: boolean }
+      compare = false,
+      specifickeys
+    }: {
+      json?: boolean,
+      versions: ?boolean,
+      remote: boolean,
+      outdated?: boolean,
+      compare?: boolean,
+      specifickeys: string
+    }
   ): Promise<*> {
     function getBitComponent(allVersions: ?boolean) {
       if (remote) {
@@ -58,6 +67,7 @@ export default class Show extends Command {
       component,
       componentModel,
       json,
+      specifickeys,
       outdated
     }));
   }
@@ -68,15 +78,20 @@ export default class Show extends Command {
     json,
     versions,
     components,
-    outdated
+    outdated,
+    specifickeys
   }: {
     component: ?ConsumerComponent,
     componentModel?: ConsumerComponent,
     json: ?boolean,
     versions: ?boolean,
     components: ?(ConsumerComponent[]),
-    outdated: boolean
+    outdated: boolean,
+    specifickeys: string
   }): string {
+    if (specifickeys && !json) {
+      throw new GeneralError('specific Keys available with json option only');
+    }
     if (versions) {
       if (R.isNil(components) || R.isEmpty(components)) {
         return 'could not find the requested component';
@@ -113,6 +128,12 @@ export default class Show extends Command {
       const componentFromFileSystem = makeComponentReadable(component);
       const componentFromModel = makeComponentReadable(componentModel);
       const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
+
+      if (specifickeys && json) {
+        const pickArray = R.split(',', specifickeys);
+        const jsonObjectFilter = R.pick(pickArray, jsonObject);
+        if (pickArray) return JSON.stringify(jsonObjectFilter, null, '  ');
+      }
       return JSON.stringify(jsonObject, null, '  ');
     }
     return paintComponent(component, componentModel, outdated);
