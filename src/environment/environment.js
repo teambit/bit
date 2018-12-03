@@ -2,6 +2,7 @@
 import v4 from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
+import os from 'os';
 import R from 'ramda';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
@@ -12,6 +13,13 @@ import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
 import writeComponents from '../consumer/component-ops/write-components';
 import VersionDependencies from '../scope/version-dependencies';
+
+import { write } from '../consumer/component/package-json';
+import { installNpmPackagesForComponents } from '../npm-client/install-packages';
+import execa from 'execa';
+import promiseLimit from 'promise-limit';
+
+const limit = promiseLimit(10);
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -31,6 +39,35 @@ export type IsolateOptions = {
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
+const createSandboxStub = () => {
+  const dir = path.join(os.tmpdir(), ISOLATED_ENV_ROOT, v4());
+  try {
+    fs.emptydirSync(dir);
+    fs.rmdirSync(dir);
+  } catch (e) {}
+  fs.ensureDirSync(dir);
+  return Promise.resolve({
+    async updateFs(files) {
+      Object.keys(files).forEach((fileName) => {
+        const contents = files[fileName];
+        const fileFullPath = `${dir}/${fileName}`;
+        try {
+          fs.ensureDirSync(path.dirname(fileFullPath));
+        } catch (e) {}
+        fs.writeFileSync(fileFullPath, contents);
+      });
+    },
+    async exec(command, options) {
+      const { stdout } = await execa.shell(command, { cwd: dir });
+      return stdout;
+    },
+    getSandboxFolder() {
+      // this is a temporary helper method for the purposes of the PNP POC - please do not use in prod code
+      return dir;
+    }
+  });
+};
+
 export default class Environment {
   path: PathOsBased;
   scope: Scope;
@@ -39,10 +76,14 @@ export default class Environment {
   constructor(scope: Scope, dir: ?string) {
     this.scope = scope;
     this.path = dir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
+    this.yarnlock = fs.readFileSync(`${__dirname}/../../src/environment/yarn.lock`); // this is temporary for experimenting, do not commit this
+    this.pnpjs = fs.readFileSync(`${__dirname}/../../src/environment/.pnp.js`); // this is temporary for experimenting, do not commit this
+    this.execJestPnp = fs.readFileSync(`${__dirname}/../../src/environment/exec-jest-pnp.js`);
+    this.pnpFolderPath = `${__dirname}/../../src/environment/.pnp`;
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
-  async create(): Promise<void> {
+  async create(sandbox): Promise<void> {
     await mkdirp(this.path);
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
   }
@@ -84,6 +125,40 @@ export default class Environment {
     await writeComponents(concreteOpts);
     await Environment.markEnvironmentAsInstalled(writeToPath);
     return componentWithDependencies;
+  }
+
+  /**
+   * isolate a given component end to end. Including importing the dependencies and installing the npm
+   * packages.
+   *
+   * @param {BitId} the component id to isolate
+   * @param {IsolateOptions} opts
+   * @return {Promise.<Component>}
+   */
+  isolateComponentToSandbox(component: Component, opts: IsolateOptions): Promise<ComponentWithDependencies> {
+    return limit(async () => {
+      const sandbox = await createSandboxStub();
+      await sandbox.updateFs(
+        component.files.reduce((toUpdate, cFile) => {
+          const { relativePath, content } = cFile.toReadableString();
+          return Object.assign({}, toUpdate, {
+            [relativePath]: content
+          });
+        }, {})
+      ); // TODO: also write dependency files
+      const componentPackageJson = await write(this.consumer, component, this.consumer.getPath());
+      componentPackageJson.version = componentPackageJson.version === 'latest' ? '1.0.0' : componentPackageJson.version;
+      // TODO: ^^ fix this - npm would not install a non-semver version range
+      await sandbox.updateFs({
+        'package.json': componentPackageJson.toJson(), // TODO: various fields in package.json (eg. babel configuration)
+        'yarn.lock': this.yarnlock,
+        '.pnp.js': this.pnpjs,
+        'exec-jest-pnp.js': this.execJestPnp
+      });
+      const sandboxFolder = sandbox.getSandboxFolder();
+      await fs.copy(this.pnpFolderPath, `${sandboxFolder}/.pnp`);
+      return sandbox;
+    });
   }
 
   /**

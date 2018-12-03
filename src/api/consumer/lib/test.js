@@ -7,6 +7,12 @@ import { TESTS_FORK_LEVEL } from '../../../constants';
 import specsRunner from '../../../specs-runner/specs-runner';
 import GeneralError from '../../../error/general-error';
 import type { SpecsResultsWithComponentId } from '../../../consumer/specs-results/specs-results';
+import pMapSeries from 'p-map-series';
+
+import IsolatedEnvironment from '../../../environment/environment';
+import promiseLimit from 'promise-limit';
+
+const limit = promiseLimit(10);
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
 
@@ -48,11 +54,30 @@ export const testInProcess = async (
   verbose: ?boolean
 ): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
-  const components = await _getComponents(consumer, id, includeUnmodified, verbose);
-  const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose });
-  loader.stop();
-  await consumer.onDestroy();
-  return testsResults;
+  const componentSandboxes = await _getComponents(consumer, id, includeUnmodified, verbose);
+  const testResults = await Promise.all(
+    componentSandboxes.map(compAndSandbox =>
+      limit(async () => {
+        const { component, sandbox } = compAndSandbox;
+        if (component.tester && component.tester.action) {
+          return component.tester.action(
+            {
+              files: component.files.map(file => file.clone()),
+              testFiles: component.files.filter(file => file.test),
+              rawConfig: component.tester.rawConfig,
+              dynamicConfig: component.tester.dynamicConfig,
+              configFiles: component.tester.files,
+              api: component.compiler.api
+            },
+            sandbox.updateFs,
+            sandbox.exec
+          );
+        }
+        return {};
+      })
+    )
+  );
+  return testResults;
 };
 
 const _getComponents = async (
@@ -75,6 +100,26 @@ const _getComponents = async (
     components = await componentsList.newModifiedAndAutoTaggedComponents();
   }
   loader.stop();
-  await consumer.scope.buildMultiple(components, consumer, false, verbose);
-  return components;
+  const env = new IsolatedEnvironment(consumer.scope);
+  await env.create();
+  const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c)));
+  const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
+  return componentSandboxes; // TODO: remove this, this is to skip build
+  await pMapSeries(componentSandboxes, (compAndSandbox) => {
+    const { component, sandbox } = compAndSandbox;
+    // TODO: support old api compilers
+    if (!component.compiler.action) return Promise.resolve();
+    return component.compiler.action(
+      {
+        files: component.files.map(file => file.clone()),
+        rawConfig: component.compiler.rawConfig,
+        dynamicConfig: component.compiler.dynamicConfig,
+        configFiles: component.compiler.files,
+        api: component.compiler.api
+      },
+      sandbox.updateFs,
+      sandbox.exec
+    );
+  });
+  return componentSandboxes;
 };

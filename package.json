@@ -87,6 +87,7 @@
     "pad-right": "^0.2.2",
     "parse-gitignore": "^0.4.0",
     "porter-stemmer": "^0.9.1",
+    "promise-limit": "^2.7.0",
     "prompt": "^1.0.0",
     "ramda": "^0.24.1",
     "ramda-adjunct": "^2.9.0",
