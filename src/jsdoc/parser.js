@@ -126,7 +126,7 @@ function formatProperties(props) {
       description,
       required,
       type: stringifyType(type),
-      defaultValue: defaultValue.value
+      defaultValue
     };
   });
 }
