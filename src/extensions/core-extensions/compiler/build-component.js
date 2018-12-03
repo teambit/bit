@@ -12,7 +12,6 @@ import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ExternalBuildErrors from '../component/exceptions/external-build-errors';
-import Workspace from '../consumer';
 import type { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
@@ -53,12 +52,12 @@ export default (async function buildComponent({
   }
 
   const bitMap = workspace ? workspace.bitMap : undefined;
-  const consumerPath = workspace ? workspace.workspacePath : '';
+  // const consumerPath = workspace ? workspace.workspacePath : '';
   const componentMap = bitMap && bitMap.getComponent(component.id);
-  let componentDir = consumerPath;
-  if (componentMap) {
-    componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
-  }
+  // let componentDir = consumerPath;
+  // if (componentMap) {
+  //   componentDir = consumerPath && componentMap.rootDir ? path.join(consumerPath, componentMap.rootDir) : undefined;
+  // }
   const needToRebuild = await _isNeededToReBuild(workspace, component.id, noCache);
   if (!needToRebuild && !component.dists.isEmpty()) {
     logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
@@ -157,7 +156,7 @@ async function _buildIfNeeded({
 // Ideally it's better to use the dists from the model.
 // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
-const _isNeededToReBuild = async (workspace: Workspace, componentId: BitId, noCache: ?boolean): Promise<boolean> => {
+const _isNeededToReBuild = async (workspace: ?Workspace, componentId: BitId, noCache: ?boolean): Promise<boolean> => {
   // Forcly rebuild
   if (noCache) return true;
   if (!workspace) return false;

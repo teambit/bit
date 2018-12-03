@@ -90,11 +90,11 @@ export default class ContextBitMap {
 
   getComponent(
     bitId: BitId,
-    ignoreOpts: {
+    ignoreOpts?: {
       ignoreVersion?: boolean,
       ignoreScopeAndVersion?: boolean
     } = {},
-    opts: {
+    opts?: {
       throws: boolean
     }
   ): ?ComponentMap {
