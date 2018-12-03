@@ -119,12 +119,14 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
 
 function formatProperties(props) {
   return Object.keys(props).map((name) => {
-    const { type, description, required } = props[name];
+    const { type, description, required, defaultValue } = props[name];
+
     return {
       name,
       description,
       required,
-      type: stringifyType(type)
+      type: stringifyType(type),
+      defaultValue: defaultValue.value
     };
   });
 }
