@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [[13.0.5] - 2018-12-03]
+
+- [#1326](https://github.com/teambit/bit/issues/1326) absolute path to myself not working after import
+
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 
 ### New
