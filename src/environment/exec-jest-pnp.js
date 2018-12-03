@@ -1,7 +1,3 @@
-// TODO: CONTINUE HERE make this an executable that requires the local .pnp.js (instead of require('pnpapi'))
-// make it pass all argv arguments to the command as they are
-// make it pipe all output to stdout and stderr
-// handle exit code (?)
 const pnpApi = require('pnpapi');
 const fs = require('fs');
 const execa = require('execa');
@@ -34,6 +30,3 @@ if (jestEntry) {
   const { stdout } = execa.shellSync(`node -r ./.pnp.js ${jestEntry} ${argString}`);
   console.log(stdout);
 }
-// if (binEntries.get('jest')) {
-//   execa(binEntries.get('jest'))
-// }
