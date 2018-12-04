@@ -27,7 +27,7 @@ describe('bit build', function () {
       before(() => {
         const output = helper.importCompiler();
         expect(output).to.have.string(
-          `the following component environments were installed\n- ${helper.envScope}/compilers/babel@`
+          `the following component extensions were installed\n- ${helper.envScope}/compilers/babel@`
         );
       });
       it('should successfully import and build using the babel compiler', () => {
