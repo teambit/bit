@@ -337,7 +337,7 @@ const _loadFromFile = async ({
     return extensionProps;
   }
 
-  // if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
+  // if (rootDir && !Environment.isExtensionInstalled(rootDir)) {
   //   extensionProps.loaded = false;
   //   return extensionProps;
   // }

@@ -379,7 +379,7 @@ export default class BaseExtension {
       extensionProps.loaded = false;
       return extensionProps;
     }
-    if (rootDir && !Environment.isEnvironmentInstalled(rootDir)) {
+    if (rootDir && !Environment.isExtensionInstalled(rootDir)) {
       extensionProps.loaded = false;
       return extensionProps;
     }

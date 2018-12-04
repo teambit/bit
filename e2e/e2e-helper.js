@@ -10,10 +10,9 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, FILE_PROTOCOL_PREFIX } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, FILE_PROTOCOL_PREFIX, GLOBAL_SCOPE } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
-import GeneralError from '../src/error/general-error';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -227,6 +226,10 @@ export default class Helper {
   reInitRemoteScope() {
     fs.emptyDirSync(this.remoteScopePath);
     return this.runCmd('bit init --bare', this.remoteScopePath);
+  }
+
+  reInitGlobalScope() {
+    fs.emptyDirSync(GLOBAL_SCOPE);
   }
 
   reInitEnvsScope() {

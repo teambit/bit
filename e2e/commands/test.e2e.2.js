@@ -228,6 +228,7 @@ describe('bit test command', function () {
       helper.commitComponent('utils/is-type');
 
       helper.reInitRemoteScope();
+      helper.reInitGlobalScope();
       helper.addRemoteScope();
       helper.exportComponent('utils/is-type');
 
@@ -255,6 +256,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(localScope);
+        helper.reInitGlobalScope();
         output = helper.testComponentWithOptions('utils/is-type', { '-verbose': '' });
       });
       it('should import the tester and run the tests successfully', () => {
