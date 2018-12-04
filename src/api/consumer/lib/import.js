@@ -64,10 +64,14 @@ export default (async function importAction(
 
       return Promise.resolve(true);
     }
-    const writToBitJsonP = extComponents.installed.map((extComponent) => {
+
+    const allExtensions = [...extComponents.installed, ...extComponents.skipped];
+    // bit.json needs to be updated with the skipped as well because an extension may be installed
+    // already in the global scope but newly introduced in this workspace
+    const writeToBitJsonP = allExtensions.map((extComponent) => {
       return writeToBitJsonIfNeeded(extComponent.toString());
     });
-    await Promise.all(writToBitJsonP);
+    await Promise.all(writeToBitJsonP);
     return { extComponents };
   }
 

@@ -3,6 +3,7 @@ import ExtensionWrapper from './extension-wrapper';
 import loadExtensions from './extensions-loader';
 import { COMPONENT_ORIGINS } from '../constants';
 import logger from '../logger/logger';
+import { BitId } from '../bit-id';
 
 // {componentId: array of extensions}
 type ComponentExtensions = {
@@ -59,7 +60,7 @@ class ExtensionRegistry {
     envType,
     context
   }: {
-    componentId: string,
+    componentId: BitId,
     consumerPath: string,
     scopePath: string,
     componentOrigin: ComponentOrigin,
@@ -70,12 +71,12 @@ class ExtensionRegistry {
     envType: EnvType,
     context?: Object
   }): Promise<?(ExtensionWrapper[])> {
-    const stringId = componentId.toStringWithoutVersion();
-    logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId}`);
-    if (this.componentExtensions[stringId]) {
-      logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId} - found in cache`);
-      return this.componentExtensions[stringId];
-    }
+    // const stringId = componentId.toStringWithoutVersion();
+    // logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId}`);
+    // if (this.componentExtensions[stringId]) {
+    //   logger.debugAndAddBreadCrumb('extension-registry', `getComponentExtensions for ${stringId} - found in cache`);
+    //   return this.componentExtensions[stringId];
+    // }
     // Authored component
     if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
       // TODO: Handle more loading opts (like from models when detached etc)
