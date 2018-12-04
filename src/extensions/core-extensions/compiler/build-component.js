@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
-import Dists from '../component/sources/dists';
+import Dists from './dists';
 import ConsumerComponent from '../component/consumer-component';
 import { Scope } from '../../scope';
 import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
@@ -15,7 +15,7 @@ import ExternalBuildErrors from '../component/exceptions/external-build-errors';
 import type { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
-import { Dist } from '../component/sources';
+import Dist from './dist';
 import { writeEnvFiles } from './eject-conf';
 import Workspace from '../../context/workspace';
 import Store from '../../context/store';
@@ -64,14 +64,6 @@ export default (async function buildComponent({
     return component.dists;
   }
   logger.debug('compiler found, start building');
-  // @todo: make sure it's not needed anymore
-  // if (component.compiler && !component.compiler.loaded) {
-  //   await component.compiler.install(
-  //     store,
-  //     { verbose: !!verbose },
-  //     { workspaceDir: consumerPath, componentDir, dependentId: component.id }
-  //   );
-  // }
 
   const builtFiles =
     (await _buildIfNeeded({
