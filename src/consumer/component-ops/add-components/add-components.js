@@ -145,7 +145,7 @@ export default class AddComponents {
       const filesListMatch = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
-        const matches = await glob(generatedFile, { nocase: true });
+        const matches = await glob(generatedFile);
         const matchesAfterGitIgnore = this.gitIgnore.filter(matches);
         return matchesAfterGitIgnore.filter(match => fs.existsSync(match));
       });
@@ -155,7 +155,9 @@ export default class AddComponents {
     const filesListFlatten = R.flatten(await Promise.all(filesListAllMatches));
     const filesListUnique = R.uniq(filesListFlatten);
     return filesListUnique.map((file) => {
-      const relativeToConsumer = this.consumer.getPathRelativeToConsumer(file);
+      // when files array has the test file with different letter case, use the one from the file array
+      const fileWithCorrectCase = files.find(f => f.toLowerCase() === file.toLowerCase()) || file;
+      const relativeToConsumer = this.consumer.getPathRelativeToConsumer(fileWithCorrectCase);
       return pathNormalizeToLinux(relativeToConsumer);
     });
   }
@@ -443,7 +445,6 @@ export default class AddComponents {
 
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
-          nocase: true,
           nodir: true
         });
 
