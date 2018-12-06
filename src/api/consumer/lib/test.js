@@ -12,6 +12,10 @@ import pMapSeries from 'p-map-series';
 import IsolatedEnvironment from '../../../environment/environment';
 import promiseLimit from 'promise-limit';
 
+import SpecsResults from '../../../consumer/specs-results/specs-results';
+
+import type { RawTestsResults } from '../specs-results/specs-results';
+
 const limit = promiseLimit(10);
 
 export type ForkLevel = 'NONE' | 'ONE' | 'COMPONENT';
@@ -55,29 +59,37 @@ export const testInProcess = async (
 ): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
   const componentSandboxes = await _getComponents(consumer, id, includeUnmodified, verbose);
-  const testResults = await Promise.all(
+  const specsResults = await Promise.all(
     componentSandboxes.map(compAndSandbox =>
       limit(async () => {
         const { component, sandbox } = compAndSandbox;
         if (component.tester && component.tester.action) {
-          return component.tester.action(
-            {
-              files: component.files.map(file => file.clone()),
-              testFiles: component.files.filter(file => file.test),
-              rawConfig: component.tester.rawConfig,
-              dynamicConfig: component.tester.dynamicConfig,
-              configFiles: component.tester.files,
-              api: component.compiler.api
-            },
-            sandbox.updateFs,
-            sandbox.exec
-          );
+          try {
+            const rawResults: RawTestsResults[] = await component.tester.action(
+              {
+                files: component.files.map(file => file.clone()),
+                testFiles: component.files.filter(file => file.test),
+                rawConfig: component.tester.rawConfig,
+                dynamicConfig: component.tester.dynamicConfig,
+                configFiles: component.tester.files,
+                api: component.compiler.api
+              },
+              sandbox.updateFs,
+              sandbox.exec
+            );
+            if (!rawResults || !rawResults[0]) return {};
+            const specs = SpecsResults.createFromRaw(rawResults[0]); // TODO: why is this an array?
+            const pass = !!specs.pass;
+            return { componentId: component.id, specs: [specs], pass };
+          } catch (e) {
+            throw new Error(`could not run tester ${e}`);
+          }
         }
-        return {};
+        return { componentId: component.id };
       })
     )
   );
-  return testResults;
+  return specsResults.filter(r => r.componentId); // TODO: what are those without an id?
 };
 
 const _getComponents = async (
@@ -102,7 +114,7 @@ const _getComponents = async (
   loader.stop();
   const env = new IsolatedEnvironment(consumer.scope);
   await env.create();
-  const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c)));
+  const sandboxes = await pMapSeries(components, c => env.isolateComponentToSandbox(c, components));
   const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
   return componentSandboxes; // TODO: remove this, this is to skip build
   await pMapSeries(componentSandboxes, (compAndSandbox) => {

@@ -135,7 +135,7 @@ export default class Environment {
    * @param {IsolateOptions} opts
    * @return {Promise.<Component>}
    */
-  isolateComponentToSandbox(component: Component, opts: IsolateOptions): Promise<ComponentWithDependencies> {
+  isolateComponentToSandbox(component: Component, envComponents): Promise<ComponentWithDependencies> {
     return limit(async () => {
       const sandbox = await createSandboxStub();
       await sandbox.updateFs(
@@ -145,8 +145,22 @@ export default class Environment {
             [relativePath]: content
           });
         }, {})
+      );
+      // TODO: combine these
+      await sandbox.updateFs(
+        envComponents.reduce((envFilesToUpdate, envComponent) => {
+          const toUpdate = envComponent.files.reduce((toUpdate, cFile) => {
+            const { relativePath, content } = cFile.toReadableString();
+            return Object.assign({}, toUpdate, {
+              [relativePath]: content
+            });
+          }, {});
+          return Object.assign({}, envFilesToUpdate, toUpdate);
+          // TODO: better
+        }, {})
       ); // TODO: also write dependency files
       const componentPackageJson = await write(this.consumer, component, this.consumer.getPath());
+      // TODO: packageJson of dependencies needs to be merged into this
       componentPackageJson.version = componentPackageJson.version === 'latest' ? '1.0.0' : componentPackageJson.version;
       // TODO: ^^ fix this - npm would not install a non-semver version range
       await sandbox.updateFs({
