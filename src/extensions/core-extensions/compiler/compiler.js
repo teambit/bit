@@ -32,14 +32,14 @@ export default class Compiler {
       verbose: boolean
     }
   ): Promise<any> {
-    if (!id) return buildAll(this.context.workspace, noCache, verbose);
-    return build(this.context.workspace, id, noCache, verbose);
+    if (!id) return buildAll(this.context, noCache, verbose);
+    return build(this.context, id, noCache, verbose);
   }
   report(result) {}
   compileComponent(component) {
-    this.context.hook.triggerComponentsHook('preCompile', component);
-    const dists = this.context.hook.triggerComponentsHook('compile', component, { distPath: '' });
-    this.context.hook.triggerComponentsHook('postCompile', component, { dists });
+    this.context.hooks.triggerComponentsHook('preCompile', component);
+    const dists = this.context.hooks.triggerComponentsHook('compile', component, { distPath: '' });
+    this.context.hooks.triggerComponentsHook('postCompile', component, { dists });
     this.dists[component.id.toString()] = dists;
     return dists;
   }

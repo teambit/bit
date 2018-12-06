@@ -10,11 +10,12 @@ import buildComponent from './build-component';
 type Workspace = $PropertyType<ExtensionContext, 'workspace'>;
 
 export async function build(
-  workspace: Workspace,
+  context: ExtensionContext,
   id: string,
   noCache: boolean,
   verbose: boolean
 ): Promise<?Array<string>> {
+  const workspace: Workspace = context.workspace;
   const bitId = workspace.getBitIdFromString(id);
   const [component: Component] = await workspace.loadComponents([bitId]);
   const result = await buildComponent({ component, store: workspace.scope, noCache, workspace, verbose });
@@ -25,7 +26,8 @@ export async function build(
   return distFilePaths;
 }
 
-export async function buildAll(workspace: Workspace, noCache: boolean, verbose: boolean): Promise<Object> {
+export async function buildAll(context: ExtensionContext, noCache: boolean, verbose: boolean): Promise<Object> {
+  const workspace: Workspace = context.workspace;
   const authoredAndImportedIds = workspace.bitMap.getAllBitIds([
     COMPONENT_ORIGINS.IMPORTED,
     COMPONENT_ORIGINS.AUTHORED
