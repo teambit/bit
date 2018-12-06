@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix errors when component files require each other using module path
 - add new bit watch command
 
 ## [13.0.5-dev.30 - 2018-11-11]
