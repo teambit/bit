@@ -1144,4 +1144,25 @@ describe('bit add command', function () {
       expect(output).to.have.string('added bar/foo-main2.js');
     });
   });
+  describe('directory is with upper case and test/main flags are written with lower case', () => {
+    let addOutput;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('Bar', 'foo.js');
+      helper.createFile('Bar', 'foo.spec.js');
+      addOutput = helper.addComponent('Bar', { i: 'bar', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
+    });
+    it('should not throw an error', () => {
+      expect(addOutput).to.have.string('added');
+    });
+    it('should add the files with the correct letter case as they appear on the filesystem', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property('bar');
+      const files = bitMap.bar.files.map(file => file.relativePath);
+      expect(files).to.include('Bar/foo.js');
+      expect(files).to.include('Bar/foo.spec.js');
+      expect(files).not.to.include('bar/foo.js');
+      expect(files).not.to.include('bar/foo.js');
+    });
+  });
 });

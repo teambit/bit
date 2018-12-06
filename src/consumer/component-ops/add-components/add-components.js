@@ -145,7 +145,7 @@ export default class AddComponents {
       const filesListMatch = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
         const generatedFile = format(dsl, fileInfo);
-        const matches = await glob(generatedFile);
+        const matches = await glob(generatedFile, { nocase: true });
         const matchesAfterGitIgnore = this.gitIgnore.filter(matches);
         return matchesAfterGitIgnore.filter(match => fs.existsSync(match));
       });
@@ -357,7 +357,7 @@ export default class AddComponents {
       files.forEach((file) => {
         const fileInfo = calculateFileInfo(file.relativePath);
         const generatedFile = format(mainFile, fileInfo);
-        const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(generatedFile)))(files);
+        const foundFile = this._findMainFileInFiles(generatedFile, files);
         if (foundFile) {
           mainFile = foundFile.relativePath;
         }
@@ -388,17 +388,23 @@ export default class AddComponents {
       if (isDir(mainPath)) {
         throw new MainFileIsDir(mainPath);
       }
-      const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(mainFileRelativeToConsumer)))(files);
-      if (!foundFile) {
-        files.push({
-          relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
-          test: false,
-          name: path.basename(mainFileRelativeToConsumer)
-        });
+      const foundFile = this._findMainFileInFiles(mainFileRelativeToConsumer, files);
+      if (foundFile) {
+        return foundFile.relativePath;
       }
+      files.push({
+        relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
+        test: false,
+        name: path.basename(mainFileRelativeToConsumer)
+      });
       return mainFileRelativeToConsumer;
     }
     return mainFile;
+  }
+
+  _findMainFileInFiles(mainFile: string, files: ComponentMapFile[]) {
+    const normalizedMainFile = pathNormalizeToLinux(mainFile).toLowerCase();
+    return files.find(file => file.relativePath.toLowerCase() === normalizedMainFile);
   }
 
   async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
@@ -437,6 +443,7 @@ export default class AddComponents {
 
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
+          nocase: true,
           nodir: true
         });
 
