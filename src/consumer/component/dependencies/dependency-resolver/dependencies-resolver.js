@@ -510,6 +510,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       };
       const existingId = getExistingId();
       if (existingId) {
+        if (existingId.isEqual(this.componentId)) {
+          // happens when one of the component files requires another using module path
+          // no need to enter anything to the dependencies
+          return;
+        }
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
         const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, existingId);
         if (!existingDependency) {
