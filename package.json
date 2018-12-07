@@ -85,7 +85,7 @@
     "ora": "^1.1.0",
     "p-map-series": "^1.0.0",
     "pad-right": "^0.2.2",
-    "parse-gitignore": "^0.4.0",
+    "parse-gitignore": "^1.0.1",
     "porter-stemmer": "^0.9.1",
     "prompt": "^1.0.0",
     "ramda": "^0.24.1",
