@@ -16,7 +16,7 @@ export default class Show extends Command {
   opts = [
     ['j', 'json', 'return a json version of the component'],
     ['r', 'remote', 'show a remote component'],
-    ['k', 'specifickeys <specifickeys>', 'get specific keys from json'],
+    ['k', 'specifickeys <specifickeys>', 'if --json specified, returns specific fields (comma separated list)'],
     ['v', 'versions', 'return a json of all the versions of the component'],
     ['o', 'outdated', 'show latest version from the remote scope (if exists)'],
     ['c', 'compare [boolean]', 'compare current file system component to latest tagged component [default=latest]']
@@ -90,7 +90,7 @@ export default class Show extends Command {
     specifickeys: string
   }): string {
     if (specifickeys && !json) {
-      throw new GeneralError('specific Keys available with json option only');
+      throw new GeneralError('use --json when filtering fields');
     }
     if (versions) {
       if (R.isNil(components) || R.isEmpty(components)) {
@@ -114,13 +114,16 @@ export default class Show extends Command {
 
       const makeComponentReadable = (comp: ConsumerComponent) => {
         if (!comp) return comp;
-        const componentObj = comp.toObject();
-        componentObj.files = comp.files.map(file => file.toReadableString());
-        componentObj.dists = componentObj.dists.getAsReadable();
-        if (comp.compiler) {
+
+        const componentObj = comp.toObject(specifickeys || '');
+        if (componentObj.files) componentObj.files = comp.files.map(file => file.toReadableString());
+
+        if (componentObj.dists) componentObj.dists = componentObj.dists.getAsReadable();
+
+        if (comp.compiler && componentObj.compiler) {
           componentObj.compiler.files = makeEnvFilesReadable(comp.compiler);
         }
-        if (comp.tester) {
+        if (comp.tester && componentObj.tester) {
           componentObj.tester.files = makeEnvFilesReadable(comp.tester);
         }
         return componentObj;
@@ -129,11 +132,6 @@ export default class Show extends Command {
       const componentFromModel = makeComponentReadable(componentModel);
       const jsonObject = componentFromModel ? { componentFromFileSystem, componentFromModel } : componentFromFileSystem;
 
-      if (specifickeys && json) {
-        const pickArray = R.split(',', specifickeys);
-        const jsonObjectFilter = R.pick(pickArray, jsonObject);
-        if (pickArray) return JSON.stringify(jsonObjectFilter, null, '  ');
-      }
       return JSON.stringify(jsonObject, null, '  ');
     }
     return paintComponent(component, componentModel, outdated);

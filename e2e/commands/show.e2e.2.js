@@ -205,6 +205,12 @@ describe('bit show command', function () {
           expect(outputCompiler.name).have.string(`${helper.envScope}/compilers/babel${VERSION_DELIMITER}0.0.1`);
         });
       });
+
+      it('Should show json only with the mainfile and name', () => {
+        output = helper.showComponentWithOptions('comp/comp', { j: '', k: 'name,mainFile' });
+        const parsedOutput = JSON.parse(output);
+        expect(parsedOutput).to.eql({ name: 'comp/comp', mainFile: 'src/mainFile.js' });
+      });
     });
 
     it.skip('should throw an error if the -v flag provided', () => {});
@@ -421,11 +427,6 @@ function add(a, b) {
       expect(files).to.be.ofSize(1);
       expect(files[0].name).to.equal('index.js');
       expect(JSON.parse(output).files).to.be.ofSize(1);
-    });
-    it('Should show json only with the mainfile and name', () => {
-      const output = helper.showComponent('bar/foo --json --specifickeys name,mainFile');
-      const parsedOutput = JSON.parse(output);
-      expect(parsedOutput).to.eql({ name: 'bar/foo', mainFile: 'bar/index.js' });
     });
     it('Should throw error that all files were removed', () => {
       const beforeRemoveBitMap = helper.readBitMap();

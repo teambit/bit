@@ -772,8 +772,8 @@ export default class Component {
     }
   }
 
-  toObject(): Object {
-    return {
+  toObject(specifickeys: string = ''): Object {
+    const returnObject = {
       name: this.name,
       version: this.version,
       mainFile: this.mainFile,
@@ -801,6 +801,12 @@ export default class Component {
       log: this.log,
       deprecated: this.deprecated
     };
+    if (specifickeys) {
+      const pickArray = R.split(',', specifickeys);
+      const jsonObjectFilter = R.pick(pickArray, returnObject);
+      return jsonObjectFilter;
+    }
+    return returnObject;
   }
 
   toString(): string {
