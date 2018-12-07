@@ -155,7 +155,9 @@ export default class AddComponents {
     const filesListFlatten = R.flatten(await Promise.all(filesListAllMatches));
     const filesListUnique = R.uniq(filesListFlatten);
     return filesListUnique.map((file) => {
-      const relativeToConsumer = this.consumer.getPathRelativeToConsumer(file);
+      // when files array has the test file with different letter case, use the one from the file array
+      const fileWithCorrectCase = files.find(f => f.toLowerCase() === file.toLowerCase()) || file;
+      const relativeToConsumer = this.consumer.getPathRelativeToConsumer(fileWithCorrectCase);
       return pathNormalizeToLinux(relativeToConsumer);
     });
   }
@@ -357,7 +359,7 @@ export default class AddComponents {
       files.forEach((file) => {
         const fileInfo = calculateFileInfo(file.relativePath);
         const generatedFile = format(mainFile, fileInfo);
-        const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(generatedFile)))(files);
+        const foundFile = this._findMainFileInFiles(generatedFile, files);
         if (foundFile) {
           mainFile = foundFile.relativePath;
         }
@@ -388,17 +390,23 @@ export default class AddComponents {
       if (isDir(mainPath)) {
         throw new MainFileIsDir(mainPath);
       }
-      const foundFile = R.find(R.propEq('relativePath', pathNormalizeToLinux(mainFileRelativeToConsumer)))(files);
-      if (!foundFile) {
-        files.push({
-          relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
-          test: false,
-          name: path.basename(mainFileRelativeToConsumer)
-        });
+      const foundFile = this._findMainFileInFiles(mainFileRelativeToConsumer, files);
+      if (foundFile) {
+        return foundFile.relativePath;
       }
+      files.push({
+        relativePath: pathNormalizeToLinux(mainFileRelativeToConsumer),
+        test: false,
+        name: path.basename(mainFileRelativeToConsumer)
+      });
       return mainFileRelativeToConsumer;
     }
     return mainFile;
+  }
+
+  _findMainFileInFiles(mainFile: string, files: ComponentMapFile[]) {
+    const normalizedMainFile = pathNormalizeToLinux(mainFile).toLowerCase();
+    return files.find(file => file.relativePath.toLowerCase() === normalizedMainFile);
   }
 
   async _mergeTestFilesWithFiles(files: ComponentMapFile[]): Promise<ComponentMapFile[]> {
