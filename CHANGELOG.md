@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix `bit add` to add the correct letter case even when `--main` or `--test` flags entered with incorrect case
+- fix errors when component files require each other using module path
 - add new bit watch command
 
 ## [13.0.5-dev.30 - 2018-11-11]
