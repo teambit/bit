@@ -214,4 +214,25 @@ describe('cyclic dependencies', function () {
       });
     });
   });
+  describe('same component require itself using module path (@bit/component-name)', () => {
+    let tagOutput;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagAllWithoutMessage();
+      helper.exportAllComponents();
+      // after export, the author now has a link from node_modules.
+      helper.createComponentBarFoo(`require('${helper.getRequireBitPath('bar', 'foo')}');`);
+      tagOutput = helper.tagAllWithoutMessage();
+    });
+    it('should tag successfully with no error', () => {
+      // we had a bug where this was leading to an error "unable to save Version object, it has dependencies but its flattenedDependencies is empty"
+      expect(tagOutput).to.have.string('1 components tagged');
+    });
+    it('should not save the component itself as a dependency', () => {
+      const catComponent = helper.catComponent('bar/foo@latest');
+      expect(catComponent.dependencies).to.be.lengthOf(0);
+    });
+  });
 });
