@@ -58,13 +58,14 @@ export const testInProcess = async (
   verbose: ?boolean
 ): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
-  const componentSandboxes = await _getComponents(consumer, id, includeUnmodified, verbose);
+  const { env, componentSandboxes } = await _getComponents(consumer, id, includeUnmodified, verbose);
   const specsResults = await Promise.all(
     componentSandboxes.map(compAndSandbox =>
       limit(async () => {
         const { component, sandbox } = compAndSandbox;
         if (component.tester && component.tester.action) {
           try {
+            console.log('running tests for component:', component.name); // TODO: proper bit logging
             const rawResults: RawTestsResults[] = await component.tester.action(
               {
                 files: component.files.map(file => file.clone()),
@@ -89,6 +90,7 @@ export const testInProcess = async (
       })
     )
   );
+  await env.destroySandboxedEnvs();
   return specsResults.filter(r => r.componentId); // TODO: what are those without an id?
 };
 
@@ -114,24 +116,7 @@ const _getComponents = async (
   loader.stop();
   const env = new IsolatedEnvironment(consumer.scope);
   await env.create();
-  const sandboxes = await pMapSeries(components, c => env.isolateComponentToSandbox(c, components));
+  const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c, components)));
   const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
-  return componentSandboxes; // TODO: remove this, this is to skip build
-  await pMapSeries(componentSandboxes, (compAndSandbox) => {
-    const { component, sandbox } = compAndSandbox;
-    // TODO: support old api compilers
-    if (!component.compiler.action) return Promise.resolve();
-    return component.compiler.action(
-      {
-        files: component.files.map(file => file.clone()),
-        rawConfig: component.compiler.rawConfig,
-        dynamicConfig: component.compiler.dynamicConfig,
-        configFiles: component.compiler.files,
-        api: component.compiler.api
-      },
-      sandbox.updateFs,
-      sandbox.exec
-    );
-  });
-  return componentSandboxes;
+  return { env, componentSandboxes };
 };

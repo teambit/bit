@@ -12,7 +12,7 @@ const binEntries = new Map();
 for (const [name, reference] of packageInformation.packageDependencies.entries()) {
   const dependencyInformation = pnpApi.getPackageInformation({ name, reference });
 
-  if (dependencyInformation.packageLocation) {
+  if (dependencyInformation && dependencyInformation.packageLocation) {
     binFolders.add(`${dependencyInformation.packageLocation}/.bin`);
   }
 }
@@ -25,8 +25,9 @@ for (const binFolder of binFolders) {
 }
 
 const jestEntry = binEntries.get('jest');
-if (jestEntry) {
-  const argString = process.argv.slice(2).join(' ');
-  const { stdout } = execa.shellSync(`node -r ./.pnp.js ${jestEntry} ${argString}`);
-  console.log(stdout);
-}
+console.log(jestEntry);
+// if (jestEntry) {
+//   const argString = process.argv.slice(2).join(' ');
+//   const { stdout } = execa.shellSync(`node -r ./.pnp.js ${jestEntry} ${argString}`);
+//   console.log(stdout);
+// }

@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@teambit/gitconfig": "^2.0.6",
+    "@yarnpkg/lockfile": "^1.1.0",
     "ajv": "^6.5.3",
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
@@ -110,6 +111,7 @@
     "vinyl": "^2.1.0",
     "vinyl-file": "^3.0.0",
     "winston": "^2.4.0",
+    "yarn-logical-tree": "^1.0.2",
     "yn": "^2.0.0"
   },
   "devDependencies": {

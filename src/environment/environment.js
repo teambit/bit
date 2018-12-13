@@ -19,6 +19,11 @@ import { installNpmPackagesForComponents } from '../npm-client/install-packages'
 import execa from 'execa';
 import promiseLimit from 'promise-limit';
 
+import * as lockfile from '@yarnpkg/lockfile';
+import yarnLogicalTree from 'yarn-logical-tree';
+
+const generatePnpMap = require(`${__dirname}/../../src/environment/generate-pnp-map`); // otherwise it gets transpiled, needs to be a separate package anyway
+
 const limit = promiseLimit(10);
 
 export type IsolateOptions = {
@@ -39,23 +44,25 @@ export type IsolateOptions = {
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
-const createSandboxStub = () => {
+const createSandboxStub = async () => {
   const dir = path.join(os.tmpdir(), ISOLATED_ENV_ROOT, v4());
   try {
-    fs.emptydirSync(dir);
-    fs.rmdirSync(dir);
+    await fs.emptydir(dir);
+    await fs.rmdir(dir);
   } catch (e) {}
-  fs.ensureDirSync(dir);
-  return Promise.resolve({
-    async updateFs(files) {
-      Object.keys(files).forEach((fileName) => {
-        const contents = files[fileName];
-        const fileFullPath = `${dir}/${fileName}`;
-        try {
-          fs.ensureDirSync(path.dirname(fileFullPath));
-        } catch (e) {}
-        fs.writeFileSync(fileFullPath, contents);
-      });
+  await fs.ensureDir(dir);
+  return {
+    updateFs(files) {
+      return Promise.all(
+        Object.keys(files).map(async (fileName) => {
+          const contents = files[fileName];
+          const fileFullPath = `${dir}/${fileName}`;
+          try {
+            await fs.ensureDir(path.dirname(fileFullPath));
+          } catch (e) {}
+          await fs.writeFile(fileFullPath, contents);
+        })
+      );
     },
     async exec(command, options) {
       const { stdout } = await execa.shell(command, { cwd: dir });
@@ -65,7 +72,7 @@ const createSandboxStub = () => {
       // this is a temporary helper method for the purposes of the PNP POC - please do not use in prod code
       return dir;
     }
-  });
+  };
 };
 
 export default class Environment {
@@ -76,8 +83,7 @@ export default class Environment {
   constructor(scope: Scope, dir: ?string) {
     this.scope = scope;
     this.path = dir || path.join(scope.getPath(), ISOLATED_ENV_ROOT, v4());
-    this.yarnlock = fs.readFileSync(`${__dirname}/../../src/environment/yarn.lock`); // this is temporary for experimenting, do not commit this
-    this.pnpjs = fs.readFileSync(`${__dirname}/../../src/environment/.pnp.js`); // this is temporary for experimenting, do not commit this
+    this.yarnlock = fs.readFileSync(`${__dirname}/../../src/environment/yarn.lock`, 'utf-8'); // this is temporary for experimenting, do not commit this
     this.execJestPnp = fs.readFileSync(`${__dirname}/../../src/environment/exec-jest-pnp.js`);
     this.pnpFolderPath = `${__dirname}/../../src/environment/.pnp`;
     logger.debug(`creating a new isolated environment at ${this.path}`);
@@ -135,18 +141,10 @@ export default class Environment {
    * @param {IsolateOptions} opts
    * @return {Promise.<Component>}
    */
-  isolateComponentToSandbox(component: Component, envComponents): Promise<ComponentWithDependencies> {
+  async isolateComponentToSandbox(component: Component, envComponents): Promise<ComponentWithDependencies> {
+    // TODO: better args
     return limit(async () => {
       const sandbox = await createSandboxStub();
-      await sandbox.updateFs(
-        component.files.reduce((toUpdate, cFile) => {
-          const { relativePath, content } = cFile.toReadableString();
-          return Object.assign({}, toUpdate, {
-            [relativePath]: content
-          });
-        }, {})
-      );
-      // TODO: combine these
       await sandbox.updateFs(
         envComponents.reduce((envFilesToUpdate, envComponent) => {
           const toUpdate = envComponent.files.reduce((toUpdate, cFile) => {
@@ -163,14 +161,25 @@ export default class Environment {
       // TODO: packageJson of dependencies needs to be merged into this
       componentPackageJson.version = componentPackageJson.version === 'latest' ? '1.0.0' : componentPackageJson.version;
       // TODO: ^^ fix this - npm would not install a non-semver version range
+
+      // ******* TODO: MOVE THIS ELSEWHERE *******
+      const packagePath = sandbox.getSandboxFolder();
+      const cacheFolder = '/home/aram/.cache/yarn/v4'; // TBD: generate the cache
+      const pkgJson = componentPackageJson.toJson(); // TODO: various fields in package.json (eg. babel configuration)
+      const yarnLock = this.yarnlock;
+      const yarnLockParsed = lockfile.parse(this.yarnlock);
+      const pkgParsed = JSON.parse(pkgJson);
+      const logicalDependencyTree = yarnLogicalTree(pkgParsed, yarnLockParsed.object);
+      const pnpjs = await generatePnpMap(logicalDependencyTree, cacheFolder, packagePath);
+      // *****************************************
+
       await sandbox.updateFs({
-        'package.json': componentPackageJson.toJson(), // TODO: various fields in package.json (eg. babel configuration)
+        'package.json': pkgJson,
         'yarn.lock': this.yarnlock,
-        '.pnp.js': this.pnpjs,
+        '.pnp.js': pnpjs,
         'exec-jest-pnp.js': this.execJestPnp
       });
-      const sandboxFolder = sandbox.getSandboxFolder();
-      await fs.copy(this.pnpFolderPath, `${sandboxFolder}/.pnp`);
+      console.log(`done isolating component ${component.name}`); // TODO: proper bit logging
       return sandbox;
     });
   }
@@ -197,6 +206,12 @@ export default class Environment {
     logger.debug(`destroying the isolated environment at ${this.path}`);
     logger.info(`environment, deleting ${this.path}`);
     return fs.remove(this.path);
+  }
+
+  async destroySandboxedEnvs() {
+    const envRootFolder = path.join(os.tmpdir(), ISOLATED_ENV_ROOT);
+    await fs.emptyDir(envRootFolder);
+    await fs.rmdir(envRootFolder);
   }
 
   async destroyIfExist(): Promise<*> {
