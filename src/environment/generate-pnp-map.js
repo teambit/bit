@@ -95,7 +95,7 @@ function generateFindPackageLocator(packageInformationStores) {
   code += '  if (!relativeLocation.match(isStrictRegExp))\n';
   code += '    relativeLocation = `./${relativeLocation}`;\n';
   code += '\n';
-  code += '  if (location.match(isDirRegExp) && relativeLocation.charAt(relativeLocation.length - 1) !== \'/\')\n';
+  code += "  if (location.match(isDirRegExp) && relativeLocation.charAt(relativeLocation.length - 1) !== '/')\n";
   code += '    relativeLocation = `${relativeLocation}/`;\n';
   code += '\n';
   code += '  let match;\n';
@@ -157,6 +157,7 @@ async function getPackageInformationStores(logicalDependencyTree, cacheFolder, t
     dict[`${packageName}-${packageVersion}`] = { packageFolder, cacheLocation, packageName, packageVersion };
     return dict;
   }, {});
+  const symlinks = new Map();
   const packageInformationStores = new Map();
   const blacklistedLocations = new Set(); // TBD
   logicalDependencyTree.forEach((node, cb) => {
@@ -218,16 +219,13 @@ async function getPackageInformationStores(logicalDependencyTree, cacheFolder, t
             : getHashFrom([name, version, packageName, packageVersion]);
           const hashName = `pnp-${hash}`;
           const symlinkLoc = path.resolve(targetFolder, '.pnp', 'externals', hashName);
-          const packageLocation =
-            `./${ 
-              path.relative(
-              // TODO: fix this
-                targetFolder,
-                path.resolve(targetFolder, '.pnp', 'externals', hashName, 'node_modules', packageName)
-              ) 
-            }/`; // TODO: fix this too
+          const packageLocation = `./${path.relative(
+            // TODO: fix this
+            targetFolder,
+            path.resolve(targetFolder, '.pnp', 'externals', hashName, 'node_modules', packageName)
+          )}/`; // TODO: fix this too
           const packageReference = `pnp:${hash}`;
-          fs.ensureSymlinkSync(cacheLocation, symlinkLoc);
+          symlinks.set(symlinkLoc, cacheLocation);
 
           let packageInformationStore = packageInformationStores.get(packageName);
           if (!packageInformationStore) {
@@ -269,11 +267,11 @@ async function getPackageInformationStores(logicalDependencyTree, cacheFolder, t
     cb();
   });
 
-  return [packageInformationStores, blacklistedLocations];
+  return [packageInformationStores, blacklistedLocations, symlinks];
 }
 
 module.exports = async function generatePnpMap(logicalDependencyTree, cacheFolder, targetFolder) {
-  const [packageInformationStores, blacklistedLocations] = await getPackageInformationStores(
+  const [packageInformationStores, blacklistedLocations, symlinks] = await getPackageInformationStores(
     logicalDependencyTree,
     cacheFolder,
     targetFolder
@@ -284,11 +282,12 @@ module.exports = async function generatePnpMap(logicalDependencyTree, cacheFolde
     generateFindPackageLocator(packageInformationStores)
   ].join('');
 
-  return (
-    pnpApi
+  return {
+    pnpjs: pnpApi
       .toString()
       // .replace(/\$\$SHEBANG/g, config.plugnplayShebang) // TBD
       .replace(/\$\$BLACKLIST/g, 'null') // TBD
-      .replace(/\$\$SETUP_STATIC_TABLES\(\);/g, setupStaticTables)
-  );
+      .replace(/\$\$SETUP_STATIC_TABLES\(\);/g, setupStaticTables),
+    symlinks
+  };
 };

@@ -68,6 +68,14 @@ const createSandboxStub = async () => {
       const { stdout } = await execa.shell(command, { cwd: dir });
       return stdout;
     },
+    async createSymlinks(symlinks) {
+      return Promise.all(
+        Array.from(symlinks.keys()).map((linkName) => {
+          const linkDestination = symlinks.get(linkName);
+          return fs.ensureSymlink(linkDestination, linkName);
+        })
+      );
+    },
     getSandboxFolder() {
       // this is a temporary helper method for the purposes of the PNP POC - please do not use in prod code
       return dir;
@@ -170,7 +178,7 @@ export default class Environment {
       const yarnLockParsed = lockfile.parse(this.yarnlock);
       const pkgParsed = JSON.parse(pkgJson);
       const logicalDependencyTree = yarnLogicalTree(pkgParsed, yarnLockParsed.object);
-      const pnpjs = await generatePnpMap(logicalDependencyTree, cacheFolder, packagePath);
+      const { pnpjs, symlinks } = await generatePnpMap(logicalDependencyTree, cacheFolder, packagePath);
       // *****************************************
 
       await sandbox.updateFs({
@@ -179,6 +187,7 @@ export default class Environment {
         '.pnp.js': pnpjs,
         'exec-jest-pnp.js': this.execJestPnp
       });
+      await sandbox.createSymlinks(symlinks);
       console.log(`done isolating component ${component.name}`); // TODO: proper bit logging
       return sandbox;
     });
