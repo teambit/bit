@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.31] - 2018-12-16
+
 - fix `bit add` to add the correct letter case even when `--main` or `--test` flags entered with incorrect case
 - fix errors when component files require each other using module path
 - add new bit watch command
+- update tty-table, flow-coverage-report and mocha-appveyor-reporter for security reasons
 
 ## [13.0.5-dev.30 - 2018-11-11]
 
