@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.10] - 2018-12-16
+
+- update caporal and mocha-appveyor-reporter for security reasons
+
 ## [1.0.6-dev.9] - 2018-11-08
 
 - support mix syntax of typescript and javascript inside .ts file
