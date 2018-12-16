@@ -70,5 +70,8 @@ tmp/
 .bit
 inline_components
 
-#vscode history
+# vscode history
 .history
+
+# pkg releases
+releases/

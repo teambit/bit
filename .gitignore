@@ -82,7 +82,7 @@ components
 #gitbook
 _book
 
-# pkg
+# pkg releases
 releases/
 
 # sonarcloud dir
