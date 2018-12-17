@@ -308,7 +308,8 @@ jobs:
           name: 'npm link bit-javascript to bit'
           command: 'cd bit && npm link ../bit-javascript'
       -
-        run: 'cp ./bit/releases -r /usr/local/bin/'
+        # run: 'cp ./bit/releases -r /usr/local/bin/'
+        run: 'PATH=$PATH:./bit/releases'
       -
         run: 'bit -V'
       -
