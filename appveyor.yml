@@ -93,7 +93,12 @@ install:
   - ps: Install-Product node 6
   - "npm i"
   - "npm run build"
-  - "npm install -g"
+  - "npm install -g pkg"
+  - "npm run pkg"
+  - ps: "pwd"
+  - "bit -V"
+  # - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
+  - "bit -V"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bitsrc.io"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
