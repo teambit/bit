@@ -193,7 +193,7 @@ describe('bit add many programmatically', function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.createFile('foo', 'c.js');
-      helper.createFile('foo/bar', 'c.js');
+      helper.createFile('foo/gitignoredir', 'c.js');
       helper.createFileOnRootLevel('c.js');
       helper.npmLink('bit-bin');
       newDirPath = helper.createNewDirectory();
@@ -244,7 +244,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutput).to.not.have.string('ExcludedMainFile');
     });
     it('should not add a component with gitignore in inner folder', function () {
-      helper.writeGitIgnore(['/foo/bar']);
+      helper.writeGitIgnore(['/foo/gitignoredir']);
       const scriptAbsolutePath = path.join(
         newDirPath,
         'add_many_test_files/inner_folder/add_components_inner_folder_programmatically.js'
