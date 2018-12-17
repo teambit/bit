@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix running `bit link` from an inner directory for author
+
 ## [13.0.6-dev.31] - 2018-12-16
 
 - fix `bit add` to add the correct letter case even when `--main` or `--test` flags entered with incorrect case
