@@ -2,289 +2,339 @@ version: 2
 jobs:
   checkout_code:
     docker:
-      - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
       - checkout
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - run:
-          name: clone bit-javascript
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        run:
+          name: 'clone bit-javascript'
           command: ./scripts/clone-bit-javascript.sh
-      - persist_to_workspace:
+      -
+        persist_to_workspace:
           root: /home/circleci
           paths:
             - bit
             - bit-javascript
-
   set_ssh_key:
     docker:
-        - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/.ssh
     steps:
-      - run: "echo \"-----BEGIN RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
-      - run: echo ${testerBitsrcSSHPrivateKey} >> id_rsa
-      - run: "echo \"-----END RSA PRIVATE KEY-----\" >> ~/.ssh/id_rsa"
-      - run: echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub
-      - save_cache:
+      -
+        run: 'echo "-----BEGIN RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
+      -
+        run: 'echo ${testerBitsrcSSHPrivateKey} >> id_rsa'
+      -
+        run: 'echo "-----END RSA PRIVATE KEY-----" >> ~/.ssh/id_rsa'
+      -
+        run: 'echo ${testerBitsrcSSHPublicKey} >> id_rsa.pub'
+      -
+        save_cache:
           key: bitsrc-ssh-key3
           paths:
             - ~/.ssh/id_rsa
             - ~/.ssh/id_rsa.pub
-
   set_bitsrc_registry:
     docker:
-        - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
-      # prod registry
-    #   - run: npm config set @bit:registry https://node.bitsrc.io
-    #   - run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
-      # stage registry
-      - run: npm config set @bit:registry https://node-stg.bitsrc.io
-      - run: echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc
-      - save_cache:
-        #   key: bitsrc-registry2
+      -
+        run: 'npm config set @bit:registry https://node-stg.bitsrc.io'
+      -
+        run: 'echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc'
+      -
+        save_cache:
           key: bitsrc-registry-stg4
           paths:
             - ~/.npmrc
-
   install_npm_deps:
     docker:
-      - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - attach_workspace:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
           at: ./
-      - restore_cache:
+      -
+        restore_cache:
           keys:
-            # Find a cache corresponding to this specific package.json checksum
-            # when this file is changed, this key will fail
-            # Gilad: The 1 after the deps is a workaround to clean the cache of the node modules
-            # A real solution will be to clear all the cache once circle will support it (for v2)
-            # or move the packakge.json resotre to be from workspace instead of cache, then we can run
-            # this step without cache
-            - npm-deps11-{{ checksum "./bit/package.json" }}
-            # Find the most recent cache used from any branch
+            - 'npm-deps11-{{ checksum "./bit/package.json" }}'
             - npm-deps11
-      # - run: ls ~/bit/node_modules
-      - run:
-          name: Insatll npm dependencies
+      -
+        run:
+          name: 'Insatll npm dependencies'
           command: 'cd bit && npm install'
-      - save_cache:
-          key: npm-deps11-{{ checksum "./bit/package.json" }}
+      -
+        save_cache:
+          key: 'npm-deps11-{{ checksum "./bit/package.json" }}'
           paths:
             - ./bit/node_modules
-      - save_cache:
+      -
+        save_cache:
           key: npm-deps11
           paths:
             - ./bit/node_modules
-      - persist_to_workspace:
+      -
+        persist_to_workspace:
           root: .
           paths:
             - bit/node_modules
-
   install_bit_javascript_npm_deps:
     docker:
-      - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
-      - attach_workspace:
+      -
+        attach_workspace:
           at: ./
-      - run:
-          name: Insatll npm dependencies
+      -
+        run:
+          name: 'Insatll npm dependencies'
           command: 'cd bit-javascript && npm install'
-      - persist_to_workspace:
+      -
+        persist_to_workspace:
           root: .
           paths:
             - bit-javascript/node_modules
-
-
   build:
-     docker:
-       - image: circleci/node:6.14.3
-     working_directory: ~/bit
-     steps:
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - attach_workspace:
+    docker:
+      -
+        image: 'circleci/node:6.14.3'
+    working_directory: ~/bit
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
           at: ./
-      - run:
-          name: Build bit source code
-          command: cd bit && npm run build
-      - persist_to_workspace:
+      -
+        run:
+          name: 'Build bit source code'
+          command: 'cd bit && npm run build'
+      -
+        persist_to_workspace:
           root: .
           paths:
             - bit/dist
-
   pack:
-     docker:
-       - image: circleci/node:6.14.3
-     working_directory: ~/bit
-     steps:
-      - attach_workspace:
+    docker:
+      -
+        image: 'circleci/node:6.14.3'
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
           at: ./
-      - run:
-          name: Pack bit
-          command: cd bit && npm run pkg
-      - run:
-          name: copy unsuported files
-          command: cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open
-      - persist_to_workspace:
+      -
+        run:
+          name: 'Pack bit'
+          command: 'cd bit && npm run pkg'
+      -
+        run:
+          name: 'copy unsuported files'
+          command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
+      -
+        persist_to_workspace:
           root: .
           paths:
             - bit/releases
-
   build_bit_javascript:
-     docker:
-       - image: circleci/node:6.14.3
-     working_directory: ~/bit
-     steps:
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - attach_workspace:
+    docker:
+      -
+        image: 'circleci/node:6.14.3'
+    working_directory: ~/bit
+    steps:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
           at: ./
-      - run:
-          name: Build bit javascript source code
-          command: cd bit-javascript && npm run build
-      - persist_to_workspace:
+      -
+        run:
+          name: 'Build bit javascript source code'
+          command: 'cd bit-javascript && npm run build'
+      -
+        persist_to_workspace:
           root: .
           paths:
             - bit-javascript/dist
-
   unit_test:
     docker:
-      - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - attach_workspace:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
           at: ./
-      - run: cd bit && mkdir junit
-      - run:
-          name: Run unit tests
-          command: cd bit && npm run test-circle
+      -
+        run: 'cd bit && mkdir junit'
+      -
+        run:
+          name: 'Run unit tests'
+          command: 'cd bit && npm run test-circle'
           environment:
             MOCHA_FILE: junit/unit-test-results.xml
           when: always
-      - store_test_results:
+      -
+        store_test_results:
           path: bit/junit
-      - store_artifacts:
+      -
+        store_artifacts:
           path: bit/junit
-
   unit_test_bit_javascript:
     docker:
-    - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
-    - run:
-        name: save SHA to a file
-        command: echo $CIRCLE_SHA1 > .circle-sha
-    - attach_workspace:
-        at: ./
-    - run: cd bit-javascript && mkdir junit
-    - run:
-        name: Run unit tests
-        command: cd bit-javascript && npm run test-circle
-        environment:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'cd bit-javascript && mkdir junit'
+      -
+        run:
+          name: 'Run unit tests'
+          command: 'cd bit-javascript && npm run test-circle'
+          environment:
             MOCHA_FILE: junit/unit-test-results.xml
-        when: always
-    - store_test_results:
-        path: bit-javascript/junit
-    - store_artifacts:
-        path: bit-javascript/junit
-
+          when: always
+      -
+        store_test_results:
+          path: bit-javascript/junit
+      -
+        store_artifacts:
+          path: bit-javascript/junit
   lint:
     docker:
-      - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - restore_cache:
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        restore_cache:
           keys:
-            - repo-{{ checksum ".circle-sha" }}
-      - attach_workspace:
+            - 'repo-{{ checksum ".circle-sha" }}'
+      -
+        attach_workspace:
           at: ./
-      - run:
-            name: run ESLint
-            command: cd bit && npm run lint-circle
-      - store_test_results:
+      -
+        run:
+          name: 'run ESLint'
+          command: 'cd bit && npm run lint-circle'
+      -
+        store_test_results:
           path: bit/junit
-      - store_artifacts:
+      -
+        store_artifacts:
           path: bit/junit
-
   e2e_test:
     docker:
-      - image: circleci/node:6.14.3
+      -
+        image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     environment:
-      # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
     parallelism: 4
     steps:
-      - attach_workspace:
+      -
+        attach_workspace:
           at: ./
-      - run: sudo npm i -g yarn
-      - run: echo 'export PATH=~/.npm-global/bin:$PATH' >> $BASH_ENV
-      - run:
-          name: save SHA to a file
-          command: echo $CIRCLE_SHA1 > .circle-sha
-      - run:
-          name: create global npm directory (to avoid using sudo for npm link)
-          command: mkdir ~/.npm-global
-      - restore_cache:
+      -
+        run: 'sudo npm i -g yarn'
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'save SHA to a file'
+          command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        run:
+          name: 'create global npm directory (to avoid using sudo for npm link)'
+          command: 'mkdir ~/.npm-global'
+      -
+        restore_cache:
           key: bitsrc-ssh-key3
-      - restore_cache:
-        #   key: bitsrc-registry2
+      -
+        restore_cache:
           key: bitsrc-registry-stg4
-      - restore_cache:
+      -
+        restore_cache:
           keys:
-            - builded-{{ checksum ".circle-sha" }}
-        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
-      - run: chmod 400 ~/.ssh/id_rsa
-      - run: ssh-add ~/.ssh/id_rsa
-      - run: cd bit && mkdir junit
-      - run:
-          name: npm link bit-javascript to bit
-          command: cd bit && npm link ../bit-javascript
-    #   - run:
-    #       name: npm link bit to global
-    #       command: cd bit && npm link
-      - run: cp ./bit/releases -r /usr/local/bin/
-      - run: bit -V
-      - run: bit config set analytics_reporting false
-      - run: bit config set error_reporting false
-      - run: bit config set user.name tester
-      - run: bit config set user.email ci@bitsrc.io
-      # uncomment to configure circle to run against stg enviorment
-      - run: bit config set hub_domain hub-stg.bitsrc.io
-
-      - run:
-          name: Run e2e tests
-          command: cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci
-          # command which support only - for debug purpose
-        #   command: cd bit && npm run e2e-test-circle --debug
+            - 'builded-{{ checksum ".circle-sha" }}'
+      -
+        run: 'chmod 400 ~/.ssh/id_rsa'
+      -
+        run: 'ssh-add ~/.ssh/id_rsa'
+      -
+        run: 'cd bit && mkdir junit'
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && npm link ../bit-javascript'
+      -
+        run: 'cp ./bit/releases -r /usr/local/bin/'
+      -
+        run: 'bit -V'
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bitsrc.io'
+      -
+        run: 'bit config set hub_domain hub-stg.bitsrc.io'
+      -
+        run:
+          name: 'Run e2e tests'
+          command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
-      - store_test_results:
+      -
+        store_test_results:
           path: bit/junit
-      - store_artifacts:
+      -
+        store_artifacts:
           path: bit/junit
-      - store_artifacts:
+      -
+        store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
-
 workflows:
   version: 2
   build_and_test:
@@ -292,31 +342,28 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_bitsrc_registry
-      - install_npm_deps:
+      -
+        install_npm_deps:
           requires:
             - checkout_code
-      - install_bit_javascript_npm_deps:
+      -
+        install_bit_javascript_npm_deps:
           requires:
             - checkout_code
-      - build:
+      -
+        build:
           requires:
             - install_npm_deps
-      - build_bit_javascript:
+      -
+        build_bit_javascript:
           requires:
             - install_bit_javascript_npm_deps
-    #   - unit_test:
-    #       requires:
-    #         - build
-    #   - unit_test_bit_javascript:
-    #       requires:
-    #         - build_bit_javascript
-    #   - lint:
-    #       requires:
-    #         - install_npm_deps
-      - pack:
-            - build
-            - build_bit_javascript
-      - e2e_test:
+      -
+        pack:
+          - build
+          - build_bit_javascript
+      -
+        e2e_test:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
