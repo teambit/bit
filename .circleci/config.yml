@@ -122,6 +122,24 @@ jobs:
           paths:
             - bit/dist
 
+  pack:
+     docker:
+       - image: circleci/node:6.14.3
+     working_directory: ~/bit
+     steps:
+      - attach_workspace:
+          at: ./
+      - run:
+          name: Pack bit
+          command: cd bit && npm run pkg
+      - run:
+          name: copy unsuported files
+          command: cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases
+
   build_bit_javascript:
      docker:
        - image: circleci/node:6.14.3
@@ -240,9 +258,11 @@ jobs:
       - run:
           name: npm link bit-javascript to bit
           command: cd bit && npm link ../bit-javascript
-      - run:
-          name: npm link bit to global
-          command: cd bit && npm link
+    #   - run:
+    #       name: npm link bit to global
+    #       command: cd bit && npm link
+      - run: cp ./bit/releases -r /usr/local/bin/
+      - run: bit -V
       - run: bit config set analytics_reporting false
       - run: bit config set error_reporting false
       - run: bit config set user.name tester
@@ -284,18 +304,20 @@ workflows:
       - build_bit_javascript:
           requires:
             - install_bit_javascript_npm_deps
-      - unit_test:
-          requires:
+    #   - unit_test:
+    #       requires:
+    #         - build
+    #   - unit_test_bit_javascript:
+    #       requires:
+    #         - build_bit_javascript
+    #   - lint:
+    #       requires:
+    #         - install_npm_deps
+      - pack:
             - build
-      - unit_test_bit_javascript:
-          requires:
             - build_bit_javascript
-      - lint:
-          requires:
-            - install_npm_deps
       - e2e_test:
           requires:
-            - build
-            - build_bit_javascript
             - set_ssh_key
             - set_bitsrc_registry
+            - pack
