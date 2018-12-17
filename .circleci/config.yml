@@ -147,26 +147,26 @@ jobs:
       -
         restore_cache:
           keys:
-            - 'pkg-cache-{{ checksum "./pkg-cache" }}'
+            - 'pkg-cache-{{ checksum "~/pkg-cache" }}'
             - pkg-cache
       -
         run:
           name: 'set pkg path'
-          command: 'export PKG_CACHE_PATH=./pkg-cache'
+          command: 'export PKG_CACHE_PATH=~/pkg-cache'
       -
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
       -
         save_cache:
-          key: 'pkg-cache-{{ checksum "./pkg-cache" }}'
+          key: 'pkg-cache-{{ checksum "~/pkg-cache" }}'
           paths:
-            - ./pkg-cache
+            - ~/pkg-cache
       -
         save_cache:
           key: pkg-cache
           paths:
-            - ./pkg-cache
+            - ~/pkg-cache
       -
         run:
           name: 'copy unsuported files'
