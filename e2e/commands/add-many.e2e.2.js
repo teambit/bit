@@ -226,7 +226,7 @@ describe('bit add many programmatically', function () {
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].test).to.equal(false);
       expect(nodeStartOutputObj[0].addedComponents[0].files[0].name).to.equal('c.js');
     });
-    it('should not add a component on root level if its pattern matches to gitignore', function () {
+    it.only('should not add a component on root level if its pattern matches to gitignore', function () {
       helper.writeGitIgnore(['/c.js']);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_git_ignore_file_on_root_level.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
