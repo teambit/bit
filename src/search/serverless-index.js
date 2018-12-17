@@ -1,7 +1,7 @@
 /** @flow */
 import path from 'path';
 import fs from 'fs-extra';
-import searchIndex from 'search-index';
+// import searchIndex from 'search-index';
 import logger from '../logger/logger';
 
 const indexName = 'search_index';
@@ -29,10 +29,10 @@ async function initializeIndex(scopePath: string): Promise<any> {
     };
 
     index = new Promise((resolve, reject) => {
-      searchIndex(indexOptions, (err, si) => {
-        if (err) reject(err);
-        resolve(si);
-      });
+      // searchIndex(indexOptions, (err, si) => {
+      //   if (err) reject(err);
+      //   resolve(si);
+      // });
     });
   }
 
