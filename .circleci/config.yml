@@ -143,6 +143,8 @@ jobs:
         attach_workspace:
           at: ./
       -
+        run: 'sudo npm i -g pkg'
+      -
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
@@ -275,8 +277,6 @@ jobs:
           at: ./
       -
         run: 'sudo npm i -g yarn'
-      -
-        run: 'sudo npm i -g pkg'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
