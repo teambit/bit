@@ -3,8 +3,8 @@ const runBitBin = require('../run_add_many').runBitBin;
 const components = 
     [
         {
-            'componentPaths' : ['foo/bar/c.js'],
-            'main' : 'foo/bar/c.js'
+            'componentPaths' : ['foo/gitignoredir/c.js'],
+            'main' : 'foo/gitignoredir/c.js'
         }
     ]
 
