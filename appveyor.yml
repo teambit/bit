@@ -97,7 +97,7 @@ install:
   - "npm run pkg"
   - ps: "pwd"
   - "bit -V"
-  # - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
+  - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
   - "bit -V"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bitsrc.io"
