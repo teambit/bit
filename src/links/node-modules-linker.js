@@ -105,11 +105,13 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   const mainFile = component.dists.calculateMainDistFileForAuthored(component.mainFile, consumer);
   const indexFileName = getIndexFileName(mainFile);
   const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
-  const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
+  const destAbs = consumer.toAbsolutePath(dest);
+  const mainFileAbs = consumer.toAbsolutePath(mainFile);
+  const destRelative = pathRelativeLinux(path.dirname(destAbs), mainFileAbs);
   const fileContent = getLinkToFileContent(destRelative);
   if (fileContent) {
     // otherwise, the file type is not supported, no need to write anything
-    fs.outputFileSync(dest, fileContent);
+    fs.outputFileSync(destAbs, fileContent);
   }
 }
 
@@ -201,9 +203,11 @@ function _linkAuthoredComponents(consumer: Consumer, component: Component, compo
   const filesToBind = componentMap.getFilesRelativeToConsumer();
   const bound = filesToBind.map((file) => {
     const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-    const destRelative = pathRelativeLinux(path.dirname(dest), file);
+    const destAbs = consumer.toAbsolutePath(dest);
+    const fileAbs = consumer.toAbsolutePath(file);
+    const destRelative = pathRelativeLinux(path.dirname(destAbs), fileAbs);
     const fileContent = getLinkToFileContent(destRelative);
-    fs.outputFileSync(dest, fileContent);
+    fs.outputFileSync(destAbs, fileContent);
     return { from: dest, to: file };
   });
   linkToMainFile(component, componentMap, componentId, consumer);

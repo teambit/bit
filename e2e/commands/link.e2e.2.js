@@ -71,6 +71,22 @@ console.log(isType());`;
           expect(resultMain.trim()).to.equal('got is-type');
         });
       });
+      describe('after deleting node_modules and running bit link from an inner directory', () => {
+        before(() => {
+          fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
+          helper.runCmd('bit link', path.join(helper.localScopePath, 'utils'));
+        });
+        it('should not create the node_modules in the inner directory', () => {
+          expect(path.join(helper.localScopePath, 'utils', 'node_modules')).to.not.be.a.path();
+        });
+        it('should re-generate the links successfully', () => {
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string');
+
+          const resultMain = helper.runCmd('node app-main.js');
+          expect(resultMain.trim()).to.equal('got is-type');
+        });
+      });
     });
   });
   describe('with custom bind name in bit.json', () => {
@@ -201,6 +217,11 @@ console.log(isType());`;
       helper.addRemoteScope();
       helper.modifyFieldInBitJson('bindingPrefix', 'bitTest2');
       helper.importComponent('test/is-string2');
+
+      const appJsFixture = `const isString2 = require('bitTest2/${
+        helper.remoteScope
+      }.test.is-string2'); console.log(isString2());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
     });
     it('node_modules should contain custom dir name', () => {
       expect(path.join(helper.localScopePath, 'node_modules', 'bitTest2')).to.be.a.path();
@@ -230,10 +251,6 @@ console.log(isType());`;
       ).to.be.a.path();
     });
     it('should print results from the dependency that uses require absolute syntax', () => {
-      const appJsFixture = `const isString2 = require('bitTest2/${
-        helper.remoteScope
-      }.test.is-string2'); console.log(isString2());`;
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
     });
@@ -242,6 +259,20 @@ console.log(isType());`;
         fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
         fs.removeSync(path.join(helper.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
         helper.runCmd('bit link');
+      });
+      it('should still print results from the dependency that uses require absolute syntax', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got is-string2');
+      });
+    });
+    describe('bit link after deleting the current node_modules directories from an inner directory', () => {
+      before(() => {
+        fs.removeSync(path.join(helper.localScopePath, 'node_modules'));
+        fs.removeSync(path.join(helper.localScopePath, 'components', 'test', 'is-string2', 'node_modules'));
+        helper.runCmd('bit link', path.join(helper.localScopePath, 'components'));
+      });
+      it('should not create node_modules directory inside the inner directory', () => {
+        expect(path.join(helper.localScopePath, 'components', 'node_modules')).not.to.be.a.path();
       });
       it('should still print results from the dependency that uses require absolute syntax', () => {
         const result = helper.runCmd('node app.js');
