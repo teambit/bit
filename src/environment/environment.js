@@ -60,7 +60,11 @@ const createSandboxStub = async () => {
           try {
             await fs.ensureDir(path.dirname(fileFullPath));
           } catch (e) {}
-          await fs.writeFile(fileFullPath, contents);
+          if (contents) {
+            await fs.writeFile(fileFullPath, contents);
+          } else {
+            await fs.unlink(fileFullPath);
+          }
         })
       );
     },
@@ -69,6 +73,7 @@ const createSandboxStub = async () => {
       return stdout;
     },
     async createSymlinks(symlinks) {
+      if (!symlinks) return Promise.resolve();
       return Promise.all(
         Array.from(symlinks.keys()).map((linkName) => {
           const linkDestination = symlinks.get(linkName);
@@ -97,9 +102,30 @@ export default class Environment {
     logger.debug(`creating a new isolated environment at ${this.path}`);
   }
 
-  async create(sandbox): Promise<void> {
+  async create(): Promise<void> {
     await mkdirp(this.path);
     this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
+  }
+
+  async createSandbox(envComponents): Promise<void> {
+    this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
+    this.masterPackageJson = (await Promise.all(
+      envComponents.map(c => write(this.consumer, c, this.consumer.getPath()))
+    )).reduce((packageJson, componentPkgJson) => {
+      return Object.assign({}, packageJson, {
+        devDependencies: Object.assign({}, packageJson.devDependencies || {}, componentPkgJson.devDependencies || {}),
+        dependencies: Object.assign({}, packageJson.dependencies || {}, componentPkgJson.dependencies || {}),
+        optionalDependencies: Object.assign(
+          {},
+          packageJson.optionalDependencies || {},
+          componentPkgJson.optionalDependencies || {}
+        ),
+        peerDependencies: Object.assign({}, packageJson.dependencies || {}, componentPkgJson.dependencies || {})
+      });
+    }, {});
+    // TODO: packageJson of dependencies needs to be merged into this
+    // componentPackageJson.version = componentPackageJson.version === 'latest' ? '1.0.0' : componentPackageJson.version;
+    this.masterPackageJson.version = '1.0.0';
   }
 
   /**
@@ -155,25 +181,20 @@ export default class Environment {
       const sandbox = await createSandboxStub();
       await sandbox.updateFs(
         envComponents.reduce((envFilesToUpdate, envComponent) => {
-          const toUpdate = envComponent.files.reduce((toUpdate, cFile) => {
+          const toUpdate = envComponent.files.concat(envComponent.tester.files).reduce((toUpdate, cFile) => {
             const { relativePath, content } = cFile.toReadableString();
             return Object.assign({}, toUpdate, {
-              [relativePath]: content
+              [relativePath || cFile.relativePath]: content // TODO: fix this (possibly in vinyl abstraction)
             });
           }, {});
           return Object.assign({}, envFilesToUpdate, toUpdate);
           // TODO: better
         }, {})
-      ); // TODO: also write dependency files
-      const componentPackageJson = await write(this.consumer, component, this.consumer.getPath());
-      // TODO: packageJson of dependencies needs to be merged into this
-      componentPackageJson.version = componentPackageJson.version === 'latest' ? '1.0.0' : componentPackageJson.version;
-      // TODO: ^^ fix this - npm would not install a non-semver version range
-
+      );
       // ******* TODO: MOVE THIS ELSEWHERE *******
       const packagePath = sandbox.getSandboxFolder();
       const cacheFolder = '/home/aram/.cache/yarn/v4'; // TBD: generate the cache
-      const pkgJson = componentPackageJson.toJson(); // TODO: various fields in package.json (eg. babel configuration)
+      const pkgJson = JSON.stringify(this.masterPackageJson); // TODO: various fields in package.json (eg. babel configuration)
       const yarnLock = this.yarnlock;
       const yarnLockParsed = lockfile.parse(this.yarnlock);
       const pkgParsed = JSON.parse(pkgJson);

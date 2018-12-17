@@ -65,7 +65,6 @@ export const testInProcess = async (
         const { component, sandbox } = compAndSandbox;
         if (component.tester && component.tester.action) {
           try {
-            console.log('running tests for component:', component.name); // TODO: proper bit logging
             const rawResults: RawTestsResults[] = await component.tester.action(
               {
                 files: component.files.map(file => file.clone()),
@@ -73,7 +72,7 @@ export const testInProcess = async (
                 rawConfig: component.tester.rawConfig,
                 dynamicConfig: component.tester.dynamicConfig,
                 configFiles: component.tester.files,
-                api: component.compiler.api
+                api: component.compiler ? component.compiler.api : null
               },
               sandbox.updateFs,
               sandbox.exec
@@ -115,7 +114,7 @@ const _getComponents = async (
   }
   loader.stop();
   const env = new IsolatedEnvironment(consumer.scope);
-  await env.create();
+  await env.createSandbox(components);
   const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c, components)));
   const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
   return { env, componentSandboxes };

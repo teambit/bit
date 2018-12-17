@@ -136,6 +136,7 @@ function getPackageFolder(cacheFolder, folder) {
 function findPeerDepVersion(name, versionPattern, packageInformationStores) {
   // TODO: more deterministic
   const packages = packageInformationStores.get(name);
+  if (!packages) return null;
   const candidates = Array.from(packages.keys())
     .filter(version => semver.satisfies(version, versionPattern))
     .sort();
@@ -210,7 +211,11 @@ async function getPackageInformationStores(logicalDependencyTree, cacheFolder, t
         Object.keys(peerDependencies).forEach((name) => {
           const versionPattern = peerDependencies[name];
           const version = findPeerDepVersion(name, versionPattern, packageInformationStores);
-          packageInformationStore.packageDependencies.set(name, version);
+          if (version) {
+            packageInformationStore.packageDependencies.set(name, version);
+          } else {
+            // TBD - peer dep not installed... some sort of warning?
+          }
         });
       } else {
         parentNamesAndVersions.forEach(({ name, version, isRoot }) => {
