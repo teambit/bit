@@ -360,8 +360,9 @@ workflows:
             - install_bit_javascript_npm_deps
       -
         pack:
-          - build
-          - build_bit_javascript
+          requires:
+            - build
+            - build_bit_javascript
       -
         e2e_test:
           requires:
