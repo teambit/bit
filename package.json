@@ -26,7 +26,7 @@
     "e2e-test-circle": "mocha --require babel-core/register --reporter mocha-circleci-reporter ./e2e/**/*.e2e*.js",
     "clean": "rm -rf dist",
     "build": "babel src -d dist",
-    "pkg": "pkg . --out-path releases/",
+    "pkg": "pkg . --targets node10 --out-path releases/",
     "watch": "babel --watch bin src -d dist --source-maps",
     "build-debug": "babel src -d dist --source-maps",
     "prepublishOnly": "npm run clean && npm run build"
