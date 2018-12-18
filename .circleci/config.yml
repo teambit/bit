@@ -335,7 +335,7 @@ jobs:
       -
         run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       - 
-        run:	         
+        run:
           name: 'npm link bit to global'
           command: cd bit && npm link
       - 
