@@ -327,12 +327,14 @@ jobs:
           name: 'npm link bit-javascript to bit'
           command: 'cd bit && npm link ../bit-javascript'
       -
-        run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+        run: 'ls'
+      -
+        run: 'mv ./bit/bit/releases/bit-bin ./bit/bit/releases/bit'
       # -
       #   run: './bit/releases/bit -V'
       -
         # run: 'cp ./bit/releases -r /usr/local/bin/'
-        run: 'PATH=$PATH:./bit/releases'
+        run: 'PATH=$PATH:./bit/bit/releases'
       # -
       #   run: 'bit -V'
       -
