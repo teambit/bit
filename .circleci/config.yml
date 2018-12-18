@@ -327,16 +327,14 @@ jobs:
           name: 'npm link bit-javascript to bit'
           command: 'cd bit && npm link ../bit-javascript'
       -
-        run: './bit/releases/bit-bin -V'
-      -
         run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
-      -
-        run: './bit/releases/bit -V'
+      # -
+      #   run: './bit/releases/bit -V'
       -
         # run: 'cp ./bit/releases -r /usr/local/bin/'
         run: 'PATH=$PATH:./bit/releases'
-      -
-        run: 'bit -V'
+      # -
+      #   run: 'bit -V'
       -
         run: 'bit config set analytics_reporting false'
       -
