@@ -145,6 +145,8 @@ jobs:
       -
         run: 'sudo npm i -g pkg'
       -
+        run: 'mkdir ~/pkg-cache'
+      -
         restore_cache:
           keys:
             - 'pkg-cache-{{ checksum "~/pkg-cache" }}'
@@ -329,16 +331,7 @@ jobs:
       -
         run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       -
-        run: 'ls ~/bit/bit/releases'
-      # -
-      #   run: './bit/releases/bit -V'
-      # -
-        # # run: 'cp ./bit/releases -r /usr/local/bin/'
-        # run: 'PATH=$PATH:/home/circleci/bit/bit/releases'
-      -
         run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      -
-        run: '/home/circleci/bit/bit/releases/bit'
       -
         run: 'bit config set analytics_reporting false'
       -

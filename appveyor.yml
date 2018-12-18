@@ -98,7 +98,7 @@ install:
   # - ps: "pwd"
   # - "dir"
   # - "dir .\\releases"
-  - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit"
+  - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
   - "bit -V"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
   - "bit -V"
