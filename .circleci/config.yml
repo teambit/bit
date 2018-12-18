@@ -156,7 +156,7 @@ jobs:
       -
         run:
           name: 'set pkg path'
-          command: 'export PKG_CACHE_PATH=/home/circleci/pkg-cache'
+          command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
       -
         run:
           name: 'Pack bit'
