@@ -152,7 +152,7 @@ jobs:
       -
         run: 'ls /home/circleci'
       -
-        run: 'ls /home/bit/circleci'
+        run: 'ls /home/circleci/bit'
       -
         run:
           name: 'save pkg targets names'
