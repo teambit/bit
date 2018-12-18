@@ -327,14 +327,16 @@ jobs:
           name: 'npm link bit-javascript to bit'
           command: 'cd bit && npm link ../bit-javascript'
       -
-        run: 'ls'
-      -
         run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+      -
+        run: 'ls ~/bit/bit/releases'
       # -
       #   run: './bit/releases/bit -V'
+      # -
+        # # run: 'cp ./bit/releases -r /usr/local/bin/'
+        # run: 'PATH=$PATH:/home/circleci/bit/bit/releases'
       -
-        # run: 'cp ./bit/releases -r /usr/local/bin/'
-        run: 'PATH=$PATH:/home/circleci/bit/bit/releases'
+        run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       -
         run: '/home/circleci/bit/bit/releases/bit'
       -
