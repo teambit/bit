@@ -150,7 +150,7 @@ jobs:
             # - 'pkg-cache-{{ checksum "~/pkg-cache" }}'
             - pkg-cache
       -
-        run: 'ls /home/circleci/pkg-cache'
+        run: 'ls /home/circleci'
       -
         run:
           name: 'set pkg path'
