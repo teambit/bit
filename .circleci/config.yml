@@ -152,6 +152,18 @@ jobs:
       -
         run: 'ls /home/circleci'
       -
+        run: 'ls /home/bit/circleci'
+      -
+        run:
+          name: 'save pkg targets names'
+          command: "cat ./bit/package.json | jq .scripts.pkg | sed -E 's/^.*--targets (.*) -.*$/\1/'"
+      -
+        run:
+          name: 'save pkg targets names'
+          command: "cat ./bit/package.json | jq .scripts.pkg | sed -E 's/^.*--targets (.*) -.*$/\1/' > /home/circleci/pkg-target.txt"
+      -
+        run: 'cat /home/circleci/pkg-target.txt'
+      -
         run:
           name: 'set pkg path'
           command: 'export PKG_CACHE_PATH=/home/circleci/pkg-cache'
