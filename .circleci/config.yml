@@ -133,53 +133,6 @@ jobs:
           root: .
           paths:
             - bit/dist
-  pack:
-    docker:
-      -
-        image: 'circleci/node:6.14.3'
-    working_directory: ~/bit
-    steps:
-      -
-        attach_workspace:
-          at: ./
-      -
-        run: 'sudo npm i -g pkg'
-      -
-        run:
-          name: 'save pkg targets names'
-          command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
-      -
-        restore_cache:
-          keys:
-            - 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
-            - pkg-cache-v1
-      -
-        run:
-          name: 'set pkg path'
-          command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
-      -
-        run:
-          name: 'Pack bit'
-          command: 'cd bit && npm run pkg'
-      -
-        save_cache:
-          key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
-          paths:
-            - ~/pkg-cache
-      -
-        save_cache:
-          key: pkg-cache-v1
-          paths:
-            - /home/circleci/pkg-cache
-      -
-        run:
-          name: 'copy unsuported files'
-          command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
-      -
-        persist_to_workspace:
-          root: .
-          paths:
-            - bit/releases
   build_bit_javascript:
     docker:
       -
@@ -331,15 +284,9 @@ jobs:
           name: 'npm link bit-javascript to bit'
           command: 'cd bit && npm link ../bit-javascript'
       -
-        run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
-      -
-        run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      - 
         run:
           name: 'npm link bit to global'
-          command: cd bit && npm link
-      - 
-        run: which bit
+          command: 'cd bit && npm link'
       -
         run: 'bit config set analytics_reporting false'
       -
@@ -390,13 +337,21 @@ workflows:
           requires:
             - install_bit_javascript_npm_deps
       -
-        pack:
+        unit_test:
           requires:
             - build
+      -
+        unit_test_bit_javascript:
+          requires:
             - build_bit_javascript
+      -
+        lint:
+          requires:
+            - install_npm_deps
       -
         e2e_test:
           requires:
+            - build
+            - build_bit_javascript
             - set_ssh_key
             - set_bitsrc_registry
-            - pack

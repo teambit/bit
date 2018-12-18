@@ -140,7 +140,7 @@ export default class AddComponents {
    *
    * @returns array of file-paths from 'files' parameter that match the patterns from 'filesWithPotentialDsl' parameter
    */
-  async getFilesAccordingToDsl(files: string[], filesWithPotentialDsl: PathOrDSL[]): Promise<PathLinux[]> {
+  async getFilesAccordingToDsl(files: PathLinux[], filesWithPotentialDsl: PathOrDSL[]): Promise<PathLinux[]> {
     const filesListAllMatches = filesWithPotentialDsl.map(async (dsl) => {
       const filesListMatch = files.map(async (file) => {
         const fileInfo = calculateFileInfo(file);
@@ -156,7 +156,8 @@ export default class AddComponents {
     const filesListUnique = R.uniq(filesListFlatten);
     return filesListUnique.map((file) => {
       // when files array has the test file with different letter case, use the one from the file array
-      const fileWithCorrectCase = files.find(f => f.toLowerCase() === file.toLowerCase()) || file;
+      const fileNormalized = pathNormalizeToLinux(file);
+      const fileWithCorrectCase = files.find(f => f.toLowerCase() === fileNormalized.toLowerCase()) || fileNormalized;
       const relativeToConsumer = this.consumer.getPathRelativeToConsumer(fileWithCorrectCase);
       return pathNormalizeToLinux(relativeToConsumer);
     });
