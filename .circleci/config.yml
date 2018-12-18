@@ -154,8 +154,6 @@ jobs:
             - 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
             - pkg-cache-v1
       -
-        run: ls /home/circleci/pkg-cache
-      -
         run:
           name: 'set pkg path'
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
