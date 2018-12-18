@@ -145,12 +145,12 @@ jobs:
       -
         run: 'sudo npm i -g pkg'
       -
-        run: 'mkdir ~/pkg-cache'
-      -
         restore_cache:
           keys:
-            - 'pkg-cache-{{ checksum "~/pkg-cache" }}'
+            # - 'pkg-cache-{{ checksum "~/pkg-cache" }}'
             - pkg-cache
+      -
+        run: 'ls ~/pkg-cache'
       -
         run:
           name: 'set pkg path'
@@ -159,11 +159,11 @@ jobs:
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
-      -
-        save_cache:
-          key: 'pkg-cache-{{ checksum "~/pkg-cache" }}'
-          paths:
-            - ~/pkg-cache
+      # -
+      #   save_cache:
+      #     key: 'pkg-cache-{{ checksum "~/pkg-cache" }}'
+      #     paths:
+      #       - ~/pkg-cache
       -
         save_cache:
           key: pkg-cache
