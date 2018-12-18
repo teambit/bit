@@ -102,7 +102,7 @@ install:
   # - "dir .\\releases"
   - "dir C:\\pkg-cache"
   - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
-  - "bit -V"
+  - "C:\\projects\\bit-wikt3\\releases\\bit"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
   - "bit -V"
   - "bit config set set user.name tester"

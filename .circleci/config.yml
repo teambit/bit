@@ -169,6 +169,7 @@ jobs:
           key: pkg-cache
           paths:
             - ~/pkg-cache
+      - run: cat package.json | jq .scripts.pkg | sed -e 's/^.*--targets\s//g'
       -
         run:
           name: 'copy unsuported files'
