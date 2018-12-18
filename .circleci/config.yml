@@ -334,6 +334,12 @@ jobs:
         run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       -
         run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
+      - 
+        run:	         
+          name: 'npm link bit to global'
+          command: cd bit && npm link
+      - 
+        run: which bit
       -
         run: 'bit config set analytics_reporting false'
       -

@@ -94,6 +94,7 @@ install:
   - ps: Install-Product node 6
   - "npm i"
   - "npm run build"
+  - "npm install -g"
   - "npm install -g pkg"
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - "npm run pkg"
