@@ -154,6 +154,8 @@ jobs:
             - 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
             - pkg-cache-v1
       -
+        run: ls /home/circleci/pkg-cache
+      -
         run:
           name: 'set pkg path'
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
@@ -161,8 +163,6 @@ jobs:
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
-      -
-        run: ls /home/circleci/pkg-cache
       -
         save_cache:
           key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
