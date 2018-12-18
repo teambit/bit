@@ -151,7 +151,7 @@ jobs:
       -
         restore_cache:
           keys:
-            - 'pkg-cache-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            - 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
             - pkg-cache-v1
       -
         run:
@@ -165,7 +165,7 @@ jobs:
         run: ls /home/circleci/pkg-cache
       -
         save_cache:
-          key: 'pkg-cache-{{ checksum "/home/circleci/pkg-target.txt" }}'
+          key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
           paths:
             - ~/pkg-cache
       -
