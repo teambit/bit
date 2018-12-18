@@ -104,7 +104,6 @@ install:
   - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
   - "C:\\projects\\bit-wikt3\\releases\\bit"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
-  - "bit -V"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bitsrc.io"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
