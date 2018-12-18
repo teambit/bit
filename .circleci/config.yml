@@ -150,11 +150,11 @@ jobs:
             # - 'pkg-cache-{{ checksum "~/pkg-cache" }}'
             - pkg-cache
       -
-        run: 'ls ~/pkg-cache'
+        run: 'ls /home/circleci/pkg-cache'
       -
         run:
           name: 'set pkg path'
-          command: 'export PKG_CACHE_PATH=~/pkg-cache'
+          command: 'export PKG_CACHE_PATH=/home/circleci/pkg-cache'
       -
         run:
           name: 'Pack bit'
@@ -168,7 +168,7 @@ jobs:
         save_cache:
           key: pkg-cache
           paths:
-            - ~/pkg-cache
+            - /home/circleci/pkg-cache
       - run: cat package.json | jq .scripts.pkg | sed -e 's/^.*--targets\s//g'
       -
         run:
