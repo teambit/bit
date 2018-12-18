@@ -96,6 +96,7 @@ install:
   - "npm install -g pkg"
   - "npm run pkg"
   - ps: "pwd"
+  - ps: rename-item -path "c:\projects\bit-wikt3\releases\bit-bin" -newname "bit"
   - "bit -V"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
   - "bit -V"
