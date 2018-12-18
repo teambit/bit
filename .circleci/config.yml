@@ -156,11 +156,11 @@ jobs:
       -
         run:
           name: 'save pkg targets names'
-          command: "cat ./bit/package.json | jq .scripts.pkg | sed -E 's/^.*--targets (.*) -.*$/\1/'"
+          command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/"'
       -
         run:
           name: 'save pkg targets names'
-          command: "cat ./bit/package.json | jq .scripts.pkg | sed -E 's/^.*--targets (.*) -.*$/\1/' > /home/circleci/pkg-target.txt"
+          command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
       -
         run: 'cat /home/circleci/pkg-target.txt'
       -
