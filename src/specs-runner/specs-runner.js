@@ -1,5 +1,6 @@
 /** @flow */
 import path from 'path';
+import fs from 'fs-extra';
 import R from 'ramda';
 import { fork } from 'child_process';
 import deserializeError from 'deserialize-error';
@@ -105,8 +106,13 @@ function runOnChildProcess({
 
     // Merge process.env from the main process
     const env = Object.assign({}, process.env, baseEnv);
+    let workerPath = path.join(path.dirname(process.execPath), 'test-worker');
 
-    const child = fork(path.join(__dirname, 'worker.js'), {
+    // Check if we run from npm or from binary (pkg)
+    if (!fs.pathExistsSync(workerPath)) {
+      workerPath = path.join(__dirname, 'worker.js');
+    }
+    const child = fork(workerPath, {
       execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
       silent: false,
       env

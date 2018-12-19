@@ -471,7 +471,7 @@ const _getRegularExtensionPath = (name: string, scopePath: string): ExtensionPat
     // It will be handled in higher functions
     const resolved = require.resolve(componentPath);
     return {
-      resolvedPath: resolved,
+      resolvedPath: typeof resolved === 'string' ? resolved : componentPath,
       componentPath
     };
   } catch (e) {
