@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import versionParser from '../../src/version/version-parser';
+import versionParser from '../version/version-parser';
 
 describe('versionParser()', () => {
   it('should return latest version representation', () => {
