@@ -47,12 +47,19 @@ jobs:
         image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     steps:
+      # prod registry
+      # -
+      #   run: 'npm config set @bit:registry https://node.bitsrc.io'
+      # -
+      #   run: 'echo "//node-stg.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc'
+      # stage registry
       -
         run: 'npm config set @bit:registry https://node-stg.bitsrc.io'
       -
         run: 'echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
+          # key: bitsrc-registry2
           key: bitsrc-registry-stg4
           paths:
             - ~/.npmrc
@@ -72,6 +79,12 @@ jobs:
       -
         restore_cache:
           keys:
+            # Find a cache corresponding to this specific package.json checksum
+            # when this file is changed, this key will fail	
+            # Gilad: The 1 after the deps is a workaround to clean the cache of the node modules	
+            # A real solution will be to clear all the cache once circle will support it (for v2)	
+            # or move the packakge.json resotre to be from workspace instead of cache, then we can run	
+            # this step without cache
             - 'npm-deps11-{{ checksum "./bit/package.json" }}'
             - npm-deps11
       -
@@ -297,6 +310,7 @@ jobs:
         image: 'circleci/node:6.14.3'
     working_directory: ~/bit
     environment:
+      # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
     parallelism: 4
@@ -321,11 +335,13 @@ jobs:
           key: bitsrc-ssh-key3
       -
         restore_cache:
+          # key: bitsrc-registry2
           key: bitsrc-registry-stg4
       -
         restore_cache:
           keys:
             - 'builded-{{ checksum ".circle-sha" }}'
+      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       -
         run: 'chmod 400 ~/.ssh/id_rsa'
       -
@@ -354,12 +370,15 @@ jobs:
         run: 'bit config set user.name tester'
       -
         run: 'bit config set user.email ci@bitsrc.io'
+      # uncomment to configure circle to run against stg enviorment
       -
         run: 'bit config set hub_domain hub-stg.bitsrc.io'
       -
         run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
+          # command which support only - for debug purpose
+          # command: cd bit && npm run e2e-test-circle --debug	
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
