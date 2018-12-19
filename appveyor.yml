@@ -94,7 +94,7 @@ install:
   # - ps: Install-Product node 6
   # - ps: Install-Product node 8
   # Install from the PowerShell Gallery
-  - "Install-Module nvm"
+  - ps: Install-Module nvm
   - "npm i"
   - "npm run build"
   - "npm install -g"
