@@ -95,6 +95,12 @@ install:
   # - ps: Install-Product node 8
   # Install from the PowerShell Gallery
   - ps: Install-Module nvm
+  # Install Node v6
+  - ps: Install-NodeVersion 6
+  # Install Node v8
+  - ps: Install-NodeVersion 8
+  # Set active Node version in PATH to v6
+  - ps: Set-NodeVersion 6
   - "npm i"
   - "npm run build"
   - "npm install -g"
@@ -102,7 +108,9 @@ install:
   - "npm install -g @zeit/ncc"
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - "npm run pkg"
+  - ps: Set-NodeVersion 8
   - "npm run bundle:test-worker"
+  - ps: Set-NodeVersion 6
   # - ps: "pwd"
   # - "dir"
   # - "dir .\\releases"
