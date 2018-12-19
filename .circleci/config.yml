@@ -143,7 +143,7 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg'
+        run: 'sudo npm i -g pkg ncc'
       -
         run:
           name: 'save pkg targets names'
@@ -161,6 +161,10 @@ jobs:
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
+      -
+        run:
+          name: 'Pack test worker'
+          command: 'cd bit && npm run bundle:test-worker'    
       -
         save_cache:
           key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
