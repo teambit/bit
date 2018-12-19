@@ -143,7 +143,9 @@ jobs:
         attach_workspace:
           at: ./
       -
-        run: 'sudo npm i -g pkg ncc'
+        run: 'sudo npm i -g pkg'
+      -
+        run: 'sudo npm i -g ncc'
       -
         run:
           name: 'save pkg targets names'
