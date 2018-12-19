@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
 import { pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
-import type ComponentBitJson from '../bit-json';
+import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import type ConsumerBitJson from '../bit-json/consumer-bit-json';
 import type Consumer from '../consumer';

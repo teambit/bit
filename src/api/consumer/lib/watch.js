@@ -36,11 +36,11 @@ export default (async function watchAll(verbose: boolean) {
     const log = console.log.bind(console); // eslint-disable-line no-console
     log(`File ${p} has been changed, calling build`);
     // TODO: Make sure the log for build is printed to console
-    buildAll()
+    buildAll(false, false)
       .then((buildResult) => {
         console.log(buildResult); // eslint-disable-line no-console
         loader.stop();
-        console.log(chalk.yellow('watching for changes'));
+        console.log(chalk.yellow('watching for changes')); // eslint-disable-line no-console
       })
       .catch((err) => {
         log(err); // eslint-disable-line

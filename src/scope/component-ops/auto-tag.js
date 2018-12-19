@@ -4,8 +4,7 @@ import semver from 'semver';
 import graphlib, { Graph } from 'graphlib';
 import type ModelComponent from '../models/model-component';
 import { BitId, BitIds } from '../../bit-id';
-import type Scope from '../scope';
-import type { ComponentsAndVersions } from '../scope';
+import type Scope, { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
 import type Component from '../../consumer/component';
 

@@ -7,7 +7,7 @@ import { BitId } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
-import type { Consumer } from '../consumer';
+import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
 import writeComponents from '../consumer/component-ops/write-components';
 
