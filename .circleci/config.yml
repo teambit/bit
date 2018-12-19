@@ -158,8 +158,6 @@ jobs:
       -
         run: 'sudo npm i -g pkg'
       -
-        run: 'sudo npm i -g @zeit/ncc'
-      -
         run:
           name: 'save pkg targets names'
           command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
@@ -176,10 +174,6 @@ jobs:
         run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
-      -
-        run:
-          name: 'Pack test worker'
-          command: 'cd bit && npm run bundle:test-worker'    
       -
         save_cache:
           key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
@@ -199,6 +193,28 @@ jobs:
           root: .
           paths:
             - bit/releases
+
+  bundle-test-worker:
+    docker:
+      -
+        image: 'circleci/node:8.10.0'
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'sudo npm i -g @zeit/ncc'
+      -
+        run:
+          name: 'Pack test worker'
+          command: 'cd bit && npm run bundle:test-worker'    
+
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases/test-worker
+
   build_bit_javascript:
     docker:
       -
@@ -427,8 +443,14 @@ workflows:
             - build
             - build_bit_javascript
       -
+        bundle-test-worker:
+          requires:
+            - build
+            - build_bit_javascript   
+      -
         e2e_test:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
             - pack
+            - bundle-test-worker
