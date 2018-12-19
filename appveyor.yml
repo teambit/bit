@@ -96,7 +96,7 @@ install:
   - "npm run build"
   - "npm install -g"
   - "npm install -g pkg"
-  - "npm install -g ncc"
+  - "npm install -g @zeit/ncc"
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - "npm run pkg"
   - "npm run bundle:test-worker"

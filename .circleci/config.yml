@@ -158,7 +158,7 @@ jobs:
       -
         run: 'sudo npm i -g pkg'
       -
-        run: 'sudo npm i -g ncc'
+        run: 'sudo npm i -g @zeit/ncc'
       -
         run:
           name: 'save pkg targets names'
