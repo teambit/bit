@@ -44,7 +44,6 @@ import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
-import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
@@ -699,11 +698,7 @@ export default class Component {
         // some or all the tests were failed.
         loader.stop();
         if (verbose) {
-          // $FlowFixMe this.specsResults is not null at this point
-          const specsResultsPretty = paintSpecsResults(this.specsResults).join('\n');
-          const componentIdPretty = c.bold.white(this.id.toString());
-          const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
-          return Promise.reject(new ComponentSpecsFailed(specsResultsAndIdPretty));
+          return Promise.reject(new ComponentSpecsFailed(this.id.toString(), this.specsResults));
         }
         return Promise.reject(new ComponentSpecsFailed());
       }

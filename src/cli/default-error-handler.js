@@ -2,6 +2,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
+import { paintSpecsResults } from './chalk-box';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import {
   ConsumerAlreadyExists,
@@ -234,13 +235,7 @@ once your changes are merged with the new remote version, please tag and export 
         'bit init'
       )} to recreate the file`
   ],
-  [
-    ComponentSpecsFailed,
-    err =>
-      `${
-        err.specsResultsAndIdPretty
-      }component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command`
-  ],
+  [ComponentSpecsFailed, err => formatComponentSpecsFailed(err.id, err.specsResults)],
   [
     MissingDependencies,
     (err) => {
@@ -467,6 +462,17 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
     err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
   ]
 ];
+
+function formatComponentSpecsFailed(id, specsResults) {
+  // $FlowFixMe this.specsResults is not null at this point
+  const specsResultsPretty = specsResults ? paintSpecsResults(specsResults).join('\n') : '';
+  const componentIdPretty = id ? c.bold.white(id) : '';
+  const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
+  const additionalInfo =
+    'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command';
+  const res = `${err.specsResultsAndIdPretty}${additionalInfo}`;
+  return res;
+}
 
 function formatUnhandled(err: Error): string {
   Analytics.setError(LEVEL.FATAL, err);
