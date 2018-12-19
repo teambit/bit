@@ -209,7 +209,7 @@ jobs:
         run:
           name: 'Pack test worker'
           command: 'cd bit && npm run bundle:test-worker'    
-
+      -
         persist_to_workspace:
           root: .
           paths:
