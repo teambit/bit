@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid installing node_modules in sub directories when the package manager allow it to be installed from the root dir
 - fix running `bit link` from an inner directory for author
 
 ## [13.0.6-dev.31] - 2018-12-16

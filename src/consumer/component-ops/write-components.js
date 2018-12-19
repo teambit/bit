@@ -222,16 +222,17 @@ export default (async function writeToComponentsDir({
   // add workspaces if flag is true
   await packageJson.addWorkspacesToPackageJson(consumer, writeToPath);
 
+  if (addToRootPackageJson) await packageJson.addComponentsToRoot(consumer, writtenComponents.map(c => c.id));
   if (installNpmPackages) {
     await installNpmPackagesForComponents(
       consumer,
       componentsWithDependencies,
       verbose,
       silentPackageManagerResult,
-      installPeerDependencies
+      installPeerDependencies,
+      addToRootPackageJson
     );
   }
-  if (addToRootPackageJson) await packageJson.addComponentsToRoot(consumer, writtenComponents.map(c => c.id));
 
   return linkComponents(
     componentsWithDependencies,
