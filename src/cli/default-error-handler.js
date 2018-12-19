@@ -466,11 +466,11 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
 function formatComponentSpecsFailed(id, specsResults) {
   // $FlowFixMe this.specsResults is not null at this point
   const specsResultsPretty = specsResults ? paintSpecsResults(specsResults).join('\n') : '';
-  const componentIdPretty = id ? c.bold.white(id) : '';
+  const componentIdPretty = id ? chalk.bold.white(id) : '';
   const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
   const additionalInfo =
     'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command';
-  const res = `${err.specsResultsAndIdPretty}${additionalInfo}`;
+  const res = `${specsResultsAndIdPretty}${additionalInfo}`;
   return res;
 }
 
