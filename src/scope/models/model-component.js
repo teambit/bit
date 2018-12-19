@@ -6,7 +6,7 @@ import { Ref, BitObject } from '../objects';
 import { ScopeMeta, Source } from '.';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
 import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
-import Version from './version';
+import type Version from './version';
 import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
@@ -16,7 +16,7 @@ import {
 import BitId from '../../bit-id/bit-id';
 import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
-import Scope from '../scope';
+import type Scope from '../scope';
 import Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';

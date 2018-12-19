@@ -3,7 +3,7 @@ import R from 'ramda';
 import { Dependency } from './';
 import type { RelativePath } from './dependency';
 import { BitId, BitIds } from '../../../bit-id';
-import Scope from '../../../scope/scope';
+import type Scope from '../../../scope/scope';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';

@@ -7,7 +7,7 @@ import { PrimaryOverloaded } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import remoteResolver from './remote-resolver/remote-resolver';
 import { GlobalRemotes } from '../global-config';
-import Scope from '../scope/scope';
+import type Scope from '../scope/scope';
 import logger from '../logger/logger';
 
 export default class Remotes extends Map<string, Remote> {

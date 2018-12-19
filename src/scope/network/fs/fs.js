@@ -1,12 +1,11 @@
 /** @flow */
 import loadScope from '../../scope-loader';
-import Scope from '../../scope';
 import { fetch, deprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
-import type { ScopeDescriptor } from '../../scope';
+import type Scope, { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
 import type { Network } from '../network';
 import ComponentsList from '../../../consumer/component/components-list';

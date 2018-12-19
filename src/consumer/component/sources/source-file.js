@@ -6,7 +6,7 @@ import FileSourceNotFound from '../exceptions/file-source-not-found';
 import logger from '../../../logger/logger';
 import type { SourceFileModel } from '../../../scope/models/version';
 import type { PathOsBased } from '../../../utils/path';
-import { Repository } from '../../../scope/objects';
+import type { Repository } from '../../../scope/objects';
 
 export default class SourceFile extends AbstractVinyl {
   // TODO: remove this distFilePath?

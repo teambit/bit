@@ -3,7 +3,7 @@
 import chokidar from 'chokidar';
 import chalk from 'chalk';
 import { loadConsumer } from '../../../consumer';
-import { buildAll } from '../index';
+import { buildAll } from '../lib/build';
 import ComponentsList from '../../../consumer/component/components-list';
 import loader from '../../../cli/loader';
 

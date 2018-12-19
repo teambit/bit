@@ -3,7 +3,8 @@ import path from 'path';
 import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '../constants';
 import { writeFile } from '../utils';
-import { Remotes, Remote } from '../remotes';
+import Remotes from '../remotes/remotes';
+import type Remote from '../remotes/remote';
 
 export default class GlobalRemotes {
   remotes: { [string]: string };

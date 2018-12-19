@@ -1,10 +1,10 @@
 // @flow
 import R from 'ramda';
-import Component from '../../component';
-import { Consumer } from '../..';
+import type Component from '../../component';
+import type { Consumer } from '../..';
 import { sha1, pathNormalizeToLinux } from '../../../utils';
-import { SourceFile } from '../../component/sources';
-import { Tmp } from '../../../scope/repositories';
+import type { SourceFile } from '../../component/sources';
+import Tmp from '../../../scope/repositories/tmp';
 import mergeFiles from '../../../utils/merge-files';
 import type { MergeFileResult, MergeFileParams } from '../../../utils/merge-files';
 import type { PathOsBased, PathLinux } from '../../../utils/path';

@@ -9,9 +9,7 @@ import EjectBoundToWorkspace from '../../src/consumer/component/exceptions/eject
 import EjectNoDir from '../../src/consumer/component-ops/exceptions/eject-no-dir';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 import InvalidConfigDir from '../../src/consumer/bit-map/exceptions/invalid-config-dir';
-import { COMPILER_ENV_TYPE } from '../../src/extensions/compiler-extension';
-import { TESTER_ENV_TYPE } from '../../src/extensions/tester-extension';
-import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME } from '../../src/constants';
+import { COMPONENT_DIR, BIT_WORKSPACE_TMP_DIRNAME, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import InjectNonEjected from '../../src/consumer/component/exceptions/inject-non-ejected';
 import { _verboseMsg as abstractVinylVerboseMsg } from '../../src/consumer/component/sources/abstract-vinyl';

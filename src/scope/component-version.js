@@ -1,13 +1,13 @@
 /** @flow */
-import ModelComponent from './models/model-component';
-import Version from './models/version';
+import type ModelComponent from './models/model-component';
+import type Version from './models/version';
 import { BitId, BitIds } from '../bit-id';
-import Scope from './scope';
+import type Scope from './scope';
 import Repository from './objects/repository';
 import VersionDependencies from './version-dependencies';
 import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
-import ConsumerComponent from '../consumer/component';
+import type ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';

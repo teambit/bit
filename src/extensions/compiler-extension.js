@@ -6,10 +6,10 @@ import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions, EnvExten
 import { Repository } from '../scope/objects';
 import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
+import { COMPILER_ENV_TYPE } from '../constants';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
 export type CompilerExtensionModel = EnvExtensionModel;
-export const COMPILER_ENV_TYPE = 'compiler';
 
 export default class CompilerExtension extends EnvExtension {
   constructor(extensionProps: EnvExtensionProps) {

@@ -2,7 +2,7 @@
 import R from 'ramda';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
-import Component from '../component';
+import type Component from '../component';
 import {
   COMPONENT_ORIGINS,
   CFG_REGISTRY_DOMAIN_PREFIX,
@@ -14,7 +14,7 @@ import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
 import Consumer from '../consumer';
-import { Dependencies } from './dependencies';
+import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';

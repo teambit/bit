@@ -4,11 +4,11 @@ import R from 'ramda';
 import semver from 'semver';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId } from '../../../../bit-id';
-import Component from '../../../component';
+import type Component from '../../../component';
 import logger from '../../../../logger/logger';
 import { Consumer } from '../../../../consumer';
 import type { PathLinux } from '../../../../utils/path';
-import ComponentBitJson from '../../../bit-json';
+import type ComponentBitJson from '../../../bit-json';
 import Dependencies from '../dependencies';
 
 function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {

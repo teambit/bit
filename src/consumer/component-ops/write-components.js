@@ -5,16 +5,16 @@ import { moveExistingComponent } from './move-components';
 import { linkComponents } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
 import * as packageJson from '../component/package-json';
-import { ComponentWithDependencies } from '../../scope';
-import Component from '../component/consumer-component';
-import { Remotes } from '../../remotes';
+import type { ComponentWithDependencies } from '../../scope';
+import type Component from '../component/consumer-component';
+import type { Remotes } from '../../remotes';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
-import { Consumer } from '..';
+import type { Consumer } from '..';
 import { isDir, isDirEmptySync } from '../../utils';
 import GeneralError from '../../error/general-error';
-import ComponentMap from '../bit-map/component-map';
+import type ComponentMap from '../bit-map/component-map';
 import ComponentWriter from './component-writer';
 
 function throwErrorWhenDirectoryNotEmpty(

@@ -1,7 +1,7 @@
 /** @flow */
 import { loadScope, Scope } from '../../../scope';
 import { BitId } from '../../../bit-id';
-import ConsumerComponent from '../../../consumer/component';
+import type ConsumerComponent from '../../../consumer/component';
 
 export default (async function modifyCIProps(path: string, id: string, ciProps: Object): Promise<any> {
   const scope: Scope = await loadScope(path);

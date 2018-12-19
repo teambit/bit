@@ -2,12 +2,12 @@
 import R from 'ramda';
 import semver from 'semver';
 import graphlib, { Graph } from 'graphlib';
-import ModelComponent from '../models/model-component';
+import type ModelComponent from '../models/model-component';
 import { BitId, BitIds } from '../../bit-id';
-import Scope from '../scope';
+import type Scope from '../scope';
 import type { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
-import Component from '../../consumer/component';
+import type Component from '../../consumer/component';
 
 const removeNils = R.reject(R.isNil);
 

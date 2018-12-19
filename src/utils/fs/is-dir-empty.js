@@ -1,6 +1,6 @@
 /** @flow */
 import fs from 'fs-extra';
-import { promisify } from '../index';
+import promisify from '../promisify';
 
 const readdir = promisify(fs.readdir);
 

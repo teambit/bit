@@ -1,7 +1,7 @@
 // @flow
 import fs from 'fs-extra';
 import path from 'path';
-import Component from '../component/consumer-component';
+import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';

@@ -14,6 +14,8 @@ import {
   DEFAULT_INDEX_EXTS,
   BIT_VERSION,
   VERSION_DELIMITER,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE,
   COMPONENT_DIR
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
@@ -26,8 +28,6 @@ import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentBitJson from '../bit-json';
-import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
-import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import ConfigDir from './config-dir';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };

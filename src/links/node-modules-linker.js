@@ -5,16 +5,16 @@ import R from 'ramda';
 import symlinkOrCopy from 'symlink-or-copy';
 import glob from 'glob';
 import { BitId } from '../bit-id';
-import Component from '../consumer/component';
+import type Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
-import ComponentMap from '../consumer/bit-map/component-map';
+import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first, createSymlinkOrCopy } from '../utils';
 import Consumer from '../consumer/consumer';
 import { getIndexFileName, writeComponentsDependenciesLinks } from './link-generator';
 import { getLinkToFileContent } from './link-content';
 import type { PathOsBased } from '../utils/path';
-import { Dependency } from '../consumer/component/dependencies';
+import type { Dependency } from '../consumer/component/dependencies';
 
 type LinkDetail = { from: string, to: string };
 
