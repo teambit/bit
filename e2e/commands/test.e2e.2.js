@@ -22,7 +22,7 @@ describe('isType before hook describe', () => {
   });
 });`;
 
-describe.only('bit test command', function () {
+describe('bit test command', function () {
   this.timeout(0);
   const helper = new Helper();
   let clonedScopePath;

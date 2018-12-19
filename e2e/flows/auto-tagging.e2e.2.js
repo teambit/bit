@@ -6,7 +6,7 @@ import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe.only('auto tagging functionality', function () {
+describe('auto tagging functionality', function () {
   this.timeout(0);
   const helper = new Helper();
 
