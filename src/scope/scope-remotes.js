@@ -15,7 +15,7 @@ export function getScopeRemotes(scope: Scope): Promise<Remotes> {
 }
 
 export async function fetchRemoteVersions(scope: Scope, componentIds: BitId[]): Promise<BitId[]> {
-  const externals = componentIds.filter(id => !id.isLocal(this.scope.name));
+  const externals = componentIds.filter(id => !id.isLocal(scope.name));
   const remotes = await getScopeRemotes(scope);
-  return remotes.latestVersions(externals, this.scope);
+  return remotes.latestVersions(externals, scope);
 }

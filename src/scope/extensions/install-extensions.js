@@ -65,7 +65,7 @@ export default function installExtensions({
     logger.debug(`scope.installEnvironment.importEnv, id: ${concreteId.toString()}`);
 
     const dir = pathLib.join(componentsDir, Scope.getComponentRelativePath(concreteId));
-    const env = new IsolatedEnvironment(this, dir);
+    const env = new IsolatedEnvironment(scope, dir);
     // Destroying environment to make sure there is no left over
     await env.destroyIfExist();
     await env.create();

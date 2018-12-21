@@ -24,6 +24,7 @@ export default class ScopeComponentsImporter {
   scope: Scope;
   sources: SourcesRepository;
   constructor(scope: Scope) {
+    if (!scope) throw new Error('unable to instantiate ScopeComponentsImporter without Scope');
     this.scope = scope;
     this.sources = scope.sources;
   }
