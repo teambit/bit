@@ -17,6 +17,7 @@ import GeneralError from '../../error/general-error';
 import { getScopeRemotes } from '../scope-remotes';
 import type ConsumerComponent from '../../consumer/component';
 import { splitBy } from '../../utils';
+import type { ModelComponent, Version } from '../models';
 
 const removeNils = R.reject(R.isNil);
 
@@ -29,16 +30,8 @@ export default class ScopeComponentsImporter {
     this.sources = scope.sources;
   }
 
-  importDependencies(dependencies: BitIds): Promise<VersionDependencies[]> {
-    return new Promise((resolve, reject) => {
-      return this.importMany(dependencies)
-        .then(resolve)
-        .catch((e) => {
-          logger.error(`importDependencies got an error: ${JSON.stringify(e)}`);
-          if (e instanceof RemoteScopeNotFound || e instanceof PermissionDenied) return reject(e);
-          return reject(new DependencyNotFound(e.id));
-        });
-    });
+  static getInstance(scope: Scope): ScopeComponentsImporter {
+    return new ScopeComponentsImporter(scope);
   }
 
   /**
@@ -57,7 +50,7 @@ export default class ScopeComponentsImporter {
     const localDefs = await this.sources.getMany(locals);
     const versionDeps = await pMapSeries(localDefs, (def) => {
       if (!def.component) throw new ComponentNotFound(def.id.toString());
-      return def.component.toVersionDependencies(def.id.version, this.scope, def.id.scope);
+      return this.componentToVersionDependencies(def.component, def.id);
     });
     logger.debugAndAddBreadCrumb(
       'ScopeComponentsImporter',
@@ -66,6 +59,136 @@ export default class ScopeComponentsImporter {
     const remotes = await getScopeRemotes(this.scope);
     const externalDeps = await this._getExternalMany(externals, remotes, cache, persist);
     return versionDeps.concat(externalDeps);
+  }
+
+  async importManyWithoutDependencies(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
+    if (!ids.length) return [];
+    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
+    Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
+
+    const idsWithoutNils = removeNils(ids);
+    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+
+    const [externals, locals] = splitBy(idsWithoutNils, id => id.isLocal(this.scope.name));
+
+    const localDefs: ComponentDef[] = await this.sources.getMany(locals);
+    const componentVersionArr = await Promise.all(
+      localDefs.map((def) => {
+        if (!def.component) throw new ComponentNotFound(def.id.toString());
+        // $FlowFixMe it must have a version
+        return def.component.toComponentVersion(def.id.version);
+      })
+    );
+    const remotes = await getScopeRemotes(this.scope);
+    const externalDeps = await this._getExternalManyWithoutDependencies(externals, remotes, cache);
+    return componentVersionArr.concat(externalDeps);
+  }
+
+  /**
+   * todo: improve performance by finding all versions needed and fetching them in one request from the server
+   * currently it goes to the server twice. First, it asks for the last version of each id, and then it goes again to
+   * ask for the older versions.
+   */
+  async importManyWithAllVersions(ids: BitIds, cache?: boolean = true): Promise<VersionDependencies[]> {
+    logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
+    Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
+    const idsWithoutNils = removeNils(ids);
+    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
+    const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
+
+    const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
+      const versions = versionDependencies.component.component.listVersions();
+      const idsWithAllVersions = versions.map((version) => {
+        if (version === versionDependencies.component.version) return null; // imported already
+        const versionId = versionDependencies.component.id;
+        return versionId.changeVersion(version);
+      });
+      // $FlowFixMe
+      const bitIdsWithAllVersions = BitIds.fromArray(idsWithAllVersions.filter(x => x));
+      return this.importManyWithoutDependencies(bitIdsWithAllVersions);
+    });
+    await Promise.all(allVersionsP);
+    return versionDependenciesArr;
+  }
+
+  importDependencies(dependencies: BitIds): Promise<VersionDependencies[]> {
+    return new Promise((resolve, reject) => {
+      return this.importMany(dependencies)
+        .then(resolve)
+        .catch((e) => {
+          logger.error(`importDependencies got an error: ${JSON.stringify(e)}`);
+          if (e instanceof RemoteScopeNotFound || e instanceof PermissionDenied) return reject(e);
+          return reject(new DependencyNotFound(e.id));
+        });
+    });
+  }
+
+  async componentToVersionDependencies(component: ModelComponent, id: BitId): Promise<VersionDependencies> {
+    // $FlowFixMe
+    const versionComp: ComponentVersion = component.toComponentVersion(id.version);
+    // $FlowFixMe
+    const source: string = id.scope;
+    const version: Version = await versionComp.getVersion(this.scope.objects);
+    if (!version) {
+      logger.debug(
+        `toVersionDependencies, component ${component.id().toString()}, version ${
+          versionComp.version
+        } not found, going to fetch from a remote`
+      );
+      if (component.scope === this.scope.name) {
+        // it should have been fetched locally, since it wasn't found, this is an error
+        throw new GeneralError(
+          `Version ${versionComp.version} of ${component.id().toString()} was not found in scope ${this.scope.name}`
+        );
+      }
+      return getScopeRemotes(this.scope).then((remotes) => {
+        return this._getExternal({ id, remotes, localFetch: false });
+      });
+    }
+
+    logger.debug(
+      `toVersionDependencies, component ${component.id().toString()}, version ${
+        versionComp.version
+      } found, going to collect its dependencies`
+    );
+    const dependencies = await this.importManyWithoutDependencies(version.flattenedDependencies);
+    const devDependencies = await this.importManyWithoutDependencies(version.flattenedDevDependencies);
+    const compilerDependencies = await this.importManyWithoutDependencies(version.flattenedCompilerDependencies);
+    const testerDependencies = await this.importManyWithoutDependencies(version.flattenedTesterDependencies);
+
+    return new VersionDependencies(
+      versionComp,
+      dependencies,
+      devDependencies,
+      compilerDependencies,
+      testerDependencies,
+      source
+    );
+  }
+
+  componentsToComponentsObjects(
+    components: Array<VersionDependencies | ComponentVersion>
+  ): Promise<ComponentObjects[]> {
+    return Promise.all(components.map(component => component.toObjects(this.scope.objects)));
+  }
+
+  /**
+   * get ConsumerComponent by bitId. if the component was not found locally, import it from a remote scope
+   */
+  loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
+    return this._getComponentVersion(id).then((component) => {
+      if (!component) throw new ComponentNotFound(id.toString());
+      return component.toConsumer(this.scope.objects);
+    });
+  }
+
+  loadComponent(id: BitId, localOnly: boolean = true): Promise<ConsumerComponent> {
+    logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
+
+    if (localOnly && !id.isLocal(this.scope.name)) {
+      throw new GeneralError('cannot load bit from remote scope, please import first');
+    }
+    return this.loadRemoteComponent(id);
   }
 
   /**
@@ -98,9 +221,10 @@ export default class ScopeComponentsImporter {
           'scope.getExternalMany',
           'no more ids left, all found locally, exiting the method'
         );
-        // $FlowFixMe - there should be a component because there no defs without components left.
+
         return Promise.all(
-          defs.map(def => def.component.toVersionDependencies(def.id.version, this.scope, def.id.scope))
+          // $FlowFixMe - there should be a component because there no defs without components left.
+          defs.map(def => this.componentToVersionDependencies(def.component, def.id))
         );
       }
 
@@ -119,7 +243,7 @@ export default class ScopeComponentsImporter {
    * If the component is not in the local scope, fetch it from a remote and save into the local
    * scope. (objects directory).
    */
-  getExternal({
+  _getExternal({
     id,
     remotes,
     localFetch = true,
@@ -134,8 +258,7 @@ export default class ScopeComponentsImporter {
     enrichContextFromGlobal(context);
     return this.sources.get(id).then((component) => {
       if (component && localFetch) {
-        // $FlowFixMe id from remote must have scope and version
-        return component.toVersionDependencies(id.version, this.scope, id.scope);
+        return this.componentToVersionDependencies(component, id);
       }
 
       return remotes
@@ -143,11 +266,11 @@ export default class ScopeComponentsImporter {
         .then(([componentObjects]) => {
           return this.scope.writeComponentToModel(componentObjects);
         })
-        .then(() => this.getExternal({ id, remotes, localFetch: true }));
+        .then(() => this._getExternal({ id, remotes, localFetch: true }));
     });
   }
 
-  _getExternalOne({
+  _getExternalWithoutDependencies({
     id,
     remotes,
     localFetch = true,
@@ -166,73 +289,12 @@ export default class ScopeComponentsImporter {
       return remotes
         .fetch([id], this.scope, true, context)
         .then(([componentObjects]) => this.scope.writeComponentToModel(componentObjects))
-        .then(() => this.getExternal({ id, remotes, localFetch: true }))
+        .then(() => this._getExternal({ id, remotes, localFetch: true }))
         .then((versionDependencies: VersionDependencies) => versionDependencies.component);
     });
   }
 
-  /**
-   * get multiple components from a scope, if not found in the local scope, fetch from a remote
-   * scope. Then, write them to the local scope.
-   */
-  getMany(ids: BitId[], cache?: boolean = true): Promise<VersionDependencies[]> {
-    logger.debug(`scope.getMany, Ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('getMany', `scope.getMany, Ids: ${Analytics.hashData(ids)}`);
-
-    const idsWithoutNils = removeNils(ids);
-    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    return this.importMany(idsWithoutNils, cache);
-  }
-
-  // todo: improve performance by finding all versions needed and fetching them in one request from the server
-  // currently it goes to the server twice. First, it asks for the last version of each id, and then it goes again to
-  // ask for the older versions.
-  async getManyWithAllVersions(ids: BitId[], cache?: boolean = true): Promise<VersionDependencies[]> {
-    logger.debug(`scope.getManyWithAllVersions, Ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb('getManyWithAllVersions', `scope.getManyWithAllVersions, Ids: ${Analytics.hashData(ids)}`);
-    const idsWithoutNils = removeNils(ids);
-    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-    const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
-
-    const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
-      const versions = versionDependencies.component.component.listVersions();
-      const idsWithAllVersions = versions.map((version) => {
-        if (version === versionDependencies.component.version) return null; // imported already
-        const versionId = versionDependencies.component.id;
-        return versionId.changeVersion(version);
-      });
-      // $FlowFixMe
-      const bitIdsWithAllVersions = BitIds.fromArray(idsWithAllVersions.filter(x => x));
-      return this.importManyOnes(bitIdsWithAllVersions);
-    });
-    await Promise.all(allVersionsP);
-    return versionDependenciesArr;
-  }
-
-  async importManyOnes(ids: BitIds, cache: boolean = true): Promise<ComponentVersion[]> {
-    if (!ids.length) return [];
-    logger.debug(`scope.importManyOnes. Ids: ${ids.join(', ')}, cache: ${cache.toString()}`);
-    Analytics.addBreadCrumb('importManyOnes', `scope.importManyOnes. Ids: ${Analytics.hashData(ids)}`);
-
-    const idsWithoutNils = removeNils(ids);
-    if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
-
-    const [externals, locals] = splitBy(idsWithoutNils, id => id.isLocal(this.scope.name));
-
-    const localDefs: ComponentDef[] = await this.sources.getMany(locals);
-    const componentVersionArr = await Promise.all(
-      localDefs.map((def) => {
-        if (!def.component) throw new ComponentNotFound(def.id.toString());
-        // $FlowFixMe it must have a version
-        return def.component.toComponentVersion(def.id.version);
-      })
-    );
-    const remotes = await getScopeRemotes(this.scope);
-    const externalDeps = await this._getExternalOnes(externals, remotes, cache);
-    return componentVersionArr.concat(externalDeps);
-  }
-
-  _getExternalOnes(
+  _getExternalManyWithoutDependencies(
     ids: BitId[],
     remotes: Remotes,
     localFetch: boolean = false,
@@ -270,48 +332,14 @@ export default class ScopeComponentsImporter {
         .then((componentObjects) => {
           return this.scope.writeManyComponentsToModel(componentObjects);
         })
-        .then(() => this._getExternalOnes(ids, remotes, true));
+        .then(() => this._getExternalManyWithoutDependencies(ids, remotes, true));
     });
-  }
-
-  manyOneObjects(ids: BitIds): Promise<ComponentObjects[]> {
-    return this.importManyOnes(ids, false).then(componentVersions =>
-      Promise.all(
-        componentVersions.map((version) => {
-          return version.toObjects(this.scope.objects);
-        })
-      )
-    );
-  }
-
-  async getObjects(ids: BitIds): Promise<ComponentObjects[]> {
-    const versions = await this.importMany(ids);
-    return Promise.all(versions.map(version => version.toObjects(this.scope.objects)));
-  }
-
-  /**
-   * get ConsumerComponent by bitId. if the component was not found locally, import it from a remote scope
-   */
-  loadRemoteComponent(id: BitId): Promise<ConsumerComponent> {
-    return this._getComponentVersion(id).then((component) => {
-      if (!component) throw new ComponentNotFound(id.toString());
-      return component.toConsumer(this.scope.objects);
-    });
-  }
-
-  loadComponent(id: BitId, localOnly: boolean = true): Promise<ConsumerComponent> {
-    logger.debugAndAddBreadCrumb('ScopeComponentsImporter', 'loadComponent {id}', { id: id.toString() });
-
-    if (localOnly && !id.isLocal(this.scope.name)) {
-      throw new GeneralError('cannot load bit from remote scope, please import first');
-    }
-    return this.loadRemoteComponent(id);
   }
 
   async _getComponentVersion(id: BitId): Promise<ComponentVersion> {
     if (!id.isLocal(this.scope.name)) {
       const remotes = await getScopeRemotes(this.scope);
-      return this._getExternalOne({ id, remotes, localFetch: true });
+      return this._getExternalWithoutDependencies({ id, remotes, localFetch: true });
     }
 
     return this.sources.get(id).then((component) => {
@@ -319,9 +347,5 @@ export default class ScopeComponentsImporter {
       // $FlowFixMe version is set
       return component.toComponentVersion(id.version);
     });
-  }
-
-  static getInstance(scope: Scope): ScopeComponentsImporter {
-    return new ScopeComponentsImporter(scope);
   }
 }

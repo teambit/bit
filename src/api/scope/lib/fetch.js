@@ -5,10 +5,16 @@ import { PRE_SEND_OBJECTS, POST_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 // import logger from '../../../logger/logger';
 import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
+import type ComponentObjects from '../../../scope/component-objects';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
-export default (async function fetch(path: string, ids: string[], noDependencies: boolean = false, headers: ?Object) {
+export default (async function fetch(
+  path: string,
+  ids: string[],
+  noDependencies: boolean = false,
+  headers: ?Object
+): Promise<ComponentObjects[]> {
   const bitIds: BitIds = BitIds.deserialize(ids);
 
   const args = { path, bitIds, noDependencies };
@@ -18,10 +24,11 @@ export default (async function fetch(path: string, ids: string[], noDependencies
   }
   const scope: Scope = await loadScope(path);
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  const componentObjects = noDependencies
-    ? await scopeComponentsImporter.manyOneObjects(bitIds)
-    : await scopeComponentsImporter.getObjects(bitIds);
-
+  const importedComponents = noDependencies
+    ? await scopeComponentsImporter.importManyWithoutDependencies(bitIds, false)
+    : await scopeComponentsImporter.importMany(bitIds);
+  // $FlowFixMe
+  const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(importedComponents);
   if (HooksManagerInstance) {
     await HooksManagerInstance.triggerHook(
       POST_SEND_OBJECTS,

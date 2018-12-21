@@ -401,11 +401,6 @@ export default class Component extends BitObject {
     return Buffer.from(str);
   }
 
-  toVersionDependencies(version: string, scope: Scope, source: string): Promise<VersionDependencies> {
-    const versionComp = this.toComponentVersion(version);
-    return versionComp.toVersionDependencies(scope, source);
-  }
-
   /**
    * Clear data that is relevant only for the local scope and should not be moved to the remote scope
    */

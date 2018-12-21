@@ -309,16 +309,13 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  /**
-   * return a component only when it's stored locally.
-   * don't go to any remote server and don't throw an exception if the component is not there.
-   */
   async loadComponentWithDependenciesFromModel(id: BitId): Promise<ComponentWithDependencies> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     if (!id.version) {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
-    const versionDependencies = await modelComponent.toVersionDependencies(id.version, this.scope, this.scope.name);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
     const manipulateDirData = await getManipulateDirForExistingComponents(this, versionDependencies.component);
     return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
   }
@@ -339,11 +336,11 @@ export default class Consumer {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
-  async importComponents(ids: BitId[], withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+  async importComponents(ids: BitIds, withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
-      ? await scopeComponentsImporter.getManyWithAllVersions(ids, false)
-      : await scopeComponentsImporter.getMany(ids);
+      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
+      : await scopeComponentsImporter.importMany(ids);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
