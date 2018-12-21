@@ -6,7 +6,7 @@ import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import remoteResolver from './remote-resolver/remote-resolver';
-import { GlobalRemotes } from '../global-config';
+import GlobalRemotes from '../global-config/global-remotes';
 import type Scope from '../scope/scope';
 import logger from '../logger/logger';
 

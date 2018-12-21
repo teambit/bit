@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import { BitId } from '../bit-id';
+import BitId from '../bit-id/bit-id';
 import forEach from '../utils/object/foreach';
 import getLatestVersionNumber from '../utils/resolveLatestVersion';
 

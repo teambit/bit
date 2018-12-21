@@ -36,9 +36,8 @@ import {
   ExcludedMainFile,
   MainFileIsDir
 } from './exceptions';
-import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
+import type ComponentMap, { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
-import ComponentMap from '../../bit-map/component-map';
 import GeneralError from '../../../error/general-error';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';

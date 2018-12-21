@@ -3,9 +3,10 @@ import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
-import { ScopeMeta, Source } from '.';
+import ScopeMeta from './scopeMeta';
+import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
+import { forEach, empty, mapObject, values, filterObject, getStringifyArgs } from '../../utils';
 import type Version from './version';
 import {
   DEFAULT_LANGUAGE,
