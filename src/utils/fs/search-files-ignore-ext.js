@@ -1,7 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import Vinyl from 'vinyl';
-import { getWithoutExt } from '../';
+import getWithoutExt from './fs-no-ext';
 import type { PathOsBased } from '../path';
 
 export default function searchFilesIgnoreExt(

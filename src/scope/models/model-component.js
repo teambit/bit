@@ -14,7 +14,6 @@ import {
   DEFAULT_BIT_VERSION
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
-import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
 import type Scope from '../scope';
 import Repository from '../objects/repository';
@@ -28,6 +27,7 @@ import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import VersionDependencies from '../version-dependencies';
+import versionParser from '../../version/version-parser';
 
 type State = {
   versions?: {
@@ -281,7 +281,7 @@ export default class Component extends BitObject {
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
-    const versionNum = VersionParser.parse(versionStr).resolve(this.listVersions());
+    const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
       throw new GeneralError(

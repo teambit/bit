@@ -9,7 +9,6 @@ import mapObject from './map-object';
 import mkdirp from './mkdirp';
 import forEach from './object/foreach';
 import hasOwnProperty from './object/has-own-property';
-import contains from './string/contains';
 import cleanObject from './object-clean';
 import prependBang from './prepend-bang';
 import cleanChar from './string/clean-char';
@@ -35,7 +34,6 @@ import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './fs/current-dir-name';
-import removeFile from './fs-remove-file';
 import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import allSettled from './promise-all-settled';
 import values from './object/values';
@@ -118,7 +116,6 @@ export {
   prependBang,
   forEach,
   hasOwnProperty,
-  contains,
   removeContainingDirIfEmpty,
   removeFilesAndEmptyDirsRecursively,
   isBitUrl,
@@ -133,7 +130,6 @@ export {
   listDirectories,
   isDirEmpty,
   removeEmptyDir,
-  removeFile,
   createSymlinkOrCopy,
   isDirEmptySync,
   flatten,

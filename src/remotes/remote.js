@@ -1,5 +1,5 @@
 /** @flow */
-import { contains, isBitUrl, cleanBang } from '../utils';
+import { isBitUrl, cleanBang } from '../utils';
 import type ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
@@ -12,7 +12,7 @@ import type { ListScopeResult } from '../consumer/component/components-list';
  * @ctx bit, primary, remote
  */
 function isPrimary(alias: string): boolean {
-  return contains(alias, '!');
+  return alias.includes('!');
 }
 
 export default class Remote {
