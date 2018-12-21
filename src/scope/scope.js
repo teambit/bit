@@ -7,7 +7,7 @@ import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
 import types from './object-registrar';
-import { propogateUntil, currentDirName, pathHasAll, first, splitBy } from '../utils';
+import { propogateUntil, currentDirName, pathHasAll, first } from '../utils';
 import {
   BIT_HIDDEN_DIR,
   OBJECTS_DIR,

@@ -9,8 +9,7 @@ import ComponentObjects from '../component-objects';
 import { LATEST } from '../../constants';
 import type { ComponentTree } from '../repositories/sources';
 import { Ref, BitObject } from '../objects';
-import { ModelComponent, Symlink } from '../models';
-import Version from '../../version';
+import { ModelComponent, Symlink, Version } from '../models';
 import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import type { Remotes, Remote } from '../../remotes';
@@ -131,7 +130,7 @@ function convertNonScopeToCorrectScope(
     return BitIds.fromArray(updatedIds);
   };
 
-  componentsObjects.objects.forEach((object: Version) => {
+  componentsObjects.objects.forEach((object: BitObject) => {
     if (object instanceof Version) {
       const hashBefore = object.hash().toString();
       object.getAllDependencies().forEach((dependency) => {
