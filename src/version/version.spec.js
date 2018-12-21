@@ -64,12 +64,4 @@ describe('Version', () => {
       }).to.throw();
     });
   });
-
-  describe('parse()', () => {
-    it('should parse given version as latest', () => {
-      const version = Version.parse('latest');
-      expect(version.versionNum).to.equal(null);
-      expect(version.latest).to.equal(true);
-    });
-  });
 });

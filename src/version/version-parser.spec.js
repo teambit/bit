@@ -32,4 +32,10 @@ describe('versionParser()', () => {
     expect(version.latest).to.equal(true);
     expect(version.versionNum).to.equal('0.0.11');
   });
+
+  it('should parse given version as latest', () => {
+    const version = versionParser('latest');
+    expect(version.versionNum).to.equal(null);
+    expect(version.latest).to.equal(true);
+  });
 });

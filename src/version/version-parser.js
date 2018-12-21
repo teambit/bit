@@ -39,7 +39,7 @@ function convertToSemVer(versionStr: string) {
   return returnRegular(`0.0.${versionStr}`);
 }
 
-export default function versionParser(versionStr?: string): Version {
+export default function versionParser(versionStr: ?string): Version {
   if (!versionStr) return returnLatest();
   if (isLatest(versionStr)) return returnLatest();
   if (isLatestTested(versionStr)) return returnLatestTestedVersion(versionStr);
