@@ -61,6 +61,9 @@ import {
   getManipulateDirForExistingComponents
 } from './component-ops/manipulate-dir';
 import ComponentLoader from './component/component-loader';
+import { getScopeRemotes } from '../scope/scope-remotes';
+import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
+import installExtensions from '../scope/extensions/install-extensions';
 
 type ConsumerProps = {
   projectPath: string,
@@ -333,13 +336,14 @@ export default class Consumer {
   }
 
   importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
-    return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
+    return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
   async importComponents(ids: BitId[], withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
-      ? await this.scope.getManyWithAllVersions(ids, false)
-      : await this.scope.getMany(ids);
+      ? await scopeComponentsImporter.getManyWithAllVersions(ids, false)
+      : await scopeComponentsImporter.getMany(ids);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
@@ -732,7 +736,7 @@ export default class Consumer {
 
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await this.scope.remotes();
+    const remotes = await getScopeRemotes(this.scope);
     const context = {};
     enrichContextFromGlobal(context);
     const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
@@ -806,7 +810,7 @@ export default class Consumer {
    */
   async removeRemote(bitIds: BitIds, force: boolean) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await this.scope.remotes();
+    const remotes = await getScopeRemotes(this.scope);
     const context = {};
     enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {

@@ -11,6 +11,8 @@ import type ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
+import { getScopeRemotes } from './scope-remotes';
+import ScopeComponentsImporter from './component-ops/scope-components-importer';
 
 export default class ComponentVersion {
   component: ModelComponent;
@@ -54,6 +56,7 @@ export default class ComponentVersion {
   }
 
   async toVersionDependencies(scope: Scope, source: string): Promise<VersionDependencies> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     const version = await this.getVersion(scope.objects);
     if (!version) {
       logger.debug(
@@ -67,10 +70,10 @@ export default class ComponentVersion {
           `Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`
         );
       }
-      return scope.remotes().then((remotes) => {
+      return getScopeRemotes(scope).then((remotes) => {
         const src = this.id;
         src.scope = source;
-        return scope.getExternal({ id: src, remotes, localFetch: false });
+        return scopeComponentsImporter.getExternal({ id: src, remotes, localFetch: false });
       });
     }
 
@@ -79,10 +82,10 @@ export default class ComponentVersion {
         this.version
       } found, going to collect its dependencies`
     );
-    const dependencies = await scope.importManyOnes(version.flattenedDependencies);
-    const devDependencies = await scope.importManyOnes(version.flattenedDevDependencies);
-    const compilerDependencies = await scope.importManyOnes(version.flattenedCompilerDependencies);
-    const testerDependencies = await scope.importManyOnes(version.flattenedTesterDependencies);
+    const dependencies = await scopeComponentsImporter.importManyOnes(version.flattenedDependencies);
+    const devDependencies = await scopeComponentsImporter.importManyOnes(version.flattenedDevDependencies);
+    const compilerDependencies = await scopeComponentsImporter.importManyOnes(version.flattenedCompilerDependencies);
+    const testerDependencies = await scopeComponentsImporter.importManyOnes(version.flattenedTesterDependencies);
 
     return new VersionDependencies(
       this,

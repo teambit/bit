@@ -10,6 +10,7 @@ import validateType from '../../../utils/validate-type';
 import type { BitIdStr } from '../../../bit-id/bit-id';
 import type { ManipulateDirItem } from '../../component-ops/manipulate-dir';
 import type { PathLinux } from '../../../utils/path';
+import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -113,7 +114,7 @@ export default class Dependencies {
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
     const dependenciesIds = this.dependencies.map(dependency => dependency.id);
     const localDependencies = await scope.latestVersions(dependenciesIds);
-    const remoteVersionsDependencies = await scope.fetchRemoteVersions(dependenciesIds);
+    const remoteVersionsDependencies = await fetchRemoteVersions(scope, dependenciesIds);
 
     this.dependencies.forEach((dependency) => {
       const remoteVersionId = remoteVersionsDependencies.find(remoteId =>

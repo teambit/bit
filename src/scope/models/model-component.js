@@ -84,7 +84,7 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  listVersions(sort: 'ASC' | 'DESC'): string[] {
+  listVersions(sort?: 'ASC' | 'DESC'): string[] {
     const versions = Object.keys(this.versions);
     if (!sort) return versions;
     if (sort === 'ASC') {

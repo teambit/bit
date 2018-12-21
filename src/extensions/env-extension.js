@@ -27,6 +27,7 @@ import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
+import installExtensions from '../scope/extensions/install-extensions';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -104,9 +105,10 @@ export default class EnvExtension extends BaseExtension {
     const installOpts = {
       ids: [{ componentId: BitId.parse(this.name, true), type: this.envType.toLowerCase() }], // @todo: make sure it always has a scope name
       dependentId,
+      scope,
       ...opts
     };
-    const installResult = await scope.installEnvironment(installOpts);
+    const installResult = await installExtensions(installOpts);
     this.setExtensionPathInScope(scope.getPath());
     await this.reload(scope.getPath(), context);
     return installResult;

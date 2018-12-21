@@ -23,6 +23,7 @@ import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
+import ScopeComponentsImporter from './scope-components-importer';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
@@ -66,8 +67,9 @@ async function getFlattenedDependencies(
     // $FlowFixMe if graph doesn't have the node, prodGraph must have it
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
     let versionDependencies;
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
     try {
-      versionDependencies = await scope.importDependencies([dependencyBitId]);
+      versionDependencies = await scopeComponentsImporter.importDependencies(BitIds.fromArray([dependencyBitId]));
     } catch (err) {
       if (err instanceof DependencyNotFound) {
         return [dependencyBitId];

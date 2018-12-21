@@ -16,6 +16,7 @@ import { isDir, isDirEmptySync } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type ComponentMap from '../bit-map/component-map';
 import ComponentWriter from './component-writer';
+import { getScopeRemotes } from '../../scope/scope-remotes';
 
 function throwErrorWhenDirectoryNotEmpty(
   componentDir: string,
@@ -89,7 +90,7 @@ export default (async function writeToComponentsDir({
   excludeRegistryPrefix?: boolean
 }): Promise<Component[]> {
   const dependenciesIdsCache = {};
-  const remotes: Remotes = await consumer.scope.remotes();
+  const remotes: Remotes = await getScopeRemotes(consumer.scope);
   const writeComponentsParams = componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
     const bitDir = writeToPath
       ? path.resolve(writeToPath)

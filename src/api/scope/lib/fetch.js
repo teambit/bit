@@ -4,6 +4,7 @@ import { BitIds } from '../../../bit-id';
 import { PRE_SEND_OBJECTS, POST_SEND_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
 // import logger from '../../../logger/logger';
+import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -16,7 +17,10 @@ export default (async function fetch(path: string, ids: string[], noDependencies
     HooksManagerInstance.triggerHook(PRE_SEND_OBJECTS, args, headers);
   }
   const scope: Scope = await loadScope(path);
-  const componentObjects = noDependencies ? await scope.manyOneObjects(bitIds) : await scope.getObjects(bitIds);
+  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+  const componentObjects = noDependencies
+    ? await scopeComponentsImporter.manyOneObjects(bitIds)
+    : await scopeComponentsImporter.getObjects(bitIds);
 
   if (HooksManagerInstance) {
     await HooksManagerInstance.triggerHook(

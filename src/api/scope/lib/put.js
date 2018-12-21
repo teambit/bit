@@ -3,6 +3,7 @@ import { loadScope } from '../../../scope';
 import ComponentObjects from '../../../scope/component-objects';
 import { PRE_RECEIVE_OBJECTS, POST_RECEIVE_OBJECTS } from '../../../constants';
 import HooksManager from '../../../hooks';
+import { exportManyBareScope } from '../../../scope/component-ops/export-scope-components';
 
 const HooksManagerInstance = HooksManager.getInstance();
 
@@ -21,7 +22,7 @@ export default (async function put(
 
   await HooksManagerInstance.triggerHook(PRE_RECEIVE_OBJECTS, { path, componentObjects }, headers);
   const scope = await loadScope(path);
-  const componentsIds = await scope.exportManyBareScope(componentObjects);
+  const componentsIds = await exportManyBareScope(scope, componentObjects);
   await HooksManagerInstance.triggerHook(
     POST_RECEIVE_OBJECTS,
     {
