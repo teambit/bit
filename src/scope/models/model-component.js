@@ -16,8 +16,7 @@ import {
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
-import type Scope from '../scope';
-import Repository from '../objects/repository';
+import type Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
@@ -27,7 +26,6 @@ import GeneralError from '../../error/general-error';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import VersionDependencies from '../version-dependencies';
 import versionParser from '../../version/version-parser';
 
 type State = {
