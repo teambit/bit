@@ -585,7 +585,7 @@ export default class Consumer {
     return { taggedComponents, autoTaggedComponents };
   }
 
-  static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
+  getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
     if (!id.scope) {
       throw new GeneralError(
         `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`

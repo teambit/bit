@@ -13,7 +13,7 @@ import {
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
 import { getSync } from '../../api/consumer/lib/global-config';
-import Consumer from '../consumer';
+import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import type { PathLinux } from '../../utils/path';
@@ -261,7 +261,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map((id) => {
-      return id.scope ? Consumer.getNodeModulesPathOfComponent(registryPrefix, id) : null;
+      return id.scope ? consumer.getNodeModulesPathOfComponent(registryPrefix, id) : null;
     })
     .filter(a => a); // remove null
 

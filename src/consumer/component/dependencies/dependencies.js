@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import { Dependency } from './';
+import Dependency from './dependency';
 import type { RelativePath } from './dependency';
 import { BitId, BitIds } from '../../../bit-id';
 import type Scope from '../../../scope/scope';

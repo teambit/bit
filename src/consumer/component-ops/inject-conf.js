@@ -3,13 +3,12 @@ import path from 'path';
 import R from 'ramda';
 import type ConsumerComponent from '../component/consumer-component';
 import ComponentBitJson from '../bit-json';
-import { removeEmptyDir } from '../../utils';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
 import { AbstractVinyl } from '../component/sources';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
-
 
 export type InjectConfResult = { id: string };
 
