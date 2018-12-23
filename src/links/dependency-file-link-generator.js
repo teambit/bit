@@ -5,11 +5,11 @@ import { getSync } from '../api/consumer/lib/global-config';
 import { DEFAULT_INDEX_NAME, CFG_REGISTRY_DOMAIN_PREFIX, DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../constants';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import { BitId } from '../bit-id';
-import { Consumer } from '../consumer';
+import type { Consumer } from '../consumer';
 import logger from '../logger/logger';
-import Component from '../consumer/component';
+import type Component from '../consumer/component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
-import ComponentMap from '../consumer/bit-map/component-map';
+import type ComponentMap from '../consumer/bit-map/component-map';
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 
 export type LinkFile = {

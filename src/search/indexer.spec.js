@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import indexer from '../../src/search/indexer';
+import indexer from '../search/indexer';
 
 describe('Indexer', () => {
   describe('tokenizeStr', () => {

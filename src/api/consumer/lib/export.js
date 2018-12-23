@@ -12,6 +12,7 @@ import { Analytics } from '../../../analytics/analytics';
 import EjectComponents from '../../../consumer/component-ops/eject-components';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 import hasWildcard from '../../../utils/string/has-wildcard';
+import { exportMany } from '../../../scope/component-ops/export-scope-components';
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
   const componentsIds = await exportComponents(ids, remote, save);
@@ -26,7 +27,8 @@ async function exportComponents(ids?: string[], remote: string, save: ?boolean):
   // todo: what happens when some failed? we might consider avoid Promise.all
   // in case we don't have anything to export
   if (R.isEmpty(idsToExport)) return [];
-  const componentsIds = await consumer.scope.exportMany(idsToExport, remote, undefined);
+
+  const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
   if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
   await linkComponents(componentsIds, consumer);

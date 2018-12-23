@@ -2,6 +2,8 @@
 import { loadScope, Scope } from '../../../scope';
 import { loadConsumer } from '../../../consumer';
 import logger from '../../../logger/logger';
+import BitId from '../../../bit-id/bit-id';
+import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 
 // TODO: merge this with other instances of the same options
 export type IsolateOptions = {
@@ -24,11 +26,25 @@ export default (async function isolate(componentId: string, scopePath: string, o
   if (scopePath) {
     scope = await loadScope(scopePath);
     const bitId = await scope.getParsedId(componentId);
-    return scope.isolateComponent(bitId, opts);
+    return isolateComponent(scope, bitId, opts);
   }
   // If a scope path was not provided we will get the consumer's scope
   const consumer = await loadConsumer();
   scope = consumer.scope;
   const bitId = consumer.getParsedId(componentId);
-  return scope.isolateComponent(bitId, opts);
+  return isolateComponent(scope, bitId, opts);
 });
+
+/**
+ * import a component end to end. Including importing the dependencies and installing the npm
+ * packages.
+ *
+ * @param {BitId} bitId - the component id to isolate
+ * @param {IsolateOptions} opts
+ * @return {Promise.<string>} - the path to the isolated component
+ */
+async function isolateComponent(scope: Scope, bitId: BitId, opts: IsolateOptions): Promise<string> {
+  const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+  const component = await scopeComponentsImporter.loadComponent(bitId);
+  return component.isolate(scope, opts);
+}

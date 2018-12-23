@@ -3,10 +3,11 @@ import semver from 'semver';
 import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
-import { ScopeMeta, Source } from '.';
+import ScopeMeta from './scopeMeta';
+import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
-import Version from './version';
+import { forEach, empty, mapObject, values, filterObject, getStringifyArgs } from '../../utils';
+import type Version from './version';
 import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
@@ -14,10 +15,8 @@ import {
   DEFAULT_BIT_VERSION
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
-import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
-import Scope from '../scope';
-import Repository from '../objects/repository';
+import type Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
@@ -27,7 +26,7 @@ import GeneralError from '../../error/general-error';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import VersionDependencies from '../version-dependencies';
+import versionParser from '../../version/version-parser';
 
 type State = {
   versions?: {
@@ -84,7 +83,7 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  listVersions(sort: 'ASC' | 'DESC'): string[] {
+  listVersions(sort?: 'ASC' | 'DESC'): string[] {
     const versions = Object.keys(this.versions);
     if (!sort) return versions;
     if (sort === 'ASC') {
@@ -281,7 +280,7 @@ export default class Component extends BitObject {
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
-    const versionNum = VersionParser.parse(versionStr).resolve(this.listVersions());
+    const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
       throw new GeneralError(
@@ -398,11 +397,6 @@ export default class Component extends BitObject {
     const str = JSON.stringify(obj, ...args);
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return Buffer.from(str);
-  }
-
-  toVersionDependencies(version: string, scope: Scope, source: string): Promise<VersionDependencies> {
-    const versionComp = this.toComponentVersion(version);
-    return versionComp.toVersionDependencies(scope, source);
   }
 
   /**

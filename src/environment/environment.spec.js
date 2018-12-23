@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import Environment from '../../src/environment';
-import { Scope } from '../../src/scope';
+import Environment from '../environment';
+import { Scope } from '../scope';
 
 describe('Environment', () => {
   let sandbox;

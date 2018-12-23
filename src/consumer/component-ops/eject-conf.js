@@ -1,15 +1,16 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import ConsumerComponent from '../component/consumer-component';
+import type ConsumerComponent from '../component/consumer-component';
 import ComponentBitJson from '../bit-json';
-import { sharedStartOfArray, removeEmptyDir } from '../../utils';
+import { sharedStartOfArray } from '../../utils';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import GeneralError from '../../error/general-error';
-import BitMap from '../bit-map';
+import type BitMap from '../bit-map';
 import EjectNoDir from './exceptions/eject-no-dir';
 import ConfigDir from '../bit-map/config-dir';
 import { writeDependenciesLinksToDir } from '../../links/link-generator';
-import { Consumer } from '..';
+import type { Consumer } from '..';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { PathOsBased } from '../../utils/path';

@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import buildQuery from '../../src/search/query-builder';
+import buildQuery from '../search/query-builder';
 
 describe('query-builder', () => {
   describe('buildQuery', () => {

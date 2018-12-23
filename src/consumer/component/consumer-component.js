@@ -3,13 +3,14 @@ import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
 import c from 'chalk';
-import { pathNormalizeToLinux, createSymlinkOrCopy } from '../../utils';
+import { pathNormalizeToLinux } from '../../utils';
+import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
-import ConsumerBitJson from '../bit-json/consumer-bit-json';
-import Consumer from '../consumer';
+import type ConsumerBitJson from '../bit-json/consumer-bit-json';
+import type Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
-import Scope from '../../scope/scope';
+import type Scope from '../../scope/scope';
 import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
@@ -22,13 +23,13 @@ import MissingFilesFromComponent from './exceptions/missing-files-from-component
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
 import IsolatedEnvironment, { IsolateOptions } from '../../environment';
 import type { Log } from '../../scope/models/version';
-import BitMap from '../bit-map';
+import type BitMap from '../bit-map';
 import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
 import logger from '../../logger/logger';
 import loader from '../../cli/loader';
-import CompilerExtension, { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
-import TesterExtension, { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
+import CompilerExtension from '../../extensions/compiler-extension';
+import TesterExtension from '../../extensions/tester-extension';
 import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -36,6 +37,8 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   COMPONENT_ORIGINS,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE,
   BIT_WORKSPACE_TMP_DIRNAME
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';

@@ -2,6 +2,7 @@
 // all errors that the command does not handle comes to this switch statement
 // if you handle the error, then return true
 import chalk from 'chalk';
+import hashErrorIfNeeded from '../error/hash-error-object';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from '../bit-id/exceptions';
 import {
   ConsumerAlreadyExists,
@@ -527,7 +528,7 @@ export default (err: Error): ?string => {
   /* this is an error that bit knows how to handle dont send to sentry */
 
   if (err instanceof AbstractError) {
-    Analytics.setError(LEVEL.INFO, err.makeAnonymous());
+    Analytics.setError(LEVEL.INFO, hashErrorIfNeeded(err));
   } else {
     Analytics.setError(LEVEL.FATAL, err);
   }

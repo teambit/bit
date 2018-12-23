@@ -6,6 +6,7 @@ import { BEFORE_REMOTE_LIST, BEFORE_LOCAL_LIST } from '../../../cli/loader/loade
 import Remote from '../../../remotes/remote';
 import ComponentsList from '../../../consumer/component/components-list';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
+import { getScopeRemotes } from '../../../scope/scope-remotes';
 
 export default (async function list({
   scopeName,
@@ -19,7 +20,7 @@ export default (async function list({
   const consumer: Consumer = await loadConsumer();
   const scope: Scope = consumer.scope;
   if (scopeName) {
-    const remotes = await scope.remotes();
+    const remotes = await getScopeRemotes(scope);
     const remote: Remote = await remotes.resolve(scopeName, scope);
     return remoteList(remote);
   }

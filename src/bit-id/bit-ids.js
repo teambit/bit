@@ -1,7 +1,8 @@
 /** @flow */
 import R from 'ramda';
-import { BitId } from '../bit-id';
-import { forEach, getLatestVersionNumber } from '../utils';
+import BitId from '../bit-id/bit-id';
+import forEach from '../utils/object/foreach';
+import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {

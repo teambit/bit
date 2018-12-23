@@ -1,10 +1,10 @@
 // @flow
 import fs from 'fs-extra';
 import path from 'path';
-import Component from '../component/consumer-component';
+import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
-import { Consumer } from '..';
+import type { Consumer } from '..';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
@@ -262,7 +262,7 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-        const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(
+        const relativeLinkPath = this.consumer.getNodeModulesPathOfComponent(
           this.consumer.bitJson.bindingPrefix,
           this.component.id
         );

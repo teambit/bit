@@ -1,11 +1,11 @@
 /** @flow */
 import R from 'ramda';
-import Component from '../consumer/component';
+import type Component from '../consumer/component';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
 import linkComponentsToNodeModules from './node-modules-linker';
-import Consumer from '../consumer/consumer';
+import type Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJson from '../consumer/component/package-json';
 import type { LinksResult } from './node-modules-linker';

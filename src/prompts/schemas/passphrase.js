@@ -1,5 +1,5 @@
 /** @flow */
-import { identityFile } from '../../utils';
+import identityFile from '../../utils/ssh/identity-file';
 
 /**
  * schema for passphrase prompt on SSH.

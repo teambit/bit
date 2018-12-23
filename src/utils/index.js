@@ -9,7 +9,6 @@ import mapObject from './map-object';
 import mkdirp from './mkdirp';
 import forEach from './object/foreach';
 import hasOwnProperty from './object/has-own-property';
-import contains from './string/contains';
 import cleanObject from './object-clean';
 import prependBang from './prepend-bang';
 import cleanChar from './string/clean-char';
@@ -28,15 +27,12 @@ import parseSSHUrl from './ssh/parse-url';
 import listDirectories from './fs/list-directories';
 import isDirEmptySync from './is-dir-empty-sync';
 import isDirEmpty from './fs/is-dir-empty';
-import removeEmptyDir from './fs/remove-empty-dir';
 import isDir from './is-dir';
 import writeFile from './fs-write-file';
 import immutableUnshift from './immutable-unshift';
 import rmDir from './fs-rmdir';
 import resolveHomePath from './os-resolve-home-path';
 import currentDirName from './fs/current-dir-name';
-import removeFile from './fs-remove-file';
-import createSymlinkOrCopy from './fs/create-symlink-or-copy';
 import allSettled from './promise-all-settled';
 import values from './object/values';
 import sortObject from './object/sort';
@@ -54,8 +50,6 @@ import isNumeric from './number/is-numeric';
 import diff from './array/diff';
 import sharedStartOfArray from './array/shared-start';
 import filterObject from './filter-object';
-import removeContainingDirIfEmpty from './fs/remove-containing-dir-if-empty';
-import removeFilesAndEmptyDirsRecursively from './fs/remove-files-and-empty-dirs-recursively';
 import isValidIdChunk from './is-valid-id-chunk';
 import isValidScopeName from './is-valid-scope-name';
 import packCommand from './pack-command';
@@ -118,9 +112,6 @@ export {
   prependBang,
   forEach,
   hasOwnProperty,
-  contains,
-  removeContainingDirIfEmpty,
-  removeFilesAndEmptyDirsRecursively,
   isBitUrl,
   isDir,
   mapObject,
@@ -132,9 +123,6 @@ export {
   bufferToReadStream,
   listDirectories,
   isDirEmpty,
-  removeEmptyDir,
-  removeFile,
-  createSymlinkOrCopy,
   isDirEmptySync,
   flatten,
   currentDirName,

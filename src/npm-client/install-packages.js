@@ -3,8 +3,8 @@ import R from 'ramda';
 import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
-import { ComponentWithDependencies } from '../scope';
-import { Consumer } from '../consumer';
+import type { ComponentWithDependencies } from '../scope';
+import type { Consumer } from '../consumer';
 
 export async function installPackages(
   consumer: Consumer,

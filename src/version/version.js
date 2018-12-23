@@ -1,7 +1,6 @@
 /** @flow */
 import semver from 'semver';
 import { InvalidVersionChange, InvalidVersion } from './exceptions';
-import versionParser from './version-parser';
 import { DEFAULT_BIT_RELEASE_TYPE } from '../constants';
 
 export default class Version {
@@ -31,19 +30,5 @@ export default class Version {
     if (this.versionNum && this.latest) return `*${this.versionNum}`;
     if (this.versionNum && !this.latest) return this.versionNum.toString();
     throw new InvalidVersion();
-  }
-
-  static parse(versionStr: string): Version {
-    // $FlowFixMe unclear error, might be a bug, try to remove with next Flow version
-    return versionParser(versionStr);
-  }
-
-  static validate(versionStr: string): boolean {
-    try {
-      versionParser(versionStr);
-      return true;
-    } catch (err) {
-      return false;
-    }
   }
 }

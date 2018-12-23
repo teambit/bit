@@ -1,5 +1,6 @@
 /** @flow */
-import { loadConsumer, Consumer } from '../../../consumer';
+import { loadConsumer } from '../../../consumer';
+import type { Consumer } from '../../../consumer';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';

@@ -5,7 +5,7 @@ import validateType from '../utils/validate-type';
 import { BitId, BitIds } from '../bit-id';
 import VersionInvalid from './exceptions/version-invalid';
 import { isValidPath } from '../utils';
-import Version from './models/version';
+import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
 
 /**
