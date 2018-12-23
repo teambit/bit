@@ -644,6 +644,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
         );
         const currentComponentDeps = {
           id: dependencyId,
+          // $FlowFixMe
           relativePaths: clonedDependencies.getById(dependencyId).relativePaths
         };
         if (fileType.isTestFile && !existingDevDependency) {

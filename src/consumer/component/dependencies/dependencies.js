@@ -91,15 +91,15 @@ export default class Dependencies {
     );
   }
 
-  getById(id: BitId): Dependency {
+  getById(id: BitId): ?Dependency {
     return this.dependencies.find(dep => dep.id.isEqual(id));
   }
 
-  getByIdStr(id: BitIdStr): Dependency {
+  getByIdStr(id: BitIdStr): ?Dependency {
     return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
-  getBySourcePath(sourcePath: string): Dependency {
+  getBySourcePath(sourcePath: string): ?Dependency {
     return this.dependencies.find(dependency =>
       dependency.relativePaths.some((relativePath) => {
         return relativePath.sourceRelativePath === sourcePath;
@@ -124,8 +124,11 @@ export default class Dependencies {
       const modelVersionId = modelDependencies
         .get()
         .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
+      // $FlowFixMe
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
+      // $FlowFixMe
       dependency.localVersion = localVersionId ? localVersionId.version : null;
+      // $FlowFixMe
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
     });
   }
@@ -202,6 +205,7 @@ export default class Dependencies {
         }
         if (relativePath.importSpecifiers) {
           validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
+          // $FlowFixMe it's already confirmed that relativePath.importSpecifiers is set
           relativePath.importSpecifiers.forEach((importSpecifier) => {
             validateType(message, importSpecifier, 'importSpecifier', 'object');
             if (!importSpecifier.mainFile) {
