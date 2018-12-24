@@ -1,7 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import semver from 'semver';
-import BitMap from '../../bit-map';
+import type BitMap from '../../bit-map';
 import { VERSION_DELIMITER } from '../../../constants';
 
 /**

@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_REMOTES } from '../constants';
 import { writeFile } from '../utils';
-import { Remotes, Remote } from '../remotes';
+import type Remote from '../remotes/remote';
 
 export default class GlobalRemotes {
   remotes: { [string]: string };
@@ -25,10 +25,6 @@ export default class GlobalRemotes {
   toJson(readable: boolean = true) {
     if (!readable) return JSON.stringify(this.toPlainObject());
     return JSON.stringify(this.toPlainObject(), null, 4);
-  }
-
-  asRemotes() {
-    return Remotes.load(this.remotes);
   }
 
   toPlainObject() {

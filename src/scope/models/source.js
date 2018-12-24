@@ -1,5 +1,5 @@
 // @flow
-import { BitObject } from '../objects';
+import BitObject from '../objects/object';
 
 export default class Source extends BitObject {
   contents: Buffer;

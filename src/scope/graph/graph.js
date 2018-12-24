@@ -4,7 +4,7 @@ import semver from 'semver';
 import R from 'ramda';
 import { Repository } from '../objects';
 import { BitId, BitIds } from '../../bit-id';
-import { ModelComponent, Version } from '../models';
+import type { ModelComponent, Version } from '../models';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../constants';
 
 const Graph = GraphLib.Graph;

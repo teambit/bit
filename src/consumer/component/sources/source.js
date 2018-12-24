@@ -1,5 +1,5 @@
 // @flow
-import Bit from '../../component';
+import type Component from '../../component';
 
 export default class Source {
   src: string;
@@ -8,7 +8,7 @@ export default class Source {
     this.src = src;
   }
 
-  create(bit: Bit): Source {
+  create(bit: Component): Source {
     // eslint-disable-line
     throw Error('every source must implement a create method');
   }

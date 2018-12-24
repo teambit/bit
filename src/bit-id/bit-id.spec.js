@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BitId } from '../../src/bit-id';
+import BitId from './bit-id';
 import { InvalidName, InvalidScopeName } from './exceptions';
 
 describe('Bit-id', () => {

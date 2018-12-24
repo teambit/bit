@@ -342,3 +342,7 @@ export const NODE_PATH_SEPARATOR = process.platform === 'win32' ? ';' : ':'; // 
 export const WRAPPER_DIR = 'bit_wrapper_dir';
 
 export const PACKAGE_JSON = 'package.json';
+
+export const COMPILER_ENV_TYPE = 'compiler';
+
+export const TESTER_ENV_TYPE = 'tester';

@@ -2,16 +2,17 @@
 import path from 'path';
 import semver from 'semver';
 import R from 'ramda';
-import { Version, ModelComponent } from '../../scope/models';
-import { Scope } from '../../scope';
+import type Version from '../../scope/models/version';
+import ModelComponent from '../../scope/models/model-component';
+import type { Scope } from '../../scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
-import logger from '../../logger/logger';
-import BitMap from '../bit-map/bit-map';
-import Consumer from '../consumer';
+import type BitMap from '../bit-map/bit-map';
+import type Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
+import { fetchRemoteVersions } from '../../scope/scope-remotes';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -295,7 +296,7 @@ export default class ComponentsList {
     }));
     const componentsIds = listScopeResults.map(result => result.id);
     if (showRemoteVersion) {
-      const latestVersionsInfo: BitId[] = await this.scope.fetchRemoteVersions(componentsIds);
+      const latestVersionsInfo: BitId[] = await fetchRemoteVersions(this.scope, componentsIds);
       latestVersionsInfo.forEach((componentId) => {
         const listResult = listScopeResults.find(c => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);

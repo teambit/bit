@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import pMapSeries from 'p-map-series';
-import { removeEmptyDir } from '..';
+import removeEmptyDir from './remove-empty-dir';
 import logger from '../../logger/logger';
 
 /**

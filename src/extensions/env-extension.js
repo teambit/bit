@@ -4,29 +4,31 @@ import R from 'ramda';
 import path from 'path';
 import format from 'string-format';
 import BaseExtension from './base-extension';
-import Scope from '../scope/scope';
+import type Scope from '../scope/scope';
 import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
 import { Repository } from '../scope/objects';
-import { pathJoinLinux, removeFilesAndEmptyDirsRecursively } from '../utils';
+import { pathJoinLinux } from '../utils';
+import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import CompilerExtension, { COMPILER_ENV_TYPE } from './compiler-extension';
-import TesterExtension, { TESTER_ENV_TYPE } from './tester-extension';
-import { COMPONENT_ORIGINS } from '../constants';
+import type CompilerExtension from './compiler-extension';
+import type TesterExtension from './tester-extension';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
-import ConsumerComponent from '../consumer/component';
-import ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
-import ComponentBitJson from '../consumer/bit-json';
+import type ConsumerComponent from '../consumer/component';
+import type ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
+import type ComponentBitJson from '../consumer/bit-json';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
+import installExtensions from '../scope/extensions/install-extensions';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -104,9 +106,10 @@ export default class EnvExtension extends BaseExtension {
     const installOpts = {
       ids: [{ componentId: BitId.parse(this.name, true), type: this.envType.toLowerCase() }], // @todo: make sure it always has a scope name
       dependentId,
+      scope,
       ...opts
     };
-    const installResult = await scope.installEnvironment(installOpts);
+    const installResult = await installExtensions(installOpts);
     this.setExtensionPathInScope(scope.getPath());
     await this.reload(scope.getPath(), context);
     return installResult;

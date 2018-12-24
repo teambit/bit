@@ -15,6 +15,7 @@ import * as packageJson from '../component/package-json';
 import { installPackages } from '../../npm-client/install-packages';
 import logger from '../../logger/logger';
 import defaultErrorHandler from '../../cli/default-error-handler';
+import { getScopeRemotes } from '../../scope/scope-remotes';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
@@ -68,7 +69,7 @@ export default class EjectComponents {
   async decideWhichComponentsToEject(): Promise<void> {
     logger.debug('eject: getting the components status');
     if (R.isEmpty(this.componentsIds)) return;
-    const remotes = await this.consumer.scope.remotes();
+    const remotes = await getScopeRemotes(this.consumer.scope);
     const hubExportedComponents = new BitIds();
     this.componentsIds.forEach((bitId) => {
       if (!bitId.hasScope()) this.failedComponents.notExportedComponents.push(bitId);

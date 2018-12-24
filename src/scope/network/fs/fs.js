@@ -1,16 +1,16 @@
 /** @flow */
 import loadScope from '../../scope-loader';
-import Scope from '../../scope';
 import { fetch, deprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
 import { flatten } from '../../../utils';
-import type { ScopeDescriptor } from '../../scope';
+import type Scope, { ScopeDescriptor } from '../../scope';
 import { searchAdapter } from '../../../search';
 import type { Network } from '../network';
 import ComponentsList from '../../../consumer/component/components-list';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
+import ScopeComponentsImporter from '../../component-ops/scope-components-importer';
 
 export default class Fs implements Network {
   scopePath: string;
@@ -33,11 +33,11 @@ export default class Fs implements Network {
     return Promise.resolve(this.getScope().describe());
   }
 
-  push(componentObjects: ComponentObjects): Promise<ComponentObjects> {
+  push(componentObjects: ComponentObjects): Promise<string[]> {
     return this.pushMany([componentObjects]);
   }
 
-  pushMany(components: ComponentObjects[]): Promise<ComponentObjects[]> {
+  pushMany(components: ComponentObjects[]): Promise<string[]> {
     return put({ path: this.scopePath, componentObjects: components });
   }
 
@@ -72,7 +72,8 @@ export default class Fs implements Network {
   }
 
   show(bitId: BitId): Promise<> {
-    return this.getScope().loadComponent(bitId);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.getScope());
+    return scopeComponentsImporter.loadComponent(bitId);
   }
 
   connect() {

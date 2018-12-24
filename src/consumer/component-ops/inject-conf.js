@@ -1,15 +1,14 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import ConsumerComponent from '../component/consumer-component';
+import type ConsumerComponent from '../component/consumer-component';
 import ComponentBitJson from '../bit-json';
-import { removeEmptyDir } from '../../utils';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import GeneralError from '../../error/general-error';
-import BitMap from '../bit-map';
+import type BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
-import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
-import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import { AbstractVinyl } from '../component/sources';
+import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 
 export type InjectConfResult = { id: string };
 

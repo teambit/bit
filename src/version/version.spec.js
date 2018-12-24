@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Version from '../../src/version';
+import Version from '../version';
 
 describe('Version', () => {
   describe('toString()', () => {
@@ -62,14 +62,6 @@ describe('Version', () => {
       expect(() => {
         version.increase();
       }).to.throw();
-    });
-  });
-
-  describe('parse()', () => {
-    it('should parse given version as latest', () => {
-      const version = Version.parse('latest');
-      expect(version.versionNum).to.equal(null);
-      expect(version.latest).to.equal(true);
     });
   });
 });

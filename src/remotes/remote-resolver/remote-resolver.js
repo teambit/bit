@@ -1,6 +1,6 @@
 /* @flow */
 import R from 'ramda';
-import Scope from '../../scope/scope';
+import type Scope from '../../scope/scope';
 import { getSync } from '../../api/consumer/lib/global-config';
 import { DEFAULT_HUB_DOMAIN, CFG_HUB_DOMAIN_KEY } from '../../constants';
 

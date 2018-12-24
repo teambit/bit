@@ -3,12 +3,13 @@ import path from 'path';
 import semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
-import Version from '../version';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
-import { isValidIdChunk, isValidScopeName } from '../utils';
+import isValidIdChunk from '../utils/is-valid-id-chunk';
+import isValidScopeName from '../utils/is-valid-scope-name';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
+import versionParser from '../version/version-parser';
 
 export type BitIdProps = {
   scope?: ?string,
@@ -54,7 +55,7 @@ export default class BitId {
   }
 
   getVersion() {
-    return Version.parse(this.version);
+    return versionParser(this.version);
   }
 
   hasVersion(): boolean {

@@ -58,7 +58,6 @@ src/consumer/component/environment/validate-plugin.js
 src/consumer/component/sources/dist.js
 src/consumer/dir-structure/dir-structure.js
 src/remotes/remotes.js
-src/scope/component-version.js
 src/scope/migrations/component-version/remove-latest-from-compiler.js
 src/search/serverless-index.js
 src/utils/array/filter-async.js

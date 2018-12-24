@@ -37,7 +37,8 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { pathNormalizeToLinux, sortObject } from '../utils';
-import { Version, ModelComponent } from '../scope/models';
+import type { ModelComponent } from '../scope/models';
+import { Version } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import { RemovedLocalObjects } from '../scope/removed-components';
@@ -50,9 +51,7 @@ import { Analytics } from '../analytics/analytics';
 import GeneralError from '../error/general-error';
 import tagModelComponent from '../scope/component-ops/tag-model-component';
 import type { InvalidComponent } from './component/consumer-component';
-import MainFileRemoved from './component/exceptions/main-file-removed';
 import type { BitIdStr } from '../bit-id/bit-id';
-import ExtensionFileNotFound from '../extensions/exceptions/extension-file-not-found';
 import { getAutoTagPending } from '../scope/component-ops/auto-tag';
 import { ComponentNotFound } from '../scope/exceptions';
 import VersionDependencies from '../scope/version-dependencies';
@@ -62,6 +61,9 @@ import {
   getManipulateDirForExistingComponents
 } from './component-ops/manipulate-dir';
 import ComponentLoader from './component/component-loader';
+import { getScopeRemotes } from '../scope/scope-remotes';
+import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
+import installExtensions from '../scope/extensions/install-extensions';
 
 type ConsumerProps = {
   projectPath: string,
@@ -307,16 +309,13 @@ export default class Consumer {
     return Promise.all(componentsP);
   }
 
-  /**
-   * return a component only when it's stored locally.
-   * don't go to any remote server and don't throw an exception if the component is not there.
-   */
   async loadComponentWithDependenciesFromModel(id: BitId): Promise<ComponentWithDependencies> {
     const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     if (!id.version) {
       throw new TypeError('consumer.loadComponentWithDependenciesFromModel, version is missing from the id');
     }
-    const versionDependencies = await modelComponent.toVersionDependencies(id.version, this.scope, this.scope.name);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+    const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
     const manipulateDirData = await getManipulateDirForExistingComponents(this, versionDependencies.component);
     return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
   }
@@ -334,13 +333,14 @@ export default class Consumer {
   }
 
   importEnvironment(bitId: BitId, verbose?: boolean, dontPrintEnvMsg: boolean): Promise<ComponentWithDependencies[]> {
-    return this.scope.installEnvironment({ ids: [{ componentId: bitId }], verbose, dontPrintEnvMsg });
+    return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
-  async importComponents(ids: BitId[], withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+  async importComponents(ids: BitIds, withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
-      ? await this.scope.getManyWithAllVersions(ids, false)
-      : await this.scope.getMany(ids);
+      ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
+      : await scopeComponentsImporter.importMany(ids);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
@@ -585,7 +585,7 @@ export default class Consumer {
     return { taggedComponents, autoTaggedComponents };
   }
 
-  static getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
+  getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
     if (!id.scope) {
       throw new GeneralError(
         `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
@@ -733,7 +733,7 @@ export default class Consumer {
 
   async deprecateRemote(bitIds: Array<BitId>) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await this.scope.remotes();
+    const remotes = await getScopeRemotes(this.scope);
     const context = {};
     enrichContextFromGlobal(context);
     const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
@@ -807,7 +807,7 @@ export default class Consumer {
    */
   async removeRemote(bitIds: BitIds, force: boolean) {
     const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await this.scope.remotes();
+    const remotes = await getScopeRemotes(this.scope);
     const context = {};
     enrichContextFromGlobal(context);
     const removeP = Object.keys(groupedBitsByScope).map(async (key) => {

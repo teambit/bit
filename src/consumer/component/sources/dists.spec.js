@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Dists from '../../../../src/consumer/component/sources/dists';
+import Dists from '../../../consumer/component/sources/dists';
 
 describe('Dists', () => {
   describe('getNodePathDir', () => {

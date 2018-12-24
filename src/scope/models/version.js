@@ -1,13 +1,10 @@
 /** @flow */
 import R from 'ramda';
 import { Ref, BitObject } from '../objects';
-import Scope from '../scope';
 import Source from './source';
 import { filterObject, first, bufferFrom, getStringifyArgs, sha1, sortObject } from '../../utils';
-import ConsumerComponent from '../../consumer/component';
-import type { customResolvedPath } from '../../consumer/component';
+import type ConsumerComponent, { customResolvedPath } from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
-import ComponentVersion from '../component-version';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
@@ -16,9 +13,8 @@ import type { PathLinux } from '../../utils/path';
 import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
 import type { TesterExtensionModel } from '../../extensions/tester-extension';
 import ExtensionFile from '../../extensions/extension-file';
-import { SourceFile, License, Dist } from '../../consumer/component/sources';
+import { SourceFile } from '../../consumer/component/sources';
 import Repository from '../objects/repository';
-import type { RelativePath } from '../../consumer/component/dependencies/dependency';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';

@@ -6,9 +6,12 @@ import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
-import { resolveGroupId, mkdirp, writeFile, removeFile, glob } from '../../utils';
-import { Scope } from '../../scope';
-import { ModelComponent, Symlink, ScopeMeta } from '../models';
+import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
+import removeFile from '../../utils/fs-remove-file';
+import type Scope from '../../scope/scope';
+import ModelComponent from '../models/model-component';
+import Symlink from '../models/symlink';
+import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
