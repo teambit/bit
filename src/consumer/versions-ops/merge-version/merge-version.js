@@ -2,7 +2,7 @@
 import path from 'path';
 import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
-import type Component from '../../component';
+import type Component from '../../component/consumer-component';
 import type { Consumer } from '../..';
 import type { SourceFile } from '../../component/sources';
 import { resolveConflictPrompt } from '../../../prompts';
@@ -145,6 +145,7 @@ async function applyVersion(
 
   consumer.bitMap.removeComponent(component.id);
   componentWriter.origin = componentMap.origin;
+  // $FlowFixMe todo: fix this. does configDir should be a string or ConfigDir?
   componentWriter.configDir = componentMap.configDir;
   componentWriter.addComponentToBitMap(componentMap.rootDir);
 

@@ -251,7 +251,7 @@ export default class ImportComponents {
       consumer: this.consumer,
       otherComponent: fsComponent,
       otherVersion: currentlyUsedVersion,
-      currentComponent,
+      currentComponent, // $FlowFixMe
       currentVersion: component.id.version,
       baseComponent
     });

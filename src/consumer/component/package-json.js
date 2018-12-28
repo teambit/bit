@@ -2,7 +2,7 @@
 import R from 'ramda';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
-import type Component from '../component';
+import type Component from '../component/consumer-component';
 import {
   COMPONENT_ORIGINS,
   CFG_REGISTRY_DOMAIN_PREFIX,

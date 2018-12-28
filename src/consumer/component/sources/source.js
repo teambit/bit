@@ -1,5 +1,5 @@
 // @flow
-import type Component from '../../component';
+import type Component from '../../component/consumer-component';
 
 export default class Source {
   src: string;

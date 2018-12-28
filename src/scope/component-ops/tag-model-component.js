@@ -6,7 +6,7 @@ import pMapSeries from 'p-map-series';
 import type { Scope } from '..';
 import type { Consumer } from '../../consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import type Component from '../../consumer/component';
+import type Component from '../../consumer/component/consumer-component';
 import type ModelComponent from '../models/model-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
@@ -128,6 +128,7 @@ async function setFutureVersions(
     componentsToTag.map(async (componentToTag) => {
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+      // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance
       componentToTag.usedVersion = componentToTag.version;
       componentToTag.version = version;
     })
@@ -165,6 +166,7 @@ function validateDirManipulation(components: Component[]): void {
     const sharedDir = component.componentFromModel.originallySharedDir;
     const wrapDir = component.componentFromModel.wrapDir;
     const pathWithSharedDir = (pathStr: PathLinux): PathLinux => {
+      // $FlowFixMe componentMap is set here
       if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         return pathJoinLinux(sharedDir, pathStr);
       }
@@ -182,6 +184,7 @@ function validateDirManipulation(components: Component[]): void {
     };
     const expectedMainFile = pathAfterDirManipulation(component.componentMap.mainFile);
     throwOnError(expectedMainFile, component.pendingVersion.mainFile);
+    // $FlowFixMe componentMap is set here
     const componentMapFiles = component.componentMap.getAllFilesPaths();
     const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
     componentMapFiles.forEach((file) => {
