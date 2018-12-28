@@ -4,7 +4,7 @@ import R from 'ramda';
 import semver from 'semver';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId } from '../../../../bit-id';
-import type Component from '../../../component';
+import type Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
 import type { Consumer } from '../../../../consumer';
 import type { PathLinux } from '../../../../utils/path';
@@ -48,8 +48,8 @@ function getIdFromBitJson(bitJson?: ComponentBitJson, componentId: BitId): ?BitI
  * found it goes to the dependency package.json.
  */
 function getIdFromPackageJson(consumer: Consumer, component: Component, componentId: BitId): ?BitId {
-  if (!componentId.scope) return null;
-  const rootDir: PathLinux = component.componentMap.rootDir;
+  if (!componentId.scope) return null; // $FlowFixMe component.componentMap is set
+  const rootDir: ?PathLinux = component.componentMap.rootDir;
   const consumerPath = consumer.getPath();
   const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
   const packagePath = consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
@@ -66,6 +66,7 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
 }
 
 function getIdFromBitMap(consumer: Consumer, component: Component, componentId: BitId): ?BitId {
+  // $FlowFixMe component.componentMap is set
   const componentMap: ComponentMap = component.componentMap;
   if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
     const dependencyId = componentMap.dependencies.find(
@@ -101,7 +102,9 @@ export default (async function updateDependenciesVersions(consumer: Consumer, co
   const updateDependencies = async (dependencies: Dependencies) => {
     dependencies.get().forEach((dependency) => {
       const id = dependency.id;
+      // $FlowFixMe component.componentFromModel is set
       const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
+      // $FlowFixMe component.bitJson is set
       const idFromBitJson = getIdFromBitJson(component.bitJson, id);
       const idFromPackageJson = getIdFromPackageJson(consumer, component, id);
       const idFromBitMap = getIdFromBitMap(consumer, component, id);

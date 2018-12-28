@@ -1,6 +1,6 @@
 // @flow
 import R from 'ramda';
-import type Component from '../../component';
+import type Component from '../../component/consumer-component';
 import type { Consumer } from '../..';
 import { sha1, pathNormalizeToLinux } from '../../../utils';
 import type { SourceFile } from '../../component/sources';
