@@ -193,7 +193,7 @@ export default class Environment {
       );
       // ******* TODO: MOVE THIS ELSEWHERE *******
       const packagePath = sandbox.getSandboxFolder();
-      const cacheFolder = '/home/aram/.cache/yarn/v4'; // TBD: generate the cache
+      const cacheFolder = '/Users/davidfirst/Library/Caches/Yarn/v4'; // TBD: generate the cache
       const pkgJson = JSON.stringify(this.masterPackageJson); // TODO: various fields in package.json (eg. babel configuration)
       const yarnLock = this.yarnlock;
       const yarnLockParsed = lockfile.parse(this.yarnlock);

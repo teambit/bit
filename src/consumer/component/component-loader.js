@@ -84,7 +84,7 @@ export default class ComponentLoader {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
     const componentFromModel = await this.consumer.loadComponentFromModelIfExist(idWithConcreteVersion);
-    let component;
+    let component: Component;
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
