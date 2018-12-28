@@ -108,7 +108,9 @@
     "vinyl": "^2.1.0",
     "vinyl-file": "^3.0.0",
     "winston": "^2.4.0",
-    "yn": "^2.0.0"
+    "yn": "^2.0.0",
+    "@bit/bit.capsule-dev.core.capsule": "file:./components/core/capsule",
+    "@bit/bit.capsule-dev.container.fs-container": "file:./components/container/fs-container"
   },
   "devDependencies": {
     "babel-cli": "^6.18.0",
