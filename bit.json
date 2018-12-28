@@ -5,8 +5,5 @@
         "bit.capsule-dev/container/fs-container": "0.0.2"
     },
     "componentsDefaultDirectory": "components/{namespace}/{name}",
-    "packageManager": "npm",
-    "dist": {
-        "target": "dist"
-    }
+    "packageManager": "npm"
 }
