@@ -5,7 +5,7 @@ import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
 import type { Network } from '../scope/network/network';
-import type Component from '../consumer/component';
+import type Component from '../consumer/component/consumer-component';
 import type { ListScopeResult } from '../consumer/component/components-list';
 
 /**

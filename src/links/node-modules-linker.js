@@ -5,7 +5,7 @@ import R from 'ramda';
 import symlinkOrCopy from 'symlink-or-copy';
 import glob from 'glob';
 import { BitId } from '../bit-id';
-import type Component from '../consumer/component';
+import type Component from '../consumer/component/consumer-component';
 import { COMPONENT_ORIGINS } from '../constants';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';

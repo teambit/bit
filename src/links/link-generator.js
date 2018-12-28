@@ -9,7 +9,7 @@ import { outputFile, getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
 import type { ComponentWithDependencies } from '../scope';
-import type Component from '../consumer/component';
+import type Component from '../consumer/component/consumer-component';
 import type { Dependency, Dependencies } from '../consumer/component/dependencies';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
@@ -67,9 +67,7 @@ async function getComponentLinks({
     const dependencyComponent = getDependencyComponent();
 
     if (!dependencyComponent) {
-      const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${
-        component.id
-      }.
+      const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${component.id.toString()}.
 The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
       throw new Error(errorMessage);
     }
@@ -98,7 +96,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     await generatePostInstallScript(component, postInstallLinks);
   }
   if (symlinks.length) {
-    createSymlinks(symlinks, component.id);
+    createSymlinks(symlinks, component.id.toString());
   }
   return linksToWrite;
 }
@@ -113,7 +111,7 @@ function _getDirectDependencies(component: Component, componentMap: ComponentMap
 function _getFlattenedDependencies(component: Component, componentMap: ComponentMap): BitIds {
   return componentMap.origin === COMPONENT_ORIGINS.NESTED
     ? component.flattenedDependencies
-    : component.getAllNonEnvsFlattenedDependencies();
+    : BitIds.fromArray(component.getAllNonEnvsFlattenedDependencies());
 }
 
 function createSymlinks(symlinks: Symlink[], componentId: string) {
@@ -176,14 +174,12 @@ async function writeComponentsDependenciesLinks(
     const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
-        `writeComponentsDependenciesLinks, ignoring a component ${
-          componentWithDeps.component.id
-        } as it is an author component`
+        `writeComponentsDependenciesLinks, ignoring a component ${componentWithDeps.component.id.toString()} as it is an author component`
       );
       return null;
     }
     // it must be IMPORTED. We don't pass NESTED to this function
-    logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id}`);
+    logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id.toString()}`);
 
     const componentsLinks = await getComponentLinks({
       consumer,
@@ -261,7 +257,8 @@ function getInternalCustomResolvedLinks(
  * @see postInstallTemplate() JSDoc to understand better why this postInstall script is needed
  */
 async function generatePostInstallScript(component: Component, postInstallLinks) {
-  const componentDir = component.writtenPath;
+  // $FlowFixMe todo: is it possible that writtenPath is empty here?
+  const componentDir: string = component.writtenPath;
   // convert from array to object for easier parsing in the postinstall script
   const linkPathsObject = postInstallLinks.reduce((acc, val) => {
     acc[val.filePath] = val.content;
@@ -272,10 +269,12 @@ async function generatePostInstallScript(component: Component, postInstallLinks)
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
+  // $FlowFixMe packageJsonInstance must be set
   component.packageJsonInstance.scripts = { postinstall: postInstallScript };
   const override = true;
   await Promise.all([
     fs.writeFile(postInstallFilePath, postInstallCode),
+    // $FlowFixMe packageJsonInstance must be set
     component.packageJsonInstance.write({ override })
   ]);
 }
@@ -318,7 +317,7 @@ async function writeDependenciesLinksToDir(
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
-        component,
+        component, // $FlowFixMe componentMap should be set here
         componentMap: component.componentMap,
         relativePath,
         dependencyId: dependency.id,

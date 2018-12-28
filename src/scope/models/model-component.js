@@ -39,12 +39,12 @@ type State = {
 type Versions = { [string]: Ref };
 
 export type ComponentProps = {
-  scope?: string,
+  scope: ?string,
   name: string,
   versions?: Versions,
-  lang?: string,
-  deprecated?: boolean,
-  bindingPrefix?: string,
+  lang: string,
+  deprecated: boolean,
+  bindingPrefix: string,
   /**
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
    */

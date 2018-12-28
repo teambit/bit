@@ -7,7 +7,7 @@ import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import { BitId } from '../bit-id';
 import type { Consumer } from '../consumer';
 import logger from '../logger/logger';
-import type Component from '../consumer/component';
+import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
@@ -15,7 +15,7 @@ import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 export type LinkFile = {
   linkPath: string,
   linkContent: string,
-  isEs6: boolean,
+  isEs6?: boolean,
   postInstallLink?: boolean, // postInstallLink is needed when custom module resolution was used
   symlinkTo?: ?PathOsBased // symlink (instead of link) is needed for unsupported files, such as binary files
 };
@@ -200,6 +200,7 @@ export default class DependencyFileLinkGenerator {
     if (this.targetDir) return this.targetDir;
     // when running from bit build, the writtenPath is not available
     if (!this.component.writtenPath) return this.consumer.toAbsolutePath(this.componentMap.rootDir);
+    // $FlowFixMe this.component.writtenPath must be set, see the previous line
     if (path.isAbsolute(this.component.writtenPath)) return this.component.writtenPath;
     return this.consumer.toAbsolutePath(this.component.writtenPath);
   }
@@ -218,6 +219,7 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getDistRoot(): PathOsBased {
+    // $FlowFixMe probably fine, should be for imported
     return this.component.dists.getDistDirForConsumer(this.consumer, this.componentMap.rootDir);
   }
 
