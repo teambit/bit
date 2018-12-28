@@ -23,5 +23,114 @@
         "mainFile": "src/consumer/component/dependencies/dependency-resolver/types/dependency-tree-type.js",
         "origin": "AUTHORED"
     },
-    "version": "13.0.1"
+    "bit.capsule-dev/core/capsule@0.0.1": {
+        "files": [
+            {
+                "name": "capsule.spec.ts",
+                "relativePath": "capsule.spec.ts",
+                "test": false
+            },
+            {
+                "name": "capsule.ts",
+                "relativePath": "capsule.ts",
+                "test": false
+            },
+            {
+                "name": "console.ts",
+                "relativePath": "console/console.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "console/index.ts",
+                "test": false
+            },
+            {
+                "name": "container.ts",
+                "relativePath": "container/container.ts",
+                "test": false
+            },
+            {
+                "name": "exec.ts",
+                "relativePath": "container/exec.ts",
+                "test": false
+            },
+            {
+                "name": "container-fs.ts",
+                "relativePath": "container/fs/container-fs.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "container/fs/index.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "container/index.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "exceptions/index.ts",
+                "test": false
+            },
+            {
+                "name": "missing-container-support.ts",
+                "relativePath": "exceptions/missing-container-support.ts",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "index.ts",
+                "test": false
+            },
+            {
+                "name": "readme.md",
+                "relativePath": "readme.md",
+                "test": false
+            },
+            {
+                "name": "index.ts",
+                "relativePath": "state/index.ts",
+                "test": false
+            },
+            {
+                "name": "state.spec.ts",
+                "relativePath": "state/state.spec.ts",
+                "test": false
+            },
+            {
+                "name": "state.ts",
+                "relativePath": "state/state.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "index.ts",
+        "rootDir": "components/core/capsule",
+        "origin": "IMPORTED",
+        "originallySharedDir": "src/capsule"
+    },
+    "bit.capsule-dev/container/fs-container@0.0.2": {
+        "files": [
+            {
+                "name": "container.spec.ts",
+                "relativePath": "container.spec.ts",
+                "test": true
+            },
+            {
+                "name": "container.ts",
+                "relativePath": "container.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "container.ts",
+        "rootDir": "components/container/fs-container",
+        "origin": "IMPORTED",
+        "dependencies": [
+            "bit.capsule-dev/core/capsule@0.0.1"
+        ],
+        "originallySharedDir": "fsContainer"
+    },
+    "version": "13.0.4"
 }
