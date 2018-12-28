@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import { Consumer } from '..';
+import type { Consumer } from '..';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';

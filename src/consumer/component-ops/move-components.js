@@ -4,10 +4,10 @@ import R from 'ramda';
 import { linkComponentsToNodeModules, reLinkDependents } from '../../links';
 import * as packageJson from '../component/package-json';
 import GeneralError from '../../error/general-error';
-import { Consumer } from '..';
+import type { Consumer } from '..';
 import type { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import type { PathChangeResult } from '../bit-map/bit-map';
-import Component from '../component/consumer-component';
+import type Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
 
 export async function movePaths(

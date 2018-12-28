@@ -2,6 +2,7 @@
 import { loadScope } from '../../../scope';
 import { Remote } from '../../../remotes';
 import { GlobalRemotes } from '../../../global-config';
+import { getScopeRemotes } from '../../../scope/scope-remotes';
 
 function buildRemote(url: string): Remote {
   return new Remote(url);
@@ -54,7 +55,7 @@ export function list(global: boolean) {
   }
 
   return loadScope().then((scope) => {
-    return scope.remotes().then(remotes => remotes.toPlainObject());
+    return getScopeRemotes(scope).then(remotes => remotes.toPlainObject());
   });
 }
 

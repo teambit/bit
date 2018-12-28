@@ -5,16 +5,17 @@ import R from 'ramda';
 import symlinkOrCopy from 'symlink-or-copy';
 import glob from 'glob';
 import { BitId } from '../bit-id';
-import Component from '../consumer/component';
+import type Component from '../consumer/component';
 import { COMPONENT_ORIGINS } from '../constants';
-import ComponentMap from '../consumer/bit-map/component-map';
+import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
-import { pathRelativeLinux, first, createSymlinkOrCopy } from '../utils';
-import Consumer from '../consumer/consumer';
+import { pathRelativeLinux, first } from '../utils';
+import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
+import type Consumer from '../consumer/consumer';
 import { getIndexFileName, writeComponentsDependenciesLinks } from './link-generator';
 import { getLinkToFileContent } from './link-content';
 import type { PathOsBased } from '../utils/path';
-import { Dependency } from '../consumer/component/dependencies';
+import type { Dependency } from '../consumer/component/dependencies';
 
 type LinkDetail = { from: string, to: string };
 
@@ -27,9 +28,10 @@ function writeDependencyLink(
   parentRootDir: PathOsBased, // absolute path
   bitId: BitId,
   rootDir: PathOsBased, // absolute path
-  bindingPrefix: string
+  bindingPrefix: string,
+  consumer: Consumer
 ): LinkDetail {
-  const relativeDestPath = Consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
+  const relativeDestPath = consumer.getNodeModulesPathOfComponent(bindingPrefix, bitId);
   const destPath = path.join(parentRootDir, relativeDestPath);
   createSymlinkOrCopy(rootDir, destPath, bitId.toString());
 
@@ -77,7 +79,8 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
         consumer.toAbsolutePath(parentRootDir),
         dependency.id,
         consumer.toAbsolutePath(dependencyComponentMap.rootDir || '.'),
-        component.bindingPrefix
+        component.bindingPrefix,
+        consumer
       )
     );
     if (!consumer.shouldDistsBeInsideTheComponent()) {
@@ -86,7 +89,7 @@ function writeDependenciesLinks(component: Component, componentMap: ComponentMap
       // dir into the dist dir. (see consumer-component.write())
       const from = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
       const to = component.dists.getDistDirForConsumer(consumer, dependencyComponentMap.rootDir);
-      writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
+      writtenLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix, consumer));
       // @todo: why is it from a component to its dependency? shouldn't it be from component src to dist/component?
       symlinkPackages(from, to, consumer, component);
     }
@@ -104,12 +107,14 @@ function linkToMainFile(component: Component, componentMap: ComponentMap, compon
   component.dists.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
   const mainFile = component.dists.calculateMainDistFileForAuthored(component.mainFile, consumer);
   const indexFileName = getIndexFileName(mainFile);
-  const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
-  const destRelative = pathRelativeLinux(path.dirname(dest), mainFile);
+  const dest = path.join(consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), indexFileName);
+  const destAbs = consumer.toAbsolutePath(dest);
+  const mainFileAbs = consumer.toAbsolutePath(mainFile);
+  const destRelative = pathRelativeLinux(path.dirname(destAbs), mainFileAbs);
   const fileContent = getLinkToFileContent(destRelative);
   if (fileContent) {
     // otherwise, the file type is not supported, no need to write anything
-    fs.outputFileSync(dest, fileContent);
+    fs.outputFileSync(destAbs, fileContent);
   }
 }
 
@@ -123,7 +128,8 @@ function writeMissingLinks(consumer: Consumer, component: Component, componentMa
         consumer.toAbsolutePath(componentMap.rootDir),
         dependencyId,
         consumer.toAbsolutePath(dependencyComponentMap.rootDir),
-        component.bindingPrefix
+        component.bindingPrefix,
+        consumer
       );
     });
   });
@@ -150,7 +156,7 @@ async function _linkImportedComponents(
   componentMap: ComponentMap
 ): Promise<LinksResult> {
   const componentId = component.id;
-  const relativeLinkPath = Consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
+  const relativeLinkPath = consumer.getNodeModulesPathOfComponent(consumer.bitJson.bindingPrefix, componentId);
   const linkPath = consumer.toAbsolutePath(relativeLinkPath);
   // when a user moves the component directory, use component.writtenPath to find the correct target
   const srcTarget = component.writtenPath || consumer.toAbsolutePath(componentMap.rootDir);
@@ -200,10 +206,12 @@ function _linkAuthoredComponents(consumer: Consumer, component: Component, compo
   if (!componentId.scope) return { id: componentId, bound: [] }; // scope is a must to generate the link
   const filesToBind = componentMap.getFilesRelativeToConsumer();
   const bound = filesToBind.map((file) => {
-    const dest = path.join(Consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-    const destRelative = pathRelativeLinux(path.dirname(dest), file);
+    const dest = path.join(consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
+    const destAbs = consumer.toAbsolutePath(dest);
+    const fileAbs = consumer.toAbsolutePath(file);
+    const destRelative = pathRelativeLinux(path.dirname(destAbs), fileAbs);
     const fileContent = getLinkToFileContent(destRelative);
-    fs.outputFileSync(dest, fileContent);
+    fs.outputFileSync(destAbs, fileContent);
     return { from: dest, to: file };
   });
   linkToMainFile(component, componentMap, componentId, consumer);

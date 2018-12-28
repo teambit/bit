@@ -1,6 +1,6 @@
 /** @flow */
 import R from 'ramda';
-import BitMap from '../bit-map';
+import type BitMap from '../bit-map';
 import { BIT_VERSION } from '../../constants';
 import getMigrationVersions, { MigrationDeclaration } from '../../migration/migration-helper';
 import logger from '../../logger/logger';
@@ -21,7 +21,7 @@ type VersionMigrations = {
 let globalVerbose: boolean = false;
 
 /**
- * Running migration process for consumer 
+ * Running migration process for consumer
  * (Currently support only bitmap migration, but might contain other stores in the future)
  * @param {string} bitmapVersion - The current bitmap version
  * @param {Object} migratonManifest - A manifest which define what migrations to run

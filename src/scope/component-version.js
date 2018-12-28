@@ -1,13 +1,11 @@
 /** @flow */
-import ModelComponent from './models/model-component';
-import Version from './models/version';
+import type ModelComponent from './models/model-component';
+import type Version from './models/version';
 import { BitId, BitIds } from '../bit-id';
-import Scope from './scope';
 import Repository from './objects/repository';
-import VersionDependencies from './version-dependencies';
 import ComponentObjects from './component-objects';
 import logger from '../logger/logger';
-import ConsumerComponent from '../consumer/component';
+import type ConsumerComponent from '../consumer/component';
 import GeneralError from '../error/general-error';
 import { HashMismatch } from './exceptions';
 import type { ManipulateDirItem } from '../consumer/component-ops/manipulate-dir';
@@ -53,48 +51,8 @@ export default class ComponentVersion {
     return this.toId();
   }
 
-  async toVersionDependencies(scope: Scope, source: string): Promise<VersionDependencies> {
-    const version = await this.getVersion(scope.objects);
-    if (!version) {
-      logger.debug(
-        `toVersionDependencies, component ${this.component.id().toString()}, version ${
-          this.version
-        } not found, going to fetch from a remote`
-      );
-      if (this.component.scope === scope.name) {
-        // it should have been fetched locally, since it wasn't found, this is an error
-        throw new GeneralError(
-          `Version ${this.version} of ${this.component.id().toString()} was not found in scope ${scope.name}`
-        );
-      }
-      return scope.remotes().then((remotes) => {
-        const src = this.id;
-        src.scope = source;
-        return scope.getExternal({ id: src, remotes, localFetch: false });
-      });
-    }
-
-    logger.debug(
-      `toVersionDependencies, component ${this.component.id().toString()}, version ${
-        this.version
-      } found, going to collect its dependencies`
-    );
-    const dependencies = await scope.importManyOnes(version.flattenedDependencies);
-    const devDependencies = await scope.importManyOnes(version.flattenedDevDependencies);
-    const compilerDependencies = await scope.importManyOnes(version.flattenedCompilerDependencies);
-    const testerDependencies = await scope.importManyOnes(version.flattenedTesterDependencies);
-
-    return new VersionDependencies(
-      this,
-      dependencies,
-      devDependencies,
-      compilerDependencies,
-      testerDependencies,
-      source
-    );
-  }
-
   toConsumer(repo: Repository, manipulateDirData: ?(ManipulateDirItem[])): Promise<ConsumerComponent> {
+    // $FlowFixMe
     return this.component.toConsumerComponent(this.version, this.component.scope, repo, manipulateDirData);
   }
 

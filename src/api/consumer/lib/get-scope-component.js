@@ -8,6 +8,8 @@ import Remotes from '../../../remotes/remotes';
 import Remote from '../../../remotes/remote';
 import Component from '../../../consumer/component';
 import { loadConsumer, Consumer } from '../../../consumer';
+import { getScopeRemotes } from '../../../scope/scope-remotes';
+import ScopeComponentsImporter from '../../../scope/component-ops/scope-components-importer';
 
 export default (async function getScopeComponent({
   id,
@@ -44,7 +46,8 @@ export default (async function getScopeComponent({
     if (allVersions) {
       return Promise.reject(new Error('cant list all versions of a remote scope'));
     }
-    const remotes = await consumer.scope.remotes();
+    const remotes: Remotes = await getScopeRemotes(consumer.scope);
+    // $FlowFixMe scope must be set as it came from a remote
     const remote = await remotes.resolve(bitId.scope, consumer.scope);
     return remoteShow(remote);
   };
@@ -52,7 +55,8 @@ export default (async function getScopeComponent({
     if (allVersions) {
       return scope.loadAllVersions(bitId);
     }
-    return scope.loadRemoteComponent(bitId);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    return scopeComponentsImporter.loadRemoteComponent(bitId);
   };
 
   if (!scopePath) {

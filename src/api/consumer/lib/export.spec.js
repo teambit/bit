@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import exportAction from '../../../../src/api/consumer/lib/export';
-import { ComponentNotFound } from '../../../../src/scope/exceptions';
-import * as consumer from '../../../../src/consumer';
+import exportAction from '../../../api/consumer/lib/export';
+import { ComponentNotFound } from '../../../scope/exceptions';
+import * as consumer from '../../../consumer';
 
 describe('export', () => {
   let sandbox;

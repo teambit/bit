@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import Sources from '../../../src/scope/repositories/sources';
+import Sources from '../../scope/repositories/sources';
 
 describe('SourceRepository', () => {
   describe('mergeTwoComponentsObjects', () => {

@@ -2,9 +2,9 @@
 import path from 'path';
 import chalk from 'chalk';
 import { BitId } from '../../../bit-id';
-import Component from '../../component';
-import { Consumer } from '../..';
-import { SourceFile } from '../../component/sources';
+import type Component from '../../component';
+import type { Consumer } from '../..';
+import type { SourceFile } from '../../component/sources';
 import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';

@@ -1,5 +1,5 @@
 import path from 'path';
-import { stripTrailingChar } from './';
+import stripTrailingChar from './string/strip-trailing-char';
 import { DEFAULT_SEPARATOR } from '../constants';
 
 module.exports = function (thePath, potentialParent) {

@@ -5,11 +5,11 @@ import R from 'ramda';
 import { COMPONENT_ORIGINS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
-import Component from '../../../component';
+import type Component from '../../../component';
 import { Driver } from '../../../../driver';
 import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import logger from '../../../../logger/logger';
-import { Consumer } from '../../../../consumer';
+import type { Consumer } from '../../../../consumer';
 import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
 import type { PathLinux, PathOsBased, PathLinuxRelative } from '../../../../utils/path';
 import Dependencies from '../dependencies';
@@ -510,6 +510,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       };
       const existingId = getExistingId();
       if (existingId) {
+        if (existingId.isEqual(this.componentId)) {
+          // happens when one of the component files requires another using module path
+          // no need to enter anything to the dependencies
+          return;
+        }
         const currentComponentsDeps: Dependency = { id: existingId, relativePaths: [] };
         const existingDependency = this.getExistingDependency(this.allDependencies.dependencies, existingId);
         if (!existingDependency) {
@@ -639,6 +644,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
         );
         const currentComponentDeps = {
           id: dependencyId,
+          // $FlowFixMe
           relativePaths: clonedDependencies.getById(dependencyId).relativePaths
         };
         if (fileType.isTestFile && !existingDevDependency) {

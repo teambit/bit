@@ -2,7 +2,7 @@
 import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
-import Component from '../consumer/component/consumer-component';
+import type Component from '../consumer/component/consumer-component';
 import type { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';

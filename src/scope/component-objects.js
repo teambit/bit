@@ -1,9 +1,9 @@
 /** @flow */
 import BitObject from './objects/object';
-import Repository from './objects/repository';
+import type Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
 import { typesObj } from './object-registrar';
-import ModelComponent from './models/model-component';
+import type ModelComponent from './models/model-component';
 // import logger from '../logger/logger';
 
 export default class ComponentObjects {

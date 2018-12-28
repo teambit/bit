@@ -1,10 +1,10 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import BitMap from '../bit-map/bit-map';
+import type BitMap from '../bit-map/bit-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
-import { Version } from '../../scope/models';
+import type { Version } from '../../scope/models';
 import type { PathLinux, PathOsBased } from '../../utils/path';
 import VersionDependencies from '../../scope/version-dependencies';
 import { pathNormalizeToLinux, sharedStartOfArray } from '../../utils';
@@ -12,7 +12,7 @@ import { Dependencies } from '../component/dependencies';
 import { PACKAGE_JSON, COMPONENT_ORIGINS, WRAPPER_DIR } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import ComponentVersion from '../../scope/component-version';
-import Consumer from '../consumer';
+import type Consumer from '../consumer';
 import BitIds from '../../bit-id/bit-ids';
 import Repository from '../../scope/objects/repository';
 

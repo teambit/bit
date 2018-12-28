@@ -1,5 +1,5 @@
 /** @flow */
-import Component from '../consumer/component';
+import type Component from '../consumer/component';
 
 export default class ComponentWithDependencies {
   component: Component;

@@ -1,18 +1,18 @@
 // @flow
 import path from 'path';
 import Dist from '.';
-import Consumer from '../../consumer';
+import type Consumer from '../../consumer';
 import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
-import ComponentMap from '../../bit-map/component-map';
+import type ComponentMap from '../../bit-map/component-map';
 import logger from '../../../logger/logger';
 import { writeLinksInDist } from '../../../links';
 import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
 import { BitId } from '../../../bit-id';
-import Component from '../consumer-component';
+import type Component from '../consumer-component';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import Source from '../../../scope/models/source';
-import CompilerExtension from '../../../extensions/compiler-extension';
+import type CompilerExtension from '../../../extensions/compiler-extension';
 import type { DistFileModel } from '../../../scope/models/version';
 
 /**

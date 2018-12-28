@@ -209,7 +209,7 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
-  push(componentObjects: ComponentObjects): Promise<ComponentObjects[]> {
+  push(componentObjects: ComponentObjects): Promise<string[]> {
     return this.pushMany([componentObjects]);
   }
 

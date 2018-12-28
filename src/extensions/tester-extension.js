@@ -6,10 +6,10 @@ import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions, EnvExten
 import { Repository } from '../scope/objects';
 import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
+import { TESTER_ENV_TYPE } from '../constants';
 
 export type TesterExtensionOptions = EnvExtensionOptions;
 export type TesterExtensionModel = EnvExtensionModel;
-export const TESTER_ENV_TYPE = 'tester';
 
 export default class TesterExtension extends EnvExtension {
   constructor(extensionProps: EnvExtensionProps) {

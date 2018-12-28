@@ -1,10 +1,10 @@
 import { expect } from 'chai';
 import sinon from 'sinon';
-import listScope from '../../../../src/api/consumer/lib/list-scope';
-import { ConsumerNotFound } from '../../../../src/consumer/exceptions';
-import * as consumer from '../../../../src/consumer';
-import { GlobalRemotes } from '../../../../src/global-config';
-import Remotes from '../../../../src/remotes/remotes';
+import listScope from '../../../api/consumer/lib/list-scope';
+import { ConsumerNotFound } from '../../../consumer/exceptions';
+import * as consumer from '../../../consumer';
+import { GlobalRemotes } from '../../../global-config';
+import Remotes from '../../../remotes/remotes';
 
 describe('ListScope', () => {
   let sandbox;

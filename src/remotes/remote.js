@@ -1,18 +1,18 @@
 /** @flow */
-import { contains, isBitUrl, cleanBang } from '../utils';
-import ComponentObjects from '../scope/component-objects';
+import { isBitUrl, cleanBang } from '../utils';
+import type ComponentObjects from '../scope/component-objects';
 import { connect } from '../scope/network';
 import { InvalidRemote } from './exceptions';
 import { BitId, BitIds } from '../bit-id';
 import type { Network } from '../scope/network/network';
-import Component from '../consumer/component';
+import type Component from '../consumer/component';
 import type { ListScopeResult } from '../consumer/component/components-list';
 
 /**
  * @ctx bit, primary, remote
  */
 function isPrimary(alias: string): boolean {
-  return contains(alias, '!');
+  return alias.includes('!');
 }
 
 export default class Remote {
@@ -71,7 +71,7 @@ export default class Remote {
     return connect(this.host).then(network => network.push(componentObjects));
   }
 
-  pushMany(components: ComponentObjects[], context: ?Object): Promise<ComponentObjects[]> {
+  pushMany(components: ComponentObjects[], context: ?Object): Promise<string[]> {
     return connect(this.host).then(network => network.pushMany(components, context));
   }
   deleteMany(ids: string[], force: boolean, context: ?Object): Promise<Object[]> {
