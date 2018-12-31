@@ -42,8 +42,14 @@ export type IsolateOptions = {
 
 const ENV_IS_INSTALLED_FILENAME = '.bit_env_has_installed';
 
+/**
+ * workaround for Mac where `os.tmpdir()` returns /var/folder but `pwd` in that folder returns
+ * '/private/var/folders'.
+ */
+const getTmpPath = () => os.tmpdir().replace('/var/folders/', '/private/var/folders/');
+
 const createSandboxStub = async () => {
-  const dir = path.join(os.tmpdir(), ISOLATED_ENV_ROOT, v4());
+  const dir = path.join(getTmpPath(), ISOLATED_ENV_ROOT, v4());
   try {
     await fs.emptydir(dir);
     await fs.rmdir(dir);
@@ -192,7 +198,7 @@ export default class Environment {
       // ******* TODO: MOVE THIS ELSEWHERE *******
       const packagePath = sandbox.getSandboxFolder();
       const cacheFolder = '/Users/davidfirst/Library/Caches/Yarn/v4'; // TBD: generate the cache
-      const pkgJson = JSON.stringify(this.masterPackageJson); // TODO: various fields in package.json (eg. babel configuration)
+      const pkgJson = JSON.stringify(this.masterPackageJson, null, 4); // TODO: various fields in package.json (eg. babel configuration)
       const yarnLock = this.yarnlock;
       const yarnLockParsed = lockfile.parse(this.yarnlock);
       const pkgParsed = JSON.parse(pkgJson);
@@ -237,7 +243,7 @@ export default class Environment {
   }
 
   async destroySandboxedEnvs() {
-    const envRootFolder = path.join(os.tmpdir(), ISOLATED_ENV_ROOT);
+    const envRootFolder = path.join(getTmpPath(), ISOLATED_ENV_ROOT);
     await fs.emptyDir(envRootFolder);
     await fs.rmdir(envRootFolder);
   }
