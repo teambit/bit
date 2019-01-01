@@ -23,7 +23,28 @@
         "mainFile": "src/consumer/component/dependencies/dependency-resolver/types/dependency-tree-type.js",
         "origin": "AUTHORED"
     },
-    "bit.capsule-dev/core/capsule@0.0.1": {
+    "bit.capsule-dev/container/fs-container@0.0.2": {
+        "files": [
+            {
+                "name": "container.spec.ts",
+                "relativePath": "container.spec.ts",
+                "test": true
+            },
+            {
+                "name": "container.ts",
+                "relativePath": "container.ts",
+                "test": false
+            }
+        ],
+        "mainFile": "container.ts",
+        "rootDir": "components/container/fs-container",
+        "origin": "IMPORTED",
+        "dependencies": [
+            "bit.capsule-dev/core/capsule@0.0.1"
+        ],
+        "originallySharedDir": "fsContainer"
+    },
+    "bit.capsule-dev/core/capsule@0.0.9": {
         "files": [
             {
                 "name": "capsule.spec.ts",
@@ -110,27 +131,6 @@
         "rootDir": "components/core/capsule",
         "origin": "IMPORTED",
         "originallySharedDir": "src/capsule"
-    },
-    "bit.capsule-dev/container/fs-container@0.0.2": {
-        "files": [
-            {
-                "name": "container.spec.ts",
-                "relativePath": "container.spec.ts",
-                "test": true
-            },
-            {
-                "name": "container.ts",
-                "relativePath": "container.ts",
-                "test": false
-            }
-        ],
-        "mainFile": "container.ts",
-        "rootDir": "components/container/fs-container",
-        "origin": "IMPORTED",
-        "dependencies": [
-            "bit.capsule-dev/core/capsule@0.0.1"
-        ],
-        "originallySharedDir": "fsContainer"
     },
     "version": "13.0.4"
 }
