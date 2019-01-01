@@ -1,7 +1,7 @@
 {
     "env": {},
     "dependencies": {
-        "bit.capsule-dev/core/capsule": "0.0.1",
+        "bit.capsule-dev/core/capsule": "0.0.9",
         "bit.capsule-dev/container/fs-container": "0.0.2"
     },
     "componentsDefaultDirectory": "components/{namespace}/{name}",
