@@ -8,20 +8,48 @@ import { Union } from 'unionfs';
 import { ContainerFS } from './container';
 import { Exec } from "./container";
 
-
-export type ContainerFactoryOptions = {
-  image: string
+export class ContainerFactoryOptions {
+  image: string = '';
+  config: object = {};
 };
 
-export default class Capsule<StateType = {}> {
+export default class Capsule {
   constructor(
+    /**
+     * container implementation the capsule is being executed within.
+     */
     protected container: Container,
+
+    /**
+     * the capsule's file system.
+     */
     readonly fs: Volume,
+
+    /**
+     * console for controlling process streams as stdout, stdin and stderr.
+     */
     readonly console: Console,
+
+    /**
+     * capsule's state.
+     */
     readonly state: State
   ) {}
 
+  /**
+   * default capsule image.
+   */
   static image = 'ubuntu';
+  
+  /**
+   * default capsule config.
+   */
+  static config = {};
+
+  // implement this to handle capsules ids.
+  get id(): string {
+    return '';
+  }
 
   get containerId(): string {
     return this.container.id;
@@ -31,17 +59,17 @@ export default class Capsule<StateType = {}> {
     return this.container.start();
   }
 
+  on(event: string, fn: (data: any) => void) {
+    this.container.on(event, fn);
+  }
+
   updateFs(fs: {[path: string]: string}, fn: Function): void {
     Object.keys(fs).forEach((path) => {
-      // @ts-ignore
+      // @ts-ignorex
       this.fs.writeFile(path, fs[path], () => {
         if (Object.keys(fs).length === 1) fn();
       });
     });
-  }
-
-  setState() {
-
   }
 
   pause() {
@@ -67,10 +95,10 @@ export default class Capsule<StateType = {}> {
   }
 
   destroy() {
-    return this.container.destroy();
+    return this.container.stop();
   }
 
-  static buildFs(memFs: Volume, containerFs: ContainerFS): Volume {
+  private static buildFs(memFs: Volume, containerFs: ContainerFS): Volume {
     const fs = new Union();
     fs
       .use(memFs)
@@ -79,14 +107,14 @@ export default class Capsule<StateType = {}> {
     return fs;
   }
 
-  static async create(
+  static async create<T extends Capsule>(
       containerFactory: (options: ContainerFactoryOptions) => Promise<Container>, 
       volume: Volume, 
       initialState: State = new State(),
       console: Console = new Console()
-    ) {
-    const container = await containerFactory({ image: this.image });
+    ): Promise<T> {
+    const container = await containerFactory({ image: this.image, config: this.config });
     const fs = await ContainerFS.fromJSON(container, {});
-    return new Capsule(container, this.buildFs(volume, fs), console, initialState);
+    return (new this(container, this.buildFs(volume, fs), console, initialState) as T);
   }
 }

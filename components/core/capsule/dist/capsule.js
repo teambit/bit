@@ -34,19 +34,55 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
-var state_1 = require("./state");
-var console_1 = require("./console");
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var state_1 = __importDefault(require("./state"));
+var console_1 = __importDefault(require("./console"));
 // @ts-ignore
 var unionfs_1 = require("unionfs");
 var container_1 = require("./container");
+var ContainerFactoryOptions = /** @class */ (function () {
+    function ContainerFactoryOptions() {
+        this.image = '';
+        this.config = {};
+    }
+    return ContainerFactoryOptions;
+}());
+exports.ContainerFactoryOptions = ContainerFactoryOptions;
+;
 var Capsule = /** @class */ (function () {
-    function Capsule(container, fs, console, state) {
+    function Capsule(
+    /**
+     * container implementation the capsule is being executed within.
+     */
+    container, 
+    /**
+     * the capsule's file system.
+     */
+    fs, 
+    /**
+     * console for controlling process streams as stdout, stdin and stderr.
+     */
+    console, 
+    /**
+     * capsule's state.
+     */
+    state) {
         this.container = container;
         this.fs = fs;
         this.console = console;
         this.state = state;
     }
+    Object.defineProperty(Capsule.prototype, "id", {
+        // implement this to handle capsules ids.
+        get: function () {
+            return '';
+        },
+        enumerable: true,
+        configurable: true
+    });
     Object.defineProperty(Capsule.prototype, "containerId", {
         get: function () {
             return this.container.id;
@@ -57,17 +93,18 @@ var Capsule = /** @class */ (function () {
     Capsule.prototype.start = function () {
         return this.container.start();
     };
+    Capsule.prototype.on = function (event, fn) {
+        this.container.on(event, fn);
+    };
     Capsule.prototype.updateFs = function (fs, fn) {
         var _this = this;
         Object.keys(fs).forEach(function (path) {
-            // @ts-ignore
+            // @ts-ignorex
             _this.fs.writeFile(path, fs[path], function () {
                 if (Object.keys(fs).length === 1)
                     fn();
             });
         });
-    };
-    Capsule.prototype.setState = function () {
     };
     Capsule.prototype.pause = function () {
         return this.container.pause();
@@ -94,7 +131,7 @@ var Capsule = /** @class */ (function () {
         });
     };
     Capsule.prototype.destroy = function () {
-        return this.container.destroy();
+        return this.container.stop();
     };
     Capsule.buildFs = function (memFs, containerFs) {
         var fs = new unionfs_1.Union();
@@ -104,27 +141,34 @@ var Capsule = /** @class */ (function () {
         return fs;
     };
     Capsule.create = function (containerFactory, volume, initialState, console) {
-        if (initialState === void 0) { initialState = new state_1["default"](); }
-        if (console === void 0) { console = new console_1["default"](); }
-        return __awaiter(this, void 0, void 0, function () {
+        if (initialState === void 0) { initialState = new state_1.default(); }
+        if (console === void 0) { console = new console_1.default(); }
+        return __awaiter(this, void 0, Promise, function () {
             var container, fs;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, containerFactory({ image: this.image })];
+                    case 0: return [4 /*yield*/, containerFactory({ image: this.image, config: this.config })];
                     case 1:
                         container = _a.sent();
                         return [4 /*yield*/, container_1.ContainerFS.fromJSON(container, {})];
                     case 2:
                         fs = _a.sent();
-                        return [2 /*return*/, new Capsule(container, this.buildFs(volume, fs), console, initialState)];
+                        return [2 /*return*/, new this(container, this.buildFs(volume, fs), console, initialState)];
                 }
             });
         });
     };
+    /**
+     * default capsule image.
+     */
     Capsule.image = 'ubuntu';
+    /**
+     * default capsule config.
+     */
+    Capsule.config = {};
     return Capsule;
 }());
-exports["default"] = Capsule;
+exports.default = Capsule;
 //# sourceMappingURL=module.js.map
 
-//# sourceMappingURL={"version":3,"file":"module.js","sourceRoot":"","sources":["module.tsx"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAAA,iCAA4B;AAI5B,qCAAgC;AAChC,aAAa;AACb,mCAAgC;AAChC,yCAA0C;AAQ1C;IACE,iBACY,SAAoB,EACrB,EAAU,EACV,OAAgB,EAChB,KAAY;QAHX,cAAS,GAAT,SAAS,CAAW;QACrB,OAAE,GAAF,EAAE,CAAQ;QACV,YAAO,GAAP,OAAO,CAAS;QAChB,UAAK,GAAL,KAAK,CAAO;IACpB,CAAC;IAIJ,sBAAI,gCAAW;aAAf;YACE,OAAO,IAAI,CAAC,SAAS,CAAC,EAAE,CAAC;QAC3B,CAAC;;;OAAA;IAED,uBAAK,GAAL;QACE,OAAO,IAAI,CAAC,SAAS,CAAC,KAAK,EAAE,CAAC;IAChC,CAAC;IAED,0BAAQ,GAAR,UAAS,EAA4B,EAAE,EAAY;QAAnD,iBAOC;QANC,MAAM,CAAC,IAAI,CAAC,EAAE,CAAC,CAAC,OAAO,CAAC,UAAC,IAAI;YAC3B,aAAa;YACb,KAAI,CAAC,EAAE,CAAC,SAAS,CAAC,IAAI,EAAE,EAAE,CAAC,IAAI,CAAC,EAAE;gBAChC,IAAI,MAAM,CAAC,IAAI,CAAC,EAAE,CAAC,CAAC,MAAM,KAAK,CAAC;oBAAE,EAAE,EAAE,CAAC;YACzC,CAAC,CAAC,CAAC;QACL,CAAC,CAAC,CAAC;IACL,CAAC;IAED,0BAAQ,GAAR;IAEA,CAAC;IAED,uBAAK,GAAL;QACE,OAAO,IAAI,CAAC,SAAS,CAAC,KAAK,EAAE,CAAC;IAChC,CAAC;IAED,wBAAM,GAAN;QACE,OAAO,IAAI,CAAC,SAAS,CAAC,MAAM,EAAE,CAAA;IAChC,CAAC;IAED,sBAAI,GAAJ;QACE,OAAO,IAAI,CAAC,SAAS,CAAC,IAAI,EAAE,CAAC;IAC/B,CAAC;IAED,wBAAM,GAAN;QACE,OAAO,IAAI,CAAC,SAAS,CAAC,OAAO,EAAE,CAAC;IAClC,CAAC;IAEK,sBAAI,GAAV,UAAW,OAAe;uCAAG,OAAO;;;4BAC3B,qBAAM,IAAI,CAAC,SAAS,CAAC,IAAI,CAAC;4BAC/B,OAAO,EAAE,OAAO,CAAC,KAAK,CAAC,GAAG,CAAC;yBAC5B,CAAC,EAAA;4BAFF,sBAAO,SAEL,EAAC;;;;KACJ;IAED,yBAAO,GAAP;QACE,OAAO,IAAI,CAAC,SAAS,CAAC,OAAO,EAAE,CAAC;IAClC,CAAC;IAEM,eAAO,GAAd,UAAe,KAAa,EAAE,WAAwB;QACpD,IAAM,EAAE,GAAG,IAAI,eAAK,EAAE,CAAC;QACvB,EAAE;aACC,GAAG,CAAC,KAAK,CAAC;aACV,GAAG,CAAC,WAAW,CAAC,CAAC;QAEpB,OAAO,EAAE,CAAC;IACZ,CAAC;IAEY,cAAM,GAAnB,UACI,gBAA0E,EAC1E,MAAc,EACd,YAAiC,EACjC,OAAgC;QADhC,6BAAA,EAAA,mBAA0B,kBAAK,EAAE;QACjC,wBAAA,EAAA,cAAuB,oBAAO,EAAE;;;;;4BAEhB,qBAAM,gBAAgB,CAAC,EAAE,KAAK,EAAE,IAAI,CAAC,KAAK,EAAE,CAAC,EAAA;;wBAAzD,SAAS,GAAG,SAA6C;wBACpD,qBAAM,uBAAW,CAAC,QAAQ,CAAC,SAAS,EAAE,EAAE,CAAC,EAAA;;wBAA9C,EAAE,GAAG,SAAyC;wBACpD,sBAAO,IAAI,OAAO,CAAC,SAAS,EAAE,IAAI,CAAC,OAAO,CAAC,MAAM,EAAE,EAAE,CAAC,EAAE,OAAO,EAAE,YAAY,CAAC,EAAC;;;;KAChF;IAnEM,aAAK,GAAG,QAAQ,CAAC;IAoE1B,cAAC;CAAA,AA5ED,IA4EC;qBA5EoB,OAAO"}
+//# sourceMappingURL={"version":3,"file":"module.js","sourceRoot":"","sources":["module.tsx"],"names":[],"mappings":"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"}

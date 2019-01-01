@@ -1,3 +1,4 @@
+import { Readable as ReadableStream, Writable as WritableStream } from 'readable-stream';
 
 /**
  * exec instance
@@ -6,17 +7,17 @@ export interface Exec {
   /**
    * stdout stream
    */
-  stdout: NodeJS.ReadableStream;
+  stdout: ReadableStream;
 
   /**
    * stdin stream
    */
-  stderr: NodeJS.ReadableStream;
+  stderr: ReadableStream;
 
   /**
    * stdin stream
    */
-  stdin: NodeJS.WritableStream;
+  stdin: WritableStream;
 
   /**
    * inspect the exec instance for its status.
@@ -26,9 +27,7 @@ export interface Exec {
   /**
    * abort the running command.
    */
-  abort(): Promise<void>;
-
-  on(event: 'close' | 'error', callback: () => void): void;
+  abort(): Promise<void>
 };
 
 /**

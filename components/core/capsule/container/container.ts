@@ -1,4 +1,5 @@
 import { Exec, ExecOptions } from './exec';
+import { Readable as ReadableStream, Writable as WritableStream } from 'readable-stream';
 
 export default interface Container {
   /**
@@ -14,12 +15,14 @@ export default interface Container {
   /**
    * get a directory or a file.
    */
-  get(options: { path: string }): Promise<NodeJS.ReadableStream>;
+  get(options: { path: string }): Promise<ReadableStream>;
 
   /**
    * put a file or a directory to the container.
    */
   put(files: {[path: string]: string}, options: { overwrite?: boolean, path: string }): Promise<void>;
+
+  on(event: string, fn: (data: any) => void): void; 
   
   /**
    * start a container.
@@ -45,8 +48,6 @@ export default interface Container {
    * stop an existing container.
    */
   stop(ttl?: number): Promise<void>;
-
-  destroy(): Promise<void>;
 
   /**
    * get the container stats

@@ -34,7 +34,7 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var ContainerVolume = /** @class */ (function () {
     function ContainerVolume(container) {
         this.container = container;
@@ -61,29 +61,29 @@ var ContainerVolume = /** @class */ (function () {
     };
     ContainerVolume.prototype.readFile = function (path, options, callback) {
         this.readArchive(path)
-            .then(function (contents) { return callback(undefined, contents); })["catch"](function (err) { return callback(err); });
+            .then(function (contents) { return callback(undefined, contents); })
+            .catch(function (err) { return callback(err); });
     };
     ContainerVolume.prototype.writeFile = function (path, data, options, cb) {
-        return this.putArchive(path.toString(), data).then(function () {
-            if (cb)
-                return cb();
-            return;
-        });
-    };
-    ContainerVolume.fromJSON = function (container, json) {
         return __awaiter(this, void 0, Promise, function () {
-            var volume;
             return __generator(this, function (_a) {
-                volume = new ContainerVolume(container);
-                if (!json)
-                    return [2 /*return*/, volume];
-                return [2 /*return*/, volume];
+                return [2 /*return*/, this.putArchive(path.toString(), data).then(function () {
+                        if (cb)
+                            return cb();
+                        return;
+                    })];
             });
         });
     };
+    ContainerVolume.fromJSON = function (container, json) {
+        var volume = new ContainerVolume(container);
+        if (!json)
+            return volume;
+        return volume;
+    };
     return ContainerVolume;
 }());
-exports["default"] = ContainerVolume;
+exports.default = ContainerVolume;
 //# sourceMappingURL=module.js.map
 
-//# sourceMappingURL={"version":3,"file":"module.js","sourceRoot":"","sources":["module.tsx"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAGA;IACE,yBACU,SAAoB;QAApB,cAAS,GAAT,SAAS,CAAW;IAC3B,CAAC;IAEI,qCAAW,GAAnB,UAAoB,IAAc;QAChC,OAAO,IAAI,CAAC,SAAS,CAAC,GAAG,CAAC,EAAE,IAAI,EAAE,IAAI,CAAC,QAAQ,EAAE,EAAE,CAAC;aACjD,IAAI,CAAC,UAAC,MAAM;YACX,IAAI,IAAI,GAAG,EAAE,CAAC;YACd,MAAM,CAAC,EAAE,CAAC,MAAM,EAAE,UAAC,KAAK;gBACtB,IAAI,IAAI,KAAK,CAAC;YAChB,CAAC,CAAC,CAAC;YAEH,OAAO,IAAI,MAAM,CAAC,IAAI,CAAC,CAAC;QAC1B,CAAC,CAAC,CAAC;IACP,CAAC;IAEa,oCAAU,GAAxB,UAAyB,IAAc,EAAE,QAAgB;uCAAG,OAAO;;;gBAC3D,MAAM,GAA6B,EAAE,CAAC;gBAC5C,MAAM,CAAC,IAAI,CAAC,QAAQ,EAAE,CAAC,GAAG,QAAQ,CAAC;gBACnC,sBAAO,IAAI,CAAC,SAAS,CAAC,GAAG,CAAC,MAAM,EAAE,EAAE,IAAI,EAAE,UAAU,EAAE,CAAC,EAAC;;;KACzD;IAED,kCAAQ,GAAR,UAAS,IAAc,EAAE,OAA+D,EAAE,QAA8D;QACtJ,IAAI,CAAC,WAAW,CAAC,IAAI,CAAC;aACnB,IAAI,CAAC,UAAA,QAAQ,IAAI,OAAA,QAAQ,CAAC,SAAS,EAAE,QAAQ,CAAC,EAA7B,CAA6B,CAAC,CAC/C,OAAK,CAAA,CAAC,UAAA,GAAG,IAAI,OAAA,QAAQ,CAAC,GAAG,CAAC,EAAb,CAAa,CAAC,CAAC;IACjC,CAAC;IAED,mCAAS,GAAT,UAAU,IAAuB,EAAE,IAAS,EAAE,OAAyB,EAAE,EAAa;QACpF,OAAO,IAAI,CAAC,UAAU,CAAC,IAAI,CAAC,QAAQ,EAAE,EAAE,IAAI,CAAC,CAAC,IAAI,CAAC;YACjD,IAAI,EAAE;gBAAE,OAAO,EAAE,EAAE,CAAC;YACpB,OAAO;QACT,CAAC,CAAC,CAAC;IACN,CAAC;IAEa,wBAAQ,GAArB,UAAsB,SAAoB,EAAE,IAA+B;uCAAG,OAAO;;;gBAC7E,MAAM,GAAG,IAAI,eAAe,CAAC,SAAS,CAAC,CAAC;gBAC9C,IAAI,CAAC,IAAI;oBAAE,sBAAO,MAAM,EAAC;gBAEzB,sBAAO,MAAM,EAAC;;;KACf;IACH,sBAAC;AAAD,CAAC,AA1CD,IA0CC"}
+//# sourceMappingURL={"version":3,"file":"module.js","sourceRoot":"","sources":["module.tsx"],"names":[],"mappings":";;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;AAGA;IACE,yBACU,SAAoB;QAApB,cAAS,GAAT,SAAS,CAAW;IAC3B,CAAC;IAEI,qCAAW,GAAnB,UAAoB,IAAc;QAChC,OAAO,IAAI,CAAC,SAAS,CAAC,GAAG,CAAC,EAAE,IAAI,EAAE,IAAI,CAAC,QAAQ,EAAE,EAAE,CAAC;aACjD,IAAI,CAAC,UAAC,MAAM;YACX,IAAI,IAAI,GAAG,EAAE,CAAC;YACd,MAAM,CAAC,EAAE,CAAC,MAAM,EAAE,UAAC,KAAK;gBACtB,IAAI,IAAI,KAAK,CAAC;YAChB,CAAC,CAAC,CAAC;YAEH,OAAO,IAAI,MAAM,CAAC,IAAI,CAAC,CAAC;QAC1B,CAAC,CAAC,CAAC;IACP,CAAC;IAEa,oCAAU,GAAxB,UAAyB,IAAc,EAAE,QAAgB;uCAAG,OAAO;;;gBAC3D,MAAM,GAA6B,EAAE,CAAC;gBAC5C,MAAM,CAAC,IAAI,CAAC,QAAQ,EAAE,CAAC,GAAG,QAAQ,CAAC;gBACnC,sBAAO,IAAI,CAAC,SAAS,CAAC,GAAG,CAAC,MAAM,EAAE,EAAE,IAAI,EAAE,UAAU,EAAE,CAAC,EAAC;;;KACzD;IAED,kCAAQ,GAAR,UAAS,IAAc,EAAE,OAA+D,EAAE,QAA8D;QACtJ,IAAI,CAAC,WAAW,CAAC,IAAI,CAAC;aACnB,IAAI,CAAC,UAAA,QAAQ,IAAI,OAAA,QAAQ,CAAC,SAAS,EAAE,QAAQ,CAAC,EAA7B,CAA6B,CAAC;aAC/C,KAAK,CAAC,UAAA,GAAG,IAAI,OAAA,QAAQ,CAAC,GAAG,CAAC,EAAb,CAAa,CAAC,CAAC;IACjC,CAAC;IAEK,mCAAS,GAAf,UAAgB,IAAuB,EAAE,IAAS,EAAE,OAAyB,EAAE,EAAa;uCAAG,OAAO;;gBACpG,sBAAO,IAAI,CAAC,UAAU,CAAC,IAAI,CAAC,QAAQ,EAAE,EAAE,IAAI,CAAC,CAAC,IAAI,CAAC;wBACjD,IAAI,EAAE;4BAAE,OAAO,EAAE,EAAE,CAAC;wBACpB,OAAO;oBACT,CAAC,CAAC,EAAC;;;KACL;IAEO,wBAAQ,GAAf,UAAgB,SAAoB,EAAE,IAA+B;QACnE,IAAM,MAAM,GAAG,IAAI,eAAe,CAAC,SAAS,CAAC,CAAC;QAC9C,IAAI,CAAC,IAAI;YAAE,OAAO,MAAM,CAAC;QAEzB,OAAO,MAAM,CAAC;IAChB,CAAC;IACH,sBAAC;AAAD,CAAC,AA1CD,IA0CC"}

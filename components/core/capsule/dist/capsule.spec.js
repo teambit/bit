@@ -1,5 +1,5 @@
 "use strict";
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 var chai_1 = require("chai");
 describe('Capsule', function () {
     describe('constructor', function () {
