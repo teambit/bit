@@ -30,14 +30,14 @@ export default class ContainerVolume {
       .catch(err => callback(err));
   }
 
-  writeFile(path: PathLike | number, data: any, options: WriteFileOptions, cb?: Function): Promise<void> {
+  async writeFile(path: PathLike | number, data: any, options: WriteFileOptions, cb?: Function): Promise<void> {
     return this.putArchive(path.toString(), data).then(() => {
       if (cb) return cb();
       return;
     });
  }
 
-  static async fromJSON(container: Container, json?: {[path: string]: string}): Promise<ContainerVolume> {
+  static fromJSON(container: Container, json?: {[path: string]: string}): ContainerVolume {
     const volume = new ContainerVolume(container);
     if (!json) return volume;
 
