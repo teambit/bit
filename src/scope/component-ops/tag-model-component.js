@@ -25,7 +25,7 @@ import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import ScopeComponentsImporter from './scope-components-importer';
 
-function buildComponentsGraph(components: Component[]) {
+export function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
     const id = component.id.toString();
     dependencies.get().forEach((dependency) => {
@@ -50,7 +50,7 @@ function buildComponentsGraph(components: Component[]) {
   return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
 }
 
-async function getFlattenedDependencies(
+export async function getFlattenedDependencies(
   scope: Scope,
   component: Component,
   graph: Object,
