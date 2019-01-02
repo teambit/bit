@@ -1,4 +1,3 @@
-/// <reference types="node" />
 import Container from "../container";
 import { PathLike, WriteFileOptions } from 'fs';
 export default class ContainerVolume {

@@ -1,6 +1,6 @@
 {
   "name": "@bit/bit.capsule-dev.container.fs-container",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "homepage": "https://bitsrc.io/bit/capsule-dev/container/fs-container",
   "main": "dist/container.js",
   "dependencies": {

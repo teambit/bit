@@ -1,6 +1,6 @@
 {
   "name": "@bit/bit.capsule-dev.core.capsule",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "homepage": "https://bitsrc.io/bit/capsule-dev/core/capsule",
   "main": "dist/index.js",
   "dependencies": {
