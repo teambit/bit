@@ -40,7 +40,7 @@ export default class Capsule {
    * default capsule image.
    */
   static image = 'ubuntu';
-  
+
   /**
    * default capsule config.
    */
@@ -103,13 +103,13 @@ export default class Capsule {
     fs
       .use(memFs)
       .use(containerFs);
-    
+
     return fs;
   }
 
   static async create<T extends Capsule>(
-      containerFactory: (options: ContainerFactoryOptions) => Promise<Container>, 
-      volume: Volume, 
+      containerFactory: (options: ContainerFactoryOptions) => Promise<Container>,
+      volume: Volume = new Volume(),
       initialState: State = new State(),
       console: Console = new Console()
     ): Promise<T> {

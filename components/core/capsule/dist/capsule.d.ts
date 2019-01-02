@@ -63,5 +63,5 @@ export default class Capsule {
     exec(command: string): Promise<Exec>;
     destroy(): Promise<void>;
     private static buildFs;
-    static create<T extends Capsule>(containerFactory: (options: ContainerFactoryOptions) => Promise<Container>, volume: Volume, initialState?: State, console?: Console): Promise<T>;
+    static create<T extends Capsule>(containerFactory: (options: ContainerFactoryOptions) => Promise<Container>, volume?: Volume, initialState?: State, console?: Console): Promise<T>;
 }
