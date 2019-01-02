@@ -233,7 +233,7 @@ describe('bit add many programmatically', function () {
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
       expect(nodeStartOutput).to.have.string('ExcludedMainFile');
     });
-    it('should add a component with gitignore on root but not ineer folder', function () {
+    it('should add a component with gitignore on root but not inner folder', function () {
       helper.writeGitIgnore(['/bar']);
       const scriptAbsolutePath = path.join(
         newDirPath,
