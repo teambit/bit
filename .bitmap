@@ -111,7 +111,7 @@
         "origin": "IMPORTED",
         "originallySharedDir": "src/capsule"
     },
-    "bit.capsule-dev/container/fs-container@0.0.3": {
+    "bit.capsule-dev/container/fs-container@0.0.4": {
         "files": [
             {
                 "name": "container.spec.ts",
@@ -128,7 +128,7 @@
         "rootDir": "components/container/fs-container",
         "origin": "IMPORTED",
         "dependencies": [
-            "bit.capsule-dev/core/capsule@0.0.1"
+            "bit.capsule-dev/core/capsule@0.0.10"
         ],
         "originallySharedDir": "fsContainer"
     },
