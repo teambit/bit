@@ -63,14 +63,21 @@ export async function reLinkDependents(consumer: Consumer, components: Component
  * 3) creating symlinks from components directories to node_modules
  * 4) in case a component was nested and now imported directly, re-link its dependents
  */
-export async function linkComponents(
+export async function linkComponents({
+  componentsWithDependencies,
+  writtenComponents,
+  writtenDependencies,
+  consumer,
+  createNpmLinkFiles,
+  writePackageJson
+}: {
   componentsWithDependencies: ComponentWithDependencies[],
   writtenComponents: Component[],
   writtenDependencies: ?(Component[]),
   consumer: Consumer,
   createNpmLinkFiles: boolean,
   writePackageJson: boolean
-) {
+}) {
   await linkGenerator.writeComponentsDependenciesLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
   // no need for entry-point file if package.json is written.
   if (writtenDependencies) {

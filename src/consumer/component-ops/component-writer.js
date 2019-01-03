@@ -85,7 +85,7 @@ export default class ComponentWriter {
    *
    * when a component is not new, write the files according to the paths in .bitmap.
    */
-  async write() {
+  async write(): Promise<Component> {
     logger.debug(`component-writer.write, id: ${this.component.id.toString()}`);
     if (!this.component.files || !this.component.files.length) {
       throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);

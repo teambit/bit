@@ -15,7 +15,7 @@ import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/m
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
-import writeComponents from './write-components';
+import ManyComponentsWriter from './many-components-writer';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -338,7 +338,7 @@ export default class ImportComponents {
     if (this.options.writeConfig && !this.options.configDir) {
       this.options.configDir = this.consumer.dirStructure.ejectedEnvsDirStructure;
     }
-    await writeComponents({
+    const manyComponentsWriter = new ManyComponentsWriter({
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
@@ -351,5 +351,6 @@ export default class ImportComponents {
       verbose: this.options.verbose,
       override: this.options.override
     });
+    await manyComponentsWriter.writeAll();
   }
 }

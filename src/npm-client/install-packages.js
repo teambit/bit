@@ -52,13 +52,19 @@ export async function installPackages(
   }
 }
 
-export async function installNpmPackagesForComponents(
+export async function installNpmPackagesForComponents({
+  consumer,
+  componentsWithDependencies,
+  verbose = false,
+  silentPackageManagerResult = false,
+  installPeerDependencies = false
+}: {
   consumer: Consumer,
   componentsWithDependencies: ComponentWithDependencies[],
-  verbose: boolean = false,
-  silentPackageManagerResult: boolean = false,
-  installPeerDependencies: boolean = false
-): Promise<*> {
+  verbose: boolean,
+  silentPackageManagerResult: boolean,
+  installPeerDependencies: boolean
+}): Promise<*> {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
   const componentsWithDependenciesFlatten = R.flatten(
