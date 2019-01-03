@@ -634,7 +634,7 @@ export default class Consumer {
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
-  composeComponentPath(bitId: BitId): PathOsBased {
+  composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
     const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);

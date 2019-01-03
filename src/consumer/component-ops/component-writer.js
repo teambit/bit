@@ -12,7 +12,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 import mkdirp from '../../utils/mkdirp';
 import type { PathOsBasedAbsolute } from '../../utils/path';
 
-type ComponentWriterProps = {
+export type ComponentWriterProps = {
   component: Component,
   writeToPath: PathOsBasedAbsolute,
   writeConfig?: boolean,

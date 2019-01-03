@@ -16,7 +16,9 @@ import { isDir, isDirEmptySync } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type ComponentMap from '../bit-map/component-map';
 import ComponentWriter from './component-writer';
+import type { ComponentWriterProps } from './component-writer';
 import { getScopeRemotes } from '../../scope/scope-remotes';
+import type { PathOsBasedAbsolute } from '../../utils/path';
 
 type ManyComponentsWriterParams = {
   consumer: Consumer,
@@ -36,6 +38,9 @@ type ManyComponentsWriterParams = {
   addToRootPackageJson?: boolean,
   verbose?: boolean,
   excludeRegistryPrefix?: boolean
+};
+type Files = {
+  [filePath: string]: string
 };
 
 /**
@@ -69,6 +74,7 @@ export default class ManyComponentsWriter {
   dependenciesIdsCache: Object;
   writtenComponents: Component[];
   writtenDependencies: Component[];
+  isolated: Boolean; // a preparation for the capsule feature
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
@@ -92,60 +98,84 @@ export default class ManyComponentsWriter {
     return typeof field === 'undefined' ? defaultValue : Boolean(field);
   }
   async writeAll() {
+    await this._determineWhetherDependenciesAreSavedAsComponents();
     await this.writeComponents();
     await this.writeDependencies();
     this.moveComponentsIfNeeded();
     // add workspaces if flag is true
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     await this.installPackagesIfNeeded();
-    if (this.addToRootPackageJson) { await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id)); }
+    if (this.addToRootPackageJson) {
+      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
+    }
     await this.linkAll();
   }
   async writeComponents() {
-    const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
-    const writeComponentsParams = this.componentsWithDependencies.map(
-      (componentWithDeps: ComponentWithDependencies) => {
-        const bitDir = this.writeToPath
-          ? path.resolve(this.writeToPath)
-          : this.consumer.composeComponentPath(componentWithDeps.component.id);
-        // if it doesn't go to the hub, it can't import dependencies as packages
-        componentWithDeps.component.dependenciesSavedAsComponents =
-          this.saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
-        // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
-        // find the component in bit.map
-        const componentMap = this.consumer.bitMap.getComponentPreferNonNested(componentWithDeps.component.id);
-        const origin =
-          componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
-            ? COMPONENT_ORIGINS.AUTHORED
-            : COMPONENT_ORIGINS.IMPORTED;
-        const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
-        this.throwErrorWhenDirectoryNotEmpty(bitDir, componentMap);
-        // don't write dists files for authored components as the author has its own mechanism to generate them
-        // also, don't write dists file for imported component, unless the user used '--dist' flag
-        componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
-        return {
-          writeParams: {
-            component: componentWithDeps.component,
-            writeToPath: bitDir,
-            override: true,
-            writeConfig: this.writeConfig,
-            configDir: this.configDir || configDirFromComponentMap,
-            writePackageJson: this.writePackageJson,
-            origin,
-            consumer: this.consumer,
-            writeBitDependencies:
-              this.writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
-            existingComponentMap: componentMap,
-            excludeRegistryPrefix: this.excludeRegistryPrefix
-          }
-        };
-      }
-    );
-    const writeComponentsP = writeComponentsParams.map(({ writeParams }) => {
+    const writeComponentsParams = this._getWriteComponentsParams();
+    const writeComponentsP = writeComponentsParams.map((writeParams) => {
       const componentWriter = ComponentWriter.getInstance(writeParams);
       return componentWriter.write();
     });
     this.writtenComponents = await Promise.all(writeComponentsP);
+  }
+  async _determineWhetherDependenciesAreSavedAsComponents() {
+    const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
+    this.componentsWithDependencies.forEach((componentWithDeps: ComponentWithDependencies) => {
+      // if it doesn't go to the hub, it can't import dependencies as packages
+      componentWithDeps.component.dependenciesSavedAsComponents =
+        this.saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
+    });
+  }
+  _getWriteComponentsParams(): ComponentWriterProps[] {
+    return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>
+      this._getWriteParamsOfOneComponent(componentWithDeps)
+    );
+  }
+  _getWriteParamsOfOneComponent(componentWithDeps: ComponentWithDependencies): ComponentWriterProps {
+    const componentRootDir: PathOsBasedAbsolute = this.writeToPath
+      ? path.resolve(this.writeToPath)
+      : this.consumer.composeComponentPath(componentWithDeps.component.id);
+    const getParams = () => {
+      if (this.isolated) {
+        return {
+          origin: COMPONENT_ORIGINS.AUTHORED
+        };
+      }
+      // AUTHORED and IMPORTED components can't be saved with multiple versions, so we can ignore the version to
+      // find the component in bit.map
+      const componentMap = this.consumer.bitMap.getComponentPreferNonNested(componentWithDeps.component.id);
+      const origin =
+        componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED
+          ? COMPONENT_ORIGINS.AUTHORED
+          : COMPONENT_ORIGINS.IMPORTED;
+      const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
+      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap);
+      // don't write dists files for authored components as the author has its own mechanism to generate them
+      // also, don't write dists file for imported component, unless the user used '--dist' flag
+      componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
+      return {
+        configDir: this.configDir || configDirFromComponentMap,
+        origin,
+        existingComponentMap: componentMap
+      };
+    };
+    return {
+      ...this._getDefaultWriteParams(),
+      component: componentWithDeps.component,
+      writeToPath: componentRootDir,
+      writeBitDependencies: this.writeBitDependencies || !componentWithDeps.component.dependenciesSavedAsComponents, // when dependencies are written as npm packages, they must be written in package.json
+      ...getParams()
+    };
+  }
+
+  _getDefaultWriteParams(): Object {
+    return {
+      override: true,
+      writeConfig: this.writeConfig,
+      writePackageJson: this.writePackageJson,
+      consumer: this.consumer,
+      excludeRegistryPrefix: this.excludeRegistryPrefix
+    };
   }
   async writeDependencies() {
     const allDependenciesP = this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
@@ -209,15 +239,13 @@ export default class ManyComponentsWriter {
         // and namespace can co-exist with different versions.
         const componentMap = this.consumer.bitMap.getComponentIfExist(dep.id);
         const componentWriter = ComponentWriter.getInstance({
+          ...this._getDefaultWriteParams(),
+          writeConfig: false,
           component: dep,
           writeToPath: depRootPath,
-          override: true,
-          writePackageJson: this.writePackageJson,
           origin: COMPONENT_ORIGINS.NESTED,
           parent: componentWithDeps.component.id,
-          consumer: this.consumer,
-          existingComponentMap: componentMap,
-          excludeRegistryPrefix: this.excludeRegistryPrefix
+          existingComponentMap: componentMap
         });
         return componentWriter.write();
       });
