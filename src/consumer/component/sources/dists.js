@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import Dist from '.';
+import Dist from './dist';
 import type Consumer from '../../consumer';
 import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
@@ -145,11 +145,12 @@ export default class Dists {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
       this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
-    const saveDist = this.dists.map(distFile => distFile.write());
+    const saveDistP = this.dists.map(distFile => distFile.write());
+    const saveDist = await Promise.all(saveDistP);
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       await writeLinksInDist(component, componentMap, consumer);
-    }
-    return Promise.all(saveDist);
+    } // $FlowFixMe
+    return saveDist;
   }
 
   // In case there are dist files, we want to point the index to the main dist file, not to source.

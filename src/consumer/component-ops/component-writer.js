@@ -104,6 +104,37 @@ export default class ComponentWriter {
     return this.component;
   }
 
+  async getComponentsFilesToWrite(): Promise<Component> {
+    const allComponentFiles = {};
+    if (!this.component.files || !this.component.files.length) {
+      throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
+    }
+    this._updateFilesBasePaths();
+    const files = this.component.files.map(file => ({ [file.path]: file.contents }));
+    await this.component.dists.writeDists(this.component, this.consumer, false);
+    if (this.writeConfig && this.consumer) {
+      const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
+      await this.component.writeConfig(this.consumer, resolvedConfigDir, this.override);
+    }
+    // make sure the project's package.json is not overridden by Bit
+    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
+    // of compilers / testers / extensions)
+    if (this.writePackageJson && (this.consumer.isolated || this.writeToPath !== this.consumer.getPath())) {
+      await this.component.writePackageJson(
+        this.consumer,
+        this.writeToPath,
+        this.override,
+        this.writeBitDependencies,
+        this.excludeRegistryPrefix
+      );
+    }
+    if (this.component.license && this.component.license.src) {
+      await this.component.license.write(this.writeToPath, this.override);
+    }
+    logger.debug('component has been written successfully');
+    return this;
+  }
+
   async _writeToComponentDir() {
     if (this.deleteBitDirContent) {
       logger.info(`consumer-component._writeToComponentDir, deleting ${this.writeToPath}`);

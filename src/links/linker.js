@@ -29,6 +29,20 @@ export async function writeLinksInDist(component: Component, componentMap: Compo
   return linkGenerator.writeEntryPointsForComponent(component, consumer);
 }
 
+export async function getLinksInDistToWrite(
+  componentWithDeps: ComponentWithDependencies,
+  componentMap?: ComponentMap,
+  consumer?: Consumer
+) {
+  const component: Component = componentWithDeps.component;
+  await linkGenerator.writeComponentsDependenciesLinks([componentWithDeps], consumer, false);
+  const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  if (!componentMap.rootDir) throw new GeneralError('writeLinksInDist should get called on imported components only');
+  await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
+  await linkComponentsToNodeModules([component], consumer);
+  return linkGenerator.writeEntryPointsForComponent(component, consumer);
+}
+
 async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {
   logger.debug(`reLinkDirectlyImportedDependencies: found ${components.length} components to re-link`);
   const componentsWithDependencies = await Promise.all(

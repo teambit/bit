@@ -170,7 +170,23 @@ async function writeComponentsDependenciesLinks(
   consumer: Consumer,
   createNpmLinkFiles: boolean
 ): Promise<any> {
+  const componentsDependenciesLinks = await getComponentsDependenciesLinks(
+    componentDependencies,
+    consumer,
+    createNpmLinkFiles
+  );
+  return Promise.all(componentsDependenciesLinks.map(link => outputFile(link)));
+}
+
+async function getComponentsDependenciesLinks(
+  componentDependencies: ComponentWithDependencies[],
+  consumer: Consumer,
+  createNpmLinkFiles: boolean
+): Promise<OutputFileParams[]> {
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
+    // const component = componentWithDeps.component;
+    // const componentMap = component.componentMap;
+    // if (!componentMap) throw new Error('getComponentsDependenciesLinks expects components to have componentMap');
     const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
@@ -214,8 +230,7 @@ async function writeComponentsDependenciesLinks(
   const allLinks = await Promise.all(allLinksP);
 
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
-  const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
-  return Promise.all(linksWithoutDuplications.map(link => outputFile(link)));
+  return uniqBy(linksWithoutNulls, 'filePath');
 }
 
 /**
