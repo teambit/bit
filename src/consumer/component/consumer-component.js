@@ -854,6 +854,9 @@ export default class Component {
     const devDependencies = await getDependenciesComponents(getFlatten('flattenedDevDependencies'));
     const compilerDependencies = await getDependenciesComponents(getFlatten('flattenedCompilerDependencies'));
     const testerDependencies = await getDependenciesComponents(getFlatten('flattenedTesterDependencies'));
+    if (!this.componentMap) {
+      this.componentMap = consumer.bitMap.getComponent(this.id);
+    }
     return new ComponentWithDependencies({
       component: this,
       dependencies,

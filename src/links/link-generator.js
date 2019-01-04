@@ -184,31 +184,30 @@ async function getComponentsDependenciesLinks(
   createNpmLinkFiles: boolean
 ): Promise<OutputFileParams[]> {
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
-    // const component = componentWithDeps.component;
-    // const componentMap = component.componentMap;
-    // if (!componentMap) throw new Error('getComponentsDependenciesLinks expects components to have componentMap');
-    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
+    const component = componentWithDeps.component;
+    const componentMap = component.componentMap;
+    if (!componentMap) throw new Error('getComponentsDependenciesLinks expects components to have componentMap');
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
-        `writeComponentsDependenciesLinks, ignoring a component ${componentWithDeps.component.id.toString()} as it is an author component`
+        `writeComponentsDependenciesLinks, ignoring a component ${component.id.toString()} as it is an author component`
       );
       return null;
     }
     // it must be IMPORTED. We don't pass NESTED to this function
-    logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id.toString()}`);
+    logger.debug(`writeComponentsDependenciesLinks, generating links for ${component.id.toString()}`);
 
     const componentsLinks = await getComponentLinks({
       consumer,
-      component: componentWithDeps.component,
+      component,
       componentMap,
       dependencies: componentWithDeps.allDependencies,
       createNpmLinkFiles
     });
 
-    if (componentWithDeps.component.dependenciesSavedAsComponents) {
+    if (component.dependenciesSavedAsComponents) {
       const dependenciesLinks = await Promise.all(
         componentWithDeps.allDependencies.map((dep: Component) => {
-          const depComponentMap = consumer.bitMap.getComponent(dep.id);
+          const depComponentMap = dep.componentMap;
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
@@ -216,7 +215,7 @@ async function getComponentsDependenciesLinks(
           dependencies.push(componentWithDeps.component);
           return getComponentLinks({
             consumer,
-            component: dep,
+            component: dep, // $FlowFixMe should be set because component.dependenciesSavedAsComponents
             componentMap: depComponentMap,
             dependencies,
             createNpmLinkFiles

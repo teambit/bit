@@ -92,6 +92,7 @@ export default class ComponentWriter {
     }
     this._updateFilesBasePaths();
     this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
+    this.component.componentMap = this.componentMap;
     this._copyFilesIntoDistsWhenDistsOutsideComponentDir();
     this._determineWhetherToDeleteComponentDirContent();
     await this._handlePreviouslyNestedCurrentlyImportedCase();
