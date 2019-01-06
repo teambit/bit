@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.11] - 2019-01-06
+
+- fix ampersand and minus sings causing parse error in css files
+
 ## [1.0.6-dev.10] - 2018-12-16
 
 - update caporal and mocha-appveyor-reporter for security reasons
