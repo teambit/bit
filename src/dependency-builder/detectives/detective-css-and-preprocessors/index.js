@@ -1,7 +1,7 @@
 // forked and changed from https://github.com/dependents/node-detective-sass
 
 const Walker = require('node-source-walk');
-const parser = require('gonzales-pe');
+const parser = require('@teambit/gonzales-pe');
 
 /**
  * Extract the @import statements from a given file's content
