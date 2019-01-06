@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.32] - 2019-01-06
+
 - fix running `bit link` from an inner directory for author
 - fix ampersand and minus sings causing parse error in css files
 
