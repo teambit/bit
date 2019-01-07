@@ -351,6 +351,6 @@ export default class ImportComponents {
       verbose: this.options.verbose,
       override: this.options.override
     });
-    await manyComponentsWriter.writeAll();
+    await manyComponentsWriter.getAllData();
   }
 }

@@ -1,16 +1,18 @@
 /** @flow */
 import R from 'ramda';
+import path from 'path';
 import type Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
 import * as linkGenerator from '../links/link-generator';
-import linkComponentsToNodeModules from './node-modules-linker';
+import linkComponentsToNodeModules, { NodeModuleLinker } from './node-modules-linker';
 import type Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
 import * as packageJson from '../consumer/component/package-json';
 import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
+import { LinkFile } from '.';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -31,16 +33,34 @@ export async function writeLinksInDist(component: Component, componentMap: Compo
 
 export async function getLinksInDistToWrite(
   componentWithDeps: ComponentWithDependencies,
-  componentMap?: ComponentMap,
+  componentMap: ComponentMap,
   consumer?: Consumer
 ) {
+  const files = [];
+  const symlinks = [];
   const component: Component = componentWithDeps.component;
-  await linkGenerator.writeComponentsDependenciesLinks([componentWithDeps], consumer, false);
+  const outputFileParams = await linkGenerator.getComponentsDependenciesLinks([componentWithDeps], consumer, false);
+  outputFileParams.map(outputFile =>
+    files.push(new LinkFile({ path: outputFile.filePath, contents: outputFile.content }))
+  );
   const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   if (!componentMap.rootDir) throw new GeneralError('writeLinksInDist should get called on imported components only');
-  await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
-  await linkComponentsToNodeModules([component], consumer);
-  return linkGenerator.writeEntryPointsForComponent(component, consumer);
+  // await packageJson.updateAttribute(consumer, componentMap.rootDir, 'main', newMainFile);
+  const packageJsonFile = component.dataToPersist.files.find(
+    f => f.relative === path.join(componentMap.rootDir, 'package.json')
+  );
+  if (packageJsonFile) {
+    const packageJson = JSON.parse(packageJsonFile.contents);
+    packageJson.main = newMainFile;
+    packageJsonFile.content = JSON.stringify(packageJson, null, 4);
+  }
+  // await linkComponentsToNodeModules([component], consumer);
+  const nodeModuleLinker = new NodeModuleLinker([component], consumer);
+  const results = nodeModuleLinker.getLinks();
+  files.push(...results.files);
+  symlinks.push(...results.symlinks);
+  const entryPoints = await linkGenerator.getEntryPointsForComponent(component, consumer);
+  files.push(...entryPoints);
 }
 
 async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {

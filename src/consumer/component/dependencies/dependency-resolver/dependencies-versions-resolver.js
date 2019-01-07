@@ -8,6 +8,7 @@ import type Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
 import type { Consumer } from '../../../../consumer';
 import type { PathLinux } from '../../../../utils/path';
+import getNodeModulesPathOfComponent from '../../../../utils/component-node-modules-path';
 import type ComponentBitJson from '../../../bit-json';
 import Dependencies from '../dependencies';
 
@@ -52,7 +53,7 @@ function getIdFromPackageJson(consumer: Consumer, component: Component, componen
   const rootDir: ?PathLinux = component.componentMap.rootDir;
   const consumerPath = consumer.getPath();
   const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
-  const packagePath = consumer.getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
+  const packagePath = getNodeModulesPathOfComponent(component.bindingPrefix, componentId);
   const packageName = packagePath.replace(`node_modules${path.sep}`, '');
   const modulePath = consumer.driver.driver.resolveModulePath(packageName, basePath, consumerPath);
   if (!modulePath) return null; // e.g. it's author and wasn't exported yet, so there's no node_modules of that component

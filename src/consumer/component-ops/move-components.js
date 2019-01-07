@@ -53,10 +53,11 @@ export function moveExistingComponent(
     );
   }
   const componentMap = consumer.bitMap.getComponent(component.id);
-  componentMap.updateDirLocation(
-    consumer.getPathRelativeToConsumer(oldPath),
-    consumer.getPathRelativeToConsumer(newPath)
-  );
-  moveSync(oldPath, newPath);
-  component.writtenPath = newPath;
+  const oldPathRelative = consumer.getPathRelativeToConsumer(oldPath);
+  const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
+  componentMap.updateDirLocation(oldPathRelative, newPathRelative);
+  throw new Error('moveExistingComponent: not implemented yet');
+  // moveSync(oldPath, newPath);
+  // component.dataToPersist.files
+  component.writtenPath = newPathRelative;
 }

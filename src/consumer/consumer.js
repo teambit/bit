@@ -585,19 +585,6 @@ export default class Consumer {
     return { taggedComponents, autoTaggedComponents };
   }
 
-  getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
-    if (!id.scope) {
-      throw new GeneralError(
-        `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
-      );
-    }
-    // Temp fix to support old components before the migration has been running
-    bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    const allSlashes = new RegExp('/', 'g');
-    const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-    return path.join('node_modules', bindingPrefix, [id.scope, name].join(NODE_PATH_COMPONENT_SEPARATOR));
-  }
-
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     requirePath = pathNormalizeToLinux(requirePath);
     // Temp fix to support old components before the migration has been running

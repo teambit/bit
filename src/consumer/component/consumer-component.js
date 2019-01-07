@@ -45,7 +45,7 @@ import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
-import type { PathLinux, PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
+import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
@@ -134,7 +134,7 @@ export default class Component {
   specsResults: ?(SpecsResults[]);
   license: ?License;
   log: ?Log;
-  writtenPath: ?string; // needed for generate links
+  writtenPath: ?PathOsBasedRelative; // needed for generate links
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
@@ -154,6 +154,7 @@ export default class Component {
   packageJsonInstance: PackageJsonInstance;
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
+  dataToPersist: Object;
 
   get id(): BitId {
     return new BitId({

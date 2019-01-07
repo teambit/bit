@@ -20,7 +20,8 @@ import postInstallTemplate from '../consumer/component/templates/postinstall.def
 import { getLinkToFileContent } from './link-content';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
-import type { LinkFile } from './dependency-file-link-generator';
+import type { LinkFile as LinkFileType } from './dependency-file-link-generator';
+import LinkFile from './link-file';
 
 type Symlink = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -38,16 +39,16 @@ function getIndexFileName(mainFile: string): string {
 async function getComponentLinks({
   consumer,
   component,
-  componentMap,
   dependencies,
   createNpmLinkFiles
 }: {
-  consumer: Consumer,
+  consumer: ?Consumer,
   component: Component,
-  componentMap: ComponentMap,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean
 }): Promise<OutputFileParams[]> {
+  if (!component.componentMap) throw new Error('getComponentLinks expects component to have componentMap');
+  const componentMap: ComponentMap = component.componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
   const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
   const links = directDependencies.map((dep: Dependency) => {
@@ -76,7 +77,6 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
         component,
-        componentMap,
         relativePath,
         dependencyId,
         dependencyComponent,
@@ -121,7 +121,7 @@ function createSymlinks(symlinks: Symlink[], componentId: string) {
 }
 
 function groupLinks(
-  flattenLinks: LinkFile[]
+  flattenLinks: LinkFileType[]
 ): { postInstallLinks: OutputFileParams[], linksToWrite: OutputFileParams[], symlinks: Symlink[] } {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];
@@ -180,7 +180,7 @@ async function writeComponentsDependenciesLinks(
 
 async function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
-  consumer: Consumer,
+  consumer: ?Consumer,
   createNpmLinkFiles: boolean
 ): Promise<OutputFileParams[]> {
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
@@ -199,7 +199,6 @@ async function getComponentsDependenciesLinks(
     const componentsLinks = await getComponentLinks({
       consumer,
       component,
-      componentMap,
       dependencies: componentWithDeps.allDependencies,
       createNpmLinkFiles
     });
@@ -207,7 +206,6 @@ async function getComponentsDependenciesLinks(
     if (component.dependenciesSavedAsComponents) {
       const dependenciesLinks = await Promise.all(
         componentWithDeps.allDependencies.map((dep: Component) => {
-          const depComponentMap = dep.componentMap;
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
@@ -215,8 +213,7 @@ async function getComponentsDependenciesLinks(
           dependencies.push(componentWithDeps.component);
           return getComponentLinks({
             consumer,
-            component: dep, // $FlowFixMe should be set because component.dependenciesSavedAsComponents
-            componentMap: depComponentMap,
+            component: dep,
             dependencies,
             createNpmLinkFiles
           });
@@ -250,7 +247,7 @@ function getInternalCustomResolvedLinks(
   component: Component,
   componentMap: ComponentMap,
   createNpmLinkFiles: boolean
-): LinkFile[] {
+): LinkFileType[] {
   const componentDir = component.writtenPath || componentMap.rootDir;
   if (!componentDir) {
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
@@ -315,6 +312,29 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
 }
 
 /**
+ * Relevant for IMPORTED and NESTED only
+ */
+async function getEntryPointsForComponent(component: Component, consumer: Consumer): Promise<any> {
+  const files = [];
+  const componentMap = consumer.bitMap.getComponent(component.id);
+  const componentRoot = component.writtenPath || componentMap.rootDir;
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
+  const mainFile = component.dists.calculateMainDistFile(component.mainFile);
+  const indexName = getIndexFileName(mainFile); // Move to bit-javascript
+  const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
+  const entryPointPath = path.join(componentRoot, indexName);
+  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
+    const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+    const entryPointDist = path.join(distDir, indexName);
+    logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
+    files.push(new LinkFile({ path: entryPointDist, contents: entryPointFileContent, override: false }));
+  }
+  logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
+  files.push(new LinkFile({ path: entryPointPath, contents: entryPointFileContent, override: false }));
+  return files;
+}
+
+/**
  * used for writing compiler and tester dependencies to the directory of their configuration file
  * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
  * this methods write the environment dependency links no matter where the directory located on the workspace
@@ -331,8 +351,7 @@ async function writeDependenciesLinksToDir(
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
-        component, // $FlowFixMe componentMap should be set here
-        componentMap: component.componentMap,
+        component,
         relativePath,
         dependencyId: dependency.id,
         dependencyComponent,
@@ -353,7 +372,9 @@ async function writeDependenciesLinksToDir(
 
 export {
   writeEntryPointsForComponent,
+  getEntryPointsForComponent,
   writeComponentsDependenciesLinks,
+  getComponentsDependenciesLinks,
   getIndexFileName,
   writeDependenciesLinksToDir
 };

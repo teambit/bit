@@ -16,6 +16,7 @@ import { getSync } from '../../api/consumer/lib/global-config';
 import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
+import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
@@ -159,6 +160,26 @@ async function write(
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
 ): Promise<PackageJsonInstance> {
+  const packageJson = await preparePackageJsonToWrite(
+    consumer,
+    component,
+    bitDir,
+    override,
+    writeBitDependencies,
+    excludeRegistryPrefix
+  );
+  await packageJson.write({ override });
+  return packageJson;
+}
+
+async function preparePackageJsonToWrite(
+  consumer: Consumer,
+  component: Component,
+  bitDir: string,
+  override?: boolean = true,
+  writeBitDependencies?: boolean = false,
+  excludeRegistryPrefix?: boolean
+): Promise<PackageJsonInstance> {
   logger.debug(`package-json.write. bitDir ${bitDir}. override ${override.toString()}`);
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = async (dependencies: Dependencies) => {
@@ -210,7 +231,6 @@ async function write(
     await distPackageJson.write({ override });
   }
 
-  await packageJson.write({ override });
   return packageJson;
 }
 
@@ -261,7 +281,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map((id) => {
-      return id.scope ? consumer.getNodeModulesPathOfComponent(registryPrefix, id) : null;
+      return id.scope ? getNodeModulesPathOfComponent(registryPrefix, id) : null;
     })
     .filter(a => a); // remove null
 
@@ -308,6 +328,7 @@ export {
   removeComponentsFromNodeModules,
   changeDependenciesToRelativeSyntax,
   write,
+  preparePackageJsonToWrite,
   addComponentsWithVersionToRoot,
   updateAttribute,
   addWorkspacesToPackageJson,

@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import R from 'ramda';
 import fs from 'fs-extra';
 import { moveExistingComponent } from './move-components';
 import { linkComponents } from '../../links';
@@ -110,6 +111,28 @@ export default class ManyComponentsWriter {
     }
     await this.linkAll();
   }
+  async getAllData() {
+    await this._determineWhetherDependenciesAreSavedAsComponents();
+    await this.populateComponentsFilesToWrite();
+    await this.populateComponentsDependenciesToWrite();
+    this.moveComponentsIfNeeded();
+    await this._persistData();
+    // from here the data is written directly
+    await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
+    await this.installPackagesIfNeeded();
+    if (this.addToRootPackageJson) {
+      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
+    }
+    await this.linkAll();
+  }
+  async _persistData() {
+    const writeAll = this.componentsWithDependencies.map((componentWithDeps) => {
+      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
+      const filesToWriteP = allComponents.map(component => component.dataToPersist.files.map(f => f.write()));
+      return Promise.all(R.flatten(filesToWriteP));
+    });
+    return Promise.all(writeAll);
+  }
   async writeComponents() {
     const writeComponentsParams = this._getWriteComponentsParams();
     const writeComponentsP = writeComponentsParams.map((writeParams) => {
@@ -117,6 +140,14 @@ export default class ManyComponentsWriter {
       return componentWriter.write();
     });
     this.writtenComponents = await Promise.all(writeComponentsP);
+  }
+  async populateComponentsFilesToWrite() {
+    const writeComponentsParams = this._getWriteComponentsParams();
+    const writeComponentsP = writeComponentsParams.map((writeParams) => {
+      const componentWriter = ComponentWriter.getInstance(writeParams);
+      return componentWriter.getComponentsFilesToWrite();
+    });
+    await Promise.all(writeComponentsP);
   }
   async _determineWhetherDependenciesAreSavedAsComponents() {
     const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
@@ -255,6 +286,85 @@ export default class ManyComponentsWriter {
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     this.writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
   }
+  async populateComponentsDependenciesToWrite() {
+    const allDependenciesP = this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
+      const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
+        const dependencyId = dep.id.toString();
+        const depFromBitMap = this.consumer.bitMap.getComponentIfExist(dep.id);
+        if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
+          // when depFromBitMap is true, it means that this component was imported as a component already before
+          // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
+          logger.debug(
+            `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
+          );
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
+              dependencyId
+            )}. It'll be installed later using npm-client`
+          );
+          return Promise.resolve(null);
+        }
+        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+          dep.writtenPath = this.consumer.getPath();
+          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
+              dependencyId
+            )} as it already exists in bit map`
+          );
+          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
+          return Promise.resolve(dep);
+        }
+        if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
+          dep.writtenPath = depFromBitMap.rootDir;
+          logger.debug(
+            `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
+          );
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
+              dependencyId
+            )} as it already exists in bit map and file system`
+          );
+          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
+          return Promise.resolve(dep);
+        }
+        if (this.dependenciesIdsCache[dependencyId]) {
+          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
+          Analytics.addBreadCrumb(
+            'writeToComponentsDir',
+            `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in cache`
+          );
+          dep.writtenPath = this.dependenciesIdsCache[dependencyId];
+          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
+          return Promise.resolve(dep);
+        }
+        const depRootPath = this.consumer.composeDependencyPath(dep.id);
+        dep.writtenPath = depRootPath;
+        this.dependenciesIdsCache[dependencyId] = depRootPath;
+        // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
+        // and namespace can co-exist with different versions.
+        const componentMap = this.consumer.bitMap.getComponentIfExist(dep.id);
+        const componentWriter = ComponentWriter.getInstance({
+          ...this._getDefaultWriteParams(),
+          writeConfig: false,
+          component: dep,
+          writeToPath: depRootPath,
+          origin: COMPONENT_ORIGINS.NESTED,
+          parent: componentWithDeps.component.id,
+          existingComponentMap: componentMap
+        });
+        return componentWriter.getComponentsFilesToWrite();
+      });
+
+      return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
+    });
+    const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
+    this.writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
+  }
+
   moveComponentsIfNeeded() {
     if (this.writeToPath) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {

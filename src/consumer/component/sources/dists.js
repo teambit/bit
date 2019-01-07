@@ -3,10 +3,10 @@ import path from 'path';
 import Dist from './dist';
 import type Consumer from '../../consumer';
 import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '../../../constants';
-import type { PathLinux, PathOsBased } from '../../../utils/path';
+import type { PathLinux, PathOsBased, PathOsBasedRelative } from '../../../utils/path';
 import type ComponentMap from '../../bit-map/component-map';
 import logger from '../../../logger/logger';
-import { writeLinksInDist } from '../../../links';
+import { writeLinksInDist, getLinksInDistToWrite } from '../../../links';
 import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
 import { BitId } from '../../../bit-id';
 import type Component from '../consumer-component';
@@ -53,7 +53,7 @@ export default class Dists {
   areDistsInsideComponentDir: ?boolean = true;
   distEntryShouldBeStripped: ?boolean = false;
   _distsPathsAreUpdated: ?boolean = false; // makes sure to not update twice
-  distsRootDir: ?string; // populated only after getDistDirForConsumer() is called
+  distsRootDir: ?PathOsBasedRelative; // populated only after getDistDirForConsumer() is called
   constructor(dists?: ?(Dist[])) {
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
@@ -76,27 +76,32 @@ export default class Dists {
    * By default, the dists path is inside the component. If dist attribute is populated in bit.json, the path is
    * relative to consumer root.
    */
-  getDistDirForConsumer(consumer: Consumer, componentRootDir?: PathLinux): PathOsBased {
+  getDistDirForConsumer(consumer: Consumer, componentRootDir: PathLinux): PathOsBasedRelative {
     const consumerBitJson = consumer.bitJson;
-    let rootDir = componentRootDir || '.';
     if (consumer.shouldDistsBeInsideTheComponent()) {
       // should be relative to component
-      this.distsRootDir = path.join(consumer.getPath(), rootDir, DEFAULT_DIST_DIRNAME);
+      this.distsRootDir = path.join(componentRootDir, DEFAULT_DIST_DIRNAME);
     } else {
       // should be relative to consumer root
-      if (consumerBitJson.distEntry) rootDir = rootDir.replace(consumerBitJson.distEntry, '');
+      if (consumerBitJson.distEntry) componentRootDir = componentRootDir.replace(consumerBitJson.distEntry, '');
       const distTarget = consumerBitJson.distTarget || DEFAULT_DIST_DIRNAME;
       this.areDistsInsideComponentDir = false;
-      this.distsRootDir = path.join(consumer.getPath(), distTarget, rootDir);
+      this.distsRootDir = path.join(distTarget, componentRootDir);
     }
     return this.distsRootDir;
   }
 
-  updateDistsPerConsumerBitJson(id: BitId, consumer: Consumer, componentMap: ComponentMap): void {
+  getDistDir(consumer: ?Consumer, componentRootDir: ?PathLinux): PathOsBasedRelative {
+    const rootDir = componentRootDir || '.';
+    if (consumer) return this.getDistDirForConsumer(consumer, rootDir);
+    this.distsRootDir = path.join(componentRootDir || '.', rootDir);
+    return this.distsRootDir;
+  }
+
+  updateDistsPerConsumerBitJson(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
     if (this._distsPathsAreUpdated || this.isEmpty()) return;
-    // $FlowFixMe
-    const newDistBase = this.getDistDirForConsumer(consumer, componentMap.rootDir);
-    const distEntry = consumer.bitJson.distEntry;
+    const newDistBase = this.getDistDir(consumer, componentMap.rootDir);
+    const distEntry = consumer ? consumer.bitJson.distEntry : undefined;
     const shouldDistEntryBeStripped = () => {
       if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
       const areAllDistsStartWithDistEntry = () => {
@@ -119,6 +124,7 @@ export default class Dists {
     }
     const getNewRelative = (dist) => {
       if (distEntryShouldBeStripped) {
+        // $FlowFixMe distEntry is set when distEntryShouldBeStripped
         return dist.relative.replace(distEntry, '');
       }
       return dist.relative;
@@ -151,6 +157,26 @@ export default class Dists {
       await writeLinksInDist(component, componentMap, consumer);
     } // $FlowFixMe
     return saveDist;
+  }
+
+  /**
+   * write dists file to the filesystem. In case there is a consumer and dist.entry should be stripped, it will be
+   * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
+   */
+  async getDistsToWrite(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
+    if (this.isEmpty() || !this.writeDistsFiles) return null;
+    let componentMap;
+    if (consumer) {
+      componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
+      this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
+    }
+    // const saveDistP = this.dists.map(distFile => distFile.write());
+    // const saveDist = await Promise.all(saveDistP);
+    let linksInDist;
+    if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
+      linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);
+    } // $FlowFixMe
+    return { files: this.dists.get(), symlinks: linksInDist || [] };
   }
 
   // In case there are dist files, we want to point the index to the main dist file, not to source.
