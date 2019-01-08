@@ -96,10 +96,6 @@ install:
   - "npm run build"
   - "npm install -g"
   - "bit config set set user.name tester"
-  - "dir %LOCALAPPDATA%\\Bit\\Logs"
-  - "type %LOCALAPPDATA%\\Bit\\Logs\\debug.log"
-  # - "dir %USERPROFILE%"
-  # - ps: Get-ChildItem -Path %USERPROFILE%\Local\Bit\logs
   - "bit config set user.email ci@bitsrc.io"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - "bit config set analytics_reporting false"
@@ -114,7 +110,7 @@ build_script:
 
 
 test_script:
-  # - npm run test:appveyor
+  - npm run test:appveyor
   - npm run e2e-test:appveyor
 
 #after_test:
