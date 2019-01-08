@@ -127,7 +127,7 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
-  - path: "%USERPROFILE%\Local\Bit\logs\debug.log"
+  - path: "%USERPROFILE%\\Local\\Bit\\logs\\debug.log"
     name: bitLogs
 #- path: artifacts\*.msi
 #  name: Installer
