@@ -70,7 +70,7 @@ environment:
   registryProdToken:
     secure: PRt6cU+74aoYU+qZrdbRnQn62vTYP786tovlgwUkoA6mMQCypTcXxBubEFiZqFRE
   registryStgToken:
-    secure: p+ErTxsMthuFfEPHs37W0aVl6ChM8RcADXy994a5tZAV5jKwLHGQ0ttJ8/hOiHdf
+    secure: v5l1kiPQwyt21xAht4eEL97w2g4XQbMMmBk7Iu8YQ2OIHzs2SmYC4fKZ7oZvKohH
   testerBitsrcPassword:
     secure: tR01IIjMw35fBOFhTQd9jw==
   matrix:

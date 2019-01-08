@@ -60,7 +60,7 @@ jobs:
       -
         save_cache:
           # key: bitsrc-registry2
-          key: bitsrc-registry-stg4
+          key: bitsrc-registry-stg-v1
           paths:
             - ~/.npmrc
   install_npm_deps:
@@ -277,7 +277,7 @@ jobs:
       -
         restore_cache:
           # key: bitsrc-registry2
-          key: bitsrc-registry-stg4
+          key: bitsrc-registry-stg-v1
       -
         restore_cache:
           keys:
