@@ -62,7 +62,7 @@ export async function installNpmPackagesForComponents({
   consumer: Consumer,
   componentsWithDependencies: ComponentWithDependencies[],
   verbose: boolean,
-  silentPackageManagerResult: boolean,
+  silentPackageManagerResult?: boolean,
   installPeerDependencies: boolean
 }): Promise<*> {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages

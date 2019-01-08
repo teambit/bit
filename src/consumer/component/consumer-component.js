@@ -64,6 +64,7 @@ import ConfigDir from '../bit-map/config-dir';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-not-found';
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
+import DataToPersist from './sources/data-to-persist';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -154,7 +155,7 @@ export default class Component {
   packageJsonInstance: PackageJsonInstance;
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
-  dataToPersist: Object;
+  dataToPersist: DataToPersist;
 
   get id(): BitId {
     return new BitId({

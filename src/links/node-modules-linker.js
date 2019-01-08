@@ -20,6 +20,7 @@ import type { Dependency } from '../consumer/component/dependencies';
 import BitMap from '../consumer/bit-map/bit-map';
 import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 import Symlink from './symlink';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
 
 type LinkDetail = { from: string, to: string };
 
@@ -243,11 +244,15 @@ export class NodeModuleLinker {
     this.consumer = consumer; // $FlowFixMe
     this.bitMap = bitMap || consumer.bitMap;
   }
-  async getLinks() {
+  async link(): Promise<void> {
+    const links = await this.getLinks();
+    await links.persistAll();
+  }
+  async getLinks(): Promise<DataToPersist> {
     await Promise.all(
       this.components.map((component) => {
         const componentId = component.id;
-        logger.debug(`linking component to node_modules: ${componentId}`);
+        logger.debug(`linking component to node_modules: ${componentId.toString()}`);
         // const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId);
         // $FlowFixMe
         const componentMap: ComponentMap = component.componentMap;
@@ -265,7 +270,7 @@ export class NodeModuleLinker {
         }
       })
     );
-    return { symlinks: this.symlinks, files: this.files };
+    return DataToPersist.makeInstance({ files: this.files, symlinks: this.symlinks });
   }
 
   async _populateImportedComponentsLinks(component: Component): Promise<void> {

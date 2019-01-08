@@ -36,7 +36,7 @@ export async function getLinksInDistToWrite(
   componentWithDeps: ComponentWithDependencies,
   componentMap: ComponentMap,
   consumer?: Consumer
-) {
+): Promise<DataToPersist> {
   const files = [];
   const symlinks = [];
   const component: Component = componentWithDeps.component;
@@ -60,21 +60,13 @@ export async function getLinksInDistToWrite(
   symlinks.push(...results.symlinks);
   const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
   files.push(...entryPoints);
-}
-
-async function reLinkDirectlyImportedDependencies(components: Component[], consumer: Consumer): Promise<void> {
-  logger.debug(`reLinkDirectlyImportedDependencies: found ${components.length} components to re-link`);
-  const componentsWithDependencies = await Promise.all(
-    components.map(component => component.toComponentWithDependencies(consumer))
-  );
-  await linkGenerator.writeComponentsDependenciesLinks(componentsWithDependencies, consumer, false);
-  await linkComponentsToNodeModules(components, consumer);
+  return DataToPersist.makeInstance({ files, symlinks });
 }
 
 async function getReLinkDirectlyImportedDependenciesLinks(
   components: Component[],
   consumer: Consumer
-): Promise<Object> {
+): Promise<DataToPersist> {
   logger.debug(`reLinkDirectlyImportedDependencies: found ${components.length} components to re-link`);
   const componentsWithDependencies = await Promise.all(
     components.map(component => component.toComponentWithDependencies(consumer))
@@ -87,23 +79,15 @@ async function getReLinkDirectlyImportedDependenciesLinks(
   const componentsDependenciesLinkFiles = componentsDependenciesLinks.map(l => LinkFile.load(l));
   const nodeModuleLinker = new NodeModuleLinker(components, consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  return { files: [...componentsDependenciesLinkFiles, ...nodeModuleLinks.files], symlinks: nodeModuleLinks.symlinks };
+  return DataToPersist.makeInstance({
+    files: [...componentsDependenciesLinkFiles, ...nodeModuleLinks.files],
+    symlinks: nodeModuleLinks.symlinks
+  });
 }
 
-/**
- * needed for the following cases:
- * 1) user is importing a component directly which was a dependency before. (before: IMPORTED, now: NESTED).
- * 2) user used bit-move to move a dependency to another directory.
- * as a result of the cases above, the link from the dependent to the dependency is broken.
- * find the dependents components and re-link them
- */
 export async function reLinkDependents(consumer: Consumer, components: Component[]): Promise<void> {
-  logger.debug('linker: check whether there are direct dependents for re-linking');
-  const directDependentComponents = await consumer.getAuthoredAndImportedDependentsOfComponents(components);
-  if (directDependentComponents.length) {
-    await reLinkDirectlyImportedDependencies(directDependentComponents, consumer);
-    await packageJson.changeDependenciesToRelativeSyntax(consumer, directDependentComponents, components);
-  }
+  const links = await getReLinkDependentsData(consumer, components);
+  await links.persistAll();
 }
 
 /**
@@ -113,7 +97,7 @@ export async function reLinkDependents(consumer: Consumer, components: Component
  * as a result of the cases above, the link from the dependent to the dependency is broken.
  * find the dependents components and re-link them
  */
-export async function getReLinkDependentsData(consumer: Consumer, components: Component[]): Promise<Object> {
+export async function getReLinkDependentsData(consumer: Consumer, components: Component[]): Promise<DataToPersist> {
   logger.debug('linker: check whether there are direct dependents for re-linking');
   const directDependentComponents = await consumer.getAuthoredAndImportedDependentsOfComponents(components);
   const files = [];
@@ -128,26 +112,10 @@ export async function getReLinkDependentsData(consumer: Consumer, components: Co
     files.push(...data.files, ...packageJsonFiles);
     symlinks.push(...data.symlinks);
   }
-  return { files, symlinks };
+  return DataToPersist.makeInstance({ files, symlinks });
 }
 
-/**
- * link the components after import.
- * this process contains the following steps:
- * 1) writing link files to connect imported components to their dependencies
- * 2) writing index.js files (entry-point files) in the root directories of each one of the imported and dependencies components.
- * unless writePackageJson is true, because if package.json is written, its "main" attribute points to the entry-point.
- * 3) creating symlinks from components directories to node_modules
- * 4) in case a component was nested and now imported directly, re-link its dependents
- */
-export async function linkComponents({
-  componentsWithDependencies,
-  writtenComponents,
-  writtenDependencies,
-  consumer,
-  createNpmLinkFiles,
-  writePackageJson
-}: {
+export async function linkComponents(params: {
   componentsWithDependencies: ComponentWithDependencies[],
   writtenComponents: Component[],
   writtenDependencies: ?(Component[]),
@@ -155,24 +123,8 @@ export async function linkComponents({
   createNpmLinkFiles: boolean,
   writePackageJson: boolean
 }) {
-  await linkGenerator.writeComponentsDependenciesLinks(componentsWithDependencies, consumer, createNpmLinkFiles);
-  // no need for entry-point file if package.json is written.
-  if (writtenDependencies) {
-    await Promise.all(
-      R.flatten(writtenDependencies).map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
-    );
-  }
-  if (!writePackageJson) {
-    await Promise.all(
-      writtenComponents.map(component => linkGenerator.writeEntryPointsForComponent(component, consumer))
-    );
-  }
-  const allComponents = writtenDependencies
-    ? [...writtenComponents, ...R.flatten(writtenDependencies)]
-    : writtenComponents;
-  await linkComponentsToNodeModules(allComponents, consumer);
-  await reLinkDependents(consumer, writtenComponents);
-  return allComponents;
+  const allLinks = await getAllComponentsLinks(params);
+  await allLinks.persistAll();
 }
 
 /**

@@ -6,7 +6,7 @@ import { DEFAULT_DIST_DIRNAME, COMPONENT_ORIGINS, NODE_PATH_SEPARATOR } from '..
 import type { PathLinux, PathOsBased, PathOsBasedRelative } from '../../../utils/path';
 import type ComponentMap from '../../bit-map/component-map';
 import logger from '../../../logger/logger';
-import { writeLinksInDist, getLinksInDistToWrite } from '../../../links';
+import { getLinksInDistToWrite } from '../../../links';
 import { searchFilesIgnoreExt, pathRelativeLinux } from '../../../utils';
 import { BitId } from '../../../bit-id';
 import type Component from '../consumer-component';
@@ -14,6 +14,7 @@ import { pathNormalizeToLinux } from '../../../utils/path';
 import Source from '../../../scope/models/source';
 import type CompilerExtension from '../../../extensions/compiler-extension';
 import type { DistFileModel } from '../../../scope/models/version';
+import DataToPersist from './data-to-persist';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -141,42 +142,38 @@ export default class Dists {
   }
 
   /**
-   * write dists file to the filesystem. In case there is a consumer and dist.entry should be stripped, it will be
-   * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
+   * write dists files to the filesystem
    */
   async writeDists(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
-    if (this.isEmpty() || !this.writeDistsFiles) return null;
-    let componentMap;
-    if (consumer) {
-      componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
-      this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
-    }
-    const saveDistP = this.dists.map(distFile => distFile.write());
-    const saveDist = await Promise.all(saveDistP);
-    if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      await writeLinksInDist(component, componentMap, consumer);
-    } // $FlowFixMe
-    return saveDist;
+    const dataToPersist = await this.getDistsToWrite(component, consumer, writeLinks);
+    if (!dataToPersist) return null;
+    await dataToPersist.persistAll();
+    return this.dists.map(distFile => distFile.path);
   }
 
   /**
-   * write dists file to the filesystem. In case there is a consumer and dist.entry should be stripped, it will be
-   * done before writing the files. The originallySharedDir should be already stripped before accessing this method.
+   * In case there is a consumer and dist.entry should be stripped, it will be done before writing the files.
+   * The originallySharedDir should be already stripped before accessing this method.
    */
-  async getDistsToWrite(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
+  async getDistsToWrite(
+    component: Component,
+    consumer?: Consumer,
+    writeLinks?: boolean = true
+  ): Promise<?DataToPersist> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
     let componentMap;
     if (consumer) {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
       this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
-    // const saveDistP = this.dists.map(distFile => distFile.write());
-    // const saveDist = await Promise.all(saveDistP);
-    let linksInDist;
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);
-    } // $FlowFixMe
-    return { files: this.dists.get(), symlinks: linksInDist || [] };
+      const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);
+      return DataToPersist.makeInstance({
+        files: [...this.dists, ...linksInDist.files],
+        symlinks: [...linksInDist.symlinks]
+      });
+    }
+    return null;
   }
 
   // In case there are dist files, we want to point the index to the main dist file, not to source.
