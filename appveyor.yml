@@ -89,6 +89,7 @@ install:
   - ps: $npmrcContent = "@bit:registry=https://node-stg.bitsrc.io/`n"
   - ps: $npmrcContent += "//node-stg.bitsrc.io/:_authToken=$env:registryStgToken`n"
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
+  - "dir %USERPROFILE%\Local\Bit\logs"
   - npm config ls
   - ps: Install-Product node 6
   - ps: npm i -g npm
@@ -97,6 +98,7 @@ install:
   - "npm run build"
   - "npm install -g"
   - "bit config set set user.name tester"
+  - "dir %USERPROFILE%\Local\Bit\logs"
   - "bit config set user.email ci@bitsrc.io"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - "bit config set analytics_reporting false"
@@ -125,7 +127,7 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
-  - path: '%APPDATA%\Local\Bit\logs\debug.log'
+  - path: '%USERPROFILE%\Local\Bit\logs\debug.log'
     name: bitLogs
 #- path: artifacts\*.msi
 #  name: Installer
