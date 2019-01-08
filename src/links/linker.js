@@ -13,6 +13,7 @@ import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import { LinkFile } from '.';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -197,7 +198,7 @@ export async function getAllComponentsLinks({
   consumer: Consumer,
   createNpmLinkFiles: boolean,
   writePackageJson: boolean
-}): Promise<Object> {
+}): Promise<DataToPersist> {
   const files = [];
   const symlinks = [];
   const componentsDependenciesLinks = await linkGenerator.getComponentsDependenciesLinks(
@@ -228,5 +229,5 @@ export async function getAllComponentsLinks({
   const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents);
   files.push(...componentsDependenciesLinkFiles, ...nodeModuleLinks.files, ...reLinkDependentsData.files);
   symlinks.push(...nodeModuleLinks.symlinks, ...reLinkDependentsData.symlinks);
-  return { files, symlinks };
+  return DataToPersist.makeInstance({ files, symlinks });
 }

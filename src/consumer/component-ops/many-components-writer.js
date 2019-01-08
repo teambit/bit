@@ -3,7 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
 import { moveExistingComponent } from './move-components';
-import { linkComponents, getAllComponentsLinks } from '../../links';
+import { getAllComponentsLinks } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
 import * as packageJson from '../component/package-json';
 import type { ComponentWithDependencies } from '../../scope';
@@ -20,8 +20,7 @@ import ComponentWriter from './component-writer';
 import type { ComponentWriterProps } from './component-writer';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import type { PathOsBasedAbsolute } from '../../utils/path';
-import { AbstractVinyl } from '../component/sources';
-import Symlink from '../../links/symlink';
+import DataToPersist from '../component/sources/data-to-persist';
 
 type ManyComponentsWriterParams = {
   consumer: Consumer,
@@ -98,55 +97,40 @@ export default class ManyComponentsWriter {
     return typeof field === 'undefined' ? defaultValue : Boolean(field);
   }
   async writeAll() {
-    await this._determineWhetherDependenciesAreSavedAsComponents();
-    await this.writeComponents();
-    await this.writeDependencies();
-    this.moveComponentsIfNeeded();
-    // add workspaces if flag is true
-    await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
-    await this.installPackagesIfNeeded();
-    if (this.addToRootPackageJson) {
-      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
-    }
-    await this.linkAll();
+    await this._writeComponentsAndDependencies();
+    await this._installPackages();
+    await this._writeLinks();
   }
-  async getAllData() {
+  async _writeComponentsAndDependencies() {
     await this._determineWhetherDependenciesAreSavedAsComponents();
     await this.populateComponentsFilesToWrite();
     await this.populateComponentsDependenciesToWrite();
     this.moveComponentsIfNeeded();
     await this._persistComponentsData();
-    // from here the data is written directly
+  }
+  async _installPackages() {
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     await this.installPackagesIfNeeded();
     if (this.addToRootPackageJson) {
       await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
     }
+  }
+  async _writeLinks() {
     const links = await this.getAllLinks();
-    await this._persistFiles(links.files);
-    await this._persistSymlinks(links.symlinks);
-  }
-  async _persistFiles(files: AbstractVinyl[]) {
-    return Promise.all(files.map(file => file.write()));
-  }
-  async _persistSymlinks(symlinks: Symlink[]) {
-    return Promise.all(symlinks.map(symlink => symlink.write()));
+    await links.persistAll();
   }
   async _persistComponentsData() {
-    const allFiles = this.componentsWithDependencies.map((componentWithDeps) => {
+    const files = [];
+    const symlinks = [];
+    this.componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      const files = allComponents.map(component => component.dataToPersist.files);
-      return R.flatten(files);
+      const componentsFiles = allComponents.map(component => component.dataToPersist.files);
+      const componentsSymlinks = allComponents.map(component => component.dataToPersist.symlinks);
+      files.push(...R.flatten(componentsFiles));
+      symlinks.push(...R.flatten(componentsSymlinks));
     });
-    return this._persistFiles(R.flatten(allFiles));
-  }
-  async writeComponents() {
-    const writeComponentsParams = this._getWriteComponentsParams();
-    const writeComponentsP = writeComponentsParams.map((writeParams) => {
-      const componentWriter = ComponentWriter.getInstance(writeParams);
-      return componentWriter.write();
-    });
-    this.writtenComponents = await Promise.all(writeComponentsP);
+    const dataToPersist = DataToPersist.makeInstance({ files, symlinks });
+    return dataToPersist.persistAll();
   }
   async populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
@@ -205,7 +189,6 @@ export default class ManyComponentsWriter {
       ...getParams()
     };
   }
-
   _getDefaultWriteParams(): Object {
     return {
       override: true,
@@ -214,84 +197,6 @@ export default class ManyComponentsWriter {
       consumer: this.consumer,
       excludeRegistryPrefix: this.excludeRegistryPrefix
     };
-  }
-  async writeDependencies() {
-    const allDependenciesP = this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
-      const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
-        const dependencyId = dep.id.toString();
-        const depFromBitMap = this.consumer.bitMap.getComponentIfExist(dep.id);
-        if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
-          // when depFromBitMap is true, it means that this component was imported as a component already before
-          // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
-          logger.debug(
-            `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
-          );
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )}. It'll be installed later using npm-client`
-          );
-          return Promise.resolve(null);
-        }
-        if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-          dep.writtenPath = this.consumer.getPath();
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )} as it already exists in bit map`
-          );
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
-          dep.writtenPath = depFromBitMap.rootDir;
-          logger.debug(
-            `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
-          );
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )} as it already exists in bit map and file system`
-          );
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        if (this.dependenciesIdsCache[dependencyId]) {
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
-          Analytics.addBreadCrumb(
-            'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in cache`
-          );
-          dep.writtenPath = this.dependenciesIdsCache[dependencyId];
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        const depRootPath = this.consumer.composeDependencyPath(dep.id);
-        dep.writtenPath = depRootPath;
-        this.dependenciesIdsCache[dependencyId] = depRootPath;
-        // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
-        // and namespace can co-exist with different versions.
-        const componentMap = this.consumer.bitMap.getComponentIfExist(dep.id);
-        const componentWriter = ComponentWriter.getInstance({
-          ...this._getDefaultWriteParams(),
-          writeConfig: false,
-          component: dep,
-          writeToPath: depRootPath,
-          origin: COMPONENT_ORIGINS.NESTED,
-          parent: componentWithDeps.component.id,
-          existingComponentMap: componentMap
-        });
-        return componentWriter.write();
-      });
-
-      return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
-    });
-    const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
-    this.writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
   }
   async populateComponentsDependenciesToWrite() {
     const allDependenciesP = this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
@@ -371,7 +276,6 @@ export default class ManyComponentsWriter {
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     this.writtenDependencies = R.flatten(writtenDependenciesIncludesNull).filter(dep => dep);
   }
-
   moveComponentsIfNeeded() {
     if (this.writeToPath) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
@@ -397,18 +301,7 @@ export default class ManyComponentsWriter {
       });
     }
   }
-  async linkAll() {
-    return linkComponents({
-      componentsWithDependencies: this.componentsWithDependencies,
-      writtenComponents: this.writtenComponents,
-      writtenDependencies: this.writtenDependencies,
-      consumer: this.consumer,
-      createNpmLinkFiles: this.createNpmLinkFiles,
-      writePackageJson: this.writePackageJson
-    });
-  }
-
-  async getAllLinks() {
+  async getAllLinks(): Promise<DataToPersist> {
     return getAllComponentsLinks({
       componentsWithDependencies: this.componentsWithDependencies,
       writtenComponents: this.writtenComponents,
@@ -418,7 +311,6 @@ export default class ManyComponentsWriter {
       writePackageJson: this.writePackageJson
     });
   }
-
   throwErrorWhenDirectoryNotEmpty(componentDir: string, componentMap: ?ComponentMap) {
     // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
     // component is not new, and it's ok to override the existing directory.

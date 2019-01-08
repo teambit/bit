@@ -28,19 +28,6 @@ export type LinksResult = {
   bound: LinkDetail[]
 };
 
-function writeDependencyLink(
-  parentRootDir: PathOsBased, // absolute path
-  bitId: BitId,
-  rootDir: PathOsBased, // absolute path
-  bindingPrefix: string
-): LinkDetail {
-  const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId);
-  const destPath = path.join(parentRootDir, relativeDestPath);
-  createSymlinkOrCopy(rootDir, destPath, bitId.toString());
-
-  return { from: parentRootDir, to: rootDir };
-}
-
 /**
  * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
  * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
@@ -354,6 +341,7 @@ export class NodeModuleLinker {
    * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
    */
   getSymlinkPackages(from: string, to: string, component: Component): Symlink[] {
+    if (!this.consumer) throw new Error('getSymlinkPackages expects the Consumer to be defined');
     const dependenciesSavedAsComponents = component.dependenciesSavedAsComponents;
     const fromNodeModules = path.join(from, 'node_modules');
     const toNodeModules = path.join(to, 'node_modules');
@@ -377,6 +365,7 @@ export class NodeModuleLinker {
       return Symlink.makeInstance(fromDir, toDir);
     });
   }
+
   getDependenciesLinks(component: Component): Symlink[] {
     // $FlowFixMe
     const componentMap: ComponentMap = component.componentMap;
