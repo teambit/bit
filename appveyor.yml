@@ -91,6 +91,7 @@ install:
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
   - ps: Install-Product node 6
+  - "npm cache clean"
   - "npm update"
   - "npm i"
   - "npm run build"
