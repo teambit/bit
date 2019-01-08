@@ -130,7 +130,9 @@ test_script:
 artifacts:
   # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
   - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
-    name: bitLogs
+    name: bit-logs
+  - path: "output.err"
+    name: mocha-output
 #- path: artifacts\*.msi
 #  name: Installer
 #- path: artifacts\bit.${VERSION}.nupkg
