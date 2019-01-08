@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix parsing React docs to show the `@example` tag
+
 ## [13.0.6-dev.32] - 2019-01-06
 
 - fix running `bit link` from an inner directory for author
