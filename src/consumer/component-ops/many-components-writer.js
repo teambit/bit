@@ -103,20 +103,20 @@ export default class ManyComponentsWriter {
   }
   async _writeComponentsAndDependencies() {
     await this._determineWhetherDependenciesAreSavedAsComponents();
-    await this.populateComponentsFilesToWrite();
-    await this.populateComponentsDependenciesToWrite();
-    this.moveComponentsIfNeeded();
+    await this._populateComponentsFilesToWrite();
+    await this._populateComponentsDependenciesToWrite();
+    this._moveComponentsIfNeeded();
     await this._persistComponentsData();
   }
   async _installPackages() {
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
-    await this.installPackagesIfNeeded();
+    await this._installPackagesIfNeeded();
     if (this.addToRootPackageJson) {
       await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
     }
   }
   async _writeLinks() {
-    const links = await this.getAllLinks();
+    const links = await this._getAllLinks();
     await links.persistAll();
   }
   async _persistComponentsData() {
@@ -132,7 +132,7 @@ export default class ManyComponentsWriter {
     const dataToPersist = DataToPersist.makeInstance({ files, symlinks });
     return dataToPersist.persistAll();
   }
-  async populateComponentsFilesToWrite() {
+  async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
     const writeComponentsP = writeComponentsParams.map((writeParams) => {
       const componentWriter = ComponentWriter.getInstance(writeParams);
@@ -171,7 +171,7 @@ export default class ManyComponentsWriter {
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
       const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
-      this.throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap);
+      this._throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
@@ -198,7 +198,7 @@ export default class ManyComponentsWriter {
       excludeRegistryPrefix: this.excludeRegistryPrefix
     };
   }
-  async populateComponentsDependenciesToWrite() {
+  async _populateComponentsDependenciesToWrite() {
     const allDependenciesP = this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) => {
       const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
@@ -276,7 +276,7 @@ export default class ManyComponentsWriter {
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
     this.writtenDependencies = R.flatten(writtenDependenciesIncludesNull).filter(dep => dep);
   }
-  moveComponentsIfNeeded() {
+  _moveComponentsIfNeeded() {
     if (this.writeToPath) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
         const relativeWrittenPath = this.consumer.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
@@ -290,7 +290,7 @@ export default class ManyComponentsWriter {
       });
     }
   }
-  async installPackagesIfNeeded() {
+  async _installPackagesIfNeeded() {
     if (this.installNpmPackages) {
       await installNpmPackagesForComponents({
         consumer: this.consumer,
@@ -301,7 +301,7 @@ export default class ManyComponentsWriter {
       });
     }
   }
-  async getAllLinks(): Promise<DataToPersist> {
+  async _getAllLinks(): Promise<DataToPersist> {
     return getAllComponentsLinks({
       componentsWithDependencies: this.componentsWithDependencies,
       writtenComponents: this.writtenComponents,
@@ -311,7 +311,7 @@ export default class ManyComponentsWriter {
       writePackageJson: this.writePackageJson
     });
   }
-  throwErrorWhenDirectoryNotEmpty(componentDir: string, componentMap: ?ComponentMap) {
+  _throwErrorWhenDirectoryNotEmpty(componentDir: string, componentMap: ?ComponentMap) {
     // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
     // component is not new, and it's ok to override the existing directory.
     if (!this.writeToPath && componentMap) return;
