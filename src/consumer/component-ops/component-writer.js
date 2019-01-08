@@ -111,7 +111,7 @@ export default class ComponentWriter {
     return this.component;
   }
 
-  async getComponentsFilesToWrite(): Promise<Object> {
+  async populateComponentsFilesToWrite(): Promise<Object> {
     if (!this.component.files || !this.component.files.length) {
       throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
@@ -127,7 +127,7 @@ export default class ComponentWriter {
     this._updateBitMapIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
-    return { files: this.files, symlinks: this.symlinks };
+    return this.component;
   }
 
   async populateFilesToWriteToComponentDir() {

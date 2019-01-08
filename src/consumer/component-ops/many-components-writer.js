@@ -145,9 +145,9 @@ export default class ManyComponentsWriter {
     const writeComponentsParams = this._getWriteComponentsParams();
     const writeComponentsP = writeComponentsParams.map((writeParams) => {
       const componentWriter = ComponentWriter.getInstance(writeParams);
-      return componentWriter.getComponentsFilesToWrite();
+      return componentWriter.populateComponentsFilesToWrite();
     });
-    await Promise.all(writeComponentsP);
+    this.writtenComponents = await Promise.all(writeComponentsP);
   }
   async _determineWhetherDependenciesAreSavedAsComponents() {
     const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
@@ -356,7 +356,7 @@ export default class ManyComponentsWriter {
           parent: componentWithDeps.component.id,
           existingComponentMap: componentMap
         });
-        return componentWriter.getComponentsFilesToWrite();
+        return componentWriter.populateComponentsFilesToWrite();
       });
 
       return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
