@@ -252,8 +252,19 @@ export default class NodeModuleLinker {
     return DataToPersist.makeInstance({ files: this.files, symlinks: this.symlinks });
   }
 
-  async getLinksResults(): LinksResults[] {
-    throw new Error('to implement');
+  getLinksResults(): LinksResult[] {
+    const linksResults: LinksResult[] = [];
+    this.symlinks.forEach((symlink: Symlink) => {
+      if (!symlink.componentId) return;
+      const existingLinkResult = linksResults.find(linkResult => linkResult.id.isEqual(symlink.componentId));
+      if (existingLinkResult) {
+        existingLinkResult.bound.push({ from: symlink.src, to: symlink.dest });
+      } else {
+        const linkResult = { id: symlink.componentId, bound: [{ from: symlink.src, to: symlink.dest }] };
+        linksResults.push(linkResult);
+      }
+    });
+    return linksResults;
   }
 
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
@@ -274,9 +285,9 @@ export default class NodeModuleLinker {
       const distTarget = component.dists.getDistDir(this.consumer, componentMap.rootDir);
       const packagesSymlinks = this.getSymlinkPackages(srcTarget, distTarget, component);
       this.symlinks.push(...packagesSymlinks);
-      this.symlinks.push(Symlink.makeInstance(distTarget, linkPath, componentId.toString()));
+      this.symlinks.push(Symlink.makeInstance(distTarget, linkPath, componentId));
     } else {
-      this.symlinks.push(Symlink.makeInstance(srcTarget, linkPath, componentId.toString()));
+      this.symlinks.push(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
 
     if (component.hasDependencies()) {
@@ -411,7 +422,7 @@ export default class NodeModuleLinker {
   ): Symlink {
     const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId);
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
-    return Symlink.makeInstance(rootDir, destPathInsideParent, bitId.toString());
+    return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
 
   async getMissingCustomResolvedLinks(component: Component): Promise<LinkFile[]> {
