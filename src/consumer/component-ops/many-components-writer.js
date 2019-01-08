@@ -3,7 +3,7 @@ import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
 import { moveExistingComponent } from './move-components';
-import { linkComponents } from '../../links';
+import { linkComponents, getAllComponentsLinks } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
 import * as packageJson from '../component/package-json';
 import type { ComponentWithDependencies } from '../../scope';
@@ -20,6 +20,8 @@ import ComponentWriter from './component-writer';
 import type { ComponentWriterProps } from './component-writer';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import type { PathOsBasedAbsolute } from '../../utils/path';
+import { AbstractVinyl } from '../component/sources';
+import Symlink from '../../links/symlink';
 
 type ManyComponentsWriterParams = {
   consumer: Consumer,
@@ -39,9 +41,6 @@ type ManyComponentsWriterParams = {
   addToRootPackageJson?: boolean,
   verbose?: boolean,
   excludeRegistryPrefix?: boolean
-};
-type Files = {
-  [filePath: string]: string
 };
 
 /**
@@ -116,22 +115,30 @@ export default class ManyComponentsWriter {
     await this.populateComponentsFilesToWrite();
     await this.populateComponentsDependenciesToWrite();
     this.moveComponentsIfNeeded();
-    await this._persistData();
+    await this._persistComponentsData();
     // from here the data is written directly
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     await this.installPackagesIfNeeded();
     if (this.addToRootPackageJson) {
       await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
     }
-    await this.linkAll();
+    const links = await this.getAllLinks();
+    await this._persistFiles(links.files);
+    await this._persistSymlinks(links.symlinks);
   }
-  async _persistData() {
-    const writeAll = this.componentsWithDependencies.map((componentWithDeps) => {
+  async _persistFiles(files: AbstractVinyl[]) {
+    return Promise.all(files.map(file => file.write()));
+  }
+  async _persistSymlinks(symlinks: Symlink[]) {
+    return Promise.all(symlinks.map(symlink => symlink.write()));
+  }
+  async _persistComponentsData() {
+    const allFiles = this.componentsWithDependencies.map((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      const filesToWriteP = allComponents.map(component => component.dataToPersist.files.map(f => f.write()));
-      return Promise.all(R.flatten(filesToWriteP));
+      const files = allComponents.map(component => component.dataToPersist.files);
+      return R.flatten(files);
     });
-    return Promise.all(writeAll);
+    return this._persistFiles(R.flatten(allFiles));
   }
   async writeComponents() {
     const writeComponentsParams = this._getWriteComponentsParams();
@@ -362,7 +369,7 @@ export default class ManyComponentsWriter {
       return Promise.all(writeDependenciesP).then(deps => deps.filter(dep => dep));
     });
     const writtenDependenciesIncludesNull = await Promise.all(allDependenciesP);
-    this.writtenDependencies = writtenDependenciesIncludesNull.filter(dep => dep);
+    this.writtenDependencies = R.flatten(writtenDependenciesIncludesNull).filter(dep => dep);
   }
 
   moveComponentsIfNeeded() {
@@ -392,6 +399,17 @@ export default class ManyComponentsWriter {
   }
   async linkAll() {
     return linkComponents({
+      componentsWithDependencies: this.componentsWithDependencies,
+      writtenComponents: this.writtenComponents,
+      writtenDependencies: this.writtenDependencies,
+      consumer: this.consumer,
+      createNpmLinkFiles: this.createNpmLinkFiles,
+      writePackageJson: this.writePackageJson
+    });
+  }
+
+  async getAllLinks() {
+    return getAllComponentsLinks({
       componentsWithDependencies: this.componentsWithDependencies,
       writtenComponents: this.writtenComponents,
       writtenDependencies: this.writtenDependencies,

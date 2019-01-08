@@ -20,6 +20,7 @@ import getNodeModulesPathOfComponent from '../../utils/component-node-modules-pa
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
+import GeneralFile from './sources/general-file';
 
 export type PackageJsonInstance = {};
 
@@ -105,11 +106,11 @@ async function changeDependenciesToRelativeSyntax(
   consumer: Consumer,
   components: Component[],
   dependencies: Component[]
-) {
+): Promise<GeneralFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
-  const updateComponent = async (component) => {
+  const updateComponentPackageJson = async (component): Promise<?GeneralFile> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
     let packageJson;
     try {
@@ -136,9 +137,15 @@ async function changeDependenciesToRelativeSyntax(
     const testerDeps = getPackages(component.testerDependencies);
     packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
     packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, getRegistryPrefix());
-    return packageJson.write({ override: true });
+    // return packageJson.write({ override: true });
+    return new GeneralFile({
+      path: componentMap.rootDir,
+      content: JSON.stringify(packageJson, null, 4),
+      override: true
+    });
   };
-  return Promise.all(components.map(component => updateComponent(component)));
+  const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
+  return packageJsonFiles.filter(file => file);
 }
 
 function getRegistryPrefix(): string {

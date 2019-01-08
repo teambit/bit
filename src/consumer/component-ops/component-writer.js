@@ -12,9 +12,9 @@ import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
 import mkdirp from '../../utils/mkdirp';
 import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
 import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
-import type { Symlink } from '../../links/node-modules-linker';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { preparePackageJsonToWrite } from '../component/package-json';
+import Symlink from '../../links/symlink';
 
 export type ComponentWriterProps = {
   component: Component,

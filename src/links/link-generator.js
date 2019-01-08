@@ -314,11 +314,11 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
 /**
  * Relevant for IMPORTED and NESTED only
  */
-async function getEntryPointsForComponent(component: Component, consumer: Consumer): Promise<any> {
+function getEntryPointsForComponent(component: Component, consumer: Consumer): LinkFile[] {
   const files = [];
   const componentMap = consumer.bitMap.getComponent(component.id);
   const componentRoot = component.writtenPath || componentMap.rootDir;
-  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
@@ -327,10 +327,10 @@ async function getEntryPointsForComponent(component: Component, consumer: Consum
     const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
-    files.push(new LinkFile({ path: entryPointDist, contents: entryPointFileContent, override: false }));
+    files.push(LinkFile.load({ filePath: entryPointDist, content: entryPointFileContent }));
   }
   logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
-  files.push(new LinkFile({ path: entryPointPath, contents: entryPointFileContent, override: false }));
+  files.push(LinkFile.load({ filePath: entryPointPath, content: entryPointFileContent }));
   return files;
 }
 

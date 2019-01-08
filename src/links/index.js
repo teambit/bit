@@ -4,6 +4,7 @@ import {
   linkAllToNodeModules,
   writeLinksInDist,
   getLinksInDistToWrite,
+  getAllComponentsLinks,
   reLinkDependents
 } from './linker';
 import LinkFile from './link-file';
@@ -14,6 +15,7 @@ export {
   linkAllToNodeModules,
   writeLinksInDist,
   getLinksInDistToWrite,
+  getAllComponentsLinks,
   reLinkDependents,
   LinkFile
 };

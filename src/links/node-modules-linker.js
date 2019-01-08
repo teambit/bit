@@ -19,6 +19,7 @@ import getNodeModulesPathOfComponent from '../utils/component-node-modules-path'
 import type { Dependency } from '../consumer/component/dependencies';
 import BitMap from '../consumer/bit-map/bit-map';
 import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
+import Symlink from './symlink';
 
 type LinkDetail = { from: string, to: string };
 
@@ -244,8 +245,6 @@ export default (async function linkComponents(components: Component[], consumer:
   );
 });
 
-export type Symlink = { src: string, dest: string, componentId: string };
-
 export class NodeModuleLinker {
   components: Component[];
   consumer: ?Consumer;
@@ -255,7 +254,7 @@ export class NodeModuleLinker {
   constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
     this.components = components;
     this.consumer = consumer; // $FlowFixMe
-    this.bitmap = bitMap || consumer.bitMap;
+    this.bitMap = bitMap || consumer.bitMap;
   }
   async getLinks() {
     await Promise.all(
@@ -301,9 +300,9 @@ export class NodeModuleLinker {
       const distTarget = component.dists.getDistDir(this.consumer, componentMap.rootDir);
       const packagesSymlinks = this.getSymlinkPackages(srcTarget, distTarget, component);
       this.symlinks.push(...packagesSymlinks);
-      this.symlinks.push({ src: distTarget, dest: linkPath, componentId: componentId.toString() });
+      this.symlinks.push(Symlink.makeInstance(distTarget, linkPath, componentId.toString()));
     } else {
-      this.symlinks.push({ src: srcTarget, dest: linkPath, componentId: componentId.toString() });
+      this.symlinks.push(Symlink.makeInstance(srcTarget, linkPath, componentId.toString()));
     }
 
     if (component.hasDependencies()) {
@@ -375,15 +374,15 @@ export class NodeModuleLinker {
     return dirs.map((dir) => {
       const fromDir = path.join(fromNodeModules, dir);
       const toDir = path.join(toNodeModules, dir);
-      return { src: fromDir, dest: toDir };
+      return Symlink.makeInstance(fromDir, toDir);
     });
   }
   getDependenciesLinks(component: Component): Symlink[] {
     // $FlowFixMe
     const componentMap: ComponentMap = component.componentMap;
-    return component.getAllDependencies().map((dependency: Dependency) => {
+    const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
-      const dependenciesLinks = [];
+      const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap) return dependenciesLinks;
       const parentRootDir = componentMap.rootDir || '.'; // compilers/testers don't have rootDir
       dependenciesLinks.push(
@@ -400,13 +399,15 @@ export class NodeModuleLinker {
         // dir into the dist dir. (see consumer-component.write())
         const from = component.dists.getDistDirForConsumer(this.consumer, componentMap.rootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyComponentMap.rootDir);
-        dependenciesLinks.push(writeDependencyLink(from, dependency.id, to, component.bindingPrefix));
+        dependenciesLinks.push(this.getDependencyLink(from, dependency.id, to, component.bindingPrefix));
         // @todo: why is it from a component to its dependency? shouldn't it be from component src to dist/component?
         const packagesSymlinks = this.getSymlinkPackages(from, to, component);
         dependenciesLinks.push(...packagesSymlinks);
       }
       return dependenciesLinks;
-    });
+    };
+    const symlinks = component.getAllDependencies().map((dependency: Dependency) => getSymlinks(dependency));
+    return R.flatten(symlinks);
   }
 
   getMissingLinks(component: Component): Symlink[] {
@@ -434,7 +435,7 @@ export class NodeModuleLinker {
   ): Symlink {
     const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId);
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
-    return { src: rootDir, dest: destPathInsideParent, componentId: bitId.toString() };
+    return Symlink.makeInstance(rootDir, destPathInsideParent, bitId.toString());
   }
 
   async getMissingCustomResolvedLinks(component: Component) {
