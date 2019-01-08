@@ -109,7 +109,7 @@ build_script:
 
 
 test_script:
-  - npm run test:appveyor
+  # - npm run test:appveyor
   - npm run e2e-test:appveyor
 
 #after_test:
