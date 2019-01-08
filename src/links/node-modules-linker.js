@@ -14,13 +14,14 @@ import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import type Consumer from '../consumer/consumer';
 import { getIndexFileName, writeComponentsDependenciesLinks, getComponentsDependenciesLinks } from './link-generator';
 import { getLinkToFileContent } from './link-content';
-import type { PathOsBased, PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
+import type { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 import getNodeModulesPathOfComponent from '../utils/component-node-modules-path';
 import type { Dependency } from '../consumer/component/dependencies';
 import BitMap from '../consumer/bit-map/bit-map';
 import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
+import LinkFile from './link-file';
 
 type LinkDetail = { from: string, to: string };
 
@@ -211,29 +212,7 @@ function _linkAuthoredComponents(consumer: Consumer, component: Component, compo
  * link given components to node_modules, so it's possible to use absolute link instead of relative
  * for example, require('@bit/remote-scope.bar.foo)
  */
-export default (async function linkComponents(components: Component[], consumer: Consumer): Promise<LinksResult[]> {
-  return Promise.all(
-    components.map((component) => {
-      const componentId = component.id;
-      logger.debug(`linking component to node_modules: ${componentId}`);
-      // const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId);
-      // $FlowFixMe
-      const componentMap: ComponentMap = component.componentMap;
-      switch (componentMap.origin) {
-        case COMPONENT_ORIGINS.IMPORTED:
-          return _linkImportedComponents(consumer, component, componentMap);
-        case COMPONENT_ORIGINS.NESTED:
-          return _linkNestedComponents(consumer, component, componentMap);
-        case COMPONENT_ORIGINS.AUTHORED:
-          return _linkAuthoredComponents(consumer, component, componentMap);
-        default:
-          throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
-      }
-    })
-  );
-});
-
-export class NodeModuleLinker {
+export default class NodeModuleLinker {
   components: Component[];
   consumer: ?Consumer;
   bitMap: BitMap;
@@ -273,9 +252,12 @@ export class NodeModuleLinker {
     return DataToPersist.makeInstance({ files: this.files, symlinks: this.symlinks });
   }
 
+  async getLinksResults(): LinksResults[] {
+    throw new Error('to implement');
+  }
+
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
-    const symlinks = [];
     const componentId = component.id;
     const bindingPrefix = this.consumer ? this.consumer.bitJson.bindingPrefix : null;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
@@ -303,12 +285,12 @@ export class NodeModuleLinker {
     }
     const missingDependenciesLinks =
       this.consumer && component.issues && component.issues.missingLinks ? this.getMissingLinks(component) : [];
-    symlinks.push(...missingDependenciesLinks);
+    this.symlinks.push(...missingDependenciesLinks);
     const missingCustomResolvedLinks =
       this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks
         ? await this.getMissingCustomResolvedLinks(component)
         : [];
-    symlinks.push(...missingCustomResolvedLinks);
+    this.files.push(...missingCustomResolvedLinks);
   }
 
   /**
@@ -432,7 +414,7 @@ export class NodeModuleLinker {
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId.toString());
   }
 
-  async getMissingCustomResolvedLinks(component: Component) {
+  async getMissingCustomResolvedLinks(component: Component): Promise<LinkFile[]> {
     if (!component.componentFromModel) return [];
 
     const componentWithDependencies = await component.toComponentWithDependencies(this.consumer);

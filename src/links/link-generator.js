@@ -182,7 +182,7 @@ async function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: ?Consumer,
   createNpmLinkFiles: boolean
-): Promise<OutputFileParams[]> {
+): Promise<LinkFile[]> {
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
     const component = componentWithDeps.component;
     const componentMap = component.componentMap;
@@ -226,7 +226,8 @@ async function getComponentsDependenciesLinks(
   const allLinks = await Promise.all(allLinksP);
 
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
-  return uniqBy(linksWithoutNulls, 'filePath');
+  const outputFileParams = uniqBy(linksWithoutNulls, 'filePath');
+  return outputFileParams.map(outputFileParam => LinkFile.load(outputFileParam));
 }
 
 /**
