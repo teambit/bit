@@ -92,14 +92,14 @@ install:
   - npm config ls
   - ps: Install-Product node 6
   - ps: npm i -g npm
-  - "npm -v"
   - "npm i"
   - "npm run build"
   - "npm install -g"
   - "bit config set set user.name tester"
-  - "dir %LOCALAPPDATA%"
-  - "dir %USERPROFILE%"
-  - ps: Get-ChildItem -Path %USERPROFILE%\Local\Bit\logs
+  - "dir %LOCALAPPDATA%\\Bit\\Logs"
+  - "type %LOCALAPPDATA%\\Bit\\Logs\\debug.log"
+  # - "dir %USERPROFILE%"
+  # - ps: Get-ChildItem -Path %USERPROFILE%\Local\Bit\logs
   - "bit config set user.email ci@bitsrc.io"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - "bit config set analytics_reporting false"
@@ -128,7 +128,7 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
-  - path: "%USERPROFILE%\\Local\\Bit\\logs\\debug.log"
+  - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
     name: bitLogs
 #- path: artifacts\*.msi
 #  name: Installer
