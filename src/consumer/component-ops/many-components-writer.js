@@ -104,6 +104,7 @@ export default class ManyComponentsWriter {
     await this._writeLinks();
   }
   async _writeComponentsAndDependencies() {
+    logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._determineWhetherDependenciesAreSavedAsComponents();
     await this._populateComponentsFilesToWrite();
     await this._populateComponentsDependenciesToWrite();
@@ -112,6 +113,7 @@ export default class ManyComponentsWriter {
     await this._persistComponentsData();
   }
   async _installPackages() {
+    logger.debug('ManyComponentsWriter, _installPackages');
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     await this._installPackagesIfNeeded();
     if (this.addToRootPackageJson) {
@@ -119,6 +121,7 @@ export default class ManyComponentsWriter {
     }
   }
   async _writeLinks() {
+    logger.debug('ManyComponentsWriter, _writeLinks');
     const links: DataToPersist = await this._getAllLinks();
     if (this.basePath) {
       links.addBasePath(this.basePath);

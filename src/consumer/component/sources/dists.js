@@ -166,14 +166,14 @@ export default class Dists {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
       this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
+    const files = [...this.dists];
+    const symlinks = [];
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);
-      return DataToPersist.makeInstance({
-        files: [...this.dists, ...linksInDist.files],
-        symlinks: [...linksInDist.symlinks]
-      });
+      files.push(...linksInDist.files);
+      symlinks.push(...linksInDist.symlinks);
     }
-    return null;
+    return DataToPersist.makeInstance({ files, symlinks });
   }
 
   // In case there are dist files, we want to point the index to the main dist file, not to source.

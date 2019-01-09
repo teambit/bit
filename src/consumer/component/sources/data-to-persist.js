@@ -31,13 +31,21 @@ export default class DataToPersist {
     await this._persistFiles();
     await this._persistSymlinks();
   }
-  async addBasePath(basePath: string) {
-    this.files.forEach(file => file.updatePaths({ newBase: path.join(basePath, file.base) }));
+  addBasePath(basePath: string) {
+    this.files.forEach((file) => {
+      this._assertRelative(file.base);
+      file.updatePaths({ newBase: path.join(basePath, file.base) });
+    });
     this.symlinks.forEach((symlink) => {
+      this._assertRelative(symlink.src);
+      this._assertRelative(symlink.dest);
       symlink.src = path.join(basePath, symlink.src);
       symlink.dest = path.join(basePath, symlink.dest);
     });
-    this.remove = this.remove.map(removePath => path.join(basePath, removePath));
+    this.remove = this.remove.map((removePath) => {
+      this._assertRelative(removePath);
+      return path.join(basePath, removePath);
+    });
   }
   async _persistFiles() {
     return Promise.all(this.files.map(file => file.write()));
@@ -60,6 +68,11 @@ export default class DataToPersist {
     if (this.symlinks.length) {
       const symlinksStr = this.symlinks.map(symlink => `src: ${symlink.src}, dest: ${symlink.dest}`).join('\n');
       logger.debug(`DateToPersist, symlinks:\n${symlinksStr}`);
+    }
+  }
+  _assertRelative(pathToCheck: string) {
+    if (path.isAbsolute(pathToCheck)) {
+      throw new Error(`DataToPersist expects ${pathToCheck} to be relative, but found it absolute`);
     }
   }
 }
