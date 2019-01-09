@@ -15,6 +15,7 @@ import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path'
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { preparePackageJsonToWrite } from '../component/package-json';
 import Symlink from '../../links/symlink';
+import GeneralFile from '../component/sources/general-file';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -155,8 +156,8 @@ export default class ComponentWriter {
         this.excludeRegistryPrefix
       );
       const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
-      const packageJsonContent = new Buffer(JSON.stringify(packageJson, null, 4));
-      this.files.push(new AbstractVinyl({ path: packageJsonPath, contents: packageJsonContent }));
+      const packageJsonContent = JSON.stringify(packageJson, null, 4);
+      this.files.push(GeneralFile.load({ filePath: packageJsonPath, content: packageJsonContent }));
     }
     if (this.component.license && this.component.license.src) {
       this.component.license.override = this.override;

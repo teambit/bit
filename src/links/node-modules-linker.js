@@ -48,11 +48,10 @@ export default class NodeModuleLinker {
   async getLinks(): Promise<DataToPersist> {
     await Promise.all(
       this.components.map((component) => {
-        const componentId = component.id;
-        logger.debug(`linking component to node_modules: ${componentId.toString()}`);
-        // const componentMap: ComponentMap = consumer.bitMap.getComponent(componentId);
-        // $FlowFixMe
-        const componentMap: ComponentMap = component.componentMap;
+        const componentId = component.id.toString();
+        logger.debug(`linking component to node_modules: ${componentId}`);
+        const componentMap: ComponentMap = this.bitMap.getComponent(component.id);
+        component.componentMap = componentMap;
         switch (componentMap.origin) {
           case COMPONENT_ORIGINS.IMPORTED:
             return this._populateImportedComponentsLinks(component);
@@ -61,9 +60,7 @@ export default class NodeModuleLinker {
           case COMPONENT_ORIGINS.AUTHORED:
             return this._populateAuthoredComponentsLinks(component);
           default:
-            throw new Error(
-              `ComponentMap.origin ${componentMap.origin} of ${componentId.toString()} is not recognized`
-            );
+            throw new Error(`ComponentMap.origin ${componentMap.origin} of ${componentId} is not recognized`);
         }
       })
     );
@@ -139,12 +136,10 @@ export default class NodeModuleLinker {
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     filesToBind.forEach((file) => {
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      // const destAbs = consumer.toAbsolutePath(dest);
-      // const fileAbs = consumer.toAbsolutePath(file);
       const destRelative = this._getPathRelativeRegardlessCWD(dest, file);
       const fileContent = getLinkToFileContent(destRelative);
-      const vinyl = new AbstractVinyl({ path: dest, contents: fileContent });
-      this.files.push(vinyl);
+      const linkFile = LinkFile.load({ filePath: dest, content: fileContent });
+      this.files.push(linkFile);
     });
     this._populateLinkToMainFile(component);
   }
@@ -275,8 +270,8 @@ export default class NodeModuleLinker {
     const fileContent = getLinkToFileContent(destRelative);
     if (fileContent) {
       // otherwise, the file type is not supported, no need to write anything
-      const vinyl = new AbstractVinyl({ path: dest, contents: fileContent });
-      this.files.push(vinyl);
+      const linkFile = LinkFile.load({ filePath: dest, content: fileContent });
+      this.files.push(linkFile);
     }
   }
 }
