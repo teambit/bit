@@ -8,6 +8,7 @@ import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
+import semver from 'semver';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -291,7 +292,35 @@ const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) =>
   console.log(chalk.yellow(stderr)); // eslint-disable-line
 };
 
+async function getNpmVersion(): Promise<?string> {
+  try {
+    const { stdout, stderr } = await execa('npm', ['--version']);
+    if (stdout && !stderr) return stdout;
+  } catch (err) {
+    logger.debug(`got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
+}
+
+/**
+ * a situation where rootDir and subDir have package.json, some of the packages may be shared
+ * and some may be conflicted. And the "npm/yarn install" is done from the root dir.
+ * package managers install the shared packages only once in the rootDir.
+ * however, as to the conflicted packages, only npm@5 and above install it in the subDir.
+ * others, install it in the root, which, result in an incorrect package resolution for the subDir.
+ */
+async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): Promise<boolean> {
+  if (packageManager === 'npm') {
+    const version = await getNpmVersion();
+    if (version && semver.gte(version, '5.0.0')) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export default {
   install: installAction,
-  printResults
+  printResults,
+  isSupportedInstallationOfSubDirFromRoot
 };
