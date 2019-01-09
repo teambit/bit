@@ -1,18 +1,30 @@
 // @flow
+import fs from 'fs-extra';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 
 export default class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
-  constructor(files: AbstractVinyl[], symlinks: Symlink[]) {
+  remove: string[];
+  constructor(files: AbstractVinyl[], symlinks: Symlink[], remove: string[]) {
     this.files = files;
     this.symlinks = symlinks;
+    this.remove = remove;
   }
-  static makeInstance({ files, symlinks }: { files: AbstractVinyl[], symlinks: Symlink[] }) {
-    return new DataToPersist(files, symlinks);
+  static makeInstance({
+    files = [],
+    symlinks = [],
+    remove = []
+  }: {
+    files?: AbstractVinyl[],
+    symlinks?: Symlink[],
+    remove?: string[]
+  }) {
+    return new DataToPersist(files, symlinks, remove);
   }
   async persistAll() {
+    await this._deletePaths();
     await this._persistFiles();
     await this._persistSymlinks();
   }
@@ -21,5 +33,8 @@ export default class DataToPersist {
   }
   async _persistSymlinks() {
     return Promise.all(this.symlinks.map(symlink => symlink.write()));
+  }
+  async _deletePaths() {
+    return Promise.all(this.remove.map(pathToRemove => fs.remove(pathToRemove)));
   }
 }

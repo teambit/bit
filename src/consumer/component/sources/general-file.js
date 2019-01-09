@@ -14,15 +14,17 @@ export default class GeneralFile extends AbstractVinyl {
   }
 
   static load({
-    filePath,
+    base,
+    path,
     content,
     override = false
   }: {
-    filePath: string,
+    base: string,
+    path: string,
     content: string,
     override?: boolean
   }): GeneralFile {
-    const generalFile = new GeneralFile({ path: filePath, contents: new Buffer(content) });
+    const generalFile = new GeneralFile({ base, path, contents: new Buffer(content) });
     generalFile.override = override;
     return generalFile;
   }

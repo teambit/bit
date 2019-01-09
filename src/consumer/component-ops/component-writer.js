@@ -16,6 +16,7 @@ import { AbstractVinyl } from '../../consumer/component/sources';
 import { preparePackageJsonToWrite } from '../component/package-json';
 import Symlink from '../../links/symlink';
 import GeneralFile from '../component/sources/general-file';
+import DataToPersist from '../component/sources/data-to-persist';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -116,7 +117,7 @@ export default class ComponentWriter {
     if (!this.component.files || !this.component.files.length) {
       throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
-    this.component.dataToPersist = { files: this.files, symlinks: this.symlinks };
+    this.component.dataToPersist = DataToPersist.makeInstance({ files: this.files, symlinks: this.symlinks });
     this._updateFilesBasePaths();
     this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this.component.componentMap = this.componentMap;
@@ -157,7 +158,7 @@ export default class ComponentWriter {
       );
       const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
       const packageJsonContent = JSON.stringify(packageJson, null, 4);
-      this.files.push(GeneralFile.load({ filePath: packageJsonPath, content: packageJsonContent }));
+      this.files.push(GeneralFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJsonContent }));
     }
     if (this.component.license && this.component.license.src) {
       this.component.license.override = this.override;

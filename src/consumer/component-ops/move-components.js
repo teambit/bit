@@ -56,8 +56,10 @@ export function moveExistingComponent(
   const oldPathRelative = consumer.getPathRelativeToConsumer(oldPath);
   const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
-  throw new Error('moveExistingComponent: not implemented yet');
-  // moveSync(oldPath, newPath);
-  // component.dataToPersist.files
+  component.dataToPersist.files.forEach((file) => {
+    const newBase = file.base === oldPathRelative ? newPathRelative : file.base;
+    file.updatePaths({ newBase });
+  });
+  component.dataToPersist.remove.push(oldPathRelative);
   component.writtenPath = newPathRelative;
 }

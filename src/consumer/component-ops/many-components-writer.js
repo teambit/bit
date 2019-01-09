@@ -122,14 +122,23 @@ export default class ManyComponentsWriter {
   async _persistComponentsData() {
     const files = [];
     const symlinks = [];
+    const remove = [];
     this.componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      const componentsFiles = allComponents.map(component => component.dataToPersist.files);
-      const componentsSymlinks = allComponents.map(component => component.dataToPersist.symlinks);
+      const componentsFiles = allComponents.map((component) => {
+        return component.dataToPersist ? component.dataToPersist.files : [];
+      });
+      const componentsSymlinks = allComponents.map((component) => {
+        return component.dataToPersist ? component.dataToPersist.symlinks : [];
+      });
+      const componentsRemovePaths = allComponents.map((component) => {
+        return component.dataToPersist ? component.dataToPersist.remove : [];
+      });
       files.push(...R.flatten(componentsFiles));
       symlinks.push(...R.flatten(componentsSymlinks));
+      remove.push(...R.flatten(componentsRemovePaths));
     });
-    const dataToPersist = DataToPersist.makeInstance({ files, symlinks });
+    const dataToPersist = DataToPersist.makeInstance({ files, symlinks, remove });
     return dataToPersist.persistAll();
   }
   async _populateComponentsFilesToWrite() {
@@ -203,6 +212,7 @@ export default class ManyComponentsWriter {
       const writeDependenciesP = componentWithDeps.allDependencies.map((dep: Component) => {
         const dependencyId = dep.id.toString();
         const depFromBitMap = this.consumer.bitMap.getComponentIfExist(dep.id);
+        if (!dep.componentMap) dep.componentMap = depFromBitMap;
         if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
           // when depFromBitMap is true, it means that this component was imported as a component already before
           // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
@@ -279,7 +289,8 @@ export default class ManyComponentsWriter {
   _moveComponentsIfNeeded() {
     if (this.writeToPath) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
-        const relativeWrittenPath = this.consumer.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
+        // const relativeWrittenPath = this.consumer.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
+        const relativeWrittenPath = componentWithDeps.component.writtenPath;
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // $FlowFixMe this.writeToPath is set
         const absoluteWriteToPath = path.resolve(this.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir
