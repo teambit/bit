@@ -198,6 +198,12 @@ export default function parse(data: string, filePath: PathOsBased): Doclet | [] 
     if (reactDocs) {
       const formatted = fromReactDocs(reactDocs, filePath);
       formatted.args = [];
+      // this is a workaround to get the 'example' tag parsed when using react-docs
+      // because as of now Docgen doesn't parse @example tag, instead, it shows it inside
+      // the @description tag.
+      extractDataRegex(formatted.description, doclets, filePath);
+      formatted.description = doclets[0].description;
+      formatted.examples = doclets[0].examples;
       return formatted;
     }
   } catch (err) {}

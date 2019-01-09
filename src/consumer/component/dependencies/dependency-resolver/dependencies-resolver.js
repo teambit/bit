@@ -5,7 +5,7 @@ import R from 'ramda';
 import { COMPONENT_ORIGINS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
-import type Component from '../../../component';
+import type Component from '../../../component/consumer-component';
 import { Driver } from '../../../../driver';
 import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import logger from '../../../../logger/logger';

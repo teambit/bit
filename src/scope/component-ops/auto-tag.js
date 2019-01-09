@@ -6,7 +6,7 @@ import type ModelComponent from '../models/model-component';
 import { BitId, BitIds } from '../../bit-id';
 import type Scope, { ComponentsAndVersions } from '../scope';
 import { Dependency } from '../../consumer/component/dependencies';
-import type Component from '../../consumer/component';
+import type Component from '../../consumer/component/consumer-component';
 
 const removeNils = R.reject(R.isNil);
 
