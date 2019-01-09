@@ -57,7 +57,7 @@ export function moveExistingComponent(
   const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
   componentMap.updateDirLocation(oldPathRelative, newPathRelative);
   component.dataToPersist.files.forEach((file) => {
-    const newBase = file.base === oldPathRelative ? newPathRelative : file.base;
+    const newBase = file.base.replace(oldPathRelative, newPathRelative);
     file.updatePaths({ newBase });
   });
   component.dataToPersist.remove.push(oldPathRelative);

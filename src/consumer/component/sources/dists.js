@@ -147,6 +147,7 @@ export default class Dists {
   async writeDists(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
     const dataToPersist = await this.getDistsToWrite(component, consumer, writeLinks);
     if (!dataToPersist) return null;
+    if (consumer) dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAll();
     return this.dists.map(distFile => distFile.path);
   }
@@ -161,6 +162,7 @@ export default class Dists {
     writeLinks?: boolean = true
   ): Promise<?DataToPersist> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
+    if (writeLinks && !consumer) throw new Error('getDistsToWrite expects to get consumer when writeLinks is true');
     let componentMap;
     if (consumer) {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });

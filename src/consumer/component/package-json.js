@@ -245,13 +245,14 @@ async function updateAttribute(
   consumer: Consumer,
   componentDir: PathLinux,
   attributeName: string,
-  attributeValue: string
+  attributeValue: string,
+  writeFile: ?boolean = true
 ): Promise<*> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   try {
     const packageJson = await PackageJson.load(componentDir);
     packageJson[attributeName] = attributeValue;
-    return packageJson.write({ override: true });
+    return writeFile ? packageJson.write({ override: true }) : packageJson;
   } catch (e) {
     // package.json doesn't exist, that's fine, no need to update anything
     return Promise.resolve();
