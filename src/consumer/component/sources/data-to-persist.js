@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
+import logger from '../../../logger/logger';
 
 export default class DataToPersist {
   files: AbstractVinyl[];
@@ -25,6 +26,7 @@ export default class DataToPersist {
     return new DataToPersist(files, symlinks, remove);
   }
   async persistAll() {
+    this._log();
     await this._deletePaths();
     await this._persistFiles();
     await this._persistSymlinks();
@@ -45,5 +47,19 @@ export default class DataToPersist {
   }
   async _deletePaths() {
     return Promise.all(this.remove.map(pathToRemove => fs.remove(pathToRemove)));
+  }
+  _log() {
+    if (this.remove.length) {
+      const pathToDeleteStr = this.remove.join('\n');
+      logger.debug(`DateToPersist, paths-to-delete:\n${pathToDeleteStr}`);
+    }
+    if (this.files.length) {
+      const filesToWriteStr = this.files.map(f => f.path).join('\n');
+      logger.debug(`DateToPersist, paths-to-write:\n${filesToWriteStr}`);
+    }
+    if (this.symlinks.length) {
+      const symlinksStr = this.symlinks.map(symlink => `src: ${symlink.src}, dest: ${symlink.dest}`).join('\n');
+      logger.debug(`DateToPersist, symlinks:\n${symlinksStr}`);
+    }
   }
 }

@@ -3,8 +3,8 @@ import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import BitId from '../bit-id/bit-id';
 
 export default class Symlink {
-  src: string;
-  dest: string;
+  src: string; // current existing path
+  dest: string; // new symlink path
   componentId: ?BitId;
   constructor(src: string, dest: string, componentId?: BitId) {
     this.src = src;

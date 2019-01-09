@@ -74,6 +74,7 @@ export default class ManyComponentsWriter {
   writtenComponents: Component[];
   writtenDependencies: Component[];
   isolated: Boolean; // a preparation for the capsule feature
+  basePath: ?string;
   constructor(params: ManyComponentsWriterParams) {
     this.consumer = params.consumer;
     this.silentPackageManagerResult = params.silentPackageManagerResult;
@@ -92,6 +93,7 @@ export default class ManyComponentsWriter {
     this.verbose = this._setBooleanDefault(params.verbose, false);
     this.excludeRegistryPrefix = this._setBooleanDefault(params.excludeRegistryPrefix, false);
     this.dependenciesIdsCache = {};
+    if (this.consumer && !this.isolated) this.basePath = this.consumer.getPath();
   }
   _setBooleanDefault(field: ?boolean, defaultValue: boolean): boolean {
     return typeof field === 'undefined' ? defaultValue : Boolean(field);
@@ -106,7 +108,7 @@ export default class ManyComponentsWriter {
     await this._populateComponentsFilesToWrite();
     await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
-    this._addConsumerBasePathIfExistToAllFiles();
+    this._addBasePathIfExistToAllFiles();
     await this._persistComponentsData();
   }
   async _installPackages() {
@@ -117,7 +119,10 @@ export default class ManyComponentsWriter {
     }
   }
   async _writeLinks() {
-    const links = await this._getAllLinks();
+    const links: DataToPersist = await this._getAllLinks();
+    if (this.basePath) {
+      links.addBasePath(this.basePath);
+    }
     await links.persistAll();
   }
   async _persistComponentsData() {
@@ -129,13 +134,13 @@ export default class ManyComponentsWriter {
     });
     return Promise.all(R.flatten(persistP));
   }
-  _addConsumerBasePathIfExistToAllFiles() {
-    if (!this.consumer) return;
-    const base = this.consumer.getPath();
+  _addBasePathIfExistToAllFiles() {
+    if (!this.basePath) return;
     this.componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach((component) => {
-        if (component.dataToPersist) component.dataToPersist.addBasePath(base);
+        // $FlowFixMe
+        if (component.dataToPersist) component.dataToPersist.addBasePath(this.basePath);
       });
     });
   }
@@ -303,6 +308,7 @@ export default class ManyComponentsWriter {
     if (this.installNpmPackages) {
       await installNpmPackagesForComponents({
         consumer: this.consumer,
+        basePath: this.basePath,
         componentsWithDependencies: this.componentsWithDependencies,
         verbose: this.verbose,
         silentPackageManagerResult: this.silentPackageManagerResult,
