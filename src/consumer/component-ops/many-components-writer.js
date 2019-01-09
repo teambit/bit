@@ -106,6 +106,7 @@ export default class ManyComponentsWriter {
     await this._populateComponentsFilesToWrite();
     await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
+    this._addConsumerBasePathIfExistToAllFiles();
     await this._persistComponentsData();
   }
   async _installPackages() {
@@ -120,26 +121,23 @@ export default class ManyComponentsWriter {
     await links.persistAll();
   }
   async _persistComponentsData() {
-    const files = [];
-    const symlinks = [];
-    const remove = [];
+    const persistP = this.componentsWithDependencies.map((componentWithDeps) => {
+      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
+      return allComponents.map((component) => {
+        return component.dataToPersist ? component.dataToPersist.persistAll() : Promise.resolve();
+      });
+    });
+    return Promise.all(R.flatten(persistP));
+  }
+  _addConsumerBasePathIfExistToAllFiles() {
+    if (!this.consumer) return;
+    const base = this.consumer.getPath();
     this.componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      const componentsFiles = allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.files : [];
+      allComponents.forEach((component) => {
+        if (component.dataToPersist) component.dataToPersist.addBasePath(base);
       });
-      const componentsSymlinks = allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.symlinks : [];
-      });
-      const componentsRemovePaths = allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.remove : [];
-      });
-      files.push(...R.flatten(componentsFiles));
-      symlinks.push(...R.flatten(componentsSymlinks));
-      remove.push(...R.flatten(componentsRemovePaths));
     });
-    const dataToPersist = DataToPersist.makeInstance({ files, symlinks, remove });
-    return dataToPersist.persistAll();
   }
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();

@@ -12,7 +12,7 @@ export default class Symlink {
     this.componentId = componentId;
   }
   write() {
-    return createSymlinkOrCopy(this.src, this.dest, this.componentId.toString());
+    return createSymlinkOrCopy(this.src, this.dest, this.componentId ? this.componentId.toString() : null);
   }
   static makeInstance(src: string, dest: string, componentId?: BitId) {
     return new Symlink(src, dest, componentId);
