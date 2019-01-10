@@ -41,10 +41,6 @@ export default class NodeModuleLinker {
     this.consumer = consumer; // $FlowFixMe
     this.bitMap = bitMap || consumer.bitMap;
   }
-  async link(): Promise<void> {
-    const links = await this.getLinks();
-    await links.persistAll();
-  }
   async getLinks(): Promise<DataToPersist> {
     await Promise.all(
       this.components.map((component) => {
