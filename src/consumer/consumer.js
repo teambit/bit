@@ -616,21 +616,26 @@ export default class Consumer {
     return new BitId({ scope, name });
   }
 
-  composeRelativeBitPath(bitId: BitId): string {
+  composeRelativeComponentPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
   composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
-    const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
+    const addToPath = [this.getPath(), this.composeRelativeComponentPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
   }
 
-  composeDependencyPath(bitId: BitId): PathOsBased {
+  composeRelativeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
+    return path.join(dependenciesDir, bitId.toFullPath());
+  }
+
+  composeDependencyPath(bitId: BitId): PathOsBased {
+    const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
+    return path.join(this.getPath(), relativeDependencyPath);
   }
 
   static create(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {

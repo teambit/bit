@@ -20,7 +20,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 
 export type ComponentWriterProps = {
   component: Component,
-  writeToPath: PathOsBasedAbsolute,
+  writeToPath: PathOsBasedRelative,
   writeConfig?: boolean,
   configDir?: string,
   writePackageJson?: boolean,
@@ -302,7 +302,6 @@ export default class ComponentWriter {
   }
 
   _updateFilesBasePaths() {
-    // const newBase = this.consumer ? this.consumer.toAbsolutePath(this.writeToPath) : '/';
     const newBase = this.writeToPath;
     this.component.files.forEach(file => file.updatePaths({ newBase }));
     if (!this.component.dists.isEmpty()) {

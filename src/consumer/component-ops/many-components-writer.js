@@ -11,7 +11,6 @@ import type Component from '../component/consumer-component';
 import type { Remotes } from '../../remotes';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
-import { Analytics } from '../../analytics/analytics';
 import type Consumer from '../consumer';
 import { isDir, isDirEmptySync } from '../../utils';
 import GeneralError from '../../error/general-error';
@@ -19,7 +18,7 @@ import type ComponentMap from '../bit-map/component-map';
 import ComponentWriter from './component-writer';
 import type { ComponentWriterProps } from './component-writer';
 import { getScopeRemotes } from '../../scope/scope-remotes';
-import type { PathOsBasedAbsolute } from '../../utils/path';
+import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 
 type ManyComponentsWriterParams = {
@@ -169,9 +168,9 @@ export default class ManyComponentsWriter {
     );
   }
   _getWriteParamsOfOneComponent(componentWithDeps: ComponentWithDependencies): ComponentWriterProps {
-    const componentRootDir: PathOsBasedAbsolute = this.writeToPath
-      ? path.resolve(this.writeToPath)
-      : this.consumer.composeComponentPath(componentWithDeps.component.id);
+    const componentRootDir: PathOsBasedRelative = this.writeToPath
+      ? this.consumer.getPathRelativeToConsumer(path.resolve(this.writeToPath))
+      : this.consumer.composeRelativeComponentPath(componentWithDeps.component.id);
     const getParams = () => {
       if (this.isolated) {
         return {
@@ -186,7 +185,7 @@ export default class ManyComponentsWriter {
           ? COMPONENT_ORIGINS.AUTHORED
           : COMPONENT_ORIGINS.IMPORTED;
       const configDirFromComponentMap = componentMap ? componentMap.configDir : undefined;
-      this._throwErrorWhenDirectoryNotEmpty(componentRootDir, componentMap);
+      this._throwErrorWhenDirectoryNotEmpty(this.consumer.toAbsolutePath(componentRootDir), componentMap);
       // don't write dists files for authored components as the author has its own mechanism to generate them
       // also, don't write dists file for imported component, unless the user used '--dist' flag
       componentWithDeps.component.dists.writeDistsFiles = this.writeDists && origin === COMPONENT_ORIGINS.IMPORTED;
@@ -222,54 +221,44 @@ export default class ManyComponentsWriter {
         if (!componentWithDeps.component.dependenciesSavedAsComponents && !depFromBitMap) {
           // when depFromBitMap is true, it means that this component was imported as a component already before
           // don't change it now from a component to a package. (a user can do it at any time by using export --eject).
-          logger.debug(
-            `writeToComponentsDir, ignore dependency ${dependencyId}. It'll be installed later using npm-client`
-          );
-          Analytics.addBreadCrumb(
+          logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )}. It'll be installed later using npm-client`
+            "ignore dependency {dependencyId}. It'll be installed later using npm-client",
+            { dependencyId }
           );
           return Promise.resolve(null);
         }
         if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-          dep.writtenPath = this.consumer.getPath();
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map`);
-          Analytics.addBreadCrumb(
+          dep.writtenPath = '.';
+          logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )} as it already exists in bit map`
+            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map',
+            { dependencyId }
           );
           this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (depFromBitMap && fs.existsSync(depFromBitMap.rootDir)) {
           dep.writtenPath = depFromBitMap.rootDir;
-          logger.debug(
-            `writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in bit map and file system`
-          );
-          Analytics.addBreadCrumb(
+          logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(
-              dependencyId
-            )} as it already exists in bit map and file system`
+            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map and file system',
+            { dependencyId }
           );
           this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (this.dependenciesIdsCache[dependencyId]) {
-          logger.debug(`writeToComponentsDir, ignore dependency ${dependencyId} as it already exists in cache`);
-          Analytics.addBreadCrumb(
+          logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',
-            `writeToComponentsDir, ignore dependency ${Analytics.hashData(dependencyId)} as it already exists in cache`
+            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in cache',
+            { dependencyId }
           );
           dep.writtenPath = this.dependenciesIdsCache[dependencyId];
           this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
-        const depRootPath = this.consumer.composeDependencyPath(dep.id);
+        const depRootPath = this.consumer.composeRelativeDependencyPath(dep.id);
         dep.writtenPath = depRootPath;
         this.dependenciesIdsCache[dependencyId] = depRootPath;
         // When a component is NESTED we do interested in the exact version, because multiple components with the same scope
@@ -329,7 +318,7 @@ export default class ManyComponentsWriter {
       writePackageJson: this.writePackageJson
     });
   }
-  _throwErrorWhenDirectoryNotEmpty(componentDir: string, componentMap: ?ComponentMap) {
+  _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ?ComponentMap) {
     // if not writeToPath specified, it goes to the default directory. When componentMap exists, the
     // component is not new, and it's ok to override the existing directory.
     if (!this.writeToPath && componentMap) return;
