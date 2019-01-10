@@ -165,19 +165,6 @@ function groupLinks(
  * this step is not needed when the imported components don't have dependencies, or when the
  * dependencies were installed as npm/yarn packages.
  */
-async function writeComponentsDependenciesLinks(
-  componentDependencies: ComponentWithDependencies[],
-  consumer: Consumer,
-  createNpmLinkFiles: boolean
-): Promise<any> {
-  const componentsDependenciesLinks = await getComponentsDependenciesLinks(
-    componentDependencies,
-    consumer,
-    createNpmLinkFiles
-  );
-  return Promise.all(componentsDependenciesLinks.map(link => outputFile(link)));
-}
-
 async function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: ?Consumer,
@@ -374,7 +361,6 @@ async function writeDependenciesLinksToDir(
 export {
   writeEntryPointsForComponent,
   getEntryPointsForComponent,
-  writeComponentsDependenciesLinks,
   getComponentsDependenciesLinks,
   getIndexFileName,
   writeDependenciesLinksToDir

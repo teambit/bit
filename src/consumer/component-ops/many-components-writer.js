@@ -313,7 +313,7 @@ export default class ManyComponentsWriter {
         consumer: this.consumer,
         basePath: this.basePath,
         componentsWithDependencies: this.componentsWithDependencies,
-        verbose: this.verbose,
+        verbose: this.verbose, // $FlowFixMe
         silentPackageManagerResult: this.silentPackageManagerResult,
         installPeerDependencies: this.installPeerDependencies
       });

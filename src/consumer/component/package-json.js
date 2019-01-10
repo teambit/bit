@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import path from 'path';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import type Component from '../component/consumer-component';
@@ -8,7 +9,8 @@ import {
   CFG_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
   SUB_DIRECTORIES_GLOB_PATTERN,
-  NODE_PATH_COMPONENT_SEPARATOR
+  NODE_PATH_COMPONENT_SEPARATOR,
+  PACKAGE_JSON
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
@@ -138,12 +140,15 @@ async function changeDependenciesToRelativeSyntax(
     packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
     packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, getRegistryPrefix());
     // return packageJson.write({ override: true });
-    return new GeneralFile({
-      path: componentMap.rootDir,
+    return GeneralFile.load({
+      // $FlowFixMe
+      base: componentMap.rootDir, // $FlowFixMe
+      path: path.join(componentMap.rootDir, PACKAGE_JSON),
       content: JSON.stringify(packageJson, null, 4),
       override: true
     });
   };
+  // $FlowFixMe
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
   return packageJsonFiles.filter(file => file);
 }

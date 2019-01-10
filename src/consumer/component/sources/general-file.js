@@ -24,7 +24,7 @@ export default class GeneralFile extends AbstractVinyl {
     content: string,
     override?: boolean
   }): GeneralFile {
-    const generalFile = new GeneralFile({ base, path, contents: new Buffer(content) });
+    const generalFile = new GeneralFile({ base, path, contents: Buffer.from(content) });
     generalFile.override = override;
     return generalFile;
   }
