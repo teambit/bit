@@ -21,11 +21,7 @@ export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksRes
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
   const nodeModuleLinker = new NodeModuleLinker(components, consumer);
-  const links = await nodeModuleLinker.getLinks();
-  const linksResults = nodeModuleLinker.getLinksResults();
-  links.addBasePath(consumer.getPath());
-  await links.persistAll();
-  return linksResults;
+  return nodeModuleLinker.link();
 }
 
 export async function getLinksInDistToWrite(

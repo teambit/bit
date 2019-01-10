@@ -1,7 +1,7 @@
 // @flow
 import fs from 'fs-extra';
 import R from 'ramda';
-import { linkComponentsToNodeModules, reLinkDependents } from '../../links';
+import { NodeModuleLinker, reLinkDependents } from '../../links';
 import * as packageJson from '../component/package-json';
 import GeneralError from '../../error/general-error';
 import type { Consumer } from '..';
@@ -35,7 +35,8 @@ export async function movePaths(
     const componentsIds = changes.map(c => c.id);
     await packageJson.addComponentsToRoot(consumer, componentsIds);
     const { components } = await consumer.loadComponents(componentsIds);
-    await linkComponentsToNodeModules(components, consumer);
+    const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+    await nodeModuleLinker.link();
     await reLinkDependents(consumer, components);
   }
   return changes;

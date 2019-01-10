@@ -33,13 +33,20 @@ export type LinksResult = {
 export default class NodeModuleLinker {
   components: Component[];
   consumer: ?Consumer;
-  bitMap: BitMap;
+  bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   symlinks: Symlink[] = [];
   files: AbstractVinyl[] = [];
   constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
     this.components = components;
     this.consumer = consumer; // $FlowFixMe
     this.bitMap = bitMap || consumer.bitMap;
+  }
+  async link(): Promise<LinksResult[]> {
+    const links = await this.getLinks();
+    const linksResults = this.getLinksResults();
+    if (this.consumer) links.addBasePath(this.consumer.getPath());
+    await links.persistAll();
+    return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {
     await Promise.all(
