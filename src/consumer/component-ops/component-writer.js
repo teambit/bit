@@ -160,7 +160,8 @@ export default class ComponentWriter {
       const packageJsonContent = JSON.stringify(packageJson, null, 4);
       this.files.push(GeneralFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJsonContent }));
     }
-    if (this.component.license && this.component.license.src) {
+    if (this.component.license && this.component.license.contents) {
+      this.component.license.updatePaths({ newBase: this.writeToPath });
       this.component.license.override = this.override;
       this.files.push(this.component.license);
     }
