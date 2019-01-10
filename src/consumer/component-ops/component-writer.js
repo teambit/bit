@@ -11,7 +11,7 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
 import mkdirp from '../../utils/mkdirp';
 import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
-import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
+import type { PathOsBasedRelative } from '../../utils/path';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { preparePackageJsonToWrite } from '../component/package-json';
 import Symlink from '../../links/symlink';
@@ -51,6 +51,7 @@ export default class ComponentWriter {
   excludeRegistryPrefix: boolean;
   files: AbstractVinyl[] = [];
   symlinks: Symlink[] = [];
+  remove: string[] = [];
   constructor({
     component,
     writeToPath,
@@ -94,22 +95,9 @@ export default class ComponentWriter {
    * when a component is not new, write the files according to the paths in .bitmap.
    */
   async write(): Promise<Component> {
-    logger.debug(`component-writer.write, id: ${this.component.id.toString()}`);
-    if (!this.component.files || !this.component.files.length) {
-      throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
-    }
-    this._updateFilesBasePaths();
-    this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
-    this.component.componentMap = this.componentMap;
-    this._copyFilesIntoDistsWhenDistsOutsideComponentDir();
-    this._determineWhetherToDeleteComponentDirContent();
-    await this._handlePreviouslyNestedCurrentlyImportedCase();
-    this._determineWhetherToWriteConfig();
-    this._updateComponentRootPathAccordingToBitMap();
-    this._updateBitMapIfNeeded();
-    this._determineWhetherToWritePackageJson();
-    await this._writeToComponentDir();
-
+    await this.populateComponentsFilesToWrite();
+    this.component.dataToPersist.addBasePath(this.consumer.getPath());
+    await this.component.dataToPersist.persistAll();
     return this.component;
   }
 
@@ -117,7 +105,11 @@ export default class ComponentWriter {
     if (!this.component.files || !this.component.files.length) {
       throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
-    this.component.dataToPersist = DataToPersist.makeInstance({ files: this.files, symlinks: this.symlinks });
+    this.component.dataToPersist = DataToPersist.makeInstance({
+      files: this.files,
+      symlinks: this.symlinks,
+      remove: this.remove
+    });
     this._updateFilesBasePaths();
     this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this.component.componentMap = this.componentMap;
@@ -133,6 +125,9 @@ export default class ComponentWriter {
   }
 
   async populateFilesToWriteToComponentDir() {
+    if (this.deleteBitDirContent) {
+      this.remove.push(this.writeToPath);
+    }
     this.files.push(...this.component.files);
     const dists = await this.component.dists.getDistsToWrite(this.component, this.consumer, false);
     if (dists) {
@@ -162,41 +157,10 @@ export default class ComponentWriter {
     }
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
+      // $FlowFixMe this.component.license is set
       this.component.license.override = this.override;
       this.files.push(this.component.license);
     }
-  }
-
-  async _writeToComponentDir() {
-    if (this.deleteBitDirContent) {
-      logger.info(`consumer-component._writeToComponentDir, deleting ${this.writeToPath}`);
-      await fs.emptyDir(this.writeToPath);
-    } else {
-      await mkdirp(this.writeToPath);
-    }
-    if (this.component.files) await Promise.all(this.component.files.map(file => file.write(undefined, this.override)));
-    await this.component.dists.writeDists(this.component, this.consumer, false);
-    if (this.writeConfig && this.consumer) {
-      const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      await this.component.writeConfig(this.consumer, resolvedConfigDir, this.override);
-    }
-    // make sure the project's package.json is not overridden by Bit
-    // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
-    // of compilers / testers / extensions)
-    if (this.writePackageJson && (this.consumer.isolated || this.writeToPath !== this.consumer.getPath())) {
-      await this.component.writePackageJson(
-        this.consumer,
-        this.writeToPath,
-        this.override,
-        this.writeBitDependencies,
-        this.excludeRegistryPrefix
-      );
-    }
-    if (this.component.license && this.component.license.src) {
-      await this.component.license.write(this.writeToPath, this.override);
-    }
-    logger.debug('component has been written successfully');
-    return this;
   }
 
   addComponentToBitMap(rootDir: ?string): ComponentMap {
@@ -302,7 +266,7 @@ export default class ComponentWriter {
   }
 
   _updateFilesBasePaths() {
-    const newBase = this.writeToPath;
+    const newBase = this.writeToPath || '.';
     this.component.files.forEach(file => file.updatePaths({ newBase }));
     if (!this.component.dists.isEmpty()) {
       this.component.dists.get().forEach(dist => dist.updatePaths({ newBase }));
