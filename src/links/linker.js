@@ -48,12 +48,14 @@ export async function getLinksInDistToWrite(
     symlinks: [...nodeModuleLinks.symlinks]
   });
   const packageJsonFile = await packageJson.updateAttribute(consumer, rootDir, 'main', newMainFile, false);
+
   if (packageJsonFile) {
     dataToPersist.files.push(
       GeneralFile.load({
         base: rootDir,
         path: path.join(rootDir, PACKAGE_JSON),
-        content: JSON.stringify(packageJson, null, 4)
+        content: JSON.stringify(packageJsonFile, null, 4),
+        override: true
       })
     );
   }
