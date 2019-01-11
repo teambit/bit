@@ -71,9 +71,7 @@ export default class DependencyFileLinkGenerator {
   generate(): LinkFileType[] {
     this.linkFiles = [];
     if (this.component.dependenciesSavedAsComponents) {
-      if (!this.dependencyComponent.componentMap && this.consumer) {
-        this.dependencyComponent.componentMap = this.consumer.bitMap.getComponent(this.dependencyId);
-      }
+      this.dependencyComponent.componentMap = this.consumer.bitMap.getComponent(this.dependencyId);
       this.dependencyComponentMap = this.dependencyComponent.componentMap;
     }
     this.relativePathInDependency = path.normalize(this.relativePath.destinationRelativePath);

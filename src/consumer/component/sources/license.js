@@ -4,12 +4,12 @@ import { LICENSE_FILENAME } from '../../../constants';
 import { AbstractVinyl } from '.';
 
 export default class License extends AbstractVinyl {
-  override: ?boolean;
+  override: ?boolean = true;
   src: string;
 
   write(): Promise<any> {
     if (!this.override && fs.existsSync(this.path)) return Promise.resolve();
-    return fs.writeFile(this.path, this.contents);
+    return fs.outputFile(this.path, this.contents);
   }
 
   serialize() {

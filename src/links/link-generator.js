@@ -22,6 +22,7 @@ import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
+import BitMap from '../consumer/bit-map';
 
 type Symlink = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -40,15 +41,19 @@ async function getComponentLinks({
   consumer,
   component,
   dependencies,
-  createNpmLinkFiles
+  createNpmLinkFiles,
+  bitMap
 }: {
   consumer: ?Consumer,
   component: Component,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-  createNpmLinkFiles: boolean
+  createNpmLinkFiles: boolean,
+  bitMap?: ?BitMap
 }): Promise<OutputFileParams[]> {
-  if (!component.componentMap) throw new Error('getComponentLinks expects component to have componentMap');
-  const componentMap: ComponentMap = component.componentMap;
+  // $FlowFixMe
+  bitMap = bitMap || consumer.bitMap;
+  const componentMap: ComponentMap = bitMap.getComponent(component.id);
+  component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
   const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
   const links = directDependencies.map((dep: Dependency) => {
@@ -168,12 +173,15 @@ function groupLinks(
 async function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: ?Consumer,
-  createNpmLinkFiles: boolean
+  createNpmLinkFiles: boolean,
+  bitMap?: BitMap
 ): Promise<LinkFile[]> {
+  // $FlowFixMe
+  bitMap = bitMap || consumer.bitMap;
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
     const component = componentWithDeps.component;
-    const componentMap = component.componentMap;
-    if (!componentMap) throw new Error('getComponentsDependenciesLinks expects components to have componentMap');
+    const componentMap = bitMap.getComponent(component.id);
+    component.componentMap = componentMap;
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
         `writeComponentsDependenciesLinks, ignoring a component ${component.id.toString()} as it is an author component`
