@@ -174,11 +174,11 @@ export default class EnvExtension extends BaseExtension {
     const filePathsToRemove = [];
 
     this.files.forEach((file) => {
+      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
+      file.verbose = verbose;
       if (deleteOldFiles) {
         filePathsToRemove.push(file.path);
       }
-      file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
-      file.verbose = verbose;
     });
     this.dataToPersist = DataToPersist.makeInstance({
       files: this.files.map(file => file.clone()),

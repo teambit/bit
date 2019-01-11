@@ -5,7 +5,7 @@ import { getSync } from '../api/consumer/lib/global-config';
 import { DEFAULT_INDEX_NAME, CFG_REGISTRY_DOMAIN_PREFIX, DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../constants';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
 import { BitId } from '../bit-id';
-import type { Consumer } from '../consumer';
+import type Consumer from '../consumer/consumer';
 import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
@@ -71,6 +71,9 @@ export default class DependencyFileLinkGenerator {
   generate(): LinkFileType[] {
     this.linkFiles = [];
     if (this.component.dependenciesSavedAsComponents) {
+      if (!this.dependencyComponent.componentMap && this.consumer) {
+        this.dependencyComponent.componentMap = this.consumer.bitMap.getComponent(this.dependencyId);
+      }
       this.dependencyComponentMap = this.dependencyComponent.componentMap;
     }
     this.relativePathInDependency = path.normalize(this.relativePath.destinationRelativePath);

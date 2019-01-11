@@ -8,7 +8,7 @@ import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';
 import EjectNoDir from './exceptions/eject-no-dir';
 import ConfigDir from '../bit-map/config-dir';
-import { writeDependenciesLinksToDir, getLinksByDependencies } from '../../links/link-generator';
+import { getLinksByDependencies } from '../../links/link-generator';
 import type Consumer from '../consumer';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
