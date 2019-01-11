@@ -12,7 +12,7 @@ import type { RelativePath } from '../consumer/component/dependencies/dependency
 import type ComponentMap from '../consumer/bit-map/component-map';
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 
-export type LinkFile = {
+export type LinkFileType = {
   linkPath: string,
   linkContent: string,
   isEs6?: boolean,
@@ -36,7 +36,7 @@ export default class DependencyFileLinkGenerator {
   targetDir: ?string;
   isLinkToPackage: boolean;
   dependencyComponentMap: ?ComponentMap;
-  linkFiles: LinkFile[];
+  linkFiles: LinkFileType[];
   relativePathInDependency: PathOsBased;
   hasDist: boolean;
   shouldDistsBeInsideTheComponent: boolean;
@@ -68,7 +68,7 @@ export default class DependencyFileLinkGenerator {
     this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
   }
 
-  generate(): LinkFile[] {
+  generate(): LinkFileType[] {
     this.linkFiles = [];
     if (this.component.dependenciesSavedAsComponents) {
       this.dependencyComponentMap = this.dependencyComponent.componentMap;
@@ -93,7 +93,7 @@ export default class DependencyFileLinkGenerator {
     return this.linkFiles;
   }
 
-  generateForCustomResolve(): LinkFile[] {
+  generateForCustomResolve(): LinkFileType[] {
     const distRoot = this._getDistRoot();
     const relativeDistPathInDependency = this._getRelativeDistPathInDependency();
     const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
@@ -165,7 +165,7 @@ export default class DependencyFileLinkGenerator {
     linkPath: PathOsBased,
     relativePathInDependency: PathOsBased,
     depRootDir: ?PathOsBasedAbsolute
-  }): LinkFile {
+  }): LinkFileType {
     const mainFile: PathOsBased = this.dependencyComponent.dists.calculateMainDistFile(
       this.dependencyComponent.mainFile
     );

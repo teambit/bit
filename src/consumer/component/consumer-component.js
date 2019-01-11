@@ -15,7 +15,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
-import ejectConf, { writeEnvFiles } from '../component-ops/eject-conf';
+import ejectConf, { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
 import type { EjectConfResult } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
@@ -366,6 +366,39 @@ export default class Component {
     return res;
   }
 
+  async getConfigToWrite(
+    consumer: Consumer,
+    configDir: PathOsBased | ConfigDir,
+    override?: boolean = true
+  ): Promise<EjectConfResult> {
+    const bitMap: BitMap = consumer.bitMap;
+    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
+    const componentMap = this.componentMap;
+    if (!componentMap) {
+      throw new GeneralError('could not find component in the .bitmap file');
+    }
+    const configDirInstance = typeof configDir === 'string' ? new ConfigDir(configDir) : configDir.clone();
+    if (configDirInstance.isWorkspaceRoot) {
+      throw new EjectToWorkspace();
+    }
+    // Nothing is detached.. no reason to eject
+    if (
+      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
+        !componentMap.detachedCompiler &&
+        !componentMap.detachedTester) ||
+      // Need to be check for false and not falsy for imported components
+      (componentMap.detachedCompiler === false && componentMap.detachedTester === false)
+    ) {
+      throw new EjectBoundToWorkspace();
+    }
+
+    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance, override);
+    if (this.componentMap) {
+      this.componentMap.setConfigDir(res.ejectedPath);
+    }
+    return res;
+  }
+
   async injectConfig(consumerPath: PathOsBased, bitMap: BitMap, force?: boolean = false): Promise<EjectConfResult> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
@@ -628,7 +661,7 @@ export default class Component {
               console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
             }
             await writeEnvFiles({
-              fullConfigDir: tmpFolderFullPath,
+              configDir: component.getTmpFolder(),
               env: tester,
               consumer,
               component,

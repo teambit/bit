@@ -29,6 +29,8 @@ import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
 import installExtensions from '../scope/extensions/install-extensions';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
+import RemovePath from '../consumer/component/sources/remove-path';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -62,6 +64,7 @@ export default class EnvExtension extends BaseExtension {
   envType: EnvType;
   dynamicPackageDependencies: ?Object;
   files: ExtensionFile[];
+  dataToPersist: DataToPersist;
 
   /**
    * Return the action
@@ -156,12 +159,7 @@ export default class EnvExtension extends BaseExtension {
     };
   }
 
-  /**
-   * Write the env files to the file system according to the template dir
-   * used for ejecting env for imported component
-   * @param {*} param
-   */
-  async writeFilesToFs({
+  populateDataToPersist({
     configDir,
     envType,
     deleteOldFiles,
@@ -172,20 +170,20 @@ export default class EnvExtension extends BaseExtension {
     deleteOldFiles: boolean,
     verbose: boolean
   }): Promise<string> {
-    Analytics.addBreadCrumb('env-extension', 'writeFilesToFs');
-    logger.debug('env-extension - writeFilesToFs');
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
-    const writeP = [];
-    const filePaths = [];
+    const filePathsToRemove = [];
+
     this.files.forEach((file) => {
       if (deleteOldFiles) {
-        filePaths.push(file.path);
+        filePathsToRemove.push(file.path);
       }
       file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
-      writeP.push(file.write(null, true, verbose));
+      file.verbose = verbose;
     });
-    await Promise.all(writeP);
-    await removeFilesAndEmptyDirsRecursively(filePaths);
+    this.dataToPersist = DataToPersist.makeInstance({
+      files: this.files.map(file => file.clone()),
+      remove: filePathsToRemove.map(f => new RemovePath(f, true))
+    });
     return resolvedEjectedEnvsDirectory;
   }
 

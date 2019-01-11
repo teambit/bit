@@ -22,7 +22,7 @@ import getNodeModulesPathOfComponent from '../../utils/component-node-modules-pa
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import GeneralFile from './sources/general-file';
+import JSONFile from './sources/json-file';
 
 export type PackageJsonInstance = {};
 
@@ -108,11 +108,11 @@ async function changeDependenciesToRelativeSyntax(
   consumer: Consumer,
   components: Component[],
   dependencies: Component[]
-): Promise<GeneralFile[]> {
+): Promise<JSONFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
-  const updateComponentPackageJson = async (component): Promise<?GeneralFile> => {
+  const updateComponentPackageJson = async (component): Promise<?JSONFile> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
     let packageJson;
     try {
@@ -140,11 +140,11 @@ async function changeDependenciesToRelativeSyntax(
     packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
     packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, getRegistryPrefix());
     // return packageJson.write({ override: true });
-    return GeneralFile.load({
+    return JSONFile.load({
       // $FlowFixMe
       base: componentMap.rootDir, // $FlowFixMe
       path: path.join(componentMap.rootDir, PACKAGE_JSON),
-      content: JSON.stringify(packageJson, null, 4),
+      content: packageJson,
       override: true
     });
   };

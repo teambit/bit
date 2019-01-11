@@ -1,15 +1,15 @@
 // @flow
-import fs from 'fs-extra';
 import path from 'path';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
+import RemovePath from './remove-path';
 
 export default class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
-  remove: string[];
-  constructor(files: AbstractVinyl[], symlinks: Symlink[], remove: string[]) {
+  remove: RemovePath[];
+  constructor(files: AbstractVinyl[], symlinks: Symlink[], remove: RemovePath[]) {
     this.files = files;
     this.symlinks = symlinks;
     this.remove = remove;
@@ -21,15 +21,18 @@ export default class DataToPersist {
   }: {
     files?: AbstractVinyl[],
     symlinks?: Symlink[],
-    remove?: string[]
+    remove?: RemovePath[]
   }) {
     return new DataToPersist(files, symlinks, remove);
   }
-  async persistAll() {
+  async persistAllToFS() {
     this._log();
-    await this._deletePaths();
-    await this._persistFiles();
-    await this._persistSymlinks();
+    await this._deletePathsFromFS();
+    await this._persistFilesToFS();
+    await this._persistSymlinksToFS();
+  }
+  async persistAllToCapsule() {
+    throw new Error('not implemented yet');
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
@@ -42,23 +45,23 @@ export default class DataToPersist {
       symlink.src = path.join(basePath, symlink.src);
       symlink.dest = path.join(basePath, symlink.dest);
     });
-    this.remove = this.remove.map((removePath) => {
-      this._assertRelative(removePath);
-      return path.join(basePath, removePath);
+    this.remove.forEach((removePath) => {
+      this._assertRelative(removePath.path);
+      removePath.path = path.join(basePath, removePath.path);
     });
   }
-  async _persistFiles() {
+  async _persistFilesToFS() {
     return Promise.all(this.files.map(file => file.write()));
   }
-  async _persistSymlinks() {
+  async _persistSymlinksToFS() {
     return Promise.all(this.symlinks.map(symlink => symlink.write()));
   }
-  async _deletePaths() {
-    return Promise.all(this.remove.map(pathToRemove => fs.remove(pathToRemove)));
+  async _deletePathsFromFS() {
+    return Promise.all(this.remove.map(removePath => removePath.persistToFS()));
   }
   _log() {
     if (this.remove.length) {
-      const pathToDeleteStr = this.remove.join('\n');
+      const pathToDeleteStr = this.remove.map(r => r.path).join('\n');
       logger.debug(`DateToPersist, paths-to-delete:\n${pathToDeleteStr}`);
     }
     if (this.files.length) {

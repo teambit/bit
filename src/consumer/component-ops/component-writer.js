@@ -9,14 +9,14 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
-import mkdirp from '../../utils/mkdirp';
 import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { AbstractVinyl } from '../../consumer/component/sources';
 import { preparePackageJsonToWrite } from '../component/package-json';
 import Symlink from '../../links/symlink';
-import GeneralFile from '../component/sources/general-file';
+import JSONFile from '../component/sources/json-file';
 import DataToPersist from '../component/sources/data-to-persist';
+import RemovePath from '../component/sources/remove-path';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -51,7 +51,7 @@ export default class ComponentWriter {
   excludeRegistryPrefix: boolean;
   files: AbstractVinyl[] = [];
   symlinks: Symlink[] = [];
-  remove: string[] = [];
+  remove: RemovePath[] = [];
   constructor({
     component,
     writeToPath,
@@ -97,7 +97,7 @@ export default class ComponentWriter {
   async write(): Promise<Component> {
     await this.populateComponentsFilesToWrite();
     this.component.dataToPersist.addBasePath(this.consumer.getPath());
-    await this.component.dataToPersist.persistAll();
+    await this.component.dataToPersist.persistAllToFS();
     return this.component;
   }
 
@@ -126,7 +126,7 @@ export default class ComponentWriter {
 
   async populateFilesToWriteToComponentDir() {
     if (this.deleteBitDirContent) {
-      this.remove.push(this.writeToPath);
+      this.remove.push(new RemovePath(this.writeToPath));
     }
     this.files.push(...this.component.files);
     const dists = await this.component.dists.getDistsToWrite(this.component, this.consumer, false);
@@ -135,9 +135,10 @@ export default class ComponentWriter {
       this.symlinks.push(...dists.symlinks);
     }
     if (this.writeConfig && this.consumer) {
-      // @todo: this currently writes the files directly, it won't be relevant later on.
       const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      await this.component.writeConfig(this.consumer, resolvedConfigDir, this.override);
+      const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir, this.override);
+      this.files.push(...configToWrite.dataToPersist.files);
+      this.remove.push(...configToWrite.dataToPersist.remove);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
@@ -152,8 +153,7 @@ export default class ComponentWriter {
         this.excludeRegistryPrefix
       );
       const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
-      const packageJsonContent = JSON.stringify(packageJson, null, 4);
-      this.files.push(GeneralFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJsonContent }));
+      this.files.push(JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson }));
     }
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });

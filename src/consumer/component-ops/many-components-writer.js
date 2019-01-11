@@ -125,13 +125,13 @@ export default class ManyComponentsWriter {
     if (this.basePath) {
       links.addBasePath(this.basePath);
     }
-    await links.persistAll();
+    await links.persistAllToFS();
   }
   async _persistComponentsData() {
     const persistP = this.componentsWithDependencies.map((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       return allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.persistAll() : Promise.resolve();
+        return component.dataToPersist ? component.dataToPersist.persistAllToFS() : Promise.resolve();
       });
     });
     return Promise.all(R.flatten(persistP));

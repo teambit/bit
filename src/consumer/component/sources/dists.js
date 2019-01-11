@@ -148,7 +148,7 @@ export default class Dists {
     const dataToPersist = await this.getDistsToWrite(component, consumer, writeLinks);
     if (!dataToPersist) return null;
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
-    await dataToPersist.persistAll();
+    await dataToPersist.persistAllToFS();
     return this.dists.map(distFile => distFile.path);
   }
 
@@ -168,7 +168,7 @@ export default class Dists {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
       this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
-    const files = [...this.dists];
+    const files = [...this.dists.map(dist => dist.clone())];
     const symlinks = [];
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);

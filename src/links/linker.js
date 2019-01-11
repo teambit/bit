@@ -13,7 +13,7 @@ import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import GeneralFile from '../consumer/component/sources/general-file';
+import JSONFile from '../consumer/component/sources/json-file';
 import { PACKAGE_JSON } from '../constants';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
@@ -51,10 +51,10 @@ export async function getLinksInDistToWrite(
 
   if (packageJsonFile) {
     dataToPersist.files.push(
-      GeneralFile.load({
+      JSONFile.load({
         base: rootDir,
         path: path.join(rootDir, PACKAGE_JSON),
-        content: JSON.stringify(packageJsonFile, null, 4),
+        content: packageJsonFile,
         override: true
       })
     );
@@ -85,7 +85,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
 
 export async function reLinkDependents(consumer: Consumer, components: Component[]): Promise<void> {
   const links = await getReLinkDependentsData(consumer, components);
-  await links.persistAll();
+  await links.persistAllToFS();
 }
 
 /**
@@ -122,7 +122,7 @@ export async function linkComponents(params: {
   writePackageJson: boolean
 }) {
   const allLinks = await getAllComponentsLinks(params);
-  await allLinks.persistAll();
+  await allLinks.persistAllToFS();
 }
 
 /**

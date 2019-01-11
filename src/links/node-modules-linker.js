@@ -45,7 +45,7 @@ export default class NodeModuleLinker {
     const links = await this.getLinks();
     const linksResults = this.getLinksResults();
     if (this.consumer) links.addBasePath(this.consumer.getPath());
-    await links.persistAll();
+    await links.persistAllToFS();
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {

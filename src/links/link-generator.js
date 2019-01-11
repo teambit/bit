@@ -20,7 +20,7 @@ import postInstallTemplate from '../consumer/component/templates/postinstall.def
 import { getLinkToFileContent } from './link-content';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
-import type { LinkFile as LinkFileType } from './dependency-file-link-generator';
+import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
 
 type Symlink = {
@@ -334,6 +334,23 @@ async function writeDependenciesLinksToDir(
   dependencies: Dependencies,
   consumer: Consumer
 ) {
+  const linksToWrite = await getLinksByDependencies(targetDir, component, dependencies, consumer);
+
+  return Promise.all(linksToWrite.map(link => link.write()));
+}
+
+/**
+ * used for writing compiler and tester dependencies to the directory of their configuration file
+ * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
+ * this methods write the environment dependency links no matter where the directory located on the workspace
+ *
+ */
+async function getLinksByDependencies(
+  targetDir: PathOsBased,
+  component: Component,
+  dependencies: Dependencies,
+  consumer: Consumer
+): Promise<LinkFile[]> {
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
     const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
@@ -355,7 +372,7 @@ async function writeDependenciesLinksToDir(
   const flattenLinks = R.flatten(links);
   const { linksToWrite } = groupLinks(flattenLinks);
 
-  return Promise.all(linksToWrite.map(link => outputFile(link)));
+  return linksToWrite.map(link => LinkFile.load(link));
 }
 
 export {
@@ -363,5 +380,6 @@ export {
   getEntryPointsForComponent,
   getComponentsDependenciesLinks,
   getIndexFileName,
+  getLinksByDependencies,
   writeDependenciesLinksToDir
 };
