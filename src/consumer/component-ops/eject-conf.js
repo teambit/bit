@@ -102,16 +102,9 @@ export async function getEjectConfDataToPersist(
     bitJsonDirFullPath,
     consumer.toAbsolutePath(ejectedTesterDirectory)
   );
-  const files = [];
-  const remove = [];
-  if (component.compiler && component.compiler.dataToPersist) {
-    files.push(...component.compiler.dataToPersist.files);
-    remove.push(...component.compiler.dataToPersist.remove);
-  }
-  if (component.tester && component.tester.dataToPersist) {
-    files.push(...component.tester.dataToPersist.files);
-    remove.push(...component.tester.dataToPersist.remove);
-  }
+  const dataToPersist = DataToPersist.makeInstance({});
+  if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
+  if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
   const bitJson = getBitJsonToWrite(
     component,
     bitJsonDir.dirPath,
@@ -120,7 +113,7 @@ export async function getEjectConfDataToPersist(
   );
   const bitJsonDataToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath, override });
   if (bitJsonDataToWrite) {
-    files.push(
+    dataToPersist.files.addFile(
       JSONFile.load({
         base: bitJsonDir.dirPath,
         path: bitJsonDataToWrite.pathToWrite,
@@ -136,8 +129,7 @@ export async function getEjectConfDataToPersist(
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
       if (bitJsonDirFullPath !== oldBitJsonDirFullPath) {
         const bitJsonToRemove = AbstractBitJson.composePath(oldBitJsonDirFullPath);
-        const removePath = new RemovePath(bitJsonToRemove, true);
-        remove.push(removePath);
+        dataToPersist.removePath(new RemovePath(bitJsonToRemove, true));
       }
     }
   }
@@ -145,7 +137,7 @@ export async function getEjectConfDataToPersist(
     id: component.id.toStringWithoutVersion(),
     ejectedPath: configDir.linuxDirPath,
     ejectedFullPath: bitJsonDir.linuxDirPath,
-    dataToPersist: DataToPersist.makeInstance({ files, remove })
+    dataToPersist
   };
 }
 

@@ -49,9 +49,6 @@ export default class ComponentWriter {
   componentMap: ComponentMap;
   existingComponentMap: ?ComponentMap;
   excludeRegistryPrefix: boolean;
-  files: AbstractVinyl[] = [];
-  symlinks: Symlink[] = [];
-  remove: RemovePath[] = [];
   constructor({
     component,
     writeToPath,
@@ -105,11 +102,7 @@ export default class ComponentWriter {
     if (!this.component.files || !this.component.files.length) {
       throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
-    this.component.dataToPersist = DataToPersist.makeInstance({
-      files: this.files,
-      symlinks: this.symlinks,
-      remove: this.remove
-    });
+    this.component.dataToPersist = DataToPersist.makeInstance({});
     this._updateFilesBasePaths();
     this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this.component.componentMap = this.componentMap;
@@ -126,19 +119,15 @@ export default class ComponentWriter {
 
   async populateFilesToWriteToComponentDir() {
     if (this.deleteBitDirContent) {
-      this.remove.push(new RemovePath(this.writeToPath));
+      this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
-    this.files.push(...this.component.files);
+    this.component.files.map(file => this.component.dataToPersist.addFile(file.clone()));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.consumer, false);
-    if (dists) {
-      this.files.push(...dists.files);
-      this.symlinks.push(...dists.symlinks);
-    }
+    if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {
       const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
       const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir, this.override);
-      this.files.push(...configToWrite.dataToPersist.files);
-      this.remove.push(...configToWrite.dataToPersist.remove);
+      this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
@@ -153,13 +142,14 @@ export default class ComponentWriter {
         this.excludeRegistryPrefix
       );
       const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
-      this.files.push(JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson }));
+      const jsonFile = JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson });
+      this.component.dataToPersist.addFile(jsonFile);
     }
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
       // $FlowFixMe this.component.license is set
       this.component.license.override = this.override;
-      this.files.push(this.component.license);
+      this.component.dataToPersist.addFile(this.component.license);
     }
   }
 

@@ -180,10 +180,9 @@ export default class EnvExtension extends BaseExtension {
         filePathsToRemove.push(file.path);
       }
     });
-    this.dataToPersist = DataToPersist.makeInstance({
-      files: this.files.map(file => file.clone()),
-      remove: filePathsToRemove.map(f => new RemovePath(f, true))
-    });
+    this.dataToPersist = DataToPersist.makeInstance({});
+    this.files.map(file => this.dataToPersist.addFile(file.clone()));
+    filePathsToRemove.map(file => this.dataToPersist.removePath(new RemovePath(file, true)));
     return resolvedEjectedEnvsDirectory;
   }
 

@@ -25,6 +25,24 @@ export default class DataToPersist {
   }) {
     return new DataToPersist(files, symlinks, remove);
   }
+  addFile(file: AbstractVinyl) {
+    if (!file) throw new Error('failed adding an empty file into DataToPersist');
+    if (!file.path) throw new Error('failed adding a file into DataToPersist as it does not have a path property');
+    this.files.push(file);
+  }
+  removePath(pathToRemove: RemovePath) {
+    if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
+    this.remove.push(pathToRemove);
+  }
+  addSymlink(symlink: Symlink) {
+    this.symlinks.push(symlink);
+  }
+  merge(dataToPersist: ?DataToPersist) {
+    if (!dataToPersist) return;
+    this.files.push(...dataToPersist.files);
+    this.remove.push(...dataToPersist.remove);
+    this.symlinks.push(...dataToPersist.symlinks);
+  }
   async persistAllToFS() {
     this._log();
     await this._deletePathsFromFS();
