@@ -9,6 +9,7 @@ import type { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path'
 import type { PathChangeResult } from '../bit-map/bit-map';
 import type Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
+import RemovePath from '../component/sources/remove-path';
 
 export async function movePaths(
   consumer: Consumer,
@@ -61,6 +62,6 @@ export function moveExistingComponent(
     const newBase = file.base.replace(oldPathRelative, newPathRelative);
     file.updatePaths({ newBase });
   });
-  component.dataToPersist.remove.push(oldPathRelative);
+  component.dataToPersist.removePath(new RemovePath(oldPathRelative));
   component.writtenPath = newPathRelative;
 }
