@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.33] - 2019-01-13
+
 - avoid installing node_modules in sub directories when the package manager allow it to be installed from the root dir
 - fix parsing React docs to show the `@example` tag
 - make bit version command faster
