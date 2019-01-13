@@ -113,7 +113,7 @@ export async function getEjectConfDataToPersist(
   );
   const bitJsonDataToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath, override });
   if (bitJsonDataToWrite) {
-    dataToPersist.files.addFile(
+    dataToPersist.addFile(
       JSONFile.load({
         base: bitJsonDir.dirPath,
         path: bitJsonDataToWrite.pathToWrite,

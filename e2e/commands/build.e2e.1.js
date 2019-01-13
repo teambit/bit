@@ -32,8 +32,8 @@ describe('bit build', function () {
       });
       it('should successfully import and build using the babel compiler', () => {
         const buildOutput = helper.build();
-        expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js.map'));
-        expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js'));
+        expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js.map'));
+        expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js'));
       });
       describe('when an exception is thrown during the build', () => {
         before(() => {

@@ -659,7 +659,7 @@ export default class BitMap {
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ConfigDir,
     trackDir?: PathOsBased,
-    override: boolean,
+    override?: boolean,
     detachedCompiler: ?boolean,
     detachedTester: ?boolean,
     originallySharedDir?: PathLinux,
