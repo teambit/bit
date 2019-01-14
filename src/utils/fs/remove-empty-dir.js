@@ -4,7 +4,8 @@ import isDirEmpty from './is-dir-empty';
 import logger from '../../logger/logger';
 
 export default (async function removeEmptyDir(dirPath: string): Promise<boolean> {
-  const isExist = await fs.exists(dirPath);
+  // return false;
+  const isExist = await fs.pathExists(dirPath);
   if (!isExist) {
     return false;
   }

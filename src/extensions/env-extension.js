@@ -31,6 +31,7 @@ import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-c
 import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
+import type Consumer from '../consumer/consumer';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -163,22 +164,25 @@ export default class EnvExtension extends BaseExtension {
     configDir,
     envType,
     deleteOldFiles,
+    consumer,
     verbose = false
   }: {
     configDir: string,
     envType: EnvType,
     deleteOldFiles: boolean,
+    consumer?: Consumer,
     verbose: boolean
   }): Promise<string> {
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });
     const filePathsToRemove = [];
 
     this.files.forEach((file) => {
+      if (deleteOldFiles) {
+        const pathToDelete = consumer ? consumer.getPathRelativeToConsumer(file.path) : file.path;
+        filePathsToRemove.push(pathToDelete);
+      }
       file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
       file.verbose = verbose;
-      if (deleteOldFiles) {
-        filePathsToRemove.push(file.path);
-      }
     });
     this.dataToPersist = DataToPersist.makeInstance({});
     this.files.forEach((file) => {

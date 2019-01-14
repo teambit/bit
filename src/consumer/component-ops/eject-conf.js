@@ -34,7 +34,7 @@ export default (async function ejectConf(
     override
   );
   if (consumer) dataToPersist.addBasePath(consumer.getPath());
-  dataToPersist.persistAllToFS();
+  await dataToPersist.persistAllToFS();
   return {
     id,
     ejectedPath,
@@ -169,7 +169,7 @@ export async function writeEnvFiles({
   });
   if (env.dataToPersist) {
     if (consumer) env.dataToPersist.addBasePath(consumer.getPath());
-    env.dataToPersist.persistAllToFS();
+    await env.dataToPersist.persistAllToFS();
   }
   return ejectedDirectory;
 }
@@ -196,7 +196,7 @@ export async function populateEnvFilesToWrite({
     return '';
   }
   const envType = env instanceof CompilerExtension ? COMPILER_ENV_TYPE : TESTER_ENV_TYPE;
-  const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, envType, verbose });
+  const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, consumer, envType, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
   const links = await getLinksByDependencies(configDir, component, deps, consumer);
   env.dataToPersist.files.push(...links);
