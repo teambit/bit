@@ -4,6 +4,7 @@ import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
 import RemovePath from './remove-path';
+import removeFilesAndEmptyDirsRecursively from '../../../utils/fs/remove-files-and-empty-dirs-recursively';
 
 export default class DataToPersist {
   files: AbstractVinyl[];
@@ -75,7 +76,10 @@ export default class DataToPersist {
     return Promise.all(this.symlinks.map(symlink => symlink.write()));
   }
   async _deletePathsFromFS() {
-    return Promise.all(this.remove.map(removePath => removePath.persistToFS()));
+    const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter(p => p.removeItsDirIfEmpty).map(p => p.path);
+    const restPaths = this.remove.filter(p => !p.removeItsDirIfEmpty);
+    await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
+    return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
   }
   _log() {
     if (this.remove.length) {
