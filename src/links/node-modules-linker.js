@@ -82,6 +82,12 @@ export default class NodeModuleLinker {
         linksResults.push(linkResult);
       }
     });
+    this.components.forEach((component) => {
+      const existingLinkResult = linksResults.find(linkResult => linkResult.id.isEqual(component.id));
+      if (!existingLinkResult) {
+        linksResults.push({ id: component.id, bound: [] });
+      }
+    });
     return linksResults;
   }
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
