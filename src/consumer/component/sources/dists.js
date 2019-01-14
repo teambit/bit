@@ -168,7 +168,7 @@ export default class Dists {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
       this.updateDistsPerConsumerBitJson(component.id, consumer, componentMap);
     }
-    const files = [...this.dists.map(dist => dist.clone())];
+    const files = [...this.dists];
     const symlinks = [];
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);

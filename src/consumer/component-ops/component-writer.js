@@ -119,7 +119,7 @@ export default class ComponentWriter {
     if (this.deleteBitDirContent) {
       this.component.dataToPersist.removePath(new RemovePath(this.writeToPath));
     }
-    this.component.files.map(file => this.component.dataToPersist.addFile(file.clone()));
+    this.component.files.map(file => this.component.dataToPersist.addFile(file));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {

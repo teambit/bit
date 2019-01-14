@@ -625,7 +625,7 @@ export default class Component {
 
     const testerFilePath = tester.filePath;
 
-    const run = async (component: ConsumerComponent, cwd?: PathOsBased) => {
+    const run = async (component: Component, cwd?: PathOsBased) => {
       if (cwd) {
         logger.debug(`changing process cwd to ${cwd}`);
         Analytics.addBreadCrumb('runSpecs.run', 'changing process cwd');
