@@ -71,19 +71,24 @@ export default class NodeModuleLinker {
   }
   getLinksResults(): LinksResult[] {
     const linksResults: LinksResult[] = [];
-    this.symlinks.forEach((symlink: Symlink) => {
-      const id = symlink.componentId;
+    const getExistingLinkResult = id => linksResults.find(linkResult => linkResult.id.isEqual(id));
+    const addLinkResult = (id: ?BitId, from: string, to: string) => {
       if (!id) return;
-      const existingLinkResult = linksResults.find(linkResult => linkResult.id.isEqual(id));
+      const existingLinkResult = getExistingLinkResult(id);
       if (existingLinkResult) {
-        existingLinkResult.bound.push({ from: symlink.src, to: symlink.dest });
+        existingLinkResult.bound.push({ from, to });
       } else {
-        const linkResult = { id, bound: [{ from: symlink.src, to: symlink.dest }] };
-        linksResults.push(linkResult);
+        linksResults.push({ id, bound: [{ from, to }] });
       }
+    };
+    this.symlinks.forEach((symlink: Symlink) => {
+      addLinkResult(symlink.componentId, symlink.src, symlink.dest);
+    });
+    this.files.forEach((file: LinkFile) => {
+      addLinkResult(file.componentId, file.srcPath, file.path);
     });
     this.components.forEach((component) => {
-      const existingLinkResult = linksResults.find(linkResult => linkResult.id.isEqual(component.id));
+      const existingLinkResult = getExistingLinkResult(component.id);
       if (!existingLinkResult) {
         linksResults.push({ id: component.id, bound: [] });
       }
@@ -145,9 +150,9 @@ export default class NodeModuleLinker {
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     filesToBind.forEach((file) => {
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      const destRelative = this._getPathRelativeRegardlessCWD(dest, file);
+      const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), file);
       const fileContent = getLinkToFileContent(destRelative);
-      const linkFile = LinkFile.load({ filePath: dest, content: fileContent });
+      const linkFile = LinkFile.load({ filePath: dest, content: fileContent, srcPath: file, componentId });
       this.files.push(linkFile);
     });
     this._populateLinkToMainFile(component);
@@ -275,11 +280,16 @@ export default class NodeModuleLinker {
     const mainFile = component.dists.calculateMainDistFileForAuthored(component.mainFile, this.consumer);
     const indexFileName = getIndexFileName(mainFile);
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id), indexFileName);
-    const destRelative = this._getPathRelativeRegardlessCWD(dest, mainFile);
+    const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), mainFile);
     const fileContent = getLinkToFileContent(destRelative);
     if (fileContent) {
       // otherwise, the file type is not supported, no need to write anything
-      const linkFile = LinkFile.load({ filePath: dest, content: fileContent });
+      const linkFile = LinkFile.load({
+        filePath: dest,
+        content: fileContent,
+        srcPath: mainFile,
+        componentId: component.id
+      });
       this.files.push(linkFile);
     }
   }
