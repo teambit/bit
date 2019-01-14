@@ -64,6 +64,7 @@ const _getComponents = async (
   if (id) {
     const idParsed = consumer.getParsedId(id);
     const component = await consumer.loadComponent(idParsed);
+    await consumer.scope.buildMultiple([component], consumer, false, verbose);
     return [component];
   }
   const componentsList = new ComponentsList(consumer);

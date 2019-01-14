@@ -181,7 +181,11 @@ export default class EnvExtension extends BaseExtension {
       }
     });
     this.dataToPersist = DataToPersist.makeInstance({});
-    this.files.map(file => this.dataToPersist.addFile(file.clone()));
+    this.files.forEach((file) => {
+      const cloned = file.clone();
+      cloned.verbose = verbose;
+      this.dataToPersist.addFile(cloned);
+    });
     filePathsToRemove.map(file => this.dataToPersist.removePath(new RemovePath(file, true)));
     return resolvedEjectedEnvsDirectory;
   }

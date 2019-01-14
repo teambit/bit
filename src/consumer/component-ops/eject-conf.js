@@ -128,7 +128,7 @@ export async function getEjectConfDataToPersist(
       const oldBitJsonDir = oldConfigDir.getResolved({ componentDir }).getEnvTypeCleaned();
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
       if (bitJsonDirFullPath !== oldBitJsonDirFullPath) {
-        const bitJsonToRemove = AbstractBitJson.composePath(oldBitJsonDirFullPath);
+        const bitJsonToRemove = AbstractBitJson.composePath(oldBitJsonDir.dirPath);
         dataToPersist.removePath(new RemovePath(bitJsonToRemove, true));
       }
     }
