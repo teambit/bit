@@ -217,7 +217,7 @@ const _runBuild = async ({
             console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
           }
           await writeEnvFiles({
-            fullConfigDir: tmpFolderFullPath,
+            configDir: component.getTmpFolder(),
             env: compiler,
             consumer,
             component,

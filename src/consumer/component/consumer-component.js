@@ -757,9 +757,9 @@ export default class Component {
     };
 
     if (!isolated && consumer) {
-      logger.debug('Building the component before running the tests');
-      await this.build({ scope, verbose, consumer });
-      await this.dists.writeDists(this, consumer);
+      // logger.debug('Building the component before running the tests');
+      // await this.build({ scope, verbose, consumer });
+      // await this.dists.writeDists(this, consumer);
       return run(this, consumer.getPath());
     }
 
