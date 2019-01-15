@@ -43,14 +43,12 @@ export async function getLinksInDistToWrite(
   const nodeModuleLinker = new NodeModuleLinker([component], consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
-  const dataToPersist = DataToPersist.makeInstance({
-    files: [...componentsDependenciesLinks, ...nodeModuleLinks.files, ...entryPoints],
-    symlinks: [...nodeModuleLinks.symlinks]
-  });
+  const dataToPersist = new DataToPersist();
+  dataToPersist.addManyFiles([...componentsDependenciesLinks, ...entryPoints]);
+  dataToPersist.merge(nodeModuleLinks);
   const packageJsonFile = await packageJson.updateAttribute(consumer, rootDir, 'main', newMainFile, false);
-
   if (packageJsonFile) {
-    dataToPersist.files.push(
+    dataToPersist.addFile(
       JSONFile.load({
         base: rootDir,
         path: path.join(rootDir, PACKAGE_JSON),
@@ -77,10 +75,10 @@ async function getReLinkDirectlyImportedDependenciesLinks(
   );
   const nodeModuleLinker = new NodeModuleLinker(components, consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  return DataToPersist.makeInstance({
-    files: [...componentsDependenciesLinkFiles, ...nodeModuleLinks.files],
-    symlinks: nodeModuleLinks.symlinks
-  });
+  const dataToPersist = new DataToPersist();
+  dataToPersist.addManyFiles(componentsDependenciesLinkFiles);
+  dataToPersist.merge(nodeModuleLinks);
+  return dataToPersist;
 }
 
 export async function reLinkDependents(consumer: Consumer, components: Component[]): Promise<void> {
@@ -99,8 +97,7 @@ export async function reLinkDependents(consumer: Consumer, components: Component
 export async function getReLinkDependentsData(consumer: Consumer, components: Component[]): Promise<DataToPersist> {
   logger.debug('linker: check whether there are direct dependents for re-linking');
   const directDependentComponents = await consumer.getAuthoredAndImportedDependentsOfComponents(components);
-  const files = [];
-  const symlinks = [];
+  const dataToPersist = new DataToPersist();
   if (directDependentComponents.length) {
     const data = await getReLinkDirectlyImportedDependenciesLinks(directDependentComponents, consumer);
     const packageJsonFiles = await packageJson.changeDependenciesToRelativeSyntax(
@@ -108,10 +105,10 @@ export async function getReLinkDependentsData(consumer: Consumer, components: Co
       directDependentComponents,
       components
     );
-    files.push(...data.files, ...packageJsonFiles);
-    symlinks.push(...data.symlinks);
+    dataToPersist.merge(data);
+    dataToPersist.addManyFiles(packageJsonFiles);
   }
-  return DataToPersist.makeInstance({ files, symlinks });
+  return dataToPersist;
 }
 
 export async function linkComponents(params: {
@@ -151,26 +148,24 @@ export async function getAllComponentsLinks({
   createNpmLinkFiles: boolean,
   writePackageJson: boolean
 }): Promise<DataToPersist> {
-  const files = [];
-  const symlinks = [];
+  const dataToPersist = new DataToPersist();
   const componentsDependenciesLinkFiles = await linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
     createNpmLinkFiles
   );
-
   if (writtenDependencies) {
     const entryPoints = R.flatten(writtenDependencies).map(component =>
       linkGenerator.getEntryPointsForComponent(component, consumer)
     );
-    files.push(...R.flatten(entryPoints));
+    dataToPersist.addManyFiles(R.flatten(entryPoints));
   }
   if (!writePackageJson) {
     // no need for entry-point file if package.json is written.
     const entryPoints = writtenComponents.map(component =>
       linkGenerator.getEntryPointsForComponent(component, consumer)
     );
-    files.push(...R.flatten(entryPoints));
+    dataToPersist.addManyFiles(R.flatten(entryPoints));
   }
   const allComponents = writtenDependencies
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
@@ -178,7 +173,8 @@ export async function getAllComponentsLinks({
   const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents);
-  files.push(...componentsDependenciesLinkFiles, ...nodeModuleLinks.files, ...reLinkDependentsData.files);
-  symlinks.push(...nodeModuleLinks.symlinks, ...reLinkDependentsData.symlinks);
-  return DataToPersist.makeInstance({ files, symlinks });
+  dataToPersist.merge(nodeModuleLinks);
+  dataToPersist.merge(reLinkDependentsData);
+  dataToPersist.addManyFiles(componentsDependenciesLinkFiles);
+  return dataToPersist;
 }

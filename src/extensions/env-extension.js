@@ -184,7 +184,7 @@ export default class EnvExtension extends BaseExtension {
       file.updatePaths({ newBase: resolvedEjectedEnvsDirectory, newRelative: file.relative });
       file.verbose = verbose;
     });
-    this.dataToPersist = DataToPersist.makeInstance({});
+    this.dataToPersist = new DataToPersist();
     this.files.forEach((file) => {
       const cloned = file.clone();
       cloned.verbose = verbose;

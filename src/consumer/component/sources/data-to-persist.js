@@ -10,33 +10,31 @@ export default class DataToPersist {
   files: AbstractVinyl[];
   symlinks: Symlink[];
   remove: RemovePath[];
-  constructor(files: AbstractVinyl[], symlinks: Symlink[], remove: RemovePath[]) {
-    this.files = files;
-    this.symlinks = symlinks;
-    this.remove = remove;
-  }
-  static makeInstance({
-    files = [],
-    symlinks = [],
-    remove = []
-  }: {
-    files?: AbstractVinyl[],
-    symlinks?: Symlink[],
-    remove?: RemovePath[]
-  }) {
-    return new DataToPersist(files, symlinks, remove);
+  constructor() {
+    this.files = [];
+    this.symlinks = [];
+    this.remove = [];
   }
   addFile(file: AbstractVinyl) {
     if (!file) throw new Error('failed adding an empty file into DataToPersist');
     if (!file.path) throw new Error('failed adding a file into DataToPersist as it does not have a path property');
     this.files.push(file);
   }
+  addManyFiles(files: AbstractVinyl[]) {
+    files.forEach(file => this.addFile(file));
+  }
   removePath(pathToRemove: RemovePath) {
     if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
     this.remove.push(pathToRemove);
   }
+  removeManyPaths(pathsToRemove: RemovePath[]) {
+    pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
+  }
   addSymlink(symlink: Symlink) {
     this.symlinks.push(symlink);
+  }
+  addManySymlinks(symlinks: Symlink[]) {
+    symlinks.forEach(symlink => this.addSymlink(symlink));
   }
   merge(dataToPersist: ?DataToPersist) {
     if (!dataToPersist) return;

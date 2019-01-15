@@ -102,7 +102,7 @@ export async function getEjectConfDataToPersist(
     bitJsonDirFullPath,
     consumer.toAbsolutePath(ejectedTesterDirectory)
   );
-  const dataToPersist = DataToPersist.makeInstance({});
+  const dataToPersist = new DataToPersist();
   if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
   if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
   const bitJson = getBitJsonToWrite(
@@ -200,7 +200,7 @@ export async function populateEnvFilesToWrite({
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
   // $FlowFixMe will be fixed with the Capsule feature
   const links = await getLinksByDependencies(configDir, component, deps, consumer);
-  env.dataToPersist.files.push(...links);
+  env.dataToPersist.addManyFiles(links);
   return ejectedDirectory;
 }
 

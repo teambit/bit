@@ -67,7 +67,10 @@ export default class NodeModuleLinker {
         }
       })
     );
-    return DataToPersist.makeInstance({ files: this.files, symlinks: this.symlinks });
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addManyFiles(this.files);
+    dataToPersist.addManySymlinks(this.symlinks);
+    return dataToPersist;
   }
   getLinksResults(): LinksResult[] {
     const linksResults: LinksResult[] = [];

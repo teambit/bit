@@ -101,7 +101,7 @@ export default class ComponentWriter {
     if (!this.component.files || !this.component.files.length) {
       throw new GeneralError(`Component ${this.component.id.toString()} is invalid as it has no files`);
     }
-    this.component.dataToPersist = DataToPersist.makeInstance({});
+    this.component.dataToPersist = new DataToPersist();
     this._updateFilesBasePaths();
     this.componentMap = this.existingComponentMap || this.addComponentToBitMap(this.writeToPath);
     this.component.componentMap = this.componentMap;
