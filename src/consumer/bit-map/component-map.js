@@ -6,7 +6,7 @@ import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
 import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/path';
-import type { Consumer } from '..';
+import type Consumer from '../consumer';
 import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
 import type { AddContext } from '../component-ops/add-components';

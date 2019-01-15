@@ -650,8 +650,8 @@ export default class Scope {
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
-    directory: ?string,
-    keep: ?boolean
+    directory?: ?string,
+    keep?: ?boolean
   }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');

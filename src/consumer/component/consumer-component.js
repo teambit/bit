@@ -980,7 +980,7 @@ export default class Component {
     componentMap: ComponentMap,
     id: BitId,
     consumer: Consumer,
-    componentFromModel: Component
+    componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;

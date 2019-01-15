@@ -9,7 +9,7 @@ import type Component from '../../../component/consumer-component';
 import { Driver } from '../../../../driver';
 import { pathNormalizeToLinux, pathRelativeLinux } from '../../../../utils';
 import logger from '../../../../logger/logger';
-import type { Consumer } from '../../../../consumer';
+import type Consumer from '../../../../consumer/consumer';
 import type { ImportSpecifier, FileObject, Tree } from './types/dependency-tree-type';
 import type { PathLinux, PathOsBased, PathLinuxRelative } from '../../../../utils/path';
 import Dependencies from '../dependencies';

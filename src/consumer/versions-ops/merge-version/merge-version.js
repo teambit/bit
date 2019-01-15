@@ -1,10 +1,10 @@
 // @flow
 import path from 'path';
 import chalk from 'chalk';
-import { BitId } from '../../../bit-id';
+import { BitId, BitIds } from '../../../bit-id';
 import type Component from '../../component/consumer-component';
-import type { Consumer } from '../..';
-import type { SourceFile } from '../../component/sources';
+import type Consumer from '../../consumer';
+import type SourceFile from '../../component/sources/source-file';
 import { resolveConflictPrompt } from '../../../prompts';
 import { pathNormalizeToLinux } from '../../../utils/path';
 import twoWayMergeVersions from './two-way-merge';
@@ -44,7 +44,7 @@ export async function mergeVersion(
   ids: BitId[],
   mergeStrategy: MergeStrategy
 ): Promise<ApplyVersionResults> {
-  const { components } = await consumer.loadComponents(ids);
+  const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
   const componentsStatusP = components.map((component: Component) => {
     return getComponentStatus(consumer, component, version);
   });
@@ -79,7 +79,7 @@ async function getComponentStatus(consumer: Consumer, component: Component, vers
     consumer,
     otherComponent,
     otherVersion: version,
-    currentComponent: component,
+    currentComponent: component, // $FlowFixMe
     currentVersion: currentlyUsedVersion
   });
   return { componentFromFS: component, id: component.id, mergeResults };

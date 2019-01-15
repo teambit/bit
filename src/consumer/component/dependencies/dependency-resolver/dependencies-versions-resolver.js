@@ -6,7 +6,7 @@ import ComponentMap from '../../../bit-map/component-map';
 import { BitId } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
-import type { Consumer } from '../../../../consumer';
+import type Consumer from '../../../../consumer/consumer';
 import type { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/component-node-modules-path';
 import type ComponentBitJson from '../../../bit-json';

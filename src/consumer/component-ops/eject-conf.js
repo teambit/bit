@@ -199,6 +199,7 @@ export async function populateEnvFilesToWrite({
   const envType = env instanceof CompilerExtension ? COMPILER_ENV_TYPE : TESTER_ENV_TYPE;
   const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, consumer, envType, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
+  // $FlowFixMe will be fixed with the Capsule feature
   const links = await getLinksByDependencies(configDir, component, deps, consumer);
   env.dataToPersist.files.push(...links);
   return ejectedDirectory;

@@ -4,7 +4,7 @@ import * as RA from 'ramda-adjunct';
 import graphlib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
 import type { Scope } from '..';
-import type { Consumer } from '../../consumer';
+import type Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
 import type Component from '../../consumer/component/consumer-component';
 import type ModelComponent from '../models/model-component';
@@ -235,6 +235,7 @@ export default (async function tagModelComponent({
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
   const autoTagCandidates = await consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
+  // $FlowFixMe unclear error
   const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));

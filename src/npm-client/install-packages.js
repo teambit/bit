@@ -5,7 +5,7 @@ import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import type { ComponentWithDependencies } from '../scope';
-import type { Consumer } from '../consumer';
+import type Consumer from '../consumer/consumer';
 
 export async function installPackages(
   consumer: Consumer,

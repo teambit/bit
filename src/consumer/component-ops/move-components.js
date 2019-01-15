@@ -4,12 +4,13 @@ import R from 'ramda';
 import { NodeModuleLinker, reLinkDependents } from '../../links';
 import * as packageJson from '../component/package-json';
 import GeneralError from '../../error/general-error';
-import type { Consumer } from '..';
+import type Consumer from '../consumer';
 import type { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import type { PathChangeResult } from '../bit-map/bit-map';
 import type Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
 import RemovePath from '../component/sources/remove-path';
+import BitIds from '../../bit-id/bit-ids';
 
 export async function movePaths(
   consumer: Consumer,
@@ -35,7 +36,7 @@ export async function movePaths(
   if (!R.isEmpty(changes)) {
     const componentsIds = changes.map(c => c.id);
     await packageJson.addComponentsToRoot(consumer, componentsIds);
-    const { components } = await consumer.loadComponents(componentsIds);
+    const { components } = await consumer.loadComponents(BitIds.fromArray(componentsIds));
     const nodeModuleLinker = new NodeModuleLinker(components, consumer);
     await nodeModuleLinker.link();
     await reLinkDependents(consumer, components);

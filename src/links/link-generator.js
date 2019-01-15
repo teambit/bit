@@ -5,7 +5,7 @@ import R from 'ramda';
 import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
 import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../constants';
-import { outputFile, getExt } from '../utils';
+import { getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
 import type { ComponentWithDependencies } from '../scope';
@@ -13,7 +13,7 @@ import type Component from '../consumer/component/consumer-component';
 import type { Dependency, Dependencies } from '../consumer/component/dependencies';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
-import type { Consumer } from '../consumer';
+import type Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
@@ -291,38 +291,18 @@ async function generatePostInstallScript(component: Component, postInstallLinks)
 /**
  * Relevant for IMPORTED and NESTED only
  */
-async function writeEntryPointsForComponent(component: Component, consumer: Consumer): Promise<any> {
-  const componentMap = consumer.bitMap.getComponent(component.id);
-  const componentRoot = component.writtenPath || componentMap.rootDir;
-  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
-  const mainFile = component.dists.calculateMainDistFile(component.mainFile);
-  const indexName = getIndexFileName(mainFile); // Move to bit-javascript
-  const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
-  const entryPointPath = path.join(componentRoot, indexName);
-  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
-    const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-    const entryPointDist = path.join(distDir, indexName);
-    logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
-    await outputFile({ filePath: entryPointDist, content: entryPointFileContent, override: false });
-  }
-  logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
-  return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
-}
-
-/**
- * Relevant for IMPORTED and NESTED only
- */
 function getEntryPointsForComponent(component: Component, consumer: Consumer): LinkFile[] {
   const files = [];
   const componentMap = consumer.bitMap.getComponent(component.id);
-  const componentRoot = component.writtenPath || componentMap.rootDir;
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
   if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
-    const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+    const distDir = component.dists.getDistDirForConsumer(consumer, componentRoot);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
     files.push(LinkFile.load({ filePath: entryPointDist, content: entryPointFileContent }));
@@ -330,23 +310,6 @@ function getEntryPointsForComponent(component: Component, consumer: Consumer): L
   logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
   files.push(LinkFile.load({ filePath: entryPointPath, content: entryPointFileContent }));
   return files;
-}
-
-/**
- * used for writing compiler and tester dependencies to the directory of their configuration file
- * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
- * this methods write the environment dependency links no matter where the directory located on the workspace
- *
- */
-async function writeDependenciesLinksToDir(
-  targetDir: PathOsBased,
-  component: Component,
-  dependencies: Dependencies,
-  consumer: Consumer
-) {
-  const linksToWrite = await getLinksByDependencies(targetDir, component, dependencies, consumer);
-
-  return Promise.all(linksToWrite.map(link => link.write()));
 }
 
 /**
@@ -385,11 +348,4 @@ async function getLinksByDependencies(
   return linksToWrite.map(link => LinkFile.load(link));
 }
 
-export {
-  writeEntryPointsForComponent,
-  getEntryPointsForComponent,
-  getComponentsDependenciesLinks,
-  getIndexFileName,
-  getLinksByDependencies,
-  writeDependenciesLinksToDir
-};
+export { getEntryPointsForComponent, getComponentsDependenciesLinks, getIndexFileName, getLinksByDependencies };
