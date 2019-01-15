@@ -1,14 +1,16 @@
 // @flow
 import fs from 'fs-extra';
 import R from 'ramda';
-import { linkComponentsToNodeModules, reLinkDependents } from '../../links';
+import { NodeModuleLinker, reLinkDependents } from '../../links';
 import * as packageJson from '../component/package-json';
 import GeneralError from '../../error/general-error';
-import type { Consumer } from '..';
+import type Consumer from '../consumer';
 import type { PathOsBasedRelative, PathOsBasedAbsolute } from '../../utils/path';
 import type { PathChangeResult } from '../bit-map/bit-map';
 import type Component from '../component/consumer-component';
 import moveSync from '../../utils/fs/move-sync';
+import RemovePath from '../component/sources/remove-path';
+import BitIds from '../../bit-id/bit-ids';
 
 export async function movePaths(
   consumer: Consumer,
@@ -34,8 +36,9 @@ export async function movePaths(
   if (!R.isEmpty(changes)) {
     const componentsIds = changes.map(c => c.id);
     await packageJson.addComponentsToRoot(consumer, componentsIds);
-    const { components } = await consumer.loadComponents(componentsIds);
-    await linkComponentsToNodeModules(components, consumer);
+    const { components } = await consumer.loadComponents(BitIds.fromArray(componentsIds));
+    const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+    await nodeModuleLinker.link();
     await reLinkDependents(consumer, components);
   }
   return changes;
@@ -53,10 +56,13 @@ export function moveExistingComponent(
     );
   }
   const componentMap = consumer.bitMap.getComponent(component.id);
-  componentMap.updateDirLocation(
-    consumer.getPathRelativeToConsumer(oldPath),
-    consumer.getPathRelativeToConsumer(newPath)
-  );
-  moveSync(oldPath, newPath);
-  component.writtenPath = newPath;
+  const oldPathRelative = consumer.getPathRelativeToConsumer(oldPath);
+  const newPathRelative = consumer.getPathRelativeToConsumer(newPath);
+  componentMap.updateDirLocation(oldPathRelative, newPathRelative);
+  component.dataToPersist.files.forEach((file) => {
+    const newBase = file.base.replace(oldPathRelative, newPathRelative);
+    file.updatePaths({ newBase });
+  });
+  component.dataToPersist.removePath(new RemovePath(oldPathRelative));
+  component.writtenPath = newPathRelative;
 }

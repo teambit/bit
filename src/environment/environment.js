@@ -9,7 +9,7 @@ import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
-import writeComponents from '../consumer/component-ops/write-components';
+import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -79,7 +79,8 @@ export default class Environment {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
-    await writeComponents(concreteOpts);
+    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    await manyComponentsWriter.writeAll();
     await Environment.markEnvironmentAsInstalled(writeToPath);
     return componentWithDependencies;
   }

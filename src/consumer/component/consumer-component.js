@@ -15,9 +15,9 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
-import ejectConf, { writeEnvFiles } from '../component-ops/eject-conf';
+import { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
-import type { EjectConfResult } from '../component-ops/eject-conf';
+import type { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -45,7 +45,7 @@ import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
-import type { PathLinux, PathOsBased, PathOsBasedAbsolute } from '../../utils/path';
+import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
@@ -64,6 +64,7 @@ import ConfigDir from '../bit-map/config-dir';
 import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-not-found';
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
+import DataToPersist from './sources/data-to-persist';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -134,7 +135,7 @@ export default class Component {
   specsResults: ?(SpecsResults[]);
   license: ?License;
   log: ?Log;
-  writtenPath: ?string; // needed for generate links
+  writtenPath: ?PathOsBasedRelative; // needed for generate links
   dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
@@ -154,6 +155,7 @@ export default class Component {
   packageJsonInstance: PackageJsonInstance;
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
+  dataToPersist: DataToPersist;
 
   get id(): BitId {
     return new BitId({
@@ -336,6 +338,17 @@ export default class Component {
     configDir: PathOsBased | ConfigDir,
     override?: boolean = true
   ): Promise<EjectConfResult> {
+    const ejectConfData = await this.getConfigToWrite(consumer, configDir, override);
+    if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
+    await ejectConfData.dataToPersist.persistAllToFS();
+    return ejectConfData;
+  }
+
+  async getConfigToWrite(
+    consumer: Consumer,
+    configDir: PathOsBased | ConfigDir,
+    override?: boolean = true
+  ): Promise<EjectConfData> {
     const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
@@ -357,7 +370,7 @@ export default class Component {
       throw new EjectBoundToWorkspace();
     }
 
-    const res = await ejectConf(this, consumer, configDirInstance, override);
+    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance, override);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -590,7 +603,7 @@ export default class Component {
 
     const testerFilePath = tester.filePath;
 
-    const run = async (component: ConsumerComponent, cwd?: PathOsBased) => {
+    const run = async (component: Component, cwd?: PathOsBased) => {
       if (cwd) {
         logger.debug(`changing process cwd to ${cwd}`);
         Analytics.addBreadCrumb('runSpecs.run', 'changing process cwd');
@@ -626,7 +639,7 @@ export default class Component {
               console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
             }
             await writeEnvFiles({
-              fullConfigDir: tmpFolderFullPath,
+              configDir: component.getTmpFolder(),
               env: tester,
               consumer,
               component,
@@ -722,9 +735,7 @@ export default class Component {
     };
 
     if (!isolated && consumer) {
-      logger.debug('Building the component before running the tests');
-      await this.build({ scope, verbose, consumer });
-      await this.dists.writeDists(this, consumer);
+      // we got here from either bit-tag or bit-test. either way we executed already the build process
       return run(this, consumer.getPath());
     }
 
@@ -967,7 +978,7 @@ export default class Component {
     componentMap: ComponentMap,
     id: BitId,
     consumer: Consumer,
-    componentFromModel: Component
+    componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
     const consumerBitJson: ConsumerBitJson = consumer.bitJson;

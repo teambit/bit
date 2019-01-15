@@ -13,7 +13,7 @@ import { getMergeStrategyInteractive, FileStatus, MergeOptions, threeWayMerge } 
 import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult, FailedComponents } from './merge-version';
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
-import writeComponents from '../component-ops/write-components';
+import ManyComponentsWriter from '../component-ops/many-components-writer';
 
 export type CheckoutProps = {
   version?: string, // if reset is true, the version is undefined
@@ -195,7 +195,7 @@ async function applyVersion(
     modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
 
-  await writeComponents({
+  const manyComponentsWriter = new ManyComponentsWriter({
     consumer,
     componentsWithDependencies: [componentWithDependencies],
     installNpmPackages: shouldInstallNpmPackages(),
@@ -206,6 +206,7 @@ async function applyVersion(
     writeDists: !ignoreDist,
     writePackageJson
   });
+  await manyComponentsWriter.writeAll();
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }

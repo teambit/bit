@@ -1,5 +1,6 @@
 /** @flow */
 import R from 'ramda';
+import path from 'path';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import type Component from '../component/consumer-component';
@@ -8,7 +9,8 @@ import {
   CFG_REGISTRY_DOMAIN_PREFIX,
   DEFAULT_REGISTRY_DOMAIN_PREFIX,
   SUB_DIRECTORIES_GLOB_PATTERN,
-  NODE_PATH_COMPONENT_SEPARATOR
+  NODE_PATH_COMPONENT_SEPARATOR,
+  PACKAGE_JSON
 } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
@@ -16,11 +18,14 @@ import { getSync } from '../../api/consumer/lib/global-config';
 import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
+import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
+import JSONFile from './sources/json-file';
 
-export type PackageJsonInstance = {};
+// the instance comes from bit-javascript PackageJson class
+export type PackageJsonInstance = { write: Function };
 
 /**
  * Add components as dependencies to root package.json
@@ -104,11 +109,11 @@ async function changeDependenciesToRelativeSyntax(
   consumer: Consumer,
   components: Component[],
   dependencies: Component[]
-) {
+): Promise<JSONFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
-  const updateComponent = async (component) => {
+  const updateComponentPackageJson = async (component): Promise<?JSONFile> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
     let packageJson;
     try {
@@ -135,9 +140,18 @@ async function changeDependenciesToRelativeSyntax(
     const testerDeps = getPackages(component.testerDependencies);
     packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
     packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, getRegistryPrefix());
-    return packageJson.write({ override: true });
+    // return packageJson.write({ override: true });
+    return JSONFile.load({
+      // $FlowFixMe
+      base: componentMap.rootDir, // $FlowFixMe
+      path: path.join(componentMap.rootDir, PACKAGE_JSON),
+      content: packageJson,
+      override: true
+    });
   };
-  return Promise.all(components.map(component => updateComponent(component)));
+  // $FlowFixMe
+  const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
+  return packageJsonFiles.filter(file => file);
 }
 
 function getRegistryPrefix(): string {
@@ -152,6 +166,26 @@ function convertIdToNpmName(id: BitId, withVersion = false): string {
 }
 
 async function write(
+  consumer: Consumer,
+  component: Component,
+  bitDir: string,
+  override?: boolean = true,
+  writeBitDependencies?: boolean = false,
+  excludeRegistryPrefix?: boolean
+): Promise<PackageJsonInstance> {
+  const packageJson: PackageJsonInstance = await preparePackageJsonToWrite(
+    consumer,
+    component,
+    bitDir,
+    override,
+    writeBitDependencies,
+    excludeRegistryPrefix
+  );
+  await packageJson.write({ override });
+  return packageJson;
+}
+
+async function preparePackageJsonToWrite(
   consumer: Consumer,
   component: Component,
   bitDir: string,
@@ -210,7 +244,6 @@ async function write(
     await distPackageJson.write({ override });
   }
 
-  await packageJson.write({ override });
   return packageJson;
 }
 
@@ -218,13 +251,14 @@ async function updateAttribute(
   consumer: Consumer,
   componentDir: PathLinux,
   attributeName: string,
-  attributeValue: string
+  attributeValue: string,
+  writeFile: ?boolean = true
 ): Promise<*> {
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   try {
     const packageJson = await PackageJson.load(componentDir);
     packageJson[attributeName] = attributeValue;
-    return packageJson.write({ override: true });
+    return writeFile ? packageJson.write({ override: true }) : packageJson;
   } catch (e) {
     // package.json doesn't exist, that's fine, no need to update anything
     return Promise.resolve();
@@ -261,7 +295,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map((id) => {
-      return id.scope ? consumer.getNodeModulesPathOfComponent(registryPrefix, id) : null;
+      return id.scope ? getNodeModulesPathOfComponent(registryPrefix, id) : null;
     })
     .filter(a => a); // remove null
 
@@ -308,6 +342,7 @@ export {
   removeComponentsFromNodeModules,
   changeDependenciesToRelativeSyntax,
   write,
+  preparePackageJsonToWrite,
   addComponentsWithVersionToRoot,
   updateAttribute,
   addWorkspacesToPackageJson,

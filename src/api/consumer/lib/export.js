@@ -6,13 +6,13 @@ import loader from '../../../cli/loader';
 import { BEFORE_EXPORT, BEFORE_EXPORTS, BEFORE_LOADING_COMPONENTS } from '../../../cli/loader/loader-messages';
 import { BitId, BitIds } from '../../../bit-id';
 import IdExportedAlready from './exceptions/id-exported-already';
-import { linkComponentsToNodeModules } from '../../../links';
 import logger from '../../../logger/logger';
 import { Analytics } from '../../../analytics/analytics';
 import EjectComponents from '../../../consumer/component-ops/eject-components';
 import type { EjectResults } from '../../../consumer/component-ops/eject-components';
 import hasWildcard from '../../../utils/string/has-wildcard';
 import { exportMany } from '../../../scope/component-ops/export-scope-components';
+import { NodeModuleLinker } from '../../../links';
 
 export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
   const componentsIds = await exportComponents(ids, remote, save);
@@ -87,7 +87,8 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // some of the components might but authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const components = await Promise.all(ids.map(id => consumer.loadComponentFromModel(id)));
-  linkComponentsToNodeModules(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  await nodeModuleLinker.link();
 }
 
 async function ejectExportedComponents(componentsIds): Promise<EjectResults> {

@@ -5,7 +5,7 @@ import R from 'ramda';
 import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
 import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../constants';
-import { outputFile, getExt } from '../utils';
+import { getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
 import type { ComponentWithDependencies } from '../scope';
@@ -13,14 +13,16 @@ import type Component from '../consumer/component/consumer-component';
 import type { Dependency, Dependencies } from '../consumer/component/dependencies';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
-import type { Consumer } from '../consumer';
+import type Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import { getLinkToFileContent } from './link-content';
 import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
-import type { LinkFile } from './dependency-file-link-generator';
+import type { LinkFileType } from './dependency-file-link-generator';
+import LinkFile from './link-file';
+import BitMap from '../consumer/bit-map';
 
 type Symlink = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -38,16 +40,20 @@ function getIndexFileName(mainFile: string): string {
 async function getComponentLinks({
   consumer,
   component,
-  componentMap,
   dependencies,
-  createNpmLinkFiles
+  createNpmLinkFiles,
+  bitMap
 }: {
-  consumer: Consumer,
+  consumer: ?Consumer,
   component: Component,
-  componentMap: ComponentMap,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
-  createNpmLinkFiles: boolean
+  createNpmLinkFiles: boolean,
+  bitMap?: ?BitMap
 }): Promise<OutputFileParams[]> {
+  // $FlowFixMe
+  bitMap = bitMap || consumer.bitMap;
+  const componentMap: ComponentMap = bitMap.getComponent(component.id);
+  component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
   const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
   const links = directDependencies.map((dep: Dependency) => {
@@ -74,9 +80,9 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
+        // $FlowFixMe
         consumer,
         component,
-        componentMap,
         relativePath,
         dependencyId,
         dependencyComponent,
@@ -121,7 +127,7 @@ function createSymlinks(symlinks: Symlink[], componentId: string) {
 }
 
 function groupLinks(
-  flattenLinks: LinkFile[]
+  flattenLinks: LinkFileType[]
 ): { postInstallLinks: OutputFileParams[], linksToWrite: OutputFileParams[], symlinks: Symlink[] } {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];
@@ -165,34 +171,38 @@ function groupLinks(
  * this step is not needed when the imported components don't have dependencies, or when the
  * dependencies were installed as npm/yarn packages.
  */
-async function writeComponentsDependenciesLinks(
+async function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
-  consumer: Consumer,
-  createNpmLinkFiles: boolean
-): Promise<any> {
+  consumer: ?Consumer,
+  createNpmLinkFiles: boolean,
+  bitMap?: BitMap
+): Promise<LinkFile[]> {
+  // $FlowFixMe
+  bitMap = bitMap || consumer.bitMap;
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
-    const componentMap = consumer.bitMap.getComponent(componentWithDeps.component.id);
+    const component = componentWithDeps.component;
+    // $FlowFixMe bitMap is set at this point
+    const componentMap = bitMap.getComponent(component.id);
+    component.componentMap = componentMap;
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
       logger.debug(
-        `writeComponentsDependenciesLinks, ignoring a component ${componentWithDeps.component.id.toString()} as it is an author component`
+        `writeComponentsDependenciesLinks, ignoring a component ${component.id.toString()} as it is an author component`
       );
       return null;
     }
     // it must be IMPORTED. We don't pass NESTED to this function
-    logger.debug(`writeComponentsDependenciesLinks, generating links for ${componentWithDeps.component.id.toString()}`);
+    logger.debug(`writeComponentsDependenciesLinks, generating links for ${component.id.toString()}`);
 
     const componentsLinks = await getComponentLinks({
       consumer,
-      component: componentWithDeps.component,
-      componentMap,
+      component,
       dependencies: componentWithDeps.allDependencies,
       createNpmLinkFiles
     });
 
-    if (componentWithDeps.component.dependenciesSavedAsComponents) {
+    if (component.dependenciesSavedAsComponents) {
       const dependenciesLinks = await Promise.all(
         componentWithDeps.allDependencies.map((dep: Component) => {
-          const depComponentMap = consumer.bitMap.getComponent(dep.id);
           // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
           // also the indirect ones
           // The dep.dependencies contain only an id and relativePaths and not the full object
@@ -201,7 +211,6 @@ async function writeComponentsDependenciesLinks(
           return getComponentLinks({
             consumer,
             component: dep,
-            componentMap: depComponentMap,
             dependencies,
             createNpmLinkFiles
           });
@@ -214,8 +223,8 @@ async function writeComponentsDependenciesLinks(
   const allLinks = await Promise.all(allLinksP);
 
   const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
-  const linksWithoutDuplications = uniqBy(linksWithoutNulls, 'filePath');
-  return Promise.all(linksWithoutDuplications.map(link => outputFile(link)));
+  const outputFileParams = uniqBy(linksWithoutNulls, 'filePath');
+  return outputFileParams.map(outputFileParam => LinkFile.load(outputFileParam));
 }
 
 /**
@@ -236,7 +245,7 @@ function getInternalCustomResolvedLinks(
   component: Component,
   componentMap: ComponentMap,
   createNpmLinkFiles: boolean
-): LinkFile[] {
+): LinkFileType[] {
   const componentDir = component.writtenPath || componentMap.rootDir;
   if (!componentDir) {
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
@@ -282,22 +291,25 @@ async function generatePostInstallScript(component: Component, postInstallLinks)
 /**
  * Relevant for IMPORTED and NESTED only
  */
-async function writeEntryPointsForComponent(component: Component, consumer: Consumer): Promise<any> {
+function getEntryPointsForComponent(component: Component, consumer: Consumer): LinkFile[] {
+  const files = [];
   const componentMap = consumer.bitMap.getComponent(component.id);
-  const componentRoot = component.writtenPath || componentMap.rootDir;
-  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return Promise.resolve();
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
   if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
-    const distDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
+    const distDir = component.dists.getDistDirForConsumer(consumer, componentRoot);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
-    await outputFile({ filePath: entryPointDist, content: entryPointFileContent, override: false });
+    files.push(LinkFile.load({ filePath: entryPointDist, content: entryPointFileContent }));
   }
   logger.debug(`writeEntryPointFile, on ${entryPointPath}`);
-  return outputFile({ filePath: entryPointPath, content: entryPointFileContent, override: false });
+  files.push(LinkFile.load({ filePath: entryPointPath, content: entryPointFileContent }));
+  return files;
 }
 
 /**
@@ -306,19 +318,18 @@ async function writeEntryPointsForComponent(component: Component, consumer: Cons
  * this methods write the environment dependency links no matter where the directory located on the workspace
  *
  */
-async function writeDependenciesLinksToDir(
+async function getLinksByDependencies(
   targetDir: PathOsBased,
   component: Component,
   dependencies: Dependencies,
   consumer: Consumer
-) {
+): Promise<LinkFile[]> {
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
     const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
-        component, // $FlowFixMe componentMap should be set here
-        componentMap: component.componentMap,
+        component,
         relativePath,
         dependencyId: dependency.id,
         dependencyComponent,
@@ -333,13 +344,8 @@ async function writeDependenciesLinksToDir(
 
   const flattenLinks = R.flatten(links);
   const { linksToWrite } = groupLinks(flattenLinks);
-
-  return Promise.all(linksToWrite.map(link => outputFile(link)));
+  // $FlowFixMe base is optional
+  return linksToWrite.map(link => LinkFile.load(link));
 }
 
-export {
-  writeEntryPointsForComponent,
-  writeComponentsDependenciesLinks,
-  getIndexFileName,
-  writeDependenciesLinksToDir
-};
+export { getEntryPointsForComponent, getComponentsDependenciesLinks, getIndexFileName, getLinksByDependencies };

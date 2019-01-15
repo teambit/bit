@@ -1,10 +1,11 @@
 // @flow
 import R from 'ramda';
+import path from 'path';
 import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import type { ComponentWithDependencies } from '../scope';
-import type { Consumer } from '../consumer';
+import type Consumer from '../consumer/consumer';
 
 export async function installPackages(
   consumer: Consumer,
@@ -52,18 +53,28 @@ export async function installPackages(
   }
 }
 
-export async function installNpmPackagesForComponents(
+export async function installNpmPackagesForComponents({
+  consumer,
+  basePath,
+  componentsWithDependencies,
+  verbose = false,
+  silentPackageManagerResult = false,
+  installPeerDependencies = false,
+  hasImportedComponentsAddedToRootPackageJson = true
+}: {
   consumer: Consumer,
+  basePath: ?string,
   componentsWithDependencies: ComponentWithDependencies[],
-  verbose: boolean = false,
-  silentPackageManagerResult: boolean = false,
-  installPeerDependencies: boolean = false,
-  hasImportedComponentsAddedToRootPackageJson: boolean = true
-): Promise<*> {
+  verbose: boolean,
+  silentPackageManagerResult?: boolean,
+  installPeerDependencies: boolean,
+  hasImportedComponentsAddedToRootPackageJson?: boolean
+}): Promise<*> {
   const installImportedPackagesViaRoot =
     (await npmClient.isSupportedInstallationOfSubDirFromRoot(consumer.bitJson.packageManager)) &&
     hasImportedComponentsAddedToRootPackageJson;
-
+  // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
+  // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
   const componentsWithDependenciesFlatten = R.flatten(
     componentsWithDependencies.map((oneComponentWithDependencies) => {
       const componentsToInstallPackages = installImportedPackagesViaRoot
@@ -78,7 +89,8 @@ export async function installNpmPackagesForComponents(
     })
   );
 
-  const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+  const componentDirsRelative = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+  const componentDirs = componentDirsRelative.map(dir => (basePath ? path.join(basePath, dir) : dir));
   await installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
 
   if (installImportedPackagesViaRoot) {

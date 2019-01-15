@@ -585,19 +585,6 @@ export default class Consumer {
     return { taggedComponents, autoTaggedComponents };
   }
 
-  getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
-    if (!id.scope) {
-      throw new GeneralError(
-        `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
-      );
-    }
-    // Temp fix to support old components before the migration has been running
-    bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    const allSlashes = new RegExp('/', 'g');
-    const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-    return path.join('node_modules', bindingPrefix, [id.scope, name].join(NODE_PATH_COMPONENT_SEPARATOR));
-  }
-
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     requirePath = pathNormalizeToLinux(requirePath);
     // Temp fix to support old components before the migration has been running
@@ -629,21 +616,26 @@ export default class Consumer {
     return new BitId({ scope, name });
   }
 
-  composeRelativeBitPath(bitId: BitId): string {
+  composeRelativeComponentPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
-  composeComponentPath(bitId: BitId): PathOsBased {
-    const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
+  composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
+    const addToPath = [this.getPath(), this.composeRelativeComponentPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
   }
 
-  composeDependencyPath(bitId: BitId): PathOsBased {
+  composeRelativeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
+    return path.join(dependenciesDir, bitId.toFullPath());
+  }
+
+  composeDependencyPath(bitId: BitId): PathOsBased {
+    const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
+    return path.join(this.getPath(), relativeDependencyPath);
   }
 
   static create(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {

@@ -26,17 +26,6 @@ export default class CompilerExtension extends EnvExtension {
   }
 
   /**
-   * Write the env files to the file system according to the template dir
-   * used for ejecting env for imported component
-   * @param {*} param0
-   */
-  async writeFilesToFs(baseOpts: { configDir: string, deleteOldFiles: boolean, verbose: boolean }): Promise<string> {
-    Analytics.addBreadCrumb('compiler-extension', 'writeFilesToFs');
-    const concreteOpts = { ...baseOpts, envType: this.envType };
-    return super.writeFilesToFs(concreteOpts);
-  }
-
-  /**
    * Loading from props (usually from bit.json)
    * @param {*} props
    */

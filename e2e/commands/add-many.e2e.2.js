@@ -28,7 +28,7 @@ describe('bit add many programmatically', function () {
   after(() => {
     helper.destroyEnv();
   });
-  this.timeout(20000);
+  this.timeout(0);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
