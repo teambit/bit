@@ -55,6 +55,7 @@ async function getFlattenedDependencies(
   component: Component,
   graph: Object,
   cache: Object,
+  notFoundDependencies: BitIds,
   prodGraph?: Object
 ): Promise<BitIds> {
   const id = component.id.toString();
@@ -68,10 +69,12 @@ async function getFlattenedDependencies(
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
     let versionDependencies;
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    if (notFoundDependencies.has(dependencyBitId)) return [dependencyBitId];
     try {
       versionDependencies = await scopeComponentsImporter.importDependencies(BitIds.fromArray([dependencyBitId]));
     } catch (err) {
       if (err instanceof DependencyNotFound) {
+        notFoundDependencies.push(dependencyBitId);
         return [dependencyBitId];
       }
       throw err;
@@ -302,6 +305,7 @@ export default (async function tagModelComponent({
   const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = buildComponentsGraph(componentsToTag);
 
   const dependenciesCache = {};
+  const notFoundDependencies = new BitIds();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
@@ -313,13 +317,15 @@ export default (async function tagModelComponent({
       scope,
       consumerComponent,
       graphDeps,
-      dependenciesCache
+      dependenciesCache,
+      notFoundDependencies
     );
     const flattenedDevDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,
       graphDevDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const flattenedCompilerDependencies = await getFlattenedDependencies(
@@ -327,6 +333,7 @@ export default (async function tagModelComponent({
       consumerComponent,
       graphCompilerDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const flattenedTesterDependencies = await getFlattenedDependencies(
@@ -334,6 +341,7 @@ export default (async function tagModelComponent({
       consumerComponent,
       graphTesterDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     await scope.sources.addSource({

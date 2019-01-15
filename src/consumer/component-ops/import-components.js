@@ -139,7 +139,7 @@ export default class ImportComponents {
       const envComponents = await Promise.all(envsPromises);
       return {
         dependencies: componentsAndDependencies,
-        envComponents,
+        envComponents: R.flatten(envComponents),
         importDetails
       };
     }
