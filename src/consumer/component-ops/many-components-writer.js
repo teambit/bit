@@ -308,8 +308,7 @@ export default class ManyComponentsWriter {
         componentsWithDependencies: this.componentsWithDependencies,
         verbose: this.verbose, // $FlowFixMe
         silentPackageManagerResult: this.silentPackageManagerResult,
-        installPeerDependencies: this.installPeerDependencies,
-        hasImportedComponentsAddedToRootPackageJson: this.addToRootPackageJson
+        installPeerDependencies: this.installPeerDependencies
       });
     }
   }
