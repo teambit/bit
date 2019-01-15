@@ -26,7 +26,7 @@ export type LinkFileType = {
  * @see RelativePath docs for more info
  */
 export default class DependencyFileLinkGenerator {
-  consumer: ?Consumer;
+  consumer: Consumer;
   component: Component;
   componentMap: ComponentMap;
   relativePath: RelativePath;
@@ -49,7 +49,7 @@ export default class DependencyFileLinkGenerator {
     createNpmLinkFiles,
     targetDir
   }: {
-    consumer: ?Consumer,
+    consumer: Consumer,
     component: Component,
     relativePath: RelativePath,
     dependencyId: BitId,
@@ -196,13 +196,13 @@ export default class DependencyFileLinkGenerator {
 
   getTargetDir(): PathOsBasedRelative {
     if (this.targetDir) return this.targetDir;
-    // when running from bit build, the writtenPath is not available
-    if (!this.component.writtenPath) return this.componentMap.rootDir;
-    // $FlowFixMe this.component.writtenPath must be set, see the previous line
-    if (path.isAbsolute(this.component.writtenPath)) {
+    const writtenPath = this.component.writtenPath;
+    // $FlowFixMe when running from bit build, the writtenPath is not available but it should have rootDir as it's related to the dists links
+    if (!writtenPath) return this.componentMap.rootDir;
+    if (path.isAbsolute(writtenPath)) {
       throw new Error('getTargetDir: component.writtenPath should be relative');
     }
-    return this.component.writtenPath;
+    return writtenPath;
   }
 
   getLinkPath(): PathOsBased {

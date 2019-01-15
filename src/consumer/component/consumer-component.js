@@ -17,7 +17,7 @@ import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
 import ejectConf, { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
-import type { EjectConfResult } from '../component-ops/eject-conf';
+import type { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
 import MissingFilesFromComponent from './exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './exceptions/component-not-found-in-path';
@@ -338,39 +338,17 @@ export default class Component {
     configDir: PathOsBased | ConfigDir,
     override?: boolean = true
   ): Promise<EjectConfResult> {
-    const bitMap: BitMap = consumer.bitMap;
-    this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
-    const componentMap = this.componentMap;
-    if (!componentMap) {
-      throw new GeneralError('could not find component in the .bitmap file');
-    }
-    const configDirInstance = typeof configDir === 'string' ? new ConfigDir(configDir) : configDir.clone();
-    if (configDirInstance.isWorkspaceRoot) {
-      throw new EjectToWorkspace();
-    }
-    // Nothing is detached.. no reason to eject
-    if (
-      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
-        !componentMap.detachedCompiler &&
-        !componentMap.detachedTester) ||
-      // Need to be check for false and not falsy for imported components
-      (componentMap.detachedCompiler === false && componentMap.detachedTester === false)
-    ) {
-      throw new EjectBoundToWorkspace();
-    }
-
-    const res = await ejectConf(this, consumer, configDirInstance, override);
-    if (this.componentMap) {
-      this.componentMap.setConfigDir(res.ejectedPath);
-    }
-    return res;
+    const ejectConfData = await this.getConfigToWrite(consumer, configDir, override);
+    if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
+    await ejectConfData.dataToPersist.persistAllToFS();
+    return ejectConfData;
   }
 
   async getConfigToWrite(
     consumer: Consumer,
     configDir: PathOsBased | ConfigDir,
     override?: boolean = true
-  ): Promise<EjectConfResult> {
+  ): Promise<EjectConfData> {
     const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;

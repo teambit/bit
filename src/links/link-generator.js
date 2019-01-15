@@ -80,6 +80,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
+        // $FlowFixMe
         consumer,
         component,
         relativePath,
@@ -180,6 +181,7 @@ async function getComponentsDependenciesLinks(
   bitMap = bitMap || consumer.bitMap;
   const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
     const component = componentWithDeps.component;
+    // $FlowFixMe bitMap is set at this point
     const componentMap = bitMap.getComponent(component.id);
     component.componentMap = componentMap;
     if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -379,7 +381,7 @@ async function getLinksByDependencies(
 
   const flattenLinks = R.flatten(links);
   const { linksToWrite } = groupLinks(flattenLinks);
-
+  // $FlowFixMe base is optional
   return linksToWrite.map(link => LinkFile.load(link));
 }
 

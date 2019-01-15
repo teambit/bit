@@ -170,7 +170,7 @@ export default class EnvExtension extends BaseExtension {
     configDir: string,
     envType: EnvType,
     deleteOldFiles: boolean,
-    consumer?: Consumer,
+    consumer: ?Consumer,
     verbose: boolean
   }): Promise<string> {
     const resolvedEjectedEnvsDirectory = format(configDir, { ENV_TYPE: envType });

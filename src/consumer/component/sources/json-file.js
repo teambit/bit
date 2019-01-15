@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import AbstractVinyl from './abstract-vinyl';
 
 export default class JSONFile extends AbstractVinyl {
-  override: ?boolean = false;
+  override: boolean = false;
 
   async write(): Promise<string> {
     if (!this.override && fs.existsSync(this.path)) {
@@ -21,7 +21,7 @@ export default class JSONFile extends AbstractVinyl {
   }: {
     base: string,
     path: string,
-    content: JSON,
+    content: Object,
     override?: boolean
   }): JSONFile {
     const jsonStr = JSON.stringify(content, null, 4);

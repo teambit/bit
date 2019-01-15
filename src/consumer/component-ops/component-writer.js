@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
+import type { ComponentOrigin } from '../bit-map/component-map';
 import { BitId } from '../../bit-id';
 import type Consumer from '../consumer';
 import logger from '../../logger/logger';
@@ -23,9 +24,9 @@ export type ComponentWriterProps = {
   configDir?: string,
   writePackageJson?: boolean,
   override?: boolean,
-  origin?: string,
+  origin: ComponentOrigin,
   parent?: BitId,
-  consumer?: Consumer,
+  consumer: Consumer,
   writeBitDependencies?: boolean,
   deleteBitDirContent?: boolean,
   existingComponentMap?: ComponentMap,
@@ -39,7 +40,7 @@ export default class ComponentWriter {
   configDir: ?string;
   writePackageJson: boolean;
   override: boolean;
-  origin: ?string;
+  origin: ComponentOrigin;
   parent: ?BitId;
   consumer: Consumer;
   writeBitDependencies: boolean;
@@ -148,6 +149,7 @@ export default class ComponentWriter {
       this.component.license.updatePaths({ newBase: this.writeToPath });
       // $FlowFixMe this.component.license is set
       this.component.license.override = this.override;
+      // $FlowFixMe this.component.license is set
       this.component.dataToPersist.addFile(this.component.license);
     }
   }
@@ -165,8 +167,8 @@ export default class ComponentWriter {
     return this.consumer.bitMap.addComponent({
       componentId: this.component.id,
       files: filesForBitMap,
-      mainFile: this.component.mainFile,
-      rootDir,
+      mainFile: this.component.mainFile, // $FlowFixMe
+      rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       detachedCompiler: this.component.detachedCompiler,
       detachedTester: this.component.detachedTester,

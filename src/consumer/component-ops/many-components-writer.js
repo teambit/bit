@@ -288,8 +288,8 @@ export default class ManyComponentsWriter {
   _moveComponentsIfNeeded() {
     if (this.writeToPath) {
       this.componentsWithDependencies.forEach((componentWithDeps) => {
-        // const relativeWrittenPath = this.consumer.getPathRelativeToConsumer(componentWithDeps.component.writtenPath);
         const relativeWrittenPath = componentWithDeps.component.writtenPath;
+        // $FlowFixMe relativeWrittenPath is set
         const absoluteWrittenPath = this.consumer.toAbsolutePath(relativeWrittenPath);
         // $FlowFixMe this.writeToPath is set
         const absoluteWriteToPath = path.resolve(this.writeToPath); // don't use consumer.toAbsolutePath, it might be an inner dir

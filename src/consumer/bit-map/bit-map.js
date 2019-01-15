@@ -655,15 +655,15 @@ export default class BitMap {
     files: ComponentMapFile[],
     mainFile?: PathOsBased,
     origin: ComponentOrigin,
-    parent?: BitId,
+    parent?: ?BitId,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
-    configDir?: ConfigDir,
+    configDir?: ?ConfigDir,
     trackDir?: PathOsBased,
     override?: boolean,
     detachedCompiler: ?boolean,
     detachedTester: ?boolean,
-    originallySharedDir?: PathLinux,
-    wrapDir?: PathLinux
+    originallySharedDir?: ?PathLinux,
+    wrapDir?: ?PathLinux
   }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();

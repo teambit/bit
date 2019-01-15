@@ -19,7 +19,8 @@ import JSONFile from '../component/sources/json-file';
 import RemovePath from '../component/sources/remove-path';
 import AbstractBitJson from '../bit-json/abstract-bit-json';
 
-export type EjectConfResult = { id: string, ejectedPath: string, dataToPersist?: DataToPersist };
+export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
+export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath: string, dataToPersist: DataToPersist };
 
 export default (async function ejectConf(
   component: ConsumerComponent,
@@ -47,7 +48,7 @@ export async function getEjectConfDataToPersist(
   consumer: Consumer,
   configDir: ConfigDir,
   override?: boolean = true
-): Promise<EjectConfResult> {
+): Promise<EjectConfData> {
   const consumerPath: PathOsBased = consumer.getPath();
   const bitMap: BitMap = consumer.bitMap;
   const oldConfigDir = R.path(['componentMap', 'configDir'], component);
@@ -151,7 +152,7 @@ export async function writeEnvFiles({
 }: {
   configDir: PathOsBased,
   env?: ?CompilerExtension | ?TesterExtension,
-  consumer: Consumer,
+  consumer?: ?Consumer,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
   verbose: boolean
@@ -187,7 +188,7 @@ export async function populateEnvFilesToWrite({
 }: {
   configDir: PathOsBased,
   env?: ?CompilerExtension | ?TesterExtension,
-  consumer: Consumer,
+  consumer?: ?Consumer,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
   verbose: boolean

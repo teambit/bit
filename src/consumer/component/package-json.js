@@ -24,7 +24,8 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
 
-export type PackageJsonInstance = {};
+// the instance comes from bit-javascript PackageJson class
+export type PackageJsonInstance = { write: Function };
 
 /**
  * Add components as dependencies to root package.json
@@ -172,7 +173,7 @@ async function write(
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
 ): Promise<PackageJsonInstance> {
-  const packageJson = await preparePackageJsonToWrite(
+  const packageJson: PackageJsonInstance = await preparePackageJsonToWrite(
     consumer,
     component,
     bitDir,
