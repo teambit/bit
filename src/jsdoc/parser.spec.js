@@ -354,5 +354,37 @@ describe('JSDoc Parser', () => {
           .that.is.equal('Basic accordion component');
       });
     });
+
+    describe('React Docs', () => {
+      let doclet;
+      before(() => {
+        const file = path.join(fixtures, 'react-docs.js');
+        doclet = parser(fs.readFileSync(file).toString());
+        expect(doclet).to.be.an('object');
+      });
+      it('should have properties parsed', () => {
+        expect(doclet).to.have.property('properties');
+        expect(doclet.properties)
+          .to.be.an('array')
+          .with.lengthOf(3);
+      });
+      it('should have methods parsed', () => {
+        expect(doclet).to.have.property('methods');
+        expect(doclet.methods)
+          .to.be.an('array')
+          .with.lengthOf(2);
+      });
+      it('should parse the description correctly', () => {
+        expect(doclet)
+          .to.have.property('description')
+          .that.is.equal('Styled button component for the rich and famous!');
+      });
+      it('should parse the examples correctly', () => {
+        expect(doclet)
+          .to.have.property('examples')
+          .that.is.an('array')
+          .with.lengthOf(1);
+      });
+    });
   });
 });

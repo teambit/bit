@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.33] - 2019-01-13
+
+- avoid installing node_modules in sub directories when the package manager allow it to be installed from the root dir
+- fix parsing React docs to show the `@example` tag
+- make bit version command faster
+- support both `bit -v` and `bit -V` to get bit version
+
+## [13.0.6-dev.32] - 2019-01-06
+
 - fix running `bit link` from an inner directory for author
+- fix ampersand and minus sings causing parse error in css files
 
 ## [13.0.6-dev.31] - 2018-12-16
 

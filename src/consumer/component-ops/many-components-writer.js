@@ -114,10 +114,10 @@ export default class ManyComponentsWriter {
   async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
-    await this._installPackagesIfNeeded();
     if (this.addToRootPackageJson) {
       await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
     }
+    await this._installPackagesIfNeeded();
   }
   async _writeLinks() {
     logger.debug('ManyComponentsWriter, _writeLinks');
@@ -308,7 +308,8 @@ export default class ManyComponentsWriter {
         componentsWithDependencies: this.componentsWithDependencies,
         verbose: this.verbose, // $FlowFixMe
         silentPackageManagerResult: this.silentPackageManagerResult,
-        installPeerDependencies: this.installPeerDependencies
+        installPeerDependencies: this.installPeerDependencies,
+        hasImportedComponentsAddedToRootPackageJson: this.addToRootPackageJson
       });
     }
   }
