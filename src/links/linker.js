@@ -85,6 +85,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
 
 export async function reLinkDependents(consumer: Consumer, components: Component[]): Promise<void> {
   const links = await getReLinkDependentsData(consumer, components);
+  links.addBasePath(consumer.getPath());
   await links.persistAllToFS();
 }
 
@@ -122,6 +123,7 @@ export async function linkComponents(params: {
   writePackageJson: boolean
 }) {
   const allLinks = await getAllComponentsLinks(params);
+  allLinks.addBasePath(params.consumer.getPath());
   await allLinks.persistAllToFS();
 }
 

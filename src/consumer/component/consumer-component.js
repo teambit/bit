@@ -15,7 +15,7 @@ import BitIds from '../../bit-id/bit-ids';
 import docsParser from '../../jsdoc/parser';
 import type { Doclet } from '../../jsdoc/parser';
 import SpecsResults from '../specs-results';
-import ejectConf, { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
+import { writeEnvFiles, getEjectConfDataToPersist } from '../component-ops/eject-conf';
 import injectConf from '../component-ops/inject-conf';
 import type { EjectConfResult, EjectConfData } from '../component-ops/eject-conf';
 import ComponentSpecsFailed from '../exceptions/component-specs-failed';
@@ -735,9 +735,7 @@ export default class Component {
     };
 
     if (!isolated && consumer) {
-      // logger.debug('Building the component before running the tests');
-      // await this.build({ scope, verbose, consumer });
-      // await this.dists.writeDists(this, consumer);
+      // we got here from either bit-tag or bit-test. either way we executed already the build process
       return run(this, consumer.getPath());
     }
 

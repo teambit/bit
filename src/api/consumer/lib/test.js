@@ -33,7 +33,7 @@ export default (async function test(
   }
   if (forkLevel === TESTS_FORK_LEVEL.COMPONENT) {
     const consumer: Consumer = await loadConsumer();
-    const components = await _getComponents(consumer, id, includeUnmodified, verbose);
+    const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
     const ids = components.map(component => component.id.toString());
     // $FlowFixMe
     const results = await specsRunner({ ids, forkLevel, verbose });
@@ -48,34 +48,34 @@ export const testInProcess = async (
   verbose: ?boolean
 ): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
-  const components = await _getComponents(consumer, id, includeUnmodified, verbose);
+  const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
   const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose });
   loader.stop();
   await consumer.onDestroy();
   return testsResults;
 };
 
-const _getComponents = async (
+const _getComponentsAfterBuild = async (
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
   verbose: ?boolean
 ) => {
+  let components;
   if (id) {
     const idParsed = consumer.getParsedId(id);
     const component = await consumer.loadComponent(idParsed);
-    await consumer.scope.buildMultiple([component], consumer, false, verbose);
-    return [component];
-  }
-  const componentsList = new ComponentsList(consumer);
-  loader.start(BEFORE_LOADING_COMPONENTS);
-  let components;
-  if (includeUnmodified) {
-    components = await componentsList.authoredAndImportedComponents();
+    components = [component];
   } else {
-    components = await componentsList.newModifiedAndAutoTaggedComponents();
+    const componentsList = new ComponentsList(consumer);
+    loader.start(BEFORE_LOADING_COMPONENTS);
+    if (includeUnmodified) {
+      components = await componentsList.authoredAndImportedComponents();
+    } else {
+      components = await componentsList.newModifiedAndAutoTaggedComponents();
+    }
+    loader.stop();
   }
-  loader.stop();
   await consumer.scope.buildMultiple(components, consumer, false, verbose);
   return components;
 };

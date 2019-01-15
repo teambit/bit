@@ -47,6 +47,7 @@ export default class DataToPersist {
   async persistAllToFS() {
     this._log();
     this._validate();
+    // the order is super important. first remove, then create and finally symlink
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();

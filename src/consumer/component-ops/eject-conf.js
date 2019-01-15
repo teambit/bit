@@ -72,7 +72,6 @@ export async function getEjectConfDataToPersist(
   const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir.linuxDirPath;
   // Passing here the ENV_TYPE as well to make sure it's not removed since we need it later
   const resolvedConfigDir = configDir.getResolved({ componentDir });
-  // const resolvedConfigDirFullPath = path.normalize(path.join(consumerPath, resolvedConfigDir.dirPath));
   const ejectedCompilerDirectoryP = populateEnvFilesToWrite({
     configDir: resolvedConfigDir.dirPath,
     env: component.compiler,
