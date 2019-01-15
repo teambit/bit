@@ -46,6 +46,7 @@ export default class DataToPersist {
   }
   async persistAllToFS() {
     this._log();
+    this._validate();
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
@@ -80,6 +81,25 @@ export default class DataToPersist {
     const restPaths = this.remove.filter(p => !p.removeItsDirIfEmpty);
     await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
     return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
+  }
+  _validate() {
+    // it's important to make sure that all paths are absolute before writing them to the
+    // filesystem. relative paths won't work when running bit commands from an inner dir
+    const validateAbsolutePath = (pathToValidate) => {
+      if (!path.isAbsolute(pathToValidate)) {
+        throw new Error(`DataToPersist expects ${pathToValidate} to be absolute, got relative`);
+      }
+    };
+    this.files.forEach((file) => {
+      validateAbsolutePath(file.path);
+    });
+    this.remove.forEach((removePath) => {
+      validateAbsolutePath(removePath.path);
+    });
+    this.symlinks.forEach((symlink) => {
+      validateAbsolutePath(symlink.src);
+      validateAbsolutePath(symlink.dest);
+    });
   }
   _log() {
     if (this.remove.length) {
