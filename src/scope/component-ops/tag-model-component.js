@@ -75,6 +75,7 @@ async function getFlattenedDependencies(
     } catch (err) {
       if (err instanceof DependencyNotFound) {
         notFoundDependencies.push(dependencyBitId);
+        throwWhenDepNotIncluded(component.id, dependencyBitId);
         return [dependencyBitId];
       }
       throw err;
@@ -88,6 +89,13 @@ async function getFlattenedDependencies(
   const flattenedUnique = BitIds.fromArray(R.flatten(flattened)).getUniq();
   // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
   return flattenedUnique.removeIfExistWithoutVersion(component.id);
+}
+
+function throwWhenDepNotIncluded(componentId: BitId, dependencyId: BitId) {
+  if (!dependencyId.hasScope() && !dependencyId.hasVersion()) {
+    throw new GeneralError(`fatal: "${componentId.toString()}" has a dependency "${dependencyId.toString()}".
+this dependency was not included in the tag command.`);
+  }
 }
 
 function getEdges(graph: Object, id: BitIdStr): ?(BitIdStr[]) {
