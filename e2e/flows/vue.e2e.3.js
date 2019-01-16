@@ -4,7 +4,7 @@ import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
 
-describe('support vue files', function () {
+describe.only('support vue files', function () {
   this.timeout(0);
   const helper = new Helper();
 
