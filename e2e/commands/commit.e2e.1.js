@@ -4,6 +4,7 @@ import sinon from 'sinon';
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import * as fixtures from '../fixtures/fixtures';
 
 let logSpy;
 const assertArrays = require('chai-arrays');
@@ -969,6 +970,20 @@ describe('bit tag command', function () {
       const fileContent = helper.runCmd(`bit cat-object ${fileHash} -s`);
       // notice how the \r is stripped
       expect(fileContent).to.have.string('"hello\\n world\\n"');
+    });
+  });
+  describe('tag a component without its dependencies', () => {
+    let output;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.addComponent('utils/is-type.js');
+      helper.addComponent('utils/is-string.js');
+      output = helper.runWithTryCatch('bit tag is-string');
+    });
+    it('should show a descriptive error message', () => {
+      expect(output).to.have.string('this dependency was not included in the tag command');
     });
   });
 });
