@@ -385,6 +385,12 @@ describe('JSDoc Parser', () => {
           .that.is.an('array')
           .with.lengthOf(1);
       });
+      it('should parse the properties description correctly', () => {
+        expect(doclet)
+          .to.have.property('properties')
+          .that.is.an('array');
+        expect(doclet.properties[0].description).to.equal('Button text.');
+      });
     });
   });
 });

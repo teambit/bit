@@ -118,12 +118,24 @@ function extractDataRegex(doc: string, doclets: Array<Doclet>, filePath: PathOsB
 }
 
 function formatProperties(props) {
+  const parseDescription = (description) => {
+    // an extra step is needed to parse the properties description correctly. without this step
+    // it'd show the entire tag, e.g. `@property {propTypes.string} text - Button text.`
+    // instead of just `text - Button text.`.
+    try {
+      const descriptionAST = doctrine.parse(description, { unwrap: true, recoverable: true, sloppy: true });
+      if (descriptionAST && descriptionAST.tags[0]) return descriptionAST.tags[0].description;
+    } catch (err) {
+      // failed to parse the react property, that's fine, it'll return the original description
+    }
+    return description;
+  };
   return Object.keys(props).map((name) => {
     const { type, description, required, defaultValue } = props[name];
 
     return {
       name,
-      description,
+      description: parseDescription(description),
       required,
       type: stringifyType(type),
       defaultValue
