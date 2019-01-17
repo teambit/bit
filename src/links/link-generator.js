@@ -186,30 +186,44 @@ function getComponentsDependenciesLinks(
   bitMap = bitMap || consumer.bitMap;
   const componentsDependenciesLinks = new DataToPersist();
   const linkedComponents = new BitIds();
-  componentDependencies.forEach((componentWithDeps: ComponentWithDependencies) => {
-    const component = componentWithDeps.component;
-    if (linkedComponents.has(component.id)) return;
-    // $FlowFixMe bitMap is set at this point
-    const componentMap = bitMap.getComponent(component.id);
-    component.componentMap = componentMap;
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      logger.debug(
-        `writeComponentsDependenciesLinks, ignoring a component ${component.id.toString()} as it is an author component`
-      );
-      return;
-    }
-    // it must be IMPORTED. We don't pass NESTED to this function
-    logger.debug(`writeComponentsDependenciesLinks, generating links for ${component.id.toString()}`);
-
-    const componentsLinks = getComponentLinks({
-      consumer,
-      component,
-      dependencies: componentWithDeps.allDependencies,
-      createNpmLinkFiles
+  const componentsToLink = getComponentsToLink();
+  addLinksForComponents();
+  addLinksForDependencies();
+  return componentsDependenciesLinks;
+  function getComponentsToLink(): ComponentWithDependencies[] {
+    return componentDependencies.reduce((acc, componentWithDeps) => {
+      const component = componentWithDeps.component;
+      // $FlowFixMe bitMap is set at this point
+      const componentMap = bitMap.getComponent(component.id);
+      component.componentMap = componentMap;
+      if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+        logger.debug(
+          `writeComponentsDependenciesLinks, ignoring a component ${component.id.toString()} as it is an author component`
+        );
+        return acc;
+      }
+      return acc.concat(componentWithDeps);
+    }, []);
+  }
+  function addLinksForComponents() {
+    componentsToLink.forEach((componentWithDeps: ComponentWithDependencies) => {
+      const component = componentWithDeps.component;
+      if (linkedComponents.has(component.id)) return;
+      // it must be IMPORTED. We don't pass NESTED to this function
+      logger.debug(`writeComponentsDependenciesLinks, generating links for ${component.id.toString()}`);
+      const componentsLinks = getComponentLinks({
+        consumer,
+        component,
+        dependencies: componentWithDeps.allDependencies,
+        createNpmLinkFiles
+      });
+      componentsDependenciesLinks.merge(componentsLinks);
+      linkedComponents.push(component.id);
     });
-    componentsDependenciesLinks.merge(componentsLinks);
-    linkedComponents.push(component.id);
-    if (component.dependenciesSavedAsComponents) {
+  }
+  function addLinksForDependencies() {
+    componentsToLink.forEach((componentWithDeps: ComponentWithDependencies) => {
+      if (!componentWithDeps.component.dependenciesSavedAsComponents) return;
       componentWithDeps.allDependencies.forEach((dep: Component) => {
         if (linkedComponents.has(dep.id)) return;
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
@@ -226,9 +240,8 @@ function getComponentsDependenciesLinks(
         componentsDependenciesLinks.merge(dependencyLinks);
         linkedComponents.push(dep.id);
       });
-    }
-  });
-  return componentsDependenciesLinks;
+    });
+  }
 }
 
 /**

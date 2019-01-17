@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -456,6 +457,10 @@ describe('auto tagging functionality', function () {
       helper.importComponent('bar/a');
       helper.importComponent('bar/b');
       helper.importComponent('bar/c');
+
+      // as an intermediate step, make sure the re-link done by import C, didn't break anything
+      const output = helper.runCmd('bit status');
+      expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
 
       helper.createFile('components/bar/c', 'c.js', 'console.log("I am C v2")');
     });
