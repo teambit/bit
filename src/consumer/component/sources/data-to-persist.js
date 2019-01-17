@@ -23,20 +23,20 @@ export default class DataToPersist {
     this._handleExistingFile(file);
     this.files.push(file);
   }
-  addManyFiles(files: AbstractVinyl[]) {
+  addManyFiles(files: AbstractVinyl[] = []) {
     files.forEach(file => this.addFile(file));
   }
   removePath(pathToRemove: RemovePath) {
     if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
     this.remove.push(pathToRemove);
   }
-  removeManyPaths(pathsToRemove: RemovePath[]) {
+  removeManyPaths(pathsToRemove: RemovePath[] = []) {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
   }
   addSymlink(symlink: Symlink) {
     this.symlinks.push(symlink);
   }
-  addManySymlinks(symlinks: Symlink[]) {
+  addManySymlinks(symlinks: Symlink[] = []) {
     symlinks.forEach(symlink => this.addSymlink(symlink));
   }
   merge(dataToPersist: ?DataToPersist) {
