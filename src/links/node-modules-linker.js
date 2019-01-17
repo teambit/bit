@@ -258,7 +258,12 @@ export default class NodeModuleLinker {
     const missingLinks = component.issues.missingCustomModuleResolutionLinks;
     const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
     component.copyDependenciesFromModel(dependenciesStr);
-    return getComponentsDependenciesLinks([componentWithDependencies], this.consumer, false);
+    const { componentsDependenciesLinks } = getComponentsDependenciesLinks(
+      [componentWithDependencies],
+      this.consumer,
+      false
+    );
+    return componentsDependenciesLinks;
   }
 
   /**

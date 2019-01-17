@@ -181,13 +181,14 @@ function getComponentsDependenciesLinks(
   consumer: ?Consumer,
   createNpmLinkFiles: boolean,
   bitMap?: BitMap
-): DataToPersist {
+): { componentsDependenciesLinks: DataToPersist, linkedComponents: BitIds } {
   // $FlowFixMe
   bitMap = bitMap || consumer.bitMap;
-  const dataToPersist = new DataToPersist();
-  const processedComponents = new BitIds();
+  const componentsDependenciesLinks = new DataToPersist();
+  const linkedComponents = new BitIds();
   componentDependencies.forEach((componentWithDeps: ComponentWithDependencies) => {
     const component = componentWithDeps.component;
+    if (linkedComponents.has(component.id)) return;
     // $FlowFixMe bitMap is set at this point
     const componentMap = bitMap.getComponent(component.id);
     component.componentMap = componentMap;
@@ -206,11 +207,11 @@ function getComponentsDependenciesLinks(
       dependencies: componentWithDeps.allDependencies,
       createNpmLinkFiles
     });
-    dataToPersist.merge(componentsLinks);
-    processedComponents.push(component.id);
+    componentsDependenciesLinks.merge(componentsLinks);
+    linkedComponents.push(component.id);
     if (component.dependenciesSavedAsComponents) {
       componentWithDeps.allDependencies.forEach((dep: Component) => {
-        if (processedComponents.has(dep.id)) return;
+        if (linkedComponents.has(dep.id)) return;
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
         // also the indirect ones
         // The dep.dependencies contain only an id and relativePaths and not the full object
@@ -222,12 +223,12 @@ function getComponentsDependenciesLinks(
           dependencies,
           createNpmLinkFiles
         });
-        dataToPersist.merge(dependencyLinks);
-        processedComponents.push(dep.id);
+        componentsDependenciesLinks.merge(dependencyLinks);
+        linkedComponents.push(dep.id);
       });
     }
   });
-  return dataToPersist;
+  return { componentsDependenciesLinks, linkedComponents };
 }
 
 /**
