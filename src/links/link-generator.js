@@ -1,8 +1,6 @@
 // @flow
-import fs from 'fs-extra';
 import path from 'path';
 import R from 'ramda';
-import uniqBy from 'lodash.uniqby';
 import groupBy from 'lodash.groupby';
 import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../constants';
 import { getExt } from '../utils';
@@ -196,7 +194,7 @@ function getComponentsDependenciesLinks(
       logger.debug(
         `writeComponentsDependenciesLinks, ignoring a component ${component.id.toString()} as it is an author component`
       );
-      return null;
+      return;
     }
     // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeComponentsDependenciesLinks, generating links for ${component.id.toString()}`);

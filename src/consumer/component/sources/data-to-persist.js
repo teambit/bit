@@ -20,9 +20,7 @@ export default class DataToPersist {
     if (!file.path) {
       throw new Error('failed adding a file into DataToPersist as it does not have a path property');
     }
-    if (this.files.find(existingFile => existingFile.path === file.path)) {
-      throw new Error(`DataToPersist failed to add ${file.path} as it has already such a file`);
-    }
+    this._handleExistingFile(file);
     this.files.push(file);
   }
   addManyFiles(files: AbstractVinyl[]) {
@@ -80,6 +78,13 @@ export default class DataToPersist {
   toConsole() {
     console.log(`\nfiles: ${this.files.map(f => f.path).join('\n')}`); // eslint-disable-line no-console
     console.log(`remove: ${this.remove.map(r => r.path).join('\n')}`); // eslint-disable-line no-console
+  }
+  _handleExistingFile(file: AbstractVinyl) {
+    const existingFileIndex = this.files.findIndex(existingFile => existingFile.path === file.path);
+    if (existingFileIndex < 0) return;
+    if (!file.override) throw new Error(`DataToPersist failed to add ${file.path} as it has already such a file`);
+    // delete existing file
+    this.files.splice(existingFileIndex, 1);
   }
   async _persistFilesToFS() {
     return Promise.all(this.files.map(file => file.write()));
