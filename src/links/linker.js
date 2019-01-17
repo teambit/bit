@@ -30,7 +30,7 @@ export async function getLinksInDistToWrite(
   consumer: Consumer
 ): Promise<DataToPersist> {
   const componentWithDeps: ComponentWithDependencies = await component.toComponentWithDependencies(consumer);
-  const componentsDependenciesLinks = await linkGenerator.getComponentsDependenciesLinks(
+  const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     [componentWithDeps],
     consumer,
     false
@@ -44,8 +44,9 @@ export async function getLinksInDistToWrite(
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
   const dataToPersist = new DataToPersist();
-  dataToPersist.addManyFiles([...componentsDependenciesLinks, ...entryPoints]);
+  dataToPersist.addManyFiles(entryPoints);
   dataToPersist.merge(nodeModuleLinks);
+  dataToPersist.merge(componentsDependenciesLinks);
   const packageJsonFile = await packageJson.updateAttribute(consumer, rootDir, 'main', newMainFile, false);
   if (packageJsonFile) {
     dataToPersist.addFile(
@@ -68,7 +69,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
   const componentsWithDependencies = await Promise.all(
     components.map(component => component.toComponentWithDependencies(consumer))
   );
-  const componentsDependenciesLinkFiles = await linkGenerator.getComponentsDependenciesLinks(
+  const componentsDependenciesLinkFiles = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
     false
@@ -76,7 +77,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
   const nodeModuleLinker = new NodeModuleLinker(components, consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const dataToPersist = new DataToPersist();
-  dataToPersist.addManyFiles(componentsDependenciesLinkFiles);
+  dataToPersist.merge(componentsDependenciesLinkFiles);
   dataToPersist.merge(nodeModuleLinks);
   return dataToPersist;
 }
@@ -149,7 +150,7 @@ export async function getAllComponentsLinks({
   writePackageJson: boolean
 }): Promise<DataToPersist> {
   const dataToPersist = new DataToPersist();
-  const componentsDependenciesLinkFiles = await linkGenerator.getComponentsDependenciesLinks(
+  const componentsDependenciesLinkFiles = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
     createNpmLinkFiles
@@ -175,6 +176,6 @@ export async function getAllComponentsLinks({
   const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents);
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(reLinkDependentsData);
-  dataToPersist.addManyFiles(componentsDependenciesLinkFiles);
+  dataToPersist.merge(componentsDependenciesLinkFiles);
   return dataToPersist;
 }

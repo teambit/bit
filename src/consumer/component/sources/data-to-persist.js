@@ -17,7 +17,12 @@ export default class DataToPersist {
   }
   addFile(file: AbstractVinyl) {
     if (!file) throw new Error('failed adding an empty file into DataToPersist');
-    if (!file.path) throw new Error('failed adding a file into DataToPersist as it does not have a path property');
+    if (!file.path) {
+      throw new Error('failed adding a file into DataToPersist as it does not have a path property');
+    }
+    if (this.files.find(existingFile => existingFile.path === file.path)) {
+      throw new Error(`DataToPersist failed to add ${file.path} as it has already such a file`);
+    }
     this.files.push(file);
   }
   addManyFiles(files: AbstractVinyl[]) {
@@ -38,9 +43,9 @@ export default class DataToPersist {
   }
   merge(dataToPersist: ?DataToPersist) {
     if (!dataToPersist) return;
-    this.files.push(...dataToPersist.files);
-    this.remove.push(...dataToPersist.remove);
-    this.symlinks.push(...dataToPersist.symlinks);
+    this.addManyFiles(dataToPersist.files);
+    this.removeManyPaths(dataToPersist.remove);
+    this.addManySymlinks(dataToPersist.symlinks);
   }
   async persistAllToFS() {
     this._log();
@@ -69,6 +74,13 @@ export default class DataToPersist {
       removePath.path = path.join(basePath, removePath.path);
     });
   }
+  /**
+   * helps for debugging
+   */
+  toConsole() {
+    console.log(`\nfiles: ${this.files.map(f => f.path).join('\n')}`); // eslint-disable-line no-console
+    console.log(`remove: ${this.remove.map(r => r.path).join('\n')}`); // eslint-disable-line no-console
+  }
   async _persistFilesToFS() {
     return Promise.all(this.files.map(file => file.write()));
   }
@@ -78,7 +90,9 @@ export default class DataToPersist {
   async _deletePathsFromFS() {
     const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter(p => p.removeItsDirIfEmpty).map(p => p.path);
     const restPaths = this.remove.filter(p => !p.removeItsDirIfEmpty);
-    await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
+    if (pathWithRemoveItsDirIfEmptyEnabled.length) {
+      await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
+    }
     return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
   }
   _validate() {

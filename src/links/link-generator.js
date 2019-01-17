@@ -23,6 +23,8 @@ import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
 import BitMap from '../consumer/bit-map';
+import JSONFile from '../consumer/component/sources/json-file';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
 
 type Symlink = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -37,7 +39,7 @@ function getIndexFileName(mainFile: string): string {
 /**
  * a component may have many dependencies, this function returns the links content for all of its dependencies
  */
-async function getComponentLinks({
+function getComponentLinks({
   consumer,
   component,
   dependencies,
@@ -49,7 +51,7 @@ async function getComponentLinks({
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean,
   bitMap?: ?BitMap
-}): Promise<OutputFileParams[]> {
+}): DataToPersist {
   // $FlowFixMe
   bitMap = bitMap || consumer.bitMap;
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
@@ -92,6 +94,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     });
     return R.flatten(dependencyLinks);
   });
+  const dataToPersist = new DataToPersist();
   const internalCustomResolvedLinks = component.customResolvedPaths.length
     ? getInternalCustomResolvedLinks(component, componentMap, createNpmLinkFiles)
     : [];
@@ -99,12 +102,16 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
 
   const { postInstallLinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
   if (postInstallLinks.length) {
-    await generatePostInstallScript(component, postInstallLinks);
+    const [postInstallFile, packageJsonFile] = generatePostInstallScript(component, postInstallLinks);
+    dataToPersist.addFile(postInstallFile);
+    dataToPersist.addFile(packageJsonFile);
   }
   if (symlinks.length) {
     createSymlinks(symlinks, component.id.toString());
   }
-  return linksToWrite;
+  // $FlowFixMe
+  dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
+  return dataToPersist;
 }
 
 function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
@@ -171,15 +178,16 @@ function groupLinks(
  * this step is not needed when the imported components don't have dependencies, or when the
  * dependencies were installed as npm/yarn packages.
  */
-async function getComponentsDependenciesLinks(
+function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: ?Consumer,
   createNpmLinkFiles: boolean,
   bitMap?: BitMap
-): Promise<LinkFile[]> {
+): DataToPersist {
   // $FlowFixMe
   bitMap = bitMap || consumer.bitMap;
-  const allLinksP = componentDependencies.map(async (componentWithDeps: ComponentWithDependencies) => {
+  const dataToPersist = new DataToPersist();
+  componentDependencies.forEach((componentWithDeps: ComponentWithDependencies) => {
     const component = componentWithDeps.component;
     // $FlowFixMe bitMap is set at this point
     const componentMap = bitMap.getComponent(component.id);
@@ -193,7 +201,7 @@ async function getComponentsDependenciesLinks(
     // it must be IMPORTED. We don't pass NESTED to this function
     logger.debug(`writeComponentsDependenciesLinks, generating links for ${component.id.toString()}`);
 
-    const componentsLinks = await getComponentLinks({
+    const componentsLinks = getComponentLinks({
       consumer,
       component,
       dependencies: componentWithDeps.allDependencies,
@@ -201,30 +209,24 @@ async function getComponentsDependenciesLinks(
     });
 
     if (component.dependenciesSavedAsComponents) {
-      const dependenciesLinks = await Promise.all(
-        componentWithDeps.allDependencies.map((dep: Component) => {
-          // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
-          // also the indirect ones
-          // The dep.dependencies contain only an id and relativePaths and not the full object
-          const dependencies = componentWithDeps.allDependencies;
-          dependencies.push(componentWithDeps.component);
-          return getComponentLinks({
-            consumer,
-            component: dep,
-            dependencies,
-            createNpmLinkFiles
-          });
-        })
-      );
-      return [componentsLinks, ...dependenciesLinks];
+      const dependenciesLinks = componentWithDeps.allDependencies.map((dep: Component) => {
+        // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
+        // also the indirect ones
+        // The dep.dependencies contain only an id and relativePaths and not the full object
+        const dependencies = componentWithDeps.allDependencies;
+        dependencies.push(componentWithDeps.component);
+        return getComponentLinks({
+          consumer,
+          component: dep,
+          dependencies,
+          createNpmLinkFiles
+        });
+      });
+      dependenciesLinks.forEach(dep => dataToPersist.merge(dep));
     }
-    return componentsLinks;
+    dataToPersist.merge(componentsLinks);
   });
-  const allLinks = await Promise.all(allLinksP);
-
-  const linksWithoutNulls = R.flatten(allLinks).filter(x => x);
-  const outputFileParams = uniqBy(linksWithoutNulls, 'filePath');
-  return outputFileParams.map(outputFileParam => LinkFile.load(outputFileParam));
+  return dataToPersist;
 }
 
 /**
@@ -265,7 +267,7 @@ function getInternalCustomResolvedLinks(
  * change the package.json of a component to include postInstall script.
  * @see postInstallTemplate() JSDoc to understand better why this postInstall script is needed
  */
-async function generatePostInstallScript(component: Component, postInstallLinks) {
+function generatePostInstallScript(component: Component, postInstallLinks) {
   // $FlowFixMe todo: is it possible that writtenPath is empty here?
   const componentDir: string = component.writtenPath;
   // convert from array to object for easier parsing in the postinstall script
@@ -280,12 +282,14 @@ async function generatePostInstallScript(component: Component, postInstallLinks)
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
   // $FlowFixMe packageJsonInstance must be set
   component.packageJsonInstance.scripts = { postinstall: postInstallScript };
-  const override = true;
-  await Promise.all([
-    fs.writeFile(postInstallFilePath, postInstallCode),
-    // $FlowFixMe packageJsonInstance must be set
-    component.packageJsonInstance.write({ override })
-  ]);
+  const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
+  const packageJsonFile = JSONFile.load({
+    base: componentDir,
+    path: path.join(componentDir, 'package.json'),
+    content: component.packageJsonInstance,
+    override: true
+  });
+  return [postInstallFile, packageJsonFile];
 }
 
 /**

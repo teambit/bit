@@ -128,11 +128,11 @@ export default class NodeModuleLinker {
     const missingDependenciesLinks =
       this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
     this.symlinks.push(...missingDependenciesLinks);
-    const missingCustomResolvedLinks =
-      this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks
-        ? await this._getMissingCustomResolvedLinks(component)
-        : [];
-    this.files.push(...missingCustomResolvedLinks);
+    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
+      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
+      this.files.push(...missingCustomResolvedLinks.files);
+      this.symlinks.push(...missingCustomResolvedLinks.symlinks);
+    }
   }
   /**
    * nested components are linked only during the import process. running `bit link` command won't
@@ -251,8 +251,8 @@ export default class NodeModuleLinker {
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
 
-  async _getMissingCustomResolvedLinks(component: Component): Promise<LinkFile[]> {
-    if (!component.componentFromModel) return [];
+  async _getMissingCustomResolvedLinks(component: Component): Promise<DataToPersist> {
+    if (!component.componentFromModel) return new DataToPersist();
 
     const componentWithDependencies = await component.toComponentWithDependencies(this.consumer);
     const missingLinks = component.issues.missingCustomModuleResolutionLinks;
