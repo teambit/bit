@@ -313,7 +313,7 @@ jobs:
           name: 'Run e2e tests'
           #command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
-           command: cd bit && npm run e2e-test-circle --debug
+          command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -349,18 +349,18 @@ workflows:
         build_bit_javascript:
           requires:
             - install_bit_javascript_npm_deps
-      # -
-      #   unit_test:
-      #     requires:
-      #       - build
+      -
+        unit_test:
+          requires:
+            - build
       -
         unit_test_bit_javascript:
           requires:
             - build_bit_javascript
-      # -
-      #   lint:
-      #     requires:
-      #       - install_npm_deps
+      -
+        lint:
+          requires:
+            - install_npm_deps
       -
         e2e_test:
           requires:
