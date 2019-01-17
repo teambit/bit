@@ -16,6 +16,7 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import JSONFile from '../consumer/component/sources/json-file';
 import { PACKAGE_JSON } from '../constants';
 import { BitIds } from '../bit-id';
+import ComponentsList from '../consumer/component/components-list';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -70,7 +71,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
   const componentsWithDependencies = await Promise.all(
     components.map(component => component.toComponentWithDependencies(consumer))
   );
-  const { componentsDependenciesLinks } = linkGenerator.getComponentsDependenciesLinks(
+  const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
     false
@@ -159,13 +160,13 @@ export async function getAllComponentsLinks({
   writePackageJson: boolean
 }): Promise<DataToPersist> {
   const dataToPersist = new DataToPersist();
-  const { componentsDependenciesLinks, linkedComponents } = linkGenerator.getComponentsDependenciesLinks(
+  const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     componentsWithDependencies,
     consumer,
     createNpmLinkFiles
   );
   if (writtenDependencies) {
-    const uniqDependencies = R.uniqBy(d => JSON.stringify(d.id), R.flatten(writtenDependencies));
+    const uniqDependencies = ComponentsList.getUniqueComponents(R.flatten(writtenDependencies));
     const entryPoints = uniqDependencies.map(component =>
       linkGenerator.getEntryPointsForComponent(component, consumer)
     );
@@ -183,7 +184,8 @@ export async function getAllComponentsLinks({
     : writtenComponents;
   const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, linkedComponents);
+  const allComponentsIds = BitIds.fromArray(allComponents.map(c => c.id));
+  const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, allComponentsIds);
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(reLinkDependentsData);
   dataToPersist.merge(componentsDependenciesLinks);

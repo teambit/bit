@@ -181,7 +181,7 @@ function getComponentsDependenciesLinks(
   consumer: ?Consumer,
   createNpmLinkFiles: boolean,
   bitMap?: BitMap
-): { componentsDependenciesLinks: DataToPersist, linkedComponents: BitIds } {
+): DataToPersist {
   // $FlowFixMe
   bitMap = bitMap || consumer.bitMap;
   const componentsDependenciesLinks = new DataToPersist();
@@ -228,7 +228,7 @@ function getComponentsDependenciesLinks(
       });
     }
   });
-  return { componentsDependenciesLinks, linkedComponents };
+  return componentsDependenciesLinks;
 }
 
 /**

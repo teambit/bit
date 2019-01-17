@@ -19,6 +19,7 @@ import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
+import ComponentsList from '../consumer/component/components-list';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -37,7 +38,7 @@ export default class NodeModuleLinker {
   symlinks: Symlink[] = [];
   files: AbstractVinyl[] = [];
   constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
-    this.components = components;
+    this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer; // $FlowFixMe
     this.bitMap = bitMap || consumer.bitMap;
   }
@@ -258,7 +259,7 @@ export default class NodeModuleLinker {
     const missingLinks = component.issues.missingCustomModuleResolutionLinks;
     const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
     component.copyDependenciesFromModel(dependenciesStr);
-    const { componentsDependenciesLinks } = getComponentsDependenciesLinks(
+    const componentsDependenciesLinks = getComponentsDependenciesLinks(
       [componentWithDependencies],
       this.consumer,
       false

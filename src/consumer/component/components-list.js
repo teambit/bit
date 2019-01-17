@@ -386,6 +386,10 @@ export default class ComponentsList {
     });
   }
 
+  static getUniqueComponents(components: Component[]): Component[] {
+    return R.uniqBy(component => JSON.stringify(component.id), components);
+  }
+
   listComponentsByIdsWithWildcard(idsWithWildcard: string[]): BitId[] {
     const allIds = this.bitMap.getAuthoredAndImportedBitIds();
     const matchedIds = ComponentsList.filterComponentsByWildcard(allIds, idsWithWildcard);

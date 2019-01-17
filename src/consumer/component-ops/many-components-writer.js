@@ -101,6 +101,7 @@ export default class ManyComponentsWriter {
     await this._writeComponentsAndDependencies();
     await this._installPackages();
     await this._writeLinks();
+    logger.debug('ManyComponentsWriter, Done!');
   }
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
