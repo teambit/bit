@@ -156,7 +156,8 @@ export async function getAllComponentsLinks({
     createNpmLinkFiles
   );
   if (writtenDependencies) {
-    const entryPoints = R.flatten(writtenDependencies).map(component =>
+    const uniqDependencies = R.uniqBy(d => JSON.stringify(d.id), R.flatten(writtenDependencies));
+    const entryPoints = uniqDependencies.map(component =>
       linkGenerator.getEntryPointsForComponent(component, consumer)
     );
     dataToPersist.addManyFiles(R.flatten(entryPoints));

@@ -185,6 +185,7 @@ function getComponentsDependenciesLinks(
   // $FlowFixMe
   bitMap = bitMap || consumer.bitMap;
   const dataToPersist = new DataToPersist();
+  const processedComponents = new BitIds();
   componentDependencies.forEach((componentWithDeps: ComponentWithDependencies) => {
     const component = componentWithDeps.component;
     // $FlowFixMe bitMap is set at this point
@@ -205,24 +206,26 @@ function getComponentsDependenciesLinks(
       dependencies: componentWithDeps.allDependencies,
       createNpmLinkFiles
     });
-
+    dataToPersist.merge(componentsLinks);
+    processedComponents.push(component.id);
     if (component.dependenciesSavedAsComponents) {
-      const dependenciesLinks = componentWithDeps.allDependencies.map((dep: Component) => {
+      componentWithDeps.allDependencies.forEach((dep: Component) => {
+        if (processedComponents.has(dep.id)) return;
         // We pass here the componentWithDeps.dependencies again because it contains the full dependencies objects
         // also the indirect ones
         // The dep.dependencies contain only an id and relativePaths and not the full object
         const dependencies = componentWithDeps.allDependencies;
         dependencies.push(componentWithDeps.component);
-        return getComponentLinks({
+        const dependencyLinks = getComponentLinks({
           consumer,
           component: dep,
           dependencies,
           createNpmLinkFiles
         });
+        dataToPersist.merge(dependencyLinks);
+        processedComponents.push(dep.id);
       });
-      dependenciesLinks.forEach(dep => dataToPersist.merge(dep));
     }
-    dataToPersist.merge(componentsLinks);
   });
   return dataToPersist;
 }
