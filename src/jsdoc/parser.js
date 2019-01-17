@@ -131,13 +131,13 @@ function formatProperties(props) {
     return description;
   };
   return Object.keys(props).map((name) => {
-    const { type, description, required, defaultValue } = props[name];
+    const { type, description, required, defaultValue, flowType } = props[name];
 
     return {
       name,
       description: parseDescription(description),
       required,
-      type: stringifyType(type),
+      type: stringifyType(type || flowType),
       defaultValue
     };
   });
