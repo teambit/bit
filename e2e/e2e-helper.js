@@ -450,6 +450,10 @@ export default class Helper {
     this.runCmd(`bit import ${id} --tester`);
   }
 
+  importExtension(id: string) {
+    return this.runCmd(`bit import ${id} --extension`);
+  }
+
   build(id?: string = '') {
     return this.runCmd(`bit build ${id}`);
   }

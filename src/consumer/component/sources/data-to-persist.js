@@ -17,30 +17,42 @@ export default class DataToPersist {
   }
   addFile(file: AbstractVinyl) {
     if (!file) throw new Error('failed adding an empty file into DataToPersist');
-    if (!file.path) throw new Error('failed adding a file into DataToPersist as it does not have a path property');
+    if (!file.path) {
+      throw new Error('failed adding a file into DataToPersist as it does not have a path property');
+    }
+    const existingFileIndex = this.files.findIndex(existingFile => existingFile.path === file.path);
+    if (existingFileIndex !== -1) {
+      if (file.override) {
+        // delete existing file
+        this.files.splice(existingFileIndex, 1);
+      } else {
+        // don't push this one. keep the existing file
+        return;
+      }
+    }
     this.files.push(file);
   }
-  addManyFiles(files: AbstractVinyl[]) {
+  addManyFiles(files: AbstractVinyl[] = []) {
     files.forEach(file => this.addFile(file));
   }
   removePath(pathToRemove: RemovePath) {
     if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
     this.remove.push(pathToRemove);
   }
-  removeManyPaths(pathsToRemove: RemovePath[]) {
+  removeManyPaths(pathsToRemove: RemovePath[] = []) {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
   }
   addSymlink(symlink: Symlink) {
     this.symlinks.push(symlink);
   }
-  addManySymlinks(symlinks: Symlink[]) {
+  addManySymlinks(symlinks: Symlink[] = []) {
     symlinks.forEach(symlink => this.addSymlink(symlink));
   }
   merge(dataToPersist: ?DataToPersist) {
     if (!dataToPersist) return;
-    this.files.push(...dataToPersist.files);
-    this.remove.push(...dataToPersist.remove);
-    this.symlinks.push(...dataToPersist.symlinks);
+    this.addManyFiles(dataToPersist.files);
+    this.removeManyPaths(dataToPersist.remove);
+    this.addManySymlinks(dataToPersist.symlinks);
   }
   async persistAllToFS() {
     this._log();
@@ -69,6 +81,13 @@ export default class DataToPersist {
       removePath.path = path.join(basePath, removePath.path);
     });
   }
+  /**
+   * helps for debugging
+   */
+  toConsole() {
+    console.log(`\nfiles: ${this.files.map(f => f.path).join('\n')}`); // eslint-disable-line no-console
+    console.log(`remove: ${this.remove.map(r => r.path).join('\n')}`); // eslint-disable-line no-console
+  }
   async _persistFilesToFS() {
     return Promise.all(this.files.map(file => file.write()));
   }
@@ -78,7 +97,9 @@ export default class DataToPersist {
   async _deletePathsFromFS() {
     const pathWithRemoveItsDirIfEmptyEnabled = this.remove.filter(p => p.removeItsDirIfEmpty).map(p => p.path);
     const restPaths = this.remove.filter(p => !p.removeItsDirIfEmpty);
-    await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
+    if (pathWithRemoveItsDirIfEmptyEnabled.length) {
+      await removeFilesAndEmptyDirsRecursively(pathWithRemoveItsDirIfEmptyEnabled);
+    }
     return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
   }
   _validate() {

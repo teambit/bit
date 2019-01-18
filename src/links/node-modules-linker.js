@@ -19,6 +19,7 @@ import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
+import ComponentsList from '../consumer/component/components-list';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -37,7 +38,7 @@ export default class NodeModuleLinker {
   symlinks: Symlink[] = [];
   files: AbstractVinyl[] = [];
   constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
-    this.components = components;
+    this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer; // $FlowFixMe
     this.bitMap = bitMap || consumer.bitMap;
   }
@@ -128,11 +129,11 @@ export default class NodeModuleLinker {
     const missingDependenciesLinks =
       this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
     this.symlinks.push(...missingDependenciesLinks);
-    const missingCustomResolvedLinks =
-      this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks
-        ? await this._getMissingCustomResolvedLinks(component)
-        : [];
-    this.files.push(...missingCustomResolvedLinks);
+    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
+      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
+      this.files.push(...missingCustomResolvedLinks.files);
+      this.symlinks.push(...missingCustomResolvedLinks.symlinks);
+    }
   }
   /**
    * nested components are linked only during the import process. running `bit link` command won't
@@ -251,14 +252,19 @@ export default class NodeModuleLinker {
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
 
-  async _getMissingCustomResolvedLinks(component: Component): Promise<LinkFile[]> {
-    if (!component.componentFromModel) return [];
+  async _getMissingCustomResolvedLinks(component: Component): Promise<DataToPersist> {
+    if (!component.componentFromModel) return new DataToPersist();
 
     const componentWithDependencies = await component.toComponentWithDependencies(this.consumer);
     const missingLinks = component.issues.missingCustomModuleResolutionLinks;
     const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
     component.copyDependenciesFromModel(dependenciesStr);
-    return getComponentsDependenciesLinks([componentWithDependencies], this.consumer, false);
+    const componentsDependenciesLinks = getComponentsDependenciesLinks(
+      [componentWithDependencies],
+      this.consumer,
+      false
+    );
+    return componentsDependenciesLinks;
   }
 
   /**

@@ -104,6 +104,10 @@ describe('bit build', function () {
   describe('as imported', () => {
     let localScope;
     before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
       helper.tagAllWithoutMessage();
       helper.exportAllComponents();
       helper.reInitLocalScope();

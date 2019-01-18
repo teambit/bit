@@ -144,6 +144,7 @@ export default class ComponentWriter {
       const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
       const jsonFile = JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson });
       this.component.dataToPersist.addFile(jsonFile);
+      this.component.packageJsonInstance = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
