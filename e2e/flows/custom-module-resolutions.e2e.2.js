@@ -185,6 +185,35 @@ describe('custom module resolutions', function () {
           const output = helper.runCmd('bit status');
           expect(output).to.not.have.string('modified');
         });
+        describe('npm packing the component using an extension npm-pack', () => {
+          let packDir;
+          before(() => {
+            helper.importExtension('bit.extensions/npm/pack@2.0.1');
+            const bitJson = helper.readBitJson();
+            bitJson.extensions = { 'bit.extensions/npm/pack@2.0.1': {} };
+            helper.writeBitJson(bitJson);
+            packDir = path.join(helper.localScopePath, 'pack');
+            helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+          });
+          it('should create the specified directory', () => {
+            expect(packDir).to.be.a.path();
+          });
+          it('should generate .bit.postinstall.js file', () => {
+            expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+          });
+          it('should add the postinstall script to the package.json file', () => {
+            const packageJson = helper.readPackageJson(packDir);
+            expect(packageJson).to.have.property('scripts');
+            expect(packageJson.scripts).to.have.property('postinstall');
+            expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
+          });
+          it('npm install should create the custom-resolved dir inside node_modules', () => {
+            helper.runCmd('npm i', packDir);
+            expect(path.join(packDir, 'node_modules/utils/is-string')).to.be.a.file();
+            expect(path.join(packDir, 'node_modules/utils/is-type')).to.be.a.file();
+            expect(() => helper.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
+          });
+        });
       });
     });
   });
