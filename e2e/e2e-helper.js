@@ -454,6 +454,13 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
+  importAndConfigureExtension(id: string = 'bit.extensions/npm/pack@2.0.1') {
+    this.importExtension(id);
+    const bitJson = this.readBitJson();
+    bitJson.extensions = { [id]: {} };
+    this.writeBitJson(bitJson);
+  }
+
   build(id?: string = '') {
     return this.runCmd(`bit build ${id}`);
   }

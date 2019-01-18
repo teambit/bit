@@ -25,7 +25,7 @@ import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
 
 // the instance comes from bit-javascript PackageJson class
-export type PackageJsonInstance = { write: Function };
+export type PackageJsonInstance = { write: Function, bit?: Object };
 
 /**
  * Add components as dependencies to root package.json

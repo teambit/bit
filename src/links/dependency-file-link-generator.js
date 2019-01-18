@@ -17,7 +17,8 @@ export type LinkFileType = {
   linkContent: string,
   isEs6?: boolean,
   postInstallLink?: boolean, // postInstallLink is needed when custom module resolution was used
-  symlinkTo?: ?PathOsBased // symlink (instead of link) is needed for unsupported files, such as binary files
+  symlinkTo?: ?PathOsBased, // symlink (instead of link) is needed for unsupported files, such as binary files
+  customResolveMapping?: ?{ [string]: string } // needed when custom module resolution was used
 };
 
 /**
@@ -102,13 +103,10 @@ export default class DependencyFileLinkGenerator {
     const depRootDirDist = this._getDepRootDirDist();
 
     const isCustomResolvedWithDistInside = Boolean(
-      this.relativePath.isCustomResolveUsed && depRootDirDist && this.shouldDistsBeInsideTheComponent && this.hasDist
+      depRootDirDist && this.shouldDistsBeInsideTheComponent && this.hasDist
     );
     const isCustomResolvedWithDistAndNpmLink = Boolean(
-      this.relativePath.isCustomResolveUsed &&
-        this.shouldDistsBeInsideTheComponent &&
-        this.hasDist &&
-        this.isLinkToPackage
+      this.shouldDistsBeInsideTheComponent && this.hasDist && this.isLinkToPackage
     );
 
     const relativePathInDependency =
@@ -122,7 +120,7 @@ export default class DependencyFileLinkGenerator {
       depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
     });
 
-    if (this.relativePath.isCustomResolveUsed && this.createNpmLinkFiles) {
+    if (this.createNpmLinkFiles) {
       linkFile.postInstallLink = true;
     }
     this.linkFiles.push(linkFile);
@@ -177,21 +175,37 @@ export default class DependencyFileLinkGenerator {
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = this.relativePath.importSpecifiers;
     const linkContent = this.getLinkContent(relativeFilePath);
+    const customResolveMapping = this._getCustomResolveMapping(relativeFilePath);
     logger.debug(`prepareLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = Boolean(importSpecifiers && linkPathExt === 'js');
     const symlinkTo = linkContent ? undefined : actualFilePath;
-    return { linkPath, linkContent, isEs6, symlinkTo };
+    return { linkPath, linkContent, isEs6, symlinkTo, customResolveMapping };
   }
 
   getLinkContent(relativeFilePath: PathOsBased): string {
     if (this.isLinkToPackage) {
-      // this is used to convert the component name to a valid npm package  name
-      const packagePath = `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
-        DEFAULT_REGISTRY_DOMAIN_PREFIX}/${this.dependencyId.toStringWithoutVersion().replace(/\//g, '.')}`;
-      return getLinkToPackageContent(relativeFilePath, packagePath);
+      return getLinkToPackageContent(relativeFilePath, this._getPackagePath());
     }
     return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
+  }
+
+  _getPackagePath() {
+    // convert the component name to a valid npm package name
+    return `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
+      DEFAULT_REGISTRY_DOMAIN_PREFIX}/${this.dependencyId.toStringWithoutVersion().replace(/\//g, '.')}`;
+  }
+
+  _getCustomResolveMapping(relativeFilePath: PathOsBased) {
+    if (!this.relativePath.isCustomResolveUsed) return null;
+    const getValue = () => {
+      if (this.isLinkToPackage) {
+        return this._getPackagePath();
+      }
+      return relativeFilePath;
+    };
+    // $FlowFixMe importSource is set for custom resolved
+    return { [this.relativePath.importSource]: getValue() };
   }
 
   getTargetDir(): PathOsBasedRelative {
