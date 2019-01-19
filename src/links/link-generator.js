@@ -329,10 +329,10 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
     return acc;
   }, {});
   if (R.isEmpty(resolveAliases)) return false;
-  if (!component.packageJsonInstance) throw new Error(`packageJsonInstance is missing for ${component.id.toString()}`);
+  // @TODO: load the package.json here if not found. it happens during the build process
+  if (!component.packageJsonInstance) return false;
   if (component.packageJsonInstance.bit) component.packageJsonInstance.bit.resolveAliases = resolveAliases;
   else component.packageJsonInstance.bit = { resolveAliases };
-  // $FlowFixMe
   return true;
 }
 
