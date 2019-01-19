@@ -100,16 +100,32 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
 
   const { postInstallLinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
   if (postInstallLinks.length) {
-    const [postInstallFile, packageJsonFile] = generatePostInstallScript(component, postInstallLinks);
+    const postInstallFile = generatePostInstallScript(component, postInstallLinks);
     dataToPersist.addFile(postInstallFile);
+  }
+  const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
+  if (customResolveAliasesAdded || postInstallLinks.length) {
+    const packageJsonFile = _getPackageJsonFile(component);
     dataToPersist.addFile(packageJsonFile);
   }
+
   if (symlinks.length) {
     createSymlinks(symlinks, component.id.toString());
   }
   // $FlowFixMe
   dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
   return dataToPersist;
+}
+
+function _getPackageJsonFile(component: Component) {
+  // $FlowFixMe
+  const componentDir: string = component.writtenPath;
+  return JSONFile.load({
+    base: componentDir,
+    path: path.join(componentDir, 'package.json'),
+    content: component.packageJsonInstance,
+    override: true
+  });
 }
 
 function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
@@ -274,7 +290,13 @@ function getInternalCustomResolvedLinks(
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
     const linkContent = getLinkToFileContent(destRelative);
-    return { linkPath: createNpmLinkFiles ? dest : destAbs, linkContent, postInstallLink: createNpmLinkFiles };
+    const customResolveMapping = { [customPath.importSource]: destRelative };
+    return {
+      linkPath: createNpmLinkFiles ? dest : destAbs,
+      linkContent,
+      postInstallLink: createNpmLinkFiles,
+      customResolveMapping
+    };
   });
 }
 
@@ -298,13 +320,20 @@ function generatePostInstallScript(component: Component, postInstallLinks) {
   // $FlowFixMe packageJsonInstance must be set
   component.packageJsonInstance.scripts = { postinstall: postInstallScript };
   const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
-  const packageJsonFile = JSONFile.load({
-    base: componentDir,
-    path: path.join(componentDir, 'package.json'),
-    content: component.packageJsonInstance,
-    override: true
-  });
-  return [postInstallFile, packageJsonFile];
+  return postInstallFile;
+}
+
+function addCustomResolveAliasesToPackageJson(component: Component, links: LinkFileType[]): boolean {
+  const resolveAliases = links.reduce((acc, link: LinkFileType) => {
+    if (link.customResolveMapping) Object.assign(acc, link.customResolveMapping);
+    return acc;
+  }, {});
+  if (R.isEmpty(resolveAliases)) return false;
+  // @TODO: load the package.json here if not found. it happens during the build process
+  if (!component.packageJsonInstance) return false;
+  if (component.packageJsonInstance.bit) component.packageJsonInstance.bit.resolveAliases = resolveAliases;
+  else component.packageJsonInstance.bit = { resolveAliases };
+  return true;
 }
 
 /**
