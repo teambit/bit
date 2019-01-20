@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.12] - 2019-01-20
+
+- temp rollback caporal version (to support node 6)
+
 ## [1.0.6-dev.11] - 2019-01-06
 
 - fix ampersand and minus sings causing parse error in css files

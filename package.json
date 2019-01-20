@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "1.0.6-dev.11",
+  "version": "1.0.6-dev.12",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
@@ -38,7 +38,7 @@
     "app-module-path": "^2.2.0",
     "babel-runtime": "^6.26.0",
     "camelcase": "^4.0.0",
-    "caporal": "^1.1.0",
+    "caporal": "^0.10.0",
     "chalk": "^1.1.3",
     "commander": "^2.14.1",
     "debug": "^3.1.0",
