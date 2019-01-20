@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.34] - 2019-01-20
+
+- major refactor to write components
+- rollback PR-1358 (install npm packages by npm when file:// exists)
+- improve tag performance
+- show a better error when a component was tagged without its dependencies
+- fix react docs parsing to extract the description of the properties correctly
+- supported flow types in react doc gen
+- add bit.resolveAliases to the package.json when custom-resolve-modules is used
+
 ## [13.0.6-dev.33] - 2019-01-13
 
 - avoid installing node_modules in sub directories when the package manager allow it to be installed from the root dir
