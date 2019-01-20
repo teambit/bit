@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.35] - 2019-01-20
+
+- temp rollback caporal version (to support node 6)
+
 ## [13.0.6-dev.34] - 2019-01-20
 
 - major refactor to write components
