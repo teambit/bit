@@ -1,5 +1,10 @@
 import 'regenerator-runtime/runtime';
-import { getDependencyTree, resolveNodePackage, resolveModulePath } from './dependency-builder';
+import {
+  getDependencyTree,
+  resolveNodePackage,
+  resolveModulePath,
+  getDependenciesFromSource
+} from './dependency-builder';
 import { npmLogin } from './registry';
 import PackageJson from './package-json/package-json';
 
@@ -8,5 +13,6 @@ module.exports = {
   resolveNodePackage,
   resolveModulePath,
   PackageJson,
-  npmLogin
+  npmLogin,
+  getDependenciesFromSource
 };
