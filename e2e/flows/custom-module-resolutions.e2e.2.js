@@ -241,12 +241,13 @@ describe('custom module resolutions', function () {
           });
           it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
             const packageJson = helper.readPackageJson(packDir);
+            const packageName = helper.getRequireBitPath('bar', 'foo');
             expect(packageJson.bit.resolveAliases)
               .to.have.property('utils/is-string')
-              .that.equal('../../utils/is-string.js');
+              .that.equal(`${packageName}/utils/is-string.js`);
             expect(packageJson.bit.resolveAliases)
               .to.have.property('utils/is-type')
-              .that.equal('../../utils/is-type.js');
+              .that.equal(`${packageName}/utils/is-type.js`);
           });
         });
       });

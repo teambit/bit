@@ -4,25 +4,19 @@ import path from 'path';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import type Component from '../component/consumer-component';
-import {
-  COMPONENT_ORIGINS,
-  CFG_REGISTRY_DOMAIN_PREFIX,
-  DEFAULT_REGISTRY_DOMAIN_PREFIX,
-  SUB_DIRECTORIES_GLOB_PATTERN,
-  NODE_PATH_COMPONENT_SEPARATOR,
-  PACKAGE_JSON
-} from '../../constants';
+import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN, PACKAGE_JSON } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
-import { getSync } from '../../api/consumer/lib/global-config';
 import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
-import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
+import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathLinux } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
+import npmRegistryName from '../../utils/bit/npm-registry-name';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 // the instance comes from bit-javascript PackageJson class
 export type PackageJsonInstance = { write: Function, bit?: Object };
@@ -49,7 +43,7 @@ async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
       return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
     })
   );
-  const registryPrefix = getRegistryPrefix();
+  const registryPrefix = npmRegistryName();
   await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, registryPrefix);
 }
 
@@ -65,7 +59,7 @@ async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds:
       return [id.toStringWithoutVersion(), id.version];
     })
   );
-  await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, getRegistryPrefix());
+  await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, npmRegistryName());
 }
 
 function convertToValidPathForPackageManager(pathStr: PathLinux): string {
@@ -138,8 +132,8 @@ async function changeDependenciesToRelativeSyntax(
     const devDeps = getPackages(component.devDependencies);
     const compilerDeps = getPackages(component.compilerDependencies);
     const testerDeps = getPackages(component.testerDependencies);
-    packageJson.addDependencies(getPackages(component.dependencies), getRegistryPrefix());
-    packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, getRegistryPrefix());
+    packageJson.addDependencies(getPackages(component.dependencies), npmRegistryName());
+    packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, npmRegistryName());
     // return packageJson.write({ override: true });
     return JSONFile.load({
       // $FlowFixMe
@@ -152,17 +146,6 @@ async function changeDependenciesToRelativeSyntax(
   // $FlowFixMe
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
   return packageJsonFiles.filter(file => file);
-}
-
-function getRegistryPrefix(): string {
-  return getSync(CFG_REGISTRY_DOMAIN_PREFIX) || DEFAULT_REGISTRY_DOMAIN_PREFIX;
-}
-
-function convertIdToNpmName(id: BitId, withVersion = false): string {
-  const registryPrefix = getRegistryPrefix();
-  const npmName = `${registryPrefix}/${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
-  // $FlowFixMe the id here has a version
-  return withVersion ? `${npmName}@${id.version}` : npmName;
 }
 
 async function write(
@@ -207,10 +190,10 @@ async function preparePackageJsonToWrite(
   const bitDevDependencies = await getBitDependencies(component.devDependencies);
   const bitCompilerDependencies = await getBitDependencies(component.compilerDependencies);
   const bitTesterDependencies = await getBitDependencies(component.testerDependencies);
-  const registryPrefix = getRegistryPrefix();
+  const registryPrefix = npmRegistryName();
   const name = excludeRegistryPrefix
-    ? component.id.toStringWithoutVersion().replace(/\//g, '.')
-    : convertIdToNpmName(component.id);
+    ? componentIdToPackageName(component.id, false)
+    : componentIdToPackageName(component.id);
   const getPackageJsonInstance = (dir) => {
     const packageJson = new PackageJson(dir, {
       name,
@@ -291,7 +274,7 @@ async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: 
 
 async function removeComponentsFromNodeModules(consumer: Consumer, componentIds: BitIds) {
   logger.debug(`removeComponentsFromNodeModules: ${componentIds.map(c => c.toString()).join(', ')}`);
-  const registryPrefix = getRegistryPrefix();
+  const registryPrefix = npmRegistryName();
   // paths without scope name, don't have a symlink in node-modules
   const pathsToRemove = componentIds
     .map((id) => {
@@ -318,7 +301,7 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   }
   await PackageJson.removeComponentsFromDependencies(
     rootDir,
-    getRegistryPrefix(),
+    npmRegistryName(),
     componentIds.map(id => id.toStringWithoutVersion())
   );
   await removeComponentsFromNodeModules(consumer, componentIds);

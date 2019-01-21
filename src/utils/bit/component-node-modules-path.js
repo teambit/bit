@@ -1,9 +1,9 @@
 // @flow
 import path from 'path';
-import BitId from '../bit-id/bit-id';
-import GeneralError from '../error/general-error';
-import type { PathOsBased } from './path';
-import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../constants';
+import GeneralError from '../../error/general-error';
+import type { PathOsBased } from '../path';
+import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../../constants';
+import BitId from '../../bit-id/bit-id';
 
 export default function getNodeModulesPathOfComponent(bindingPrefix: ?string, id: BitId): PathOsBased {
   if (!id.scope) {

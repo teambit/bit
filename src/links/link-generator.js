@@ -23,6 +23,7 @@ import LinkFile from './link-file';
 import BitMap from '../consumer/bit-map';
 import JSONFile from '../consumer/component/sources/json-file';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
+import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 
 type Symlink = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
@@ -261,6 +262,9 @@ function getComponentsDependenciesLinks(
 }
 
 /**
+ * important: do not attempt to move this function into DependencyFileLinkGenerator as it should be
+ * running even when a component does not have any dependencies.
+ *
  * when using custom module resolutions, and inside a component there is a file that requires
  * another file by custom-resolved syntax, we must generate links on the imported component inside
  * node_modules.
@@ -290,7 +294,8 @@ function getInternalCustomResolvedLinks(
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
     const linkContent = getLinkToFileContent(destRelative);
-    const customResolveMapping = { [customPath.importSource]: destRelative };
+    const packageName = componentIdToPackageName(component.id);
+    const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
     return {
       linkPath: createNpmLinkFiles ? dest : destAbs,
       linkContent,

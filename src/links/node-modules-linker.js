@@ -12,7 +12,7 @@ import type Consumer from '../consumer/consumer';
 import { getIndexFileName, getComponentsDependenciesLinks } from './link-generator';
 import { getLinkToFileContent } from './link-content';
 import type { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
-import getNodeModulesPathOfComponent from '../utils/component-node-modules-path';
+import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import type { Dependency } from '../consumer/component/dependencies';
 import BitMap from '../consumer/bit-map/bit-map';
 import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';

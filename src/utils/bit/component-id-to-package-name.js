@@ -1,0 +1,14 @@
+// @flow
+import npmRegistryName from './npm-registry-name';
+import { NODE_PATH_COMPONENT_SEPARATOR } from '../../constants';
+import BitId from '../../bit-id/bit-id';
+
+/**
+ * convert a component name to a valid npm package name
+ */
+export default function componentIdToPackageName(id: BitId, withPrefix?: boolean = true): string {
+  const nameWithoutPrefix = `${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
+  if (!withPrefix) return nameWithoutPrefix;
+  const registryPrefix = npmRegistryName();
+  return `${registryPrefix}/${nameWithoutPrefix}`;
+}
