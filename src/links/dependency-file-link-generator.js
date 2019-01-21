@@ -1,8 +1,7 @@
 // @flow
 import path from 'path';
 import { getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
-import { getSync } from '../api/consumer/lib/global-config';
-import { DEFAULT_INDEX_NAME, CFG_REGISTRY_DOMAIN_PREFIX, DEFAULT_REGISTRY_DOMAIN_PREFIX } from '../constants';
+import { DEFAULT_INDEX_NAME } from '../constants';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
 import { BitId } from '../bit-id';
 import type Consumer from '../consumer/consumer';
@@ -11,6 +10,7 @@ import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
+import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 
 export type LinkFileType = {
   linkPath: string,
@@ -190,10 +190,9 @@ export default class DependencyFileLinkGenerator {
     return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
   }
 
-  _getPackagePath() {
+  _getPackagePath(): string {
     // convert the component name to a valid npm package name
-    return `${getSync(CFG_REGISTRY_DOMAIN_PREFIX) ||
-      DEFAULT_REGISTRY_DOMAIN_PREFIX}/${this.dependencyId.toStringWithoutVersion().replace(/\//g, '.')}`;
+    return componentIdToPackageName(this.dependencyId);
   }
 
   _getCustomResolveMapping(relativeFilePath: PathOsBased) {

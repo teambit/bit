@@ -10,7 +10,7 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
-import getNodeModulesPathOfComponent from '../../utils/component-node-modules-path';
+import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite } from '../component/package-json';
 import JSONFile from '../component/sources/json-file';
