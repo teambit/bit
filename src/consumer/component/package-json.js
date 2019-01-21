@@ -192,7 +192,7 @@ async function preparePackageJsonToWrite(
   const bitTesterDependencies = await getBitDependencies(component.testerDependencies);
   const registryPrefix = npmRegistryName();
   const name = excludeRegistryPrefix
-    ? componentIdToPackageName(component.id, { withPrefix: false })
+    ? componentIdToPackageName(component.id, false)
     : componentIdToPackageName(component.id);
   const getPackageJsonInstance = (dir) => {
     const packageJson = new PackageJson(dir, {
