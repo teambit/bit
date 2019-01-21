@@ -1,6 +1,6 @@
 // @flow
 import chalk from 'chalk';
-import prog from 'caporal';
+import program from 'commander';
 import pkg from '../../package.json';
 import loader from './loader';
 import commands from './commands/command-list';
@@ -33,13 +33,12 @@ function logAndExit(str) {
 }
 
 function start() {
-  const program = prog.version(pkg.version).description('bit driver for javascript');
-
+  program.version(pkg.version).description('bit driver for javascript');
   commands.forEach((c) => {
-    const currentCommand = program.command(c.name, c.description);
+    const currentCommand = program.command(c.name).description(c.description);
 
-    if (c.arguments && Array.isArray(c.arguments)) {
-      c.arguments.forEach(arg => currentCommand.argument(arg.name, arg.description));
+    if (c.options && Array.isArray(c.options)) {
+      c.options.forEach(option => currentCommand.option(`${option.alias} ${option.name}`, option.description));
     }
 
     currentCommand.action((args, options) => {
