@@ -58,7 +58,13 @@ export default class Environment {
     if (typeof bitId === 'string') {
       bitId = await BitId.parse(bitId, true);
     }
-    const componentsWithDependencies = await this.consumer.importComponents(BitIds.fromArray([bitId]));
+    const saveDependenciesAsComponents =
+      opts.saveDependenciesAsComponents === undefined ? true : opts.saveDependenciesAsComponents;
+    const componentsWithDependencies = await this.consumer.importComponents(
+      BitIds.fromArray([bitId]),
+      false,
+      saveDependenciesAsComponents
+    );
     const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
