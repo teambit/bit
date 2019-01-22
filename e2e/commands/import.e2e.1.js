@@ -625,47 +625,65 @@ describe('bit import', function () {
     });
   });
 
-  describe("component which require another component's internal (not main) file", () => {
-    describe('javascript without compiler', () => {
+  describe('component that requires another component internal (not main) file', () => {
+    let scopeBeforeExport;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+
+      helper.createFile('src/utils', 'is-type.js', '');
+      helper.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
+      helper.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+        i: 'utils/is-type',
+        m: 'src/utils/is-type.js'
+      });
+
+      const isStringFixture =
+        "const isType = require('./is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('src/utils', 'is-string.js', '');
+      helper.createFile('src/utils', 'is-string-internal.js', isStringFixture);
+      helper.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
+        i: 'utils/is-string',
+        m: 'src/utils/is-string.js'
+      });
+
+      const barFooFixture =
+        "const isString = require('../utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('src/bar', 'foo.js', barFooFixture);
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+      helper.commitAllComponents();
+      scopeBeforeExport = helper.cloneLocalScope();
+    });
+    describe('when dependencies are saved as components', () => {
       before(() => {
-        helper.setNewLocalAndRemoteScopes();
-
-        helper.createFile('utils', 'is-type-internal.js', fixtures.isType);
-        const isTypeMainFixture = "module.exports = require('./is-type-internal');";
-        helper.createFile('utils', 'is-type-main.js', isTypeMainFixture);
-        helper.addComponent('utils/is-type-internal.js utils/is-type-main.js', {
-          m: 'utils/is-type-main.js',
-          i: 'utils/is-type'
-        });
-
-        const isStringInternalFixture =
-          "const isType = require('./is-type-internal.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-        helper.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
-        const isStringMainFixture =
-          "const isType = require('./is-type-main.js'); module.exports = require('./is-string-internal');";
-        helper.createFile('utils', 'is-string-main.js', isStringMainFixture);
-        helper.addComponent('utils/is-string-internal.js utils/is-string-main.js', {
-          m: 'utils/is-string-main.js',
-          i: 'utils/is-string'
-        });
-
-        helper.commitAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        helper.importComponent('utils/is-string');
+        helper.importComponent('bar/foo');
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
       });
       it('should be able to require the main and the internal files and print the results', () => {
-        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      describe('npm packing the component using an extension npm-pack', () => {
+        let packDir;
+        before(() => {
+          helper.importAndConfigureExtension();
+          packDir = path.join(helper.localScopePath, 'pack');
+          helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+
+          helper.importComponent('bar/foo');
+          fs.outputFileSync(path.join(helper.localScopePath, 'pack/app.js'), fixtures.appPrintBarFooAuthor);
+        });
+        it('should create the specified directory', () => {
+          expect(packDir).to.be.a.path();
+        });
+        it('should be able to require the main and the internal files and print the results', () => {
+          const result = helper.runCmd('node pack/app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
       });
     });
-
-    describe.skip('javascript with compiler', () => {});
-
-    describe.skip('typescript without compiler', () => {});
   });
 
   describe("component's with bit.json and packages dependencies", () => {
