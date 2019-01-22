@@ -76,7 +76,6 @@ export default class Environment {
       writeConfig: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
-      // saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       installPeerDependencies: !!opts.installPackages, // convert to boolean

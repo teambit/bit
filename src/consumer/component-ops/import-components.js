@@ -59,12 +59,12 @@ export default class ImportComponents {
 
   importComponents(): ImportResult {
     loader.start(BEFORE_IMPORT_ACTION);
-    // this.options.saveDependenciesAsComponents = this.consumer.bitJson.saveDependenciesAsComponents;
-    // if (!this.options.writePackageJson) {
-    //   // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
-    //   this.options.installNpmPackages = false;
-    //   this.options.saveDependenciesAsComponents = true;
-    // }
+    this.options.saveDependenciesAsComponents = this.consumer.bitJson.saveDependenciesAsComponents;
+    if (!this.options.writePackageJson) {
+      // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
+      this.options.installNpmPackages = false;
+      this.options.saveDependenciesAsComponents = true;
+    }
     if (!this.options.ids || R.isEmpty(this.options.ids)) {
       return this.importAccordingToBitJsonAndBitMap();
     }
@@ -72,13 +72,15 @@ export default class ImportComponents {
   }
 
   async importSpecificComponents(): ImportResult {
-    // $FlowFixMe - we make sure the ids are populated before.
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
-    // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponents(bitIds, true);
+    const componentsWithDependencies = await this.consumer.importComponents(
+      bitIds,
+      true,
+      this.options.saveDependenciesAsComponents
+    );
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependencies, importDetails };
@@ -347,7 +349,6 @@ export default class ImportComponents {
       configDir: this.options.configDir,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
-      // saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
       override: this.options.override
     });
