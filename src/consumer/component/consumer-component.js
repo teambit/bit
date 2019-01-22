@@ -149,7 +149,7 @@ export default class Component {
   origin: ComponentOrigin;
   detachedCompiler: ?boolean;
   detachedTester: ?boolean;
-  customResolvedPaths: customResolvedPath[];
+  customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   _driver: Driver;
   _isModified: boolean;
   packageJsonInstance: PackageJsonInstance;

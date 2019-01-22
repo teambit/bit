@@ -341,16 +341,38 @@ export default class Consumer {
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
       ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
       : await scopeComponentsImporter.importMany(ids);
+    const shouldDependenciesSavedAsComponents = await this._shouldDependenciesSavedAsComponents(versionDependenciesArr);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
-      this.scope.objects
+      this.scope.objects,
+      shouldDependenciesSavedAsComponents
     );
-    return Promise.all(
+    const componentWithDependencies = await Promise.all(
       versionDependenciesArr.map(versionDependencies =>
         versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
       )
     );
+    componentWithDependencies.forEach((componentWithDeps) => {
+      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
+        c.id.isEqual(componentWithDeps.component.id)
+      );
+      if (!shouldSavedAsComponents) { throw new Error(`saveDependenciesAsComponents is missing for ${componentWithDeps.component.id.toString()}`); }
+      componentWithDeps.component.dependenciesSavedAsComponents = shouldSavedAsComponents.saveDependenciesAsComponents;
+    });
+    return componentWithDependencies;
+  }
+
+  async _shouldDependenciesSavedAsComponents(versionDependencies: VersionDependencies[]) {
+    const saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
+    const remotes: Remotes = await getScopeRemotes(this.scope);
+    const shouldDependenciesSavedAsComponents = versionDependencies.map((versionDep: VersionDependencies) => {
+      return {
+        id: versionDep.component.id, // if it doesn't go to the hub, it can't import dependencies as packages
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(versionDep.component.id.scope)
+      };
+    });
+    return shouldDependenciesSavedAsComponents;
   }
 
   /**

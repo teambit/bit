@@ -44,8 +44,10 @@ export default class Dependency {
     };
     const depManipulateDir = manipulateDirData.find(manipulateDirItem => manipulateDirItem.id.isEqual(dependency.id));
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
-      if (relativePath.isCustomResolveUsed) return; // don't strip sharedDir when custom resolved is used
-      relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
+      if (!relativePath.isCustomResolveUsed) {
+        relativePath.sourceRelativePath = pathWithoutSharedDir(relativePath.sourceRelativePath, originallySharedDir);
+      }
+      // if (relativePath.isCustomResolveUsed) return; // don't strip sharedDir when custom resolved is used
       if (depManipulateDir) {
         relativePath.destinationRelativePath = pathWithoutSharedDir(
           relativePath.destinationRelativePath,
@@ -63,8 +65,10 @@ export default class Dependency {
 
     const depManipulateDir = manipulateDirData.find(manipulateDirItem => manipulateDirItem.id.isEqual(dependency.id));
     dependency.relativePaths.forEach((relativePath: RelativePath) => {
-      if (relativePath.isCustomResolveUsed) return; // don't add wrapDir when custom resolved is used
-      relativePath.sourceRelativePath = pathWithWrapDir(relativePath.sourceRelativePath, componentWrapDir);
+      // if (relativePath.isCustomResolveUsed) return; // don't add wrapDir when custom resolved is used
+      if (!relativePath.isCustomResolveUsed) {
+        relativePath.sourceRelativePath = pathWithWrapDir(relativePath.sourceRelativePath, componentWrapDir);
+      }
       if (depManipulateDir && depManipulateDir.wrapDir) {
         relativePath.destinationRelativePath = pathWithWrapDir(
           relativePath.destinationRelativePath,

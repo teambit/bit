@@ -59,12 +59,12 @@ export default class ImportComponents {
 
   importComponents(): ImportResult {
     loader.start(BEFORE_IMPORT_ACTION);
-    this.options.saveDependenciesAsComponents = this.consumer.bitJson.saveDependenciesAsComponents;
-    if (!this.options.writePackageJson) {
-      // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
-      this.options.installNpmPackages = false;
-      this.options.saveDependenciesAsComponents = true;
-    }
+    // this.options.saveDependenciesAsComponents = this.consumer.bitJson.saveDependenciesAsComponents;
+    // if (!this.options.writePackageJson) {
+    //   // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
+    //   this.options.installNpmPackages = false;
+    //   this.options.saveDependenciesAsComponents = true;
+    // }
     if (!this.options.ids || R.isEmpty(this.options.ids)) {
       return this.importAccordingToBitJsonAndBitMap();
     }
@@ -347,7 +347,7 @@ export default class ImportComponents {
       configDir: this.options.configDir,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
-      saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
+      // saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
       override: this.options.override
     });
