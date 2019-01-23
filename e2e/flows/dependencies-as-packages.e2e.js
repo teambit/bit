@@ -3,12 +3,18 @@ import fs from 'fs-extra';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import NpmCiRegistry from '../npm-ci-registry';
 
 describe('installing dependencies as packages (not as components)', function () {
   this.timeout(0);
   const helper = new Helper();
+  const npmCiRegistry = new NpmCiRegistry(helper);
   after(() => {
     helper.destroyEnv();
+    npmCiRegistry.destroy();
+  });
+  before(async () => {
+    await npmCiRegistry.init();
   });
   describe('components with nested dependencies', () => {
     before(() => {

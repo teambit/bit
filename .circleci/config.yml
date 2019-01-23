@@ -245,19 +245,6 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
-  verdaccio:
-    docker:
-      -
-        image: 'circleci/node:6.14.3'
-    working_directory: ~/.
-    steps:
-      -
-        run:
-          name: 'install Verdaccio globally'
-          command: 'sudo npm install --global verdaccio'
-      -
-        attach_workspace:
-          at: ./
   e2e_test:
     docker:
       -
@@ -274,8 +261,6 @@ jobs:
           at: ./
       -
         run: 'sudo npm i -g yarn'
-      -
-        run: 'sudo npm i --g verdaccio'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
