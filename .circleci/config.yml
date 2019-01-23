@@ -269,7 +269,7 @@ jobs:
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
-          name: 'install expect lib'
+          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
           command: 'sudo apt-get install expect'
       -
         run:

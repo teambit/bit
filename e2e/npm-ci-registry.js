@@ -6,6 +6,9 @@ import tar from 'tar';
 import { ChildProcess } from 'child_process';
 import Helper from './e2e-helper';
 
+const isAppVeyor = process.env.APPVEYOR === 'True';
+export const supportNpmCiRegistryTesting = !isAppVeyor;
+
 export default class NpmCiRegistry {
   registryServer: ChildProcess;
   helper: Helper;
