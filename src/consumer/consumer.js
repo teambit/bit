@@ -15,7 +15,6 @@ import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
-  BITS_DIRNAME,
   BIT_HIDDEN_DIR,
   COMPONENT_ORIGINS,
   BIT_VERSION,
@@ -64,7 +63,7 @@ import ComponentLoader from './component/component-loader';
 import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
-import { Remotes } from '../remotes';
+import type { Remotes } from '../remotes';
 
 type ConsumerProps = {
   projectPath: string,

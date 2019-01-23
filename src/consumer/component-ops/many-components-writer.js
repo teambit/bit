@@ -8,7 +8,6 @@ import { installNpmPackagesForComponents } from '../../npm-client/install-packag
 import * as packageJson from '../component/package-json';
 import type { ComponentWithDependencies } from '../../scope';
 import type Component from '../component/consumer-component';
-import type { Remotes } from '../../remotes';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import type Consumer from '../consumer';
@@ -17,7 +16,6 @@ import GeneralError from '../../error/general-error';
 import type ComponentMap from '../bit-map/component-map';
 import ComponentWriter from './component-writer';
 import type { ComponentWriterProps } from './component-writer';
-import { getScopeRemotes } from '../../scope/scope-remotes';
 import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 

@@ -626,7 +626,7 @@ describe('bit import', function () {
   });
 
   describe('component that requires another component internal (not main) file', () => {
-    let scopeBeforeExport;
+    // let scopeBeforeExport;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
 
@@ -651,7 +651,7 @@ describe('bit import', function () {
       helper.createFile('src/bar', 'foo.js', barFooFixture);
       helper.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
       helper.commitAllComponents();
-      scopeBeforeExport = helper.cloneLocalScope();
+      // scopeBeforeExport = helper.cloneLocalScope();
     });
     describe('when dependencies are saved as components', () => {
       before(() => {
