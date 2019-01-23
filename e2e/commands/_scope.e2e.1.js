@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe.only('bit _scope command', function () {
+describe('bit _scope command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
