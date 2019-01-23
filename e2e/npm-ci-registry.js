@@ -10,6 +10,21 @@ import Helper from './e2e-helper';
 const isAppVeyor = process.env.APPVEYOR === 'True';
 export const supportNpmCiRegistryTesting = !isAppVeyor;
 
+/**
+ * some features, such as installing dependencies as packages, require npm registry to be set.
+ * in order to not rely on bitsrc site for the npm registry, this class provides a way to use npm
+ * registry by running a Verdaccio server (https://www.npmjs.com/package/verdaccio).
+ * the default scope registry is `@bit`. we don't touch this scope.
+ * instead, we create a new one `@ci` for all components published using this class.
+ *
+ * when using bitsrc, on export, a component is automatically pushed to @bit registry.
+ * here, we don't have this privilege. instead, the following needs to be done to save the
+ * component in the registry.
+ * 1) import the component.
+ * 2) run npm-pack to create a .tgz file.
+ * 3) extract the file and run `npm publish` in that directory.
+ * You can use the method `publishComponent()` in this class to automate the process
+ */
 export default class NpmCiRegistry {
   registryServer: ChildProcess;
   helper: Helper;
