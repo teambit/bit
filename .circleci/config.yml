@@ -255,7 +255,9 @@ jobs:
         run:
           name: 'install Verdaccio globally'
           command: 'npm install --global verdaccio'
-
+      -
+        attach_workspace:
+          at: ./
   e2e_test:
     docker:
       -
@@ -344,6 +346,7 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_bitsrc_registry
+      - verdaccio
       -
         install_npm_deps:
           requires:
