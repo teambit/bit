@@ -269,6 +269,10 @@ jobs:
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
+          name: 'install expect lib'
+          command: 'sudo apt-get install expect'
+      -
+        run:
           name: 'create global npm directory (to avoid using sudo for npm link)'
           command: 'mkdir ~/.npm-global'
       -
