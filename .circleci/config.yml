@@ -267,13 +267,15 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-    # parallelism: 4
+    parallelism: 1
     steps:
       -
         attach_workspace:
           at: ./
       -
         run: 'sudo npm i -g yarn'
+      -
+        run: 'sudo npm i --g verdaccio'
       -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
@@ -346,7 +348,6 @@ workflows:
       - checkout_code
       - set_ssh_key
       - set_bitsrc_registry
-      - verdaccio
       -
         install_npm_deps:
           requires:
@@ -382,4 +383,3 @@ workflows:
             - build_bit_javascript
             - set_ssh_key
             - set_bitsrc_registry
-            - verdaccio
