@@ -5,7 +5,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import NpmCiRegistry from '../npm-ci-registry';
 
-describe('installing dependencies as packages (not as components)', function () {
+describe.only('installing dependencies as packages (not as components)', function () {
   this.timeout(0);
   const helper = new Helper();
   const npmCiRegistry = new NpmCiRegistry(helper);
@@ -43,7 +43,7 @@ describe('installing dependencies as packages (not as components)', function () 
       helper.runCmd('npm init -y');
       helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
     });
-    it.only('should be able to require its direct dependency and print results from all dependencies', () => {
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
