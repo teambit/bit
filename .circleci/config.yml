@@ -48,9 +48,9 @@ jobs:
     working_directory: ~/bit
     steps:
       # prod registry
-      # - 
+      # -
         # run: npm config set @bit:registry https://node.bitsrc.io
-      # - 
+      # -
         # run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
       -
@@ -245,6 +245,17 @@ jobs:
       -
         store_artifacts:
           path: bit/junit
+  verdaccio:
+    docker:
+      -
+        image: 'circleci/node:6.14.3'
+    working_directory: ~/.
+    steps:
+      -
+        run:
+          name: 'install Verdaccio globally'
+          command: 'npm install --global verdaccio'
+
   e2e_test:
     docker:
       -
@@ -254,7 +265,7 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-    parallelism: 4
+    # parallelism: 4
     steps:
       -
         attach_workspace:
@@ -368,3 +379,4 @@ workflows:
             - build_bit_javascript
             - set_ssh_key
             - set_bitsrc_registry
+            - verdaccio
