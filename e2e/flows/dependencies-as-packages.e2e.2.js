@@ -35,9 +35,9 @@ describe('installing dependencies as packages (not as components)', function () 
       helper.importComponent('bar/foo');
 
       helper.importNpmPackExtension();
-      helper.publishComponentToCIRegistry('utils/is-type');
-      helper.publishComponentToCIRegistry('utils/is-string');
-      helper.publishComponentToCIRegistry('bar/foo');
+      npmCiRegistry.publishComponent('utils/is-type');
+      npmCiRegistry.publishComponent('utils/is-string');
+      npmCiRegistry.publishComponent('bar/foo');
 
       helper.reInitLocalScope();
       helper.runCmd('npm init -y');

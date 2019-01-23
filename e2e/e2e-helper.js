@@ -8,7 +8,6 @@ import path from 'path';
 import childProcess from 'child_process';
 import fs from 'fs-extra';
 import json from 'comment-json';
-import tar from 'tar';
 import { expect } from 'chai';
 import set from 'lodash.set';
 import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
@@ -472,25 +471,6 @@ export default class Helper {
       'excludeRegistryPrefix: false'
     );
     fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
-  }
-
-  publishComponentToCIRegistry(componentName: string, componentVersion?: string = '0.0.1') {
-    const packDir = path.join(this.localScopePath, 'pack');
-    this.runCmd(`bit npm-pack ${this.remoteScope}/${componentName} -o -k -d ${packDir}`);
-    const npmComponentName = componentName.replace(/\//g, '.');
-    const tarballFileName = `ci-${this.remoteScope}.${npmComponentName}-${componentVersion}.tgz`;
-    const tarballFilePath = path.join(packDir, tarballFileName);
-    tar.x({ file: tarballFilePath, C: packDir, sync: true });
-    const extractedDir = path.join(packDir, 'package');
-    fs.removeSync(path.join(extractedDir, 'components')); // not sure why this dir is created
-    this._validateRegistryScope(extractedDir);
-    this.runCmd('npm publish', extractedDir);
-  }
-
-  _validateRegistryScope(dir: string) {
-    const packageJson = this.readPackageJson(dir);
-    expect(packageJson.name.startsWith('@ci')).to.be.true;
-    this.runCmd('npm config set @ci:registry http://localhost:4873'); // makes sure to not publish to a real npm registry
   }
 
   build(id?: string = '') {

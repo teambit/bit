@@ -1,6 +1,8 @@
 // @flow
 import fs from 'fs-extra';
+import path from 'path';
 import execa from 'execa';
+import tar from 'tar';
 import { ChildProcess } from 'child_process';
 import Helper from './e2e-helper';
 
@@ -11,15 +13,16 @@ export default class NpmCiRegistry {
     this.helper = helper;
   }
   async init() {
-    await this.establishRegistry();
+    await this._establishRegistry();
     this._addDefaultUser();
+    this._registerToCiScope();
   }
 
   destroy() {
     this.registryServer.kill();
   }
 
-  establishRegistry(): Promise<void> {
+  _establishRegistry(): Promise<void> {
     return new Promise((resolve) => {
       this.registryServer = execa('verdaccio', { detached: true });
       this.registryServer.stdout.on('data', (data) => {
@@ -54,5 +57,29 @@ EOD`;
     }
     if (this.helper.debugMode) console.log('default user has been added successfully to Verdaccio');
     fs.removeSync('adduser.sh');
+  }
+
+  _registerToCiScope() {
+    this.helper.runCmd('npm config set @ci:registry http://localhost:4873');
+  }
+
+  publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
+    const packDir = path.join(this.helper.localScopePath, 'pack');
+    this.helper.runCmd(`bit npm-pack ${this.helper.remoteScope}/${componentName} -o -k -d ${packDir}`);
+    const npmComponentName = componentName.replace(/\//g, '.');
+    const tarballFileName = `ci-${this.helper.remoteScope}.${npmComponentName}-${componentVersion}.tgz`;
+    const tarballFilePath = path.join(packDir, tarballFileName);
+    tar.x({ file: tarballFilePath, C: packDir, sync: true });
+    const extractedDir = path.join(packDir, 'package');
+    fs.removeSync(path.join(extractedDir, 'components')); // not sure why this dir is created
+    this._validateRegistryScope(extractedDir);
+    this.helper.runCmd('npm publish', extractedDir);
+  }
+
+  _validateRegistryScope(dir: string) {
+    const packageJson = this.helper.readPackageJson(dir);
+    if (!packageJson.name.startsWith('@ci')) {
+      throw new Error('expect package.json name to start with "@ci" in order to publish it to @ci scope');
+    }
   }
 }
