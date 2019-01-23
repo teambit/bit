@@ -1,4 +1,5 @@
 // @flow
+/* eslint no-console: 0 */
 import fs from 'fs-extra';
 import path from 'path';
 import execa from 'execa';
@@ -81,6 +82,7 @@ EOD`;
 
   _validateRegistryScope(dir: string) {
     const packageJson = this.helper.readPackageJson(dir);
+    // $FlowFixMe name must be set
     if (!packageJson.name.startsWith('@ci')) {
       throw new Error('expect package.json name to start with "@ci" in order to publish it to @ci scope');
     }
