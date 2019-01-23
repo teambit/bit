@@ -254,7 +254,7 @@ jobs:
       -
         run:
           name: 'install Verdaccio globally'
-          command: 'npm install --global verdaccio'
+          command: 'sudo npm install --global verdaccio'
       -
         attach_workspace:
           at: ./
