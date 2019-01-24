@@ -173,7 +173,7 @@ describe('bit move command', function () {
       expect(filesBeforeMove).to.deep.equal(filesAfterMove);
     });
   });
-  describe('move a file after commit (as author)', () => {
+  describe('move a file after tag (as author)', () => {
     const oldPath = path.join('bar', 'foo.js');
     const newPath = path.join('utils', 'foo.js');
     before(() => {

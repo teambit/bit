@@ -32,7 +32,7 @@ describe('bit untag command', function () {
     describe('with multiple versions when specifying the version', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.commitComponent('bar/foo', undefined, '-f');
+        helper.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
 
@@ -60,7 +60,7 @@ describe('bit untag command', function () {
     describe('with multiple versions when specifying the version as part of the id', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.commitComponent('bar/foo', undefined, '-f');
+        helper.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
         const componentStatus = helper.runCmd('bit status');
@@ -80,7 +80,7 @@ describe('bit untag command', function () {
       describe('and all versions are local', () => {
         before(() => {
           helper.getClonedLocalScope(localScope);
-          helper.commitComponent('bar/foo', undefined, '-f');
+          helper.tagComponent('bar/foo', undefined, '-f');
           const catComponent = helper.catComponent('bar/foo');
           expect(catComponent.versions).to.have.property('0.0.2');
 
@@ -98,7 +98,7 @@ describe('bit untag command', function () {
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportAllComponents();
-        helper.commitComponent('bar/foo', undefined, '-f');
+        helper.tagComponent('bar/foo', undefined, '-f');
         const catComponent = helper.catComponent('bar/foo');
         expect(catComponent.versions).to.have.property('0.0.2');
       });
@@ -264,7 +264,7 @@ describe('bit untag command', function () {
         let untagOutput;
         before(() => {
           helper.getClonedLocalScope(localScope);
-          helper.commitComponent('utils/is-string', undefined, '-f');
+          helper.tagComponent('utils/is-string', undefined, '-f');
           try {
             helper.runCmd('bit untag 0.0.1 --all');
           } catch (err) {
@@ -304,7 +304,7 @@ describe('bit untag command', function () {
         helper.addRemoteScope();
         helper.importComponent('utils/is-string');
         scopeAfterImport = helper.cloneLocalScope();
-        helper.commitComponent('utils/is-string', undefined, '-f');
+        helper.tagComponent('utils/is-string', undefined, '-f');
       });
       describe('untag using the id without scope-name', () => {
         let output;

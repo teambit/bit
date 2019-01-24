@@ -568,8 +568,8 @@ export default class Consumer {
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
-    logger.debug(`committing the following components: ${ids.toString()}`);
-    Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
+    logger.debug(`tagging the following components: ${ids.toString()}`);
+    Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
     // if there is at least one we won't commit anything

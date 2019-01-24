@@ -370,7 +370,7 @@ export default class Helper {
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
-  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
+  tagComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
   }
   tagWithoutMessage(id: string, version: string = '', options: string = '') {
@@ -602,7 +602,7 @@ export default class Helper {
   }
 
   commitComponentBarFoo() {
-    return this.commitComponent('bar/foo');
+    return this.tagComponent('bar/foo');
   }
 
   createCompiler() {

@@ -115,7 +115,7 @@ describe('bit status command', function () {
       expect(output.includes('new components')).to.be.false;
     });
   });
-  describe('when a component is modified after commit', () => {
+  describe('when a component is modified after tag', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -284,7 +284,7 @@ describe('bit status command', function () {
       helper.importComponent('comp/comp');
       const filefixture = '//some change to file';
       helper.createFile('components/comp/comp', 'file.js', filefixture);
-      helper.commitComponent('comp/comp');
+      helper.tagComponent('comp/comp');
       const filefixture2 = '//some other change to file';
       helper.createFile('components/comp/comp', 'file.js', filefixture2);
       output = helper.runCmd('bit status');
@@ -333,7 +333,7 @@ describe('bit status command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
       helper.exportComponent('utils/is-type');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -358,7 +358,7 @@ describe('bit status command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
 
       const isStringInternalFixture =
         "import isType from './is-type'; module.exports = function isString() { return isType() +  ' and got is-string'; };";
@@ -369,7 +369,7 @@ describe('bit status command', function () {
         m: 'utils/is-string.js',
         i: 'utils/is-string'
       });
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

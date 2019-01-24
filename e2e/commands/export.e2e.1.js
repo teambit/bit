@@ -105,13 +105,13 @@ describe('bit export command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
       helper.exportComponent('utils/is-type');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
       helper.exportComponent('utils/is-string');
     });
     it('should export them successfully', () => {
@@ -128,12 +128,12 @@ describe('bit export command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -159,7 +159,7 @@ describe('bit export command', function () {
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo();
       helper.exportComponent('bar/foo');
-      helper.commitComponent('bar/foo -f');
+      helper.tagComponent('bar/foo -f');
       helper.exportComponent('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -212,7 +212,7 @@ describe('bit export command', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
-      helper.commitComponent(`${helper.remoteScope}/utils/is-string -f`);
+      helper.tagComponent(`${helper.remoteScope}/utils/is-string -f`);
       helper.exportComponent(`${helper.remoteScope}/utils/is-string`);
     });
 
@@ -229,12 +229,12 @@ describe('bit export command', function () {
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
       const isStringFixture =
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
       helper.exportComponent('utils/is-type');
 
       const { scopeName, scopePath } = helper.getNewBareScope();
@@ -258,14 +258,14 @@ describe('bit export command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.commitComponentBarFoo(); // v1
-      helper.commitComponent('bar/foo -f'); // v2
+      helper.tagComponent('bar/foo -f'); // v2
       helper.exportComponent('bar/foo');
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
 
-      helper.commitComponent('bar/foo -f'); // v3
+      helper.tagComponent('bar/foo -f'); // v3
       helper.exportComponent(`${helper.remoteScope}/bar/foo`);
     });
     it('should export it with no errors', () => {
@@ -371,7 +371,7 @@ describe('bit export command', function () {
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-type');
-      helper.commitComponent('utils/is-type', undefined, '0.0.2 --force');
+      helper.tagComponent('utils/is-type', undefined, '0.0.2 --force');
       helper.exportAllComponents();
       const isType = helper.getRequireBitPath('utils', 'is-type');
       helper.createFile(
@@ -382,7 +382,7 @@ describe('bit export command', function () {
       helper.addComponent('utils/is-string2.js', { i: 'utils/is-string2' });
       const bitShowOutput = helper.showComponentParsed('utils/is-string2');
       expect(bitShowOutput.dependencies[0].id).to.have.string('utils/is-type@0.0.2');
-      helper.commitComponent('utils/is-string2');
+      helper.tagComponent('utils/is-string2');
       helper.exportAllComponents();
 
       // step3: export is-string2 to remote2, so then it will have only the 0.0.2 version of the is-type dependency

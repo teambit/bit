@@ -194,7 +194,7 @@ describe('bit remove command', function () {
       // export a new simple component
       helper.createFile('global', 'simple.js');
       helper.addComponent('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('global/simple');
+      helper.tagComponent('global/simple');
       helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
@@ -234,7 +234,7 @@ describe('bit remove command', function () {
       // export a new simple component
       helper.createFile('global', 'simple.js');
       helper.addComponent('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('global/simple');
+      helper.tagComponent('global/simple');
       helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();

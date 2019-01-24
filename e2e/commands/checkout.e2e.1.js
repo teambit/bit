@@ -92,14 +92,14 @@ describe('bit checkout command', function () {
               helper.createComponentBarFoo('console.log("modified components");');
             });
             it('should throw an error NewerVersionFound', () => {
-              const commitFunc = () => helper.commitComponent('bar/foo');
+              const commitFunc = () => helper.tagComponent('bar/foo');
               const error = new NewerVersionFound([
                 { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' }
               ]);
               helper.expectToThrow(commitFunc, error);
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
-              const commitOutput = helper.commitComponent('bar/foo', 'msg', '--ignore-newest-version');
+              const commitOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
               expect(commitOutput).to.have.string('1 components tagged');
             });
           });
@@ -580,7 +580,7 @@ describe('bit checkout command', function () {
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
         helper.commitComponentBarFoo();
-        helper.commitComponent('bar/foo --force');
+        helper.tagComponent('bar/foo --force');
         helper.createComponentBarFoo(barFooV2);
         output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
@@ -642,7 +642,7 @@ describe('bit checkout command', function () {
 
       helper.commitAllComponents('v1', '-s 0.0.1');
       helper.commitAllComponents('v2', '-s 0.0.2');
-      helper.commitComponent('bar/foo2', 'v3', '0.0.3 -f');
+      helper.tagComponent('bar/foo2', 'v3', '0.0.3 -f');
       localScope = helper.cloneLocalScope();
     });
     describe('checkout all to a specific version', () => {

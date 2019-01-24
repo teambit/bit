@@ -31,7 +31,7 @@ describe('bit show command', function () {
 
       helper.createFile('utils', 'is-string.js');
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
 
       helper.addNpmPackage();
 
@@ -40,7 +40,7 @@ describe('bit show command', function () {
       helper.createFile('src', 'mainFile.js', fooBarFixture);
       helper.createFile('src/utils', 'utilFile.js');
       helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
-      helper.commitComponent('comp/comp');
+      helper.tagComponent('comp/comp');
     });
 
     describe('show deprecated local component', () => {
@@ -364,7 +364,7 @@ function add(a, b) {
 
       helper.createFile('utils', 'is-string.js');
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
     });
 
     it('Should not show component if bit.json is corrupted', () => {
@@ -442,7 +442,7 @@ function add(a, b) {
       helper.createFile('bar', 'index.js');
       helper.addComponent('bar/', { i: 'bar/foo' });
     });
-    describe('when adding a component without committing it', () => {
+    describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
         expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
@@ -498,8 +498,8 @@ function add(a, b) {
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponentUtilsIsType();
-        helper.commitComponent('utils/is-type');
-        helper.commitComponent('utils/is-type', 'msg', '-f');
+        helper.tagComponent('utils/is-type');
+        helper.tagComponent('utils/is-type', 'msg', '-f');
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -525,7 +525,7 @@ function add(a, b) {
       });
       describe('when the dependency was updated locally but not exported yet', () => {
         before(() => {
-          helper.commitComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
+          helper.tagComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
         });
         it('should indicate that the current version is larger than the remote version', () => {
           const output = helper.showComponent('utils/is-string --outdated --json');
@@ -554,8 +554,8 @@ function add(a, b) {
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponentUtilsIsType();
-        helper.commitComponent('utils/is-type');
-        helper.commitComponent('utils/is-type', 'msg', '-f');
+        helper.tagComponent('utils/is-type');
+        helper.tagComponent('utils/is-type', 'msg', '-f');
         helper.exportAllComponents();
 
         helper.reInitLocalScope();

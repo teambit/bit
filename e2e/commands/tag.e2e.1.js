@@ -30,7 +30,7 @@ describe('bit tag command', function () {
 
       helper.corruptBitJson();
       try {
-        helper.commitComponent('bar/foo2');
+        helper.tagComponent('bar/foo2');
       } catch (err) {
         output = err.toString();
       }
@@ -48,7 +48,7 @@ describe('bit tag command', function () {
       bitMap['bar/foo'].mainFile = '';
       helper.writeBitMap(bitMap);
       try {
-        helper.commitComponent('bar/foo');
+        helper.tagComponent('bar/foo');
       } catch (err) {
         output = err.toString();
       }
@@ -81,7 +81,7 @@ describe('bit tag command', function () {
       it('Should set the version to default version in tag new component', () => {
         helper.createFile('components', 'default.js');
         helper.addComponent('components/default.js', { i: 'components/default' });
-        output = helper.commitComponent('components/default');
+        output = helper.tagComponent('components/default');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
         expect(listOutput).to.deep.include({
           id: 'components/default',
@@ -90,29 +90,29 @@ describe('bit tag command', function () {
         });
       });
       it('Should increment the patch version when no version type specified', () => {
-        output = helper.commitComponent('components/default', 'message', '-f');
+        output = helper.tagComponent('components/default', 'message', '-f');
         expect(output).to.have.string('components/default@0.0.2');
       });
       it('Should increment the patch version when --patch flag specified', () => {
-        output = helper.commitComponent('components/patch', 'message', '-f --patch');
+        output = helper.tagComponent('components/patch', 'message', '-f --patch');
         expect(output).to.have.string('components/patch@0.0.2');
       });
       it('Should increment the minor version when --minor flag specified', () => {
-        output = helper.commitComponent('components/minor', 'message', '-f --minor');
+        output = helper.tagComponent('components/minor', 'message', '-f --minor');
         expect(output).to.have.string('components/minor@0.1.0');
       });
       it('Should increment the major version when --major flag specified', () => {
-        output = helper.commitComponent('components/major', 'message', '-f --major');
+        output = helper.tagComponent('components/major', 'message', '-f --major');
         expect(output).to.have.string('components/major@1.0.0');
       });
       it('Should set the exact version when specified on new component', () => {
         helper.createFile('components', 'exact-new.js');
         helper.addComponent('components/exact-new.js', { i: 'components/exact-new' });
-        output = helper.commitComponent('components/exact-new 5.12.10', 'message', '-f');
+        output = helper.tagComponent('components/exact-new 5.12.10', 'message', '-f');
         expect(output).to.have.string('components/exact-new@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
-        output = helper.commitComponent('components/exact 3.3.3', 'message', '-f');
+        output = helper.tagComponent('components/exact 3.3.3', 'message', '-f');
         expect(output).to.have.string('components/exact@3.3.3');
       });
       it('Should increment patch version of dependent when using other flag on tag dependency', () => {
@@ -121,7 +121,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'dependent.js', fixture);
         helper.addComponent('components/dependency.js components/dependent.js', { n: 'components' });
         helper.commitAllComponents();
-        helper.commitComponent('components/dependency', 'message', '-f --major');
+        helper.tagComponent('components/dependency', 'message', '-f --major');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
         expect(listOutput).to.deep.include({
           id: 'components/dependency',
@@ -135,8 +135,8 @@ describe('bit tag command', function () {
         });
       });
       it('Should throw error when the version already exists', () => {
-        helper.commitComponent('components/exact 5.5.5', 'message', '-f');
-        const tagWithExisting = () => helper.commitComponent('components/exact 5.5.5', 'message', '-f');
+        helper.tagComponent('components/exact 5.5.5', 'message', '-f');
+        const tagWithExisting = () => helper.tagComponent('components/exact 5.5.5', 'message', '-f');
         expect(tagWithExisting).to.throw(
           `Command failed: ${
             helper.bitBin
@@ -147,11 +147,11 @@ describe('bit tag command', function () {
         helper.reInitLocalScope();
         helper.createFile('components', 'major.js');
         helper.addComponent('components/major.js', { i: 'components/major' });
-        const majorOutput = helper.commitComponent('components/major', 'message', '--major');
+        const majorOutput = helper.tagComponent('components/major', 'message', '--major');
         helper.reInitLocalScope();
         helper.createFile('components', 'major.js');
         helper.addComponent('components/major.js', { i: 'components/major' });
-        const nonFlagedCommit = helper.commitComponent('components/major');
+        const nonFlagedCommit = helper.tagComponent('components/major');
         expect(majorOutput).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
         expect(nonFlagedCommit).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
       });
@@ -237,7 +237,7 @@ describe('bit tag command', function () {
       it('Should throw error when the version already exists in one of the components', () => {
         helper.createFile('components', 'a.js', 'console.log("v4.3.4")');
         helper.createFile('components', 'b.js', 'console.log("v4.3.4")');
-        helper.commitComponent('components/a 4.3.4', 'message');
+        helper.tagComponent('components/a 4.3.4', 'message');
         helper.createFile('components', 'a.js', 'console.log("v4.3.4 ssss")');
         const tagWithExisting = () => helper.commitAllComponents('message', '', '4.3.4');
         expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
@@ -397,7 +397,7 @@ describe('bit tag command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('', 'file.js');
       helper.addComponent('file.js', { i: 'comp/comp' });
-      output = helper.commitComponent('comp/comp');
+      output = helper.tagComponent('comp/comp');
     });
 
     it('should successfully tag if there is no special error', () => {
@@ -423,7 +423,7 @@ describe('bit tag command', function () {
         // Commit, export and import the component to make sure we have root folder defined in the bit.map
         helper.reInitRemoteScope();
         helper.addRemoteScope();
-        helper.commitComponent('comp/comp');
+        helper.tagComponent('comp/comp');
         helper.exportComponent('comp/comp');
         helper.reInitLocalScope('comp/comp');
         helper.addRemoteScope();
@@ -435,7 +435,7 @@ describe('bit tag command', function () {
       it('should take the package version from package.json in the component dir if exists', () => {
         const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'lodash.isstring': '^2.0.1' } });
         helper.createFile(componentRootDir, 'package.json', componentPackageJsonFixture);
-        helper.commitComponent('comp/comp');
+        helper.tagComponent('comp/comp');
         output = helper.showComponentWithOptions('comp/comp', { j: '' });
         packageDependencies = JSON.parse(output).packageDependencies;
         depObject = { 'lodash.isstring': '^2.0.1' };
@@ -443,7 +443,7 @@ describe('bit tag command', function () {
       });
       it('should take the package version from package.json in the consumer root dir if the package.json not exists in component dir', () => {
         helper.deleteFile(path.join(componentRootDir, 'package.json'));
-        helper.commitComponent('comp/comp');
+        helper.tagComponent('comp/comp');
         output = helper.showComponentWithOptions('comp/comp', { j: '' });
         packageDependencies = JSON.parse(output).packageDependencies;
         depObject = { 'lodash.isstring': '3.0.0' };
@@ -452,7 +452,7 @@ describe('bit tag command', function () {
       it('should take the package version from package.json in the consumer root dir if the package.json in component root dir does not contain the package definition', () => {
         const componentPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
         helper.createFile(componentRootDir, 'package.json', componentPackageJsonFixture);
-        helper.commitComponent('comp/comp');
+        helper.tagComponent('comp/comp');
         output = helper.showComponentWithOptions('comp/comp', { j: '' });
         packageDependencies = JSON.parse(output).packageDependencies;
         depObject = { 'lodash.isstring': '3.0.0' };
@@ -461,7 +461,7 @@ describe('bit tag command', function () {
       it('should take the package version from the package package.json if the package.json not exists in component / root dir', () => {
         helper.deleteFile(path.join(componentRootDir, 'package.json'));
         helper.deleteFile('package.json');
-        helper.commitComponent('comp/comp');
+        helper.tagComponent('comp/comp');
         output = helper.showComponentWithOptions('comp/comp', { j: '' });
         packageDependencies = JSON.parse(output).packageDependencies;
         depObject = { 'lodash.isstring': '3.0.0' };
@@ -471,7 +471,7 @@ describe('bit tag command', function () {
         helper.deleteFile(path.join(componentRootDir, 'package.json'));
         const rootPackageJsonFixture = JSON.stringify({ dependencies: { 'fake.package': '^1.0.1' } });
         helper.createFile('', 'package.json', rootPackageJsonFixture);
-        helper.commitComponent('comp/comp');
+        helper.tagComponent('comp/comp');
         output = helper.showComponentWithOptions('comp/comp', { j: '' });
         packageDependencies = JSON.parse(output).packageDependencies;
         depObject = { 'lodash.isstring': '3.0.0' };
@@ -520,7 +520,7 @@ describe('bit tag command', function () {
         helper.importComponent('comp/comp2');
         const fileFixture = `var a = require('@bit/${helper.remoteScope}.comp.comp2/file2')`;
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
-        output = helper.commitComponent('comp/comp');
+        output = helper.tagComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
       it('should tag the component', () => {
@@ -553,7 +553,7 @@ describe('bit tag command', function () {
         helper.importComponent('comp/comp2');
         const fileFixture = `var a = require('${helper.getRequireBitPath('comp', 'comp2')}')`;
         helper.createFile('components/comp/comp', 'file.js', fileFixture);
-        output = helper.commitComponent('comp/comp');
+        output = helper.tagComponent('comp/comp');
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
       it('should tag the component', () => {
@@ -683,7 +683,7 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitOne = () => helper.commitComponent('comp/a', 'commit-msg', '--ignore-unresolved-dependencies');
+        const commitOne = () => helper.tagComponent('comp/a', 'commit-msg', '--ignore-unresolved-dependencies');
         try {
           output = commitOne();
         } catch (err) {
@@ -906,7 +906,7 @@ describe('bit tag command', function () {
       describe('when one of the components has the same version', () => {
         let output;
         before(() => {
-          helper.commitComponent('bar/foo 0.0.8', 'msg', '--force');
+          helper.tagComponent('bar/foo 0.0.8', 'msg', '--force');
           try {
             helper.commitAllComponents('msg', '--scope 0.0.8');
           } catch (err) {
@@ -924,7 +924,7 @@ describe('bit tag command', function () {
       describe('when one of the components has a greater version', () => {
         let output;
         before(() => {
-          helper.commitComponent('bar/foo 0.1.5', 'msg', '--force');
+          helper.tagComponent('bar/foo 0.1.5', 'msg', '--force');
           output = helper.tagScope('0.1.4', 'msg');
         });
         it('should display a warning', () => {

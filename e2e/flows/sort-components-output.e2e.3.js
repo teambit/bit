@@ -49,7 +49,7 @@ describe('basic flow with dependencies', function () {
       const output = helper.runCmd('bit list');
       expect(output).to.have.string('found 0 components');
     });
-    describe('after committing the components', () => {
+    describe('after tagging the components', () => {
       before(() => {
         helper.commitAllComponents();
       });

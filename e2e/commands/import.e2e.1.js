@@ -30,7 +30,7 @@ describe('bit import', function () {
       // export a new simple component
       helper.createFile('global', 'simple.js');
       helper.addComponent('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('global/simple');
+      helper.tagComponent('global/simple');
       helper.exportComponent('global/simple');
 
       helper.reInitLocalScope();
@@ -75,7 +75,7 @@ describe('bit import', function () {
         helper.runCmd(
           'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
         );
-        helper.commitComponent('imprel/imprel');
+        helper.tagComponent('imprel/imprel');
         helper.exportComponent('imprel/imprel');
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -306,7 +306,7 @@ describe('bit import', function () {
         helper.runCmd(
           'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/impreldist'
         );
-        helper.commitComponent('imprel/impreldist');
+        helper.tagComponent('imprel/impreldist');
         helper.exportComponent('imprel/impreldist');
       });
       describe('when a project is cloned somewhere else as AUTHORED', () => {
@@ -445,7 +445,7 @@ describe('bit import', function () {
       helper.runCmd(
         'bit add src/imprel.js src/utils/myUtil.js -t src/imprel.spec.js -m src/imprel.js -i imprel/imprel'
       );
-      helper.commitComponent('imprel/imprel');
+      helper.tagComponent('imprel/imprel');
       helper.deprecateComponent('imprel/imprel');
       helper.exportComponent('imprel/imprel');
       helper.reInitLocalScope();
@@ -634,7 +634,7 @@ describe('bit import', function () {
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponent('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('global/simple');
+      helper.tagComponent('global/simple');
       helper.exportComponent('global/simple');
 
       helper.addNpmPackage('lodash.isstring', '4.0.0');
@@ -947,7 +947,7 @@ describe('bit import', function () {
         helper.addRemoteScope();
         helper.importComponent('utils/is-type');
         helper.importComponent('utils/is-string');
-        helper.commitComponent('utils/is-type --force'); // it tags also is-string to 0.0.2
+        helper.tagComponent('utils/is-type --force'); // it tags also is-string to 0.0.2
         output = helper.importComponent('bar/foo'); // import bar/foo@0.0.1 with is-string@0.0.1 and is-type@0.0.1 as dependencies
       });
       it('should not show an error saying failed finding in the dependencies array', () => {
@@ -1482,10 +1482,10 @@ console.log(barFoo.default());`;
       const isTypeFixtureV1 = "module.exports = function isType() { return 'got is-type v1'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV1);
       helper.addComponentUtilsIsType();
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
       const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -1813,7 +1813,7 @@ console.log(barFoo.default());`;
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
       const componentPath = path.join('components', 'utils', 'is-string');
       helper.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
       // export to scope B
       const { scopeName, scopePath } = helper.getNewBareScope();
       scopeB = scopeName;
@@ -1857,7 +1857,7 @@ console.log(barFoo.default());`;
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string v2'; };";
       const componentPath = path.join('components', 'utils', 'is-string');
       helper.createFile(componentPath, 'is-string.js', isStringModifiedFixture);
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
       helper.exportComponent(`${helper.remoteScope}/utils/is-string@0.0.2`);
 
       fs.removeSync(helper.localScopePath);
@@ -2105,7 +2105,7 @@ console.log(barFoo.default());`;
       const simpleFixture = 'import a from "lodash.isboolean"; ';
       helper.createFile('global', 'simple.js', simpleFixture);
       helper.addComponent('global/simple.js', { i: 'global/simple' });
-      helper.commitComponent('global/simple');
+      helper.tagComponent('global/simple');
       helper.exportComponent('global/simple');
       helper.addNpmPackage('lodash.isstring', '4.0.0');
       const withDepsFixture = 'import a from "./global/simple.js"; import c from "lodash.isstring"';

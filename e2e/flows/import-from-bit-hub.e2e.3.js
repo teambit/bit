@@ -240,7 +240,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${scopeId}/utils/is-string`);
-      helper.commitComponent('utils/is-string', 'v2', '-f');
+      helper.tagComponent('utils/is-string', 'v2', '-f');
       helper.exportAllComponents(scopeId);
 
       helper.reInitLocalScope();

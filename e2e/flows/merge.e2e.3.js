@@ -18,7 +18,7 @@ describe('merge functionality', function () {
 
       helper.createFile('bar2', 'foo2.js');
       helper.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
-      helper.commitComponent('bar2/foo2');
+      helper.tagComponent('bar2/foo2');
 
       helper.exportAllComponents();
 
@@ -27,13 +27,13 @@ describe('merge functionality', function () {
       helper.importComponent('bar/foo');
       helper.importComponent('bar2/foo2');
       const scopeWithV1 = helper.cloneLocalScope();
-      helper.commitComponent('bar/foo', 'msg', '-f');
-      helper.commitComponent('bar2/foo2', 'msg', '-f');
+      helper.tagComponent('bar/foo', 'msg', '-f');
+      helper.tagComponent('bar2/foo2', 'msg', '-f');
       helper.exportAllComponents(); // v2 is exported
 
       helper.getClonedLocalScope(scopeWithV1);
-      helper.commitComponent('bar/foo', 'msg', '-f');
-      helper.commitComponent('bar2/foo2', 'msg', '-f');
+      helper.tagComponent('bar/foo', 'msg', '-f');
+      helper.tagComponent('bar2/foo2', 'msg', '-f');
     });
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
       const exportFunc = () => helper.exportAllComponents(); // v2 is exported again

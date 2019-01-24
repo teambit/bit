@@ -22,14 +22,14 @@ describe('delete files from a component', function () {
       expect(statusOutput.includes('bar/foo')).to.be.true;
     });
   });
-  describe('when committing it', () => {
+  describe('when tagging it', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
       helper.deleteFile('bar/baz.js');
-      helper.commitComponent('bar/foo');
+      helper.tagComponent('bar/foo');
     });
     it('should delete the file from bit.map', () => {
       const bitMap = helper.readBitMap();
@@ -42,7 +42,7 @@ describe('delete files from a component', function () {
       helper.createComponentBarFoo();
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.commitComponent('bar/foo');
+      helper.tagComponent('bar/foo');
       helper.deleteFile('bar/baz.js');
     });
     it('bit status should show the component as modified', () => {
@@ -51,15 +51,15 @@ describe('delete files from a component', function () {
       expect(output.includes('bar/foo')).to.be.true;
     });
   });
-  describe('adding a file, committing it, deleting it and then committing again', () => {
+  describe('adding a file, tagging it, deleting it and then tagging again', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.commitComponent('bar/foo');
+      helper.tagComponent('bar/foo');
       helper.deleteFile('bar/baz.js');
-      helper.commitComponent('bar/foo');
+      helper.tagComponent('bar/foo');
     });
     it('should delete the file from bit.map', () => {
       const bitMap = helper.readBitMap();

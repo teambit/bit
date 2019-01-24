@@ -14,7 +14,7 @@ describe('auto tagging functionality', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('after committing dependencies only (not dependents)', () => {
+  describe('after tagging dependencies only (not dependents)', () => {
     /**
      * Directory structure of the author
      * bar/foo.js
@@ -24,7 +24,7 @@ describe('auto tagging functionality', function () {
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
      *
-     * We change the dependency is-type implementation. When committing this change, we expect all dependent of is-type
+     * We change the dependency is-type implementation. When tagging this change, we expect all dependent of is-type
      * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
      * In this case, is-string should be updated to include is-type with v2.
      */
@@ -42,7 +42,7 @@ describe('auto tagging functionality', function () {
         helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
-        const commitOutput = helper.commitComponent('utils/is-type');
+        const commitOutput = helper.tagComponent('utils/is-type');
         expect(commitOutput).to.have.string('auto-tagged components');
         expect(commitOutput).to.have.string('utils/is-string');
         // notice how is-string is not manually committed again!
@@ -64,7 +64,7 @@ describe('auto tagging functionality', function () {
           helper.getClonedLocalScope(clonedScope);
           const isTypeFixtureV3 = "module.exports = function isType() { return 'got is-type v3'; };";
           helper.createFile('utils', 'is-type.js', isTypeFixtureV3); // modify is-type
-          const commitOutput = helper.commitComponent('utils/is-type');
+          const commitOutput = helper.tagComponent('utils/is-type');
           expect(commitOutput).to.have.string('auto-tagged components');
           expect(commitOutput).to.have.string('utils/is-string');
         });
@@ -94,7 +94,7 @@ describe('auto tagging functionality', function () {
         helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
-        commitOutput = helper.commitComponent('utils/is-type');
+        commitOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto-tag the dependents', () => {
         expect(commitOutput).to.not.have.string('no auto-tag pending components');
@@ -154,7 +154,7 @@ describe('auto tagging functionality', function () {
       describe('tagging without --verbose flag', () => {
         before(() => {
           try {
-            commitOutput = helper.commitComponent('utils/is-type');
+            commitOutput = helper.tagComponent('utils/is-type');
           } catch (err) {
             commitOutput = err.toString();
           }
@@ -168,7 +168,7 @@ describe('auto tagging functionality', function () {
       describe('tagging with --verbose flag', () => {
         before(() => {
           try {
-            commitOutput = helper.commitComponent('utils/is-type --verbose');
+            commitOutput = helper.tagComponent('utils/is-type --verbose');
           } catch (err) {
             commitOutput = err.toString() + err.stdout.toString();
           }
@@ -197,7 +197,7 @@ describe('auto tagging functionality', function () {
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
      *
-     * We change the dependency is-type implementation. When committing this change, we expect all dependent of is-type
+     * We change the dependency is-type implementation. When tagging this change, we expect all dependent of is-type
      * to be updated as well so then their 'dependencies' attribute includes the latest version of is-type.
      * In this case, is-string (so-called "dependent") should be updated to include is-type with v2.
      * Also, bar/foo (so-called "dependent of dependent") should be updated to include is-string and is-type with v2.
@@ -219,7 +219,7 @@ describe('auto tagging functionality', function () {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
 
-        commitOutput = helper.commitComponent('utils/is-type');
+        commitOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto tag the dependencies and the nested dependencies', () => {
         expect(commitOutput).to.have.string('auto-tagged components');
@@ -287,7 +287,7 @@ describe('auto tagging functionality', function () {
         helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
-        commitOutput = helper.commitComponent('utils/is-type');
+        commitOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto-tag the dependents', () => {
         expect(commitOutput).to.not.have.string('no auto-tag pending components');
@@ -472,7 +472,7 @@ describe('auto tagging functionality', function () {
     describe('tagging the dependency', () => {
       let commitOutput;
       before(() => {
-        commitOutput = helper.commitComponent('bar/c');
+        commitOutput = helper.tagComponent('bar/c');
       });
       it('should bump the component version that is direct and indirect dependent only once', () => {
         expect(commitOutput).to.have.string('bar/a@0.0.2');

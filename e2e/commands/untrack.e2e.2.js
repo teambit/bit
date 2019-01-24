@@ -53,7 +53,7 @@ describe('bit untrack command', function () {
     it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
       helper.createFile('bar', 'foo.js');
       helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.commitComponent('bar/foo');
+      helper.tagComponent('bar/foo');
       const output = helper.untrackComponent('bar/foo');
       const bitMap = helper.readBitMapWithoutVersion();
       expect(output).to.have.string('error: unable to untrack bar/foo, please use the bit remove command.');
@@ -72,7 +72,7 @@ describe('bit untrack command', function () {
       helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
-      helper.commitComponent('bar/foo2');
+      helper.tagComponent('bar/foo2');
       helper.createFile('bar', 'foo3.js');
       helper.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent('bar/foo bar/foo3');
@@ -85,7 +85,7 @@ describe('bit untrack command', function () {
       helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.createFile('bar', 'foo2.js');
       helper.addComponent(path.normalize('bar/foo2.js'), { i: 'bar/foo2' });
-      helper.commitComponent('bar/foo2');
+      helper.tagComponent('bar/foo2');
       helper.createFile('bar', 'foo3.js');
       helper.addComponent(path.normalize('bar/foo3.js'), { i: 'bar/foo3' });
       helper.untrackComponent('', true);

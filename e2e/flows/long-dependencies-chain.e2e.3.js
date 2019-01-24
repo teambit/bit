@@ -39,7 +39,7 @@ describe('flow of a long-dependencies-chain', function () {
 
           helper.createFile(dir, `${file}.js`, impl);
           helper.addComponent(path.join(dir, `${file}.js`), { i: `${dir}/${file}` });
-          helper.commitComponent(`${dir}/${file}`);
+          helper.tagComponent(`${dir}/${file}`);
           helper.exportComponent(`${dir}/${file}`);
         }
       });
