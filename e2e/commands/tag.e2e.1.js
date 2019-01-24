@@ -6,6 +6,7 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 
 let logSpy;
 const assertArrays = require('chai-arrays');
@@ -201,7 +202,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('components/b@0.0.4');
       });
       it('Should show message "nothing to tag" if trying to tag with no changes', () => {
-        helper.tagAllComponents();
+        helper.tagAllComponents(undefined, undefined, false);
         const tagWithoutChanges = helper.tagAllComponents(undefined, undefined, false);
         expect(tagWithoutChanges).to.have.string(NOTHING_TO_TAG_MSG);
       });
@@ -602,7 +603,6 @@ describe('bit tag command', function () {
 
   // there is another describe('tag all components')
   describe('tag all components', () => {
-
     it.skip('Should build and test all components before tag', () => {});
 
     it.skip('Should tag nothing if only some of the tags worked', () => {});
@@ -850,11 +850,8 @@ describe('bit tag command', function () {
       helper.deleteFile('bar/foo.js');
 
       const tagCmd = () => helper.tagAllComponents();
-      expect(tagCmd).to.throw(
-        `Command failed: ${
-          helper.bitBin
-        } tag  -a  -m tag-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`
-      );
+      const error = new MissingFilesFromComponent('bar/foo');
+      helper.expectToThrow(tagCmd, error);
     });
   });
   describe('with --scope flag', () => {
@@ -906,17 +903,13 @@ describe('bit tag command', function () {
         before(() => {
           helper.tagComponent('bar/foo 0.0.8', 'msg', '--force');
           try {
-            helper.tagWithoutMessage('--scope 0.0.8');
+            helper.tagAllComponents('--scope 0.0.8');
           } catch (err) {
             output = err.toString();
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string(
-            `Error: Command failed: ${
-              helper.bitBin
-            } tag --scope 0.0.8 -a  -m msg \nerror: version 0.0.8 already exists for bar/foo\n`
-          );
+          expect(output).to.have.string('version 0.0.8 already exists for bar/foo');
         });
       });
       describe('when one of the components has a greater version', () => {

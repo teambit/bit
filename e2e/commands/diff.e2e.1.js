@@ -220,7 +220,7 @@ describe('bit diff command', function () {
     });
     describe('running bit diff between current version and version 0.0.1', () => {
       before(() => {
-        helper.tagAllComponents();
+        helper.tagAllComponents(undefined, undefined, false);
         output = helper.diff('bar/foo 0.0.1');
       });
       it('should indicate the deleted files as deleted', () => {
