@@ -20,7 +20,7 @@ export type TagResults = {
   newComponents: BitIds
 };
 
-export async function commitAction(args: {
+export async function tagAction(args: {
   id: string,
   message: string,
   exactVersion: ?string,
@@ -52,7 +52,7 @@ export async function commitAction(args: {
     const componentStatus = await consumer.getComponentStatusById(bitId);
     if (componentStatus.modified === false) return null;
   }
-  const commitResults = await consumer.tag(
+  const tagResults = await consumer.tag(
     new BitIds(bitId),
     message,
     validExactVersion,
@@ -63,10 +63,10 @@ export async function commitAction(args: {
     ignoreNewestVersion,
     skipTests
   );
-  commitResults.newComponents = newComponents;
-  HooksManagerInstance.triggerHook(POST_TAG_HOOK, commitResults);
+  tagResults.newComponents = newComponents;
+  HooksManagerInstance.triggerHook(POST_TAG_HOOK, tagResults);
   await consumer.onDestroy();
-  return commitResults;
+  return tagResults;
 }
 
 async function getCommitPendingComponents(
@@ -74,17 +74,17 @@ async function getCommitPendingComponents(
   isAllScope: boolean,
   exactVersion: string,
   includeImported: boolean
-): Promise<{ commitPendingComponents: BitId[], warnings: string[] }> {
+): Promise<{ tagPendingComponents: BitId[], warnings: string[] }> {
   const componentsList = new ComponentsList(consumer);
   if (isAllScope) {
     return componentsList.listCommitPendingOfAllScope(exactVersion, includeImported);
   }
-  const commitPendingComponents = await componentsList.listCommitPendingComponents();
+  const tagPendingComponents = await componentsList.listCommitPendingComponents();
   const warnings = [];
-  return { commitPendingComponents, warnings };
+  return { tagPendingComponents, warnings };
 }
 
-export async function commitAllAction(args: {
+export async function tagAllAction(args: {
   message: string,
   exactVersion: ?string,
   releaseType: string,
@@ -115,18 +115,18 @@ export async function commitAllAction(args: {
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const newComponents = await componentsList.listNewComponents();
-  const { commitPendingComponents, warnings } = await getCommitPendingComponents(
+  const { tagPendingComponents, warnings } = await getCommitPendingComponents(
     consumer,
     scope,
     exactVersion,
     includeImported
   );
-  if (R.isEmpty(commitPendingComponents)) return null;
+  if (R.isEmpty(tagPendingComponents)) return null;
   const componentsToTag = idWithWildcard
-    ? ComponentsList.filterComponentsByWildcard(commitPendingComponents, idWithWildcard)
-    : commitPendingComponents;
+    ? ComponentsList.filterComponentsByWildcard(tagPendingComponents, idWithWildcard)
+    : tagPendingComponents;
 
-  const commitResults = await consumer.tag(
+  const tagResults = await consumer.tag(
     componentsToTag,
     message,
     validExactVersion,
@@ -137,16 +137,16 @@ export async function commitAllAction(args: {
     ignoreNewestVersion,
     skipTests
   );
-  commitResults.warnings = warnings;
+  tagResults.warnings = warnings;
 
-  commitResults.newComponents = newComponents;
-  HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, commitResults);
+  tagResults.newComponents = newComponents;
+  HooksManagerInstance.triggerHook(POST_TAG_ALL_HOOK, tagResults);
   Analytics.setExtraData(
     'num_components',
-    R.concat(commitResults.taggedComponents, commitResults.autoTaggedComponents, commitResults.newComponents).length
+    R.concat(tagResults.taggedComponents, tagResults.autoTaggedComponents, tagResults.newComponents).length
   );
   await consumer.onDestroy();
-  return commitResults;
+  return tagResults;
 }
 
 function _validateVersion(version) {

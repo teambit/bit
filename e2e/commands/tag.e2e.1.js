@@ -628,9 +628,9 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitAll = () => helper.tagAllComponents();
+        const tagAll = () => helper.tagAllComponents();
         try {
-          commitAll();
+          tagAll();
         } catch (err) {
           output = err.toString();
         }
@@ -683,9 +683,9 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitOne = () => helper.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
+        const tagOne = () => helper.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
         try {
-          output = commitOne();
+          output = tagOne();
         } catch (err) {
           output = err.toString();
         }
@@ -714,9 +714,9 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitAll = () => helper.tagAllComponents('tag-msg', '--ignore-unresolved-dependencies');
+        const tagAll = () => helper.tagAllComponents('tag-msg', '--ignore-unresolved-dependencies');
         try {
-          output = commitAll();
+          output = tagAll();
         } catch (err) {
           output = err.toString();
         }
@@ -851,8 +851,8 @@ describe('bit tag command', function () {
       helper.deleteFile('bar/index.js');
       helper.deleteFile('bar/foo.js');
 
-      const commitCmd = () => helper.tagAllComponents();
-      expect(commitCmd).to.throw(
+      const tagCmd = () => helper.tagAllComponents();
+      expect(tagCmd).to.throw(
         `Command failed: ${
           helper.bitBin
         } tag  -a  -m tag-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`

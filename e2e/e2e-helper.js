@@ -370,8 +370,8 @@ export default class Helper {
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
-  tagComponent(id: string, commitMsg: string = 'tag-message', options: string = '') {
-    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
+  tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
   tagWithoutMessage(id: string, version: string = '', options: string = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options}`);
@@ -383,8 +383,8 @@ export default class Helper {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
 
-  tagAllComponents(commitMsg: string = 'tag-message', options: string = '', version: string = '') {
-    return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
+  tagAllComponents(tagMsg: string = 'tag-message', options: string = '', version: string = '') {
+    return this.runCmd(`bit tag ${options} -a ${version} -m ${tagMsg} `);
   }
   tagAllWithoutMessage(options: string = '', version: string = '') {
     return this.runCmd(`bit tag -a ${version} ${options} `);

@@ -315,45 +315,6 @@ describe('bit show command', function () {
       expect(output).to.include({ deprecated: false });
     });
   });
-
-  describe.skip('with no docs', () => {
-    before(() => {
-      const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
-      commitFoo(fooComponentFixture);
-    });
-    it('should display "No documentation found" when there is no documentation', () => {
-      const output = helper.runCmd('bit show bar/foo');
-      expect(output.includes('No documentation found')).to.be.true;
-    });
-    it('should not show the "description" field', () => {
-      const output = helper.runCmd('bit show bar/foo');
-      expect(output.includes('Description')).to.be.false;
-    });
-  });
-  describe.skip('with docs', () => {
-    before(() => {
-      const fooComponentFixture = `/**
- * Adds two numbers.
- * @name add
- * @param {number} a The first number in an addition.
- * @param {number} b The second number in an addition.
- * @returns {number} Returns the total.
- */
-function add(a, b) {
-  return a+b;
-}`;
-      commitFoo(fooComponentFixture);
-    });
-    it('should parse the documentation correctly', () => {
-      const output = helper.runCmd('bit show bar/foo');
-      expect(output.includes('No documentation found')).to.be.false;
-      expect(output.includes('Description')).to.be.true;
-      expect(output.includes('Adds two numbers.')).to.be.true;
-      expect(output.includes('Args')).to.be.true;
-      expect(output.includes('Returns')).to.be.true;
-      expect(output.includes('number -> Returns the total.')).to.be.true;
-    });
-  });
   describe('local component', () => {
     let output;
     before(() => {
