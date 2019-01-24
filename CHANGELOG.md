@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve import performance by caching the enrich-context object
+
 ## [13.0.6-dev.36] - 2019-01-22
 
 - bit-javascript: replace caporal package with commander to support node 6
