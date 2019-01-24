@@ -383,7 +383,7 @@ export default class Helper {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
 
-  commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
+  tagAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
     return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
   }
   tagAllWithoutMessage(options: string = '', version: string = '') {
@@ -601,7 +601,7 @@ export default class Helper {
     return this.runCmd('bit add utils/is-string.js --id utils/is-string');
   }
 
-  commitComponentBarFoo() {
+  tagComponentBarFoo() {
     return this.tagComponent('bar/foo');
   }
 

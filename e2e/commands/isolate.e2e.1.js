@@ -34,7 +34,7 @@ describe('run bit isolate', function () {
       helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('with the same parameters as pack is using', () => {

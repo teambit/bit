@@ -373,7 +373,7 @@ describe('bit test command', function () {
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', fixtures.passTest);
       helper.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should show there is nothing to test', () => {
       const output = helper.testComponent();

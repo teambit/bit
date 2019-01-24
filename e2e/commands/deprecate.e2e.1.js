@@ -30,7 +30,7 @@ describe('bit deprecate command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       output = helper.deprecateComponent('bar/foo');
     });
     it('should show deprecated component', () => {
@@ -54,7 +54,7 @@ describe('bit deprecate command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
       output = helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
     });
@@ -81,7 +81,7 @@ describe('bit deprecate command', function () {
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should deprecate component that is being used by other components', () => {

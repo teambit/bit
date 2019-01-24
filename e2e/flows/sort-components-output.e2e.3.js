@@ -51,7 +51,7 @@ describe('basic flow with dependencies', function () {
     });
     describe('after tagging the components', () => {
       before(() => {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       describe('bit status', () => {
         let output;
@@ -166,7 +166,7 @@ describe('basic flow with dependencies', function () {
       helper.addComponentUtilsIsType();
       helper.addComponentUtilsIsString();
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       const isTypeFixtureV2 = "console.log('got is-type v2')";
       helper.createFile('utils', 'is-type.js', isTypeFixtureV2);
     });

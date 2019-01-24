@@ -15,7 +15,7 @@ describe('bit untag command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       localScope = helper.cloneLocalScope();
       const output = helper.listLocalScope();
       expect(output).to.have.string('found 1 components');
@@ -156,7 +156,7 @@ describe('bit untag command', function () {
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.createFile('bar', 'foo3.js');
       helper.addComponent('bar/foo3.js', { i: 'bar/foo3' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportComponent('bar/foo3');
       localScope = helper.cloneLocalScope();
       const output = helper.listLocalScope();
@@ -202,7 +202,7 @@ describe('bit untag command', function () {
       helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       localScope = helper.cloneLocalScope();
     });
     describe('untag only the dependency', () => {
@@ -320,7 +320,7 @@ describe('bit untag command', function () {
         before(() => {
           helper.getClonedLocalScope(scopeAfterImport);
           helper.modifyFile(path.join(helper.localScopePath, 'components/utils/is-string/is-string.js'));
-          helper.commitAllComponents();
+          helper.tagAllComponents();
           helper.runCmd('bit untag --all');
         });
         it('should show the component as modified', () => {

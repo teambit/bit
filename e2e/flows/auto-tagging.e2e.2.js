@@ -36,7 +36,7 @@ describe('auto tagging functionality', function () {
         helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.addComponentUtilsIsString();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
 
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
@@ -82,7 +82,7 @@ describe('auto tagging functionality', function () {
         helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.addComponentUtilsIsString();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -212,7 +212,7 @@ describe('auto tagging functionality', function () {
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
 
         const isTypeFixtureV2 = "module.exports = function isType() { return 'got is-type v2'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
@@ -274,7 +274,7 @@ describe('auto tagging functionality', function () {
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();

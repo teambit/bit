@@ -286,7 +286,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
       helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
     });
@@ -305,7 +305,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
     });
     it('should indicate a component as non-deprecated when using "--remote" flag', () => {
@@ -383,7 +383,7 @@ function add(a, b) {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -450,7 +450,7 @@ function add(a, b) {
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
@@ -468,7 +468,7 @@ function add(a, b) {
     });
     describe('when importing a component', () => {
       before(() => {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportAllComponents();
@@ -512,7 +512,7 @@ function add(a, b) {
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponentUtilsIsString();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       describe('when a component uses an old version of a dependency', () => {
         it('should indicate that the remote version is larger than the current version', () => {
@@ -568,7 +568,7 @@ function add(a, b) {
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponentUtilsIsString();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -592,7 +592,7 @@ function add(a, b) {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
     });
     it('should show versions of authored component when not specifying scope name', () => {

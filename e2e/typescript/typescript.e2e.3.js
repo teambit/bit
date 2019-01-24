@@ -64,7 +64,7 @@ describe('typescript', function () {
           "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('bar', 'foo.ts', fooBarFixture);
         helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -255,7 +255,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       helper.createFile('bar', 'foo.ts', fooBarFixture);
       helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

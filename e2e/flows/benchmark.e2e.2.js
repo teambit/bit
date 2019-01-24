@@ -22,7 +22,7 @@ describe('benchmark', function () {
           helper.createFile('utils', `${file}.js`, impl);
         }
         helper.addComponent('utils/*');
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
       });
       it('bit list should show the correct number of exported components', () => {

@@ -67,7 +67,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'major.js');
         helper.createFile('components', 'exact.js');
         helper.addComponent('components/*.js', { n: 'components' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       it('Should not allow invalid semver', () => {
         helper.createFile('components', 'default.js');
@@ -120,7 +120,7 @@ describe('bit tag command', function () {
         const fixture = "import foo from './dependency'";
         helper.createFile('components', 'dependent.js', fixture);
         helper.addComponent('components/dependency.js components/dependent.js', { n: 'components' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.tagComponent('components/dependency', 'message', '-f --major');
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
         expect(listOutput).to.deep.include({
@@ -173,7 +173,7 @@ describe('bit tag command', function () {
         );
       });
       it('Should set the version to default version in tag new component', () => {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
         expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1', currentVersion: '0.0.1' });
         expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1', currentVersion: '0.0.1' });
@@ -181,14 +181,14 @@ describe('bit tag command', function () {
       it('Should increment the patch version when no version type specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.0.2")');
         helper.createFile('components', 'b.js', 'console.log("v0.0.2")');
-        output = helper.commitAllComponents('message');
+        output = helper.tagAllComponents('message');
         expect(output).to.have.string('components/a@0.0.2');
         expect(output).to.have.string('components/b@0.0.2');
       });
       it('Should increment the patch version when --patch flag specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.0.3")');
         helper.createFile('components', 'b.js', 'console.log("v0.0.3")');
-        output = helper.commitAllComponents('message', '--patch');
+        output = helper.tagAllComponents('message', '--patch');
         expect(output).to.have.string('components/a@0.0.3');
         expect(output).to.have.string('components/b@0.0.3');
       });
@@ -207,14 +207,14 @@ describe('bit tag command', function () {
       it('Should increment the minor version when --minor flag specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.1.0")');
         helper.createFile('components', 'b.js', 'console.log("v0.1.0")');
-        output = helper.commitAllComponents('message', '-f --minor');
+        output = helper.tagAllComponents('message', '-f --minor');
         expect(output).to.have.string('components/a@0.1.0');
         expect(output).to.have.string('components/b@0.1.0');
       });
       it('Should increment the major version when --major flag specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v1.0.0")');
         helper.createFile('components', 'b.js', 'console.log("v1.0.0")');
-        output = helper.commitAllComponents('message', '--major');
+        output = helper.tagAllComponents('message', '--major');
         expect(output).to.have.string('components/a@1.0.0');
         expect(output).to.have.string('components/b@1.0.0');
       });
@@ -223,14 +223,14 @@ describe('bit tag command', function () {
         helper.createFile('components', 'd.js');
         helper.addComponent('components/c.js', { i: 'components/c' });
         helper.addComponent('components/d.js', { i: 'components/d' });
-        output = helper.commitAllComponents('message', '-f', '5.12.10');
+        output = helper.tagAllComponents('message', '-f', '5.12.10');
         expect(output).to.have.string('components/c@5.12.10');
         expect(output).to.have.string('components/d@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
         helper.createFile('components', 'a.js', 'console.log("v3.3.3")');
         helper.createFile('components', 'b.js', 'console.log("v3.3.3")');
-        output = helper.commitAllComponents('message', '-f', '3.3.3');
+        output = helper.tagAllComponents('message', '-f', '3.3.3');
         expect(output).to.have.string('components/a@3.3.3');
         expect(output).to.have.string('components/b@3.3.3');
       });
@@ -239,7 +239,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'b.js', 'console.log("v4.3.4")');
         helper.tagComponent('components/a 4.3.4', 'message');
         helper.createFile('components', 'a.js', 'console.log("v4.3.4 ssss")');
-        const tagWithExisting = () => helper.commitAllComponents('message', '', '4.3.4');
+        const tagWithExisting = () => helper.tagAllComponents('message', '', '4.3.4');
         expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
       });
     });
@@ -491,10 +491,10 @@ describe('bit tag command', function () {
         helper.createFile('', 'file2.js');
         helper.addComponent('file.js', { i: 'comp/comp' });
         helper.addComponent('file2.js', { i: 'comp/comp2' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.createFile('', 'file.js', 'console.log()');
-        output = helper.commitAllComponents();
+        output = helper.tagAllComponents();
       });
       it('should tag the component', () => {
         expect(output).to.have.string('1 components tagged');
@@ -512,7 +512,7 @@ describe('bit tag command', function () {
         helper.createFile('', 'file2.js');
         helper.addComponent('file.js', { i: 'comp/comp' });
         helper.addComponent('file2.js', { i: 'comp/comp2' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -545,7 +545,7 @@ describe('bit tag command', function () {
         helper.createFile('', 'file2.js');
         helper.addComponent('file.js', { i: 'comp/comp' });
         helper.addComponent('file2.js', { i: 'comp/comp2' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -574,7 +574,7 @@ describe('bit tag command', function () {
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -585,7 +585,7 @@ describe('bit tag command', function () {
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
       try {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       } catch (err) {
         output = err.toString();
       }
@@ -628,7 +628,7 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitAll = () => helper.commitAllComponents();
+        const commitAll = () => helper.tagAllComponents();
         try {
           commitAll();
         } catch (err) {
@@ -714,7 +714,7 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitAll = () => helper.commitAllComponents('commit-msg', '--ignore-unresolved-dependencies');
+        const commitAll = () => helper.tagAllComponents('commit-msg', '--ignore-unresolved-dependencies');
         try {
           output = commitAll();
         } catch (err) {
@@ -756,7 +756,7 @@ describe('bit tag command', function () {
       helper.createFile('', 'second.js', secondFileFixture);
       helper.addComponent('main.js second.js', { m: 'main.js', i: 'comp/comp' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
@@ -791,7 +791,7 @@ describe('bit tag command', function () {
       helper.createFile('', 'second.js', secondFileFixture);
       helper.addComponent('main.js second.js', { m: 'main.js', i: 'comp/comp' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       const output = helper.showComponentWithOptions('comp/comp', { j: '' });
       const dependencies = JSON.parse(output).dependencies;
@@ -823,7 +823,7 @@ describe('bit tag command', function () {
       const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapFiles).to.be.ofSize(2);
       helper.deleteFile('bar/foo.js');
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       const bitMap = helper.readBitMap();
       const files = bitMap['bar/foo@0.0.1'].files;
       expect(files).to.be.ofSize(1);
@@ -851,7 +851,7 @@ describe('bit tag command', function () {
       helper.deleteFile('bar/index.js');
       helper.deleteFile('bar/foo.js');
 
-      const commitCmd = () => helper.commitAllComponents();
+      const commitCmd = () => helper.tagAllComponents();
       expect(commitCmd).to.throw(
         `Command failed: ${
           helper.bitBin
@@ -871,7 +871,7 @@ describe('bit tag command', function () {
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -883,7 +883,7 @@ describe('bit tag command', function () {
       )}'); module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       localScope = helper.cloneLocalScope();
     });
     describe('without --all flag', () => {
@@ -908,7 +908,7 @@ describe('bit tag command', function () {
         before(() => {
           helper.tagComponent('bar/foo 0.0.8', 'msg', '--force');
           try {
-            helper.commitAllComponents('msg', '--scope 0.0.8');
+            helper.tagAllComponents('msg', '--scope 0.0.8');
           } catch (err) {
             output = err.toString();
           }
@@ -941,7 +941,7 @@ describe('bit tag command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(localScope);
-          output = helper.commitAllComponents('msg', '--scope 0.2.0 --all');
+          output = helper.tagAllComponents('msg', '--scope 0.2.0 --all');
         });
         it('should tag all components with the specified version including the imported components', () => {
           // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
@@ -962,7 +962,7 @@ describe('bit tag command', function () {
       const impl = 'hello\r\n world\r\n';
       helper.createComponentBarFoo(impl);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should write the file to the model with Linux EOL characters', () => {
       const barFoo = helper.catComponent('bar/foo@latest');

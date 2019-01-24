@@ -21,7 +21,7 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
     });
     it('should not write the exported component into bit.json', () => {
@@ -44,7 +44,7 @@ describe('bit export command', function () {
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
       helper.addComponent('baz/foo1.js', { i: 'baz/foo1' });
       helper.addComponent('baz/foo2.js', { i: 'baz/foo2' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -66,7 +66,7 @@ describe('bit export command', function () {
       createFile('baz', 'foo2');
       helper.runCmd('bit add bar -m foo1.js');
       helper.runCmd('bit add baz -m foo1.js');
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should export them all', () => {
@@ -84,7 +84,7 @@ describe('bit export command', function () {
       createFile('bar', 'foo2');
       helper.addComponent('bit add bar/foo1.js', { i: 'bar/foo1' });
       helper.addComponent('bit add bar/foo2.js', { i: 'bar/foo2' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportComponent('bar/foo1 bar/foo2');
     });
     it('should export them all', () => {
@@ -157,7 +157,7 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.tagComponent('bar/foo -f');
       helper.exportComponent('bar/foo');
@@ -175,7 +175,7 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo'); // v1
 
       helper.reInitLocalScope();
@@ -183,11 +183,11 @@ describe('bit export command', function () {
       helper.importComponent('bar/foo');
 
       helper.createFile(path.join('components', 'bar', 'foo'), 'foo.js', 'console.log("got foo v2")');
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo'); // v2
 
       helper.createFile(path.join('components', 'bar', 'foo'), 'foo.js', 'console.log("got foo v3")');
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo'); // v3
     });
     it('should export it with no errors', () => {
@@ -206,7 +206,7 @@ describe('bit export command', function () {
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -257,7 +257,7 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo(); // v1
+      helper.tagComponentBarFoo(); // v1
       helper.tagComponent('bar/foo -f'); // v2
       helper.exportComponent('bar/foo');
 
@@ -279,15 +279,15 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('bar', 'foo.js', 'console.log("got foo v1")');
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo(); // v1
+      helper.tagComponentBarFoo(); // v1
       helper.exportComponent('bar/foo');
 
       helper.createFile('bar', 'foo.js', 'console.log("got foo v2")');
-      helper.commitComponentBarFoo(); // v2
+      helper.tagComponentBarFoo(); // v2
       helper.exportComponent('bar/foo');
 
       helper.createFile('bar', 'foo.js', 'console.log("got foo v3")');
-      helper.commitComponentBarFoo(); // v3
+      helper.tagComponentBarFoo(); // v3
       helper.exportComponent('bar/foo');
     });
     it('should export it with no errors', () => {
@@ -310,7 +310,7 @@ describe('bit export command', function () {
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.runCmd('bit add bar -m foo.js -i bar/foo');
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should export it with no errors', () => {
@@ -337,7 +337,7 @@ describe('bit export command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       try {
         output = helper.exportComponent('bar/foo', undefined, false);

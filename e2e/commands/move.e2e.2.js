@@ -180,7 +180,7 @@ describe('bit move command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.runCmd(`bit move ${oldPath} ${newPath}`);
     });
     it('should move physically the file', () => {
@@ -233,7 +233,7 @@ describe('bit move command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();

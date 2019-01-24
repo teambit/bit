@@ -35,7 +35,7 @@ describe('dev-dependencies functionality', function () {
         helper.installNpmPackage('chai', '4.1.2');
         helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         barFoo = helper.catComponent('bar/foo@0.0.1');
       });
       it('should not save the dev-dependencies because they are the same as dependencies', () => {
@@ -92,7 +92,7 @@ describe('foo', () => {
         helper.installNpmPackage('chai', '4.1.2');
         helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         localScope = helper.cloneLocalScope();
         barFoo = helper.catComponent('bar/foo@0.0.1');
       });

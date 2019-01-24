@@ -98,7 +98,7 @@ describe('track directories functionality', function () {
     describe('tagging the component', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       it('should save the files with relativePaths relative to consumer root', () => {
         const output = helper.catComponent('utils/bar@latest');
@@ -213,7 +213,7 @@ describe('track directories functionality', function () {
       helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -256,7 +256,7 @@ describe('track directories functionality', function () {
       });
       describe('tagging the component', () => {
         before(() => {
-          helper.commitAllComponents();
+          helper.tagAllComponents();
           statusOutput = helper.runCmd('bit status');
         });
         it('bit status should show the component as staged and not as modified', () => {

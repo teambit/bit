@@ -54,7 +54,7 @@ describe('dists file are written outside the components dir', function () {
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.getClonedLocalScope(scopeWithCompiler);
@@ -64,7 +64,7 @@ describe('dists file are written outside the components dir', function () {
  export default function isString() { return isType() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.importComponent('utils/is-string');
@@ -73,7 +73,7 @@ describe('dists file are written outside the components dir', function () {
 export default function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -132,7 +132,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       before(() => {
         helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
         helper.build();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
@@ -144,7 +144,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as imported', () => {
       before(() => {
         helper.getClonedLocalScope(clonedScope);
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportAllComponents();
@@ -186,7 +186,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         });
         describe('after importing a component with external packages', () => {
           before(() => {
-            helper.commitAllComponents();
+            helper.tagAllComponents();
             helper.exportAllComponents();
             helper.reInitLocalScope();
             helper.addRemoteScope();
@@ -242,7 +242,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
     describe('as imported', () => {
       before(() => {
         helper.getClonedLocalScope(clonedScope);
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -296,7 +296,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       const isTypeFixture = "export default function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -309,7 +309,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       )}'); module.exports = function isString() { return isType.default() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.getClonedLocalScope(scopeWithCompiler);
       helper.importComponent('utils/is-string');
@@ -318,7 +318,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
 export default function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -362,7 +362,7 @@ export default function foo() { return isString() + ' and got foo'; };`;
       helper.createFile('src/bar', 'foo.js', fooBarFixture);
       helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -404,7 +404,7 @@ describe('dist-outside-components when no compiler has been set up', function ()
     helper.modifyFieldInBitJson('dist', { target: 'dist' });
     helper.createComponentBarFoo();
     helper.addComponentBarFoo();
-    helper.commitComponentBarFoo();
+    helper.tagComponentBarFoo();
   });
   it('should not save the dists in the model', () => {
     const catComponent = helper.catComponent('bar/foo@latest');

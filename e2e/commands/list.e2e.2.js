@@ -43,7 +43,7 @@ describe('bit list command', function () {
       helper.runCmd('bit init');
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should display "found 1 components"', () => {
       const output = helper.runCmd('bit list');
@@ -62,7 +62,7 @@ describe('bit list command', function () {
         helper.setNewLocalAndRemoteScopes();
         helper.createComponentBarFoo();
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();

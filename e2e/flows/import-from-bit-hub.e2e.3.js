@@ -30,7 +30,7 @@ chai.use(require('chai-fs'));
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents(scopeId);
         scopeAfterExport = helper.cloneLocalScope();
 
@@ -51,7 +51,7 @@ chai.use(require('chai-fs'));
         );
         helper.addComponent('bar/foo-es6.js', { i: 'bar/foo-es6' });
 
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents(scopeId);
         componentTestId = `${scopeId}/bar/foo`;
       });

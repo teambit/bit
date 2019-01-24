@@ -99,7 +99,7 @@ describe('bit status command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       output = helper.runCmd('bit status');
     });
     it('should display that component as a staged component', () => {
@@ -121,7 +121,7 @@ describe('bit status command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       // modify the component
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
       output = helper.runCmd('bit status');
@@ -150,7 +150,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       output = helper.runCmd('bit status');
     });
@@ -170,7 +170,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       // modify the component
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
@@ -195,11 +195,11 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       // modify the component
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };");
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       output = helper.runCmd('bit status');
     });
     it('should not display that component as modified', () => {
@@ -219,10 +219,10 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       output = helper.runCmd('bit status');
     });
@@ -242,7 +242,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -277,7 +277,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('', 'file.js');
       helper.addComponent('file.js', { i: 'comp/comp' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -311,7 +311,7 @@ describe('bit status command', function () {
         "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       output = helper.runCmd('bit status');
     });
     it('should not display any component as new', () => {
@@ -386,7 +386,7 @@ describe('bit status command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.createComponentBarFoo("module.exports = function foo() { return 'got foo v2'; };"); // modify the component
       helper.mimicGitCloneLocalProject(false);
