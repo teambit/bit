@@ -11,6 +11,7 @@ import type { RelativePath } from '../consumer/component/dependencies/dependency
 import type ComponentMap from '../consumer/bit-map/component-map';
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
+import { pathNormalizeToLinux } from '../utils/path';
 
 export type LinkFileType = {
   linkPath: string,
@@ -191,8 +192,12 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePath(): string {
-    // convert the component name to a valid npm package name
-    return componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
+    const packageName = componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
+    if (this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile)) {
+      return packageName;
+    }
+    // the link is to an internal file, not to the main file
+    return `${packageName}/${this.relativePath.destinationRelativePath}`;
   }
 
   _getCustomResolveMapping(relativeFilePath: PathOsBased) {

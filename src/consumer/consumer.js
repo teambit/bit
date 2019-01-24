@@ -15,7 +15,6 @@ import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
-  BITS_DIRNAME,
   BIT_HIDDEN_DIR,
   COMPONENT_ORIGINS,
   BIT_VERSION,
@@ -64,6 +63,7 @@ import ComponentLoader from './component/component-loader';
 import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
+import type { Remotes } from '../remotes';
 
 type ConsumerProps = {
   projectPath: string,
@@ -336,21 +336,57 @@ export default class Consumer {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
-  async importComponents(ids: BitIds, withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+  async importComponents(
+    ids: BitIds,
+    withAllVersions: boolean,
+    saveDependenciesAsComponents?: boolean
+  ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
       ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
       : await scopeComponentsImporter.importMany(ids);
+    const shouldDependenciesSavedAsComponents = await this._shouldDependenciesSavedAsComponents(
+      versionDependenciesArr,
+      saveDependenciesAsComponents
+    );
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
-      this.scope.objects
+      this.scope.objects,
+      shouldDependenciesSavedAsComponents
     );
-    return Promise.all(
+    const componentWithDependencies = await Promise.all(
       versionDependenciesArr.map(versionDependencies =>
         versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
       )
     );
+    componentWithDependencies.forEach((componentWithDeps) => {
+      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
+        c.id.isEqual(componentWithDeps.component.id)
+      );
+      if (!shouldSavedAsComponents) {
+        throw new Error(`saveDependenciesAsComponents is missing for ${componentWithDeps.component.id.toString()}`);
+      }
+      componentWithDeps.component.dependenciesSavedAsComponents = shouldSavedAsComponents.saveDependenciesAsComponents;
+    });
+    return componentWithDependencies;
+  }
+
+  async _shouldDependenciesSavedAsComponents(
+    versionDependencies: VersionDependencies[],
+    saveDependenciesAsComponents?: boolean
+  ) {
+    if (saveDependenciesAsComponents === undefined) {
+      saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
+    }
+    const remotes: Remotes = await getScopeRemotes(this.scope);
+    const shouldDependenciesSavedAsComponents = versionDependencies.map((versionDep: VersionDependencies) => {
+      return {
+        id: versionDep.component.id, // if it doesn't go to the hub, it can't import dependencies as packages
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(versionDep.component.id.scope)
+      };
+    });
+    return shouldDependenciesSavedAsComponents;
   }
 
   /**

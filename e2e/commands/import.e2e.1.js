@@ -625,49 +625,6 @@ describe('bit import', function () {
     });
   });
 
-  describe("component which require another component's internal (not main) file", () => {
-    describe('javascript without compiler', () => {
-      before(() => {
-        helper.setNewLocalAndRemoteScopes();
-
-        helper.createFile('utils', 'is-type-internal.js', fixtures.isType);
-        const isTypeMainFixture = "module.exports = require('./is-type-internal');";
-        helper.createFile('utils', 'is-type-main.js', isTypeMainFixture);
-        helper.addComponent('utils/is-type-internal.js utils/is-type-main.js', {
-          m: 'utils/is-type-main.js',
-          i: 'utils/is-type'
-        });
-
-        const isStringInternalFixture =
-          "const isType = require('./is-type-internal.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
-        helper.createFile('utils', 'is-string-internal.js', isStringInternalFixture);
-        const isStringMainFixture =
-          "const isType = require('./is-type-main.js'); module.exports = require('./is-string-internal');";
-        helper.createFile('utils', 'is-string-main.js', isStringMainFixture);
-        helper.addComponent('utils/is-string-internal.js utils/is-string-main.js', {
-          m: 'utils/is-string-main.js',
-          i: 'utils/is-string'
-        });
-
-        helper.commitAllComponents();
-        helper.exportAllComponents();
-        helper.reInitLocalScope();
-        helper.addRemoteScope();
-        helper.importComponent('utils/is-string');
-      });
-      it('should be able to require the main and the internal files and print the results', () => {
-        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
-        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-        const result = helper.runCmd('node app.js');
-        expect(result.trim()).to.equal('got is-type and got is-string');
-      });
-    });
-
-    describe.skip('javascript with compiler', () => {});
-
-    describe.skip('typescript without compiler', () => {});
-  });
-
   describe("component's with bit.json and packages dependencies", () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();

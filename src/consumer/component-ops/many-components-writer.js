@@ -8,7 +8,6 @@ import { installNpmPackagesForComponents } from '../../npm-client/install-packag
 import * as packageJson from '../component/package-json';
 import type { ComponentWithDependencies } from '../../scope';
 import type Component from '../component/consumer-component';
-import type { Remotes } from '../../remotes';
 import { COMPONENT_ORIGINS } from '../../constants';
 import logger from '../../logger/logger';
 import type Consumer from '../consumer';
@@ -17,7 +16,6 @@ import GeneralError from '../../error/general-error';
 import type ComponentMap from '../bit-map/component-map';
 import ComponentWriter from './component-writer';
 import type { ComponentWriterProps } from './component-writer';
-import { getScopeRemotes } from '../../scope/scope-remotes';
 import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 
@@ -86,7 +84,6 @@ export default class ManyComponentsWriter {
     this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
-    this.saveDependenciesAsComponents = this._setBooleanDefault(params.saveDependenciesAsComponents, false);
     this.installNpmPackages = this._setBooleanDefault(params.installNpmPackages, true);
     this.addToRootPackageJson = this._setBooleanDefault(params.addToRootPackageJson, true);
     this.verbose = this._setBooleanDefault(params.verbose, false);
@@ -105,7 +102,6 @@ export default class ManyComponentsWriter {
   }
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
-    await this._determineWhetherDependenciesAreSavedAsComponents();
     await this._populateComponentsFilesToWrite();
     await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
@@ -154,14 +150,6 @@ export default class ManyComponentsWriter {
       return componentWriter.populateComponentsFilesToWrite();
     });
     this.writtenComponents = await Promise.all(writeComponentsP);
-  }
-  async _determineWhetherDependenciesAreSavedAsComponents() {
-    const remotes: Remotes = await getScopeRemotes(this.consumer.scope);
-    this.componentsWithDependencies.forEach((componentWithDeps: ComponentWithDependencies) => {
-      // if it doesn't go to the hub, it can't import dependencies as packages
-      componentWithDeps.component.dependenciesSavedAsComponents =
-        this.saveDependenciesAsComponents || !remotes.isHub(componentWithDeps.component.scope);
-    });
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {
     return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>

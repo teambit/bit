@@ -21,9 +21,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
     describe('components with nested dependencies', () => {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        const bitJson = helper.readBitJson();
-        bitJson.bindingPrefix = '@ci';
-        helper.writeBitJson(bitJson);
+        npmCiRegistry.setCiScopeInBitJson();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
         helper.addComponentUtilsIsType();
         helper.createFile('utils', 'is-string.js', fixtures.isString);
@@ -37,6 +35,7 @@ import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
         helper.importComponent('bar/foo');
 
         helper.importNpmPackExtension();
+        helper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
         npmCiRegistry.publishComponent('bar/foo');

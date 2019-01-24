@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix link files generated to a package when it should point to an internal file of the package
 - improve import performance by caching the enrich-context object
 
 ## [13.0.6-dev.36] - 2019-01-22
