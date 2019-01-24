@@ -129,7 +129,7 @@ describe('bit import command with no ids', function () {
     });
   });
 
-  describe('with an AUTHORED component which was only committed but not exported', () => {
+  describe('with an AUTHORED component which was only tagged but not exported', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();

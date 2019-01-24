@@ -45,7 +45,7 @@ describe('auto tagging functionality', function () {
         const tagOutput = helper.tagComponent('utils/is-type');
         expect(tagOutput).to.have.string('auto-tagged components');
         expect(tagOutput).to.have.string('utils/is-string');
-        // notice how is-string is not manually committed again!
+        // notice how is-string is not manually tagged again!
         helper.exportAllComponents();
         clonedScope = helper.cloneLocalScope();
         helper.reInitLocalScope();

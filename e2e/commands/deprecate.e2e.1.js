@@ -24,7 +24,7 @@ describe('bit deprecate command', function () {
       expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
-  describe('with local scope and commited components', () => {
+  describe('with local scope and tagged components', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();

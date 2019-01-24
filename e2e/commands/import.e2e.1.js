@@ -1165,7 +1165,7 @@ describe('bit import', function () {
   });
 
   // This is one of the most important cases, because it involve a lot of working pieces from the base flow:
-  // Add, build, commit, export, import, dependency resolution, index file generation
+  // Add, build, tag, export, import, dependency resolution, index file generation
   describe('components with auto-resolve dependencies - with compiler', () => {
     /**
      * Directory structure of the author
@@ -1547,7 +1547,7 @@ console.log(barFoo.default());`;
       expect(output).to.have.string(
         `Error: Command failed: ${
           helper.bitBin
-        } tag  -a  -m commit-message \nerror: issues found with the following component dependencies\n\n${
+        } tag  -a  -m tag-message \nerror: issues found with the following component dependencies\n\n${
           helper.remoteScope
         }/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
       );

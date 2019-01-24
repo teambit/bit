@@ -47,7 +47,7 @@ describe('bit status command', function () {
       expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
     });
   });
-  describe('when a component is created and added but not committed', () => {
+  describe('when a component is created and added but not tagged', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -93,7 +93,7 @@ describe('bit status command', function () {
       expect(output).to.have.string('bar/foo.js -> react');
     });
   });
-  describe('when a component is created, added and committed', () => {
+  describe('when a component is created, added and tagged', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -144,7 +144,7 @@ describe('bit status command', function () {
       expect(output.includes('new components')).to.be.false;
     });
   });
-  describe('when a component is created, added, committed and exported', () => {
+  describe('when a component is created, added, tagged and exported', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -189,7 +189,7 @@ describe('bit status command', function () {
       expect(output.includes('new components')).to.be.false;
     });
   });
-  describe('when a component is exported, modified and then committed', () => {
+  describe('when a component is exported, modified and then tagged', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -213,7 +213,7 @@ describe('bit status command', function () {
       expect(output.includes('new components')).to.be.false;
     });
   });
-  describe('when a component is exported, modified, committed and then exported again', () => {
+  describe('when a component is exported, modified, tagged and then exported again', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -271,7 +271,7 @@ describe('bit status command', function () {
       });
     });
   });
-  describe('when a component is imported committed and modified again', () => {
+  describe('when a component is imported tagged and modified again', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -300,7 +300,7 @@ describe('bit status command', function () {
     });
   });
 
-  describe('when a component has a dependency and both were committed', () => {
+  describe('when a component has a dependency and both were tagged', () => {
     let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();

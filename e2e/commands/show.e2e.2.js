@@ -1,5 +1,3 @@
-// covers also init, create, commit commands and the js-doc parser
-
 import chai, { expect } from 'chai';
 import path from 'path';
 import R from 'ramda';

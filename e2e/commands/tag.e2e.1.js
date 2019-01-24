@@ -691,7 +691,7 @@ describe('bit tag command', function () {
         }
       });
 
-      it('Should print that the component is committed', () => {
+      it('Should print that the component is tagged', () => {
         expect(output).to.have.string('1 components tagged');
       });
     });
@@ -855,7 +855,7 @@ describe('bit tag command', function () {
       expect(commitCmd).to.throw(
         `Command failed: ${
           helper.bitBin
-        } tag  -a  -m commit-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`
+        } tag  -a  -m tag-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`
       );
     });
   });

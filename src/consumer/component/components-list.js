@@ -74,7 +74,7 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are in the model (either, committed from a local scope or imported), and were
+   * Components that are in the model (either, tagged from a local scope or imported), and were
    * changed in the file system
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
@@ -130,7 +130,7 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are registered in bit.map but have never been committed
+   * Components that are registered in bit.map but have never been tagged
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise.<string[] | Component[]>}

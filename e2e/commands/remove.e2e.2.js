@@ -28,7 +28,7 @@ describe('bit remove command', function () {
       expect(output).to.include(`${path.join(helper.localScopePath, 'bit.json')}`);
     });
   });
-  describe('with committed components and --track=false ', () => {
+  describe('with tagged components and --track=false ', () => {
     let output;
     before(() => {
       helper.reInitLocalScope();
@@ -102,7 +102,7 @@ describe('bit remove command', function () {
       });
     });
   });
-  describe('with committed components and -t=true', () => {
+  describe('with tagged components and -t=true', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();

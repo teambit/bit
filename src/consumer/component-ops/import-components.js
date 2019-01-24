@@ -199,7 +199,7 @@ export default class ImportComponents {
   }
 
   async _throwForModifiedOrNewComponents(ids: BitId[]) {
-    // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
+    // the typical objectsOnly option is when a user cloned a project with components tagged to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
     if (this.options.override || this.options.objectsOnly || this.options.merge) return Promise.resolve();

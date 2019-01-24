@@ -25,7 +25,7 @@ describe('bit list command', function () {
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
-  describe('when a component is created but not committed', () => {
+  describe('when a component is created but not tagged', () => {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
@@ -37,7 +37,7 @@ describe('bit list command', function () {
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
-  describe('when a component is created and committed', () => {
+  describe('when a component is created and tagged', () => {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
