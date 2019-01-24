@@ -454,11 +454,23 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --extension`);
   }
 
-  importAndConfigureExtension(id: string = 'bit.extensions/npm/pack@2.0.1') {
+  importAndConfigureExtension(id: string) {
     this.importExtension(id);
     const bitJson = this.readBitJson();
     bitJson.extensions = { [id]: {} };
     this.writeBitJson(bitJson);
+  }
+
+  importNpmPackExtension(id: string = 'bit.extensions/npm/pack@2.0.1') {
+    this.importAndConfigureExtension(id);
+    // workaround to get the registry into the package.json file
+    const extensionFilePath = path.join(this.localScopePath, '.bit/components/npm/pack/bit.extensions/2.0.1/index.js');
+    const extensionFile = fs.readFileSync(extensionFilePath).toString();
+    const extensionFileIncludeRegistry = extensionFile.replace(
+      'excludeRegistryPrefix: true',
+      'excludeRegistryPrefix: false'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
   }
 
   build(id?: string = '') {

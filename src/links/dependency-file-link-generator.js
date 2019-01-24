@@ -191,7 +191,7 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePath(): string {
-    const packageName = componentIdToPackageName(this.dependencyId);
+    const packageName = componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
     if (this.relativePath.destinationRelativePath === this.dependencyComponent.mainFile) {
       return packageName;
     }

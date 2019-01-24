@@ -78,7 +78,7 @@ describe('custom module resolutions', function () {
       describe('npm packing the component using an extension npm-pack', () => {
         let packDir;
         before(() => {
-          helper.importAndConfigureExtension();
+          helper.importNpmPackExtension();
           packDir = path.join(helper.localScopePath, 'pack');
           helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
         });
@@ -217,7 +217,7 @@ describe('custom module resolutions', function () {
         describe('npm packing the component using an extension npm-pack', () => {
           let packDir;
           before(() => {
-            helper.importAndConfigureExtension();
+            helper.importNpmPackExtension();
             packDir = path.join(helper.localScopePath, 'pack');
             helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
           });
@@ -262,16 +262,22 @@ describe('custom module resolutions', function () {
 
       helper.createFile('src/utils', 'is-type.js', '');
       helper.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
-      helper.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', { i: 'utils/is-type', m: 'src/utils/is-type.js' });
+      helper.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+        i: 'utils/is-type',
+        m: 'src/utils/is-type.js'
+      });
 
       const isStringFixture =
         "const isType = require('utils/is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('src/utils', 'is-string.js', '');
       helper.createFile('src/utils', 'is-string-internal.js', isStringFixture);
-      helper.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', { i: 'utils/is-string', m: 'src/utils/is-string.js' });
+      helper.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
+        i: 'utils/is-string',
+        m: 'src/utils/is-string.js'
+      });
 
       const barFooFixture =
-      "const isString = require('utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
+        "const isString = require('utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
       helper.createFile('src/bar', 'foo.js', barFooFixture);
       helper.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
     });
