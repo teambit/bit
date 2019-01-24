@@ -27,7 +27,7 @@ chai.use(require('chai-fs'));
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents(`${username}.${scopeName} --eject`);
     });
     it('should delete the original component files from the file-system', () => {

@@ -140,7 +140,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         try {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
         } catch (err) {
           output = err.message;
         }
@@ -155,7 +155,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         try {
-          helper.tagAllWithoutMessage('--verbose');
+          helper.tagAllComponents('--verbose');
         } catch (err) {
           output = err.message;
         }
@@ -167,7 +167,7 @@ describe('bit test command', function () {
     describe('tagging the component with --force flag', () => {
       let output;
       before(() => {
-        output = helper.tagAllWithoutMessage('--force');
+        output = helper.tagAllComponents('--force');
       });
       it('should tag the component successfully', () => {
         expect(output).to.have.string('1 components tagged');

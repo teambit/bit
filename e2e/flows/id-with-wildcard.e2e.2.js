@@ -74,7 +74,7 @@ describe('component id with wildcard', function () {
     describe('remove with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
       });
       describe('when wildcard does not match any component', () => {
         it('should throw an error saying the wildcard does not match any id', () => {
@@ -105,7 +105,7 @@ describe('component id with wildcard', function () {
     describe('remove from remote with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         // as an intermediate step, make sure the remote scope has all components
@@ -138,7 +138,7 @@ describe('component id with wildcard', function () {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
         helper.reInitRemoteScope();
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
 
         // as an intermediate step, make sure all components are staged
         const status = helper.statusJson();
@@ -175,7 +175,7 @@ describe('component id with wildcard', function () {
     describe('untag with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
 
         // as an intermediate step, make sure all components are staged
         const status = helper.statusJson();
@@ -207,7 +207,7 @@ describe('component id with wildcard', function () {
     describe('checkout with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.tagScope('0.0.5');
 
         // as an intermediate step, make sure all components are staged
@@ -246,7 +246,7 @@ describe('component id with wildcard', function () {
     describe('merge with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.tagScope('0.0.5');
 
         // as an intermediate step, make sure all components are staged
@@ -279,7 +279,7 @@ describe('component id with wildcard', function () {
     describe('diff with wildcard', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterAdd);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.createFile('utils/is', 'string.js', '');
         helper.createFile('utils/is', 'type.js', '');
         helper.createFile('utils/fs', 'read.js', '');

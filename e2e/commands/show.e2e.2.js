@@ -215,7 +215,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

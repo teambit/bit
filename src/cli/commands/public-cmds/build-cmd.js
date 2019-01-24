@@ -1,10 +1,9 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
 import { build, buildAll } from '../../../api/consumer';
 import { empty } from '../../../utils';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-
-const chalk = require('chalk');
 
 export default class Build extends Command {
   name = 'build [id]';

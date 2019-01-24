@@ -362,7 +362,7 @@ describe('bit export command', function () {
       helper.createFile('utils', 'is-string1.js', fixtures.isString);
       helper.addComponentUtilsIsType();
       helper.addComponent('utils/is-string1.js', { i: 'utils/is-string1' });
-      helper.tagAllWithoutMessage('', '0.0.1');
+      helper.tagAllComponents('', '0.0.1');
       helper.exportAllComponents();
 
       // step2: export is-type@0.0.2 and is-string2 to remote1

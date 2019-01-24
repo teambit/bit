@@ -220,7 +220,7 @@ describe('run bit init', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo(); // this modifies bitMap
-      helper.tagAllWithoutMessage(); // this creates objects in .bit dir
+      helper.tagAllComponents(); // this creates objects in .bit dir
 
       // modify bit.json
       bitJson = helper.readBitJson();

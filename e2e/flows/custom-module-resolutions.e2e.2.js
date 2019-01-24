@@ -47,7 +47,7 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -141,7 +141,7 @@ describe('custom module resolutions', function () {
       });
       describe('importing the component', () => {
         before(() => {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           // an intermediate step, make sure it saves the customResolvedPaths in the model
           const catComponent = helper.catComponent('bar/foo@latest');
           expect(catComponent).to.have.property('customResolvedPaths');
@@ -179,7 +179,7 @@ describe('custom module resolutions', function () {
         helper.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.createFile('src/bar', 'foo.js', barFooFixture);
         helper.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.runCmd('bit status');
@@ -299,7 +299,7 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -374,7 +374,7 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();

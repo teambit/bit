@@ -1545,9 +1545,7 @@ console.log(barFoo.default());`;
     });
     it('should not allow tagging the component', () => {
       expect(output).to.have.string(
-        `Error: Command failed: ${
-          helper.bitBin
-        } tag  -a  -m tag-message \nerror: issues found with the following component dependencies\n\n${
+        `error: issues found with the following component dependencies\n\n${
           helper.remoteScope
         }/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
       );
@@ -1778,7 +1776,7 @@ console.log(barFoo.default());`;
         helper.getClonedLocalScope(scopeAfterExport);
         helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
         helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -1945,7 +1943,7 @@ console.log(barFoo.default());`;
     describe('re-import a component after tagging the component', () => {
       before(() => {
         helper.getClonedLocalScope(localScope);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
       });
       it('should import successfully', () => {
         const output = helper.importComponent('bar/foo');
@@ -2178,13 +2176,13 @@ console.log(barFoo.default());`;
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('as author', () => {
       before(() => {
         helper.createComponentBarFoo('v2');
-        const tagOutput = helper.tagAllWithoutMessage();
+        const tagOutput = helper.tagAllComponents();
         expect(tagOutput).to.have.string('0.0.2');
 
         // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
@@ -2208,7 +2206,7 @@ console.log(barFoo.default());`;
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
         helper.createFile('components/bar/foo', 'foo.js', 'v2');
-        const tagOutput = helper.tagAllWithoutMessage();
+        const tagOutput = helper.tagAllComponents();
         expect(tagOutput).to.have.string('0.0.2');
 
         // at this stage, the remote component has only 0.0.1. The local component has also 0.0.2
@@ -2244,7 +2242,7 @@ console.log(barFoo.default());`;
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.addComponentUtilsIsType();
       helper.addComponentUtilsIsString();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       const exportOutput = helper.exportAllComponents();
 
       // intermediate step to make sure all are exported

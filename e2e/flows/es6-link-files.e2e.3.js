@@ -75,7 +75,7 @@ describe('es6 components with link files', function () {
     describe('when importing the component', () => {
       before(() => {
         helper.importCompiler();
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -114,7 +114,7 @@ describe('es6 components with link files', function () {
     describe('when importing the component', () => {
       before(() => {
         helper.importCompiler('bit.envs/compilers/babel');
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();

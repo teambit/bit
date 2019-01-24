@@ -126,7 +126,7 @@ describe('auto tagging functionality', function () {
         helper.createFile('utils', 'is-string.spec.js', fixtures.isStringSpec(true));
 
         helper.addComponent('utils/is-string.js', { t: 'utils/is-string.spec.js', i: 'utils/is-string' });
-        helper.tagAllWithoutMessage(); // tests are passing at this point
+        helper.tagAllComponents(); // tests are passing at this point
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -317,7 +317,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'd.js', 'require("./e")');
       helper.createFile('bar', 'e.js', 'console.log("I am E v1")');
       helper.addComponent('bar/*.js', { n: 'bar' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -339,7 +339,7 @@ describe('auto tagging functionality', function () {
     describe('after tagging the components', () => {
       let tagOutput;
       before(() => {
-        tagOutput = helper.tagAllWithoutMessage();
+        tagOutput = helper.tagAllComponents();
       });
       it('should auto tag only IMPORTED', () => {
         expect(tagOutput).to.have.string('auto-tagged components');
@@ -396,7 +396,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'b.js', 'require("./c")');
       helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v1")');
       helper.addComponent('bar/*.js', { n: 'bar' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.createFile('bar', 'c.js', 'require("./a"); console.log("I am C v2")');
     });
     it('bit status should recognize the auto tag pending components', () => {
@@ -407,7 +407,7 @@ describe('auto tagging functionality', function () {
     describe('after tagging the components', () => {
       let tagOutput;
       before(() => {
-        tagOutput = helper.tagAllWithoutMessage();
+        tagOutput = helper.tagAllComponents();
       });
       it('should auto tag all dependents', () => {
         expect(tagOutput).to.have.string('auto-tagged components');
@@ -449,7 +449,7 @@ describe('auto tagging functionality', function () {
       helper.createFile('bar', 'b.js', 'require("./c")');
       helper.createFile('bar', 'c.js', 'console.log("I am C v1")');
       helper.addComponent('bar/*.js', { n: 'bar' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();

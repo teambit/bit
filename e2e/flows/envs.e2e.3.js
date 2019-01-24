@@ -55,7 +55,7 @@ describe('envs', function () {
     helper.addNpmPackage('mocha', '5.1.1');
     helper.addNpmPackage('vinyl', '2.1.0');
     helper.addNpmPackage('resolve', '1.7.1');
-    helper.tagAllWithoutMessage();
+    helper.tagAllComponents();
     helper.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
     helper.addRemoteScope();
@@ -80,7 +80,7 @@ describe('envs', function () {
     helper.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.installNpmPackage('babel-preset-env', '1.6.1');
     helper.installNpmPackage('chai', '4.1.2');
-    helper.tagAllWithoutMessage();
+    helper.tagAllComponents();
     helper.exportAllComponents();
     authorScopeBeforeChanges = helper.cloneLocalScope();
     remoteScopeBeforeChanges = helper.cloneRemoteScope();
@@ -219,7 +219,7 @@ describe('envs', function () {
         bitJsonPath = path.join(fullComponentFolder, 'bit.json');
         helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', COMPILER_ENV_TYPE);
         helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', TESTER_ENV_TYPE);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         helper.importComponent('comp/my-comp');
@@ -257,7 +257,7 @@ describe('envs', function () {
         before(() => {
           // Change the component
           helper.createFile('', 'objRestSpread.js', 'const a = 3');
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
           componentModel = helper.catComponent(compId);
         });
@@ -293,7 +293,7 @@ describe('envs', function () {
           });
           describe('tagging re-attached component', () => {
             before(() => {
-              helper.tagAllWithoutMessage();
+              helper.tagAllComponents();
               compId = `${helper.remoteScope}/comp/my-comp@0.0.4`;
               componentModel = helper.catComponent(compId);
             });
@@ -892,7 +892,7 @@ describe('envs', function () {
           fs.outputJsonSync(mochaConfigPath, mochaConfigFromFS, { spaces: 4 });
           fs.outputJsonSync(bitJsonPath, bitJsonFromFS, { spaces: 4 });
           // tag a new version (so the conf files won't consider as modified)
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           // Checkout previous version
           helper.checkoutVersion('0.0.1', 'comp/my-comp');
           // Read config files again after checkout
@@ -1170,7 +1170,7 @@ describe('envs', function () {
             before(() => {
               helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', COMPILER_ENV_TYPE);
               helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', TESTER_ENV_TYPE);
-              helper.tagAllWithoutMessage();
+              helper.tagAllComponents();
               componentModel = helper.catComponent(compId);
               const bitmap = helper.readBitMap();
               componentMap = bitmap[compId];
@@ -1190,7 +1190,7 @@ describe('envs', function () {
             describe('tagging already detached component (without new envs changes)', () => {
               before(() => {
                 helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
-                helper.tagAllWithoutMessage();
+                helper.tagAllComponents();
                 compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
                 componentModel = helper.catComponent(compId);
               });
@@ -1266,7 +1266,7 @@ describe('envs', function () {
               before(() => {
                 helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
                 helper.addRemoteEnvironment();
-                helper.tagAllWithoutMessage();
+                helper.tagAllComponents();
                 compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
                 componentModel = helper.catComponent(compId);
               });
@@ -1504,7 +1504,7 @@ describe('envs with relative paths', function () {
   });
   describe('tagging the component', () => {
     before(() => {
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
     });
     it('should save the relative paths of the compiler files', () => {
       const catComponent = helper.catComponent('bar/foo@latest');

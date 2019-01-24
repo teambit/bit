@@ -47,7 +47,7 @@ describe('bit merge command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllWithoutMessage('', '0.0.5');
+        helper.tagAllComponents('', '0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
@@ -239,7 +239,7 @@ describe('bit merge command', function () {
             expect(tagOutput).to.have.string('error found while parsing the file');
           });
           it('bit tag should tag the component when --ignore-unresolved-dependencies flag is used', () => {
-            const tagOutput = helper.tagAllWithoutMessage('--ignore-unresolved-dependencies');
+            const tagOutput = helper.tagAllComponents('--ignore-unresolved-dependencies');
             expect(tagOutput).to.have.string('1 components tagged');
           });
         });

@@ -46,7 +46,7 @@ describe('bit diff command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllWithoutMessage('', '0.0.5');
+        helper.tagAllComponents('', '0.0.5');
       });
       it('should still indicate that there is no diff for that component', () => {
         const output = helper.diff('bar/foo');
@@ -149,7 +149,7 @@ describe('bit diff command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.createFile('bar', 'foo2.js', barFooV2);
       fs.removeSync(path.join(helper.localScopePath, 'bar/foo.js'));
       helper.addComponent('bar/foo2.js', { i: 'bar/foo', m: 'bar/foo2.js' });
@@ -185,7 +185,7 @@ describe('bit diff command', function () {
     });
     describe('running bit diff between the previous version and the last version', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         output = helper.diff('bar/foo 0.0.1 0.0.2');
       });
       it('should indicate the deleted files as deleted', () => {
@@ -220,7 +220,7 @@ describe('bit diff command', function () {
     });
     describe('running bit diff between current version and version 0.0.1', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         output = helper.diff('bar/foo 0.0.1');
       });
       it('should indicate the deleted files as deleted', () => {
@@ -324,7 +324,7 @@ describe('bit diff command', function () {
       helper.createComponentBarFoo('import isString from "../utils/is-string"');
       helper.addComponentUtilsIsString();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.runCmd('bit move utils utility');
       helper.createComponentBarFoo('import isString from "../utility/is-string"');
     });
