@@ -218,6 +218,10 @@ export default class Helper {
     return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
   }
 
+  removeRemoteScope(remoteScope: string = this.remoteScope) {
+    return this.runCmd(`bit remote del ${remoteScope}`);
+  }
+
   addRemoteEnvironment() {
     return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
   }

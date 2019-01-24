@@ -17,13 +17,13 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * the default scope registry is `@bit`. we don't touch this scope.
  * instead, we create a new one `@ci` for all components published using this class.
  *
- * when using bitsrc, on export, a component is automatically pushed to @bit registry.
- * here, we don't have this privilege. instead, the following needs to be done to save the
- * component in the registry.
- * 1) import the component.
- * 2) run npm-pack to create a .tgz file.
- * 3) extract the file and run `npm publish` in that directory.
- * You can use the method `publishComponent()` in this class to automate the process
+ * To get it work, the following steps are mandatory.
+ * 1. before tagging the components, run `this.setCiScopeInBitJson()`.
+ * 2. import the components to a new scope.
+ * 3. run `helper.importNpmPackExtension();`
+ * 4. run `helper.removeRemoteScope();` otherwise, it'll save components as dependencies
+ * 5. run `this.publishComponent(your-component)`.
+ * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
  */
 export default class NpmCiRegistry {
   registryServer: ChildProcess;
@@ -37,6 +37,9 @@ export default class NpmCiRegistry {
     this._registerToCiScope();
   }
 
+  /**
+   * makes sure to kill the server process, otherwise, the tests will continue forever and never exit
+   */
   destroy() {
     this.registryServer.kill();
   }
@@ -82,6 +85,27 @@ EOD`;
     this.helper.runCmd('npm config set @ci:registry http://localhost:4873');
   }
 
+  /**
+   * ensures that the bindingPrefix of all components is `@ci`, so it'll be possible to publish
+   * them later on into @ci scope of Verdaccio registry
+   */
+  setCiScopeInBitJson() {
+    const bitJson = this.helper.readBitJson();
+    // $FlowFixMe
+    bitJson.bindingPrefix = '@ci';
+    this.helper.writeBitJson(bitJson);
+  }
+
+  /**
+   * when using bitsrc, on export, a component is automatically pushed to @bit registry.
+   * here, we don't have this privilege. instead, the following needs to be done to save the
+   * component in the registry.
+   * 1) import the component.
+   * 2) run npm-pack to create a .tgz file.
+   * 3) extract the file and run `npm publish` in that directory.
+   * this method does the last two. the end result is that Verdaccio registry has this component
+   * published and ready to be consumed later on when running 'npm install package-name'.
+   */
   publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
     const packDir = path.join(this.helper.localScopePath, 'pack');
     this.helper.runCmd(`bit npm-pack ${this.helper.remoteScope}/${componentName} -o -k -d ${packDir}`);
@@ -90,7 +114,6 @@ EOD`;
     const tarballFilePath = path.join(packDir, tarballFileName);
     tar.x({ file: tarballFilePath, C: packDir, sync: true });
     const extractedDir = path.join(packDir, 'package');
-    fs.removeSync(path.join(extractedDir, 'components')); // not sure why this dir is created
     this._validateRegistryScope(extractedDir);
     this.helper.runCmd('npm publish', extractedDir);
   }
