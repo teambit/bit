@@ -22,7 +22,7 @@ const removeNils = R.reject(R.isNil);
  * when utils/is-type is tagged, utils/is-string and bar/foo are updated in the first updateComponents() round.
  * by looking at bar/foo dependencies, we find out that its utils/is-type dependency was updated to 0.0.2
  * however, its utils/is-string dependency stays with 0.0.1, because utils/is-string was never part of
- * committedComponents array.
+ * taggedComponents array.
  * this second round of updateComponents() makes sure that the auto-tagged components will be updated as well.
  *
  * another case when round2 is needed is when the tagged component has a cycle dependency.
@@ -34,23 +34,23 @@ const removeNils = R.reject(R.isNil);
 export async function bumpDependenciesVersions(
   scope: Scope,
   potentialComponents: BitIds,
-  committedComponents: Component[]
+  taggedComponents: Component[]
 ): Promise<ModelComponent[]> {
-  const committedComponentsIds = BitIds.fromArray(committedComponents.map(c => c.id));
-  const allComponents = new BitIds(...potentialComponents, ...committedComponentsIds);
+  const taggedComponentsIds = BitIds.fromArray(taggedComponents.map(c => c.id));
+  const allComponents = new BitIds(...potentialComponents, ...taggedComponentsIds);
   const componentsAndVersions: ComponentsAndVersions[] = await scope.getComponentsAndVersions(allComponents);
   const graph = buildGraph(componentsAndVersions);
   const updatedComponents = await updateComponents(
     componentsAndVersions,
     scope,
-    committedComponentsIds,
-    committedComponentsIds,
+    taggedComponentsIds,
+    taggedComponentsIds,
     false,
     graph
   );
   if (updatedComponents.length) {
     const ids = updatedComponents.map(component => component.toBitIdWithLatestVersion());
-    await updateComponents(componentsAndVersions, scope, committedComponentsIds, BitIds.fromArray(ids), true, graph);
+    await updateComponents(componentsAndVersions, scope, taggedComponentsIds, BitIds.fromArray(ids), true, graph);
   }
   return updatedComponents;
 }
@@ -58,7 +58,7 @@ export async function bumpDependenciesVersions(
 async function updateComponents(
   componentsAndVersions: ComponentsAndVersions[],
   scope: Scope,
-  committedComponents: BitIds,
+  taggedComponents: BitIds,
   changedComponents: BitIds,
   isRound2 = false,
   graph: Object
@@ -68,7 +68,7 @@ async function updateComponents(
     const bitId = component.toBitId();
     const idStr = bitId.toStringWithoutVersion();
     if (!graph.hasNode(idStr)) return null;
-    const isCommittedComponent = committedComponents.hasWithoutVersion(bitId);
+    const isCommittedComponent = taggedComponents.hasWithoutVersion(bitId);
     if (isCommittedComponent && !isRound2) {
       // if isCommittedComponent is true, the only case it's needed to be updated is when it has
       // cycle dependencies. in that case, it should be updated on the round2 only.
