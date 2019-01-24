@@ -3,6 +3,7 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
@@ -253,13 +254,14 @@ describe('custom module resolutions', function () {
       });
     });
   });
-  describe.skip('using custom module directory when a component uses an internal file of another component', () => {
+  describe('using custom module directory when a component uses an internal file of another component', () => {
+    const npmCiRegistry = new NpmCiRegistry(helper);
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const bitJson = helper.readBitJson();
       bitJson.resolveModules = { modulesDirectories: ['src'] };
       helper.writeBitJson(bitJson);
-
+      npmCiRegistry.setCiScopeInBitJson();
       helper.createFile('src/utils', 'is-type.js', '');
       helper.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
       helper.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
@@ -313,33 +315,27 @@ describe('custom module resolutions', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.string('modified');
       });
-      describe('npm packing the component using an extension npm-pack', () => {
-        let packDir;
-        before(() => {
-          helper.importAndConfigureExtension();
-          packDir = path.join(helper.localScopePath, 'pack');
-          helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+      (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
+        before(async () => {
+          await npmCiRegistry.init();
+          helper.importNpmPackExtension();
+          helper.removeRemoteScope();
+          npmCiRegistry.publishComponent('utils/is-type');
+          npmCiRegistry.publishComponent('utils/is-string');
+          npmCiRegistry.publishComponent('bar/foo');
+
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
         });
-        it('should create the specified directory', () => {
-          expect(packDir).to.be.a.path();
+        after(() => {
+          npmCiRegistry.destroy();
         });
-        it('should generate .bit.postinstall.js file', () => {
-          expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
-        });
-        it('should add the postinstall script to the package.json file', () => {
-          const packageJson = helper.readPackageJson(packDir);
-          expect(packageJson).to.have.property('scripts');
-          expect(packageJson.scripts).to.have.property('postinstall');
-          expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
-        });
-        it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-          const packageJson = helper.readPackageJson(packDir);
-          expect(packageJson).to.have.property('bit');
-          expect(packageJson.bit).to.have.property('resolveAliases');
-          expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
-          expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
-            `@bit/${helper.remoteScope}.utils.is-string`
-          );
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
       });
     });
