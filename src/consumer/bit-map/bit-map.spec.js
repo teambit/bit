@@ -23,9 +23,10 @@ const addComponentParamsImportedFixture = {
   rootDir: 'utils'
 };
 
-describe('BitMap', () => {
+describe('BitMap', function () {
   logger.debug = () => {};
   logger.info = () => {};
+  this.timeout(0);
   describe('toObject', () => {
     let bitMap;
     let componentMap;
