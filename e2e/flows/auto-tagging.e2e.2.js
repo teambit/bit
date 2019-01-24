@@ -42,9 +42,9 @@ describe('auto tagging functionality', function () {
         helper.createFile('utils', 'is-type.js', isTypeFixtureV2); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
-        const commitOutput = helper.tagComponent('utils/is-type');
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('utils/is-string');
+        const tagOutput = helper.tagComponent('utils/is-type');
+        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string('utils/is-string');
         // notice how is-string is not manually committed again!
         helper.exportAllComponents();
         clonedScope = helper.cloneLocalScope();
@@ -64,9 +64,9 @@ describe('auto tagging functionality', function () {
           helper.getClonedLocalScope(clonedScope);
           const isTypeFixtureV3 = "module.exports = function isType() { return 'got is-type v3'; };";
           helper.createFile('utils', 'is-type.js', isTypeFixtureV3); // modify is-type
-          const commitOutput = helper.tagComponent('utils/is-type');
-          expect(commitOutput).to.have.string('auto-tagged components');
-          expect(commitOutput).to.have.string('utils/is-string');
+          const tagOutput = helper.tagComponent('utils/is-type');
+          expect(tagOutput).to.have.string('auto-tagged components');
+          expect(tagOutput).to.have.string('utils/is-string');
         });
         it('the dependent should not be shown as modified after the commit', () => {
           const output = helper.runCmd('bit status');
@@ -75,7 +75,7 @@ describe('auto tagging functionality', function () {
       });
     });
     describe('as IMPORTED', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -94,12 +94,12 @@ describe('auto tagging functionality', function () {
         helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
-        commitOutput = helper.tagComponent('utils/is-type');
+        tagOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto-tag the dependents', () => {
-        expect(commitOutput).to.not.have.string('no auto-tag pending components');
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('utils/is-string');
+        expect(tagOutput).to.not.have.string('no auto-tag pending components');
+        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string('utils/is-string');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
         helper.exportAllComponents();
@@ -115,7 +115,7 @@ describe('auto tagging functionality', function () {
       });
     });
     describe('with dependents tests failing', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.importTester('bit.envs/testers/mocha@0.0.12');
@@ -154,13 +154,13 @@ describe('auto tagging functionality', function () {
       describe('tagging without --verbose flag', () => {
         before(() => {
           try {
-            commitOutput = helper.tagComponent('utils/is-type');
+            tagOutput = helper.tagComponent('utils/is-type');
           } catch (err) {
-            commitOutput = err.toString();
+            tagOutput = err.toString();
           }
         });
         it('should not auto-tag the dependents', () => {
-          expect(commitOutput).to.have.string(
+          expect(tagOutput).to.have.string(
             'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
           );
         });
@@ -168,19 +168,19 @@ describe('auto tagging functionality', function () {
       describe('tagging with --verbose flag', () => {
         before(() => {
           try {
-            commitOutput = helper.tagComponent('utils/is-type --verbose');
+            tagOutput = helper.tagComponent('utils/is-type --verbose');
           } catch (err) {
-            commitOutput = err.toString() + err.stdout.toString();
+            tagOutput = err.toString() + err.stdout.toString();
           }
         });
         it('should not auto-tag the dependents', () => {
-          expect(commitOutput).to.have.string(
+          expect(tagOutput).to.have.string(
             'component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command\n'
           );
         });
         it('should display the failing tests results', () => {
-          expect(commitOutput).to.have.string('tests failed');
-          expect(commitOutput).to.have.string(
+          expect(tagOutput).to.have.string('tests failed');
+          expect(tagOutput).to.have.string(
             "expected 'got is-type! and got is-string' to equal 'got is-type and got is-string'"
           );
         });
@@ -203,7 +203,7 @@ describe('auto tagging functionality', function () {
      * Also, bar/foo (so-called "dependent of dependent") should be updated to include is-string and is-type with v2.
      */
     describe('as AUTHORED', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -219,12 +219,12 @@ describe('auto tagging functionality', function () {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
 
-        commitOutput = helper.tagComponent('utils/is-type');
+        tagOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto tag the dependencies and the nested dependencies', () => {
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('utils/is-string@0.0.2');
-        expect(commitOutput).to.have.string('bar/foo@0.0.2');
+        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string('utils/is-string@0.0.2');
+        expect(tagOutput).to.have.string('bar/foo@0.0.2');
       });
       it('should update the dependencies and the flattenedDependencies of the dependent with the new versions', () => {
         const barFoo = helper.catComponent('utils/is-string@latest');
@@ -265,7 +265,7 @@ describe('auto tagging functionality', function () {
       });
     });
     describe('as IMPORTED', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -287,13 +287,13 @@ describe('auto tagging functionality', function () {
         helper.createFile(path.join('components', 'utils', 'is-type'), 'is-type.js', isTypeFixtureV2); // modify is-type
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
-        commitOutput = helper.tagComponent('utils/is-type');
+        tagOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto-tag the dependents', () => {
-        expect(commitOutput).to.not.have.string('no auto-tag pending components');
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('utils/is-string');
-        expect(commitOutput).to.have.string('bar/foo');
+        expect(tagOutput).to.not.have.string('no auto-tag pending components');
+        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string('utils/is-string');
+        expect(tagOutput).to.have.string('bar/foo');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
         helper.exportAllComponents();
@@ -337,16 +337,16 @@ describe('auto tagging functionality', function () {
       expect(status.autoTagPendingComponents).to.not.deep.include(`${helper.remoteScope}/bar/a`); // it's a dependent via nested
     });
     describe('after tagging the components', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
-        commitOutput = helper.tagAllWithoutMessage();
+        tagOutput = helper.tagAllWithoutMessage();
       });
       it('should auto tag only IMPORTED', () => {
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('bar/c@0.0.2');
-        expect(commitOutput).to.have.string('bar/d@0.0.2');
-        expect(commitOutput).to.not.have.string('bar/b');
-        expect(commitOutput).to.not.have.string('bar/a');
+        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string('bar/c@0.0.2');
+        expect(tagOutput).to.have.string('bar/d@0.0.2');
+        expect(tagOutput).to.not.have.string('bar/b');
+        expect(tagOutput).to.not.have.string('bar/a');
       });
       it('should update the dependencies and the flattenedDependencies of the IMPORTED dependents with the new versions', () => {
         const barC = helper.catComponent(`${helper.remoteScope}/bar/c@latest`);
@@ -405,14 +405,14 @@ describe('auto tagging functionality', function () {
       expect(output.autoTagPendingComponents).to.deep.include('bar/b');
     });
     describe('after tagging the components', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
-        commitOutput = helper.tagAllWithoutMessage();
+        tagOutput = helper.tagAllWithoutMessage();
       });
       it('should auto tag all dependents', () => {
-        expect(commitOutput).to.have.string('auto-tagged components');
-        expect(commitOutput).to.have.string('bar/a@0.0.2');
-        expect(commitOutput).to.have.string('bar/b@0.0.2');
+        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string('bar/a@0.0.2');
+        expect(tagOutput).to.have.string('bar/b@0.0.2');
       });
       it('should update the dependencies and the flattenedDependencies of the all dependents with the new versions', () => {
         const barA = helper.catComponent('bar/a@latest');
@@ -470,12 +470,12 @@ describe('auto tagging functionality', function () {
       expect(status.autoTagPendingComponents).to.include(`${helper.remoteScope}/bar/b`);
     });
     describe('tagging the dependency', () => {
-      let commitOutput;
+      let tagOutput;
       before(() => {
-        commitOutput = helper.tagComponent('bar/c');
+        tagOutput = helper.tagComponent('bar/c');
       });
       it('should bump the component version that is direct and indirect dependent only once', () => {
-        expect(commitOutput).to.have.string('bar/a@0.0.2');
+        expect(tagOutput).to.have.string('bar/a@0.0.2');
 
         const barA = helper.catComponent(`${helper.remoteScope}/bar/a`);
         const barAVersions = Object.keys(barA.versions);

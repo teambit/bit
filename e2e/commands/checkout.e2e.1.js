@@ -92,15 +92,15 @@ describe('bit checkout command', function () {
               helper.createComponentBarFoo('console.log("modified components");');
             });
             it('should throw an error NewerVersionFound', () => {
-              const commitFunc = () => helper.tagComponent('bar/foo');
+              const tagFunc = () => helper.tagComponent('bar/foo');
               const error = new NewerVersionFound([
                 { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' }
               ]);
-              helper.expectToThrow(commitFunc, error);
+              helper.expectToThrow(tagFunc, error);
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
-              const commitOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(commitOutput).to.have.string('1 components tagged');
+              const tagOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
+              expect(tagOutput).to.have.string('1 components tagged');
             });
           });
         });
