@@ -68,7 +68,7 @@ describe('auto tagging functionality', function () {
           expect(tagOutput).to.have.string('auto-tagged components');
           expect(tagOutput).to.have.string('utils/is-string');
         });
-        it('the dependent should not be shown as modified after the commit', () => {
+        it('the dependent should not be shown as modified after the tag', () => {
           const output = helper.runCmd('bit status');
           expect(output).to.not.have.a.string('modified components');
         });

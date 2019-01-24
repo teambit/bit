@@ -572,7 +572,7 @@ export default class Consumer {
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't commit anything
+    // if there is at least one we won't tag anything
     if (!ignoreUnresolvedDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.issues);

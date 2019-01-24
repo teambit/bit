@@ -1,4 +1,4 @@
-// covers also init, create, commit, import and export commands
+// covers also init, create, tag, import and export commands
 
 import chai, { expect } from 'chai';
 import path from 'path';
@@ -50,7 +50,7 @@ describe('bit untrack command', function () {
       expect(Object.keys(bitMap)).to.be.ofSize(1);
       expect(bitMap).to.have.property('bar/foo2');
     });
-    it('Should be unsuccessful in untracking commited component and return a message to the user', () => {
+    it('Should be unsuccessful in untracking tagged component and return a message to the user', () => {
       helper.createFile('bar', 'foo.js');
       helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
       helper.tagComponent('bar/foo');

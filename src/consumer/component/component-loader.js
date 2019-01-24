@@ -50,7 +50,7 @@ export default class ComponentLoader {
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
     const driverExists = this.consumer.warnForMissingDriver(
-      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
+      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run tag again.'
     );
 
     const components = idsToProcess.map(async (id: BitId) => {

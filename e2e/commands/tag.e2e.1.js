@@ -23,7 +23,7 @@ describe('bit tag command', function () {
   });
   describe('tag component with corrupted bit.json', () => {
     let output;
-    it('Should not commit component if bit.json is corrupted', () => {
+    it('Should not tag component if bit.json is corrupted', () => {
       const fixture = "import foo from ./foo; module.exports = function foo2() { return 'got foo'; };";
       helper.createFile('bar', 'foo2.js', fixture);
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
@@ -664,7 +664,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('src/untracked2.js');
       });
     });
-    describe('commit component with missing dependencies with --ignore-unresolved-dependencies', () => {
+    describe('tag component with missing dependencies with --ignore-unresolved-dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -683,7 +683,7 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitOne = () => helper.tagComponent('comp/a', 'commit-msg', '--ignore-unresolved-dependencies');
+        const commitOne = () => helper.tagComponent('comp/a', 'tag-msg', '--ignore-unresolved-dependencies');
         try {
           output = commitOne();
         } catch (err) {
@@ -695,7 +695,7 @@ describe('bit tag command', function () {
         expect(output).to.have.string('1 components tagged');
       });
     });
-    describe('commit all components with missing dependencies with --ignore-unresolved-dependencies', () => {
+    describe('tag all components with missing dependencies with --ignore-unresolved-dependencies', () => {
       let output;
       before(() => {
         helper.reInitLocalScope();
@@ -714,7 +714,7 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const commitAll = () => helper.tagAllComponents('commit-msg', '--ignore-unresolved-dependencies');
+        const commitAll = () => helper.tagAllComponents('tag-msg', '--ignore-unresolved-dependencies');
         try {
           output = commitAll();
         } catch (err) {
@@ -722,7 +722,7 @@ describe('bit tag command', function () {
         }
       });
 
-      it('Should print that the components are commited', () => {
+      it('Should print that the components are tagged', () => {
         expect(output).to.have.string('2 components tagged');
       });
     });
@@ -818,7 +818,7 @@ describe('bit tag command', function () {
       helper.createFile('bar', 'index.js');
       helper.addComponent('bar/', { i: 'bar/foo' });
     });
-    it('Should commit component only with the left files', () => {
+    it('Should tag component only with the left files', () => {
       const beforeRemoveBitMap = helper.readBitMap();
       const beforeRemoveBitMapFiles = beforeRemoveBitMap['bar/foo'].files;
       expect(beforeRemoveBitMapFiles).to.be.ofSize(2);

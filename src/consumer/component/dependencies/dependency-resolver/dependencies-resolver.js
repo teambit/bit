@@ -126,7 +126,7 @@ export default class DependencyResolver {
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependenciesTree();
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
-    // they are referred as "untracked components" and the user should add them later on in order to commit
+    // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
     this.populateDependencies(allFiles, testsFiles);
     this.component.setDependencies(this.allDependencies.dependencies);

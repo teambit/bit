@@ -191,7 +191,7 @@ export default class ComponentsList {
   }
 
   /**
-   * New and modified components are commit pending
+   * New and modified components are tag pending
    *
    * @return {Promise<string[]>}
    */

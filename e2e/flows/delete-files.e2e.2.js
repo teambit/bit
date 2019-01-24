@@ -36,7 +36,7 @@ describe('delete files from a component', function () {
       expect(bitMap['bar/foo@0.0.1'].files.length).to.equal(1);
     });
   });
-  describe('commit and then delete a file', () => {
+  describe('tag and then delete a file', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
