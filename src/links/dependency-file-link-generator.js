@@ -192,7 +192,7 @@ export default class DependencyFileLinkGenerator {
 
   _getPackagePath(): string {
     // convert the component name to a valid npm package name
-    return componentIdToPackageName(this.dependencyId);
+    return componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
   }
 
   _getCustomResolveMapping(relativeFilePath: PathOsBased) {

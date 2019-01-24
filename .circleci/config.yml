@@ -48,9 +48,9 @@ jobs:
     working_directory: ~/bit
     steps:
       # prod registry
-      # - 
+      # -
         # run: npm config set @bit:registry https://node.bitsrc.io
-      # - 
+      # -
         # run: echo "//node.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
       -
@@ -267,6 +267,10 @@ jobs:
         run:
           name: 'save SHA to a file'
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
+      -
+        run:
+          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
+          command: 'sudo apt-get install expect'
       -
         run:
           name: 'create global npm directory (to avoid using sudo for npm link)'

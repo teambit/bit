@@ -6,9 +6,13 @@ import BitId from '../../bit-id/bit-id';
 /**
  * convert a component name to a valid npm package name
  */
-export default function componentIdToPackageName(id: BitId, withPrefix?: boolean = true): string {
+export default function componentIdToPackageName(
+  id: BitId,
+  bindingPrefix: ?string,
+  withPrefix?: boolean = true
+): string {
   const nameWithoutPrefix = `${id.toStringWithoutVersion().replace(/\//g, NODE_PATH_COMPONENT_SEPARATOR)}`;
   if (!withPrefix) return nameWithoutPrefix;
-  const registryPrefix = npmRegistryName();
+  const registryPrefix = bindingPrefix || npmRegistryName();
   return `${registryPrefix}/${nameWithoutPrefix}`;
 }

@@ -294,7 +294,7 @@ function getInternalCustomResolvedLinks(
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
     const linkContent = getLinkToFileContent(destRelative);
-    const packageName = componentIdToPackageName(component.id);
+    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
     const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
     return {
       linkPath: createNpmLinkFiles ? dest : destAbs,

@@ -78,7 +78,7 @@ describe('custom module resolutions', function () {
       describe('npm packing the component using an extension npm-pack', () => {
         let packDir;
         before(() => {
-          helper.importAndConfigureExtension();
+          helper.importNpmPackExtension();
           packDir = path.join(helper.localScopePath, 'pack');
           helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
         });
@@ -217,7 +217,7 @@ describe('custom module resolutions', function () {
         describe('npm packing the component using an extension npm-pack', () => {
           let packDir;
           before(() => {
-            helper.importAndConfigureExtension();
+            helper.importNpmPackExtension();
             packDir = path.join(helper.localScopePath, 'pack');
             helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
           });
