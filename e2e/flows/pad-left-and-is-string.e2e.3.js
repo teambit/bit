@@ -83,7 +83,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.addRemoteScope();
         helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'any' });
         helper.importComponent('string/pad-left -p src/pad-left');
-        helper.commitComponent('string/pad-left', 'msg', '-f');
+        helper.tagComponent('string/pad-left', 'msg', '-f');
         const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });

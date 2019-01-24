@@ -25,7 +25,7 @@ describe('bit list command', function () {
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
-  describe('when a component is created but not committed', () => {
+  describe('when a component is created but not tagged', () => {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
@@ -37,13 +37,13 @@ describe('bit list command', function () {
       expect(output.includes('found 0 components')).to.be.true;
     });
   });
-  describe('when a component is created and committed', () => {
+  describe('when a component is created and tagged', () => {
     before(() => {
       helper.cleanEnv();
       helper.runCmd('bit init');
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should display "found 1 components"', () => {
       const output = helper.runCmd('bit list');
@@ -62,7 +62,7 @@ describe('bit list command', function () {
         helper.setNewLocalAndRemoteScopes();
         helper.createComponentBarFoo();
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -72,7 +72,7 @@ describe('bit list command', function () {
         helper.reInitLocalScope();
         helper.addRemoteScope();
         helper.importComponent('bar/foo@0.0.1');
-        helper.commitComponent('bar/foo', 'msg', '-f');
+        helper.tagComponent('bar/foo', 'msg', '-f');
         helper.exportAllComponents();
 
         helper.getClonedLocalScope(clonedScopePath);
@@ -91,7 +91,7 @@ describe('bit list command', function () {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('bar', 'baz.js');
         helper.addComponent('bar/baz.js', { i: 'bar/baz' });
-        helper.commitComponent('bar/baz');
+        helper.tagComponent('bar/baz');
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -110,7 +110,7 @@ describe('bit list command', function () {
         helper.reInitLocalScope();
         helper.createFile('bar', 'local');
         helper.addComponent('bar/local', { i: 'bar/local' });
-        helper.commitComponent('bar/local');
+        helper.tagComponent('bar/local');
         const stringOutput = helper.runCmd('bit list -o -j');
         output = JSON.parse(stringOutput);
       });

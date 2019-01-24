@@ -34,7 +34,7 @@ describe('bit link', function () {
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponentUtilsIsType();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         // requiring is-type through the internal file (@bit/remoteScope.utils.is-type/utils/is-type)
@@ -94,7 +94,7 @@ console.log(isType());`;
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -133,7 +133,7 @@ console.log(isType());`;
       helper.createFile('bar2', 'foo2.js');
       helper.addComponentBarFoo();
       helper.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -155,7 +155,7 @@ console.log(isType());`;
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -166,7 +166,7 @@ console.log(isType());`;
       )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -184,7 +184,7 @@ console.log(isType());`;
       const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
       helper.createFile('utils', 'is-type.js', isTypeFixture);
       helper.addComponentUtilsIsType();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       // is-string
@@ -197,7 +197,7 @@ console.log(isType());`;
       }.utils.is-type'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       // is-string2
@@ -210,7 +210,7 @@ console.log(isType());`;
       }.utils.is-string'); module.exports = function isString2() { return isString() +  ' and got is-string2'; };`;
       helper.createFile('test', 'is-string2.js', isStringFixture2);
       helper.addComponent('test/is-string2.js', { i: 'test/is-string2' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();

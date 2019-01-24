@@ -76,12 +76,12 @@ describe('bit merge command', function () {
       helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
       helper.createComponentBarFoo(fixtures.barFooFixtureV2);
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       localScope = helper.cloneLocalScope();
     });
     it('as an intermediate step, make sure the dependencies are correct', () => {
@@ -300,9 +300,9 @@ describe('bit merge command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       localScope = helper.cloneLocalScope();
     });
     describe('using manual strategy', () => {
@@ -479,10 +479,10 @@ describe('bit merge command', function () {
         helper.getClonedLocalScope(localScope);
         helper.createFile('bar', 'foo2.js');
         helper.addComponent('bar/foo2.js', { i: 'bar/foo' });
-        helper.commitAllComponents(); // 0.0.3
+        helper.tagAllComponents(); // 0.0.3
         fs.removeSync(path.join(helper.localScopePath, 'bar/foo2.js'));
         helper.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict
-        helper.commitAllComponents(); // 0.0.4 without bar/foo2.js
+        helper.tagAllComponents(); // 0.0.4 without bar/foo2.js
         scopeWithRemovedFile = helper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
@@ -561,9 +561,9 @@ describe('bit merge command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV3);
       localScope = helper.cloneLocalScope();
     });
@@ -662,9 +662,9 @@ describe('bit merge command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV2);
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV1);
         output = helper.mergeVersion('0.0.1', 'bar/foo');
       });

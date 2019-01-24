@@ -603,7 +603,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 - prevent exporting a component when the same version has been exported already to the same remote scope
 - avoid running the build and test processes upon `bit status`
 - allow export specific components without specifying the scope-name
-- avoid committing unmodified components unless `--force` flag is being used
+- avoid tagging unmodified components unless `--force` flag is being used
 - resolve dependencies from all component files regardless whether they are referenced from the main file
 - bug fix - the author was not able to update his/her component in case it was changed in another scope
 - bug fix - status command shows an error when components directory has an unreferenced (from bit.map) component

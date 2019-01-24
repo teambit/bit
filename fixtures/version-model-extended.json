@@ -33,7 +33,7 @@
     },
     "bindingPrefix": "@bit",
     "log": {
-        "message": "commit-message",
+        "message": "tag-message",
         "date": "1527523854385",
         "username": "David First",
         "email": "david@bitsrc.io"

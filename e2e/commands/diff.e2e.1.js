@@ -102,7 +102,7 @@ describe('bit diff command', function () {
       helper.addComponentUtilsIsType();
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       // modify only bar/foo and utils/is-type, not utils/is-string
       helper.createComponentBarFoo(barFooV2);
@@ -259,11 +259,11 @@ describe('bit diff command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo(); // 0.0.1
+      helper.tagComponentBarFoo(); // 0.0.1
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo(); // 0.0.2
+      helper.tagComponentBarFoo(); // 0.0.2
       helper.createComponentBarFoo(barFooV3);
-      helper.commitComponentBarFoo(); // 0.0.3
+      helper.tagComponentBarFoo(); // 0.0.3
     });
     describe('diff between a non-exist version and current version', () => {
       it('should throw an VersionNotFound error', () => {

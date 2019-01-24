@@ -1,7 +1,7 @@
 /** @flow */
 import Command from '../../command';
-import { commitAction, commitAllAction } from '../../../api/consumer';
-import type { TagResults } from '../../../api/consumer/lib/commit';
+import { tagAction, tagAllAction } from '../../../api/consumer';
+import type { TagResults } from '../../../api/consumer/lib/tag';
 import { isString } from '../../../utils';
 import ModelComponent from '../../../scope/models/model-component';
 import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
@@ -96,7 +96,7 @@ export default class Export extends Command {
     const idHasWildcard = hasWildcard(id);
 
     if (all || scope || idHasWildcard) {
-      return commitAllAction({
+      return tagAllAction({
         message: message || '',
         exactVersion: getVersion(),
         releaseType,
@@ -110,7 +110,7 @@ export default class Export extends Command {
         idWithWildcard: id
       });
     }
-    return commitAction({
+    return tagAction({
       id,
       message,
       exactVersion: getVersion(),

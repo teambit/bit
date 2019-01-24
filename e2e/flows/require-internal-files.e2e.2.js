@@ -35,7 +35,7 @@ describe('component that requires another component internal (not main) file', f
       "const isString = require('../utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
     helper.createFile('src/bar', 'foo.js', barFooFixture);
     helper.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
-    helper.commitAllComponents();
+    helper.tagAllComponents();
 
     helper.exportAllComponents();
     helper.reInitLocalScope();

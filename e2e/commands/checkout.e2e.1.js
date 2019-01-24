@@ -92,15 +92,15 @@ describe('bit checkout command', function () {
               helper.createComponentBarFoo('console.log("modified components");');
             });
             it('should throw an error NewerVersionFound', () => {
-              const commitFunc = () => helper.commitComponent('bar/foo');
+              const tagFunc = () => helper.tagComponent('bar/foo');
               const error = new NewerVersionFound([
                 { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' }
               ]);
-              helper.expectToThrow(commitFunc, error);
+              helper.expectToThrow(tagFunc, error);
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
-              const commitOutput = helper.commitComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(commitOutput).to.have.string('1 components tagged');
+              const tagOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
+              expect(tagOutput).to.have.string('1 components tagged');
             });
           });
         });
@@ -117,12 +117,12 @@ describe('bit checkout command', function () {
       helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
       helper.createComponentBarFoo(fixtures.barFooFixtureV2);
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       localScope = helper.cloneLocalScope();
     });
     describe('as authored', () => {
@@ -371,9 +371,9 @@ describe('bit checkout command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV3);
       localScope = helper.cloneLocalScope();
     });
@@ -551,9 +551,9 @@ describe('bit checkout command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV2);
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV1);
         output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
@@ -579,8 +579,8 @@ describe('bit checkout command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
-        helper.commitComponent('bar/foo --force');
+        helper.tagComponentBarFoo();
+        helper.tagComponent('bar/foo --force');
         helper.createComponentBarFoo(barFooV2);
         output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
@@ -611,7 +611,7 @@ describe('bit checkout command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.tagScope('0.0.5');
       helper.exportAllComponents();
 
@@ -640,9 +640,9 @@ describe('bit checkout command', function () {
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
-      helper.commitAllComponents('v1', '-s 0.0.1');
-      helper.commitAllComponents('v2', '-s 0.0.2');
-      helper.commitComponent('bar/foo2', 'v3', '0.0.3 -f');
+      helper.tagAllComponents('v1', '-s 0.0.1');
+      helper.tagAllComponents('v2', '-s 0.0.2');
+      helper.tagComponent('bar/foo2', 'v3', '0.0.3 -f');
       localScope = helper.cloneLocalScope();
     });
     describe('checkout all to a specific version', () => {

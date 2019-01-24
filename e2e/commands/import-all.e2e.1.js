@@ -14,7 +14,7 @@ describe('bit import command with no ids', function () {
       // export a new component "bar/foo"
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -41,7 +41,7 @@ describe('bit import command with no ids', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       const bitMap = helper.readBitMap();
       helper.reInitLocalScope();
@@ -60,12 +60,12 @@ describe('bit import command with no ids', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       const bitMap = helper.readBitMap();
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -129,12 +129,12 @@ describe('bit import command with no ids', function () {
     });
   });
 
-  describe('with an AUTHORED component which was only committed but not exported', () => {
+  describe('with an AUTHORED component which was only tagged but not exported', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       const bitMap = helper.readBitMap();
       helper.reInitLocalScope();
       helper.addRemoteScope();

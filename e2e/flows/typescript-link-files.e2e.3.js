@@ -64,7 +64,7 @@ describe('typescript components with link files', function () {
       helper.createFile('bar', 'foo.ts', fooBarFixture);
       helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -103,7 +103,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.createFile('bar', 'foo.ts', fooBarFixture);
       helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

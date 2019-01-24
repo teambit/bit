@@ -1,4 +1,4 @@
-// covers init, commit, create, import commands and
+// covers init, tag, create, import commands and
 
 import path from 'path';
 import fs from 'fs-extra';
@@ -17,7 +17,7 @@ describe('typescript', function () {
   });
 
   // This is one of the most important cases, because it involve a lot of working pieces from the base flow:
-  // Add, build, commit, export, import, dependency resolution, index file generation
+  // Add, build, tag, export, import, dependency resolution, index file generation
   describe('components with auto-resolve dependencies - with ts compiler', () => {
     // Skipping this test on appveyor because it's fail due to madge issues
     if (process.env.APPVEYOR === 'True') {
@@ -64,7 +64,7 @@ describe('typescript', function () {
           "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('bar', 'foo.ts', fooBarFixture);
         helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -255,7 +255,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       helper.createFile('bar', 'foo.ts', fooBarFixture);
       helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

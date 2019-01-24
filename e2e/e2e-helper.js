@@ -370,8 +370,8 @@ export default class Helper {
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
-  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
+  tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
   tagWithoutMessage(id: string, version: string = '', options: string = '') {
     return this.runCmd(`bit tag ${id} ${version} ${options}`);
@@ -383,14 +383,14 @@ export default class Helper {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
 
-  commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
-    return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
+  tagAllComponents(tagMsg: string = 'tag-message', options: string = '', version: string = '') {
+    return this.runCmd(`bit tag ${options} -a ${version} -m ${tagMsg} `);
   }
   tagAllWithoutMessage(options: string = '', version: string = '') {
     return this.runCmd(`bit tag -a ${version} ${options} `);
   }
 
-  tagScope(version: string, message: string = 'commit-message', options: string = '') {
+  tagScope(version: string, message: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
   }
 
@@ -601,8 +601,8 @@ export default class Helper {
     return this.runCmd('bit add utils/is-string.js --id utils/is-string');
   }
 
-  commitComponentBarFoo() {
-    return this.commitComponent('bar/foo');
+  tagComponentBarFoo() {
+    return this.tagComponent('bar/foo');
   }
 
   createCompiler() {

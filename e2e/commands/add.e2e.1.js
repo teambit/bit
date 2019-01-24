@@ -863,7 +863,7 @@ describe('bit add command', function () {
       helper.addRemoteScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -917,7 +917,7 @@ describe('bit add command', function () {
       helper.addRemoteScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.addComponentBarFoo();
     });

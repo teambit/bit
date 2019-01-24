@@ -25,7 +25,7 @@ describe('binary files', function () {
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.runCmd('bit add bar -m foo.js -i bar/foo');
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should export it with no errors', () => {
@@ -55,7 +55,7 @@ describe('binary files', function () {
       const stats = fs.statSync(destPngFile);
       pngSize = stats.size;
       helper.runCmd('bit add bar -m png_fixture.png -i bar/foo');
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should export it with no errors', () => {
@@ -102,7 +102,7 @@ describe('binary files', function () {
       const fixture = 'require("./png_fixture.png")';
       helper.createFile('bar', 'foo.js', fixture);
       helper.addComponent('bar/foo.js', { i: 'bar/foo' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();

@@ -1,5 +1,3 @@
-// covers also init, create, commit commands and the js-doc parser
-
 import chai, { expect } from 'chai';
 import path from 'path';
 import R from 'ramda';
@@ -31,7 +29,7 @@ describe('bit show command', function () {
 
       helper.createFile('utils', 'is-string.js');
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
 
       helper.addNpmPackage();
 
@@ -40,7 +38,7 @@ describe('bit show command', function () {
       helper.createFile('src', 'mainFile.js', fooBarFixture);
       helper.createFile('src/utils', 'utilFile.js');
       helper.runCmd('bit add src/mainFile.js src/utils/utilFile.js -i comp/comp -m src/mainFile.js');
-      helper.commitComponent('comp/comp');
+      helper.tagComponent('comp/comp');
     });
 
     describe('show deprecated local component', () => {
@@ -286,7 +284,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
       helper.deprecateComponent(`${helper.remoteScope}/bar/foo`, '-r');
     });
@@ -305,7 +303,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
     });
     it('should indicate a component as non-deprecated when using "--remote" flag', () => {
@@ -317,45 +315,6 @@ describe('bit show command', function () {
       expect(output).to.include({ deprecated: false });
     });
   });
-
-  describe.skip('with no docs', () => {
-    before(() => {
-      const fooComponentFixture = "module.exports = function foo() { return 'got foo'; };";
-      commitFoo(fooComponentFixture);
-    });
-    it('should display "No documentation found" when there is no documentation', () => {
-      const output = helper.runCmd('bit show bar/foo');
-      expect(output.includes('No documentation found')).to.be.true;
-    });
-    it('should not show the "description" field', () => {
-      const output = helper.runCmd('bit show bar/foo');
-      expect(output.includes('Description')).to.be.false;
-    });
-  });
-  describe.skip('with docs', () => {
-    before(() => {
-      const fooComponentFixture = `/**
- * Adds two numbers.
- * @name add
- * @param {number} a The first number in an addition.
- * @param {number} b The second number in an addition.
- * @returns {number} Returns the total.
- */
-function add(a, b) {
-  return a+b;
-}`;
-      commitFoo(fooComponentFixture);
-    });
-    it('should parse the documentation correctly', () => {
-      const output = helper.runCmd('bit show bar/foo');
-      expect(output.includes('No documentation found')).to.be.false;
-      expect(output.includes('Description')).to.be.true;
-      expect(output.includes('Adds two numbers.')).to.be.true;
-      expect(output.includes('Args')).to.be.true;
-      expect(output.includes('Returns')).to.be.true;
-      expect(output.includes('number -> Returns the total.')).to.be.true;
-    });
-  });
   describe('local component', () => {
     let output;
     before(() => {
@@ -364,7 +323,7 @@ function add(a, b) {
 
       helper.createFile('utils', 'is-string.js');
       helper.addComponentUtilsIsString();
-      helper.commitComponent('utils/is-string');
+      helper.tagComponent('utils/is-string');
     });
 
     it('Should not show component if bit.json is corrupted', () => {
@@ -383,7 +342,7 @@ function add(a, b) {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -442,7 +401,7 @@ function add(a, b) {
       helper.createFile('bar', 'index.js');
       helper.addComponent('bar/', { i: 'bar/foo' });
     });
-    describe('when adding a component without committing it', () => {
+    describe('when adding a component without tagging it', () => {
       it('Should throw error nothing to compare no previous versions found', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
         expect(showCmd).to.throw('Command failed: bit show bar/foo --compare\nno previous versions to compare\n');
@@ -450,7 +409,7 @@ function add(a, b) {
     });
     describe('when the component is AUTHORED', () => {
       before(() => {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       it('should not throw an error "nothing to compare no previous versions found"', () => {
         const showCmd = () => helper.showComponent('bar/foo --compare');
@@ -468,7 +427,7 @@ function add(a, b) {
     });
     describe('when importing a component', () => {
       before(() => {
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportAllComponents();
@@ -498,8 +457,8 @@ function add(a, b) {
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponentUtilsIsType();
-        helper.commitComponent('utils/is-type');
-        helper.commitComponent('utils/is-type', 'msg', '-f');
+        helper.tagComponent('utils/is-type');
+        helper.tagComponent('utils/is-type', 'msg', '-f');
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -512,7 +471,7 @@ function add(a, b) {
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponentUtilsIsString();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
       });
       describe('when a component uses an old version of a dependency', () => {
         it('should indicate that the remote version is larger than the current version', () => {
@@ -525,7 +484,7 @@ function add(a, b) {
       });
       describe('when the dependency was updated locally but not exported yet', () => {
         before(() => {
-          helper.commitComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
+          helper.tagComponent('utils/is-type', 'msg', '-f --ignore-newest-version');
         });
         it('should indicate that the current version is larger than the remote version', () => {
           const output = helper.showComponent('utils/is-string --outdated --json');
@@ -554,8 +513,8 @@ function add(a, b) {
         const isTypeFixture = "module.exports = function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.js', isTypeFixture);
         helper.addComponentUtilsIsType();
-        helper.commitComponent('utils/is-type');
-        helper.commitComponent('utils/is-type', 'msg', '-f');
+        helper.tagComponent('utils/is-type');
+        helper.tagComponent('utils/is-type', 'msg', '-f');
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -568,7 +527,7 @@ function add(a, b) {
         )}'); module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponentUtilsIsString();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -592,7 +551,7 @@ function add(a, b) {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportAllComponents();
     });
     it('should show versions of authored component when not specifying scope name', () => {

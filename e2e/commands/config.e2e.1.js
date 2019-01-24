@@ -1,5 +1,3 @@
-// covers also init, create, commit, modify commands
-
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 

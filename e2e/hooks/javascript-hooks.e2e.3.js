@@ -1,4 +1,4 @@
-// covers also init, commit, create, export, import, remote, build commands
+// covers also init, tag, create, export, import, remote, build commands
 
 import path from 'path';
 import fs from 'fs-extra';
@@ -53,7 +53,7 @@ describe('javascript-hooks', function () {
         "const isType = require('./internals/is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponent('utils', { m: 'utils/is-string.js', i: 'utils/is-string' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -118,7 +118,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.reInitLocalScope();
         createFile('foo');
-        helper.commitComponent('foo');
+        helper.tagComponent('foo');
       });
       it('should create links in the component level', () => {
         expectLinksInComponentLevel();
@@ -135,8 +135,8 @@ describe('javascript-hooks', function () {
         helper.reInitLocalScope();
         helper.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.commitComponent('foo'); // does the build as well
-        // todo: commit should run the build
+        helper.tagComponent('foo'); // does the build as well
+        // todo: tag should run the build
         helper.runCmd('bit build foo');
       });
       it('should create links in the component level', () => {
@@ -156,7 +156,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.reInitLocalScope();
         createFile('foo');
-        helper.commitComponent('foo');
+        helper.tagComponent('foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportComponent('foo');
@@ -177,8 +177,8 @@ describe('javascript-hooks', function () {
         helper.reInitLocalScope();
         helper.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.commitComponent('foo'); // does the build as well
-        // todo: commit should run the build
+        helper.tagComponent('foo'); // does the build as well
+        // todo: tag should run the build
         helper.runCmd('bit build foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
@@ -201,7 +201,7 @@ describe('javascript-hooks', function () {
       before(() => {
         helper.reInitLocalScope();
         createFile('foo');
-        helper.commitComponent('foo');
+        helper.tagComponent('foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportComponent('foo');
@@ -224,8 +224,8 @@ describe('javascript-hooks', function () {
         helper.reInitLocalScope();
         helper.importCompiler();
         createFile('foo', fooES6Fixture);
-        helper.commitComponent('foo');
-        // todo: commit should run the build
+        helper.tagComponent('foo');
+        // todo: tag should run the build
         helper.runCmd('bit build foo');
         helper.reInitRemoteScope();
         helper.addRemoteScope();
@@ -252,7 +252,7 @@ describe('javascript-hooks', function () {
         helper.runCmd('bit import bit.envs/testers/mocha --tester');
         helper.runCmd('bit create foo --json --specs');
         fs.writeFileSync(fooImplPath, fooComponentFixture);
-        helper.runCmd('bit commit foo commit-msg'); // run the test as well
+        helper.runCmd('bit tag foo tag-msg'); // run the test as well
         helper.runCmd('bit init --bare', helper.remoteScopePath);
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
         helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);
@@ -276,7 +276,7 @@ describe('javascript-hooks', function () {
         helper.cleanEnv();
         helper.runCmd('bit init');
         createFile('foo');
-        helper.commitComponent('foo');
+        helper.tagComponent('foo');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
         helper.exportComponent('foo');
@@ -287,7 +287,7 @@ describe('javascript-hooks', function () {
 
         const barJsonPath = path.join(helper.localScopePath, 'components', 'global', 'bar', 'bit.json');
         helper.addBitJsonDependencies(barJsonPath, { [`${helper.remoteScope}/global/foo`]: '0.0.1' });
-        helper.commitComponent('bar');
+        helper.tagComponent('bar');
         helper.exportComponent('bar');
       });
       before(() => {
@@ -323,7 +323,7 @@ describe('javascript-hooks', function () {
 
           const bazJsonPath = path.join(helper.localScopePath, 'components', 'global', 'baz', 'bit.json');
           helper.addBitJsonDependencies(bazJsonPath, { [`${helper.remoteScope}/global/bar`]: '0.0.1' });
-          helper.commitComponent('baz');
+          helper.tagComponent('baz');
           helper.exportComponent('baz');
 
           helper.reInitLocalScope();
@@ -358,11 +358,11 @@ describe('javascript-hooks', function () {
         helper.runCmd('bit create foo');
         const fooComponentV1 = "module.exports = function foo() { return 'got foo v1'; };";
         fs.writeFileSync(fooImplPath, fooComponentV1);
-        helper.runCmd('bit commit foo commit-msg1');
+        helper.runCmd('bit tag foo tag-msg1');
         helper.runCmd('bit modify @this/global/foo');
         const fooComponentV2 = "module.exports = function foo() { return 'got foo v2'; };";
         fs.writeFileSync(fooImplPath, fooComponentV2);
-        helper.runCmd('bit commit foo commit-msg2');
+        helper.runCmd('bit tag foo tag-msg2');
         helper.runCmd('bit init --bare', helper.remoteScopePath);
         helper.runCmd(`bit remote add file://${helper.remoteScopePath}`);
         helper.runCmd(`bit export @this/global/foo @${helper.remoteScope}`);

@@ -20,7 +20,7 @@ describe('run bit install', function () {
 module.exports = function isString() { return 'isString: ' + lodashIsString() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       const requirePath = helper.getRequireBitPath('utils', 'is-string');
@@ -29,7 +29,7 @@ module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
