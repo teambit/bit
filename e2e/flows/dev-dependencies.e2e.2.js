@@ -181,7 +181,7 @@ describe('foo', () => {
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js'
       });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -207,7 +207,7 @@ describe('foo', () => {
       helper.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
       helper.addComponentUtilsIsString();
       helper.addComponentUtilsIsType();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       barFoo = helper.catComponent('bar/foo@latest');
 
       // as an intermediate step, make sure barFoo has is-string as a dev dependency only

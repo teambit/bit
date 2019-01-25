@@ -326,7 +326,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       });
       describe('export and import the component to a new scope', () => {
         before(() => {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           helper.exportAllComponents();
           helper.reInitLocalScope();
           helper.addRemoteScope();
@@ -359,7 +359,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
         });
         describe('exporting to bitsrc and importing locally', () => {
           before(() => {
-            helper.tagAllWithoutMessage();
+            helper.tagAllComponents();
             helper.exportAllComponents(fullScopeName);
             helper.reInitLocalScope();
             helper.addRemoteScope();

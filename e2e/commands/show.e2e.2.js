@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import R from 'ramda';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 
 const assertArrays = require('chai-arrays');
 
@@ -215,7 +216,7 @@ describe('bit show command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -389,9 +390,8 @@ describe('bit show command', function () {
       helper.deleteFile('bar/foo.js');
 
       const showCmd = () => helper.showComponent('bar/foo');
-      expect(showCmd).to.throw(
-        "Command failed: bit show bar/foo\ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n"
-      );
+      const error = new MissingFilesFromComponent('bar/foo');
+      helper.expectToThrow(showCmd, error);
     });
   });
   describe('with --compare flag', () => {
@@ -425,9 +425,9 @@ describe('bit show command', function () {
         expect(componentFromModel.mainFile).to.have.string('bar');
       });
     });
-    describe('when importing a component', () => {
+    describe.only('when importing a component', () => {
       before(() => {
-        helper.tagAllComponents();
+        helper.tagAllComponents(undefined, undefined, false);
         helper.reInitRemoteScope();
         helper.addRemoteScope();
         helper.exportAllComponents();

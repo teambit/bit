@@ -13,6 +13,7 @@ import set from 'lodash.set';
 import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
+import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -370,26 +371,23 @@ export default class Helper {
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
-  tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
-    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
-  }
-  tagWithoutMessage(id: string, version: string = '', options: string = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options}`);
-  }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
   }
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
-
-  tagAllComponents(tagMsg: string = 'tag-message', options: string = '', version: string = '') {
-    return this.runCmd(`bit tag ${options} -a ${version} -m ${tagMsg} `);
+  tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
-  tagAllWithoutMessage(options: string = '', version: string = '') {
-    return this.runCmd(`bit tag -a ${version} ${options} `);
+  tagWithoutMessage(id: string, version: string = '', options: string = '') {
+    return this.runCmd(`bit tag ${id} ${version} ${options}`);
   }
-
+  tagAllComponents(options: string = '', version: string = '', assertTagged: boolean = true) {
+    const result = this.runCmd(`bit tag -a ${version} ${options} `);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
   tagScope(version: string, message: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
   }

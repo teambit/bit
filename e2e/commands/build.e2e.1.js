@@ -55,7 +55,7 @@ describe('bit build', function () {
         const compilerFolderFullPath = path.join(helper.localScopePath, '.bit', 'components', 'compilers');
         const distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
         before(() => {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           const output = helper.status();
           // Make sure there is no modified components
           expect(output).to.not.contain.string('modified');
@@ -108,7 +108,7 @@ describe('bit build', function () {
       helper.importCompiler();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

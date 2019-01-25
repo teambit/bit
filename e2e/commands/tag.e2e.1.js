@@ -5,6 +5,8 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { NOTHING_TO_TAG_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
+import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 
 let logSpy;
 const assertArrays = require('chai-arrays');
@@ -167,7 +169,7 @@ describe('bit tag command', function () {
       });
       it('Should not allow invalid semver', () => {
         const version = 'invalidVersion';
-        const tag = () => helper.tagAllWithoutMessage(version);
+        const tag = () => helper.tagAllComponents(version);
         expect(tag).to.throw(
           `error: version ${version} is not a valid semantic version. learn more: https://semver.org`
         );
@@ -181,40 +183,40 @@ describe('bit tag command', function () {
       it('Should increment the patch version when no version type specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.0.2")');
         helper.createFile('components', 'b.js', 'console.log("v0.0.2")');
-        output = helper.tagAllComponents('message');
+        output = helper.tagAllComponents();
         expect(output).to.have.string('components/a@0.0.2');
         expect(output).to.have.string('components/b@0.0.2');
       });
       it('Should increment the patch version when --patch flag specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.0.3")');
         helper.createFile('components', 'b.js', 'console.log("v0.0.3")');
-        output = helper.tagAllComponents('message', '--patch');
+        output = helper.tagAllComponents('--patch');
         expect(output).to.have.string('components/a@0.0.3');
         expect(output).to.have.string('components/b@0.0.3');
       });
       it('Should increment the default version without the -m flag', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.0.4")');
         helper.createFile('components', 'b.js', 'console.log("v0.0.4")');
-        output = helper.tagAllWithoutMessage();
+        output = helper.tagAllComponents();
         expect(output).to.have.string('components/a@0.0.4');
         expect(output).to.have.string('components/b@0.0.4');
       });
       it('Should show message "nothing to tag" if trying to tag with no changes', () => {
-        helper.tagAllWithoutMessage();
-        const tagWithoutChanges = helper.tagAllWithoutMessage();
-        expect(tagWithoutChanges).to.have.string('nothing to tag');
+        helper.tagAllComponents(undefined, undefined, false);
+        const tagWithoutChanges = helper.tagAllComponents(undefined, undefined, false);
+        expect(tagWithoutChanges).to.have.string(NOTHING_TO_TAG_MSG);
       });
       it('Should increment the minor version when --minor flag specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.1.0")');
         helper.createFile('components', 'b.js', 'console.log("v0.1.0")');
-        output = helper.tagAllComponents('message', '-f --minor');
+        output = helper.tagAllComponents('-f --minor');
         expect(output).to.have.string('components/a@0.1.0');
         expect(output).to.have.string('components/b@0.1.0');
       });
       it('Should increment the major version when --major flag specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v1.0.0")');
         helper.createFile('components', 'b.js', 'console.log("v1.0.0")');
-        output = helper.tagAllComponents('message', '--major');
+        output = helper.tagAllComponents('--major');
         expect(output).to.have.string('components/a@1.0.0');
         expect(output).to.have.string('components/b@1.0.0');
       });
@@ -223,14 +225,14 @@ describe('bit tag command', function () {
         helper.createFile('components', 'd.js');
         helper.addComponent('components/c.js', { i: 'components/c' });
         helper.addComponent('components/d.js', { i: 'components/d' });
-        output = helper.tagAllComponents('message', '-f', '5.12.10');
+        output = helper.tagAllComponents('-f', '5.12.10');
         expect(output).to.have.string('components/c@5.12.10');
         expect(output).to.have.string('components/d@5.12.10');
       });
       it('Should set the exact version when specified on existing component', () => {
         helper.createFile('components', 'a.js', 'console.log("v3.3.3")');
         helper.createFile('components', 'b.js', 'console.log("v3.3.3")');
-        output = helper.tagAllComponents('message', '-f', '3.3.3');
+        output = helper.tagAllComponents('-f', '3.3.3');
         expect(output).to.have.string('components/a@3.3.3');
         expect(output).to.have.string('components/b@3.3.3');
       });
@@ -239,7 +241,7 @@ describe('bit tag command', function () {
         helper.createFile('components', 'b.js', 'console.log("v4.3.4")');
         helper.tagComponent('components/a 4.3.4', 'message');
         helper.createFile('components', 'a.js', 'console.log("v4.3.4 ssss")');
-        const tagWithExisting = () => helper.tagAllComponents('message', '', '4.3.4');
+        const tagWithExisting = () => helper.tagAllComponents('', '4.3.4');
         expect(tagWithExisting).to.throw('error: version 4.3.4 already exists for components/a');
       });
     });
@@ -366,7 +368,7 @@ describe('bit tag command', function () {
       let output;
       before(() => {
         helper.getClonedLocalScope(scopeBeforeTagging);
-        output = helper.tagAllWithoutMessage('--skip-tests');
+        output = helper.tagAllComponents('--skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
         expect(output).to.have.string('5 components tagged');
@@ -601,10 +603,6 @@ describe('bit tag command', function () {
 
   // there is another describe('tag all components')
   describe('tag all components', () => {
-    it.skip('Should print there is nothing to tag after import only', () => {
-      // Import component then try to tag
-    });
-
     it.skip('Should build and test all components before tag', () => {});
 
     it.skip('Should tag nothing if only some of the tags worked', () => {});
@@ -714,7 +712,7 @@ describe('bit tag command', function () {
         helper.addComponent('src/a.js src/a2.js', { m: 'src/a.js', i: 'comp/a' });
         helper.addComponent('src/b.js', { i: 'src/b' });
 
-        const tagAll = () => helper.tagAllComponents('tag-msg', '--ignore-unresolved-dependencies');
+        const tagAll = () => helper.tagAllComponents('--ignore-unresolved-dependencies');
         try {
           output = tagAll();
         } catch (err) {
@@ -852,11 +850,8 @@ describe('bit tag command', function () {
       helper.deleteFile('bar/foo.js');
 
       const tagCmd = () => helper.tagAllComponents();
-      expect(tagCmd).to.throw(
-        `Command failed: ${
-          helper.bitBin
-        } tag  -a  -m tag-message \ncomponent bar/foo is invalid as part or all of the component files were deleted. please use 'bit remove' to resolve the issue\n`
-      );
+      const error = new MissingFilesFromComponent('bar/foo');
+      helper.expectToThrow(tagCmd, error);
     });
   });
   describe('with --scope flag', () => {
@@ -908,17 +903,13 @@ describe('bit tag command', function () {
         before(() => {
           helper.tagComponent('bar/foo 0.0.8', 'msg', '--force');
           try {
-            helper.tagAllComponents('msg', '--scope 0.0.8');
+            helper.tagAllComponents('--scope 0.0.8');
           } catch (err) {
             output = err.toString();
           }
         });
         it('should throw an error', () => {
-          expect(output).to.have.string(
-            `Error: Command failed: ${
-              helper.bitBin
-            } tag --scope 0.0.8 -a  -m msg \nerror: version 0.0.8 already exists for bar/foo\n`
-          );
+          expect(output).to.have.string('version 0.0.8 already exists for bar/foo');
         });
       });
       describe('when one of the components has a greater version', () => {
@@ -941,7 +932,7 @@ describe('bit tag command', function () {
         let output;
         before(() => {
           helper.getClonedLocalScope(localScope);
-          output = helper.tagAllComponents('msg', '--scope 0.2.0 --all');
+          output = helper.tagAllComponents('--scope 0.2.0');
         });
         it('should tag all components with the specified version including the imported components', () => {
           // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version

@@ -71,7 +71,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo.js', { i: 'bar/foo ' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -632,7 +632,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'boo1.js');
       helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.addComponent('bar/boo1.js', { i: 'bar/foo' });
       bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo@0.0.1'); // should not change the component ID
@@ -1057,7 +1057,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'index.js');
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/', { i: 'bar/foo ' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.deleteFile('bar/foo2.js');
       helper.addComponent('bar/', { i: 'bar/foo ' });

@@ -436,7 +436,7 @@ describe('bit remove command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo-main.js');
       helper.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.deleteFile('bar/foo-main.js');
       const status = helper.status();
       expect(status).to.have.string('main-file was removed');

@@ -98,7 +98,7 @@ describe('support vue files', function () {
         helper.runCmd('npm i fuzzysearch');
       });
       it('should find missing vue dependencies', () => {
-        const output = helper.tagAllComponents('message');
+        const output = helper.tagAllComponents();
         expect(output).to.have.string('9 components tagged | 9 added, 0 changed, 0 auto-tagged');
       });
       it('should export tagged components', () => {

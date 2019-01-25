@@ -28,7 +28,7 @@ describe('environments with dependencies', function () {
     helper.addNpmPackage('mocha', '5.1.1');
     helper.addNpmPackage('vinyl', '2.1.0');
     helper.addNpmPackage('resolve', '1.7.1');
-    helper.tagAllWithoutMessage();
+    helper.tagAllComponents();
     helper.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
     helper.addRemoteScope();
@@ -112,7 +112,7 @@ describe('environments with dependencies', function () {
     describe('after tagging the components', () => {
       let catComponent;
       before(() => {
-        const output = helper.tagAllWithoutMessage();
+        const output = helper.tagAllComponents();
         expect(output).to.have.string('2 components tagged');
         catComponent = helper.catComponent('bar/foo@latest');
       });

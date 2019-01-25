@@ -1,4 +1,5 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
 import { tagAction, tagAllAction } from '../../../api/consumer';
 import type { TagResults } from '../../../api/consumer/lib/tag';
@@ -8,9 +9,9 @@ import { DEFAULT_BIT_RELEASE_TYPE, BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 import hasWildcard from '../../../utils/string/has-wildcard';
 
-const chalk = require('chalk');
+export const NOTHING_TO_TAG_MSG = 'nothing to tag';
 
-export default class Export extends Command {
+export default class Tag extends Command {
   name = 'tag [id] [version]';
   description = `record component changes and lock versions.
   https://${BASE_DOCS_DOMAIN}/docs/versioning-tracked-components.html
@@ -124,7 +125,7 @@ export default class Export extends Command {
   }
 
   report(results: TagResults): string {
-    if (!results) return chalk.yellow('nothing to tag');
+    if (!results) return chalk.yellow(NOTHING_TO_TAG_MSG);
     const { taggedComponents, autoTaggedComponents, warnings, newComponents }: TagResults = results;
     function joinComponents(comps) {
       return comps

@@ -41,7 +41,7 @@ describe('bit checkout command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllWithoutMessage('', '0.0.5');
+        helper.tagAllComponents('', '0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
@@ -60,7 +60,7 @@ describe('bit checkout command', function () {
         describe('and tagged again', () => {
           let output;
           before(() => {
-            helper.tagAllWithoutMessage('', '0.0.10');
+            helper.tagAllComponents('', '0.0.10');
             output = helper.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {
@@ -346,10 +346,10 @@ describe('bit checkout command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar', { i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
 
       helper.checkoutVersion('0.0.1', 'bar/foo');
     });
@@ -640,8 +640,8 @@ describe('bit checkout command', function () {
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
-      helper.tagAllComponents('v1', '-s 0.0.1');
-      helper.tagAllComponents('v2', '-s 0.0.2');
+      helper.tagAllComponents('-m v1 -s 0.0.1');
+      helper.tagAllComponents('-m v2 -s 0.0.2');
       helper.tagComponent('bar/foo2', 'v3', '0.0.3 -f');
       localScope = helper.cloneLocalScope();
     });
