@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.14] - 2019-01-27
+
+- replace css parser (gonzales-pe -> css-tree) for better import syntax support
+
 ## [1.0.6-dev.13] - 2019-01-20
 
 - expose precinct lib as getDependenciesFromSource
