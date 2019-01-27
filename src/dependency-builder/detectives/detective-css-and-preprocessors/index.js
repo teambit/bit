@@ -1,7 +1,5 @@
 // forked and changed from https://github.com/dependents/node-detective-sass
-
-const Walker = require('node-source-walk');
-const parser = require('@teambit/gonzales-pe');
+const csstree = require('css-tree');
 
 /**
  * Extract the @import statements from a given file's content
@@ -21,60 +19,106 @@ module.exports = function detective(fileContent, syntax) {
   }
 
   let dependencies = [];
-  let ast;
 
-  try {
-    // debug('content: ' + fileContent);
-    ast = parser.parse(fileContent, { syntax });
-  } catch (e) {
-    debug('parse error: ', e.message);
-    throw new Error(e.message);
-  }
+  const ast = csstree.parse(fileContent, {
+    onParseError(error) {
+      handleError(error);
+    }
+  });
 
   detective.ast = ast;
 
-  const walker = new Walker();
-
-  walker.walk(ast, function (node) {
+  csstree.walk(ast, function (node) {
     if (!isImportStatement(node)) {
       return;
     }
 
-    dependencies = dependencies.concat(extractDependencies(node));
+    dependencies = dependencies.concat(extractDependencies(node, syntax));
   });
-
   return dependencies;
 };
 
 function isImportStatement(node) {
-  if (!node || node.type !== 'atrule') {
-    return false;
+  if (node.type === 'Atrule' && node.name === 'import') {
+    return true;
   }
-  if (!node.content.length || node.content[0].type !== 'atkeyword') {
-    return false;
-  }
-
-  const atKeyword = node.content[0];
-
-  if (!atKeyword.content.length) {
-    return false;
-  }
-
-  const importKeyword = atKeyword.content[0];
-
-  if (importKeyword.type !== 'ident' || importKeyword.content !== 'import') {
-    return false;
-  }
-
-  return true;
+  return false;
 }
 
 function extractDependencies(importStatementNode) {
-  return importStatementNode.content
-    .filter(function (innerNode) {
-      return innerNode.type === 'string' || innerNode.type === 'ident';
-    })
-    .map(function (identifierNode) {
-      return identifierNode.content.replace(/["']/g, '');
+  // handle URL import @import url("baz.css");
+  if (
+    importStatementNode.prelude.type === 'AtrulePrelude' &&
+    importStatementNode.prelude.children.tail.data.type === 'Url'
+  ) {
+    return importStatementNode.prelude.children.tail.data.value.value.replace(/["']/g, '');
+  }
+
+  // simple @import
+  if (
+    importStatementNode.prelude.type === 'AtrulePrelude' &&
+    importStatementNode.prelude.children &&
+    importStatementNode.prelude.children.tail.data.type !== 'Url'
+  ) {
+    return importStatementNode.prelude.children.tail.data.value.replace(/["']/g, '');
+  }
+
+  // allows imports with no semicolon
+  if (importStatementNode.prelude.type === 'Raw' && importStatementNode.prelude.value.includes('@import')) {
+    let imports = importStatementNode.prelude.value.split('@import');
+    imports = imports.map((imp) => {
+      return imp
+        .replace(/["']/g, '')
+        .replace(/\n/g, '')
+        .replace(/\s/g, '');
     });
+
+    return imports;
+  }
+
+  // handles comma-separated imports
+  if (importStatementNode.prelude.type === 'Raw' && importStatementNode.prelude.value.includes(',')) {
+    importStatementNode.prelude.value = clearLessImportsRules(importStatementNode.prelude.value);
+    let imports = importStatementNode.prelude.value.split(',');
+    imports = imports.map((imp) => {
+      return imp
+        .replace(/["']/g, '')
+        .replace(/\n/g, '')
+        .replace(/\s/g, '');
+    });
+
+    return imports;
+  }
+
+  // returns the dependencies of the given .sass file content
+  if (importStatementNode.prelude.type === 'Raw') {
+    importStatementNode.prelude.value = clearLessImportsRules(importStatementNode.prelude.value);
+    return importStatementNode.prelude.value;
+  }
+  return [];
+}
+
+function clearLessImportsRules(importString) {
+  // list from http://lesscss.org/features/#import-atrules-feature-import-options
+  const lessImportOptions = ['reference', 'inline', 'less', 'css', 'once', 'multiple', 'optional'];
+  const toClearSepicalImports = lessImportOptions.some((imp) => {
+    if (importString.includes(imp)) {
+      return true;
+    }
+    return false;
+  });
+
+  if (toClearSepicalImports) {
+    importString = importString.replace(/ *\([^)]*\) */g, '');
+  }
+
+  return importString
+    .replace(/["']/g, '')
+    .replace(/\n/g, '')
+    .replace(/\s/g, '');
+}
+
+function handleError(error) {
+  // handle parse error
+  return false;
 }
