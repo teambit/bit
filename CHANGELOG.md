@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Summary
 
-With over 65 new features, changes and bug fixes, Bit's v14 is focused on increased **stability** and **agility** and **performace**. Here are some of v13's highlights:
+With over 65 new features, changes and bug fixes, Bit's v14 is focused on increased **stability** and **agility** and **performace**. Here are some of v14's highlights:
 
 - Improved performance for traking, versioning and exporting components by up to 700%.
 - New commands `watch` and `eject`.
