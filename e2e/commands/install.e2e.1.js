@@ -20,7 +20,7 @@ describe('run bit install', function () {
 module.exports = function isString() { return 'isString: ' + lodashIsString() +  ' and got is-string'; };`;
       helper.createFile('utils', 'is-string.js', isStringFixture);
       helper.addComponentUtilsIsString();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       const requirePath = helper.getRequireBitPath('utils', 'is-string');
@@ -29,7 +29,7 @@ module.exports = function foo() { return isString() + ' and got foo'; };`;
       helper.createComponentBarFoo(fooBarFixture);
       helper.createFile('bar', 'foo.js', fooBarFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -85,8 +85,8 @@ console.log('isBoolean: ' + isBoolean(true) + ', ' + barFoo());`;
       it('should npm install only the specified id', () => {
         expect(output).to.have.string('successfully ran npm install at components/bar/foo');
       });
-      it('should link only the specified id', () => {
-        expect(output).to.have.string('found 1 components');
+      it('should link only the specified id and its dependencies', () => {
+        expect(output).to.have.string('found 2 components'); // 1 is for bar/foo and 2 for its dep is-string
       });
       it('all links should be in place', () => {
         const result = helper.runCmd('node app.js');

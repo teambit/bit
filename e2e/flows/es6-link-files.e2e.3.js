@@ -75,7 +75,7 @@ describe('es6 components with link files', function () {
     describe('when importing the component', () => {
       before(() => {
         helper.importCompiler();
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -114,7 +114,7 @@ describe('es6 components with link files', function () {
     describe('when importing the component', () => {
       before(() => {
         helper.importCompiler('bit.envs/compilers/babel');
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
@@ -148,7 +148,7 @@ describe('es6 components with link files', function () {
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
@@ -206,7 +206,7 @@ describe('es6 components with link files', function () {
       helper.createFile('src/bar', 'foo.js', fooBarFixture);
       helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('when importing the component', () => {
@@ -249,7 +249,7 @@ describe('es6 components with link files', function () {
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
@@ -302,7 +302,7 @@ describe('es6 components with link files', function () {
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('when the project cloned to somewhere else as AUTHORED', () => {
@@ -356,7 +356,7 @@ describe('es6 components with link files', function () {
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     describe('when importing the component', () => {
@@ -398,7 +398,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -438,7 +438,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -473,7 +473,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -518,7 +518,7 @@ export default function foo() { return isArray() + ' and ' + isString() + ' and 
       helper.createComponentBarFoo(fooBarFixture);
       helper.addComponentBarFoo();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

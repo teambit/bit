@@ -9,7 +9,7 @@ import type { ModelComponent } from '../models';
 import { Symlink } from '../models';
 import type ConsumerComponent from '../../consumer/component';
 import type Scope from '../scope';
-import type { Consumer } from '../../consumer';
+import type Consumer from '../../consumer/consumer';
 
 export default class RemoveModelComponents {
   scope: Scope;

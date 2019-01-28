@@ -10,7 +10,7 @@ import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
-import writeComponents from '../consumer/component-ops/write-components';
+import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 
 import { write } from '../consumer/component/package-json';
 import { installNpmPackagesForComponents } from '../npm-client/install-packages';
@@ -145,7 +145,13 @@ export default class Environment {
     if (typeof bitId === 'string') {
       bitId = await BitId.parse(bitId, true);
     }
-    const componentsWithDependencies = await this.consumer.importComponents(BitIds.fromArray([bitId]));
+    const saveDependenciesAsComponents =
+      opts.saveDependenciesAsComponents === undefined ? true : opts.saveDependenciesAsComponents;
+    const componentsWithDependencies = await this.consumer.importComponents(
+      BitIds.fromArray([bitId]),
+      false,
+      saveDependenciesAsComponents
+    );
     const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
@@ -157,7 +163,6 @@ export default class Environment {
       writeConfig: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
-      saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       installPeerDependencies: !!opts.installPackages, // convert to boolean
@@ -166,7 +171,8 @@ export default class Environment {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
-    await writeComponents(concreteOpts);
+    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    await manyComponentsWriter.writeAll();
     await Environment.markEnvironmentAsInstalled(writeToPath);
     return componentWithDependencies;
   }

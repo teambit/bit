@@ -55,7 +55,7 @@ describe('envs', function () {
     helper.addNpmPackage('mocha', '5.1.1');
     helper.addNpmPackage('vinyl', '2.1.0');
     helper.addNpmPackage('resolve', '1.7.1');
-    helper.tagAllWithoutMessage();
+    helper.tagAllComponents();
     helper.exportAllComponents(helper.envScope);
     helper.reInitLocalScope();
     helper.addRemoteScope();
@@ -80,7 +80,7 @@ describe('envs', function () {
     helper.installNpmPackage('babel-plugin-transform-object-rest-spread', '6.26.0');
     helper.installNpmPackage('babel-preset-env', '1.6.1');
     helper.installNpmPackage('chai', '4.1.2');
-    helper.tagAllWithoutMessage();
+    helper.tagAllComponents();
     helper.exportAllComponents();
     authorScopeBeforeChanges = helper.cloneLocalScope();
     remoteScopeBeforeChanges = helper.cloneRemoteScope();
@@ -219,7 +219,7 @@ describe('envs', function () {
         bitJsonPath = path.join(fullComponentFolder, 'bit.json');
         helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', COMPILER_ENV_TYPE);
         helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', TESTER_ENV_TYPE);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         helper.importComponent('comp/my-comp');
@@ -230,16 +230,16 @@ describe('envs', function () {
         compilerModel = componentModel.compiler;
         testerModel = componentModel.tester;
       });
-      it('should show error when trying to eject conf without path provided', () => {
-        const error = new EjectNoDir(`${helper.remoteScope}/comp/my-comp`);
-        const ejectFunc = () => helper.ejectConf('comp/my-comp');
-        helper.expectToThrow(ejectFunc, error);
-      });
       it('should mark the compiler as detached in .bitmap if the compiler is detached', () => {
         expect(componentMap.detachedCompiler).to.be.true;
       });
       it('should mark the tester as detached in .bitmap if the tester is detached', () => {
         expect(componentMap.detachedTester).to.be.true;
+      });
+      it('should show error when trying to eject conf without path provided', () => {
+        const error = new EjectNoDir(`${helper.remoteScope}/comp/my-comp`);
+        const ejectFunc = () => helper.ejectConf('comp/my-comp');
+        helper.expectToThrow(ejectFunc, error);
       });
       it('should load the compiler from models if the compiler is detached', () => {
         expect(compilerModel.config).to.include({
@@ -257,7 +257,7 @@ describe('envs', function () {
         before(() => {
           // Change the component
           helper.createFile('', 'objRestSpread.js', 'const a = 3');
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
           componentModel = helper.catComponent(compId);
         });
@@ -267,42 +267,42 @@ describe('envs', function () {
         it('should mark the tester as detached in models when tagging again', () => {
           expect(componentModel.detachedTester).to.be.true;
         });
-      });
-      describe('attach back', () => {
-        let output;
-        before(() => {
-          output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
-          componentModel = helper.showComponentParsed('comp/my-comp');
-          compilerModel = componentModel.compiler;
-          testerModel = componentModel.tester;
-        });
-        it('should print to output the attached components', () => {
-          expect(output).to.have.string('the following components has been attached to the workspace environments');
-          expect(output).to.have.string('comp/my-comp');
-        });
-        it('should load the compiler from workspace bit.json after attach compiler back', () => {
-          expect(compilerModel.config).to.include({
-            a: 'b',
-            valToDynamic: 'dyanamicValue'
-          });
-        });
-        it('should load the tester from workspace bit.json after attach tester back', () => {
-          expect(testerModel.config).to.include({
-            a: 'b',
-            valToDynamic: 'dyanamicValue'
-          });
-        });
-        describe('tagging re-attached component', () => {
+        describe('attach back', () => {
+          let output;
           before(() => {
-            helper.tagAllWithoutMessage();
-            compId = `${helper.remoteScope}/comp/my-comp@0.0.4`;
-            componentModel = helper.catComponent(compId);
+            output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
+            componentModel = helper.showComponentParsed('comp/my-comp');
+            compilerModel = componentModel.compiler;
+            testerModel = componentModel.tester;
           });
-          it('should not mark the compiler as detached in models when tagging again', () => {
-            expect(componentModel.detachedCompiler).to.be.undefined;
+          it('should print to output the attached components', () => {
+            expect(output).to.have.string('the following components has been attached to the workspace environments');
+            expect(output).to.have.string('comp/my-comp');
           });
-          it('should not mark the tester as detached in models when tagging again', () => {
-            expect(componentModel.detachedTester).to.be.undefined;
+          it('should load the compiler from workspace bit.json after attach compiler back', () => {
+            expect(compilerModel.config).to.include({
+              a: 'b',
+              valToDynamic: 'dyanamicValue'
+            });
+          });
+          it('should load the tester from workspace bit.json after attach tester back', () => {
+            expect(testerModel.config).to.include({
+              a: 'b',
+              valToDynamic: 'dyanamicValue'
+            });
+          });
+          describe('tagging re-attached component', () => {
+            before(() => {
+              helper.tagAllComponents();
+              compId = `${helper.remoteScope}/comp/my-comp@0.0.4`;
+              componentModel = helper.catComponent(compId);
+            });
+            it('should not mark the compiler as detached in models when tagging again', () => {
+              expect(componentModel.detachedCompiler).to.be.undefined;
+            });
+            it('should not mark the tester as detached in models when tagging again', () => {
+              expect(componentModel.detachedTester).to.be.undefined;
+            });
           });
         });
       });
@@ -892,7 +892,7 @@ describe('envs', function () {
           fs.outputJsonSync(mochaConfigPath, mochaConfigFromFS, { spaces: 4 });
           fs.outputJsonSync(bitJsonPath, bitJsonFromFS, { spaces: 4 });
           // tag a new version (so the conf files won't consider as modified)
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           // Checkout previous version
           helper.checkoutVersion('0.0.1', 'comp/my-comp');
           // Read config files again after checkout
@@ -1170,7 +1170,7 @@ describe('envs', function () {
             before(() => {
               helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'compiler', COMPILER_ENV_TYPE);
               helper.addToRawConfigOfEnvInBitJson(bitJsonPath, 'a', 'tester', TESTER_ENV_TYPE);
-              helper.tagAllWithoutMessage();
+              helper.tagAllComponents();
               componentModel = helper.catComponent(compId);
               const bitmap = helper.readBitMap();
               componentMap = bitmap[compId];
@@ -1190,7 +1190,7 @@ describe('envs', function () {
             describe('tagging already detached component (without new envs changes)', () => {
               before(() => {
                 helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
-                helper.tagAllWithoutMessage();
+                helper.tagAllComponents();
                 compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
                 componentModel = helper.catComponent(compId);
               });
@@ -1266,7 +1266,7 @@ describe('envs', function () {
               before(() => {
                 helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
                 helper.addRemoteEnvironment();
-                helper.tagAllWithoutMessage();
+                helper.tagAllComponents();
                 compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
                 componentModel = helper.catComponent(compId);
               });
@@ -1504,7 +1504,7 @@ describe('envs with relative paths', function () {
   });
   describe('tagging the component', () => {
     before(() => {
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
     });
     it('should save the relative paths of the compiler files', () => {
       const catComponent = helper.catComponent('bar/foo@latest');

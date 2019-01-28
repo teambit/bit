@@ -15,7 +15,7 @@ import type { MergeStrategy, FilesStatus } from '../versions-ops/merge-version/m
 import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
-import writeComponents from './write-components';
+import ManyComponentsWriter from './many-components-writer';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -72,13 +72,15 @@ export default class ImportComponents {
   }
 
   async importSpecificComponents(): ImportResult {
-    // $FlowFixMe - we make sure the ids are populated before.
     logger.debug(`importSpecificComponents, Ids: ${this.options.ids.join(', ')}`);
-    // $FlowFixMe - we check if there are bitIds before we call this function
     const bitIds = this.options.ids.map(raw => BitId.parse(raw, true)); // we don't support importing without a scope name
     const beforeImportVersions = await this._getCurrentVersions(bitIds);
     await this._throwForPotentialIssues(bitIds);
-    const componentsWithDependencies = await this.consumer.importComponents(bitIds, true);
+    const componentsWithDependencies = await this.consumer.importComponents(
+      bitIds,
+      true,
+      this.options.saveDependenciesAsComponents
+    );
     await this._writeToFileSystem(componentsWithDependencies);
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsWithDependencies);
     return { dependencies: componentsWithDependencies, importDetails };
@@ -139,7 +141,7 @@ export default class ImportComponents {
       const envComponents = await Promise.all(envsPromises);
       return {
         dependencies: componentsAndDependencies,
-        envComponents,
+        envComponents: R.flatten(envComponents),
         importDetails
       };
     }
@@ -197,7 +199,7 @@ export default class ImportComponents {
   }
 
   async _throwForModifiedOrNewComponents(ids: BitId[]) {
-    // the typical objectsOnly option is when a user cloned a project with components committed to the source code, but
+    // the typical objectsOnly option is when a user cloned a project with components tagged to the source code, but
     // doesn't have the model objects. in that case, calling getComponentStatusById() may return an error as it relies
     // on the model objects when there are dependencies
     if (this.options.override || this.options.objectsOnly || this.options.merge) return Promise.resolve();
@@ -338,7 +340,7 @@ export default class ImportComponents {
     if (this.options.writeConfig && !this.options.configDir) {
       this.options.configDir = this.consumer.dirStructure.ejectedEnvsDirStructure;
     }
-    await writeComponents({
+    const manyComponentsWriter = new ManyComponentsWriter({
       consumer: this.consumer,
       componentsWithDependencies: componentsToWrite,
       writeToPath: this.options.writeToPath,
@@ -347,9 +349,9 @@ export default class ImportComponents {
       configDir: this.options.configDir,
       writeDists: this.options.writeDists,
       installNpmPackages: this.options.installNpmPackages,
-      saveDependenciesAsComponents: this.options.saveDependenciesAsComponents,
       verbose: this.options.verbose,
       override: this.options.override
     });
+    await manyComponentsWriter.writeAll();
   }
 }

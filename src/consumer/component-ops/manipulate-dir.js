@@ -149,7 +149,8 @@ async function getManipulateDirItemFromComponentVersion(
 export async function getManipulateDirWhenImportingComponents(
   bitMap: BitMap,
   versionsDependencies: VersionDependencies[],
-  repository: Repository
+  repository: Repository,
+  shouldDependenciesSavedAsComponents: Object[]
 ): Promise<ManipulateDirItem[]> {
   const nonDependencies = BitIds.fromArray(
     versionsDependencies.map(versionDependency => versionDependency.component.id)
@@ -161,8 +162,15 @@ export async function getManipulateDirWhenImportingComponents(
       repository,
       false
     );
+    const dependenciesSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
+      c.id.isEqual(versionDependency.component.id)
+    );
+    // when dependencies are not save as components but as packages, they have the same behavior as
+    // imported components because each one of these dependencies is going to be isolated before
+    // npm installing it
+    const isDependency = !dependenciesSavedAsComponents || dependenciesSavedAsComponents.saveDependenciesAsComponents;
     const manipulateDirDependenciesP = versionDependency.allDependencies.map((dependency: ComponentVersion) => {
-      return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, true);
+      return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, isDependency);
     });
     const manipulateDirDependencies = await Promise.all(manipulateDirDependenciesP);
     // a component might be a dependency and directly imported at the same time, in which case,

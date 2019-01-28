@@ -13,7 +13,7 @@ describe('api', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should list the ids of the remote scope', async () => {

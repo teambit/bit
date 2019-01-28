@@ -188,9 +188,9 @@ const _runBuild = async ({
 
   let componentDir = '';
   if (componentMap) {
-    // $FlowFixMe
-    rootDistDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-    if (consumerPath && componentMap && componentMap.getComponentDir()) {
+    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.rootDir);
+    if (consumer) rootDistDir = consumer.toAbsolutePath(rootDistDirRelative);
+    if (consumerPath && componentMap.getComponentDir()) {
       componentDir = componentMap.getComponentDir() || '';
     }
   }
@@ -217,7 +217,7 @@ const _runBuild = async ({
             console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
           }
           await writeEnvFiles({
-            fullConfigDir: tmpFolderFullPath,
+            configDir: component.getTmpFolder(),
             env: compiler,
             consumer,
             component,

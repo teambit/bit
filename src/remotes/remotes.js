@@ -52,7 +52,7 @@ export default class Remotes extends Map<string, Remote> {
       );
     });
 
-    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps}) on a remote`);
+    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) on a remote`);
     const bits = await Promise.all(promises);
     logger.debug('[-] Returning from a remote');
     return flatten(bits);

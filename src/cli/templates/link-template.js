@@ -7,7 +7,7 @@ export default (results: LinksResult[]): string => {
     .map((result) => {
       const bounds = result.bound
         .filter(bound => bound.from && bound.to)
-        .map(bound => `\t\tfrom: ${bound.from}, to: ${bound.to}`)
+        .map(bound => `\t\toriginal path: ${chalk.bold(bound.from)}, link path: ${chalk.bold(bound.to)}`)
         .join('\n');
       if (!bounds.length) {
         const reason = result.id.scope ? 'is a nested dependency' : 'was not exported yet';

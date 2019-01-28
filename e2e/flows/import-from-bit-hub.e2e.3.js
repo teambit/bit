@@ -30,7 +30,7 @@ chai.use(require('chai-fs'));
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents(scopeId);
         scopeAfterExport = helper.cloneLocalScope();
 
@@ -51,7 +51,7 @@ chai.use(require('chai-fs'));
         );
         helper.addComponent('bar/foo-es6.js', { i: 'bar/foo-es6' });
 
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents(scopeId);
         componentTestId = `${scopeId}/bar/foo`;
       });
@@ -240,7 +240,7 @@ module.exports = function isString() { return isType() +  ' and got is-string'; 
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${scopeId}/utils/is-string`);
-      helper.commitComponent('utils/is-string', 'v2', '-f');
+      helper.tagComponent('utils/is-string', 'v2', '-f');
       helper.exportAllComponents(scopeId);
 
       helper.reInitLocalScope();

@@ -28,7 +28,7 @@ describe('bit add many programmatically', function () {
   after(() => {
     helper.destroyEnv();
   });
-  this.timeout(20000);
+  this.timeout(0);
   let nodeStartOutput;
   let nodeStartOutputObj;
   let status;
@@ -193,6 +193,7 @@ describe('bit add many programmatically', function () {
       helper.reInitLocalScope();
       helper.copyFixtureComponents('add-many');
       helper.createFile('foo', 'c.js');
+      helper.createFile('foo/gitignoredir', 'c.js');
       helper.createFileOnRootLevel('c.js');
       helper.npmLink('bit-bin');
       newDirPath = helper.createNewDirectory();
@@ -230,7 +231,26 @@ describe('bit add many programmatically', function () {
       helper.writeGitIgnore(['/c.js']);
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_git_ignore_file_on_root_level.js');
       nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
-      expect(nodeStartOutput).to.have.string('NoFiles');
+      expect(nodeStartOutput).to.have.string('ExcludedMainFile');
+    });
+    it('should add a component with gitignore on root but not inner folder', function () {
+      helper.writeGitIgnore(['/bar']);
+      const scriptAbsolutePath = path.join(
+        newDirPath,
+        'add_many_test_files/inner_folder/add_components_inner_folder_programmatically.js'
+      );
+      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
+      expect(nodeStartOutput).to.not.have.string('NoFiles');
+      expect(nodeStartOutput).to.not.have.string('ExcludedMainFile');
+    });
+    it('should not add a component with gitignore in inner folder', function () {
+      helper.writeGitIgnore(['/foo/gitignoredir']);
+      const scriptAbsolutePath = path.join(
+        newDirPath,
+        'add_many_test_files/inner_folder/add_components_inner_folder_programmatically.js'
+      );
+      nodeStartOutput = helper.nodeStart(`${scriptAbsolutePath} ${helper.localScopePath}`, process.cwd());
+      expect(nodeStartOutput).to.have.string('ExcludedMainFile');
     });
     it('should not add a component if it is one of the ignore files in the constants list', function () {
       const scriptAbsolutePath = path.join(newDirPath, 'add_many_test_files/test_ignore_constants_list.js');

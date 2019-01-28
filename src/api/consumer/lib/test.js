@@ -43,7 +43,7 @@ export default (async function test(
   }
   if (forkLevel === TESTS_FORK_LEVEL.COMPONENT) {
     const consumer: Consumer = await loadConsumer();
-    const components = await _getComponents(consumer, id, includeUnmodified, verbose);
+    const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
     const ids = components.map(component => component.id.toString());
     // $FlowFixMe
     const results = await specsRunner({ ids, forkLevel, verbose });
@@ -58,7 +58,7 @@ export const testInProcess = async (
   verbose: ?boolean
 ): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
-  const { env, componentSandboxes } = await _getComponents(consumer, id, includeUnmodified, verbose);
+  const { env, componentSandboxes } = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
   const specsResults = await Promise.all(
     componentSandboxes.map(compAndSandbox =>
       limit(async () => {
@@ -93,29 +93,36 @@ export const testInProcess = async (
   return specsResults.filter(r => r.componentId); // TODO: what are those without an id?
 };
 
-const _getComponents = async (
+const _getComponentsAfterBuild = async (
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
   verbose: ?boolean
 ) => {
+  let components;
   if (id) {
     const idParsed = consumer.getParsedId(id);
     const component = await consumer.loadComponent(idParsed);
-    return [component];
-  }
-  const componentsList = new ComponentsList(consumer);
-  loader.start(BEFORE_LOADING_COMPONENTS);
-  let components;
-  if (includeUnmodified) {
-    components = await componentsList.authoredAndImportedComponents();
+    components = [component];
   } else {
-    components = await componentsList.newModifiedAndAutoTaggedComponents();
+    const componentsList = new ComponentsList(consumer);
+    loader.start(BEFORE_LOADING_COMPONENTS);
+    if (includeUnmodified) {
+      components = await componentsList.authoredAndImportedComponents();
+    } else {
+      components = await componentsList.newModifiedAndAutoTaggedComponents();
+    }
+    loader.stop();
   }
-  loader.stop();
+  await consumer.scope.buildMultiple(components, consumer, false, verbose);
+
+  // temp hack to try the sendbox
   const env = new IsolatedEnvironment(consumer.scope);
   await env.createSandbox(components);
   const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c, components)));
   const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
   return { env, componentSandboxes };
+  // end temp hack
+
+  return components;
 };

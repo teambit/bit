@@ -140,7 +140,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         try {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
         } catch (err) {
           output = err.message;
         }
@@ -155,7 +155,7 @@ describe('bit test command', function () {
       let output;
       before(() => {
         try {
-          helper.tagAllWithoutMessage('--verbose');
+          helper.tagAllComponents('--verbose');
         } catch (err) {
           output = err.message;
         }
@@ -167,7 +167,7 @@ describe('bit test command', function () {
     describe('tagging the component with --force flag', () => {
       let output;
       before(() => {
-        output = helper.tagAllWithoutMessage('--force');
+        output = helper.tagAllComponents('--force');
       });
       it('should tag the component successfully', () => {
         expect(output).to.have.string('1 components tagged');
@@ -225,7 +225,7 @@ describe('bit test command', function () {
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js -t utils/is-type.spec.js', { i: 'utils/is-type' });
       helper.installNpmPackage('chai', '4.1.2');
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
 
       helper.reInitRemoteScope();
       helper.addRemoteScope();
@@ -357,7 +357,7 @@ describe('bit test command', function () {
       helper.createFile('utils', 'is-type.spec.js', fixtures.isTypeSpec(true));
       helper.addComponent('utils/is-type.js', { t: 'utils/is-type.spec.js', i: 'utils/is-type' });
       helper.installNpmPackage('chai', '4.1.2');
-      helper.commitComponent('utils/is-type');
+      helper.tagComponent('utils/is-type');
 
       helper.reInitRemoteScope();
       helper.addRemoteScope();
@@ -373,7 +373,7 @@ describe('bit test command', function () {
       helper.createComponentBarFoo();
       helper.createFile('bar', 'foo.spec.js', fixtures.passTest);
       helper.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should show there is nothing to test', () => {
       const output = helper.testComponent();

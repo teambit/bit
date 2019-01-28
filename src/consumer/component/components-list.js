@@ -74,7 +74,7 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are in the model (either, committed from a local scope or imported), and were
+   * Components that are in the model (either, tagged from a local scope or imported), and were
    * changed in the file system
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
@@ -130,7 +130,7 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are registered in bit.map but have never been committed
+   * Components that are registered in bit.map but have never been tagged
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise.<string[] | Component[]>}
@@ -173,25 +173,25 @@ export default class ComponentsList {
   async listCommitPendingOfAllScope(
     version: string,
     includeImported: boolean = false
-  ): Promise<{ commitPendingComponents: BitId[], warnings: string[] }> {
-    let commitPendingComponents;
-    commitPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
+  ): Promise<{ tagPendingComponents: BitId[], warnings: string[] }> {
+    let tagPendingComponents;
+    tagPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
     if (includeImported) {
       const importedComponents = this.idsFromBitMap(COMPONENT_ORIGINS.IMPORTED);
-      commitPendingComponents = commitPendingComponents.concat(importedComponents);
+      tagPendingComponents = tagPendingComponents.concat(importedComponents);
     }
-    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponents, false);
+    const tagPendingComponentsLatest = await this.scope.latestVersions(tagPendingComponents, false);
     const warnings = [];
-    commitPendingComponentsLatest.forEach((componentId) => {
+    tagPendingComponentsLatest.forEach((componentId) => {
       if (semver.gt(componentId.version, version)) {
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
       }
     });
-    return { commitPendingComponents, warnings };
+    return { tagPendingComponents, warnings };
   }
 
   /**
-   * New and modified components are commit pending
+   * New and modified components are tag pending
    *
    * @return {Promise<string[]>}
    */
@@ -384,6 +384,10 @@ export default class ComponentsList {
         isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
       );
     });
+  }
+
+  static getUniqueComponents(components: Component[]): Component[] {
+    return R.uniqBy(component => JSON.stringify(component.id), components);
   }
 
   listComponentsByIdsWithWildcard(idsWithWildcard: string[]): BitId[] {

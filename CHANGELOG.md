@@ -7,7 +7,41 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.37] - 2019-01-27
+
+- fix link files generated to a package when it should point to an internal file of the package
+- improve import performance by caching the enrich-context object
+- bit-javascript: replace css parser for better import syntax support
+
+## [13.0.6-dev.36] - 2019-01-22
+
+- bit-javascript: replace caporal package with commander to support node 6
+
+## [13.0.6-dev.35] - 2019-01-20
+
+- temp rollback caporal version (to support node 6)
+
+## [13.0.6-dev.34] - 2019-01-20
+
+- major refactor to write components
+- rollback PR-1358 (install npm packages by npm when file:// exists)
+- improve tag performance
+- show a better error when a component was tagged without its dependencies
+- fix react docs parsing to extract the description of the properties correctly
+- supported flow types in react doc gen
+- add bit.resolveAliases to the package.json when custom-resolve-modules is used
+
+## [13.0.6-dev.33] - 2019-01-13
+
+- avoid installing node_modules in sub directories when the package manager allow it to be installed from the root dir
+- fix parsing React docs to show the `@example` tag
+- make bit version command faster
+- support both `bit -v` and `bit -V` to get bit version
+
+## [13.0.6-dev.32] - 2019-01-06
+
 - fix running `bit link` from an inner directory for author
+- fix ampersand and minus sings causing parse error in css files
 
 ## [13.0.6-dev.31] - 2018-12-16
 
@@ -572,7 +606,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 - prevent exporting a component when the same version has been exported already to the same remote scope
 - avoid running the build and test processes upon `bit status`
 - allow export specific components without specifying the scope-name
-- avoid committing unmodified components unless `--force` flag is being used
+- avoid tagging unmodified components unless `--force` flag is being used
 - resolve dependencies from all component files regardless whether they are referenced from the main file
 - bug fix - the author was not able to update his/her component in case it was changed in another scope
 - bug fix - status command shows an error when components directory has an unreferenced (from bit.map) component

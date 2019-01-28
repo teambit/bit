@@ -14,11 +14,11 @@ describe('merge functionality', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
 
       helper.createFile('bar2', 'foo2.js');
       helper.addComponent('bar2/foo2.js', { i: 'bar2/foo2' });
-      helper.commitComponent('bar2/foo2');
+      helper.tagComponent('bar2/foo2');
 
       helper.exportAllComponents();
 
@@ -27,13 +27,13 @@ describe('merge functionality', function () {
       helper.importComponent('bar/foo');
       helper.importComponent('bar2/foo2');
       const scopeWithV1 = helper.cloneLocalScope();
-      helper.commitComponent('bar/foo', 'msg', '-f');
-      helper.commitComponent('bar2/foo2', 'msg', '-f');
+      helper.tagComponent('bar/foo', 'msg', '-f');
+      helper.tagComponent('bar2/foo2', 'msg', '-f');
       helper.exportAllComponents(); // v2 is exported
 
       helper.getClonedLocalScope(scopeWithV1);
-      helper.commitComponent('bar/foo', 'msg', '-f');
-      helper.commitComponent('bar2/foo2', 'msg', '-f');
+      helper.tagComponent('bar/foo', 'msg', '-f');
+      helper.tagComponent('bar2/foo2', 'msg', '-f');
     });
     it('should throw MergeConflictOnRemote error when exporting the component', () => {
       const exportFunc = () => helper.exportAllComponents(); // v2 is exported again
@@ -59,12 +59,12 @@ describe('merge functionality', function () {
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.addComponentUtilsIsString();
 
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       const clonedScope = helper.cloneRemoteScope();
 
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2); // modify is-type
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -86,10 +86,10 @@ describe('merge functionality', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
       helper.addComponentUtilsIsType();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.addComponentUtilsIsType();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();

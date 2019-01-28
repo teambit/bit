@@ -22,7 +22,7 @@ describe('cyclic dependencies', function () {
       helper.createFile('comp', 'b.js', fixtureB);
       helper.addComponent('comp/a.js', { i: 'comp/a' });
       helper.addComponent('comp/b.js', { i: 'comp/b' });
-      output = helper.tagAllWithoutMessage();
+      output = helper.tagAllComponents();
     });
     it('should be able to tag both with no errors', () => {
       expect(output).to.have.string('2 components tagged');
@@ -78,7 +78,7 @@ describe('cyclic dependencies', function () {
       helper.createFile('utils', 'is-string.js', fixtures.isString);
       helper.addComponentUtilsIsType();
       helper.addComponentUtilsIsString();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
 
       // A1 => A2 => A3 (leaf)
       // B1 => B2 => B3 => B4
@@ -92,7 +92,7 @@ describe('cyclic dependencies', function () {
       helper.createFile('comp', 'B3.js', "const B4 = require('./B4')");
       helper.createFile('comp', 'B4.js', "const isString = require('../utils/is-string')");
       helper.addComponent('comp/*.js', { n: 'comp' });
-      output = helper.tagAllWithoutMessage();
+      output = helper.tagAllComponents();
     });
     it('should be able to tag with no errors', () => {
       expect(output).to.have.string('7 components tagged');
@@ -220,11 +220,11 @@ describe('cyclic dependencies', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       // after export, the author now has a link from node_modules.
       helper.createComponentBarFoo(`require('${helper.getRequireBitPath('bar', 'foo')}');`);
-      tagOutput = helper.tagAllWithoutMessage();
+      tagOutput = helper.tagAllComponents();
     });
     it('should tag successfully with no error', () => {
       // we had a bug where this was leading to an error "unable to save Version object, it has dependencies but its flattenedDependencies is empty"

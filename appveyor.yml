@@ -70,7 +70,7 @@ environment:
   registryProdToken:
     secure: PRt6cU+74aoYU+qZrdbRnQn62vTYP786tovlgwUkoA6mMQCypTcXxBubEFiZqFRE
   registryStgToken:
-    secure: p+ErTxsMthuFfEPHs37W0aVl6ChM8RcADXy994a5tZAV5jKwLHGQ0ttJ8/hOiHdf
+    secure: v5l1kiPQwyt21xAht4eEL97w2g4XQbMMmBk7Iu8YQ2OIHzs2SmYC4fKZ7oZvKohH
   testerBitsrcPassword:
     secure: tR01IIjMw35fBOFhTQd9jw==
   matrix:
@@ -91,6 +91,7 @@ install:
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
   - ps: Install-Product node 6
+  - ps: npm i -g npm
   - "npm i"
   - "npm run build"
   - "npm install -g"
@@ -122,9 +123,12 @@ test_script:
 
 #    .\scripts\copyArtifacts.ps1
 
-#artifacts:
-#- path: '%APPDATA%\Local\Bit\logs\debug.log'
-#  name: bitLogs
+artifacts:
+  # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
+  - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
+    name: bit-logs
+  - path: "output.err"
+    name: mocha-output
 #- path: artifacts\*.msi
 #  name: Installer
 #- path: artifacts\bit.${VERSION}.nupkg

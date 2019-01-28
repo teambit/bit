@@ -15,7 +15,6 @@ import ConsumerBitJson from './bit-json/consumer-bit-json';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
-  BITS_DIRNAME,
   BIT_HIDDEN_DIR,
   COMPONENT_ORIGINS,
   BIT_VERSION,
@@ -64,6 +63,7 @@ import ComponentLoader from './component/component-loader';
 import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
+import type { Remotes } from '../remotes';
 
 type ConsumerProps = {
   projectPath: string,
@@ -336,21 +336,57 @@ export default class Consumer {
     return installExtensions({ ids: [{ componentId: bitId }], scope: this.scope, verbose, dontPrintEnvMsg });
   }
 
-  async importComponents(ids: BitIds, withAllVersions: boolean): Promise<ComponentWithDependencies[]> {
+  async importComponents(
+    ids: BitIds,
+    withAllVersions: boolean,
+    saveDependenciesAsComponents?: boolean
+  ): Promise<ComponentWithDependencies[]> {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
       ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
       : await scopeComponentsImporter.importMany(ids);
+    const shouldDependenciesSavedAsComponents = await this._shouldDependenciesSavedAsComponents(
+      versionDependenciesArr,
+      saveDependenciesAsComponents
+    );
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
-      this.scope.objects
+      this.scope.objects,
+      shouldDependenciesSavedAsComponents
     );
-    return Promise.all(
+    const componentWithDependencies = await Promise.all(
       versionDependenciesArr.map(versionDependencies =>
         versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
       )
     );
+    componentWithDependencies.forEach((componentWithDeps) => {
+      const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
+        c.id.isEqual(componentWithDeps.component.id)
+      );
+      if (!shouldSavedAsComponents) {
+        throw new Error(`saveDependenciesAsComponents is missing for ${componentWithDeps.component.id.toString()}`);
+      }
+      componentWithDeps.component.dependenciesSavedAsComponents = shouldSavedAsComponents.saveDependenciesAsComponents;
+    });
+    return componentWithDependencies;
+  }
+
+  async _shouldDependenciesSavedAsComponents(
+    versionDependencies: VersionDependencies[],
+    saveDependenciesAsComponents?: boolean
+  ) {
+    if (saveDependenciesAsComponents === undefined) {
+      saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
+    }
+    const remotes: Remotes = await getScopeRemotes(this.scope);
+    const shouldDependenciesSavedAsComponents = versionDependencies.map((versionDep: VersionDependencies) => {
+      return {
+        id: versionDep.component.id, // if it doesn't go to the hub, it can't import dependencies as packages
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(versionDep.component.id.scope)
+      };
+    });
+    return shouldDependenciesSavedAsComponents;
   }
 
   /**
@@ -532,11 +568,11 @@ export default class Consumer {
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
   ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
-    logger.debug(`committing the following components: ${ids.toString()}`);
-    Analytics.addBreadCrumb('tag', `committing the following components: ${Analytics.hashData(ids)}`);
+    logger.debug(`tagging the following components: ${ids.toString()}`);
+    Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
     // go through the components list to check if there are missing dependencies
-    // if there is at least one we won't commit anything
+    // if there is at least one we won't tag anything
     if (!ignoreUnresolvedDependencies) {
       const componentsWithMissingDeps = components.filter((component) => {
         return Boolean(component.issues);
@@ -585,19 +621,6 @@ export default class Consumer {
     return { taggedComponents, autoTaggedComponents };
   }
 
-  getNodeModulesPathOfComponent(bindingPrefix: string, id: BitId): PathOsBased {
-    if (!id.scope) {
-      throw new GeneralError(
-        `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
-      );
-    }
-    // Temp fix to support old components before the migration has been running
-    bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
-    const allSlashes = new RegExp('/', 'g');
-    const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-    return path.join('node_modules', bindingPrefix, [id.scope, name].join(NODE_PATH_COMPONENT_SEPARATOR));
-  }
-
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
     requirePath = pathNormalizeToLinux(requirePath);
     // Temp fix to support old components before the migration has been running
@@ -629,21 +652,26 @@ export default class Consumer {
     return new BitId({ scope, name });
   }
 
-  composeRelativeBitPath(bitId: BitId): string {
+  composeRelativeComponentPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
-  composeComponentPath(bitId: BitId): PathOsBased {
-    const addToPath = [this.getPath(), this.composeRelativeBitPath(bitId)];
+  composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
+    const addToPath = [this.getPath(), this.composeRelativeComponentPath(bitId)];
     logger.debug(`component dir path: ${addToPath.join('/')}`);
     Analytics.addBreadCrumb('composeComponentPath', `component dir path: ${Analytics.hashData(addToPath.join('/'))}`);
     return path.join(...addToPath);
   }
 
-  composeDependencyPath(bitId: BitId): PathOsBased {
+  composeRelativeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return path.join(this.getPath(), dependenciesDir, bitId.toFullPath());
+    return path.join(dependenciesDir, bitId.toFullPath());
+  }
+
+  composeDependencyPath(bitId: BitId): PathOsBased {
+    const relativeDependencyPath = this.composeRelativeDependencyPath(bitId);
+    return path.join(this.getPath(), relativeDependencyPath);
   }
 
   static create(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {

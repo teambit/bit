@@ -3,7 +3,7 @@ import isolate from './lib/isolate';
 import remove from './lib/remove';
 import deprecate from './lib/deprecate';
 import listScope from './lib/list-scope';
-import { commitAction, commitAllAction } from './lib/commit';
+import { tagAction, tagAllAction } from './lib/tag';
 import status from './lib/status';
 import { build, buildAll } from './lib/build';
 import importAction from './lib/import';
@@ -42,8 +42,8 @@ export {
   deprecate,
   buildAll,
   listScope,
-  commitAction,
-  commitAllAction,
+  tagAction,
+  tagAllAction,
   status,
   build,
   importAction,

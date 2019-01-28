@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "13.0.6-dev.31",
+  "version": "13.0.6-dev.37",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -45,7 +45,7 @@
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^1.0.6-dev.10",
+    "bit-javascript": "^1.0.6-dev.14",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.3",
     "cli-spinners": "^1.0.0",
@@ -86,7 +86,7 @@
     "ora": "^1.1.0",
     "p-map-series": "^1.0.0",
     "pad-right": "^0.2.2",
-    "parse-gitignore": "^0.4.0",
+    "parse-gitignore": "^1.0.1",
     "porter-stemmer": "^0.9.1",
     "promise-limit": "^2.7.0",
     "prompt": "^1.0.0",
@@ -149,7 +149,9 @@
     "mocha-junit-reporter": "^1.13.0",
     "prettier-eslint": "^8.8.1",
     "prettier-eslint-cli": "^4.7.1",
-    "sinon": "^5.0.7"
+    "sinon": "^5.0.7",
+    "tar": "^4.4.8",
+    "verdaccio": "^3.10.2"
   },
   "optionalDependencies": {
     "posix": "^4.1.1"

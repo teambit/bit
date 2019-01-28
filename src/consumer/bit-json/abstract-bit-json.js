@@ -222,6 +222,20 @@ export default class AbstractBitJson {
     override?: boolean,
     throws?: boolean
   }): Promise<boolean> {
+    const data = await this.prepareToWrite({ bitDir, override, throws });
+    if (!data) return false;
+    return fs.outputJson(data.pathToWrite, data.content, { spaces: 4 });
+  }
+
+  async prepareToWrite({
+    bitDir,
+    override = true,
+    throws = true
+  }: {
+    bitDir: string,
+    override?: boolean,
+    throws?: boolean
+  }): Promise<?{ pathToWrite: PathOsBased, content: Object }> {
     let isExisting = false;
     const isBitDirExisting = await fs.exists(bitDir);
     if (isBitDirExisting) {
@@ -231,10 +245,13 @@ export default class AbstractBitJson {
       if (throws) {
         throw new BitJsonAlreadyExists();
       }
-      return false;
+      return null;
     }
 
-    return fs.outputJson(AbstractBitJson.composePath(bitDir), this.toPlainObject(), { spaces: 4 });
+    return {
+      pathToWrite: AbstractBitJson.composePath(bitDir),
+      content: this.toPlainObject()
+    };
   }
 
   toJson(readable: boolean = true) {

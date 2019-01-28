@@ -19,7 +19,7 @@ describe('peer-dependencies functionality', function () {
       helper.addNpmPackage('chai', '2.4');
       helper.createComponentBarFoo("import chai from 'chai';");
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       catComponent = helper.catComponent('bar/foo@latest');
     });
     it('should save the peer dependencies in the model', () => {
@@ -85,7 +85,7 @@ describe('peer-dependencies functionality', function () {
       helper.addNpmPackage('chai', '2.4');
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should not save the peer dependencies in the model', () => {
       const output = helper.catComponent('bar/foo@latest');

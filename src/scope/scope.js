@@ -22,7 +22,6 @@ import { ScopeJson, getPath as getScopeJsonPath } from './scope-json';
 import { ScopeNotFound, ComponentNotFound } from './exceptions';
 import { Tmp } from './repositories';
 import { BitId, BitIds } from '../bit-id';
-import type ConsumerComponent from '../consumer/component';
 import ComponentVersion from './component-version';
 import { Repository, Ref, BitObject } from './objects';
 import SourcesRepository from './repositories/sources';
@@ -207,7 +206,7 @@ export default class Scope {
     };
   }
 
-  toConsumerComponents(components: ModelComponent[]): Promise<ConsumerComponent[]> {
+  toConsumerComponents(components: ModelComponent[]): Promise<Component[]> {
     return Promise.all(
       components
         .filter(comp => !(comp instanceof Symlink))
@@ -493,7 +492,7 @@ export default class Scope {
     });
   }
 
-  loadAllVersions(id: BitId): Promise<ConsumerComponent[]> {
+  loadAllVersions(id: BitId): Promise<Component[]> {
     return this.sources.get(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
@@ -534,7 +533,7 @@ export default class Scope {
   /**
    * throws if component was not found
    */
-  async getConsumerComponent(id: BitId): Promise<ConsumerComponent> {
+  async getConsumerComponent(id: BitId): Promise<Component> {
     const modelComponent: ModelComponent = await this.getModelComponent(id);
     // $FlowFixMe version must be set
     const componentVersion = modelComponent.toComponentVersion(id.version);
@@ -651,8 +650,8 @@ export default class Scope {
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
-    directory: ?string,
-    keep: ?boolean
+    directory?: ?string,
+    keep?: ?boolean
   }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');

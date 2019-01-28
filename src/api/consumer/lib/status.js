@@ -34,7 +34,7 @@ export default (async function status(): Promise<StatusResult> {
   const outdatedComponents = await componentsList.listOutdatedComponents();
 
   // Run over the components to check if there is missing dependencies
-  // If there is at least one we won't commit anything
+  // If there is at least one we won't tag anything
   const newAndModified: BitId[] = newComponents.concat(modifiedComponent);
   const componentsWithMissingDeps = newAndModified.filter((component: Component) => {
     return Boolean(component.issues);

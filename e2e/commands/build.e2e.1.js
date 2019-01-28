@@ -32,8 +32,8 @@ describe('bit build', function () {
       });
       it('should successfully import and build using the babel compiler', () => {
         const buildOutput = helper.build();
-        expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js.map'));
-        expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js'));
+        expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js.map'));
+        expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js'));
       });
       describe('when an exception is thrown during the build', () => {
         before(() => {
@@ -55,7 +55,7 @@ describe('bit build', function () {
         const compilerFolderFullPath = path.join(helper.localScopePath, '.bit', 'components', 'compilers');
         const distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
         before(() => {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           const output = helper.status();
           // Make sure there is no modified components
           expect(output).to.not.contain.string('modified');
@@ -104,7 +104,11 @@ describe('bit build', function () {
   describe('as imported', () => {
     let localScope;
     before(() => {
-      helper.tagAllWithoutMessage();
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();

@@ -13,6 +13,7 @@ import set from 'lodash.set';
 import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
+import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -218,6 +219,10 @@ export default class Helper {
     return this.runCmd(`bit remote add file://${remoteScopePath}`, localScopePath);
   }
 
+  removeRemoteScope(remoteScope: string = this.remoteScope) {
+    return this.runCmd(`bit remote del ${remoteScope}`);
+  }
+
   addRemoteEnvironment() {
     return this.runCmd(`bit remote add file://${this.envScopePath}`, this.localScopePath);
   }
@@ -366,27 +371,24 @@ export default class Helper {
   untrackComponent(id: string = '', all: boolean = false, cwd: string = this.localScopePath) {
     return this.runCmd(`bit untrack ${id} ${all ? '--all' : ''}`, cwd);
   }
-  commitComponent(id: string, commitMsg: string = 'commit-message', options: string = '') {
-    return this.runCmd(`bit tag ${id} -m ${commitMsg} ${options}`);
-  }
-  tagWithoutMessage(id: string, version: string = '', options: string = '') {
-    return this.runCmd(`bit tag ${id} ${version} ${options}`);
-  }
   removeComponent(id: string, flags: string = '') {
     return this.runCmd(`bit remove ${id} ${flags}`);
   }
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
-
-  commitAllComponents(commitMsg: string = 'commit-message', options: string = '', version: string = '') {
-    return this.runCmd(`bit tag ${options} -a ${version} -m ${commitMsg} `);
+  tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
+    return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
-  tagAllWithoutMessage(options: string = '', version: string = '') {
-    return this.runCmd(`bit tag -a ${version} ${options} `);
+  tagWithoutMessage(id: string, version: string = '', options: string = '') {
+    return this.runCmd(`bit tag ${id} ${version} ${options}`);
   }
-
-  tagScope(version: string, message: string = 'commit-message', options: string = '') {
+  tagAllComponents(options: string = '', version: string = '', assertTagged: boolean = true) {
+    const result = this.runCmd(`bit tag -a ${version} ${options} `);
+    if (assertTagged) expect(result).to.not.have.string(NOTHING_TO_TAG_MSG);
+    return result;
+  }
+  tagScope(version: string, message: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag -s ${version} -m ${message} ${options}`);
   }
 
@@ -448,6 +450,29 @@ export default class Helper {
     // Temporary - for checking new serialization against the stage env
     // this.setHubDomain('hub-stg.bitsrc.io');
     this.runCmd(`bit import ${id} --tester`);
+  }
+
+  importExtension(id: string) {
+    return this.runCmd(`bit import ${id} --extension`);
+  }
+
+  importAndConfigureExtension(id: string) {
+    this.importExtension(id);
+    const bitJson = this.readBitJson();
+    bitJson.extensions = { [id]: {} };
+    this.writeBitJson(bitJson);
+  }
+
+  importNpmPackExtension(id: string = 'bit.extensions/npm/pack@2.0.1') {
+    this.importAndConfigureExtension(id);
+    // workaround to get the registry into the package.json file
+    const extensionFilePath = path.join(this.localScopePath, '.bit/components/npm/pack/bit.extensions/2.0.1/index.js');
+    const extensionFile = fs.readFileSync(extensionFilePath).toString();
+    const extensionFileIncludeRegistry = extensionFile.replace(
+      'excludeRegistryPrefix: true',
+      'excludeRegistryPrefix: false'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
   }
 
   build(id?: string = '') {
@@ -574,8 +599,8 @@ export default class Helper {
     return this.runCmd('bit add utils/is-string.js --id utils/is-string');
   }
 
-  commitComponentBarFoo() {
-    return this.commitComponent('bar/foo');
+  tagComponentBarFoo() {
+    return this.tagComponent('bar/foo');
   }
 
   createCompiler() {

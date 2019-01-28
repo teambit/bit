@@ -655,15 +655,15 @@ export default class BitMap {
     files: ComponentMapFile[],
     mainFile?: PathOsBased,
     origin: ComponentOrigin,
-    parent?: BitId,
+    parent?: ?BitId,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
-    configDir?: ConfigDir,
+    configDir?: ?ConfigDir,
     trackDir?: PathOsBased,
-    override: boolean,
+    override?: boolean,
     detachedCompiler: ?boolean,
     detachedTester: ?boolean,
-    originallySharedDir?: PathLinux,
-    wrapDir?: PathLinux
+    originallySharedDir?: ?PathLinux,
+    wrapDir?: ?PathLinux
   }): ComponentMap {
     const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
@@ -704,12 +704,7 @@ export default class BitMap {
       this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
     }
     if (rootDir) {
-      // when rootDir is from the cli, it is changed to be absolute first (see write-components.writeToComponentsDir)
-      // and on the next line it is changed to be relative to the project-root.
-      // otherwise, rootDir may be originated from previous componentMap.rootDir value, as such,
-      // when running the command from an inner directory we must not run _makePathRelativeToProjectRoot.
-      const rootRelative = path.isAbsolute(rootDir) ? this._makePathRelativeToProjectRoot(rootDir) : rootDir;
-      this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootRelative);
+      this.components[componentIdStr].rootDir = pathNormalizeToLinux(rootDir);
     }
     if (configDir) {
       this.components[componentIdStr].configDir = configDir;
