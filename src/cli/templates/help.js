@@ -127,19 +127,19 @@ const allCommands = [
       {
         name: 'watch',
         description: 'watch components and perform `build` on changes'
-      },
-      {
-        name: 'envs-attach',
-        description: 'attach workspace environments to components'
-      },
-      {
-        name: 'eject-conf',
-        description: 'ejecting components configuration'
-      },
-      {
-        name: 'inject-conf',
-        description: 'injecting components configuration'
       }
+      // {
+      //   name: 'envs-attach',
+      //   description: 'attach workspace environments to components'
+      // },
+      // {
+      //   name: 'eject-conf',
+      //   description: 'ejecting components configuration'
+      // },
+      // {
+      //   name: 'inject-conf',
+      //   description: 'injecting components configuration'
+      // }
     ]
   },
   {
@@ -173,7 +173,7 @@ const baseTemplate = (commands) => {
   )}
   ${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
 
-  ${chalk.grey('Bit documentation: https://docs.bitsrc.io')}     
+  ${chalk.grey('Bit documentation: https://docs.bitsrc.io')}
 
 ${commandsTemplate(commands)}
 
