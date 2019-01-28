@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.15] - 2019-01-28
+
+- replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
+
 ## [1.0.6-dev.14] - 2019-01-27
 
 - replace css parser (gonzales-pe -> css-tree) for better import syntax support
