@@ -101,7 +101,6 @@
     "symlink-or-copy": "^1.1.8",
     "table": "^4.0.3",
     "tty-table": "^2.6.9",
-    "typescript": "2.9.1",
     "uniqid": "^5.0.3",
     "user-home": "^2.0.0",
     "uuid": "^3.0.1",
