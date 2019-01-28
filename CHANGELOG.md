@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bit-javascript: replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
+
 ## [13.0.6-dev.37] - 2019-01-27
 
 - fix link files generated to a package when it should point to an internal file of the package
