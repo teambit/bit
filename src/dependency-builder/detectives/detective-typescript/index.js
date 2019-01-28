@@ -2,7 +2,7 @@
  * this file had been forked from https://github.com/pahen/detective-typescript
  */
 
-const Parser = require('typescript-eslint-parser');
+const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');
 
 /**
