@@ -143,6 +143,7 @@ export default class ComponentWriter {
     if (this.writePackageJson && ((this.consumer && this.consumer.isolated) || this.writeToPath !== '.')) {
       const packageJson = await preparePackageJsonToWrite(
         this.consumer,
+        this.bitMap,
         this.component,
         this.writeToPath,
         this.override,
@@ -189,6 +190,7 @@ export default class ComponentWriter {
   }
 
   _copyFilesIntoDistsWhenDistsOutsideComponentDir() {
+    if (!this.consumer) return; // not relevant when consumer is not available
     if (!this.consumer.shouldDistsBeInsideTheComponent() && this.component.dists.isEmpty()) {
       // since the dists are set to be outside the components dir, the source files must be saved there
       // otherwise, other components in dists won't be able to link to this component
@@ -247,6 +249,7 @@ export default class ComponentWriter {
    * bit.map and add an updated one.
    */
   async _handlePreviouslyNestedCurrentlyImportedCase() {
+    if (!this.consumer) return;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       await this._cleanOldNestedComponent();
       this.componentMap = this.addComponentToBitMap(this.writeToPath);
@@ -274,6 +277,7 @@ export default class ComponentWriter {
   }
 
   async _cleanOldNestedComponent() {
+    if (!this.consumer) throw new Error('ComponentWriter._cleanOldNestedComponent expect to have a consumer');
     // $FlowFixMe this function gets called when it was previously NESTED, so the rootDir is set
     const oldLocation = path.join(this.consumer.getPath(), this.componentMap.rootDir);
     logger.debug(`deleting the old directory of a component at ${oldLocation}`);
@@ -283,13 +287,16 @@ export default class ComponentWriter {
   }
 
   async _removeNodeModulesLinksFromDependents() {
+    if (!this.consumer) throw new Error('ComponentWriter._removeNodeModulesLinksFromDependents expect to have a consumer');
     const directDependentComponents = await this.consumer.getAuthoredAndImportedDependentsOfComponents([
       this.component
     ]);
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.bitMap.getComponent(dependent.id);
+        // $FlowFixMe consumer is set
         const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.bitJson.bindingPrefix, this.component.id);
+        // $FlowFixMe consumer is set
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
         );

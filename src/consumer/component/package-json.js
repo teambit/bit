@@ -17,6 +17,8 @@ import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import { Driver } from '../../driver';
+import BitMap from '../bit-map';
 
 // the instance comes from bit-javascript PackageJson class
 export type PackageJsonInstance = { write: Function, bit?: Object };
@@ -93,9 +95,9 @@ function getPackageDependencyValue(
   return convertToValidPathForPackageManager(rootDirRelative);
 }
 
-async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): Promise<?string> {
-  const parentComponentMap = consumer.bitMap.getComponent(parentId);
-  const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyId);
+async function getPackageDependency(bitMap: BitMap, dependencyId: BitId, parentId: BitId): Promise<?string> {
+  const parentComponentMap = bitMap.getComponent(parentId);
+  const dependencyComponentMap = bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
 }
 
@@ -158,6 +160,7 @@ async function write(
 ): Promise<PackageJsonInstance> {
   const packageJson: PackageJsonInstance = await preparePackageJsonToWrite(
     consumer,
+    consumer.bitMap,
     component,
     bitDir,
     override,
@@ -170,6 +173,7 @@ async function write(
 
 async function preparePackageJsonToWrite(
   consumer: ?Consumer,
+  bitMap: BitMap,
   component: Component,
   bitDir: string,
   override?: boolean = true,
@@ -177,11 +181,11 @@ async function preparePackageJsonToWrite(
   excludeRegistryPrefix?: boolean
 ): Promise<PackageJsonInstance> {
   logger.debug(`package-json.write. bitDir ${bitDir}. override ${override.toString()}`);
-  const PackageJson = consumer.driver.getDriver(false).PackageJson;
+  const PackageJson = _getDriver(consumer).PackageJson;
   const getBitDependencies = async (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     const dependenciesPackages = dependencies.get().map(async (dep) => {
-      const packageDependency = await getPackageDependency(consumer, dep.id, component.id);
+      const packageDependency = await getPackageDependency(bitMap, dep.id, component.id);
       return [dep.id.toStringWithoutVersion(), packageDependency];
     });
     return R.fromPairs(await Promise.all(dependenciesPackages));
@@ -318,6 +322,11 @@ async function writePackageJsonFromObject(consumer: Consumer, data: Object) {
   const driver = await consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   return PackageJson.saveRawObject(consumer.getPath(), data);
+}
+
+function _getDriver(consumer: ?Consumer) {
+  const driver = consumer ? consumer.driver : Driver.load();
+  return driver.getDriver(false);
 }
 
 export {
