@@ -63,6 +63,15 @@ describe('custom module resolutions', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.string('modified');
       });
+      it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        expect(packageJson).to.have.property('bit');
+        expect(packageJson.bit).to.have.property('resolveAliases');
+        expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
+        expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
+          `@bit/${helper.remoteScope}.utils.is-string`
+        );
+      });
       describe('importing the component using isolated environment', () => {
         let isolatePath;
         before(() => {

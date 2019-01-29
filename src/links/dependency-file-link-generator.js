@@ -176,7 +176,7 @@ export default class DependencyFileLinkGenerator {
     const relativeFilePath = path.relative(path.dirname(linkPath), actualFilePath);
     const importSpecifiers = this.relativePath.importSpecifiers;
     const linkContent = this.getLinkContent(relativeFilePath);
-    const customResolveMapping = this._getCustomResolveMapping(relativeFilePath);
+    const customResolveMapping = this._getCustomResolveMapping();
     logger.debug(`prepareLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = Boolean(importSpecifiers && linkPathExt === 'js');
@@ -200,16 +200,10 @@ export default class DependencyFileLinkGenerator {
     return `${packageName}/${this.relativePath.destinationRelativePath}`;
   }
 
-  _getCustomResolveMapping(relativeFilePath: PathOsBased) {
+  _getCustomResolveMapping() {
     if (!this.relativePath.isCustomResolveUsed) return null;
-    const getValue = () => {
-      if (this.isLinkToPackage) {
-        return this._getPackagePath();
-      }
-      return relativeFilePath;
-    };
     // $FlowFixMe importSource is set for custom resolved
-    return { [this.relativePath.importSource]: getValue() };
+    return { [this.relativePath.importSource]: this._getPackagePath() };
   }
 
   getTargetDir(): PathOsBasedRelative {
