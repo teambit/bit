@@ -8,6 +8,7 @@ import specsRunner from '../../../specs-runner/specs-runner';
 import GeneralError from '../../../error/general-error';
 import type { SpecsResultsWithComponentId } from '../../../consumer/specs-results/specs-results';
 import pMapSeries from 'p-map-series';
+import Isolator from '../../../environment/isolator';
 
 import IsolatedEnvironment from '../../../environment/environment';
 import promiseLimit from 'promise-limit';
@@ -116,13 +117,19 @@ const _getComponentsAfterBuild = async (
   }
   await consumer.scope.buildMultiple(components, consumer, false, verbose);
 
-  // temp hack to try the sendbox
-  const env = new IsolatedEnvironment(consumer.scope);
-  await env.createSandbox(components);
-  const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c, components)));
-  const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
-  return { env, componentSandboxes };
-  // end temp hack
+  // temp hack #1 to try the Isolator
+  const isolator = await Isolator.getInstance(undefined, consumer.scope, consumer);
+  await isolator.writeComponent(components[0].id);
+  // end temp hack #1 to try the Isolator
 
-  return components;
+  // // temp hack #2 to try the sendbox
+  // const env = new IsolatedEnvironment(consumer.scope);
+  // const capsule = await env.isolateComponentToCapsule(components[0]);
+  // await env.createSandbox(components);
+  // const sandboxes = await Promise.all(components.map(c => env.isolateComponentToSandbox(c, components)));
+  // const componentSandboxes = components.map((component, index) => ({ component, sandbox: sandboxes[index] }));
+  // return { env, componentSandboxes };
+  // // end temp #2 hack
+
+  // return components;
 };
