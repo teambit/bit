@@ -351,7 +351,12 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && consumer && !consumer.shouldDistsBeInsideTheComponent()) {
+  if (
+    !component.dists.isEmpty() &&
+    component.dists.writeDistsFiles &&
+    consumer &&
+    !consumer.shouldDistsBeInsideTheComponent()
+  ) {
     const distDir = component.dists.getDistDirForConsumer(consumer, componentRoot);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);

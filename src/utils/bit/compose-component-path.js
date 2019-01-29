@@ -5,10 +5,16 @@ import { DEFAULT_COMPONENTS_DIR_PATH, DEFAULT_DEPENDENCIES_DIR_PATH } from '../.
 import BitId from '../../bit-id/bit-id';
 import type { PathOsBased } from '../path';
 
-export function composeComponentPath(bitId: BitId, componentsDefaultDirectory?: string = DEFAULT_COMPONENTS_DIR_PATH): string {
+export function composeComponentPath(
+  bitId: BitId,
+  componentsDefaultDirectory?: string = DEFAULT_COMPONENTS_DIR_PATH
+): string {
   return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
 }
 
-export function composeDependencyPath(bitId: BitId, dependenciesDir?: string = DEFAULT_DEPENDENCIES_DIR_PATH): PathOsBased {
+export function composeDependencyPath(
+  bitId: BitId,
+  dependenciesDir?: string = DEFAULT_DEPENDENCIES_DIR_PATH
+): PathOsBased {
   return path.join(dependenciesDir, bitId.toFullPath());
 }
