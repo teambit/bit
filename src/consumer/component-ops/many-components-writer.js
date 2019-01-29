@@ -322,6 +322,7 @@ export default class ManyComponentsWriter {
       writtenComponents: this.writtenComponents,
       writtenDependencies: this.writtenDependencies,
       consumer: this.consumer,
+      bitMap: this.bitMap,
       createNpmLinkFiles: this.createNpmLinkFiles,
       writePackageJson: this.writePackageJson
     });

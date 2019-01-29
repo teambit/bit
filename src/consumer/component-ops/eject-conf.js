@@ -77,6 +77,7 @@ export async function getEjectConfDataToPersist(
     configDir: resolvedConfigDir.dirPath,
     env: component.compiler,
     consumer,
+    bitMap,
     component,
     deleteOldFiles,
     verbose: false
@@ -85,6 +86,7 @@ export async function getEjectConfDataToPersist(
     configDir: resolvedConfigDir.dirPath,
     env: component.tester,
     consumer,
+    bitMap,
     component,
     deleteOldFiles,
     verbose: false
@@ -175,6 +177,7 @@ export async function writeEnvFiles({
     configDir,
     env,
     consumer,
+    bitMap: consumer.bitMap,
     component,
     deleteOldFiles,
     verbose
@@ -193,6 +196,7 @@ export async function populateEnvFilesToWrite({
   configDir,
   env,
   consumer,
+  bitMap,
   component,
   deleteOldFiles,
   verbose = false
@@ -200,6 +204,7 @@ export async function populateEnvFilesToWrite({
   configDir: PathOsBased,
   env?: ?CompilerExtension | ?TesterExtension,
   consumer?: ?Consumer,
+  bitMap: BitMap,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
   verbose: boolean
@@ -211,7 +216,7 @@ export async function populateEnvFilesToWrite({
   const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, consumer, envType, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
   // $FlowFixMe will be fixed with the Capsule feature
-  const links = await getLinksByDependencies(configDir, component, deps, consumer);
+  const links = await getLinksByDependencies(configDir, component, deps, consumer, bitMap);
   env.dataToPersist.addManyFiles(links);
   return ejectedDirectory;
 }
