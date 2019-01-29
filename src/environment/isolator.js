@@ -6,11 +6,12 @@ import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';
 import { buildComponentsGraph, getFlattenedDependencies } from '../scope/component-ops/tag-model-component';
 import { BitId } from '../bit-id';
-import writeComponents from '../consumer/component-ops/write-components';
 import { ModelComponent, Version } from '../scope/models';
 import Component from '../consumer/component/consumer-component';
 import CompilerExtension from '../extensions/compiler-extension';
 import TesterExtension from '../extensions/tester-extension';
+import BitIds from '../bit-id/bit-ids';
+import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 
 export default class Isolator {
   capsule: Capsule;
@@ -49,28 +50,50 @@ export default class Isolator {
       silentPackageManagerResult: opts.silentPackageManagerResult,
       capsule: this.capsule
     };
+    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     await writeComponents(concreteOpts);
   }
 
   async loadComponent(id: BitId): Promise<ComponentWithDependencies> {
-    const consumerComponent = this.consumer
-      ? await this.loadComponentFromConsumer(id)
-      : this.loadComponentFromScope(id);
+    return this.consumer ? await this.loadComponentFromConsumer(id) : this.loadComponentFromScope(id);
     throw new Error('stop here for now');
   }
 
-  async loadComponentFromConsumer(id: BitId) {
+  async loadComponentFromConsumer(id: BitId): Promise<ComponentWithDependencies> {
     if (!this.consumer) throw new Error('missing consumer');
     const component = await this.consumer.loadComponent(id);
+    const { components: dependencies } = await this.consumer.loadComponents(component.dependencies.getAllIds());
+    const { components: devDependencies } = await this.consumer.loadComponents(component.devDependencies.getAllIds());
+    const { components: compilerDependencies } = await this.consumer.loadComponents(
+      component.compilerDependencies.getAllIds()
+    );
+    const { components: testerDependencies } = await this.consumer.loadComponents(
+      component.testerDependencies.getAllIds()
+    );
+    return new ComponentWithDependencies({
+      component,
+      dependencies,
+      devDependencies,
+      compilerDependencies,
+      testerDependencies
+    });
     const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = buildComponentsGraph([component]);
 
     const dependenciesCache = {};
-    const flattenedDependencies = await getFlattenedDependencies(this.scope, component, graphDeps, dependenciesCache);
+    const notFoundDependencies = new BitIds();
+    const flattenedDependencies = await getFlattenedDependencies(
+      this.scope,
+      component,
+      graphDeps,
+      dependenciesCache,
+      notFoundDependencies
+    );
     const flattenedDevDependencies = await getFlattenedDependencies(
       this.scope,
       component,
       graphDevDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const flattenedCompilerDependencies = await getFlattenedDependencies(
@@ -78,6 +101,7 @@ export default class Isolator {
       component,
       graphCompilerDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const flattenedTesterDependencies = await getFlattenedDependencies(
@@ -85,6 +109,7 @@ export default class Isolator {
       component,
       graphTesterDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const modelComponent: ModelComponent = await this.scope.sources.findOrAddComponent(component);
@@ -106,9 +131,12 @@ export default class Isolator {
       flattenedTesterDependencies,
       versionFromModel
     });
-    const versionStr = component.id.hasVersion() ? component.version : null;
+    const versionStr = component.id.hasVersion() ? component.version : '0.0.1';
     return modelComponent.toConsumerComponent(versionStr, this.scope.name, this.scope.objects, null, version);
   }
+
+  // new = load from consumer, load all dependencies. write.
+  // imported = load from consumer, add sharedDir, load all dependencies, write.
 
   async toConsumerComponentWithoutDirManipulation(originalComponent: Component, version: Version) {
     const repository = this.scope.objects;
