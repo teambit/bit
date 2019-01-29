@@ -425,7 +425,7 @@ describe('bit show command', function () {
         expect(componentFromModel.mainFile).to.have.string('bar');
       });
     });
-    describe.only('when importing a component', () => {
+    describe('when importing a component', () => {
       before(() => {
         helper.tagAllComponents(undefined, undefined, false);
         helper.reInitRemoteScope();
