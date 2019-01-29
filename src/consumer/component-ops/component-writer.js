@@ -134,7 +134,12 @@ export default class ComponentWriter {
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig) {
       const resolvedConfigDir = this._getConfigDir();
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, this.bitMap, resolvedConfigDir, this.override);
+      const configToWrite = await this.component.getConfigToWrite(
+        this.consumer,
+        this.bitMap,
+        resolvedConfigDir,
+        this.override
+      );
       this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
@@ -287,7 +292,9 @@ export default class ComponentWriter {
   }
 
   async _removeNodeModulesLinksFromDependents() {
-    if (!this.consumer) throw new Error('ComponentWriter._removeNodeModulesLinksFromDependents expect to have a consumer');
+    if (!this.consumer) {
+      throw new Error('ComponentWriter._removeNodeModulesLinksFromDependents expect to have a consumer');
+    }
     const directDependentComponents = await this.consumer.getAuthoredAndImportedDependentsOfComponents([
       this.component
     ]);

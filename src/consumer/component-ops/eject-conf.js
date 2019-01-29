@@ -177,6 +177,7 @@ export async function writeEnvFiles({
     configDir,
     env,
     consumer,
+    // $FlowFixMe todo: fix!
     bitMap: consumer.bitMap,
     component,
     deleteOldFiles,
