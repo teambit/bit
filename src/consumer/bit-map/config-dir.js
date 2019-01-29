@@ -33,7 +33,7 @@ export default class ConfigDir {
     return new ConfigDir(this.dirPath);
   }
 
-  repalceByComponentDirDSL(componentDir: string) {
+  replaceByComponentDirDSL(componentDir: string) {
     if (this.linuxDirPath.startsWith(componentDir)) {
       const replaced = this.linuxDirPath.replace(componentDir, `{${COMPONENT_DIR}}`);
       this.dirPath = path.normalize(replaced);

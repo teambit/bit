@@ -158,7 +158,7 @@ export default class Dists {
    */
   async getDistsToWrite(
     component: Component,
-    consumer?: Consumer,
+    consumer: ?Consumer,
     writeLinks?: boolean = true
   ): Promise<?DataToPersist> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;

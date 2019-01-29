@@ -205,6 +205,7 @@ export default class ManyComponentsWriter {
       writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,
+      bitMap: this.bitMap,
       excludeRegistryPrefix: this.excludeRegistryPrefix
     };
   }

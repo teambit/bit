@@ -139,6 +139,7 @@ async function applyVersion(
     deleteBitDirContent: false,
     origin: componentMap.origin,
     consumer,
+    bitMap: consumer.bitMap,
     existingComponentMap: componentMap
   });
   await componentWriter.write();

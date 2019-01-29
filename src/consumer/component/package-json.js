@@ -169,7 +169,7 @@ async function write(
 }
 
 async function preparePackageJsonToWrite(
-  consumer: Consumer,
+  consumer: ?Consumer,
   component: Component,
   bitDir: string,
   override?: boolean = true,
