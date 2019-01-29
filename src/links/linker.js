@@ -23,7 +23,7 @@ export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksRes
   const componentsIds = consumer.bitmapIds;
   if (R.isEmpty(componentsIds)) throw new GeneralError('nothing to link');
   const { components } = await consumer.loadComponents(componentsIds);
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   return nodeModuleLinker.link();
 }
 
@@ -44,7 +44,7 @@ export async function getLinksInDistToWrite(
   if (!rootDir) {
     throw new GeneralError('getLinksInDistToWrite should get called on imported components only');
   }
-  const nodeModuleLinker = new NodeModuleLinker([component], consumer);
+  const nodeModuleLinker = new NodeModuleLinker([component], consumer, consumer.bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, consumer.bitMap);
   const dataToPersist = new DataToPersist();
@@ -79,7 +79,7 @@ async function getReLinkDirectlyImportedDependenciesLinks(
     false,
     consumer.bitMap
   );
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const dataToPersist = new DataToPersist();
   dataToPersist.merge(componentsDependenciesLinks);
