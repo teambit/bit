@@ -64,6 +64,7 @@ import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
+import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 
 type ConsumerProps = {
   projectPath: string,
@@ -654,7 +655,7 @@ export default class Consumer {
 
   composeRelativeComponentPath(bitId: BitId): string {
     const { componentsDefaultDirectory } = this.dirStructure;
-    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
+    return composeComponentPath(bitId, componentsDefaultDirectory);
   }
 
   composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
@@ -666,7 +667,7 @@ export default class Consumer {
 
   composeRelativeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return path.join(dependenciesDir, bitId.toFullPath());
+    return composeDependencyPath(bitId, dependenciesDir);
   }
 
   composeDependencyPath(bitId: BitId): PathOsBased {
