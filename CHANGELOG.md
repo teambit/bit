@@ -38,7 +38,6 @@ With over 65 new features, changes and bug fixes, Bit's v14 is focused on increa
 - Support `import ~` from a local (authored) file to an imported sass component.
 - Add programmatic API for add multiple components.
 - Set the only dist file as main file in package.json (in case there is only one).
-- New programmatic API for add multiple components.
 - Allow removing a component when it is invalid.
 
 ### Changes
@@ -46,9 +45,7 @@ With over 65 new features, changes and bug fixes, Bit's v14 is focused on increa
 - Improved performance for traking, versioning and exporting components by up to 700%.
 - CSS parser replaced for better import syntax support.
 - Replace caporal package with commander to support node 6.
-- Major refactor to write components.
 - Better error when a component was tagged without its dependencies.
-- Avoid installing node_modules in sub directories when the package manager allow it to be installed from the root dir.
 - Make bit version command faster and support both `bit -v` and `bit -V` to get bit version.
 - Update tty-table, flow-coverage-report and mocha-appveyor-reporter for security reasons.
 - Improve exception handling for old clients connecting to a newer server.
@@ -58,7 +55,6 @@ With over 65 new features, changes and bug fixes, Bit's v14 is focused on increa
 - Improve "missing a main file" error when adding multiple components to print the problematic components.
 - Improve performance by caching objects after loading them.
 - Fix ci-update command with component version number.
-- Show a descriptive error when failed to parse css, sass, scss and less files.
 - Improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on.
 - Fix `bit status` to not throw an exception for invalid components.
 - Changed `--include-unmodified` to `--all`.
