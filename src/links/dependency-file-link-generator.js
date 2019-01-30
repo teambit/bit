@@ -12,6 +12,7 @@ import type ComponentMap from '../consumer/bit-map/component-map';
 import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
+import BitMap from '../consumer/bit-map';
 
 export type LinkFileType = {
   linkPath: string,
@@ -28,7 +29,8 @@ export type LinkFileType = {
  * @see RelativePath docs for more info
  */
 export default class DependencyFileLinkGenerator {
-  consumer: Consumer;
+  consumer: ?Consumer;
+  bitMap: BitMap;
   component: Component;
   componentMap: ComponentMap;
   relativePath: RelativePath;
@@ -44,6 +46,7 @@ export default class DependencyFileLinkGenerator {
   shouldDistsBeInsideTheComponent: boolean;
   constructor({
     consumer,
+    bitMap,
     component,
     relativePath,
     dependencyId,
@@ -51,7 +54,8 @@ export default class DependencyFileLinkGenerator {
     createNpmLinkFiles,
     targetDir
   }: {
-    consumer: Consumer,
+    consumer: ?Consumer,
+    bitMap: BitMap,
     component: Component,
     relativePath: RelativePath,
     dependencyId: BitId,
@@ -60,6 +64,7 @@ export default class DependencyFileLinkGenerator {
     targetDir?: string
   }) {
     this.consumer = consumer;
+    this.bitMap = bitMap;
     this.component = component; // $FlowFixMe componentMap should be set here
     this.componentMap = this.component.componentMap;
     this.relativePath = relativePath;
@@ -73,7 +78,7 @@ export default class DependencyFileLinkGenerator {
   generate(): LinkFileType[] {
     this.linkFiles = [];
     if (this.component.dependenciesSavedAsComponents) {
-      this.dependencyComponent.componentMap = this.consumer.bitMap.getComponent(this.dependencyId);
+      this.dependencyComponent.componentMap = this.bitMap.getComponent(this.dependencyId);
       this.dependencyComponentMap = this.dependencyComponent.componentMap;
     }
     this.relativePathInDependency = path.normalize(this.relativePath.destinationRelativePath);

@@ -9,13 +9,15 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
+import { COMPONENT_ORIGINS, PACKAGE_JSON, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite } from '../component/package-json';
 import JSONFile from '../component/sources/json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
+import BitMap from '../bit-map/bit-map';
+import ConfigDir from '../bit-map/config-dir';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -26,7 +28,8 @@ export type ComponentWriterProps = {
   override?: boolean,
   origin: ComponentOrigin,
   parent?: BitId,
-  consumer: Consumer,
+  consumer: ?Consumer,
+  bitMap: BitMap,
   writeBitDependencies?: boolean,
   deleteBitDirContent?: boolean,
   existingComponentMap?: ComponentMap,
@@ -42,7 +45,8 @@ export default class ComponentWriter {
   override: boolean;
   origin: ComponentOrigin;
   parent: ?BitId;
-  consumer: Consumer;
+  consumer: ?Consumer;
+  bitMap: BitMap;
   writeBitDependencies: boolean;
   deleteBitDirContent: ?boolean;
   componentMap: ComponentMap;
@@ -58,6 +62,7 @@ export default class ComponentWriter {
     origin,
     parent,
     consumer,
+    bitMap,
     writeBitDependencies = false,
     deleteBitDirContent,
     existingComponentMap,
@@ -72,6 +77,7 @@ export default class ComponentWriter {
     this.origin = origin;
     this.parent = parent;
     this.consumer = consumer;
+    this.bitMap = bitMap;
     this.writeBitDependencies = writeBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
     this.existingComponentMap = existingComponentMap;
@@ -91,7 +97,9 @@ export default class ComponentWriter {
    * when a component is not new, write the files according to the paths in .bitmap.
    */
   async write(): Promise<Component> {
+    if (!this.consumer) throw new Error('ComponentWriter.write expect to have a consumer');
     await this.populateComponentsFilesToWrite();
+    // $FlowFixMe consumer is set
     this.component.dataToPersist.addBasePath(this.consumer.getPath());
     await this.component.dataToPersist.persistAllToFS();
     return this.component;
@@ -124,17 +132,23 @@ export default class ComponentWriter {
     this.component.files.map(file => this.component.dataToPersist.addFile(file));
     const dists = await this.component.dists.getDistsToWrite(this.component, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
-    if (this.writeConfig && this.consumer) {
-      const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir, this.override);
+    if (this.writeConfig) {
+      const resolvedConfigDir = this._getConfigDir();
+      const configToWrite = await this.component.getConfigToWrite(
+        this.consumer,
+        this.bitMap,
+        resolvedConfigDir,
+        this.override
+      );
       this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
-    if (this.writePackageJson && (this.consumer.isolated || this.writeToPath !== this.consumer.getPath())) {
+    if (this.writePackageJson && ((this.consumer && this.consumer.isolated) || this.writeToPath !== '.')) {
       const packageJson = await preparePackageJsonToWrite(
         this.consumer,
+        this.bitMap,
         this.component,
         this.writeToPath,
         this.override,
@@ -165,7 +179,7 @@ export default class ComponentWriter {
       return undefined;
     };
 
-    return this.consumer.bitMap.addComponent({
+    return this.bitMap.addComponent({
       componentId: this.component.id,
       files: filesForBitMap,
       mainFile: this.component.mainFile, // $FlowFixMe
@@ -181,6 +195,7 @@ export default class ComponentWriter {
   }
 
   _copyFilesIntoDistsWhenDistsOutsideComponentDir() {
+    if (!this.consumer) return; // not relevant when consumer is not available
     if (!this.consumer.shouldDistsBeInsideTheComponent() && this.component.dists.isEmpty()) {
       // since the dists are set to be outside the components dir, the source files must be saved there
       // otherwise, other components in dists won't be able to link to this component
@@ -206,14 +221,14 @@ export default class ComponentWriter {
    * never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
    */
   _updateBitMapIfNeeded() {
-    const componentMapExistWithSameVersion = this.consumer.bitMap.isExistWithSameVersion(this.component.id);
+    const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
     const updateBitMap =
       !componentMapExistWithSameVersion || this.componentMap.originallySharedDir !== this.component.originallySharedDir;
     if (updateBitMap) {
       if (componentMapExistWithSameVersion) {
         // originallySharedDir has been changed. it affects also the relativePath of the files
         // so it's better to just remove the old record and add a new one
-        this.consumer.bitMap.removeComponent(this.component.id);
+        this.bitMap.removeComponent(this.component.id);
       }
       this.addComponentToBitMap(this.componentMap.rootDir);
     }
@@ -239,6 +254,7 @@ export default class ComponentWriter {
    * bit.map and add an updated one.
    */
   async _handlePreviouslyNestedCurrentlyImportedCase() {
+    if (!this.consumer) return;
     if (this.origin === COMPONENT_ORIGINS.IMPORTED && this.componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       await this._cleanOldNestedComponent();
       this.componentMap = this.addComponentToBitMap(this.writeToPath);
@@ -266,22 +282,28 @@ export default class ComponentWriter {
   }
 
   async _cleanOldNestedComponent() {
+    if (!this.consumer) throw new Error('ComponentWriter._cleanOldNestedComponent expect to have a consumer');
     // $FlowFixMe this function gets called when it was previously NESTED, so the rootDir is set
     const oldLocation = path.join(this.consumer.getPath(), this.componentMap.rootDir);
     logger.debug(`deleting the old directory of a component at ${oldLocation}`);
     await fs.remove(oldLocation);
     await this._removeNodeModulesLinksFromDependents();
-    this.consumer.bitMap.removeComponent(this.component.id);
+    this.bitMap.removeComponent(this.component.id);
   }
 
   async _removeNodeModulesLinksFromDependents() {
+    if (!this.consumer) {
+      throw new Error('ComponentWriter._removeNodeModulesLinksFromDependents expect to have a consumer');
+    }
     const directDependentComponents = await this.consumer.getAuthoredAndImportedDependentsOfComponents([
       this.component
     ]);
     await Promise.all(
       directDependentComponents.map((dependent) => {
-        const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
+        const dependentComponentMap = this.bitMap.getComponent(dependent.id);
+        // $FlowFixMe consumer is set
         const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.bitJson.bindingPrefix, this.component.id);
+        // $FlowFixMe consumer is set
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
         );
@@ -289,5 +311,11 @@ export default class ComponentWriter {
         return fs.remove(nodeModulesLinkAbs);
       })
     );
+  }
+
+  _getConfigDir() {
+    if (this.configDir) return this.configDir;
+    if (this.consumer) return this.consumer.dirStructure.ejectedEnvsDirStructure;
+    return new ConfigDir(DEFAULT_EJECTED_ENVS_DIR_PATH);
   }
 }

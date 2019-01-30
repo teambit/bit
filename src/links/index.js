@@ -1,6 +1,5 @@
 import NodeModuleLinker from './node-modules-linker';
 import {
-  linkComponents,
   linkAllToNodeModules,
   getLinksInDistToWrite,
   getAllComponentsLinks,
@@ -9,7 +8,6 @@ import {
 import LinkFile from './link-file';
 
 export {
-  linkComponents,
   NodeModuleLinker,
   linkAllToNodeModules,
   getLinksInDistToWrite,
