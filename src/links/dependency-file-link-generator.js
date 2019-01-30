@@ -197,7 +197,10 @@ export default class DependencyFileLinkGenerator {
       return packageName;
     }
     // the link is to an internal file, not to the main file
-    const distPrefix = this.dependencyComponent.dists.writeDistsFiles ? `${DEFAULT_DIST_DIRNAME}/` : '';
+    const distPrefix =
+      this.dependencyComponent.dists.isEmpty() || this.relativePath.isCustomResolveUsed
+        ? ''
+        : `${DEFAULT_DIST_DIRNAME}/`;
     return `${packageName}/${distPrefix}${this.relativePath.destinationRelativePath}`;
   }
 

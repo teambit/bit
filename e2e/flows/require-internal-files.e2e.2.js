@@ -79,6 +79,7 @@ describe('component that requires another component internal (not main) file', f
   describe('with compiler', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
+      helper.setRemoteScopeAsDifferentDir();
       helper.importCompiler();
       npmCiRegistry.setCiScopeInBitJson();
       helper.createFile('src/utils', 'is-type.js', '');
