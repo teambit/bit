@@ -1197,16 +1197,11 @@ describe('bit import', function () {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.importCompiler();
-      const isTypeFixtureES6 = "export default function isType() { return 'got is-type'; };";
-      helper.createFile('utils', 'is-type.js', isTypeFixtureES6);
+      helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponentUtilsIsType();
-      const isStringFixtureES6 =
-        "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
-      helper.createFile('utils', 'is-string.js', isStringFixtureES6);
+      helper.createFile('utils', 'is-string.js', fixtures.isStringES6);
       helper.addComponentUtilsIsString();
-      const fooBarFixture =
-        "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
-      helper.createComponentBarFoo(fooBarFixture);
+      helper.createComponentBarFoo(fixtures.barFooES6);
       helper.addComponentBarFoo();
       helper.tagAllComponents();
       helper.exportAllComponents();
@@ -1315,8 +1310,7 @@ describe('bit import', function () {
       );
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
-      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
