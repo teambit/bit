@@ -19,7 +19,7 @@ import type { ComponentWriterProps } from './component-writer';
 import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 import BitMap from '../bit-map';
-import { composeComponentPath, composeDependencyPath } from '../../utils/bit/compose-component-path';
+import { composeComponentPath, composeDependencyPathForIsolated } from '../../utils/bit/compose-component-path';
 import { BitId } from '../../bit-id';
 
 type ManyComponentsWriterParams = {
@@ -28,6 +28,7 @@ type ManyComponentsWriterParams = {
   componentsWithDependencies: ComponentWithDependencies[],
   writeToPath?: string,
   override?: boolean,
+  isolated?: boolean,
   writePackageJson?: boolean,
   writeConfig?: boolean,
   configDir?: string,
@@ -58,6 +59,7 @@ export default class ManyComponentsWriter {
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath: ?string;
   override: boolean;
+  isolated: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
   configDir: ?string;
@@ -82,6 +84,7 @@ export default class ManyComponentsWriter {
     this.componentsWithDependencies = params.componentsWithDependencies;
     this.writeToPath = params.writeToPath;
     this.override = this._setBooleanDefault(params.override, true);
+    this.isolated = this._setBooleanDefault(params.isolated, false);
     this.writePackageJson = this._setBooleanDefault(params.writePackageJson, true);
     this.writeConfig = this._setBooleanDefault(params.writeConfig, false);
     this.configDir = params.configDir;
@@ -104,6 +107,12 @@ export default class ManyComponentsWriter {
     await this._installPackages();
     await this._writeLinks();
     logger.debug('ManyComponentsWriter, Done!');
+  }
+  async writeAllToIsolatedCapsule(capsule) {
+    logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
+    await this._populateComponentsFilesToWrite();
+    await this._populateComponentsDependenciesToWrite();
+    await this._persistComponentsDataToCapsule(capsule);
   }
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
@@ -137,6 +146,15 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       return allComponents.map((component) => {
         return component.dataToPersist ? component.dataToPersist.persistAllToFS() : Promise.resolve();
+      });
+    });
+    return Promise.all(R.flatten(persistP));
+  }
+  async _persistComponentsDataToCapsule(capsule) {
+    const persistP = this.componentsWithDependencies.map((componentWithDeps) => {
+      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
+      return allComponents.map((component) => {
+        return component.dataToPersist ? component.dataToPersist.persistAllToCapsule(capsule) : Promise.resolve();
       });
     });
     return Promise.all(R.flatten(persistP));
@@ -206,6 +224,7 @@ export default class ManyComponentsWriter {
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,
       bitMap: this.bitMap,
+      isolated: this.isolated,
       excludeRegistryPrefix: this.excludeRegistryPrefix
     };
   }
@@ -336,10 +355,11 @@ export default class ManyComponentsWriter {
     return composeComponentPath(bitId);
   }
   _getDependencyRootDir(bitId: BitId): PathOsBasedRelative {
-    if (this.consumer) {
-      return this.consumer.composeRelativeDependencyPath(bitId);
+    if (this.isolated) {
+      return composeDependencyPathForIsolated(bitId);
     }
-    return composeDependencyPath(bitId);
+    // $FlowFixMe consumer is set here
+    return this.consumer.composeRelativeDependencyPath(bitId);
   }
   _throwErrorWhenDirectoryNotEmpty(componentDir: PathOsBasedAbsolute, componentMap: ?ComponentMap) {
     // if not writeToPath specified, it goes to the default directory. When componentMap exists, the

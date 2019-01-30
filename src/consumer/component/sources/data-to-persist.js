@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import Capsule from '@bit/bit.capsule-dev.core.capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -62,7 +63,13 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule() {
+  async persistAllToCapsule(capsule: Capsule) {
+    this._log();
+    const filesForCapsule = this.files.reduce(
+      (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
+      {}
+    );
+    await capsule.updateFs(filesForCapsule);
     throw new Error('not implemented yet');
   }
   addBasePath(basePath: string) {

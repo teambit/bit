@@ -43,6 +43,7 @@ export default class ComponentWriter {
   configDir: ?string;
   writePackageJson: boolean;
   override: boolean;
+  isolated: ?boolean;
   origin: ComponentOrigin;
   parent: ?BitId;
   consumer: ?Consumer;
@@ -59,6 +60,7 @@ export default class ComponentWriter {
     configDir,
     writePackageJson = true,
     override = true,
+    isolated = false,
     origin,
     parent,
     consumer,
@@ -74,6 +76,7 @@ export default class ComponentWriter {
     this.configDir = configDir;
     this.writePackageJson = writePackageJson;
     this.override = override;
+    this.isolated = isolated;
     this.origin = origin;
     this.parent = parent;
     this.consumer = consumer;
@@ -221,6 +224,7 @@ export default class ComponentWriter {
    * never reach this function, see @write-components.writeToComponentsDir). Therefore, always add to bit.map.
    */
   _updateBitMapIfNeeded() {
+    if (this.isolated) return;
     const componentMapExistWithSameVersion = this.bitMap.isExistWithSameVersion(this.component.id);
     const updateBitMap =
       !componentMapExistWithSameVersion || this.componentMap.originallySharedDir !== this.component.originallySharedDir;
