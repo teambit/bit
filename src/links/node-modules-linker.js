@@ -102,6 +102,7 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
+    if (!componentId.hasScope()) return; // when isolating new components// from isolated;
     const bindingPrefix = this.consumer ? this.consumer.bitJson.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
     // when a user moves the component directory, use component.writtenPath to find the correct target
@@ -198,6 +199,7 @@ export default class NodeModuleLinker {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap) return dependenciesLinks;
+      if (!dependency.id.hasScope()) return dependenciesLinks; // when isolating new components
       const parentRootDir = componentMap.rootDir || '.'; // compilers/testers don't have rootDir
       dependenciesLinks.push(
         this._getDependencyLink(

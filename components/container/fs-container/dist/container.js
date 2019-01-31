@@ -43,6 +43,7 @@ var os_1 = __importDefault(require("os"));
 var uuid_1 = __importDefault(require("uuid"));
 var path_1 = __importDefault(require("path"));
 var child_process_1 = require("child_process");
+var debug = require('debug')('fs-container');
 var FsContainer = /** @class */ (function () {
     function FsContainer(path) {
         this.id = 'FS Container';
@@ -59,6 +60,7 @@ var FsContainer = /** @class */ (function () {
     };
     FsContainer.prototype.outputFile = function (file, data, options) {
         var filePath = this.composePath(file);
+        debug("writing file on " + filePath);
         return fs_extra_1.default.outputFile(filePath, data, options);
     };
     FsContainer.prototype.removePath = function (dir) {
@@ -66,16 +68,29 @@ var FsContainer = /** @class */ (function () {
         return fs_extra_1.default.remove(pathToRemove);
     };
     FsContainer.prototype.symlink = function (src, dest) {
-        var srcPath = this.composePath(src);
-        var destPath = this.composePath(dest);
-        return fs_extra_1.default.symlink(srcPath, destPath);
+        return __awaiter(this, void 0, Promise, function () {
+            var srcPath, destPath;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        srcPath = this.composePath(src);
+                        destPath = this.composePath(dest);
+                        return [4 /*yield*/, fs_extra_1.default.ensureDir(path_1.default.dirname(destPath))];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/, fs_extra_1.default.symlink(srcPath, destPath)];
+                }
+            });
+        });
     };
     FsContainer.prototype.exec = function (execOptions) {
         return __awaiter(this, void 0, Promise, function () {
-            var childProcess;
+            var cwd, childProcess;
             var _this = this;
             return __generator(this, function (_a) {
-                childProcess = child_process_1.spawn(execOptions.command.shift(), execOptions.command, { cwd: this.getPath() });
+                cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
+                debug("executing the following command: " + execOptions.command.join(' ') + ", on cwd: " + cwd);
+                childProcess = child_process_1.spawn(execOptions.command.shift(), execOptions.command, { cwd: cwd });
                 childProcess.abort = function () { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
                     return [2 /*return*/, childProcess.kill()];
                 }); }); };
@@ -167,4 +182,4 @@ var FsContainer = /** @class */ (function () {
 exports.default = FsContainer;
 //# sourceMappingURL=module.js.map
 
-//# sourceMappingURL={"version":3,"file":"module.js","sourceRoot":"","sources":["module.tsx"],"names":[],"mappings":"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"}
+//# sourceMappingURL={"version":3,"file":"module.js","sourceRoot":"","sources":["module.tsx"],"names":[],"mappings":"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"}

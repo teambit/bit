@@ -4,7 +4,7 @@ import R from 'ramda';
 import fs from 'fs-extra';
 import { moveExistingComponent } from './move-components';
 import { getAllComponentsLinks } from '../../links';
-import { installNpmPackagesForComponents, getAllRootDirectoriesFor } from '../../npm-client/install-packages';
+import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
 import * as packageJson from '../component/package-json';
 import type { ComponentWithDependencies } from '../../scope';
 import type Component from '../component/consumer-component';
@@ -108,12 +108,6 @@ export default class ManyComponentsWriter {
     await this._writeLinks();
     logger.debug('ManyComponentsWriter, Done!');
   }
-  async writeAllToIsolatedCapsule(capsule) {
-    logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
-    await this._populateComponentsFilesToWrite();
-    await this._populateComponentsDependenciesToWrite();
-    await this._persistComponentsDataToCapsule(capsule);
-  }
   async _writeComponentsAndDependencies() {
     logger.debug('ManyComponentsWriter, _writeComponentsAndDependencies');
     await this._populateComponentsFilesToWrite();
@@ -146,15 +140,6 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       return allComponents.map((component) => {
         return component.dataToPersist ? component.dataToPersist.persistAllToFS() : Promise.resolve();
-      });
-    });
-    return Promise.all(R.flatten(persistP));
-  }
-  async _persistComponentsDataToCapsule(capsule) {
-    const persistP = this.componentsWithDependencies.map((componentWithDeps) => {
-      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      return allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.persistAllToCapsule(capsule) : Promise.resolve();
       });
     });
     return Promise.all(R.flatten(persistP));
@@ -319,21 +304,15 @@ export default class ManyComponentsWriter {
   }
   async _installPackagesIfNeeded() {
     if (!this.installNpmPackages) return;
-    if (this.consumer) {
-      await installNpmPackagesForComponents({
-        consumer: this.consumer,
-        basePath: this.basePath,
-        componentsWithDependencies: this.componentsWithDependencies,
-        verbose: this.verbose, // $FlowFixMe
-        silentPackageManagerResult: this.silentPackageManagerResult,
-        installPeerDependencies: this.installPeerDependencies
-      });
-    } else {
-      // @todo: implement
-      // eslint-disable-next-line
-      const allRootDirs = getAllRootDirectoriesFor(this.componentsWithDependencies);
-      throw new Error('implement npm installation when consumer is not available');
-    }
+    await installNpmPackagesForComponents({
+      // $FlowFixMe consumer is set here
+      consumer: this.consumer,
+      basePath: this.basePath,
+      componentsWithDependencies: this.componentsWithDependencies,
+      verbose: this.verbose, // $FlowFixMe
+      silentPackageManagerResult: this.silentPackageManagerResult,
+      installPeerDependencies: this.installPeerDependencies
+    });
   }
   async _getAllLinks(): Promise<DataToPersist> {
     return getAllComponentsLinks({

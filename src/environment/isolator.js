@@ -1,4 +1,5 @@
 // @flow
+import R from 'ramda';
 import Capsule from '@bit/bit.capsule-dev.core.capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -7,6 +8,7 @@ import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
+import { getAllRootDirectoriesFor } from '../npm-client/install-packages';
 
 export default class Isolator {
   capsule: Capsule;
@@ -48,7 +50,15 @@ export default class Isolator {
       capsule: this.capsule
     };
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
-    await manyComponentsWriter.writeAllToIsolatedCapsule(this.capsule);
+    logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
+    await manyComponentsWriter._populateComponentsFilesToWrite();
+    await manyComponentsWriter._populateComponentsDependenciesToWrite();
+    await this._persistComponentsDataToCapsule([componentWithDependencies]);
+    logger.debug('ManyComponentsWriter, install packages on capsule');
+    const allRootDirs = getAllRootDirectoriesFor([componentWithDependencies]);
+    await this.installPackagesOnDirs(allRootDirs);
+    const links = await manyComponentsWriter._getAllLinks();
+    await links.persistAllToCapsule(this.capsule);
     throw new Error('stop here for now');
   }
 
@@ -72,4 +82,37 @@ export default class Isolator {
   }
 
   async loadComponentFromScope(id: BitId): Promise<ComponentWithDependencies> {}
+
+  async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
+    const persistP = componentsWithDependencies.map((componentWithDeps) => {
+      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
+      return allComponents.map((component) => {
+        return component.dataToPersist ? component.dataToPersist.persistAllToCapsule(this.capsule) : Promise.resolve();
+      });
+    });
+    return Promise.all(R.flatten(persistP));
+  }
+
+  async installPackagesOnDirs(dirs: string[]) {
+    return Promise.all(dirs.map(dir => this.installPackagesOnOneDirectory(dir)));
+  }
+
+  async installPackagesOnOneDirectory(directory: string) {
+    const execResults = await this.capsule.exec('npm install', { cwd: directory });
+    let output = '';
+    return new Promise((resolve, reject) => {
+      execResults.stdout.on('data', (data: string) => {
+        output += data;
+      });
+      execResults.stdout.on('error', (error: string) => {
+        console.log('on error', error);
+        return reject(error);
+      });
+      // @ts-ignore
+      execResults.on('close', () => {
+        console.log('close ', output);
+        return resolve(output);
+      });
+    });
+  }
 }

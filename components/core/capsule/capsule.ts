@@ -100,9 +100,10 @@ export default class Capsule {
     return this.container.inspect();
   }
 
-  async exec(command: string): Promise<Exec> {
+  async exec(command: string, options: Object): Promise<Exec> {
     return await this.container.exec({
-      command: command.split(' ')
+      command: command.split(' '),
+      ...options
     });
   }
 

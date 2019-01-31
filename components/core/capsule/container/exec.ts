@@ -23,7 +23,7 @@ export interface Exec {
    * inspect the exec instance for its status.
    */
   inspect(): Promise<ExecStatus>;
-  
+
   /**
    * abort the running command.
    */
@@ -62,7 +62,12 @@ export type ExecOptions = {
   /**
    * the user, and optionally, group to run the exec process inside the container. Format is one of: user, user:group, uid, or uid:gid.
    */
-  user?: string
+  user?: string,
+
+  /**
+   * relative path inside the container.
+   */
+  cwd?: string
 };
 
 export type ExecStatus = {

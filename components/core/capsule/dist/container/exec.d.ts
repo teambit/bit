@@ -52,6 +52,10 @@ export declare type ExecOptions = {
      * the user, and optionally, group to run the exec process inside the container. Format is one of: user, user:group, uid, or uid:gid.
      */
     user?: string;
+    /**
+     * relative path inside the container.
+     */
+    cwd?: string;
 };
 export declare type ExecStatus = {
     /**

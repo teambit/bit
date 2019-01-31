@@ -5,6 +5,8 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { Container, ExecOptions, Exec, ContainerStatus } from '@bit/bit.capsule-dev.core.capsule';
 
+const debug = require('debug')('fs-container');
+
 export default class FsContainer implements Container {
   id: string = 'FS Container';
   path: string;
@@ -27,6 +29,7 @@ export default class FsContainer implements Container {
 
   outputFile(file, data, options) {
     const filePath = this.composePath(file);
+    debug(`writing file on ${filePath}`);
     return fs.outputFile(filePath, data, options);
   }
 
@@ -35,16 +38,19 @@ export default class FsContainer implements Container {
     return fs.remove(pathToRemove);
   }
 
-  symlink(src: string, dest: string): Promise<any> {
+  async symlink(src: string, dest: string): Promise<any> {
     const srcPath = this.composePath(src);
     const destPath = this.composePath(dest);
+    await fs.ensureDir(path.dirname(destPath));
     return fs.symlink(srcPath, destPath);
   }
 
   async exec(execOptions: ExecOptions): Promise<Exec> {
+    const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
+    debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
     // first item in the array is the command itself, other items are the flags
     // @ts-ignore
-    const childProcess = spawn(execOptions.command.shift(), execOptions.command, { cwd: this.getPath() });
+    const childProcess = spawn(execOptions.command.shift(), execOptions.command, { cwd });
     childProcess.abort = async () => childProcess.kill();
     childProcess.inspect = async () => ({
       pid: childProcess.pid,
