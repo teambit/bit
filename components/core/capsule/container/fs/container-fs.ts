@@ -35,7 +35,7 @@ export default class ContainerVolume {
       if (cb) return cb();
       return;
     });
- }
+  }
 
   static fromJSON(container: Container, json?: {[path: string]: string}): ContainerVolume {
     const volume = new ContainerVolume(container);

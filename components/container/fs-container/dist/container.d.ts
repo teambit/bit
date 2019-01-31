@@ -1,11 +1,14 @@
-/// <reference types="node" />
 import { Container, ExecOptions, Exec, ContainerStatus } from '@bit/bit.capsule-dev.core.capsule';
 export default class FsContainer implements Container {
     id: string;
     path: string;
     constructor(path?: string);
     getPath(): string;
+    private composePath;
     private generateDefaultTmpDir;
+    outputFile(file: any, data: any, options: any): any;
+    removePath(dir: string): Promise<any>;
+    symlink(src: string, dest: string): Promise<any>;
     exec(execOptions: ExecOptions): Promise<Exec>;
     get(options: {
         path: string;

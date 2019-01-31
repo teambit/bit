@@ -72,6 +72,18 @@ export default class Capsule {
     });
   }
 
+  outputFile(file: string, data: any, options: Object): Promise<any> {
+    return this.container.outputFile(file, data, options);
+  }
+
+  removePath(dir: string): Promise<any> {
+    return this.container.removePath(dir);
+  }
+
+  symlink(src: string, dest: string): Promise<any> {
+    return this.container.symlink(src, dest);
+  }
+
   pause() {
     return this.container.pause();
   }

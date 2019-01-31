@@ -56,6 +56,9 @@ export default class Capsule {
     updateFs(fs: {
         [path: string]: string;
     }, fn: Function): void;
+    outputFile(file: string, data: any, options: Object): Promise<any>;
+    removePath(dir: string): Promise<any>;
+    symlink(src: string, dest: string): Promise<any>;
     pause(): Promise<void>;
     resume(): Promise<void>;
     stop(): Promise<void>;

@@ -17,8 +17,28 @@ export default class FsContainer implements Container {
     return this.path;
   }
 
+  private composePath(pathToCompose) {
+    return path.join(this.getPath(), pathToCompose);
+  }
+
   private generateDefaultTmpDir() {
     return path.join(os.tmpdir(), v4());
+  }
+
+  outputFile(file, data, options) {
+    const filePath = this.composePath(file);
+    return fs.outputFile(filePath, data, options);
+  }
+
+  removePath(dir: string): Promise<any> {
+    const pathToRemove = this.composePath(dir);
+    return fs.remove(pathToRemove);
+  }
+
+  symlink(src: string, dest: string): Promise<any> {
+    const srcPath = this.composePath(src);
+    const destPath = this.composePath(dest);
+    return fs.symlink(srcPath, destPath);
   }
 
   async exec(execOptions: ExecOptions): Promise<Exec> {
