@@ -26,8 +26,8 @@ export default class Isolator {
     return new Isolator(capsule, scope, consumer);
   }
 
-  async writeComponent(id: BitId, opts: Object) {
-    const componentWithDependencies = await this.loadComponent(id);
+  async isolate(componentId: BitId, opts: Object) {
+    const componentWithDependencies = await this._loadComponent(componentId);
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
       // consumer: this.consumer,
@@ -59,7 +59,6 @@ export default class Isolator {
     await this.installPackagesOnDirs(allRootDirs);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
-    throw new Error('stop here for now');
   }
 
   /**
@@ -70,18 +69,18 @@ export default class Isolator {
    * loaded, not the flattened. To get the flattened, we have to load the dependencies and each one
    * of the dependency we need to load its dependencies as well until we got them all.
    */
-  async loadComponent(id: BitId): Promise<ComponentWithDependencies> {
-    return this.consumer ? await this.loadComponentFromConsumer(id) : await this.loadComponentFromScope(id);
+  async _loadComponent(id: BitId): Promise<ComponentWithDependencies> {
+    return this.consumer ? await this._loadComponentFromConsumer(id) : await this._loadComponentFromScope(id);
   }
 
-  async loadComponentFromConsumer(id: BitId): Promise<ComponentWithDependencies> {
+  async _loadComponentFromConsumer(id: BitId): Promise<ComponentWithDependencies> {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
     const component = await consumer.loadComponent(id);
     return loadFlattenedDependencies(consumer, component);
   }
 
-  async loadComponentFromScope(id: BitId): Promise<ComponentWithDependencies> {}
+  async _loadComponentFromScope(id: BitId): Promise<ComponentWithDependencies> {}
 
   async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
     const persistP = componentsWithDependencies.map((componentWithDeps) => {
@@ -94,10 +93,10 @@ export default class Isolator {
   }
 
   async installPackagesOnDirs(dirs: string[]) {
-    return Promise.all(dirs.map(dir => this.installPackagesOnOneDirectory(dir)));
+    return Promise.all(dirs.map(dir => this._installPackagesOnOneDirectory(dir)));
   }
 
-  async installPackagesOnOneDirectory(directory: string) {
+  async _installPackagesOnOneDirectory(directory: string) {
     const execResults = await this.capsule.exec('npm install', { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {

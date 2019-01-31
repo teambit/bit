@@ -131,6 +131,10 @@ export default class Helper {
   getBitVersion() {
     return BIT_VERSION;
   }
+
+  generateRandomTmpDirName() {
+    return path.join(this.e2eDir, generateRandomStr());
+  }
   // #endregion
 
   // #region npm utils

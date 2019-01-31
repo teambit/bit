@@ -44,7 +44,7 @@ async function isolateUsingCapsule(componentId: string, opts: IsolateOptions) {
   const consumer = await loadConsumer();
   const bitId = consumer.getParsedId(componentId);
   const isolator: Isolator = await Isolator.getInstance('fs', consumer.scope, consumer, opts.directory);
-  return isolator.writeComponent(bitId, opts);
+  return isolator.isolate(bitId, opts);
 }
 
 /**
