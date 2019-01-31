@@ -1,7 +1,7 @@
 // @flow
 import path from 'path';
 import { getWithoutExt, searchFilesIgnoreExt, getExt } from '../utils';
-import { DEFAULT_INDEX_NAME } from '../constants';
+import { DEFAULT_INDEX_NAME, DEFAULT_DIST_DIRNAME } from '../constants';
 import type { PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../utils/path';
 import { BitId } from '../bit-id';
 import type Consumer from '../consumer/consumer';
@@ -202,7 +202,11 @@ export default class DependencyFileLinkGenerator {
       return packageName;
     }
     // the link is to an internal file, not to the main file
-    return `${packageName}/${this.relativePath.destinationRelativePath}`;
+    const distPrefix =
+      this.dependencyComponent.dists.isEmpty() || this.relativePath.isCustomResolveUsed
+        ? ''
+        : `${DEFAULT_DIST_DIRNAME}/`;
+    return `${packageName}/${distPrefix}${this.relativePath.destinationRelativePath}`;
   }
 
   _getCustomResolveMapping() {

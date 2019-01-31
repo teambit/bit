@@ -38,10 +38,9 @@ export default class Helper {
   externalDirsArray: string[] = [];
   constructor() {
     this.debugMode = !!process.env.npm_config_debug; // default = false
-    this.remoteScope = `${generateRandomStr()}-remote`;
     this.e2eDir = path.join(os.tmpdir(), 'bit', 'e2e');
     this.setLocalScope();
-    this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
+    this.setRemoteScope();
     this.bitBin = process.env.npm_config_bit_bin || 'bit'; // e.g. npm run e2e-test --bit_bin=bit-dev
     this.envScope = `${generateRandomStr()}-env`;
     this.envScopePath = path.join(this.e2eDir, this.envScope);
@@ -158,6 +157,10 @@ export default class Helper {
       fs.ensureDirSync(this.localScopePath);
     }
   }
+  setRemoteScope() {
+    this.remoteScope = `${generateRandomStr()}-remote`;
+    this.remoteScopePath = path.join(this.e2eDir, this.remoteScope);
+  }
   cleanLocalScope() {
     fs.emptyDirSync(this.localScopePath);
   }
@@ -230,6 +233,17 @@ export default class Helper {
   reInitRemoteScope() {
     fs.emptyDirSync(this.remoteScopePath);
     return this.runCmd('bit init --bare', this.remoteScopePath);
+  }
+
+  /**
+   * useful when publishing to a local npm registry so then multiple tests in the same file
+   * won't collide in the @ci registry
+   */
+  setRemoteScopeAsDifferentDir() {
+    fs.removeSync(this.remoteScopePath);
+    this.setRemoteScope();
+    this.reInitRemoteScope();
+    this.addRemoteScope();
   }
 
   reInitEnvsScope() {
