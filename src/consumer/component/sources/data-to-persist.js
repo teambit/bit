@@ -65,12 +65,13 @@ export default class DataToPersist {
   }
   async persistAllToCapsule(capsule: Capsule) {
     this._log();
-    const filesForCapsule = this.files.reduce(
-      (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
-      {}
-    );
-    await capsule.updateFs(filesForCapsule);
-    throw new Error('not implemented yet');
+    // const filesForCapsule = this.files.reduce(
+    //   (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
+    //   {}
+    // );
+    await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
+    await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
+    await Promise.all(this.symlinks.map(symlink => capsule.symlink(symlink.src, symlink.dest)));
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
