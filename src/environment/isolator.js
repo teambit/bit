@@ -6,6 +6,7 @@ import { Scope, ComponentWithDependencies } from '../scope';
 import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
+import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
 
 export default class Isolator {
   capsule: Capsule;
@@ -51,27 +52,23 @@ export default class Isolator {
     throw new Error('stop here for now');
   }
 
+  /**
+   * To write a component into an isolated environment, we need not only its dependencies, but
+   * also the dependencies of its dependencies and so on.
+   * When loading a component from the model, it's easy to get them all from the
+   * flattenedDependencies. However, when loading from the consumer, we have only the dependencies
+   * loaded, not the flattened. To get the flattened, we have to load the dependencies and each one
+   * of the dependency we need to load its dependencies as well until we got them all.
+   */
   async loadComponent(id: BitId): Promise<ComponentWithDependencies> {
-    return this.consumer ? await this.loadComponentFromConsumer(id) : this.loadComponentFromScope(id);
+    return this.consumer ? await this.loadComponentFromConsumer(id) : await this.loadComponentFromScope(id);
   }
 
   async loadComponentFromConsumer(id: BitId): Promise<ComponentWithDependencies> {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
     const component = await consumer.loadComponent(id);
-    const { components: dependencies } = await consumer.loadComponents(component.dependencies.getAllIds());
-    const { components: devDependencies } = await consumer.loadComponents(component.devDependencies.getAllIds());
-    const { components: compilerDependencies } = await consumer.loadComponents(
-      component.compilerDependencies.getAllIds()
-    );
-    const { components: testerDependencies } = await consumer.loadComponents(component.testerDependencies.getAllIds());
-    return new ComponentWithDependencies({
-      component,
-      dependencies,
-      devDependencies,
-      compilerDependencies,
-      testerDependencies
-    });
+    return loadFlattenedDependencies(consumer, component);
   }
 
   async loadComponentFromScope(id: BitId): Promise<ComponentWithDependencies> {}

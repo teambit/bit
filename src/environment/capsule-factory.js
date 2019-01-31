@@ -14,6 +14,6 @@ function getContainerFactory(type: string): Function {
     case 'fs':
     default:
       // $FlowFixMe
-      return async () => new FsContainer();
+      return async () => new FsContainer('/tmp/capsule');
   }
 }
