@@ -302,10 +302,6 @@ jobs:
           name: 'npm link bit to global'
           command: 'cd bit && npm link'
       -
-        run:
-          name: 'npm install'
-          command: 'cd bit && bit install'
-      -
         run: 'bit config set analytics_reporting false'
       -
         run: 'bit config set error_reporting false'
@@ -316,6 +312,10 @@ jobs:
       -
         # uncomment to configure circle to run against stg enviorment
         run: 'bit config set hub_domain hub-stg.bitsrc.io'
+      -
+        run:
+          name: 'npm install'
+          command: 'cd bit && bit install'
       -
         run:
           name: 'Run e2e tests'
