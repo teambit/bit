@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.16] - 2019-02-1
+
+- fix a warning about mismatch typescript versions
+
 ## [1.0.6-dev.15] - 2019-01-28
 
 - replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
