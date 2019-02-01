@@ -302,6 +302,10 @@ jobs:
           name: 'npm link bit to global'
           command: 'cd bit && npm link'
       -
+        run:
+          name: 'npm install'
+          command: 'cd bit && bit install'
+      -
         run: 'bit config set analytics_reporting false'
       -
         run: 'bit config set error_reporting false'
