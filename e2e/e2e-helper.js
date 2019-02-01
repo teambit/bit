@@ -915,6 +915,21 @@ export default class Helper {
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
   }
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type
+   */
+  populateWorkspaceWithComponents() {
+    this.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
   // #endregion
 }
 
