@@ -64,7 +64,6 @@ module.exports.toList = function (options) {
  */
 module.exports._getDependencies = function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
-  let dependencies; // always an array
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
 
@@ -77,7 +76,7 @@ module.exports._getDependencies = function (config) {
     config.errors[config.filename] = e;
     dependenciesRaw = [];
   }
-  dependencies =
+  const dependencies =
     R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw) ? Object.keys(dependenciesRaw) : dependenciesRaw;
   const isDependenciesArray = Array.isArray(dependenciesRaw);
   debug(`extracted ${dependencies.length} dependencies: `, dependencies);
@@ -86,8 +85,13 @@ module.exports._getDependencies = function (config) {
   const pathMapDependencies = [];
   const pathMapFile = { file: config.filename };
 
-  for (let i = 0, l = dependencies.length; i < l; i++) {
-    const dependency = dependencies[i];
+  dependencies.forEach(dependency => processDependency(dependency));
+  pathMapFile.dependencies = pathMapDependencies;
+  config.pathMap.push(pathMapFile);
+
+  return resolvedDependencies;
+
+  function processDependency(dependency) {
     const cabinetParams = {
       partial: dependency,
       filename: config.filename,
@@ -113,24 +117,16 @@ module.exports._getDependencies = function (config) {
 
     if (!result) {
       debug(`skipping an empty filepath resolution for partial: ${dependency}`);
-      if (config.nonExistent[config.filename]) {
-        config.nonExistent[config.filename].push(dependency);
-      } else {
-        config.nonExistent[config.filename] = [dependency];
-      }
-      continue;
+      addToNonExistent(dependency);
+      return;
     }
 
     const exists = fs.existsSync(result);
 
     if (!exists) {
-      if (config.nonExistent[config.filename]) {
-        config.nonExistent[config.filename].push(dependency);
-      } else {
-        config.nonExistent[config.filename] = [dependency];
-      }
+      addToNonExistent(dependency);
       debug(`skipping non-empty but non-existent resolution: ${result} for partial: ${dependency}`);
-      continue;
+      return;
     }
     const pathMap = { importSource: dependency, resolvedDep: result };
     if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
@@ -146,10 +142,13 @@ module.exports._getDependencies = function (config) {
 
     resolvedDependencies.push(result);
   }
-  pathMapFile.dependencies = pathMapDependencies;
-  config.pathMap.push(pathMapFile);
-
-  return resolvedDependencies;
+  function addToNonExistent(dependency) {
+    if (config.nonExistent[config.filename]) {
+      config.nonExistent[config.filename].push(dependency);
+    } else {
+      config.nonExistent[config.filename] = [dependency];
+    }
+  }
 };
 
 /**
@@ -165,46 +164,58 @@ function traverse(config) {
   while (stack.length) {
     const dependency = stack.pop();
     debug(`traversing ${dependency}`);
-    if (!config.visited[dependency]) {
-      const localConfig = config.clone();
-      localConfig.filename = dependency;
-      let dependencies = module.exports._getDependencies(localConfig);
-      if (config.filter) {
-        debug('using filter function to filter out dependencies');
-        debug(`number of dependencies before filtering: ${dependencies.length}`);
-        dependencies = dependencies.filter(function (filePath) {
-          return localConfig.filter(filePath, localConfig.filename);
-        });
-        debug(`number of dependencies after filtering: ${dependencies.length}`);
-      }
-      debug('cabinet-resolved all dependencies: ', dependencies);
-      tree[dependency] = dependencies;
-      const filePathMap = config.pathMap.find(pathMapEntry => pathMapEntry.file === dependency);
-      if (!filePathMap) throw new Error(`file ${dependency} is missing from PathMap`);
-      config.visited[dependency] = { pathMap: filePathMap, missing: config.nonExistent[dependency] };
-      dependencies.forEach(d => stack.push(d));
+    if (config.visited[dependency]) {
+      populateFromCache(dependency);
     } else {
-      debug(`already visited ${dependency}. Will try to find it and its dependencies in the cache`);
-      const dependenciesStack = [dependency];
-      while (dependenciesStack.length) {
-        const dep = dependenciesStack.pop();
-        if (!config.visited[dep]) {
-          debug(`unable to find ${dep} in the cache, it was probably filtered before`);
-          continue;
-        }
-        debug(`found ${dep} in the cache`);
-        const dependencies = config.visited[dep].pathMap.dependencies.map(d => d.resolvedDep);
-        tree[dep] = dependencies;
-        config.pathMap.push(config.visited[dep].pathMap);
-        if (config.visited[dep].missing) {
-          config.nonExistent[dependency] = config.visited[dep].missing;
-        }
-        dependencies.forEach((d) => {
-          if (!tree[d]) dependenciesStack.push(d);
-        });
-      }
+      traverseDependency(dependency);
     }
   }
 
   return tree;
+
+  function traverseDependency(dependency) {
+    const localConfig = config.clone();
+    localConfig.filename = dependency;
+    let dependencies = module.exports._getDependencies(localConfig);
+    if (config.filter) {
+      debug('using filter function to filter out dependencies');
+      debug(`number of dependencies before filtering: ${dependencies.length}`);
+      dependencies = dependencies.filter(function (filePath) {
+        return localConfig.filter(filePath, localConfig.filename);
+      });
+      debug(`number of dependencies after filtering: ${dependencies.length}`);
+    }
+    debug('cabinet-resolved all dependencies: ', dependencies);
+    tree[dependency] = dependencies;
+    const filePathMap = config.pathMap.find(pathMapEntry => pathMapEntry.file === dependency);
+    if (!filePathMap) throw new Error(`file ${dependency} is missing from PathMap`);
+    config.visited[dependency] = { pathMap: filePathMap, missing: config.nonExistent[dependency] };
+    stack.push(...dependencies);
+  }
+
+  function populateFromCache(dependency) {
+    debug(`already visited ${dependency}. Will try to find it and its dependencies in the cache`);
+    const dependenciesStack = [dependency];
+    while (dependenciesStack.length) {
+      findAllDependenciesInCache(dependenciesStack);
+    }
+  }
+
+  function findAllDependenciesInCache(dependenciesStack) {
+    const dependency = dependenciesStack.pop();
+    if (!config.visited[dependency]) {
+      debug(`unable to find ${dependency} in the cache, it was probably filtered before`);
+      return;
+    }
+    debug(`found ${dependency} in the cache`);
+    const dependencies = config.visited[dependency].pathMap.dependencies.map(d => d.resolvedDep);
+    tree[dependency] = dependencies;
+    config.pathMap.push(config.visited[dependency].pathMap);
+    if (config.visited[dependency].missing) {
+      config.nonExistent[dependency] = config.visited[dependency].missing;
+    }
+    dependencies.forEach((d) => {
+      if (!tree[d]) dependenciesStack.push(d);
+    });
+  }
 }

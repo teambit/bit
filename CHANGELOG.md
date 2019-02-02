@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [1.0.6-dev.17] - 2019-02-1
+
+- fix dependency resolver cache to not be accidentally overridden
+
 ## [1.0.6-dev.16] - 2019-02-1
 
 - fix a warning about mismatch typescript versions

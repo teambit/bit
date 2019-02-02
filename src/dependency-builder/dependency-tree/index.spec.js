@@ -1,4 +1,5 @@
 import assert from 'assert';
+import { expect } from 'chai';
 import sinon from 'sinon';
 import mockfs from 'mock-fs';
 import path from 'path';
@@ -792,6 +793,46 @@ describe('dependencyTree', function () {
           assert.deepEqual(clone.detectiveConfig, detectiveConfig);
         });
       });
+    });
+  });
+
+  describe('when a dependency has missing packages and is retrieved from the cache (visited)', () => {
+    beforeEach(() => {
+      mockfs({
+        [`${__dirname}/baz`]: {
+          'foo.js': 'require("non-exist-foo-pkg");',
+          'bar.js': 'require("./foo"); require("non-exist-bar-pkg")',
+          'baz.js': 'require("./foo"); require("./bar"); require("non-exist-baz-pkg")'
+        }
+      });
+    });
+
+    it('should not override the cache with wrong packages', () => {
+      const directory = path.normalize(`${__dirname}/baz`);
+      const fooFile = path.normalize(`${directory}/foo.js`);
+      const barFile = path.normalize(`${directory}/bar.js`);
+      const bazFile = path.normalize(`${directory}/baz.js`);
+      const nonExistent = {};
+      const config = {
+        directory,
+        nonExistent,
+        visited: {}
+      };
+
+      config.filename = fooFile;
+      dependencyTree(config);
+      expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
+
+      config.filename = barFile;
+      dependencyTree(config);
+      expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
+      expect(nonExistent[barFile]).to.deep.equal(['non-exist-bar-pkg']);
+
+      config.filename = bazFile;
+      dependencyTree(config);
+      expect(nonExistent[fooFile]).to.deep.equal(['non-exist-foo-pkg']);
+      expect(nonExistent[barFile]).to.deep.equal(['non-exist-bar-pkg']);
+      expect(nonExistent[bazFile]).to.deep.equal(['non-exist-baz-pkg']);
     });
   });
 });
