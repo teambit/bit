@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- bug fix - some packages were not detected by dependency resolver (bit-javascript)
+
 ## [13.0.6-dev.39] - 2019-01-31
 
 - fix link generated to an internal package file when the dependency uses a compiler
