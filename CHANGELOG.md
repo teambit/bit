@@ -64,6 +64,7 @@ Here are some of v14's highlights:
 - Fix ci-update command with component version number.
 - Fix `bit status` to not throw an exception for invalid components.
 - Change `--conf` on `bit import` to be a path to the config dir.  
+- Replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
 
 ### Bug fixes  
 
