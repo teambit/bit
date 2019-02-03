@@ -326,6 +326,8 @@ export default class Component extends BitObject {
       compilerP,
       testerP
     ]);
+
+    const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
@@ -336,7 +338,7 @@ export default class Component extends BitObject {
       version: componentVersion.version,
       scope: this.scope,
       lang: this.lang,
-      bindingPrefix: this.bindingPrefix,
+      bindingPrefix,
       mainFile: version.mainFile || null,
       compiler,
       tester,
