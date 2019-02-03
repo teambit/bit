@@ -49,7 +49,9 @@ Here are some of v14's highlights:
 
 - Improved performance for tracking, versioning and exporting components by up to 700%.
 - CSS parser replaced for better import syntax support.
-- Replace caporal package with commander to support node 6.
+- Improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on.
+- Changed `--include-unmodified` to `--all`.
+- Replace caporal package with commander for security reasons.
 - Better error when a component was tagged without its dependencies.
 - Make bit version command faster and support both `bit -v` and `bit -V` to get bit version.
 - Update tty-table, flow-coverage-report and mocha-appveyor-reporter for security reasons.
@@ -60,9 +62,7 @@ Here are some of v14's highlights:
 - Improve "missing a main file" error when adding multiple components to print the problematic components.
 - Improve performance by caching objects after loading them.
 - Fix ci-update command with component version number.
-- Improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on.
 - Fix `bit status` to not throw an exception for invalid components.
-- Changed `--include-unmodified` to `--all`.
 - Change `--conf` on `bit import` to be a path to the config dir.  
 
 ### Bug fixes  
