@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [13.0.6-dev.41] - 2019-02-03
+
+- fix issue with default binding prefix (bit)
+
 ## [13.0.6-dev.40] - 2019-02-03
 
 - bug fix - some packages were not detected by dependency resolver (bit-javascript)
