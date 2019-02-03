@@ -68,5 +68,13 @@ describe('detective-css', function () {
     it('allows imports with no semicolon', function () {
       test('@import "_foo.css"\n@import "_bar.css"', ['_foo.css', '_bar.css']);
     });
+
+    it('not allow https and http', function () {
+      test('@import url("https://fonts.googleapis.com/css?family=Lato:100,300,400,700,900");"', []);
+    });
+
+    it('not allow ftp', function () {
+      test('@import url("ftp://fonts.googleapis.com/css?family=Lato:100,300,400,700,900");"', []);
+    });
   });
 });

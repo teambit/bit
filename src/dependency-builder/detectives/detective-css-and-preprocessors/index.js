@@ -1,5 +1,6 @@
 // forked and changed from https://github.com/dependents/node-detective-sass
 const csstree = require('css-tree');
+const isUrl = require('is-url');
 
 /**
  * Extract the @import statements from a given file's content
@@ -34,6 +35,7 @@ module.exports = function detective(fileContent, syntax) {
     }
 
     dependencies = dependencies.concat(extractDependencies(node, syntax));
+    dependencies = clearUrlImports(dependencies);
   });
   return dependencies;
 };
@@ -116,6 +118,17 @@ function clearLessImportsRules(importString) {
     .replace(/["']/g, '')
     .replace(/\n/g, '')
     .replace(/\s/g, '');
+}
+
+function clearUrlImports(dependencies) {
+  dependencies = dependencies.map((imp) => {
+    if (isUrl(imp)) {
+      return null;
+    }
+    return imp;
+  });
+
+  return dependencies.filter(Boolean);
 }
 
 function handleError(error) {
