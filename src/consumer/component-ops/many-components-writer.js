@@ -84,6 +84,7 @@ export default class ManyComponentsWriter {
     this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
+    this.installPeerDependencies = this._setBooleanDefault(params.installPeerDependencies, false);
     this.installNpmPackages = this._setBooleanDefault(params.installNpmPackages, true);
     this.addToRootPackageJson = this._setBooleanDefault(params.addToRootPackageJson, true);
     this.verbose = this._setBooleanDefault(params.verbose, false);
