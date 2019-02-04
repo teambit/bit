@@ -7,77 +7,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [1.0.6-dev.18] - 2019-02-03
-
-- fix parsing css imports with urls
-
-## [1.0.6-dev.17] - 2019-02-01
-
-- fix dependency resolver cache to not be accidentally overridden
-
-## [1.0.6-dev.16] - 2019-02-01
-
-- fix a warning about mismatch typescript versions
-
-## [1.0.6-dev.15] - 2019-01-28
-
-- replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
-
-## [1.0.6-dev.14] - 2019-01-27
-
-- replace css parser (gonzales-pe -> css-tree) for better import syntax support
-
-## [1.0.6-dev.13] - 2019-01-20
-
-- expose precinct lib as getDependenciesFromSource
-- replace caporal package with commander to parse cli input
-
-## [1.0.6-dev.12] - 2019-01-20
-
-- temp rollback caporal version (to support node 6)
-
-## [1.0.6-dev.11] - 2019-01-06
-
-- fix ampersand and minus sings causing parse error in css files
-
-## [1.0.6-dev.10] - 2018-12-16
-
-- update caporal and mocha-appveyor-reporter for security reasons
-
-## [1.0.6-dev.9] - 2018-11-08
-
-- support mix syntax of typescript and javascript inside .ts file
-
-## [1.0.6-dev.8] - 2018-10-19
-
-- support other script languages (such as typescript) inside Vue files
-
-## [1.0.6-dev.7] - 2018-10-09
-
-- utilize the cache mechanism of dependency-tree to cache resolved dependencies
-
-## [1.0.6-dev.6] - 2018-10-04
-
-- fix resolving npm paths to be linked to the correct file
-
-## [1.0.6-dev.5] - 2018-10-03
+## [[2.0.0] - 2019-00-00](https://github.com/teambit/bit-javascript/releases/tag/v2.0.0)
 
 - update node-source-walk package to support `<>` jsx syntax by Babel
-
-## [1.0.6-dev.4] - 2018-09-20
-
+- support mix syntax of typescript and javascript inside .ts file
+- fix ampersand and minus sings causing parse error in css files
+- fix dependency resolver cache to not be accidentally overridden
+- fix a warning about mismatch typescript versions
+- replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
+- replace css parser (gonzales-pe -> css-tree) for better import syntax support
+- expose precinct lib as getDependenciesFromSource
+- replace Caporal package with Commander to parse cli input
+- update mocha-appveyor-reporter for security reasons
+- support other script languages (such as typescript) inside Vue files
+- utilize the cache mechanism of dependency-tree to cache resolved dependencies
+- fix resolving npm paths to be linked to the correct file
 - fix symlinks to node_modules to be recognized as modules instead of files
-
-## [1.0.6-dev.3] - 2018-09-03
-
 - fix get-dependency command to cache processed files
-
-## [1.0.6-dev.2] - 2018-09-03
-
 - improve the scalability of the dependency resolution
-
-## [1.0.6-dev.1] - 2018-08-31
-
 - add detective-css (before it was using detective-sass for css files)
 - avoid suppressing parsing errors for css, sass, scss and less
 
