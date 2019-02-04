@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [2.0.1-dev.1] - 2019-02-4
+## [2.0.1] - 2019-02-04
 
 - fix parsing `.tsx` files
 
