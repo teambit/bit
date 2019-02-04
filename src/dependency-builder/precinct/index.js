@@ -167,7 +167,7 @@ precinct.paperwork = function (filename, options) {
         return 'stylus';
       case '.tsx':
         if (!options.ts) options.ts = {};
-        options.ts.ecmaFeatures = { jsx: true };
+        options.ts.jsx = true;
         return 'ts';
       case '.jsx':
         return 'es6';

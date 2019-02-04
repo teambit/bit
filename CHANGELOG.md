@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.1-dev.1] - 2019-02-4
+
+- fix parsing `.tsx` files
+
 ## [[2.0.0] - 2019-02-04](https://github.com/teambit/bit-javascript/releases/tag/v2.0.0)
 
 - update node-source-walk package to support `<>` jsx syntax by Babel
