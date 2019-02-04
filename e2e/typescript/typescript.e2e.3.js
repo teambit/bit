@@ -230,7 +230,7 @@ export class List extends React.Component {
         helper.addComponent('list/list.tsx', { i: 'list/list' });
         helper.addComponent('item/item.tsx', { i: 'item/item' });
       });
-      it.skip('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
+      it('should be able to parse .tsx syntax successfully and recognize the dependencies', () => {
         const output = helper.showComponent('list/list --json');
         const outputParsed = JSON.parse(output);
         expect(outputParsed.dependencies).to.have.lengthOf(1);

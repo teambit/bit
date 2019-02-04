@@ -7,15 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix parsing `.tsx` files (bit-javascript)
+
 ## [[14.0.0] - 2019-02-04](https://github.com/teambit/bit/releases/tag/v14.0.0)
 
-### Summary  
+### Summary
 
-*Bit’s v14 is released side-by-side with the release of the v2 for [bitsrc.io](https://bitsrc.io), Bit’s component community hub. New features for bitsrc.io v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*  
+*Bit’s v14 is released side-by-side with the release of the v2 for [bitsrc.io](https://bitsrc.io), Bit’s component community hub. New features for bitsrc.io v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
 
-With over 65 new features, changes and bug fixes, v14 is Bit’s largest and richest release to date. V14 is focused on increased **stability**, **agility** and **performance**. It is is fully backwards compatible, and provides a faster and smoother workflow with improved compatibility throughout the ecosystem. 
+With over 65 new features, changes and bug fixes, v14 is Bit’s largest and richest release to date. V14 is focused on increased **stability**, **agility** and **performance**. It is is fully backwards compatible, and provides a faster and smoother workflow with improved compatibility throughout the ecosystem.
 
-Here are some of v14's highlights:  
+Here are some of v14's highlights:
 
 - Improved performance for tracking, versioning and exporting components by up to **700%**.
 - Dozens of bug fixes (~70% of open issues).
@@ -23,9 +25,9 @@ Here are some of v14's highlights:
 - Dynamic namespaces support.
 - Improved VueJS support.
 - Improved CSS support.
-- Auto generated documentation for React.  
+- Auto generated documentation for React.
 
-### New  
+### New
 
 - New `bit watch` command for building components upon file modifications.
 - New `bit eject` for removing local components and installing them as packages by an NPM client
@@ -43,9 +45,9 @@ Here are some of v14's highlights:
 - Support `import ~` from a local (authored) file to an imported sass component.
 - Add programmatic API for add multiple components.
 - Set the only dist file as main file in package.json (in case there is only one).
-- Allow removing a component when it is invalid.  
+- Allow removing a component when it is invalid.
 
-### Changes  
+### Changes
 
 - Improved performance for tracking, versioning and exporting components by up to 700%.
 - CSS parser replaced for better import syntax support.
@@ -63,10 +65,10 @@ Here are some of v14's highlights:
 - Improve performance by caching objects after loading them.
 - Fix ci-update command with component version number.
 - Fix `bit status` to not throw an exception for invalid components.
-- Change `--conf` on `bit import` to be a path to the config dir.  
+- Change `--conf` on `bit import` to be a path to the config dir.
 - Replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
 
-### Bug fixes  
+### Bug fixes
 
 - Fix link files generated to a package when it should point to an internal file of the package.
 - Fix parsing React docs to show the `@example` tag.
@@ -85,7 +87,7 @@ Here are some of v14's highlights:
 - Fix errors "JavaScript heap out of memory" and "Error: EMFILE: too many open files" when exporting a huge number of components.
 - Fix error "link-generation: failed finding .. in the dependencies array" when a dependency has a devDependency installed as a component.
 - Improve the stability of `bit export --eject` and provide some kind of rollback in case of failure.
-- Fix bit-remove to delete authored component files when removing an authored component from an inner directory.  
+- Fix bit-remove to delete authored component files when removing an authored component from an inner directory.
 
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 
