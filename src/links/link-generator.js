@@ -24,8 +24,9 @@ import BitMap from '../consumer/bit-map';
 import JSONFile from '../consumer/component/sources/json-file';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
+import Symlink from './symlink';
 
-type Symlink = {
+type SymlinkType = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
   dest: PathOsBasedAbsolute // path where the symlink is written to
 };
@@ -112,7 +113,7 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   }
 
   if (symlinks.length) {
-    createSymlinks(symlinks, component.id.toString());
+    dataToPersist.addManySymlinks(symlinks.map(symlink => Symlink.makeInstance(symlink.source, symlink.dest)));
   }
   // $FlowFixMe
   dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
@@ -143,19 +144,13 @@ function _getFlattenedDependencies(component: Component, componentMap: Component
     : BitIds.fromArray(component.getAllNonEnvsFlattenedDependencies());
 }
 
-function createSymlinks(symlinks: Symlink[], componentId: string) {
-  symlinks.forEach((symlink: Symlink) => {
-    createSymlinkOrCopy(symlink.source, symlink.dest, componentId);
-  });
-}
-
 function groupLinks(
   flattenLinks: LinkFileType[]
 ): {
   postInstallLinks: OutputFileParams[],
   linksToWrite: OutputFileParams[],
-  symlinks: Symlink[],
-  postInstallSymlinks: Symlink[]
+  symlinks: SymlinkType[],
+  postInstallSymlinks: SymlinkType[]
 } {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];

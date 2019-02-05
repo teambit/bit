@@ -214,9 +214,6 @@ export default class NodeModuleLinker {
         const from = component.dists.getDistDirForConsumer(this.consumer, componentMap.rootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyComponentMap.rootDir);
         dependenciesLinks.push(this._getDependencyLink(from, dependency.id, to, component.bindingPrefix));
-        // @todo: why is it from a component to its dependency? shouldn't it be from component src to dist/component?
-        const packagesSymlinks = this._getSymlinkPackages(from, to, component);
-        dependenciesLinks.push(...packagesSymlinks);
       }
       return dependenciesLinks;
     };
