@@ -9,11 +9,12 @@
  * Now, here is the problem, when the component is installed by npm/yarn, Bit can't create these
  * link files. That's where this post install script comes it. It creates the missing link files
  */
-export default (linkFilesStr: string): string => {
+export default (linkFilesStr: string, symlinkFilesStr: string): string => {
   return `var fs = require('fs');
 var path = require('path');
 
 var linkFiles = ${linkFilesStr};
+var symlinks = ${symlinkFilesStr};
 
 function ensureDir(filePath) {
   var dirname = path.dirname(filePath);
@@ -28,6 +29,12 @@ Object.keys(linkFiles).map(function (linkFile) {
   if (!fs.existsSync(linkFile)) {
     ensureDir(linkFile);
     fs.writeFileSync(linkFile, linkFiles[linkFile]);
+  }
+});
+Object.keys(symlinks).map(function (symlink) {
+  if (!fs.existsSync(symlink)) {
+    ensureDir(symlink);
+    fs.symlinkSync(path.join(__dirname, '../../../' ,symlinks[symlink]), symlink);
   }
 });
 `;
