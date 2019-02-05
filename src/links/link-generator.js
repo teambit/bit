@@ -16,7 +16,6 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import { getLinkToFileContent } from './link-content';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
