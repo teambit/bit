@@ -162,35 +162,6 @@ describe('binary files', function () {
       const status = helper.status();
       expect(status).to.have.string(statusWorkspaceIsCleanMsg);
     });
-    describe('npm packing the component using an extension npm-pack', () => {
-      let packDir;
-      before(() => {
-        helper.importNpmPackExtension();
-        packDir = path.join(helper.localScopePath, 'pack');
-        helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
-      });
-      it('should create the specified directory', () => {
-        expect(packDir).to.be.a.path();
-      });
-      it('should generate .bit.postinstall.js file', () => {
-        expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
-      });
-      it('should add the postinstall script to the package.json file', () => {
-        const packageJson = helper.readPackageJson(packDir);
-        expect(packageJson).to.have.property('scripts');
-        expect(packageJson.scripts).to.have.property('postinstall');
-        expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
-      });
-      it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
-        const packageJson = helper.readPackageJson(packDir);
-        expect(packageJson).to.have.property('bit');
-        expect(packageJson.bit).to.have.property('resolveAliases');
-        expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
-        expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
-          `@bit/${helper.remoteScope}.utils.is-string`
-        );
-      });
-    });
     (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
       let barFooPath;
       let barPngPath;
