@@ -99,13 +99,14 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     : [];
   const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
 
-  const { postInstallLinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
-  if (postInstallLinks.length) {
-    const postInstallFile = generatePostInstallScript(component, postInstallLinks);
+  const { postInstallLinks, postInstallSymlinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
+  const shouldGeneratePostInstallScript = postInstallLinks.length || postInstallSymlinks.length;
+  if (shouldGeneratePostInstallScript) {
+    const postInstallFile = generatePostInstallScript(component, postInstallLinks, postInstallSymlinks);
     dataToPersist.addFile(postInstallFile);
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
-  if (customResolveAliasesAdded || postInstallLinks.length) {
+  if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
     const packageJsonFile = _getPackageJsonFile(component);
     dataToPersist.addFile(packageJsonFile);
   }
@@ -150,15 +151,25 @@ function createSymlinks(symlinks: Symlink[], componentId: string) {
 
 function groupLinks(
   flattenLinks: LinkFileType[]
-): { postInstallLinks: OutputFileParams[], linksToWrite: OutputFileParams[], symlinks: Symlink[] } {
+): {
+  postInstallLinks: OutputFileParams[],
+  linksToWrite: OutputFileParams[],
+  symlinks: Symlink[],
+  postInstallSymlinks: Symlink[]
+} {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];
   const postInstallLinks = [];
+  const postInstallSymlinks = [];
   const symlinks = [];
   Object.keys(groupedLinks).forEach((group) => {
     let content = '';
     const firstGroupItem = groupedLinks[group][0];
     if (firstGroupItem.symlinkTo) {
+      if (firstGroupItem.postInstallSymlink) {
+        postInstallSymlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
+        return;
+      }
       symlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
       return;
     }
@@ -174,7 +185,7 @@ function groupLinks(
       linksToWrite.push(linkFile);
     }
   });
-  return { postInstallLinks, linksToWrite, symlinks };
+  return { postInstallLinks, postInstallSymlinks, linksToWrite, symlinks };
 }
 
 /**
@@ -309,7 +320,7 @@ function getInternalCustomResolvedLinks(
  * change the package.json of a component to include postInstall script.
  * @see postInstallTemplate() JSDoc to understand better why this postInstall script is needed
  */
-function generatePostInstallScript(component: Component, postInstallLinks) {
+function generatePostInstallScript(component: Component, postInstallLinks = [], postInstallSymlinks = []): LinkFile {
   // $FlowFixMe todo: is it possible that writtenPath is empty here?
   const componentDir: string = component.writtenPath;
   // convert from array to object for easier parsing in the postinstall script
@@ -317,8 +328,12 @@ function generatePostInstallScript(component: Component, postInstallLinks) {
     acc[val.filePath] = val.content;
     return acc;
   }, {});
+  const symlinkPathsObject = postInstallSymlinks.reduce((acc, val) => {
+    acc[val.dest] = val.source;
+    return acc;
+  }, {});
   if (!component.packageJsonInstance) throw new Error(`packageJsonInstance is missing for ${component.id.toString()}`);
-  const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject));
+  const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject), JSON.stringify(symlinkPathsObject));
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- implement postinstall symlink generation for cases when custom-resolve modules is used with unsupported file (such as binary files)
 - fix parsing `.tsx` files (bit-javascript)
 
 ## [[14.0.0] - 2019-02-04](https://github.com/teambit/bit/releases/tag/v14.0.0)

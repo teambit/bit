@@ -18,6 +18,7 @@ export type LinkFileType = {
   linkContent: string,
   isEs6?: boolean,
   postInstallLink?: boolean, // postInstallLink is needed when custom module resolution was used
+  postInstallSymlink?: boolean, // postInstallSymlink is needed when custom module resolution was used with unsupported file extension
   symlinkTo?: ?PathOsBased, // symlink (instead of link) is needed for unsupported files, such as binary files
   customResolveMapping?: ?{ [string]: string } // needed when custom module resolution was used
 };
@@ -120,9 +121,9 @@ export default class DependencyFileLinkGenerator {
       relativePathInDependency,
       depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
     });
-
     if (this.createNpmLinkFiles) {
-      linkFile.postInstallLink = true;
+      if (linkFile.linkContent) linkFile.postInstallLink = true;
+      else linkFile.postInstallSymlink = true;
     }
     this.linkFiles.push(linkFile);
 
@@ -180,8 +181,17 @@ export default class DependencyFileLinkGenerator {
     logger.debug(`prepareLinkFile, on ${linkPath}`);
     const linkPathExt = getExt(linkPath);
     const isEs6 = Boolean(importSpecifiers && linkPathExt === 'js');
-    const symlinkTo = linkContent ? undefined : actualFilePath;
+
+    const symlinkTo = linkContent ? undefined : this._getSymlinkDest(actualFilePath);
+
     return { linkPath, linkContent, isEs6, symlinkTo, customResolveMapping };
+  }
+
+  _getSymlinkDest(filePath: PathOsBased): string {
+    if (this.relativePath.isCustomResolveUsed && this.isLinkToPackage) {
+      return `node_modules/${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
+    }
+    return filePath;
   }
 
   getLinkContent(relativeFilePath: PathOsBased): string {
