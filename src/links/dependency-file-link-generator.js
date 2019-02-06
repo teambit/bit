@@ -47,7 +47,6 @@ export default class DependencyFileLinkGenerator {
     consumer,
     component,
     relativePath,
-    dependencyId,
     dependencyComponent,
     createNpmLinkFiles,
     targetDir
@@ -55,7 +54,6 @@ export default class DependencyFileLinkGenerator {
     consumer: Consumer,
     component: Component,
     relativePath: RelativePath,
-    dependencyId: BitId,
     dependencyComponent: Component,
     createNpmLinkFiles: boolean,
     targetDir?: string
@@ -64,8 +62,8 @@ export default class DependencyFileLinkGenerator {
     this.component = component; // $FlowFixMe componentMap should be set here
     this.componentMap = this.component.componentMap;
     this.relativePath = relativePath;
-    this.dependencyId = dependencyId;
     this.dependencyComponent = dependencyComponent;
+    this.dependencyId = dependencyComponent.id;
     this.createNpmLinkFiles = createNpmLinkFiles;
     this.targetDir = targetDir;
     this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;

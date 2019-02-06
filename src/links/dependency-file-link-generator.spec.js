@@ -54,7 +54,6 @@ describe('DependencyFileLinkGenerator', () => {
           consumer: mockConsumer(),
           component,
           relativePath: component.dependencies.get()[0].relativePaths[0],
-          dependencyId: dependencyComponent.id,
           dependencyComponent,
           createNpmLinkFiles: false,
           targetDir: ''
@@ -109,7 +108,6 @@ describe('DependencyFileLinkGenerator', () => {
             consumer: mockConsumer(),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
-            dependencyId: dependencyComponent.id,
             dependencyComponent,
             createNpmLinkFiles: false,
             targetDir: ''
@@ -210,7 +208,6 @@ describe('DependencyFileLinkGenerator', () => {
             consumer: mockConsumer(false),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
-            dependencyId: dependencyComponent.id,
             dependencyComponent,
             createNpmLinkFiles: false,
             targetDir: ''
@@ -314,7 +311,6 @@ describe('DependencyFileLinkGenerator', () => {
             consumer: mockConsumer(),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
-            dependencyId: dependencyComponent.id,
             dependencyComponent,
             createNpmLinkFiles: false,
             targetDir: ''
@@ -374,7 +370,6 @@ describe('DependencyFileLinkGenerator', () => {
             consumer: mockConsumer(false),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
-            dependencyId: dependencyComponent.id,
             dependencyComponent,
             createNpmLinkFiles: false,
             targetDir: ''
