@@ -106,7 +106,8 @@ export function getDiffBetweenObjects(objectLeft: Object, objectRight: Object): 
 export function diffBetweenComponentsObjects(
   consumer: Consumer,
   componentLeft: Component,
-  componentRight: Component
+  componentRight: Component,
+  verbose: boolean
 ): ?(FieldsDiff[]) {
   const printableLeft = componentToPrintableForDiff(componentLeft);
   const printableRight = componentToPrintableForDiff(componentRight);
@@ -142,6 +143,7 @@ export function diffBetweenComponentsObjects(
   });
 
   const dependenciesOutput = () => {
+    if (!verbose) return [];
     const dependenciesLeft = componentLeft.getAllDependencies();
     const dependenciesRight = componentRight.getAllDependencies();
     if (R.isEmpty(dependenciesLeft) || R.isEmpty(dependenciesRight)) return [];

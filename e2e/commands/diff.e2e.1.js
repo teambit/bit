@@ -328,8 +328,13 @@ describe('bit diff command', function () {
       helper.runCmd('bit move utils utility');
       helper.createComponentBarFoo('import isString from "../utility/is-string"');
     });
-    it('should indicate relativePaths changes', () => {
+    it('should not indicate relativePaths changes when --verbose is not used', () => {
       const output = helper.diff('bar/foo');
+      expect(output).to.not.have.string('sourceRelativePath');
+      expect(output).to.not.have.string('destinationRelativePath');
+    });
+    it('should indicate relativePaths changes when --verbose is used', () => {
+      const output = helper.diff('bar/foo --verbose');
       expect(output).to.have.string('- "sourceRelativePath": "utils/is-string.js",');
       expect(output).to.have.string('+ "sourceRelativePath": "utility/is-string.js",');
     });

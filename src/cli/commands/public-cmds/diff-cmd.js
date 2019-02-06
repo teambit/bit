@@ -13,11 +13,11 @@ export default class Diff extends Command {
   bit diff [id] [version] [to_version] => compare the specified version files to to_version files
   the id can be used with wildcards (e.g. bit diff "utils/*")`;
   alias = '';
-  opts = [];
+  opts = [['v', 'verbose', 'show a more verbose output when possible']];
   loader = true;
 
-  action([values]: [string[]]): Promise<DiffResults[]> {
-    return diff(values);
+  action([values]: [string[]], { verbose = false }: { verbose?: boolean }): Promise<DiffResults[]> {
+    return diff(values, verbose);
   }
 
   report(diffResults: DiffResults[]): string {
