@@ -68,16 +68,7 @@ function getComponentLinks({
       return dep.id;
     };
     const dependencyId = getDependencyIdWithResolvedVersion();
-    const getDependencyComponent = () => {
-      return dependencies.find(dependency => dependency.id.isEqual(dependencyId));
-    };
-    const dependencyComponent = getDependencyComponent();
-
-    if (!dependencyComponent) {
-      const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${component.id.toString()}.
-The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
-      throw new Error(errorMessage);
-    }
+    const dependencyComponent = _getDependencyComponent(dependencyId, dependencies, component.id);
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
@@ -85,7 +76,6 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
         consumer,
         component,
         relativePath,
-        dependencyId,
         dependencyComponent,
         createNpmLinkFiles
       });
@@ -117,6 +107,20 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   // $FlowFixMe
   dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
   return dataToPersist;
+}
+
+function _getDependencyComponent(dependencyId: BitId, dependencies: Component[], componentId: BitId): Component {
+  const componentWithSameVersion = dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+  if (componentWithSameVersion) return componentWithSameVersion;
+  const dependencyComponent = dependencies.find(dependency => dependency.id.isEqualWithoutVersion(dependencyId));
+  if (!dependencyComponent) {
+    const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
+The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
+    throw new Error(errorMessage);
+  }
+  logger.warn(`link-generation: failed finding an exact version of ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
+    will use ${dependencyComponent.id.toString()} instead. this might happen when the dependency version is overridden in package.json or bit.json`);
+  return dependencyComponent;
 }
 
 function _getPackageJsonFile(component: Component) {
@@ -399,7 +403,6 @@ async function getLinksByDependencies(
         consumer,
         component,
         relativePath,
-        dependencyId: dependency.id,
         dependencyComponent,
         createNpmLinkFiles: false,
         targetDir
