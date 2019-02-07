@@ -414,5 +414,26 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         expect(padLeft.rootDir).to.equal('src/pad-left');
       });
     });
+    describe('change the dependency version manually from package.json of the dependent', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        helper.getClonedRemoteScope(remoteScope);
+        helper.importComponent('string/is-string -p src/is-string');
+        helper.tagAllComponents('-s 0.0.2');
+        const padLeftDir = path.join(helper.localScopePath, 'src/pad-left');
+        const packageJson = helper.readPackageJson(padLeftDir);
+        packageJson.dependencies[`@bit/${helper.remoteScope}.string.is-string`] = '0.0.1';
+        helper.writePackageJson(packageJson, padLeftDir);
+      });
+      it('bit diff should show the dependencies difference', () => {
+        const diff = helper.diff();
+        expect(diff).to.have.string(`- [ ${helper.remoteScope}/string/is-string@0.0.2 ]`);
+        expect(diff).to.have.string(`+ [ ${helper.remoteScope}/string/is-string@0.0.1 ]`);
+      });
+      it('should be able to tag the component with no error thrown', () => {
+        const output = helper.tagAllComponents();
+        expect(output).to.has.string('1 components tagged');
+      });
+    });
   });
 });
