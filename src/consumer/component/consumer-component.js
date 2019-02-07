@@ -924,14 +924,20 @@ export default class Component {
       license,
       deprecated
     } = object;
+    const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
+    // $FlowFixMe
+    const compilerInstance = compilerProps ? await CompilerExtension.load(compilerProps) : null;
+    const testerProps = tester ? await TesterExtension.loadFromSerializedModelObject(tester) : null;
+    // $FlowFixMe
+    const testerInstance = testerProps ? await TesterExtension.load(testerProps) : null;
     return new Component({
       name: box ? `${box}/${name}` : name,
       version,
       scope,
       lang,
       bindingPrefix,
-      compiler: compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null,
-      tester: tester ? await TesterExtension.loadFromSerializedModelObject(tester) : null,
+      compiler: compilerInstance,
+      tester: testerInstance,
       detachedCompiler,
       detachedTester,
       dependencies,

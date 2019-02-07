@@ -292,7 +292,6 @@ export default class BaseExtension {
     };
     // Require extension from scope
     if (scopePath) {
-      // $FlowFixMe
       const { resolvedPath, componentPath } = _getExtensionPath(name, scopePath, options.core);
       const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
       staticExtensionProps = await BaseExtension.loadFromFile({
