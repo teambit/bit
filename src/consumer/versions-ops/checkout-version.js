@@ -58,10 +58,12 @@ export default (async function checkoutVersion(
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
   const failedComponents: FailedComponents[] = allComponents
-    .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
+    .filter(componentStatus => componentStatus.failureMessage)
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
 
   const succeededComponents = allComponents.filter(componentStatus => !componentStatus.failureMessage);
+  // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
+  // which can be an issue when some components are also dependencies of others
   const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
   });
