@@ -53,7 +53,7 @@ export default class EjectComponents {
     await this.decideWhichComponentsToEject();
     logger.debug(`eject: ${this.componentsToEject.length} to eject`);
     if (this.componentsToEject.length) {
-      this.originalPackageJson = (await packageJson.getPackageJsonObject(this.consumer)) || {};
+      this.originalPackageJson = (await packageJson.getPackageJsonObject(this.consumer.getPath())) || {};
       await this.removeComponentsFromPackageJsonAndNodeModules();
       await this.addComponentsAsPackagesToPackageJson();
       await this.installPackagesUsingNPMClient();
@@ -136,7 +136,7 @@ export default class EjectComponents {
 
   async rollBack(action: string): Promise<void> {
     logger.warn(`eject: failed ${action}, restoring package.json`);
-    await packageJson.writePackageJsonFromObject(this.consumer, this.originalPackageJson);
+    await packageJson.writePackageJsonFromObject(this.consumer.getPath(), this.originalPackageJson);
   }
 
   _buildExceptionMessageWithRollbackData(action: string): string {

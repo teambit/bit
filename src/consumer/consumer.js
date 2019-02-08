@@ -96,7 +96,6 @@ export default class Consumer {
   existingGitHooks: ?(string[]); // list of git hooks already exists during init process
   _driver: Driver;
   _dirStructure: DirStructure;
-  _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;

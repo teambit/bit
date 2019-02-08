@@ -63,10 +63,13 @@ chai.use(require('chai-fs'));
         });
       });
       describe('importing a component using Bit', () => {
+        let afterImportScope;
         before(() => {
           helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
           helper.importComponent('bar/foo');
+          afterImportScope = helper.cloneLocalScope();
         });
         it('should not create .dependencies directory', () => {
           expect(path.join(helper.localScopePath, 'components/.dependencies')).to.not.be.a.path();
@@ -107,6 +110,46 @@ chai.use(require('chai-fs'));
             fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
             const result = helper.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+          });
+        });
+        describe('import all dependencies directly', () => {
+          before(() => {
+            helper.getClonedLocalScope(afterImportScope);
+            helper.importComponent('utils/is-string');
+            helper.importComponent('utils/is-type');
+          });
+          it('should write the correct scope in the package.json file', () => {
+            const packageJson = helper.readPackageJson();
+            const packages = Object.keys(packageJson.dependencies);
+            expect(packages).to.include(`@ci/${helper.remoteScope}.bar.foo`);
+            expect(packages).to.include(`@ci/${helper.remoteScope}.utils.is-string`);
+            expect(packages).to.include(`@ci/${helper.remoteScope}.utils.is-type`);
+          });
+          it('bit status should not show any error', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          });
+          describe('bit checkout all components to an older version', () => {
+            let checkoutOutput;
+            before(() => {
+              checkoutOutput = helper.checkout('0.0.1 --all');
+            });
+            it('should not crash and show a success message', () => {
+              expect(checkoutOutput).to.have.string('successfully switched');
+            });
+            it.only('should update the bit.json of all components to the old version', () => {
+              const bitJson = helper.readBitJson();
+              const dependencies = bitJson.dependencies;
+              expect(dependencies[`${helper.remoteScope}.bar.foo`]).to.equal('0.0.1');
+              expect(dependencies[`${helper.remoteScope}.utils.is-string`]).to.equal('0.0.1');
+              expect(dependencies[`${helper.remoteScope}.utils.is-type`]).to.equal('0.0.1');
+            });
+            it('should be able to require its direct dependency and print results from all dependencies', () => {
+              const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+              fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+              const result = helper.runCmd('node app.js');
+              expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+            });
           });
         });
       });
