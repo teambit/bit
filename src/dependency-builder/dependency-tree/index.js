@@ -66,6 +66,7 @@ module.exports._getDependencies = function (config) {
   let dependenciesRaw; // from some detectives it comes as an array, from some it is an object
   const precinctOptions = config.detectiveConfig;
   precinctOptions.includeCore = false;
+  delete precinct.ast;
 
   try {
     dependenciesRaw = precinct.paperwork(config.filename, precinctOptions);

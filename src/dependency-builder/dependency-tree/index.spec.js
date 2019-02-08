@@ -835,4 +835,29 @@ describe('dependencyTree', function () {
       expect(nonExistent[bazFile]).to.deep.equal(['non-exist-baz-pkg']);
     });
   });
+  describe('passing css files and then javascript files', () => {
+    beforeEach(() => {
+      mockfs({
+        [`${__dirname}/baz`]: {
+          'base.scss': 'li {} a {}', // don't change the content. it crash only with this for some reason
+          'index.jsx': "require('some-module');"
+        }
+      });
+    });
+    it('should not crash with "RangeError: Maximum call stack size exceeded" error', () => {
+      const directory = path.normalize(`${__dirname}/baz`);
+      const baseFile = path.normalize(`${directory}/base.scss`);
+      const indexFile = path.normalize(`${directory}/index.jsx`);
+      const config = {
+        directory
+      };
+
+      config.filename = baseFile;
+      dependencyTree(config);
+
+      config.filename = indexFile;
+      const dependencies = dependencyTree(config);
+      expect(dependencies).to.be.ok;
+    });
+  });
 });
