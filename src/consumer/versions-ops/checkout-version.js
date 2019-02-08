@@ -58,7 +58,7 @@ export default (async function checkoutVersion(
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
   const failedComponents: FailedComponents[] = allComponents
-    .filter(componentStatus => componentStatus.failureMessage)
+    .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
 
   const succeededComponents = allComponents.filter(componentStatus => !componentStatus.failureMessage);
