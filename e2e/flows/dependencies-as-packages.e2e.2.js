@@ -137,12 +137,12 @@ chai.use(require('chai-fs'));
             it('should not crash and show a success message', () => {
               expect(checkoutOutput).to.have.string('successfully switched');
             });
-            it.only('should update the bit.json of all components to the old version', () => {
+            it('should update the bit.json of all components to the old version', () => {
               const bitJson = helper.readBitJson();
               const dependencies = bitJson.dependencies;
-              expect(dependencies[`${helper.remoteScope}.bar.foo`]).to.equal('0.0.1');
-              expect(dependencies[`${helper.remoteScope}.utils.is-string`]).to.equal('0.0.1');
-              expect(dependencies[`${helper.remoteScope}.utils.is-type`]).to.equal('0.0.1');
+              expect(dependencies[`${helper.remoteScope}/bar/foo`]).to.equal('0.0.1');
+              expect(dependencies[`${helper.remoteScope}/utils/is-string`]).to.equal('0.0.1');
+              expect(dependencies[`${helper.remoteScope}/utils/is-type`]).to.equal('0.0.1');
             });
             it('should be able to require its direct dependency and print results from all dependencies', () => {
               const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
