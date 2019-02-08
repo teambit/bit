@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "Maximum call stack" error when resolving js files after css files (bit-javascript)
 - fix `bit checkout --all` to write the correct data when some components are also dependencies of others
 - fix `bit checkout` to install dependencies as packages when applicable
 - fix `bit remove --remote` to show the dependents correctly
