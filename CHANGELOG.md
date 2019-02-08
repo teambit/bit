@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit checkout` to install dependencies as packages when applicable
 - fix `bit remove --remote` to show the dependents correctly
 - hide component internal structure diff upon `bit diff` unless `--verbose` flag is used
 - implement postinstall symlink generation for cases when custom-resolve modules is used with unsupported file (such as binary files)

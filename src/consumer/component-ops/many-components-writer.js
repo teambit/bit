@@ -31,7 +31,6 @@ type ManyComponentsWriterParams = {
   writeBitDependencies?: boolean,
   createNpmLinkFiles?: boolean,
   writeDists?: boolean,
-  saveDependenciesAsComponents?: boolean, // as opposed to npm packages
   installNpmPackages?: boolean,
   installPeerDependencies?: boolean,
   addToRootPackageJson?: boolean,
@@ -61,7 +60,6 @@ export default class ManyComponentsWriter {
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
-  saveDependenciesAsComponents: boolean; // as opposed to npm packages
   installNpmPackages: boolean;
   installPeerDependencies: boolean;
   addToRootPackageJson: boolean;
