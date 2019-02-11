@@ -190,7 +190,11 @@ function traverse(config) {
     tree[dependency] = dependencies;
     const filePathMap = config.pathMap.find(pathMapEntry => pathMapEntry.file === dependency);
     if (!filePathMap) throw new Error(`file ${dependency} is missing from PathMap`);
-    config.visited[dependency] = { pathMap: filePathMap, missing: config.nonExistent[dependency] };
+    config.visited[dependency] = {
+      pathMap: filePathMap,
+      missing: config.nonExistent[dependency],
+      error: config.errors[dependency]
+    };
     stack.push(...dependencies);
   }
 
@@ -214,6 +218,9 @@ function traverse(config) {
     config.pathMap.push(config.visited[dependency].pathMap);
     if (config.visited[dependency].missing) {
       config.nonExistent[dependency] = config.visited[dependency].missing;
+    }
+    if (config.visited[dependency].error) {
+      config.errors[dependency] = config.visited[dependency].error;
     }
     dependencies.forEach((d) => {
       if (!tree[d]) dependenciesStack.push(d);
