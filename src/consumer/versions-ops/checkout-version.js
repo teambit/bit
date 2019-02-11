@@ -212,8 +212,15 @@ async function applyVersion(
     writePackageJson
   });
   await manyComponentsWriter.writeAll();
+  await updateBitJsonIfNeeded();
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+
+  async function updateBitJsonIfNeeded() {
+    if (consumer.bitJson.dependencies[id.toStringWithoutVersion()]) {
+      await consumer.bitJson.addDependencies([id]).write({ bitDir: consumer.getPath() });
+    }
+  }
 }
 
 /**
