@@ -318,7 +318,6 @@ export default class EnvExtension extends BaseExtension {
   }
 
   static async loadFromSerializedModelObject(
-    // $FlowFixMe
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
     Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
