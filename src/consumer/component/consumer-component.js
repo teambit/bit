@@ -167,9 +167,9 @@ export default class Component {
 
   get docs(): ?(Doclet[]) {
     if (!this._docs) {
-      this._docs = this.files
-        ? R.flatten(this.files.map(file => docsParser(file.contents.toString(), file.relative)))
-        : [];
+      this._docs = R.flatten(
+        this.files.map(file => (file.test ? [] : docsParser(file.contents.toString(), file.relative)))
+      );
     }
     return this._docs;
   }
