@@ -24,27 +24,26 @@ export type PackageJsonInstance = { write: Function, bit?: Object };
 /**
  * Add components as dependencies to root package.json
  */
-async function addComponentsToRoot(consumer: Consumer, componentsIds: BitId[]) {
-  const importedComponents = componentsIds.filter((id) => {
-    const componentMap = consumer.bitMap.getComponent(id);
-    return componentMap.origin === COMPONENT_ORIGINS.IMPORTED;
-  });
-  if (!importedComponents || !importedComponents.length) return;
+async function addComponentsToRoot(consumer: Consumer, components: Component[]): Promise<void> {
+  const componentsToAdd = components.reduce((acc, component) => {
+    const componentMap = consumer.bitMap.getComponent(component.id);
+    if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return acc;
+    if (!componentMap.rootDir) {
+      throw new GeneralError(`rootDir is missing from an imported component ${component.id.toString()}`);
+    }
+    const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
+    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+    acc[packageName] = locationAsUnixFormat;
+    return acc;
+  }, {});
+  if (R.isEmpty(componentsToAdd)) return;
+  await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
+}
 
-  const driver = await consumer.driver.getDriver(false);
-  const PackageJson = driver.PackageJson;
-  const componentsToAdd = R.fromPairs(
-    importedComponents.map((componentId) => {
-      const componentMap = consumer.bitMap.getComponent(componentId);
-      if (!componentMap.rootDir) {
-        throw new GeneralError(`rootDir is missing from an imported component ${componentId.toString()}`);
-      }
-      const locationAsUnixFormat = convertToValidPathForPackageManager(componentMap.rootDir);
-      return [componentId.toStringWithoutVersion(), locationAsUnixFormat];
-    })
-  );
-  const registryPrefix = npmRegistryName();
-  await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, registryPrefix);
+async function _addDependenciesPackagesIntoPackageJson(dir: string, dependencies: Object) {
+  const packageJson = (await getPackageJsonObject(dir)) || { dependencies: {} };
+  packageJson.dependencies = Object.assign({}, packageJson.dependencies, dependencies);
+  return writePackageJsonFromObject(dir, packageJson);
 }
 
 /**
@@ -307,17 +306,28 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
-async function getPackageJsonObject(consumer: Consumer): Promise<Object> {
-  const driver = await consumer.driver.getDriver(false);
-  const PackageJson = driver.PackageJson;
-  return PackageJson.getPackageJson(consumer.getPath());
+/**
+ * get the package.json object of the given dir, if not found, return null
+ */
+async function getPackageJsonObject(dir: string): Promise<?Object> {
+  try {
+    const packageJsonObject = await fs.readJson(composePath(dir));
+    return packageJsonObject;
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      // file not found
+      return null;
+    }
+    throw err;
+  }
 }
 
-async function writePackageJsonFromObject(consumer: Consumer, data: Object) {
-  if (!data) return null;
-  const driver = await consumer.driver.getDriver(false);
-  const PackageJson = driver.PackageJson;
-  return PackageJson.saveRawObject(consumer.getPath(), data);
+async function writePackageJsonFromObject(dir: string, data: Object) {
+  return fs.outputJSON(composePath(dir), data, { spaces: 2 });
+}
+
+function composePath(componentRootFolder: string) {
+  return path.join(componentRootFolder, PACKAGE_JSON);
 }
 
 export {

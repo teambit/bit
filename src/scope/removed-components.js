@@ -40,16 +40,25 @@ export class RemovedObjects {
     };
   }
 
-  static fromObjects(payload: Object): RemovedObjects {
+  static fromObjects(payload: {
+    removedComponentIds: string[],
+    missingComponents: string[],
+    removedDependencies: string[],
+    dependentBits: { [string]: Object[] }
+  }): RemovedObjects {
     // this function being called from an ssh, so the ids must have a remote scope
     const missingComponents = new BitIds(...payload.missingComponents.map(id => BitId.parse(id, true)));
     const removedComponentIds = new BitIds(...payload.removedComponentIds.map(id => BitId.parse(id, true)));
     const removedDependencies = new BitIds(...payload.removedDependencies.map(id => BitId.parse(id, true)));
+    const dependentBits = Object.keys(payload.dependentBits).reduce((acc, current) => {
+      acc[current] = new BitIds(...payload.dependentBits[current].map(id => new BitId(id)));
+      return acc;
+    }, {});
     return new RemovedObjects({
       missingComponents,
       removedComponentIds,
       removedDependencies,
-      dependentBits: payload.dependentBits
+      dependentBits
     });
   }
 }

@@ -1,6 +1,7 @@
 // @flow
 import path from 'path';
 import fs from 'fs-extra';
+import pMapSeries from 'p-map-series';
 import { BitId } from '../../bit-id';
 import { Consumer } from '..';
 import ConsumerComponent from '../component';
@@ -59,12 +60,13 @@ export default (async function checkoutVersion(
   const failedComponents: FailedComponents[] = allComponents
     .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
-  const componentsResultsP = allComponents
-    .filter(componentStatus => !componentStatus.failureMessage)
-    .map(({ id, componentFromFS, mergeResults }) => {
-      return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
-    });
-  const componentsResults = await Promise.all(componentsResultsP);
+
+  const succeededComponents = allComponents.filter(componentStatus => !componentStatus.failureMessage);
+  // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
+  // which can be an issue when some components are also dependencies of others
+  const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
+    return applyVersion(consumer, id, componentFromFS, mergeResults, checkoutProps);
+  });
 
   return { components: componentsResults, version, failedComponents };
 });
@@ -194,6 +196,9 @@ async function applyVersion(
     // update files according to the merge results
     modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
+  const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
+  componentWithDependencies.component.dependenciesSavedAsComponents =
+    shouldDependenciesSaveAsComponents[0].saveDependenciesAsComponents;
 
   const manyComponentsWriter = new ManyComponentsWriter({
     consumer,
@@ -207,8 +212,15 @@ async function applyVersion(
     writePackageJson
   });
   await manyComponentsWriter.writeAll();
+  await updateBitJsonIfNeeded();
 
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
+
+  async function updateBitJsonIfNeeded() {
+    if (consumer.bitJson.dependencies[id.toStringWithoutVersion()]) {
+      await consumer.bitJson.addDependencies([id]).write({ bitDir: consumer.getPath() });
+    }
+  }
 }
 
 /**

@@ -31,7 +31,6 @@ type ManyComponentsWriterParams = {
   writeBitDependencies?: boolean,
   createNpmLinkFiles?: boolean,
   writeDists?: boolean,
-  saveDependenciesAsComponents?: boolean, // as opposed to npm packages
   installNpmPackages?: boolean,
   installPeerDependencies?: boolean,
   addToRootPackageJson?: boolean,
@@ -61,7 +60,6 @@ export default class ManyComponentsWriter {
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
-  saveDependenciesAsComponents: boolean; // as opposed to npm packages
   installNpmPackages: boolean;
   installPeerDependencies: boolean;
   addToRootPackageJson: boolean;
@@ -113,7 +111,7 @@ export default class ManyComponentsWriter {
     logger.debug('ManyComponentsWriter, _installPackages');
     await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     if (this.addToRootPackageJson) {
-      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
+      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents);
     }
     await this._installPackagesIfNeeded();
   }

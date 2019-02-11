@@ -279,7 +279,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
 
   getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
     const dependency = this.componentFromModel
-      .getAllDependencies() // $FlowFixMe
+      .getAllDependencies()
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
       throw new GeneralError( // $FlowFixMe

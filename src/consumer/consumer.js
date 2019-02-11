@@ -96,7 +96,6 @@ export default class Consumer {
   existingGitHooks: ?(string[]); // list of git hooks already exists during init process
   _driver: Driver;
   _dirStructure: DirStructure;
-  _componentsCache: Object = {}; // cache loaded components
   _componentsStatusCache: Object = {}; // cache loaded components
   packageManagerArgs: string[] = []; // args entered by the user in the command line after '--'
   componentLoader: ComponentLoader;
@@ -345,8 +344,8 @@ export default class Consumer {
     const versionDependenciesArr: VersionDependencies[] = withAllVersions
       ? await scopeComponentsImporter.importManyWithAllVersions(ids, false)
       : await scopeComponentsImporter.importMany(ids);
-    const shouldDependenciesSavedAsComponents = await this._shouldDependenciesSavedAsComponents(
-      versionDependenciesArr,
+    const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents(
+      versionDependenciesArr.map(v => v.component.id),
       saveDependenciesAsComponents
     );
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
@@ -372,18 +371,15 @@ export default class Consumer {
     return componentWithDependencies;
   }
 
-  async _shouldDependenciesSavedAsComponents(
-    versionDependencies: VersionDependencies[],
-    saveDependenciesAsComponents?: boolean
-  ) {
+  async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
       saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
-    const shouldDependenciesSavedAsComponents = versionDependencies.map((versionDep: VersionDependencies) => {
+    const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
       return {
-        id: versionDep.component.id, // if it doesn't go to the hub, it can't import dependencies as packages
-        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(versionDep.component.id.scope)
+        id: bitId, // if it doesn't go to the hub, it can't import dependencies as packages
+        saveDependenciesAsComponents: saveDependenciesAsComponents || !remotes.isHub(bitId.scope)
       };
     });
     return shouldDependenciesSavedAsComponents;
@@ -628,7 +624,7 @@ export default class Consumer {
     const prefix = requirePath.includes('node_modules') ? `node_modules/${bindingPrefix}/` : `${bindingPrefix}/`;
     const withoutPrefix = requirePath.substr(requirePath.indexOf(prefix) + prefix.length);
     const componentName = withoutPrefix.includes('/')
-      ? withoutPrefix.substr(0, withoutPrefix.indexOf('/'))
+      ? withoutPrefix.substr(0, withoutPrefix.indexOf('/')) // the part after the first slash is the path inside the package
       : withoutPrefix;
     const pathSplit = componentName.split(NODE_PATH_COMPONENT_SEPARATOR);
     if (pathSplit.length < 2) throw new GeneralError(`component has an invalid require statement: ${requirePath}`);
@@ -644,7 +640,8 @@ export default class Consumer {
     const mightBeId = new BitId({ scope: mightBeScope, name: mightBeName });
     const allBitIds = this.bitMap.getAllBitIds();
     if (allBitIds.searchWithoutVersion(mightBeId)) return mightBeId;
-
+    // only bit hub has the concept of having the username in the scope name.
+    if (bindingPrefix !== 'bit' && bindingPrefix !== '@bit') return mightBeId;
     // pathSplit has 3 or more items. the first two are the scope, the rest is the name.
     // for example "user.scopeName.utils.is-string" => scope: user.scopeName, name: utils/is-string
     const scope = pathSplit.splice(0, 2).join('.');
