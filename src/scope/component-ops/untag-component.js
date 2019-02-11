@@ -61,7 +61,6 @@ export async function removeLocalVersionsForAllComponents(
   version?: string,
   force?: boolean = false
 ): Promise<untagResult[]> {
-  // $FlowFixMe
   const componentsToUntag = await getComponentsWithOptionToUntag(scope, version);
   return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, scope);
 }
@@ -72,7 +71,6 @@ export async function removeLocalVersionsForComponentsMatchedByWildcard(
   force?: boolean = false,
   idWithWildcard?: string
 ): Promise<untagResult[]> {
-  // $FlowFixMe
   const candidateComponents = await getComponentsWithOptionToUntag(scope, version);
   const componentsToUntag = idWithWildcard
     ? ComponentsList.filterComponentsByWildcard(candidateComponents, idWithWildcard)
