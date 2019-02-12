@@ -236,6 +236,11 @@ export default class Repository {
     if (added) await componentsIndex.write();
   }
 
+  /**
+   * always prefer this.persist().
+   * this method doesn't write to componentsIndex. so using this method for ModelComponent or
+   * Symlink makes the index outdated.
+   */
   async persistOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
     const options = {};

@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import ComponentsIndex from './components-index';
 import { BitId } from '../../bit-id';
 
-describe('ComponentsIndex', () => {
+describe.skip('ComponentsIndex', () => {
   describe('add', () => {
     let componentsIndex;
     before(() => {
