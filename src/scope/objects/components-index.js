@@ -3,10 +3,11 @@ import path from 'path';
 import fs from 'fs-extra';
 import BitId from '../../bit-id/bit-id';
 import { ModelComponent, Symlink } from '../models';
+import { BitObject, Ref } from '.';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
-type IndexItem = { id: { scope: ?string, name: string }, isSymlink: boolean };
+type IndexItem = { id: { scope: ?string, name: string }, isSymlink: boolean, hash: string };
 
 export default class ComponentsIndex {
   index: IndexItem[];
@@ -20,10 +21,10 @@ export default class ComponentsIndex {
     const index = await fs.readJson(indexPath);
     return new ComponentsIndex(index, indexPath);
   }
-  static async create(basePath: string, componentsList: Array<ModelComponent | Symlink>): Promise<ComponentsIndex> {
+  static async create(basePath: string, bitObjects: BitObject[]): Promise<ComponentsIndex> {
     const indexPath = this._composePath(basePath);
     const componentsIndex = new ComponentsIndex([], indexPath);
-    componentsList.forEach(component => componentsIndex.add(component.toBitId(), component instanceof Symlink));
+    componentsIndex.addMany(bitObjects);
     await componentsIndex.write();
     return componentsIndex;
   }
@@ -37,20 +38,36 @@ export default class ComponentsIndex {
     // $FlowFixMe box is not needed
     return new BitId(indexItem.id);
   }
-  add(id: BitId, isSymlink: boolean = false): boolean {
-    if (!(id instanceof BitId)) throw new TypeError('ComponentsIndex.add expects to get an instance of BitId');
-    if (this.exist(id)) return false;
-    this.index.push({ id: { scope: id.scope || null, name: id.name }, isSymlink });
+  addMany(bitObjects: BitObject[]): boolean {
+    const added = bitObjects.map(bitObject => this.addOne(bitObject));
+    return added.some(oneAdded => oneAdded); // return true if one of the objects was added
+  }
+  addOne(bitObject: BitObject): boolean {
+    if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink)) return false;
+    const hash = bitObject.hash().toString();
+    if (this.exist(hash)) return false;
+    this.index.push({
+      id: { scope: bitObject.scope || null, name: bitObject.name },
+      isSymlink: bitObject instanceof Symlink,
+      hash
+    });
     return true;
   }
   find(id: BitId): ?IndexItem {
     return this.index.find(indexItem => this._isEqual(indexItem, id));
   }
-  exist(id: BitId): boolean {
-    return Boolean(this.find(id));
+  findByHash(hash: string): ?IndexItem {
+    return this.index.find(indexItem => indexItem.hash === hash);
   }
-  remove(id: BitId): boolean {
-    const indexInIndexArray = this._findIndex(id);
+  exist(hash: string): boolean {
+    return Boolean(this.findByHash(hash));
+  }
+  removeMany(refs: Ref[]): boolean {
+    const removed = refs.map(ref => this.remove(ref.toString()));
+    return removed.some(removedOne => removedOne); // return true if one of the objects was removed
+  }
+  remove(hash: string): boolean {
+    const indexInIndexArray = this._findIndex(hash);
     if (indexInIndexArray === -1) return false; // not found
     this.index.splice(indexInIndexArray);
     return true;
@@ -61,8 +78,8 @@ export default class ComponentsIndex {
   static _composePath(basePath: string): string {
     return path.join(basePath, COMPONENTS_INDEX_FILENAME);
   }
-  _findIndex(id: BitId) {
-    return this.index.findIndex(indexItem => this._isEqual(indexItem, id));
+  _findIndex(hash: string) {
+    return this.index.findIndex(indexItem => indexItem.hash === hash);
   }
   _isEqual(indexItem: IndexItem, id: BitId): boolean {
     const isScopeEqual = (scopeA: ?string, scopeB: ?string): boolean => {

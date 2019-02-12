@@ -134,10 +134,8 @@ export default class Repository {
       return componentsIndex;
     } catch (err) {
       if (err.code === 'ENOENT') {
-        const refs: BitObject[] = await this.list();
-        // $FlowFixMe
-        const componentsList = refs.filter(ref => ref instanceof ModelComponent || ref instanceof Symlink);
-        const componentsIndex = await ComponentsIndex.create(this.scope.getPath(), componentsList);
+        const bitObjects: BitObject[] = await this.list();
+        const componentsIndex = await ComponentsIndex.create(this.scope.getPath(), bitObjects);
         return componentsIndex;
       }
       throw err;
@@ -151,8 +149,12 @@ export default class Repository {
     return removeFile(pathToDelete, true);
   }
 
-  removeMany(refs: Ref[]): Promise<boolean[]> {
-    return Promise.all(refs.map(ref => this.remove(ref)));
+  async removeMany(refs: Ref[]): Promise<boolean[]> {
+    const results = await Promise.all(refs.map(ref => this.remove(ref)));
+    const componentsIndex = await this.getComponentsIndex();
+    const removed = componentsIndex.removeMany(refs);
+    if (removed) await componentsIndex.write();
+    return results;
   }
 
   loadRaw(ref: Ref): Promise<Buffer> {
@@ -224,13 +226,14 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
-  async persist(validate: boolean = true): Promise<boolean[]> {
-    const componentsIndex = await this.getComponentsIndex();
+  async persist(validate: boolean = true): Promise<void> {
     logger.debug(`repository: persisting ${this.objects.length} objects, with validate = ${validate.toString()}`);
     // @TODO handle failures
     if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
     await Promise.all(this.objects.map(object => this.persistOne(object)));
-    await componentsIndex.write();
+    const componentsIndex = await this.getComponentsIndex();
+    const added = componentsIndex.addMany(this.objects);
+    if (added) await componentsIndex.write();
   }
 
   async persistOne(object: BitObject): Promise<boolean> {
@@ -239,10 +242,6 @@ export default class Repository {
     if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.debug(`writing an object into ${objectPath}`);
-    if (object instanceof ModelComponent || object instanceof Symlink) {
-      const componentsIndex = await this.getComponentsIndex();
-      componentsIndex.add(object.toBitId(), object instanceof Symlink);
-    }
     return writeFile(objectPath, contents, options);
   }
 }
