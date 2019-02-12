@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import withCompilerFixture from '../../../fixtures/consumer-components/with-compiler/with-compiler.json';
 import Component from './consumer-component';
 import CompilerExtension from '../../extensions/compiler-extension';
-import { SourceFile } from './sources/index.js';
+import { SourceFile } from './sources';
 
 describe('ConsumerComponent', () => {
   describe('fromString()', () => {
@@ -33,7 +33,7 @@ describe('ConsumerComponent', () => {
       const src = `/**
       * is a given variable a string
       */
-      function () {}`;
+      function isString() {}`;
       const sourceFile = new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(src), test: false });
       componentProps.files = [sourceFile];
       const component = new Component(componentProps);
@@ -44,7 +44,7 @@ describe('ConsumerComponent', () => {
       const src = `/**
       * is a given variable a string
       */
-      function () {}`;
+      function isString() {}`;
       const sourceFile = new SourceFile({ base: '.', path: 'is-string.js', contents: Buffer.from(src), test: false });
       const sourceFileSpec = new SourceFile({
         base: '.',
