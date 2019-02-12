@@ -2,31 +2,31 @@
 import GraphLib from 'graphlib';
 import semver from 'semver';
 import R from 'ramda';
-import { Repository } from '../objects';
 import { BitId, BitIds } from '../../bit-id';
 import type { ModelComponent, Version } from '../models';
 import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../constants';
+import Scope from '../scope';
 
 const Graph = GraphLib.Graph;
 
 export default class DependencyGraph {
-  repository: Repository;
+  scope: Scope;
   graph: Graph;
 
-  constructor(repository, graph) {
-    this.repository = repository;
+  constructor(scope: Scope, graph: Object) {
+    this.scope = scope;
     this.graph = graph;
   }
 
-  static async load(repository: Repository) {
-    const graph = await DependencyGraph.buildDependenciesGraph(repository);
-    return new DependencyGraph(repository, graph);
+  static async load(scope: Scope) {
+    const graph = await DependencyGraph.buildDependenciesGraph(scope);
+    return new DependencyGraph(scope, graph);
   }
 
-  static async buildDependenciesGraph(repository): Graph {
+  static async buildDependenciesGraph(scope: Scope): Graph {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
-    const allComponents = await repository.listComponents();
+    const allComponents = await scope.list();
     // build all nodes. a node is either a Version object or Component object.
     // each Version node has a parent of Component node. Component node doesn't have a parent.
     await Promise.all(
@@ -34,7 +34,7 @@ export default class DependencyGraph {
         graph.setNode(component.id(), component);
         await Promise.all(
           Object.keys(component.versions).map(async (version) => {
-            const componentVersion = await component.loadVersion(version, repository);
+            const componentVersion = await component.loadVersion(version, scope.objects);
             if (!componentVersion) return;
             const idWithVersion = `${component.id()}${VERSION_DELIMITER}${version}`;
             graph.setNode(idWithVersion, componentVersion);

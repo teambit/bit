@@ -13,14 +13,15 @@ import ModelComponent from '../models/model-component';
 import Symlink from '../models/symlink';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
+import ComponentsIndex from './components-index';
+import { BitId } from '../../bit-id';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
   objects: BitObject[] = [];
   _cache: { [string]: BitObject } = {};
-  _cacheListComponentsWithSymlinks: Array<ModelComponent | Symlink>;
-  _cacheListComponentsWithoutSymlinks: ModelComponent[];
+  _componentsIndex: ComponentsIndex;
   scope: Scope;
   types: { [string]: Function };
 
@@ -110,24 +111,37 @@ export default class Repository {
     );
   }
 
-  async listComponents(): Promise<ModelComponent[]> {
-    if (!this._cacheListComponentsWithoutSymlinks) {
-      const refs: BitObject[] = await this.list();
-      // $FlowFixMe
-      this._cacheListComponentsWithoutSymlinks = refs.filter(ref => ref instanceof ModelComponent);
-    }
-    return this._cacheListComponentsWithoutSymlinks;
+  async listComponentsIdsIncludeSymlinks(): Promise<BitId[]> {
+    const componentsIndex = await this.getComponentsIndex();
+    return componentsIndex.getIdsIncludesSymlinks();
   }
 
-  async listComponentsIncludeSymlinks(): Promise<Array<ModelComponent | Symlink>> {
-    if (!this._cacheListComponentsWithSymlinks) {
-      const refs: BitObject[] = await this.list();
-      // $FlowFixMe
-      this._cacheListComponentsWithSymlinks = refs.filter(
-        ref => ref instanceof ModelComponent || ref instanceof Symlink
-      );
+  async listComponentsIds(): Promise<BitId[]> {
+    const componentsIndex = await this.getComponentsIndex();
+    return componentsIndex.getIds();
+  }
+
+  async getComponentsIndex(): Promise<ComponentsIndex> {
+    if (!this._componentsIndex) {
+      this._componentsIndex = await this.loadOptionallyCreateComponentsIndex();
     }
-    return this._cacheListComponentsWithSymlinks;
+    return this._componentsIndex;
+  }
+
+  async loadOptionallyCreateComponentsIndex() {
+    try {
+      const componentsIndex = await ComponentsIndex.load(this.scope.getPath());
+      return componentsIndex;
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        const refs: BitObject[] = await this.list();
+        // $FlowFixMe
+        const componentsList = refs.filter(ref => ref instanceof ModelComponent || ref instanceof Symlink);
+        const componentsIndex = await ComponentsIndex.create(this.scope.getPath(), componentsList);
+        return componentsIndex;
+      }
+      throw err;
+    }
   }
 
   remove(ref: Ref): Promise<boolean> {
@@ -210,20 +224,25 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
-  persist(validate: boolean = true): Promise<boolean[]> {
+  async persist(validate: boolean = true): Promise<boolean[]> {
+    const componentsIndex = await this.getComponentsIndex();
     logger.debug(`repository: persisting ${this.objects.length} objects, with validate = ${validate.toString()}`);
     // @TODO handle failures
     if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
-    return Promise.all(this.objects.map(object => this.persistOne(object)));
+    await Promise.all(this.objects.map(object => this.persistOne(object)));
+    await componentsIndex.write();
   }
 
-  persistOne(object: BitObject): Promise<boolean> {
-    return object.compress().then((contents) => {
-      const options = {};
-      if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
-      const objectPath = this.objectPath(object.hash());
-      logger.debug(`writing an object into ${objectPath}`);
-      return writeFile(objectPath, contents, options);
-    });
+  async persistOne(object: BitObject): Promise<boolean> {
+    const contents = await object.compress();
+    const options = {};
+    if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
+    const objectPath = this.objectPath(object.hash());
+    logger.debug(`writing an object into ${objectPath}`);
+    if (object instanceof ModelComponent || object instanceof Symlink) {
+      const componentsIndex = await this.getComponentsIndex();
+      componentsIndex.add(object.toBitId(), object instanceof Symlink);
+    }
+    return writeFile(objectPath, contents, options);
   }
 }

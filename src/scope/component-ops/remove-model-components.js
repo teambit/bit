@@ -52,7 +52,7 @@ export default class RemoveModelComponents {
     const component = (await this.scope.sources.get(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     // $FlowFixMe
-    const componentList = await this.scope.objects.listComponentsIncludeSymlinks();
+    const componentList = await this.scope.listComponentsIncludeSymlinks();
 
     const dependentBits = await this.scope.findDependentBits(
       consumerComponentToRemove.flattenedDependencies,
