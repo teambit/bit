@@ -110,23 +110,24 @@ export default class Repository {
     );
   }
 
-  async listComponents(includeSymlinks: boolean = true): Promise<Array<ModelComponent | Symlink>> {
-    const filterComponents = refs =>
-      refs.filter(
-        ref =>
-          (includeSymlinks ? ref instanceof ModelComponent || ref instanceof Symlink : ref instanceof ModelComponent)
-      );
-
-    if (includeSymlinks) {
-      if (!this._cacheListComponentsWithSymlinks) {
-        this._cacheListComponentsWithSymlinks = await this.list().then(filterComponents);
-      }
-      return this._cacheListComponentsWithSymlinks;
-    }
+  async listComponents(): Promise<ModelComponent[]> {
     if (!this._cacheListComponentsWithoutSymlinks) {
-      this._cacheListComponentsWithoutSymlinks = await this.list().then(filterComponents);
+      const refs: BitObject[] = await this.list();
+      // $FlowFixMe
+      this._cacheListComponentsWithoutSymlinks = refs.filter(ref => ref instanceof ModelComponent);
     }
     return this._cacheListComponentsWithoutSymlinks;
+  }
+
+  async listComponentsIncludeSymlinks(): Promise<Array<ModelComponent | Symlink>> {
+    if (!this._cacheListComponentsWithSymlinks) {
+      const refs: BitObject[] = await this.list();
+      // $FlowFixMe
+      this._cacheListComponentsWithSymlinks = refs.filter(
+        ref => ref instanceof ModelComponent || ref instanceof Symlink
+      );
+    }
+    return this._cacheListComponentsWithSymlinks;
   }
 
   remove(ref: Ref): Promise<boolean> {

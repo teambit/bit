@@ -26,7 +26,7 @@ export default class DependencyGraph {
   static async buildDependenciesGraph(repository): Graph {
     const graph = new Graph({ compound: true });
     const depObj: { [id: string]: Version } = {};
-    const allComponents = await repository.listComponents(false);
+    const allComponents = await repository.listComponents();
     // build all nodes. a node is either a Version object or Component object.
     // each Version node has a parent of Component node. Component node doesn't have a parent.
     await Promise.all(

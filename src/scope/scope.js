@@ -215,7 +215,7 @@ export default class Scope {
   }
 
   async list(): Promise<ModelComponent[]> {
-    return this.objects.listComponents(false);
+    return this.objects.listComponents();
   }
 
   async listLocal(): Promise<ModelComponent[]> {
