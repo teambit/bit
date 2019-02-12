@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- extract docs from non-tests files only
 - fix `bit show --remote --json` to not crash when a component has a compiler
 - fix `bit checkout` to update bit.json with the checked out version
 - fix "Maximum call stack" error when resolving js files after css files (bit-javascript)
