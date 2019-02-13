@@ -704,6 +704,7 @@ export default class Scope {
   }
 
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
+    await Repository.reset(path);
     if (resetHard) {
       logger.info(`deleting the whole scope at ${path}`);
       await fs.emptyDir(path);

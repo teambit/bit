@@ -5,6 +5,7 @@ import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import { ModelComponent, Symlink } from '../models';
 import { BitObject, Ref } from '.';
+import logger from '../../logger/logger';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
@@ -26,6 +27,14 @@ export default class ComponentsIndex {
     const indexPath = this._composePath(basePath);
     return new ComponentsIndex(indexPath);
   }
+  static async reset(basePath: string) {
+    const indexPath = this._composePath(basePath);
+    logger.debug(`ComponentsIndex, deleting the index file at ${indexPath}`);
+    await fs.remove(indexPath);
+  }
+  async write() {
+    return fs.writeJson(this.indexPath, this.index, { spaces: 2 });
+  }
   getIds(): BitId[] {
     return this.index.filter(indexItem => !indexItem.isSymlink).map(indexItem => this.indexItemToBitId(indexItem));
   }
@@ -43,7 +52,7 @@ export default class ComponentsIndex {
   addOne(bitObject: BitObject): boolean {
     if (!(bitObject instanceof ModelComponent) && !(bitObject instanceof Symlink)) return false;
     const hash = bitObject.hash().toString();
-    if (this.exist(hash)) return false;
+    if (this._exist(hash)) return false;
     this.index.push({
       id: { scope: bitObject.scope || null, name: bitObject.name },
       isSymlink: bitObject instanceof Symlink,
@@ -51,24 +60,21 @@ export default class ComponentsIndex {
     });
     return true;
   }
-  find(hash: string): ?IndexItem {
-    return this.index.find(indexItem => indexItem.hash === hash);
-  }
-  exist(hash: string): boolean {
-    return Boolean(this.find(hash));
-  }
   removeMany(refs: Ref[]): boolean {
     const removed = refs.map(ref => this.removeOne(ref.toString()));
     return removed.some(removedOne => removedOne); // return true if one of the objects was removed
   }
   removeOne(hash: string): boolean {
-    const found = this.find(hash);
+    const found = this._find(hash);
     if (!found) return false;
     this.index = R.without([found], this.index);
     return true;
   }
-  async write() {
-    return fs.writeJson(this.indexPath, this.index, { spaces: 2 });
+  _find(hash: string): ?IndexItem {
+    return this.index.find(indexItem => indexItem.hash === hash);
+  }
+  _exist(hash: string): boolean {
+    return Boolean(this._find(hash));
   }
   static _composePath(basePath: string): string {
     return path.join(basePath, COMPONENTS_INDEX_FILENAME);

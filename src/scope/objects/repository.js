@@ -44,6 +44,10 @@ export default class Repository {
     return repository;
   }
 
+  static reset(scopePath: string): Promise<void> {
+    return ComponentsIndex.reset(scopePath);
+  }
+
   ensureDir() {
     return mkdirp(this.getPath());
   }
