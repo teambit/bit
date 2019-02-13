@@ -2,11 +2,12 @@ import { expect } from 'chai';
 import ComponentsIndex from './components-index';
 import { BitId } from '../../bit-id';
 import { ModelComponent, Symlink } from '../models';
+import BitObject from './object';
 
 describe('ComponentsIndex', () => {
-  describe('add', () => {
+  describe('addOne', () => {
     let componentsIndex;
-    before(() => {
+    beforeEach(() => {
       componentsIndex = new ComponentsIndex([], 'scope-path');
     });
     it('should add to the index array', () => {
@@ -15,6 +16,19 @@ describe('ComponentsIndex', () => {
       const allIds = componentsIndex.getIds();
       const id = new BitId({ scope: 'my-scope', name: 'is-string' });
       expect(allIds[0]).to.deep.equal(id);
+    });
+    it('should not add the same component multiple times', () => {
+      const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
+      componentsIndex.addOne(modelComponent);
+      componentsIndex.addOne(modelComponent);
+      componentsIndex.addOne(modelComponent);
+      expect(componentsIndex.getIds()).to.have.lengthOf(1);
+    });
+    it('should not add BitObjects that are not Symlink nor ModelComponent', () => {
+      const bitObject = new BitObject({ scope: 'my-scope', name: 'is-string' });
+      const result = componentsIndex.addOne(bitObject);
+      expect(componentsIndex.getIds()).to.have.lengthOf(0);
+      expect(result).to.be.false;
     });
   });
   describe('remove', () => {

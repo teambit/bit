@@ -4,7 +4,7 @@ import semver from 'semver';
 import R from 'ramda';
 import type Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';
-import type { Scope } from '../../scope';
+import type Scope from '../../scope/scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
 import type BitMap from '../bit-map/bit-map';
