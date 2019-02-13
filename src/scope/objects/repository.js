@@ -8,30 +8,40 @@ import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
-import type Scope from '../../scope/scope';
-import ModelComponent from '../models/model-component';
-import Symlink from '../models/symlink';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
 import { BitId } from '../../bit-id';
+import { ScopeJson } from '../scope-json';
+import { typesObj } from '../object-registrar';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
   objects: BitObject[] = [];
-  _cache: { [string]: BitObject } = {};
-  _componentsIndex: ComponentsIndex;
-  scope: Scope;
+  scopeJson: ScopeJson;
+  scopePath: string;
   types: { [string]: Function };
+  componentsIndex: ComponentsIndex;
+  _cache: { [string]: BitObject } = {};
+  constructor(scopePath: string, scopeJson: ScopeJson, types: { [string]: Function } = typesObj) {
+    this.scopePath = scopePath;
+    this.scopeJson = scopeJson;
+    this.types = types;
+  }
 
-  constructor(scope: Scope, objectTypes: Function[] = []) {
-    this.scope = scope;
-    // TODO: use typesToObject from object-registrar
-    this.types = objectTypes.reduce((map, objectType) => {
-      map[objectType.name] = objectType;
-      return map;
-    }, {});
+  static async load({ scopePath, scopeJson }: { scopePath: string, scopeJson: ScopeJson }): Promise<Repository> {
+    const repository = new Repository(scopePath, scopeJson, typesObj);
+    const componentsIndex = await repository.loadOptionallyCreateComponentsIndex();
+    repository.componentsIndex = componentsIndex;
+    return repository;
+  }
+
+  static create({ scopePath, scopeJson }: { scopePath: string, scopeJson: ScopeJson }): Repository {
+    const repository = new Repository(scopePath, scopeJson, typesObj);
+    const componentsIndex = ComponentsIndex.create(scopePath);
+    repository.componentsIndex = componentsIndex;
+    return repository;
   }
 
   ensureDir() {
@@ -39,20 +49,20 @@ export default class Repository {
   }
 
   getPath() {
-    return path.join(this.scope.getPath(), OBJECTS_DIR);
+    return path.join(this.scopePath, OBJECTS_DIR);
   }
 
   getBackupPath(dirName?: string): string {
-    const backupPath = path.join(this.scope.getPath(), OBJECTS_BACKUP_DIR);
+    const backupPath = path.join(this.scopePath, OBJECTS_BACKUP_DIR);
     return dirName ? path.join(backupPath, dirName) : backupPath;
   }
 
   getLicense(): Promise<string> {
-    return this.scope.scopeJson.getPopulatedLicense();
+    return this.scopeJson.getPopulatedLicense();
   }
 
   getScopeMetaObject(): Promise<Buffer> {
-    return this.getLicense().then(license => ScopeMeta.fromObject({ license, name: this.scope.name }).compress());
+    return this.getLicense().then(license => ScopeMeta.fromObject({ license, name: this.scopeJson.name }).compress());
   }
 
   objectPath(ref: Ref): string {
@@ -112,30 +122,23 @@ export default class Repository {
   }
 
   async listComponentsIdsIncludeSymlinks(): Promise<BitId[]> {
-    const componentsIndex = await this.getComponentsIndex();
-    return componentsIndex.getIdsIncludesSymlinks();
+    return this.componentsIndex.getIdsIncludesSymlinks();
   }
 
   async listComponentsIds(): Promise<BitId[]> {
-    const componentsIndex = await this.getComponentsIndex();
-    return componentsIndex.getIds();
+    return this.componentsIndex.getIds();
   }
 
-  async getComponentsIndex(): Promise<ComponentsIndex> {
-    if (!this._componentsIndex) {
-      this._componentsIndex = await this.loadOptionallyCreateComponentsIndex();
-    }
-    return this._componentsIndex;
-  }
-
-  async loadOptionallyCreateComponentsIndex() {
+  async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {
     try {
-      const componentsIndex = await ComponentsIndex.load(this.scope.getPath());
+      const componentsIndex = await ComponentsIndex.load(this.scopePath);
       return componentsIndex;
     } catch (err) {
       if (err.code === 'ENOENT') {
         const bitObjects: BitObject[] = await this.list();
-        const componentsIndex = await ComponentsIndex.create(this.scope.getPath(), bitObjects);
+        const componentsIndex = ComponentsIndex.create(this.scopePath);
+        componentsIndex.addMany(bitObjects);
+        await componentsIndex.write();
         return componentsIndex;
       }
       throw err;
@@ -151,9 +154,8 @@ export default class Repository {
 
   async removeMany(refs: Ref[]): Promise<boolean[]> {
     const results = await Promise.all(refs.map(ref => this.remove(ref)));
-    const componentsIndex = await this.getComponentsIndex();
-    const removed = componentsIndex.removeMany(refs);
-    if (removed) await componentsIndex.write();
+    const removed = this.componentsIndex.removeMany(refs);
+    if (removed) await this.componentsIndex.write();
     return results;
   }
 
@@ -231,9 +233,8 @@ export default class Repository {
     // @TODO handle failures
     if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
     await Promise.all(this.objects.map(object => this.persistOne(object)));
-    const componentsIndex = await this.getComponentsIndex();
-    const added = componentsIndex.addMany(this.objects);
-    if (added) await componentsIndex.write();
+    const added = this.componentsIndex.addMany(this.objects);
+    if (added) await this.componentsIndex.write();
   }
 
   /**
@@ -244,7 +245,7 @@ export default class Repository {
   async persistOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
     const options = {};
-    if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
+    if (this.scopeJson.groupName) options.gid = resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
     logger.debug(`writing an object into ${objectPath}`);
     return writeFile(objectPath, contents, options);

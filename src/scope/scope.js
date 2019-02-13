@@ -6,7 +6,6 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
-import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHasAll, first } from '../utils';
 import {
   BIT_HIDDEN_DIR,
@@ -58,7 +57,7 @@ export type ScopeProps = {
   created?: boolean,
   tmp?: Tmp,
   sources?: SourcesRepository,
-  objects?: Repository
+  objects: Repository
 };
 
 export type IsolateOptions = {
@@ -92,7 +91,7 @@ export default class Scope {
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
-    this.objects = scopeProps.objects || new Repository(this, types());
+    this.objects = scopeProps.objects;
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
@@ -700,7 +699,8 @@ export default class Scope {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
-    return Promise.resolve(new Scope({ path, created: true, scopeJson }));
+    const repository = Repository.create({ scopePath: path, scopeJson });
+    return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));
   }
 
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
@@ -716,9 +716,9 @@ export default class Scope {
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
-    const path = scopePath;
 
     const scopeJson = await ScopeJson.loadFromFile(getScopeJsonPath(scopePath));
-    return new Scope({ path, scopeJson });
+    const objects = await Repository.load({ scopePath, scopeJson });
+    return new Scope({ path: scopePath, scopeJson, objects });
   }
 }

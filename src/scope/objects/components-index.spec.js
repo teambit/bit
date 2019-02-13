@@ -8,7 +8,7 @@ describe('ComponentsIndex', () => {
   describe('addOne', () => {
     let componentsIndex;
     beforeEach(() => {
-      componentsIndex = new ComponentsIndex([], 'scope-path');
+      componentsIndex = new ComponentsIndex('scope-path');
     });
     it('should add to the index array', () => {
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
@@ -33,21 +33,63 @@ describe('ComponentsIndex', () => {
   });
   describe('remove', () => {
     let componentsIndex;
-    before(() => {
-      componentsIndex = new ComponentsIndex([], 'scope-path');
+    beforeEach(() => {
+      componentsIndex = new ComponentsIndex('scope-path');
     });
     it('should remove from the index array', () => {
       const modelComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
       componentsIndex.addOne(modelComponent);
       expect(componentsIndex.getIds()).to.have.lengthOf(1);
-      componentsIndex.remove(modelComponent.hash().toString());
+      componentsIndex.removeOne(modelComponent.hash().toString());
+      expect(componentsIndex.getIds()).to.have.lengthOf(0);
+    });
+    it('should remove the correct one when there are multiple', () => {
+      const isStringComponent = new ModelComponent({ scope: 'my-scope', name: 'is-string' });
+      const isTypeComponent = new ModelComponent({ scope: 'my-scope', name: 'is-type' });
+      componentsIndex.addOne(isStringComponent);
+      componentsIndex.addOne(isTypeComponent);
+      expect(componentsIndex.getIds()).to.have.lengthOf(2);
+      componentsIndex.removeOne(isStringComponent.hash().toString());
+      const allIds = componentsIndex.getIds();
+      expect(allIds).to.have.lengthOf(1);
+      const id = new BitId({ scope: 'my-scope', name: 'is-type' });
+      expect(allIds[0]).to.deep.equal(id);
+    });
+  });
+  describe('removeMany', () => {
+    let componentsIndex;
+    let isStringComponent;
+    let isTypeComponent;
+    beforeEach(() => {
+      componentsIndex = new ComponentsIndex('scope-path');
+      isStringComponent = new ModelComponent({ name: 'is-string' });
+      isTypeComponent = new ModelComponent({ name: 'is-type' });
+      componentsIndex.addMany([isStringComponent, isTypeComponent]);
+      expect(componentsIndex.getIds()).to.have.lengthOf(2);
+    });
+    it('should remove multiple when removing them at the same removeMany call', () => {
+      expect(componentsIndex.getIds()).to.have.lengthOf(2);
+      componentsIndex.removeMany([isStringComponent.hash().toString(), isTypeComponent.hash().toString()]);
+      expect(componentsIndex.getIds()).to.have.lengthOf(0);
+    });
+    it('should remove multiple when removing them with separate removeMany calls', () => {
+      expect(componentsIndex.getIds()).to.have.lengthOf(2);
+      componentsIndex.removeMany([isStringComponent.hash().toString()]);
+      componentsIndex.removeMany([isTypeComponent.hash().toString()]);
+      expect(componentsIndex.getIds()).to.have.lengthOf(0);
+    });
+    it('should remove multiple when calling them with separate removeMany calls using array.map', () => {
+      expect(componentsIndex.getIds()).to.have.lengthOf(2);
+      [isStringComponent.hash().toString(), isTypeComponent.hash().toString()].map(h =>
+        componentsIndex.removeMany([h])
+      );
       expect(componentsIndex.getIds()).to.have.lengthOf(0);
     });
   });
   describe('getIds', () => {
     let componentsIndex;
     beforeEach(() => {
-      componentsIndex = new ComponentsIndex([], 'scope-path');
+      componentsIndex = new ComponentsIndex('scope-path');
     });
     it('should not return symlinks', () => {
       const symlink = new Symlink({ scope: 'my-scope', name: 'is-type' });
@@ -59,7 +101,7 @@ describe('ComponentsIndex', () => {
   describe('getIdsIncludesSymlinks', () => {
     let componentsIndex;
     beforeEach(() => {
-      componentsIndex = new ComponentsIndex([], 'scope-path');
+      componentsIndex = new ComponentsIndex('scope-path');
     });
     it('should return symlinks', () => {
       const symlink = new Symlink({ scope: 'my-scope', name: 'is-type' });

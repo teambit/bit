@@ -1,6 +1,7 @@
 // @flow
 import path from 'path';
 import fs from 'fs-extra';
+import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import { ModelComponent, Symlink } from '../models';
 import { BitObject, Ref } from '.';
@@ -10,23 +11,20 @@ const COMPONENTS_INDEX_FILENAME = 'index.json';
 type IndexItem = { id: { scope: ?string, name: string }, isSymlink: boolean, hash: string };
 
 export default class ComponentsIndex {
-  index: IndexItem[];
   indexPath: string;
-  constructor(index: IndexItem[], indexPath: string) {
-    this.index = index;
+  index: IndexItem[];
+  constructor(indexPath: string, index: IndexItem[] = []) {
     this.indexPath = indexPath;
+    this.index = index;
   }
   static async load(basePath: string): Promise<ComponentsIndex> {
     const indexPath = this._composePath(basePath);
     const index = await fs.readJson(indexPath);
-    return new ComponentsIndex(index, indexPath);
+    return new ComponentsIndex(indexPath, index);
   }
-  static async create(basePath: string, bitObjects: BitObject[]): Promise<ComponentsIndex> {
+  static create(basePath: string): ComponentsIndex {
     const indexPath = this._composePath(basePath);
-    const componentsIndex = new ComponentsIndex([], indexPath);
-    componentsIndex.addMany(bitObjects);
-    await componentsIndex.write();
-    return componentsIndex;
+    return new ComponentsIndex(indexPath);
   }
   getIds(): BitId[] {
     return this.index.filter(indexItem => !indexItem.isSymlink).map(indexItem => this.indexItemToBitId(indexItem));
@@ -53,23 +51,20 @@ export default class ComponentsIndex {
     });
     return true;
   }
-  find(id: BitId): ?IndexItem {
-    return this.index.find(indexItem => this._isEqual(indexItem, id));
-  }
-  findByHash(hash: string): ?IndexItem {
+  find(hash: string): ?IndexItem {
     return this.index.find(indexItem => indexItem.hash === hash);
   }
   exist(hash: string): boolean {
-    return Boolean(this.findByHash(hash));
+    return Boolean(this.find(hash));
   }
   removeMany(refs: Ref[]): boolean {
-    const removed = refs.map(ref => this.remove(ref.toString()));
+    const removed = refs.map(ref => this.removeOne(ref.toString()));
     return removed.some(removedOne => removedOne); // return true if one of the objects was removed
   }
-  remove(hash: string): boolean {
-    const indexInIndexArray = this._findIndex(hash);
-    if (indexInIndexArray === -1) return false; // not found
-    this.index.splice(indexInIndexArray);
+  removeOne(hash: string): boolean {
+    const found = this.find(hash);
+    if (!found) return false;
+    this.index = R.without([found], this.index);
     return true;
   }
   async write() {
@@ -77,15 +72,5 @@ export default class ComponentsIndex {
   }
   static _composePath(basePath: string): string {
     return path.join(basePath, COMPONENTS_INDEX_FILENAME);
-  }
-  _findIndex(hash: string) {
-    return this.index.findIndex(indexItem => indexItem.hash === hash);
-  }
-  _isEqual(indexItem: IndexItem, id: BitId): boolean {
-    const isScopeEqual = (scopeA: ?string, scopeB: ?string): boolean => {
-      if (!scopeA && !scopeB) return true;
-      return scopeA === scopeB;
-    };
-    return indexItem.id.name === id.name && isScopeEqual(indexItem.id.scope, id.scope);
   }
 }
