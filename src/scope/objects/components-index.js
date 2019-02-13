@@ -6,6 +6,7 @@ import BitId from '../../bit-id/bit-id';
 import { ModelComponent, Symlink } from '../models';
 import { BitObject, Ref } from '.';
 import logger from '../../logger/logger';
+import InvalidIndexJson from '../exceptions/invalid-index-json';
 
 const COMPONENTS_INDEX_FILENAME = 'index.json';
 
@@ -20,8 +21,15 @@ export default class ComponentsIndex {
   }
   static async load(basePath: string): Promise<ComponentsIndex> {
     const indexPath = this._composePath(basePath);
-    const index = await fs.readJson(indexPath);
-    return new ComponentsIndex(indexPath, index);
+    try {
+      const index = await fs.readJson(indexPath);
+      return new ComponentsIndex(indexPath, index);
+    } catch (err) {
+      if (err.message.includes('Unexpected token')) {
+        throw new InvalidIndexJson(indexPath, err.message);
+      }
+      throw err;
+    }
   }
   static create(basePath: string): ComponentsIndex {
     const indexPath = this._composePath(basePath);
