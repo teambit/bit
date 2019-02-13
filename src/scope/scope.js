@@ -97,7 +97,7 @@ export default class Scope {
 
   async getDependencyGraph(): Promise<DependencyGraph> {
     if (!this._dependencyGraph) {
-      this._dependencyGraph = await DependencyGraph.load(this.objects);
+      this._dependencyGraph = await DependencyGraph.load(this);
     }
     return this._dependencyGraph;
   }
