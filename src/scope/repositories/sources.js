@@ -353,16 +353,25 @@ export default class SourceRepository {
   }
 
   /**
-   * remove specific component version from component.
+   * remove specified component versions from component.
+   * if all versions of a component were deleted, delete also the component.
    * it doesn't persist anything to the filesystem.
    * (repository.persist() needs to be called at the end of the operation)
    */
-  removeComponentVersion(component: ModelComponent, version: string): void {
-    logger.debug(`removeComponentVersion, component ${component.id()}, version ${version}`);
+  removeComponentVersions(component: ModelComponent, versions: string[]): void {
+    logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
-    const ref = component.removeVersion(version);
-    objectRepo.removeObject(ref);
-    objectRepo.add(component); // add the modified component object
+    versions.forEach((version) => {
+      const ref = component.removeVersion(version);
+      objectRepo.removeObject(ref);
+    });
+
+    if (component.versionArray.length) {
+      objectRepo.add(component); // add the modified component object
+    } else {
+      // if all versions were deleted, delete also the component itself from the model
+      objectRepo.removeObject(component.hash());
+    }
   }
 
   /**
