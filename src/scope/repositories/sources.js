@@ -109,7 +109,7 @@ export default class SourceRepository {
     return this.findOrAddComponent(source).then((component) => {
       return component.loadVersion(component.latest(), objectRepo).then((version) => {
         version.setCIProps(ciProps);
-        return objectRepo.persistOne(version);
+        return objectRepo._writeOne(version);
       });
     });
   }
@@ -120,7 +120,7 @@ export default class SourceRepository {
     return this.findOrAddComponent(source).then((component) => {
       return component.loadVersion(component.latest(), objectRepo).then((version) => {
         version.setSpecsResults(specsResults);
-        return objectRepo.persistOne(version);
+        return objectRepo._writeOne(version);
       });
     });
   }
@@ -353,30 +353,45 @@ export default class SourceRepository {
   }
 
   /**
-   * removeVersion - remove specific component version from component
-   * @param {ModelComponent} component - component to remove version from
-   * @param {string} version - version to remove.
-   * @param persist
+   * remove specific component version from component.
+   * it doesn't persist anything to the filesystem.
+   * (repository.persist() needs to be called at the end of the operation)
    */
-  async removeVersion(component: ModelComponent, version: string, persist: boolean = true): Promise<void> {
-    logger.debug(`removing version ${version} of ${component.id()} from a local scope`);
+  removeComponentVersion(component: ModelComponent, version: string): void {
+    logger.debug(`removeComponentVersion, component ${component.id()}, version ${version}`);
     const objectRepo = this.objects();
-    const modifiedComponent = await component.removeVersion(objectRepo, version);
-    objectRepo.add(modifiedComponent);
-    if (persist) await objectRepo.persist();
-    return modifiedComponent;
+    const ref = component.removeVersion(version);
+    objectRepo.removeObject(ref);
+    objectRepo.add(component); // add the modified component object
   }
 
   /**
-   * clean - remove component or component version
-   * @param {BitId} bitId - id to remove
-   * @param {boolean} deepRemove - remove all component refs or only version refs
+   * @see this.removeComponent()
+   *
    */
-  async clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
-    logger.debug(`sources.clean: ${bitId}, deepRemove: ${deepRemove.toString()}`);
+  async removeComponentById(bitId: BitId, deepRemove: boolean = false): Promise<void> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}, deepRemove: ${deepRemove.toString()}`);
     const component = await this.get(bitId);
     if (!component) return;
-    await component.remove(this.objects(), deepRemove);
+    this.removeComponent(component, deepRemove);
+  }
+
+  /**
+   * remove all versions objects of the component from local scope.
+   * if deepRemove is true, it removes also the refs associated with the removed versions.
+   * finally, it removes the component object itself
+   * it doesn't physically delete from the filesystem.
+   * the actual delete is done at a later phase, once Repository.persist() is called.
+   *
+   * @param {ModelComponent} component
+   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
+   */
+  removeComponent(component: ModelComponent, deepRemove: boolean = false): void {
+    const repo = this.objects();
+    logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
+    const objectRefs = deepRemove ? component.collectExistingRefs(repo, false).filter(x => x) : component.versionArray;
+    objectRefs.push(component.hash());
+    repo.removeManyObjects(objectRefs);
   }
 
   /**

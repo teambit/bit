@@ -33,6 +33,7 @@ export default class RemoveModelComponents {
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
       const removedComponents = await pMapSeries(foundComponents, bitId => this._removeSingle(bitId));
+      await this.scope.objects.persist();
       const ids = new BitIds(...removedComponents.map(x => x.bitId));
       const removedDependencies = new BitIds(...R.flatten(removedComponents.map(x => x.removedDependencies)));
       return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
@@ -111,7 +112,7 @@ export default class RemoveModelComponents {
     const symlink = componentList.filter(
       component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
-    await this.scope.sources.clean(id, removeRefs);
-    if (!R.isEmpty(symlink)) await this.scope.objects.remove(symlink[0].hash());
+    await this.scope.sources.removeComponentById(id, removeRefs);
+    if (!R.isEmpty(symlink)) this.scope.objects.removeObject(symlink[0].hash());
   }
 }

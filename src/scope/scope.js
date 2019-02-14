@@ -184,7 +184,7 @@ export default class Scope {
     // Add the new / updated objects
     this.objects.addMany(resultObjects.newObjects);
     // Remove old objects
-    await this.objects.removeMany(resultObjects.refsToRemove);
+    this.objects.removeManyObjects(resultObjects.refsToRemove);
     // Persists new / remove objects
     const validateBeforePersist = false;
     await this.objects.persist(validateBeforePersist);
@@ -385,13 +385,12 @@ export default class Scope {
     const component = await this.sources.get(bitId);
     component.deprecated = true;
     this.objects.add(component);
-    await this.objects.persist();
     return bitId.toStringWithoutVersion();
   }
 
   /**
    * Remove components from scope
-   * @force Boolean  - remove component from scope even if other components use it
+   * @force Boolean - remove component from scope even if other components use it
    */
   async removeMany(
     bitIds: BitIds,
@@ -473,6 +472,7 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecatedComponentsP = foundComponents.map(bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecatedComponentsP);
+    await this.objects.persist();
     const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
     return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
@@ -587,10 +587,6 @@ export default class Scope {
       .then(() => this.scopeJson.write(this.getPath()))
       .then(() => this.objects.ensureDir())
       .then(() => this);
-  }
-
-  clean(bitId: BitId): Promise<void> {
-    return this.sources.clean(bitId);
   }
 
   /**

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- index scope components to improve memory consumption and performance
 - extract docs from non-tests files only
 - fix `bit show --remote --json` to not crash when a component has a compiler
 - fix `bit checkout` to update bit.json with the checked out version

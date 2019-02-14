@@ -1,6 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import path from 'path';
+import uniqBy from 'lodash.uniqby';
 import BitObject from './object';
 import BitRawObject from './raw-object';
 import Ref from './ref';
@@ -19,6 +20,7 @@ const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
   objects: BitObject[] = [];
+  objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   scopePath: string;
   types: { [string]: Function };
@@ -149,20 +151,6 @@ export default class Repository {
     }
   }
 
-  remove(ref: Ref): Promise<boolean> {
-    this.removeFromCache(ref);
-    const pathToDelete = this.objectPath(ref);
-    logger.debug(`repository.remove: deleting ${pathToDelete}`);
-    return removeFile(pathToDelete, true);
-  }
-
-  async removeMany(refs: Ref[]): Promise<boolean[]> {
-    const results = await Promise.all(refs.map(ref => this.remove(ref)));
-    const removed = this.componentsIndex.removeMany(refs);
-    if (removed) await this.componentsIndex.write();
-    return results;
-  }
-
   loadRaw(ref: Ref): Promise<Buffer> {
     return fs.readFile(this.objectPath(ref));
   }
@@ -221,6 +209,15 @@ export default class Repository {
     return this;
   }
 
+  removeObject(ref: Ref) {
+    this.objectsToRemove.push(ref);
+  }
+
+  removeManyObjects(refs: Ref[]) {
+    if (!refs || !refs.length) return;
+    refs.forEach(ref => this.removeObject(ref));
+  }
+
   /**
    * alias to `load`
    */
@@ -232,13 +229,45 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
+  /**
+   * persist objects changes (added and removed) into the filesystem
+   * do not call this function multiple times in parallel, otherwise, it'll damage the index.json file.
+   * call this function only once after you added and removed all applicable objects.
+   */
   async persist(validate: boolean = true): Promise<void> {
-    logger.debug(`repository: persisting ${this.objects.length} objects, with validate = ${validate.toString()}`);
-    // @TODO handle failures
+    logger.debug(`Repository.persist, validate = ${validate.toString()}`);
+    await this._deleteMany();
     if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
-    await Promise.all(this.objects.map(object => this.persistOne(object)));
+    await this._writeMany();
+  }
+
+  async _deleteMany(): Promise<void> {
+    if (!this.objectsToRemove.length) return;
+    const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
+    logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
+    await Promise.all(uniqRefs.map(ref => this._deleteOne(ref)));
+    const removed = this.componentsIndex.removeMany(uniqRefs);
+    if (removed) await this.componentsIndex.write();
+  }
+
+  async _writeMany(): Promise<void> {
+    if (!this.objects.length) return;
+    logger.debug(`Repository._writeMany: writing ${this.objects.length} objects`);
+    // @TODO handle failures
+    await Promise.all(this.objects.map(object => this._writeOne(object)));
     const added = this.componentsIndex.addMany(this.objects);
     if (added) await this.componentsIndex.write();
+  }
+
+  /**
+   * do not call this method directly. always call this.removeObject() and once done with all objects,
+   * call this.persist()
+   */
+  _deleteOne(ref: Ref): Promise<boolean> {
+    this.removeFromCache(ref);
+    const pathToDelete = this.objectPath(ref);
+    logger.debug(`repository._deleteOne: deleting ${pathToDelete}`);
+    return removeFile(pathToDelete, true);
   }
 
   /**
@@ -246,12 +275,12 @@ export default class Repository {
    * this method doesn't write to componentsIndex. so using this method for ModelComponent or
    * Symlink makes the index outdated.
    */
-  async persistOne(object: BitObject): Promise<boolean> {
+  async _writeOne(object: BitObject): Promise<boolean> {
     const contents = await object.compress();
     const options = {};
     if (this.scopeJson.groupName) options.gid = resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
-    logger.debug(`writing an object into ${objectPath}`);
+    logger.debug(`repository._writeOne: writing an object into ${objectPath}`);
     return writeFile(objectPath, contents, options);
   }
 }

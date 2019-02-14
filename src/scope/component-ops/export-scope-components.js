@@ -72,7 +72,7 @@ export async function exportMany(
     logger.warn('exportMany: failed pushing ids to the bare-scope');
     return Promise.reject(err);
   }
-  await Promise.all(ids.map(id => scope.clean(id)));
+  await Promise.all(ids.map(id => scope.sources.removeComponentById(id)));
   ids.map(id => scope.createSymlink(id, remoteName));
   const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
   await Promise.all(componentsAndObjects.map(componentObject => scope.sources.merge(componentObject)));
