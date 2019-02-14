@@ -74,9 +74,9 @@ export async function exportMany(
   }
   await Promise.all(ids.map(id => scope.sources.removeComponentById(id)));
   ids.map(id => scope.createSymlink(id, remoteName));
-  const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
-  await Promise.all(componentsAndObjects.map(componentObject => scope.sources.merge(componentObject)));
+  componentsAndObjects.map(componentObject => scope.sources.put(componentObject));
   await scope.objects.persist();
+  const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
   return idsWithRemoteScope;
 }
 

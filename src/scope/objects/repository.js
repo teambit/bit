@@ -280,7 +280,7 @@ export default class Repository {
     const options = {};
     if (this.scopeJson.groupName) options.gid = resolveGroupId(this.scopeJson.groupName);
     const objectPath = this.objectPath(object.hash());
-    logger.debug(`repository._writeOne: writing an object into ${objectPath}`);
+    logger.debug(`repository._writeOne: ${objectPath}`);
     return writeFile(objectPath, contents, options);
   }
 }
