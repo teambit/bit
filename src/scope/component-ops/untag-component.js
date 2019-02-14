@@ -45,13 +45,7 @@ export async function removeLocalVersion(
     });
   }
 
-  await Promise.all(versionsToRemove.map(ver => scope.sources.removeVersion(component, ver, false)));
-  await scope.objects.persist();
-
-  if (!component.versionArray.length) {
-    // if all versions were deleted, delete also the component itself from the model
-    await component.remove(scope.objects);
-  }
+  scope.sources.removeComponentVersions(component, versionsToRemove);
 
   return { id, versions: versionsToRemove, component };
 }

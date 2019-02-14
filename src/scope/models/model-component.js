@@ -1,6 +1,5 @@
 /** @flow */
 import semver from 'semver';
-import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
 import ScopeMeta from './scopeMeta';
@@ -252,31 +251,13 @@ export default class Component extends BitObject {
   }
 
   /**
-   * delete all versions objects of the component from the filesystem.
-   * if deepRemove is true, it deletes also the refs associated with the deleted versions.
-   * finally, it deletes the component object itself
-   *
-   * @param {Repository} repo
-   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
-   * @returns {Promise}
-   * @memberof Component
-   */
-  remove(repo: Repository, deepRemove: boolean = false): Promise<boolean[]> {
-    logger.debug(`models.component.remove: removing a component ${this.id()} from a local scope`);
-    const objectRefs = deepRemove ? this.collectExistingRefs(repo, false).filter(x => x) : this.versionArray;
-    const uniqRefs = uniqBy(objectRefs, 'hash');
-    return repo.removeMany(uniqRefs.concat([this.hash()]));
-  }
-
-  /**
    * to delete a version from a component, don't call this method directly. Instead, use sources.removeVersion()
    */
-  async removeVersion(repo: Repository, version: string): Promise<Component> {
-    const objectRefs = this.versions[version];
+  removeVersion(version: string): Ref {
+    const objectRef = this.versions[version];
     delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
-    await repo.removeMany([objectRefs.hash]);
-    return this;
+    return objectRef;
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {

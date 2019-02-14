@@ -36,6 +36,7 @@ import {
   CorruptedComponent,
   VersionAlreadyExists,
   MergeConflict,
+  InvalidIndexJson,
   HashMismatch,
   MergeConflictOnRemote,
   VersionNotFound,
@@ -227,6 +228,12 @@ once your changes are merged with the new remote version, please tag and export 
     err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
   ],
   [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
+  [
+    InvalidIndexJson,
+    err => `fatal: your .bit/index.json is not a valid JSON file.
+To rebuild the file, please run ${chalk.bold('bit init --reset')}.
+Original Error: ${err.message}`
+  ],
   [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
   [
     ScopeJsonNotFound,

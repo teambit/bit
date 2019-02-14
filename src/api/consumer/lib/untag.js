@@ -43,6 +43,7 @@ export default (async function unTagAction(version?: string, force: boolean, id?
     return removeLocalVersionsForAllComponents(consumer.scope, version, force);
   };
   const results = await untag();
+  await consumer.scope.objects.persist();
   updateBitMap(consumer, results);
   await consumer.onDestroy();
   return results;

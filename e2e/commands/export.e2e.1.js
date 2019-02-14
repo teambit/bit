@@ -83,6 +83,7 @@ describe('bit export command', function () {
       helper.addComponent('bit add bar/foo1.js', { i: 'bar/foo1' });
       helper.addComponent('bit add bar/foo2.js', { i: 'bar/foo2' });
       helper.tagAllComponents();
+      // DO NOT change the next line to `helper.exportAllComponents()`. the current form catches some wierd bugs
       helper.exportComponent('bar/foo1 bar/foo2');
     });
     it('should export them all', () => {

@@ -64,7 +64,7 @@ export default class List extends Command {
     }
 
     if (R.isEmpty(listScopeResults)) {
-      return chalk.white(`${decideHeaderSentence()}`);
+      return chalk.white(json ? '[]' : `${decideHeaderSentence()}`);
     }
 
     if (ids) return JSON.stringify(listScopeResults.map(result => result.id.toString()));

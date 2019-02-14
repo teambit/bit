@@ -1,6 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import path from 'path';
+import uniqBy from 'lodash.uniqby';
 import BitObject from './object';
 import BitRawObject from './raw-object';
 import Ref from './ref';
@@ -8,29 +9,45 @@ import { OBJECTS_DIR } from '../../constants';
 import { HashNotFound } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
-import type Scope from '../../scope/scope';
-import ModelComponent from '../models/model-component';
-import Symlink from '../models/symlink';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
+import ComponentsIndex from './components-index';
+import { BitId } from '../../bit-id';
+import { ScopeJson } from '../scope-json';
+import { typesObj } from '../object-registrar';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
   objects: BitObject[] = [];
-  _cache: { [string]: BitObject } = {};
-  _cacheListComponentsWithSymlinks: Array<ModelComponent | Symlink>;
-  _cacheListComponentsWithoutSymlinks: ModelComponent[];
-  scope: Scope;
+  objectsToRemove: Ref[] = [];
+  scopeJson: ScopeJson;
+  scopePath: string;
   types: { [string]: Function };
+  componentsIndex: ComponentsIndex;
+  _cache: { [string]: BitObject } = {};
+  constructor(scopePath: string, scopeJson: ScopeJson, types: { [string]: Function } = typesObj) {
+    this.scopePath = scopePath;
+    this.scopeJson = scopeJson;
+    this.types = types;
+  }
 
-  constructor(scope: Scope, objectTypes: Function[] = []) {
-    this.scope = scope;
-    // TODO: use typesToObject from object-registrar
-    this.types = objectTypes.reduce((map, objectType) => {
-      map[objectType.name] = objectType;
-      return map;
-    }, {});
+  static async load({ scopePath, scopeJson }: { scopePath: string, scopeJson: ScopeJson }): Promise<Repository> {
+    const repository = new Repository(scopePath, scopeJson, typesObj);
+    const componentsIndex = await repository.loadOptionallyCreateComponentsIndex();
+    repository.componentsIndex = componentsIndex;
+    return repository;
+  }
+
+  static create({ scopePath, scopeJson }: { scopePath: string, scopeJson: ScopeJson }): Repository {
+    const repository = new Repository(scopePath, scopeJson, typesObj);
+    const componentsIndex = ComponentsIndex.create(scopePath);
+    repository.componentsIndex = componentsIndex;
+    return repository;
+  }
+
+  static reset(scopePath: string): Promise<void> {
+    return ComponentsIndex.reset(scopePath);
   }
 
   ensureDir() {
@@ -38,20 +55,20 @@ export default class Repository {
   }
 
   getPath() {
-    return path.join(this.scope.getPath(), OBJECTS_DIR);
+    return path.join(this.scopePath, OBJECTS_DIR);
   }
 
   getBackupPath(dirName?: string): string {
-    const backupPath = path.join(this.scope.getPath(), OBJECTS_BACKUP_DIR);
+    const backupPath = path.join(this.scopePath, OBJECTS_BACKUP_DIR);
     return dirName ? path.join(backupPath, dirName) : backupPath;
   }
 
   getLicense(): Promise<string> {
-    return this.scope.scopeJson.getPopulatedLicense();
+    return this.scopeJson.getPopulatedLicense();
   }
 
   getScopeMetaObject(): Promise<Buffer> {
-    return this.getLicense().then(license => ScopeMeta.fromObject({ license, name: this.scope.name }).compress());
+    return this.getLicense().then(license => ScopeMeta.fromObject({ license, name: this.scopeJson.name }).compress());
   }
 
   objectPath(ref: Ref): string {
@@ -110,34 +127,30 @@ export default class Repository {
     );
   }
 
-  async listComponents(includeSymlinks: boolean = true): Promise<Array<ModelComponent | Symlink>> {
-    const filterComponents = refs =>
-      refs.filter(
-        ref =>
-          (includeSymlinks ? ref instanceof ModelComponent || ref instanceof Symlink : ref instanceof ModelComponent)
-      );
+  async listComponentsIncludeSymlinks(): Promise<BitObject[]> {
+    const hashes = this.componentsIndex.getHashesIncludeSymlinks();
+    return Promise.all(hashes.map(hash => this.load(new Ref(hash))));
+  }
 
-    if (includeSymlinks) {
-      if (!this._cacheListComponentsWithSymlinks) {
-        this._cacheListComponentsWithSymlinks = await this.list().then(filterComponents);
+  async listComponents(): Promise<ModelComponent[]> {
+    const hashes = this.componentsIndex.getHashes();
+    return Promise.all(hashes.map(hash => this.load(new Ref(hash))));
+  }
+
+  async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {
+    try {
+      const componentsIndex = await ComponentsIndex.load(this.scopePath);
+      return componentsIndex;
+    } catch (err) {
+      if (err.code === 'ENOENT') {
+        const bitObjects: BitObject[] = await this.list();
+        const componentsIndex = ComponentsIndex.create(this.scopePath);
+        componentsIndex.addMany(bitObjects);
+        await componentsIndex.write();
+        return componentsIndex;
       }
-      return this._cacheListComponentsWithSymlinks;
+      throw err;
     }
-    if (!this._cacheListComponentsWithoutSymlinks) {
-      this._cacheListComponentsWithoutSymlinks = await this.list().then(filterComponents);
-    }
-    return this._cacheListComponentsWithoutSymlinks;
-  }
-
-  remove(ref: Ref): Promise<boolean> {
-    this.removeFromCache(ref);
-    const pathToDelete = this.objectPath(ref);
-    logger.debug(`repository.remove: deleting ${pathToDelete}`);
-    return removeFile(pathToDelete, true);
-  }
-
-  removeMany(refs: Ref[]): Promise<boolean[]> {
-    return Promise.all(refs.map(ref => this.remove(ref)));
   }
 
   loadRaw(ref: Ref): Promise<Buffer> {
@@ -198,6 +211,15 @@ export default class Repository {
     return this;
   }
 
+  removeObject(ref: Ref) {
+    this.objectsToRemove.push(ref);
+  }
+
+  removeManyObjects(refs: Ref[]) {
+    if (!refs || !refs.length) return;
+    refs.forEach(ref => this.removeObject(ref));
+  }
+
   /**
    * alias to `load`
    */
@@ -209,20 +231,58 @@ export default class Repository {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
 
-  persist(validate: boolean = true): Promise<boolean[]> {
-    logger.debug(`repository: persisting ${this.objects.length} objects, with validate = ${validate.toString()}`);
-    // @TODO handle failures
+  /**
+   * persist objects changes (added and removed) into the filesystem
+   * do not call this function multiple times in parallel, otherwise, it'll damage the index.json file.
+   * call this function only once after you added and removed all applicable objects.
+   */
+  async persist(validate: boolean = true): Promise<void> {
+    logger.debug(`Repository.persist, validate = ${validate.toString()}`);
+    await this._deleteMany();
     if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
-    return Promise.all(this.objects.map(object => this.persistOne(object)));
+    await this._writeMany();
   }
 
-  persistOne(object: BitObject): Promise<boolean> {
-    return object.compress().then((contents) => {
-      const options = {};
-      if (this.scope.groupName) options.gid = resolveGroupId(this.scope.groupName);
-      const objectPath = this.objectPath(object.hash());
-      logger.debug(`writing an object into ${objectPath}`);
-      return writeFile(objectPath, contents, options);
-    });
+  async _deleteMany(): Promise<void> {
+    if (!this.objectsToRemove.length) return;
+    const uniqRefs = uniqBy(this.objectsToRemove, 'hash');
+    logger.debug(`Repository._deleteMany: deleting ${uniqRefs.length} objects`);
+    await Promise.all(uniqRefs.map(ref => this._deleteOne(ref)));
+    const removed = this.componentsIndex.removeMany(uniqRefs);
+    if (removed) await this.componentsIndex.write();
+  }
+
+  async _writeMany(): Promise<void> {
+    if (!this.objects.length) return;
+    logger.debug(`Repository._writeMany: writing ${this.objects.length} objects`);
+    // @TODO handle failures
+    await Promise.all(this.objects.map(object => this._writeOne(object)));
+    const added = this.componentsIndex.addMany(this.objects);
+    if (added) await this.componentsIndex.write();
+  }
+
+  /**
+   * do not call this method directly. always call this.removeObject() and once done with all objects,
+   * call this.persist()
+   */
+  _deleteOne(ref: Ref): Promise<boolean> {
+    this.removeFromCache(ref);
+    const pathToDelete = this.objectPath(ref);
+    logger.debug(`repository._deleteOne: deleting ${pathToDelete}`);
+    return removeFile(pathToDelete, true);
+  }
+
+  /**
+   * always prefer this.persist().
+   * this method doesn't write to componentsIndex. so using this method for ModelComponent or
+   * Symlink makes the index outdated.
+   */
+  async _writeOne(object: BitObject): Promise<boolean> {
+    const contents = await object.compress();
+    const options = {};
+    if (this.scopeJson.groupName) options.gid = resolveGroupId(this.scopeJson.groupName);
+    const objectPath = this.objectPath(object.hash());
+    logger.debug(`repository._writeOne: ${objectPath}`);
+    return writeFile(objectPath, contents, options);
   }
 }
