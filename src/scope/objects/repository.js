@@ -127,12 +127,14 @@ export default class Repository {
     );
   }
 
-  async listComponentsIdsIncludeSymlinks(): Promise<BitId[]> {
-    return this.componentsIndex.getIdsIncludesSymlinks();
+  async listComponentsIncludeSymlinks(): Promise<BitObject[]> {
+    const hashes = this.componentsIndex.getHashesIncludeSymlinks();
+    return Promise.all(hashes.map(hash => this.load(new Ref(hash))));
   }
 
-  async listComponentsIds(): Promise<BitId[]> {
-    return this.componentsIndex.getIds();
+  async listComponents(): Promise<ModelComponent[]> {
+    const hashes = this.componentsIndex.getHashes();
+    return Promise.all(hashes.map(hash => this.load(new Ref(hash))));
   }
 
   async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {

@@ -66,8 +66,7 @@ describe('scope components index mechanism', function () {
         before(() => {
           helper.removeComponent('bar/foo', '-s');
         });
-        // @todo: we have a bug here. It removes only the object but not the symlink
-        it.skip('should remove the record from index.json', () => {
+        it('should remove the record from index.json', () => {
           const indexJson = getIndexJson();
           expect(indexJson).to.have.lengthOf(0);
         });

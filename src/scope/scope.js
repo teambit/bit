@@ -214,15 +214,11 @@ export default class Scope {
   }
 
   async list(): Promise<ModelComponent[]> {
-    const ids = await this.objects.listComponentsIds();
-    const components = await Promise.all(ids.map(id => this.sources.get(id)));
-    return components.filter(component => component);
+    return this.objects.listComponents();
   }
 
   async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
-    const ids = await this.objects.listComponentsIdsIncludeSymlinks();
-    const components = await Promise.all(ids.map(id => this.sources.get(id)));
-    return components.filter(component => component);
+    return this.objects.listComponentsIncludeSymlinks();
   }
 
   async listLocal(): Promise<ModelComponent[]> {

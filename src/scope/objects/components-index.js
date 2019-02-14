@@ -49,6 +49,12 @@ export default class ComponentsIndex {
   getIdsIncludesSymlinks(): BitId[] {
     return this.index.map(indexItem => this.indexItemToBitId(indexItem));
   }
+  getHashes(): string[] {
+    return this.index.filter(indexItem => !indexItem.isSymlink).map(indexItem => indexItem.hash);
+  }
+  getHashesIncludeSymlinks(): string[] {
+    return this.index.map(indexItem => indexItem.hash);
+  }
   indexItemToBitId(indexItem: IndexItem) {
     // $FlowFixMe box is not needed
     return new BitId(indexItem.id);
