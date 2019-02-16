@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve errors stack-trace readability
 - index scope components to improve memory consumption and performance
 - extract docs from non-tests files only
 - fix `bit show --remote --json` to not crash when a component has a compiler
