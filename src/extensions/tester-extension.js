@@ -19,7 +19,7 @@ export default class TesterExtension extends EnvExtension {
   }
 
   toModelObject(): TesterExtensionModel {
-    Analytics.addBreadCrumb('tester-extension', 'toModelObject');
+    logger.debug('tester-extension', 'toModelObject');
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;
@@ -30,8 +30,7 @@ export default class TesterExtension extends EnvExtension {
    * @param {*} props
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('tester-extension', 'load');
-    logger.debug('tester-extension: load');
+    logger.debug('tester-extension', 'load');
     props.envType = TESTER_ENV_TYPE;
     // Throw error if tester not loaded
     props.throws = true;
@@ -50,7 +49,7 @@ export default class TesterExtension extends EnvExtension {
     repository: Repository
     // $FlowFixMe
   ): Promise<?TesterExtension> {
-    Analytics.addBreadCrumb('tester-extension', 'loadFromModelObject');
+    logger.debug('tester-extension', 'loadFromModelObject');
     if (!modelObject) return undefined;
     const actualObject =
       typeof modelObject === 'string'

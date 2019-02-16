@@ -91,11 +91,9 @@ export default class ComponentLoader {
     } catch (err) {
       if (throwOnFailure) throw err;
 
-      logger.error(`failed loading ${id.toString()} from the file-system`);
-      Analytics.addBreadCrumb(
-        'load components',
-        `failed loading ${Analytics.hashData(id.toString())} from the file-system`
-      );
+      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
+        id: id.toString()
+      });
       if (Component.isComponentInvalidByErrorType(err)) {
         invalidComponents.push({ id, error: err });
         return null;

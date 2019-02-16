@@ -261,7 +261,6 @@ export default class BaseExtension {
     throws = false,
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
-    Analytics.addBreadCrumb('base-extension', 'load extension');
     logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
@@ -346,8 +345,7 @@ export default class BaseExtension {
     options = {},
     throws = false
   }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
-    logger.debug(`loading extension ${name} from ${filePath}`);
-    Analytics.addBreadCrumb('base-extension', 'load extension from file');
+    logger.debug(`base-extension, loading extension ${name} from ${filePath}`);
     const extensionProps: StaticProps = {
       name,
       rawConfig,
@@ -417,7 +415,6 @@ export default class BaseExtension {
   }
 
   static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
-    Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
     logger.debug('base-extension - loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {

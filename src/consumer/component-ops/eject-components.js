@@ -51,7 +51,7 @@ export default class EjectComponents {
 
   async eject(): Promise<EjectResults> {
     await this.decideWhichComponentsToEject();
-    logger.debug(`eject: ${this.componentsToEject.length} to eject`);
+    logger.debugAndAddBreadCrumb('eject-components.eject', `${this.componentsToEject.length} to eject`);
     if (this.componentsToEject.length) {
       this.originalPackageJson = (await packageJson.getPackageJsonObject(this.consumer.getPath())) || {};
       await this.removeComponentsFromPackageJsonAndNodeModules();
@@ -101,7 +101,7 @@ export default class EjectComponents {
   async removeComponentsFromPackageJsonAndNodeModules() {
     const action = 'removing the existing components from package.json and node_modules';
     try {
-      logger.debug(`eject: ${action}`);
+      logger.debugAndAddBreadCrumb(`eject: ${action}`);
       await packageJson.removeComponentsFromWorkspacesAndDependencies(this.consumer, this.componentsToEject);
     } catch (err) {
       logger.warn(`eject: failed ${action}, restoring package.json`);
@@ -113,7 +113,7 @@ export default class EjectComponents {
   async addComponentsAsPackagesToPackageJson() {
     const action = 'adding the components as packages into package.json';
     try {
-      logger.debug(`eject: ${action}`);
+      logger.debugAndAddBreadCrumb(`eject: ${action}`);
       await packageJson.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
     } catch (err) {
       logger.error(err);
@@ -126,7 +126,7 @@ export default class EjectComponents {
   async installPackagesUsingNPMClient() {
     const action = 'installing the components using the NPM client';
     try {
-      logger.debug(`eject: ${action}`);
+      logger.debugAndAddBreadCrumb(`eject: ${action}`);
       await installPackages(this.consumer, [], true, true);
     } catch (err) {
       await this.rollBack(action);
