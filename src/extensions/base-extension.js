@@ -150,13 +150,14 @@ export default class BaseExtension {
     try {
       let initOptions = {};
       if (this.script && this.script.init && typeof this.script.init === 'function') {
-        initOptions = await this.script.init({
+        initOptions = this.script.init({
           rawConfig: this.rawConfig,
           dynamicConfig: this.dynamicConfig,
           api: this.api
         });
       }
-      this.initOptions = initOptions;
+      // wrap in promise, in case a script has async init
+      this.initOptions = await Promise.resolve(initOptions);
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
@@ -387,7 +388,8 @@ export default class BaseExtension {
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
       if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {
-        extensionProps.schema = await extensionProps.script.getSchema();
+        // the function may or may not be a promise
+        extensionProps.schema = await Promise.resolve(extensionProps.script.getSchema());
         const valid = ajv.validate(extensionProps.schema, rawConfig);
         if (!valid) {
           throw new ExtensionSchemaError(name, ajv.errorsText());
@@ -416,13 +418,13 @@ export default class BaseExtension {
     return extensionProps;
   }
 
-  static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
+  static loadDynamicConfig(extensionProps: StaticProps): ?Object {
     Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
     logger.debug('base-extension - loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
-        const dynamicConfig = await getDynamicConfig({
+        const dynamicConfig = getDynamicConfig({
           rawConfig: extensionProps.rawConfig
         });
         return dynamicConfig;
