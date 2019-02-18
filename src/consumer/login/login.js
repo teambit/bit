@@ -17,7 +17,6 @@ import {
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import { Analytics } from '../../analytics/analytics';
 import { Driver } from '../../driver';
 
 const ERROR_RESPONSE = 500;

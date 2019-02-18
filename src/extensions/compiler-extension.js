@@ -4,7 +4,6 @@ import EnvExtension from './env-extension';
 import BaseExtension from './base-extension';
 import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension';
 import { Repository } from '../scope/objects';
-import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
 import { COMPILER_ENV_TYPE } from '../constants';
 
