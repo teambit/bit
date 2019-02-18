@@ -449,7 +449,7 @@ export default class SourceRepository {
     if (inScope) component.scope = this.scope.name;
     const existingComponent: ?ModelComponent = await this.findComponent(component);
     if (!existingComponent) return this.put({ component, objects });
-    const locallyChanged = await existingComponent.isLocallyChanged();
+    const locallyChanged = existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
       const mergedComponent = this.mergeTwoComponentsObjects(existingComponent, component);

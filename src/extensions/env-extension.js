@@ -222,7 +222,7 @@ export default class EnvExtension extends BaseExtension {
     const throws = true;
     await super.reload(scopePath, { throws });
     // $FlowFixMe
-    const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
+    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
 
@@ -243,20 +243,20 @@ export default class EnvExtension extends BaseExtension {
       props.envType
     );
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
-    const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
+    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
-    const dynamicConfig = await EnvExtension.loadDynamicConfig(envExtensionProps);
+    const dynamicConfig = EnvExtension.loadDynamicConfig(envExtensionProps);
     // $FlowFixMe
     envExtensionProps.dynamicConfig = dynamicConfig;
     return envExtensionProps;
   }
 
-  static async loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): Promise<?Object> {
+  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?Object {
     logger.debug('env-extension', 'loadDynamicPackageDependencies');
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       try {
-        const dynamicPackageDependencies = await getDynamicPackageDependencies({
+        const dynamicPackageDependencies = getDynamicPackageDependencies({
           rawConfig: envExtensionProps.rawConfig,
           dynamicConfig: envExtensionProps.dynamicConfig,
           configFiles: envExtensionProps.files,
@@ -271,12 +271,12 @@ export default class EnvExtension extends BaseExtension {
   }
 
   // $FlowFixMe
-  static async loadDynamicConfig(envExtensionProps: EnvExtensionProps): Promise<?Object> {
+  static loadDynamicConfig(envExtensionProps: EnvExtensionProps): ?Object {
     logger.debug('env-extension', 'loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
-        const dynamicConfig = await getDynamicConfig({
+        const dynamicConfig = getDynamicConfig({
           rawConfig: envExtensionProps.rawConfig,
           configFiles: envExtensionProps.files,
           context: envExtensionProps.context

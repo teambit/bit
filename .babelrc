@@ -18,7 +18,10 @@
       "polyfill": false,
       "regenerator": true
     }],
-    ["syntax-async-functions"],
+    ["transform-async-to-module-method", {
+      "module": "bluebird",
+      "method": "coroutine"
+    }],
     ["transform-class-properties"],
     ["transform-inline-imports-commonjs"]
   ]
