@@ -266,7 +266,15 @@ export default class SSH implements Network {
     const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';
     return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
-      const { payload, headers } = this._unpack(str);
+      const parseResponse = () => {
+        try {
+          const results = JSON.parse(str);
+          return results;
+        } catch (err) {
+          throw new SSHInvalidResponse(str);
+        }
+      };
+      const { payload, headers } = parseResponse();
       checkVersionCompatibility(headers.version);
       const componentObjects = ComponentObjects.manyFromString(payload);
       return componentObjects;
