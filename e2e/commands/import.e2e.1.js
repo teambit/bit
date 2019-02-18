@@ -270,27 +270,65 @@ describe('bit import', function () {
       });
     });
     describe('import component with custom dsl as destination dir for import', () => {
-      let output;
-      before(() => {
-        helper.reInitLocalScope();
-        helper.setComponentsDirInBitJson('{scope}/-{name}-');
-        helper.addRemoteScope();
-        helper.importComponent('global/simple');
-        output = helper.importComponent('global/simple');
+      describe('when the DSL is valid', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.setComponentsDirInBitJson('{scope}/-{name}-');
+          helper.addRemoteScope();
+          helper.importComponent('global/simple');
+          output = helper.importComponent('global/simple');
+        });
+        it('should import the component successfully', () => {
+          expect(output).to.have.string('successfully imported one component');
+        });
+        it('should import the component into new dir structure according to dsl', () => {
+          expect(path.join(helper.localScopePath, helper.remoteScope, '-global/simple-')).to.be.a.directory(
+            'should not be empty'
+          ).and.not.empty;
+        });
+        it('bitmap should contain component with correct rootDir according to dsl', () => {
+          const bitMap = helper.readBitMap();
+          const cmponentId = `${helper.remoteScope}/global/simple@0.0.1`;
+          expect(bitMap).to.have.property(cmponentId);
+          expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/-global/simple-`);
+        });
       });
-      it('should import the component successfully', () => {
-        expect(output).to.have.string('successfully imported one component');
+      describe('when the DSL has invalid parameters', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.setComponentsDirInBitJson('{non-exist-param}/{name}');
+          helper.addRemoteScope();
+          output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/global/simple`);
+        });
+        it('should throw an error saying it has an invalid parameter', () => {
+          expect(output).to.have.string(
+            'the "non-exist-param" part of the component structure "{non-exist-param}/{name}" is invalid'
+          );
+        });
       });
-      it('should import the component into new dir structure according to dsl', () => {
-        expect(path.join(helper.localScopePath, helper.remoteScope, '-global/simple-')).to.be.a.directory(
-          'should not be empty'
-        ).and.not.empty;
-      });
-      it('bitmap should contain component with correct rootDir according to dsl', () => {
-        const bitMap = helper.readBitMap();
-        const cmponentId = `${helper.remoteScope}/global/simple@0.0.1`;
-        expect(bitMap).to.have.property(cmponentId);
-        expect(bitMap[cmponentId].rootDir).to.equal(`${helper.remoteScope}/-global/simple-`);
+      describe('when the DSL has the obsolete "namespace" parameter', () => {
+        let output;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.setComponentsDirInBitJson('{namespace}/{name}');
+          helper.addRemoteScope();
+          output = helper.importComponent('global/simple');
+        });
+        it('should import the component successfully', () => {
+          expect(output).to.have.string('successfully imported one component');
+        });
+        it('should import the component into the given structure without the namespace part', () => {
+          expect(path.join(helper.localScopePath, 'global/simple')).to.be.a.directory('should not be empty').and.not
+            .empty;
+        });
+        it('bitmap should contain component with correct rootDir according to dsl', () => {
+          const bitMap = helper.readBitMap();
+          const componentId = `${helper.remoteScope}/global/simple@0.0.1`;
+          expect(bitMap).to.have.property(componentId);
+          expect(bitMap[componentId].rootDir).to.equal('global/simple');
+        });
       });
     });
   });

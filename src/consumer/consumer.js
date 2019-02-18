@@ -650,7 +650,7 @@ export default class Consumer {
   }
 
   composeRelativeComponentPath(bitId: BitId): string {
-    const { componentsDefaultDirectory } = this.dirStructure;
+    const componentsDefaultDirectory = this.dirStructure.componentsDefaultDirectory;
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 
