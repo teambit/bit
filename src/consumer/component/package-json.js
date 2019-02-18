@@ -50,7 +50,7 @@ async function _addDependenciesPackagesIntoPackageJson(dir: string, dependencies
  * Add given components with their versions to root package.json
  */
 async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitIds) {
-  const driver = await consumer.driver.getDriver(false);
+  const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
 
   const componentsToAdd = R.fromPairs(
@@ -104,7 +104,7 @@ async function changeDependenciesToRelativeSyntax(
   dependencies: Component[]
 ): Promise<JSONFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
-  const driver = await consumer.driver.getDriver(false);
+  const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   const updateComponentPackageJson = async (component): Promise<?JSONFile> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
@@ -259,7 +259,7 @@ async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: 
     const rootDir = consumer.getPath();
     const dependenciesDirectory = consumer.bitJson.dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
-    const driver = await consumer.driver.getDriver(false);
+    const driver = consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
 
     await PackageJson.addWorkspacesToPackageJson(
@@ -288,7 +288,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
 
 async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer, componentIds: BitIds) {
   const rootDir = consumer.getPath();
-  const driver = await consumer.driver.getDriver(false);
+  const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   if (
     consumer.bitJson.manageWorkspaces &&

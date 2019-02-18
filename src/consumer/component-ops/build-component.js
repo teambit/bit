@@ -234,7 +234,7 @@ const _runBuild = async ({
           api: compiler.api,
           context
         };
-        const result = await compiler.action(actionParams);
+        const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {
             console.log(`\ndeleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
@@ -251,7 +251,7 @@ const _runBuild = async ({
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
       }
-      return compiler.oldAction(files, rootDistDir, context);
+      return Promise.resolve(compiler.oldAction(files, rootDistDir, context));
     })
     .catch((e) => {
       if (tmpFolderFullPath) {
