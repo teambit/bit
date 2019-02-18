@@ -20,7 +20,7 @@ export default function buildInScope({
   directory: ?string,
   keep: boolean
 }) {
-  logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
+  logger.debugAndAddBreadCrumb('buildInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
   async function loadFromScope(initialError: ?Error) {
     const getScope = async () => {
       try {

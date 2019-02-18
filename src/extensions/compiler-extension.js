@@ -4,7 +4,6 @@ import EnvExtension from './env-extension';
 import BaseExtension from './base-extension';
 import type { EnvExtensionProps, EnvLoadArgsProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension';
 import { Repository } from '../scope/objects';
-import { Analytics } from '../analytics/analytics';
 import logger from '../logger/logger';
 import { COMPILER_ENV_TYPE } from '../constants';
 
@@ -19,7 +18,7 @@ export default class CompilerExtension extends EnvExtension {
   }
 
   toModelObject(): CompilerExtensionModel {
-    Analytics.addBreadCrumb('compiler-extension', 'toModelObject');
+    logger.debug('compiler-extension', 'toModelObject');
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;
@@ -31,8 +30,7 @@ export default class CompilerExtension extends EnvExtension {
    */
   // $FlowFixMe
   static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
-    Analytics.addBreadCrumb('compiler-extension', 'load');
-    logger.debug('compiler-extension - load');
+    logger.debug('compiler-extension', 'load');
     props.envType = COMPILER_ENV_TYPE;
     // Throw error if compiler not loaded
     props.throws = true;
@@ -50,8 +48,7 @@ export default class CompilerExtension extends EnvExtension {
     repository: Repository
     // $FlowFixMe
   ): Promise<?CompilerExtension> {
-    Analytics.addBreadCrumb('compiler-extension', 'loadFromModelObject');
-    logger.debug('compiler-extension - loadFromModelObject');
+    logger.debug('compiler-extension', 'loadFromModelObject');
     if (!modelObject) return undefined;
     const actualObject =
       typeof modelObject === 'string'

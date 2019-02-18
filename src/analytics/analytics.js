@@ -125,13 +125,25 @@ class Analytics {
     this.environment = getSync(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
   }
 
-  static async sendData() {
-    if (this.analytics_usage || (this.error_usage && !this.success)) {
-      const forked = fork(path.join(__dirname, 'analytics-sender.js'), { silent: true });
-      forked.send(this.toObject());
-    }
-
-    return Promise.resolve();
+  static sendData() {
+    return new Promise((resolve, reject) => {
+      if (this.analytics_usage || (this.error_usage && !this.success)) {
+        const file = path.join(__dirname, 'analytics-sender.js');
+        const forked = fork(file, { silent: true }); // switch to `false` to debug the child
+        // console.log('sending', this.toObject()) // un-comment to see the data sent to Analytics
+        forked.send(this.toObject());
+        forked.on('message', () => {
+          // makes sure the data has been sent to the child.
+          // without it, when the message is large, it exits before the child got the complete message
+          resolve();
+        });
+        forked.on('error', (err) => {
+          reject(err);
+        });
+      } else {
+        resolve();
+      }
+    });
   }
 
   static setError(level: string = LEVEL.ERROR, err: Error): void {
@@ -140,6 +152,9 @@ class Analytics {
     this.success = false;
   }
 
+  /**
+   * eventually goes to the "ADDITIONAL DATA" section in Sentry
+   */
   static setExtraData(key, value) {
     this.extra[key] = value;
   }

@@ -591,7 +591,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
   processErrors(originFile: PathLinuxRelative) {
     const error = this.tree[originFile].error;
     if (!error) return;
-    logger.error('got an error from the driver while resolving dependencies');
+    logger.errorAndAddBreadCrumb(
+      'dependency-resolver.processErrors',
+      'got an error from the driver while resolving dependencies'
+    );
     logger.error(error);
     // $FlowFixMe error.code is set when it comes from bit-javascript, otherwise, it's undefined and treated as resolve-error
     if (error.code === 'PARSING_ERROR') this.issues.parseErrors[originFile] = error.message;
@@ -805,8 +808,10 @@ function findPeerDependencies(consumerPath: string, component: Component): Objec
         const packageJson = fs.readJsonSync(packageJsonLocation);
         if (packageJson.peerDependencies) return packageJson.peerDependencies;
       } catch (err) {
-        logger.error(
-          `Failed reading the project package.json at ${packageJsonLocation}. Error Message: ${err.message}`
+        logger.errorAndAddBreadCrumb(
+          'dependency-resolver.findPeerDependencies',
+          'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
+          { packageJsonLocation, message: err.message }
         );
       }
     }

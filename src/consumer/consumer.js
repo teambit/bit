@@ -203,9 +203,6 @@ export default class Consumer {
    * @memberof Consumer
    */
   async migrate(verbose): Object {
-    logger.debug('running migration process for consumer');
-    Analytics.addBreadCrumb('migrate', 'running migration process for consumer');
-
     // Check version of stores (bitmap / bitjson) to check if we need to run migrate
     // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
@@ -219,8 +216,11 @@ export default class Consumer {
         run: false
       };
     }
-
     loader.start(BEFORE_MIGRATION);
+    logger.debugAndAddBreadCrumb(
+      'consumer.migrate',
+      `start consumer migration. bitmapVersion version ${bitmapVersion}, bit version ${BIT_VERSION}`
+    );
 
     const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, this.bitMap, verbose);
     result.bitMap.version = BIT_VERSION;

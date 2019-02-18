@@ -166,19 +166,23 @@ export default class Scope {
    * @memberof Consumer
    */
   async migrate(verbose: boolean): Promise<MigrationResult> {
-    logger.debugAndAddBreadCrumb('scope.migrate', 'running migration process for scope');
+    logger.debug('scope.migrate, running migration process for scope');
     if (verbose) console.log('running migration process for scope'); // eslint-disable-line
     // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
     const scopeVersion = this.scopeJson.get('version') || '0.10.9';
     if (semver.gte(scopeVersion, BIT_VERSION)) {
       const upToDateMsg = 'scope version is up to date';
       if (verbose) console.log(upToDateMsg); // eslint-disable-line
-      logger.debugAndAddBreadCrumb('scope.migrate', upToDateMsg);
+      logger.debug(`scope.migrate, ${upToDateMsg}`);
       return {
         run: false
       };
     }
     loader.start(BEFORE_MIGRATION);
+    logger.debugAndAddBreadCrumb(
+      'scope.migrate',
+      `start scope migration. scope version ${scopeVersion}, bit version ${BIT_VERSION}`
+    );
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
     // Add the new / updated objects

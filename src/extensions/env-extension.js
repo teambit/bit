@@ -120,8 +120,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toModelObject(): EnvExtensionModel {
-    Analytics.addBreadCrumb('env-extension', 'toModelObject');
-    logger.debug('env-extension - toModelObject');
+    logger.debug('env-extension', 'toModelObject');
     const baseObject: BaseExtensionModel = super.toModelObject();
     const files = this.files.map(file => file.toModelObject());
     const modelObject = { files, ...baseObject };
@@ -129,8 +128,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toObject(): Object {
-    Analytics.addBreadCrumb('env-extension', 'toObject');
-    logger.debug('env-extension - toObject');
+    logger.debug('env-extension', 'toObject');
     const baseObject: Object = super.toObject();
     const files = this.files;
     const object = { ...baseObject, files };
@@ -143,8 +141,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
-    Analytics.addBreadCrumb('env-extension', 'toBitJsonObject');
-    logger.debug('env-extension - toBitJsonObject');
+    logger.debug('env-extension', 'toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
@@ -218,8 +215,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async reload(scopePath: string, context?: Object): Promise<void> {
-    Analytics.addBreadCrumb('env-extension', 'reload');
-    logger.debug('env-extension - reload');
+    logger.debug('env-extension', 'reload');
     if (context) {
       this.context = context;
     }
@@ -236,8 +232,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('env-extension', 'load');
-    logger.debug('env-extension - load');
+    logger.debug('env-extension', 'load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(
@@ -257,8 +252,7 @@ export default class EnvExtension extends BaseExtension {
   }
 
   static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?Object {
-    Analytics.addBreadCrumb('env-extension', 'loadDynamicPackageDependencies');
-    logger.debug('env-extension - loadDynamicPackageDependencies');
+    logger.debug('env-extension', 'loadDynamicPackageDependencies');
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       try {
@@ -278,8 +272,7 @@ export default class EnvExtension extends BaseExtension {
 
   // $FlowFixMe
   static loadDynamicConfig(envExtensionProps: EnvExtensionProps): ?Object {
-    Analytics.addBreadCrumb('env-extension', 'loadDynamicConfig');
-    logger.debug('env-extension - loadDynamicConfig');
+    logger.debug('env-extension', 'loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
@@ -304,8 +297,7 @@ export default class EnvExtension extends BaseExtension {
     modelObject: EnvExtensionModel & { envType: EnvType },
     repository: Repository
   ): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
-    logger.debug('env-extension - loadFromModelObject');
+    logger.debug('env-extension', 'loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -320,8 +312,7 @@ export default class EnvExtension extends BaseExtension {
   static async loadFromSerializedModelObject(
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
-    logger.debug('env-extension - loadFromModelObject');
+    logger.debug('env-extension', 'loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -363,8 +354,7 @@ export default class EnvExtension extends BaseExtension {
     envType: EnvType,
     context?: Object
   }): Promise<?CompilerExtension | ?TesterExtension> {
-    Analytics.addBreadCrumb('env-extension', 'loadFromCorrectSource');
-    logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
+    logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
 
     // Authored component
     if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {

@@ -558,7 +558,11 @@ export default class BitMap {
     const similarIds = this.findSimilarIds(componentId);
     similarIds.forEach((id) => {
       const idStr = id.toString();
-      logger.debug(`BitMap: deleting an older version ${idStr} of an existing component ${componentId.toString()}`);
+      logger.debugAndAddBreadCrumb(
+        'BitMap.deleteOlderVersionsOfComponent',
+        'deleting an older version {idStr} of an existing component {componentId}',
+        { idStr, componentId: componentId.toString() }
+      );
       this._removeFromComponentsArray(id);
     });
   }

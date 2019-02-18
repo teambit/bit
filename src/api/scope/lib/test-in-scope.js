@@ -20,7 +20,7 @@ export default function testInScope({
   directory?: string,
   keep?: boolean
 }): Promise<?SpecsResults> {
-  logger.debug(`testInScope, id: ${id}, scopePath: ${scopePath}`);
+  logger.debugAndAddBreadCrumb('testInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
   async function loadFromScope(initialError: ?Error) {
     const getScope = async () => {
       try {
