@@ -3,7 +3,7 @@ import serializeError from 'serialize-error';
 import format from 'string-format';
 import winston from 'winston';
 import path from 'path';
-import { GLOBAL_LOGS } from '../constants';
+import { GLOBAL_LOGS, DEBUG_LOG } from '../constants';
 import { Analytics } from '../analytics/analytics';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
@@ -11,7 +11,7 @@ import { Analytics } from '../analytics/analytics';
 const extensionsLoggers = new Map();
 
 export const baseFileTransportOpts = {
-  filename: path.join(GLOBAL_LOGS, 'debug.log'),
+  filename: DEBUG_LOG,
   json: false,
   // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
   level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',

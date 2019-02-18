@@ -109,7 +109,7 @@ export default class SSH implements Network {
             res += response.toString();
           })
           .on('exit', (code) => {
-            logger.info(`ssh: server had been exiting before closing. Exit code: ${code}`);
+            logger.debug(`ssh: exit. Exit code: ${code}`);
             const promiseExit = () => {
               return code && code !== 0 ? reject(this.errorHandler(code, err)) : resolve(clean(res));
             };
@@ -266,7 +266,7 @@ export default class SSH implements Network {
     const idsStr = ids.serialize();
     if (noDeps) options = '--no-dependencies';
     return this.exec(`_fetch ${options}`, idsStr, context).then((str: string) => {
-      const { payload, headers } = JSON.parse(str);
+      const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       const componentObjects = ComponentObjects.manyFromString(payload);
       return componentObjects;
