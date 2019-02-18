@@ -121,6 +121,8 @@ function addToLoggerAndToBreadCrumb(
   data: Object,
   extraData?: ?Object
 ) {
+  if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
+  if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');
   const messageWithData = data ? format(message, data) : message;
   logger[level](category, messageWithData, extraData);
   addBreakCrumb(category, message, data, extraData);
