@@ -35,7 +35,9 @@ export default class CatScope extends Command {
   }): string {
     if (jsonExtra) {
       payload.forEach((obj) => {
+        // $FlowFixMe
         obj.hash = obj.hash().toString();
+        // $FlowFixMe
         obj.type = obj.constructor.name;
       });
       return JSON.stringify(payload, null, 2);
