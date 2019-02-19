@@ -39,17 +39,6 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  async findComponent(component: ModelComponent): Promise<?ModelComponent> {
-    try {
-      const foundComponent = await this.objects().findOne(component.hash());
-      if (foundComponent) return foundComponent;
-    } catch (err) {
-      logger.error(`findComponent got an error ${err}`);
-    }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
-    return null;
-  }
-
   getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
@@ -66,15 +55,7 @@ export default class SourceRepository {
 
   async get(bitId: BitId): Promise<?ModelComponent> {
     const component = ModelComponent.fromBitId(bitId);
-    const getComponent = async (): Promise<?ModelComponent> => {
-      const foundComponent = await this.findComponent(component);
-      if (foundComponent instanceof Symlink) {
-        return this._getComponentFromSymlink(foundComponent);
-      }
-      return foundComponent;
-    };
-
-    const foundComponent: ?ModelComponent = await getComponent();
+    const foundComponent: ?ModelComponent = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
       // $FlowFixMe
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
@@ -94,15 +75,32 @@ export default class SourceRepository {
     return foundComponent;
   }
 
-  async _getComponentFromSymlink(symlink: Symlink): Promise<?ModelComponent> {
+  async _findComponent(component: ModelComponent): Promise<?ModelComponent> {
+    try {
+      const foundComponent = await this.objects().findOne(component.hash());
+      if (foundComponent instanceof Symlink) {
+        return this._findComponentBySymlink(foundComponent);
+      }
+      if (foundComponent) return foundComponent;
+    } catch (err) {
+      logger.error(`findComponent got an error ${err}`);
+    }
+    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
+    return null;
+  }
+
+  async _findComponentBySymlink(symlink: Symlink): Promise<?ModelComponent> {
     const realComponentId: BitId = symlink.getRealComponentId();
-    const realComponent = await this.findComponent(ModelComponent.fromBitId(realComponentId));
-    if (!realComponent) {
+    const realModelComponent = ModelComponent.fromBitId(realComponentId);
+    const foundComponent = await this.objects().findOne(realModelComponent.hash());
+    if (!foundComponent) {
       throw new Error(
-        `found a symlink object of ${symlink.id()} without the component itself. Hash: ${symlink.hash().toString()}`
+        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}". Hash: ${symlink
+          .hash()
+          .toString()}`
       );
     }
-    return realComponent;
+    return foundComponent;
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {
@@ -114,7 +112,7 @@ export default class SourceRepository {
 
   findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
     const comp = ModelComponent.from(props);
-    return this.findComponent(comp).then((component) => {
+    return this._findComponent(comp).then((component) => {
       if (!component) return comp;
       return component;
     });
@@ -464,7 +462,7 @@ export default class SourceRepository {
     local: boolean = true
   ): Promise<ModelComponent> {
     if (inScope) component.scope = this.scope.name;
-    const existingComponent: ?ModelComponent = await this.findComponent(component);
+    const existingComponent: ?ModelComponent = await this._findComponent(component);
     if (!existingComponent) return this.put({ component, objects });
     const locallyChanged = existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {

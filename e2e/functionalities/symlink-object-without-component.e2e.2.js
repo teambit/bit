@@ -36,8 +36,14 @@ describe('scope with a symlink object reference to a non-exist component', funct
     const componentIndex = indexJson.filter(i => i.isSymlink === false);
     helper.writeIndexJson(R.without(componentIndex, indexJson));
   });
-  it('bit import should throw an error', () => {
+  it('bit import should throw a descriptive error', () => {
     const output = helper.runWithTryCatch('bit import bar/foo');
-    expect(output).to.have.string('found a symlink object of bar/foo without the component itself');
+    expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
+  });
+  it('bit tag should throw a descriptive error', () => {
+    helper.deleteBitMap();
+    helper.addComponentBarFoo();
+    const output = helper.runWithTryCatch('bit tag -a');
+    expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
 });
