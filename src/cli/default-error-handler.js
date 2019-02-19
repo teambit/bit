@@ -88,7 +88,7 @@ import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir'
 import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR } from '../constants';
+import { COMPONENT_DIR, DEBUG_LOG } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
@@ -227,7 +227,11 @@ once your changes are merged with the new remote version, please tag and export 
     UnexpectedNetworkError,
     err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
   ],
-  [SSHInvalidResponse, () => 'error: received an invalid response from the remote SSH server'],
+  [
+    SSHInvalidResponse,
+    () => `error: received an invalid response from the remote SSH server.
+to see the invalid response, have a look at the log, located at ${DEBUG_LOG}`
+  ],
   [
     InvalidIndexJson,
     err => `fatal: your .bit/index.json is not a valid JSON file.
