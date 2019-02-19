@@ -609,7 +609,7 @@ export default class AddComponents {
     if (isMultipleComponents) {
       await this.addMultipleComponents(componentPathsStats);
     } else {
-      logger.debug('bit add - one component');
+      logger.debugAndAddBreadCrumb('add-components', 'adding one component');
       // when a user enters more than one directory, he would like to keep the directories names
       // so then when a component is imported, it will write the files into the original directories
       const addedOne = await this.addOneComponent(componentPathsStats);
@@ -624,7 +624,7 @@ export default class AddComponents {
   }
 
   async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {
-    logger.debug('bit add - multiple components');
+    logger.debugAndAddBreadCrumb('add-components', 'adding multiple components');
     const testToRemove = !R.isEmpty(this.tests)
       ? await this.getFilesAccordingToDsl(Object.keys(componentPathsStats), this.tests)
       : [];
