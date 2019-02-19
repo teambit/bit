@@ -66,18 +66,24 @@ export default class SourceRepository {
 
   async get(bitId: BitId): Promise<?ModelComponent> {
     const component = ModelComponent.fromBitId(bitId);
-    let foundComponent = await this.findComponent(component);
-    if (foundComponent instanceof Symlink) {
-      const realComponentId: BitId = foundComponent.getRealComponentId();
-      foundComponent = await this.findComponent(ModelComponent.fromBitId(realComponentId));
-    }
+    const getComponent = async (): Promise<?ModelComponent> => {
+      const foundComponent = await this.findComponent(component);
+      if (foundComponent instanceof Symlink) {
+        return this._getComponentFromSymlink(foundComponent);
+      }
+      return foundComponent;
+    };
 
+    const foundComponent: ?ModelComponent = await getComponent();
     if (foundComponent && bitId.hasVersion()) {
+      // $FlowFixMe
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+      // $FlowFixMe
       if (!foundComponent.versions[bitId.version]) {
         logger.debug(`${msg} is not in the component versions array`);
         return null;
       }
+      // $FlowFixMe
       const version = await this.objects().findOne(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debug(`${msg} object was not found on the filesystem`);
@@ -86,6 +92,17 @@ export default class SourceRepository {
     }
 
     return foundComponent;
+  }
+
+  async _getComponentFromSymlink(symlink: Symlink): Promise<?ModelComponent> {
+    const realComponentId: BitId = symlink.getRealComponentId();
+    const realComponent = await this.findComponent(ModelComponent.fromBitId(realComponentId));
+    if (!realComponent) {
+      throw new Error(
+        `found a symlink object of ${symlink.id()} without the component itself. Hash: ${symlink.hash().toString()}`
+      );
+    }
+    return realComponent;
   }
 
   getObjects(id: BitId): Promise<ComponentObjects> {

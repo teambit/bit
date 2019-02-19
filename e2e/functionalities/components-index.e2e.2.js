@@ -1,5 +1,3 @@
-import path from 'path';
-import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -8,9 +6,6 @@ chai.use(require('chai-fs'));
 describe('scope components index mechanism', function () {
   this.timeout(0);
   const helper = new Helper();
-  const indexJsonPath = path.join(helper.localScopePath, '.bit/index.json');
-  const getIndexJson = () => fs.readJsonSync(indexJsonPath);
-  const writeIndexJson = indexJson => fs.writeJsonSync(indexJsonPath, indexJson);
   after(() => {
     helper.destroyEnv();
   });
@@ -20,8 +15,8 @@ describe('scope components index mechanism', function () {
       helper.listLocalScope();
     });
     it('the index.json file should be an empty array', () => {
-      expect(indexJsonPath).to.be.a.file();
-      const indexJson = getIndexJson();
+      expect(helper.indexJsonPath()).to.be.a.file();
+      const indexJson = helper.getIndexJson();
       expect(indexJson).to.deep.equal([]);
     });
   });
@@ -33,7 +28,7 @@ describe('scope components index mechanism', function () {
       helper.tagComponentBarFoo();
     });
     it('should save the component in the index.json file', () => {
-      const indexJson = getIndexJson();
+      const indexJson = helper.getIndexJson();
       expect(indexJson).to.have.lengthOf(1);
       const indexItem = indexJson[0];
       expect(indexItem).to.have.property('id');
@@ -48,12 +43,12 @@ describe('scope components index mechanism', function () {
         helper.exportAllComponents();
       });
       it('should create a new record with the new scope', () => {
-        const indexJson = getIndexJson();
+        const indexJson = helper.getIndexJson();
         const scopes = indexJson.map(item => item.id.scope);
         expect(scopes).to.contain(helper.remoteScope);
       });
       it('should change the previous record to be a symlink', () => {
-        const indexJson = getIndexJson();
+        const indexJson = helper.getIndexJson();
         const indexItem = indexJson.find(item => !item.id.scope);
         expect(indexItem.isSymlink).to.be.true;
       });
@@ -67,7 +62,7 @@ describe('scope components index mechanism', function () {
           helper.removeComponent('bar/foo', '-s');
         });
         it('should remove the record from index.json', () => {
-          const indexJson = getIndexJson();
+          const indexJson = helper.getIndexJson();
           expect(indexJson).to.have.lengthOf(0);
         });
         it('bit list should show zero components', () => {
@@ -82,7 +77,7 @@ describe('scope components index mechanism', function () {
           helper.importComponent('bar/foo');
         });
         it('should populate the index.json', () => {
-          const indexJson = getIndexJson();
+          const indexJson = helper.getIndexJson();
           expect(indexJson).to.have.lengthOf(1);
         });
         describe('removing the component', () => {
@@ -90,7 +85,7 @@ describe('scope components index mechanism', function () {
             helper.removeComponent('bar/foo', '-s');
           });
           it('should remove the record from index.json', () => {
-            const indexJson = getIndexJson();
+            const indexJson = helper.getIndexJson();
             expect(indexJson).to.have.lengthOf(0);
           });
           it('bit list should show zero components', () => {
@@ -112,7 +107,7 @@ describe('scope components index mechanism', function () {
       const list = helper.listLocalScopeParsed();
       expect(list).to.have.lengthOf(1);
 
-      writeIndexJson([]);
+      helper.writeIndexJson([]);
     });
     it('bit list should show zero results as it uses the index.json file', () => {
       const list = helper.listLocalScopeParsed();
@@ -127,7 +122,7 @@ describe('scope components index mechanism', function () {
         helper.runCmd('bit init --reset');
       });
       it('should rebuild index.json with the missing components', () => {
-        const indexJson = getIndexJson();
+        const indexJson = helper.getIndexJson();
         expect(indexJson).to.have.lengthOf(1);
       });
       it('bit list should show 1 component', () => {

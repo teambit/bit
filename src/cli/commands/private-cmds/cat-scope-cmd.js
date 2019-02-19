@@ -9,15 +9,39 @@ export default class CatScope extends Command {
   description = 'cat a scope and show all the contents';
   private = true;
   alias = '';
-  opts = [['f', 'full', 'show all of the objects in the scope'], ['j', 'json', 'print the results as a json object']];
+  opts = [
+    ['f', 'full', 'show all of the objects in the scope'],
+    ['j', 'json', 'print the objects as a json format'],
+    ['e', 'json-extra', 'add hash and object type to the json']
+  ];
 
-  action([scopePath]: [string], { full, json }: { full: ?boolean, json: ?boolean }): Promise<any> {
-    return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json }));
+  action(
+    [scopePath]: [string],
+    { full, json, jsonExtra }: { full: ?boolean, json: ?boolean, jsonExtra: ?boolean }
+  ): Promise<any> {
+    return catScope(scopePath || process.cwd(), full).then(payload => ({ payload, full, json, jsonExtra }));
   }
 
-  report({ payload, full, json }: { payload: ModelComponent[], full: ?boolean, json: ?boolean }): string {
+  report({
+    payload,
+    full,
+    json,
+    jsonExtra
+  }: {
+    payload: ModelComponent[],
+    full: ?boolean,
+    json: ?boolean,
+    jsonExtra: ?boolean
+  }): string {
+    if (jsonExtra) {
+      payload.forEach((obj) => {
+        obj.hash = obj.hash().toString();
+        obj.type = obj.constructor.name;
+      });
+      return JSON.stringify(payload, null, 2);
+    }
     if (json) {
-      return JSON.stringify(payload);
+      return JSON.stringify(payload, null, 2);
     }
     if (!full) {
       const header = [

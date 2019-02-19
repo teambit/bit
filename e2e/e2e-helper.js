@@ -361,8 +361,9 @@ export default class Helper {
   // #endregion
 
   // #region Bit commands
-  catScope() {
-    const result = this.runCmd('bit cat-scope --json');
+  catScope(includeExtraData: boolean = false) {
+    const extraData = includeExtraData ? '--json-extra' : '';
+    const result = this.runCmd(`bit cat-scope --json ${extraData}`);
     return JSON.parse(result);
   }
 
@@ -912,6 +913,16 @@ export default class Helper {
     fs.copySync(sourceFile, distFile);
   }
   // #endregion
+
+  indexJsonPath() {
+    return path.join(this.localScopePath, '.bit/index.json');
+  }
+  getIndexJson() {
+    return fs.readJsonSync(this.indexJsonPath());
+  }
+  writeIndexJson(indexJson: Object) {
+    return ensureAndWriteJson(this.indexJsonPath(), indexJson);
+  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
