@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix error "toAbsolutePath expects relative path"
 - improve errors stack-trace readability
 - index scope components to improve memory consumption and performance
 - extract docs from non-tests files only
