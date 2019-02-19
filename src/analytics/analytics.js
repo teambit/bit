@@ -96,12 +96,15 @@ class Analytics {
   }
   static _hashLightly(value: any) {
     switch (typeof value) {
+      case 'undefined':
+      case 'number':
       case 'boolean':
         return value;
       case 'string':
         return this._maskString(value);
       case 'object':
         if (Array.isArray(value)) return value.map(item => this._hashLightly(item));
+        if (value === null) return value;
         return hashObj(value);
       default:
         return hashObj(value);
