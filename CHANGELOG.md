@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.1-dev.2] - 2019-02-20
+
 - fix error "toAbsolutePath expects relative path"
 - improve errors stack-trace readability
 
