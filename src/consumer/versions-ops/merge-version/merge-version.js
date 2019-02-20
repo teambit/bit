@@ -128,7 +128,7 @@ async function applyVersion(
   });
 
   // update files according to the merge results
-  const modifiedStatus = await applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
+  const modifiedStatus = applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
 
   const componentWriter = ComponentWriter.getInstance({
     component,

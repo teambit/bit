@@ -130,15 +130,15 @@ export default class ImportComponents {
     if (this.options.withEnvironments) {
       compiler = compiler || (await this.consumer.compiler);
       tester = tester || (await this.consumer.tester);
-      const envsPromises = [];
       const context = { workspaceDir: this.consumer.getPath() };
+      const envsArgs = [this.consumer.scope, { verbose: this.options.verbose }, context];
+      const envComponents = [];
       if (compiler) {
-        envsPromises.push(compiler.install(this.consumer.scope, { verbose: this.options.verbose }, context));
+        envComponents.push(await compiler.install(...envsArgs));
       }
       if (tester) {
-        envsPromises.push(tester.install(this.consumer.scope, { verbose: this.options.verbose }, context));
+        envComponents.push(await tester.install(...envsArgs));
       }
-      const envComponents = await Promise.all(envsPromises);
       return {
         dependencies: componentsAndDependencies,
         envComponents: R.flatten(envComponents),
@@ -271,7 +271,7 @@ export default class ImportComponents {
    * 3) when there is no conflict or there are conflicts and the strategy is manual, write the files
    * according to the merge result. (done by applyModifiedVersion())
    */
-  async _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): Promise<?FilesStatus> {
+  _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): ?FilesStatus {
     const mergeResults = componentMergeStatus.mergeResults;
     if (!mergeResults) return null;
     const component = componentMergeStatus.componentWithDependencies.component;
@@ -317,8 +317,8 @@ export default class ImportComponents {
     }
     this.mergeStatus = {};
 
-    const componentsToWriteP = componentsStatus.map(async (componentStatus) => {
-      const filesStatus: ?FilesStatus = await this._updateComponentFilesPerMergeStrategy(componentStatus);
+    const componentsToWrite = componentsStatus.map((componentStatus) => {
+      const filesStatus: ?FilesStatus = this._updateComponentFilesPerMergeStrategy(componentStatus);
       const componentWithDependencies = componentStatus.componentWithDependencies;
       if (!filesStatus) return componentWithDependencies;
       this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;
@@ -329,7 +329,6 @@ export default class ImportComponents {
       }
       return componentWithDependencies;
     });
-    const componentsToWrite = await Promise.all(componentsToWriteP);
     const removeNulls = R.reject(R.isNil);
     return removeNulls(componentsToWrite);
   }

@@ -69,17 +69,19 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
 
 async function addToBitJson(ids: BitId[], consumer: Consumer) {
   const bitJsonDependencies = consumer.bitJson.getDependencies();
-  const componentsIdsP = ids.map(async (componentId: BitId) => {
+  const shouldWriteBitJson = ids.map((componentId: BitId) => {
     // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
     // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
     // already in bit.map
     if (bitJsonDependencies.searchWithoutVersion(componentId)) {
-      await consumer.bitJson.addDependency(componentId).write({ bitDir: consumer.getPath() });
+      consumer.bitJson.addDependency(componentId);
+      return true;
     }
-    return componentId;
+    return false;
   });
-
-  return Promise.all(componentsIdsP);
+  if (shouldWriteBitJson.includes(true)) {
+    await consumer.bitJson.write({ bitDir: consumer.getPath() });
+  }
 }
 
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
