@@ -268,7 +268,11 @@ export default class ComponentWriter {
   async _cleanOldNestedComponent() {
     // $FlowFixMe this function gets called when it was previously NESTED, so the rootDir is set
     const oldLocation = path.join(this.consumer.getPath(), this.componentMap.rootDir);
-    logger.debug(`deleting the old directory of a component at ${oldLocation}`);
+    logger.debugAndAddBreadCrumb(
+      'component-writer._cleanOldNestedComponent',
+      'deleting the old directory of a component at {oldLocation}',
+      { oldLocation }
+    );
     await fs.remove(oldLocation);
     await this._removeNodeModulesLinksFromDependents();
     this.consumer.bitMap.removeComponent(this.component.id);

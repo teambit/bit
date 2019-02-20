@@ -44,7 +44,8 @@ export default (async function buildComponent({
       logger.debug('compiler was not found, nothing to build');
       return null;
     }
-    logger.debug(
+    logger.debugAndAddBreadCrumb(
+      'build-component.buildComponent',
       'compiler was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
     );
     component.copyFilesIntoDists();
@@ -60,7 +61,10 @@ export default (async function buildComponent({
   }
   const needToRebuild = await _isNeededToReBuild(consumer, component.id, noCache);
   if (!needToRebuild && !component.dists.isEmpty()) {
-    logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
+    logger.debugAndAddBreadCrumb(
+      'build-component.buildComponent',
+      'skip the build process as the component was not modified, use the dists saved in the model'
+    );
     return component.dists;
   }
   logger.debug('compiler found, start building');
@@ -234,7 +238,7 @@ const _runBuild = async ({
           api: compiler.api,
           context
         };
-        const result = await compiler.action(actionParams);
+        const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {
             console.log(`\ndeleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
@@ -251,7 +255,7 @@ const _runBuild = async ({
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
       }
-      return compiler.oldAction(files, rootDistDir, context);
+      return Promise.resolve(compiler.oldAction(files, rootDistDir, context));
     })
     .catch((e) => {
       if (tmpFolderFullPath) {

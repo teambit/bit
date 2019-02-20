@@ -6,7 +6,7 @@ export type DependencyStatusResult = { missingFiles: string[] };
 export type DependencyStatusProps = { mainFile: string[] };
 
 async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps: DependencyStatusProps) {
-  const driver = await consumer.driver.getDriver(false);
+  const driver = consumer.driver.getDriver(false);
   const paths = dependencyStatusProps.mainFile;
   const consumerPath = consumer.getPath();
   const tree = await driver.getDependencyTree({

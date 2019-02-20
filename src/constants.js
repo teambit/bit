@@ -274,7 +274,7 @@ export const MODULES_CACHE_DIR: PathOsBased = path.join(CACHE_ROOT, 'modules');
 export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
 
 /**
- * glboal config directories
+ * global config directories
  */
 export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
 
@@ -346,3 +346,5 @@ export const PACKAGE_JSON = 'package.json';
 export const COMPILER_ENV_TYPE = 'compiler';
 
 export const TESTER_ENV_TYPE = 'tester';
+
+export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');

@@ -203,9 +203,6 @@ export default class Consumer {
    * @memberof Consumer
    */
   async migrate(verbose): Object {
-    logger.debug('running migration process for consumer');
-    Analytics.addBreadCrumb('migrate', 'running migration process for consumer');
-
     // Check version of stores (bitmap / bitjson) to check if we need to run migrate
     // If migration is needed add loader - loader.start(BEFORE_MIGRATION);
     // bitmap migrate
@@ -219,8 +216,11 @@ export default class Consumer {
         run: false
       };
     }
-
     loader.start(BEFORE_MIGRATION);
+    logger.debugAndAddBreadCrumb(
+      'consumer.migrate',
+      `start consumer migration. bitmapVersion version ${bitmapVersion}, bit version ${BIT_VERSION}`
+    );
 
     const result: ConsumerMigrationResult = await migrate(bitmapVersion, migratonManifest, this.bitMap, verbose);
     result.bitMap.version = BIT_VERSION;
@@ -393,7 +393,7 @@ export default class Consumer {
     return !this.bitJson.distEntry && !this.bitJson.distTarget;
   }
 
-  async potentialComponentsForAutoTagging(modifiedComponents: BitIds): Promise<BitIds> {
+  potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
     const candidateComponents = this.bitMap.getAuthoredAndImportedBitIds();
     const modifiedComponentsWithoutVersions = modifiedComponents.map(modifiedComponent =>
       modifiedComponent.toStringWithoutVersion()
@@ -407,7 +407,7 @@ export default class Consumer {
   }
 
   async listComponentsForAutoTagging(modifiedComponents: BitIds): Promise<ModelComponent[]> {
-    const candidateComponents = await this.potentialComponentsForAutoTagging(modifiedComponents);
+    const candidateComponents = this.potentialComponentsForAutoTagging(modifiedComponents);
     return getAutoTagPending(this.scope, candidateComponents, modifiedComponents);
   }
 
@@ -500,7 +500,7 @@ export default class Consumer {
   async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
-      const componentFromModel: ?ModelComponent = await this.scope.sources.get(id);
+      const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
         componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
@@ -650,7 +650,7 @@ export default class Consumer {
   }
 
   composeRelativeComponentPath(bitId: BitId): string {
-    const { componentsDefaultDirectory } = this.dirStructure;
+    const componentsDefaultDirectory = this.dirStructure.componentsDefaultDirectory;
     return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
   }
 

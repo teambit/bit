@@ -19,7 +19,7 @@ export type IsolateOptions = {
 };
 
 export default (async function isolate(componentId: string, scopePath: string, opts: IsolateOptions): Promise<string> {
-  logger.debug('starting isolation process');
+  logger.debugAndAddBreadCrumb('isolate', 'starting isolation process');
   if (opts.verbose) console.log('starting isolation process'); // eslint-disable-line no-console
   let scope: Scope;
   // If a scope path provided we will take the component from that scope

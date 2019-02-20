@@ -39,17 +39,6 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  async findComponent(component: ModelComponent): Promise<?ModelComponent> {
-    try {
-      const foundComponent = await this.objects().findOne(component.hash());
-      if (foundComponent) return foundComponent;
-    } catch (err) {
-      logger.error(`findComponent got an error ${err}`);
-    }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
-    return null;
-  }
-
   getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
@@ -66,18 +55,16 @@ export default class SourceRepository {
 
   async get(bitId: BitId): Promise<?ModelComponent> {
     const component = ModelComponent.fromBitId(bitId);
-    let foundComponent = await this.findComponent(component);
-    if (foundComponent instanceof Symlink) {
-      const realComponentId: BitId = foundComponent.getRealComponentId();
-      foundComponent = await this.findComponent(ModelComponent.fromBitId(realComponentId));
-    }
-
+    const foundComponent: ?ModelComponent = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
+      // $FlowFixMe
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+      // $FlowFixMe
       if (!foundComponent.versions[bitId.version]) {
         logger.debug(`${msg} is not in the component versions array`);
         return null;
       }
+      // $FlowFixMe
       const version = await this.objects().findOne(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debug(`${msg} object was not found on the filesystem`);
@@ -85,6 +72,34 @@ export default class SourceRepository {
       }
     }
 
+    return foundComponent;
+  }
+
+  async _findComponent(component: ModelComponent): Promise<?ModelComponent> {
+    try {
+      const foundComponent = await this.objects().findOne(component.hash());
+      if (foundComponent instanceof Symlink) {
+        return this._findComponentBySymlink(foundComponent);
+      }
+      if (foundComponent) return foundComponent;
+    } catch (err) {
+      logger.error(`findComponent got an error ${err}`);
+    }
+    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
+    return null;
+  }
+
+  async _findComponentBySymlink(symlink: Symlink): Promise<?ModelComponent> {
+    const realComponentId: BitId = symlink.getRealComponentId();
+    const realModelComponent = ModelComponent.fromBitId(realComponentId);
+    const foundComponent = await this.objects().findOne(realModelComponent.hash());
+    if (!foundComponent) {
+      throw new Error(
+        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}". Hash: ${symlink
+          .hash()
+          .toString()}`
+      );
+    }
     return foundComponent;
   }
 
@@ -97,7 +112,7 @@ export default class SourceRepository {
 
   findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
     const comp = ModelComponent.from(props);
-    return this.findComponent(comp).then((component) => {
+    return this._findComponent(comp).then((component) => {
       if (!component) return comp;
       return component;
     });
@@ -447,9 +462,9 @@ export default class SourceRepository {
     local: boolean = true
   ): Promise<ModelComponent> {
     if (inScope) component.scope = this.scope.name;
-    const existingComponent: ?ModelComponent = await this.findComponent(component);
+    const existingComponent: ?ModelComponent = await this._findComponent(component);
     if (!existingComponent) return this.put({ component, objects });
-    const locallyChanged = await existingComponent.isLocallyChanged();
+    const locallyChanged = existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
       const mergedComponent = this.mergeTwoComponentsObjects(existingComponent, component);

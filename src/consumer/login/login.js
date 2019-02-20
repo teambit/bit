@@ -17,7 +17,6 @@ import {
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import { Analytics } from '../../analytics/analytics';
 import { Driver } from '../../driver';
 
 const ERROR_RESPONSE = 500;
@@ -50,7 +49,7 @@ export default function loginToBitSrc(
         server.close();
       };
       if (request.method !== 'GET') {
-        logger.error('received non get request, closing connection');
+        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
@@ -58,7 +57,11 @@ export default function loginToBitSrc(
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
-          logger.error(`clientId mismatch, expecting: ${clientGeneratedId} got ${clientId}`);
+          logger.errorAndAddBreadCrumb(
+            'login.loginToBitSrc',
+            'clientId mismatch, expecting: {clientGeneratedId} got {clientId}',
+            { clientGeneratedId, clientId }
+          );
           closeConnection(ERROR_RESPONSE);
           reject(new LoginFailed());
         }
@@ -88,10 +91,10 @@ export default function loginToBitSrc(
       }
     });
 
-    Analytics.addBreadCrumb('login', `initializing login server  on port: ${port || DEFAULT_PORT}`);
+    logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
     server.listen(port || DEFAULT_PORT, (err) => {
       if (err) {
-        logger.error('something bad happened', err);
+        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
         reject(new LoginFailed());
       }
 
@@ -111,7 +114,7 @@ export default function loginToBitSrc(
 
     server.on('error', (e) => {
       if (e.code === 'EADDRINUSE') {
-        reject(new GeneralError(`port: ${e.port} alredy in use, please run bit login --port <port>`));
+        reject(new GeneralError(`port: ${e.port} already in use, please run bit login --port <port>`));
       }
       reject(e);
     });

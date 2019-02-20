@@ -25,7 +25,12 @@ export default class SourceFile extends AbstractVinyl {
       R.forEachObjIndexed(addToFile, extendedProps);
       return file;
     } catch (err) {
-      logger.error(`failed loading file ${filePath}. Error: ${err}`);
+      logger.errorAndAddBreadCrumb(
+        'source-file.load',
+        'failed loading file {filePath}. Error: {message}',
+        { filePath, message: err.message },
+        err
+      );
       if (err.code === 'ENOENT' && err.path) {
         throw new FileSourceNotFound(err.path);
       }

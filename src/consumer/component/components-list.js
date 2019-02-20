@@ -4,7 +4,7 @@ import semver from 'semver';
 import R from 'ramda';
 import type Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';
-import type Scope from '../../scope/scope';
+import Scope from '../../scope/scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
 import type BitMap from '../bit-map/bit-map';
@@ -213,7 +213,7 @@ export default class ComponentsList {
   async listExportPendingComponents(): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
     // $FlowFixMe
-    return Promise.all(exportPendingComponentsIds.map(id => this.scope.sources.get(id)));
+    return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
