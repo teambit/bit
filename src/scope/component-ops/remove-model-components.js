@@ -8,7 +8,7 @@ import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
 import type { ModelComponent } from '../models';
 import { Symlink } from '../models';
 import type ConsumerComponent from '../../consumer/component';
-import type Scope from '../scope';
+import Scope from '../scope';
 import type Consumer from '../../consumer/consumer';
 
 export default class RemoveModelComponents {
@@ -50,7 +50,7 @@ export default class RemoveModelComponents {
   async _removeSingle(bitId: BitId): Promise<{ bitId: BitId, removedDependencies: BitIds }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // $FlowFixMe
-    const component = (await this.scope.sources.get(bitId)).toComponentVersion();
+    const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     // $FlowFixMe
     const componentList = await this.scope.listIncludesSymlinks();

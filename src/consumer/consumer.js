@@ -500,7 +500,7 @@ export default class Consumer {
   async getComponentStatusById(id: BitId): Promise<ComponentStatus> {
     const getStatus = async () => {
       const status: ComponentStatus = {};
-      const componentFromModel: ?ModelComponent = await this.scope.sources.get(id);
+      const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
         componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
