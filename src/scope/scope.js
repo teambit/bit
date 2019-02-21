@@ -382,7 +382,7 @@ export default class Scope {
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
-    const component = await this.sources.get(bitId);
+    const component = await this.getModelComponentIfExist(bitId);
     component.deprecated = true;
     this.objects.add(component);
     return bitId.toStringWithoutVersion();
@@ -456,12 +456,12 @@ export default class Scope {
     const missingComponents = new BitIds();
     const foundComponents = new BitIds();
     const resultP = bitIds.map(async (id) => {
-      const component = await this.sources.get(id);
+      const component = await this.getModelComponentIfExist(id);
       if (!component) missingComponents.push(id);
       else foundComponents.push(id);
     });
     await Promise.all(resultP);
-    return Promise.resolve({ missingComponents, foundComponents });
+    return { missingComponents, foundComponents };
   }
 
   /**
@@ -493,14 +493,14 @@ export default class Scope {
   }
 
   loadComponentLogs(id: BitId): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return this.sources.get(id).then((componentModel) => {
+    return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectLogs(this.objects);
     });
   }
 
   loadAllVersions(id: BitId): Promise<Component[]> {
-    return this.sources.get(id).then((componentModel) => {
+    return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
     });
@@ -513,7 +513,7 @@ export default class Scope {
    * @see getModelComponentIgnoreScope to ignore the scope name
    */
   async getModelComponent(id: BitId): Promise<ModelComponent> {
-    const component = await this.sources.get(id);
+    const component = await this.getModelComponentIfExist(id);
     if (component) return component;
     throw new ComponentNotFound(id.toString());
   }
@@ -525,7 +525,7 @@ export default class Scope {
    * it throws an error if the component wasn't found.
    */
   async getModelComponentIgnoreScope(id: BitId): Promise<ModelComponent> {
-    const component = await this.sources.get(id);
+    const component = await this.getModelComponentIfExist(id);
     if (component) return component;
     if (!id.scope) {
       // search for the complete ID

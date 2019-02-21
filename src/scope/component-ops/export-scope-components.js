@@ -69,7 +69,7 @@ export async function exportMany(
       'successfully pushed all ids to the bare-scope, going to save them back to local scope'
     );
   } catch (err) {
-    logger.warn('exportMany: failed pushing ids to the bare-scope');
+    logger.warnAndAddBreadCrumb('exportMany', 'failed pushing ids to the bare-scope');
     return Promise.reject(err);
   }
   await Promise.all(ids.map(id => scope.sources.removeComponentById(id)));
