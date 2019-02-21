@@ -107,6 +107,7 @@ const paintGeneralFailure = (failure, verbose) => {
     errStack = failure.err.stack;
   }
   return `❌   ${c.white(failure.title)} ${duration}
+    ${c.red(failure.err.message)}
     ${c.red(errStack)}`;
 };
 
