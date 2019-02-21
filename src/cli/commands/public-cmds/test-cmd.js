@@ -43,7 +43,7 @@ export default class Test extends Command {
     if (forkLevel && !validForkLevels.includes(forkLevel)) {
       return Promise.reject(new GeneralError(`fork level must be one of: ${validForkLevels.join()}`));
     }
-    verboseReport = verbose;
+    verboseReport = verbose || false;
     const testRes = await test(id, forkLevel, all, verbose);
     const pass = testRes.every(comp => comp.pass);
     const res = {
