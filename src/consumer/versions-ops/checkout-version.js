@@ -194,7 +194,7 @@ async function applyVersion(
   let modifiedStatus = {};
   if (mergeResults) {
     // update files according to the merge results
-    modifiedStatus = await applyModifiedVersion(files, mergeResults, mergeStrategy);
+    modifiedStatus = applyModifiedVersion(files, mergeResults, mergeStrategy);
   }
   const shouldDependenciesSaveAsComponents = await consumer.shouldDependenciesSavedAsComponents([id]);
   componentWithDependencies.component.dependenciesSavedAsComponents =
@@ -227,15 +227,17 @@ async function applyVersion(
  * relevant only when
  * 1) there is no conflict => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.output.
  * 2) there is conflict and mergeStrategy is manual => add files from mergeResults: addFiles, overrideFiles and modifiedFiles.conflict.
+ *
+ * this function only updates the files content, it doesn't write the files
  */
-export async function applyModifiedVersion(
+export function applyModifiedVersion(
   componentFiles: SourceFile[],
   mergeResults: MergeResultsThreeWay,
   mergeStrategy: ?MergeStrategy
-): Promise<Object> {
+): Object {
   const filesStatus = {};
   if (mergeResults.hasConflicts && mergeStrategy !== MergeOptions.manual) return filesStatus;
-  const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
+  mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
@@ -249,18 +251,17 @@ export async function applyModifiedVersion(
       throw new GeneralError('file does not have output nor conflict');
     }
   });
-  const addFilesP = mergeResults.addFiles.map(async (file) => {
+  mergeResults.addFiles.forEach((file) => {
     componentFiles.push(file.fsFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
-  const overrideFilesP = mergeResults.overrideFiles.map(async (file) => {
+  mergeResults.overrideFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
     foundFile.contents = file.fsFile.contents;
     filesStatus[file.filePath] = FileStatus.overridden;
   });
-  await Promise.all([Promise.all(modifiedP), Promise.all(addFilesP), Promise.all(overrideFilesP)]);
 
   return filesStatus;
 }

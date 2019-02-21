@@ -128,7 +128,7 @@ async function applyVersion(
   });
 
   // update files according to the merge results
-  const modifiedStatus = await applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
+  const modifiedStatus = applyModifiedVersion(consumer, files, mergeResults, mergeStrategy);
 
   const componentWriter = ComponentWriter.getInstance({
     component,
@@ -152,14 +152,14 @@ async function applyVersion(
   return { id, filesStatus: Object.assign(filesStatus, modifiedStatus) };
 }
 
-async function applyModifiedVersion(
+function applyModifiedVersion(
   consumer: Consumer,
   componentFiles: SourceFile[],
   mergeResults: MergeResultsTwoWay,
   mergeStrategy: ?MergeStrategy
-): Promise<Object> {
+): Object {
   const filesStatus = {};
-  const modifiedP = mergeResults.modifiedFiles.map(async (file) => {
+  mergeResults.modifiedFiles.forEach((file) => {
     const filePath: PathOsBased = path.normalize(file.filePath);
     const foundFile = componentFiles.find(componentFile => componentFile.relative === filePath);
     if (!foundFile) throw new GeneralError(`file ${filePath} not found`);
@@ -178,13 +178,11 @@ async function applyModifiedVersion(
       throw new GeneralError('file does not have output nor conflict');
     }
   });
-  const addFilesP = mergeResults.addFiles.map(async (file) => {
+  mergeResults.addFiles.forEach((file) => {
     const otherFile: SourceFile = file.otherFile;
     componentFiles.push(otherFile);
     filesStatus[file.filePath] = FileStatus.added;
   });
-
-  await Promise.all([Promise.all(modifiedP), Promise.all(addFilesP)]);
 
   return filesStatus;
 }
