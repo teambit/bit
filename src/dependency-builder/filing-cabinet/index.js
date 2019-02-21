@@ -281,6 +281,9 @@ function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
   if (resolveConfig.modulesDirectories) webpackResolveConfig.modules = resolveConfig.modulesDirectories;
   if (resolveConfig.aliases) webpackResolveConfig.alias = resolveConfig.aliases;
   webpackResolveConfig.extensions = resolveExtensions;
+  // a resolve module might point to an imported component via the package name, in which case
+  // the package name is a symlink to the imported component. we want it to be resolved as a pkg
+  webpackResolveConfig.symlinks = false;
   return resolveWebpack(partial, filename, directory, webpackResolveConfig);
 }
 
