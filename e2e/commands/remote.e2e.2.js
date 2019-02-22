@@ -45,7 +45,7 @@ describe('bit remote command', function () {
       });
     });
   });
-  describe.only('adding a local remote', () => {
+  describe('adding a local remote', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.reInitRemoteScope();
