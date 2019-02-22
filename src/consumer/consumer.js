@@ -118,7 +118,7 @@ export default class Consumer {
     this.bitMap = bitMap || BitMap.load(projectPath);
     this.addedGitHooks = addedGitHooks;
     this.existingGitHooks = existingGitHooks;
-    // this.warnForMissingDriver();
+    this.warnForMissingDriver();
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<?CompilerExtension> {
