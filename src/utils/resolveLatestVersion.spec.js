@@ -3,7 +3,7 @@ import BitIds from '../bit-id/bit-ids';
 import BitId from '../bit-id/bit-id';
 import resolveLatestVersion from './resolveLatestVersion';
 
-describe.only('getLatestVersionNumber', () => {
+describe('getLatestVersionNumber', () => {
   const idWithNoVersion = new BitId({ name: 'is-string' });
   const idWithVersionLatest = new BitId({ name: 'is-string', version: 'latest' });
   const idWithVersion1 = new BitId({ name: 'is-string', version: '0.0.1' });
