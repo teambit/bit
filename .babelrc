@@ -1,22 +1,39 @@
 {
-  "only": "*.js",
+  "only": ["**/*.js"],
   "presets": [
-    ["env", {
-      "targets": {
-        "node": 4
+    [
+      "@babel/preset-env",
+      {
+        "targets": {
+          "node": 4
+        }
       }
-    }]
+    ],
+    "@babel/preset-flow"
   ],
   "plugins": [
-    ["transform-flow-strip-types"],
-    ["babel-plugin-transform-builtin-extend", {
-      "globals": ["Error", "Array", "Map"]
-    }],
-    ["transform-runtime", {
-      "helpers": false,
-      "polyfill": false,
-      "regenerator": true
-    }],
-    ["syntax-async-functions"]
+    [
+      "@babel/plugin-transform-flow-strip-types"
+    ],
+    [
+      "babel-plugin-transform-builtin-extend",
+      {
+        "globals": [
+          "Error",
+          "Array",
+          "Map"
+        ]
+      }
+    ],
+    [
+      "@babel/plugin-transform-runtime",
+      {
+        "helpers": false,
+        "regenerator": true
+      }
+    ],
+    [
+      "syntax-async-functions"
+    ]
   ]
 }
