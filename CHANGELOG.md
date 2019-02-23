@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - upgrade bit-javascript to use babel-7
+- show an error when deleting a global remote without `--global` flag
+- show an error when deleting a non-exist remote
 - enable custom resolve of aliases to symlink packages (bit-javascript)
 
 ## [14.0.1-dev.2] - 2019-02-20

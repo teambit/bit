@@ -17,9 +17,10 @@ export default class GlobalRemotes {
     return this;
   }
 
-  rmRemote(name: string) {
+  rmRemote(name: string): boolean {
+    if (!this.remotes[name]) return false;
     delete this.remotes[name];
-    return this;
+    return true;
   }
 
   toJson(readable: boolean = true) {
@@ -35,7 +36,7 @@ export default class GlobalRemotes {
     return writeFile(path.join(GLOBAL_CONFIG, GLOBAL_REMOTES), this.toJson());
   }
 
-  static load() {
+  static load(): Promise<GlobalRemotes> {
     return fs
       .readFile(path.join(GLOBAL_CONFIG, GLOBAL_REMOTES))
       .then(contents => new GlobalRemotes(JSON.parse(contents.toString('utf8'))))
