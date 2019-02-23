@@ -280,8 +280,9 @@ export default class Consumer {
    * throws a ComponentNotFound exception if not found in the model
    */
   async loadComponentFromModel(id: BitId): Promise<Component> {
-    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
     if (!id.version) throw new TypeError('consumer.loadComponentFromModel, version is missing from the id');
+    const modelComponent: ModelComponent = await this.scope.getModelComponent(id);
+
     const componentVersion = modelComponent.toComponentVersion(id.version);
     const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
     return modelComponent.toConsumerComponent(id.version, this.scope.name, this.scope.objects, manipulateDirData);
@@ -292,6 +293,7 @@ export default class Consumer {
    * don't go to any remote server and don't throw an exception if the component is not there.
    */
   async loadComponentFromModelIfExist(id: BitId): Promise<?Component> {
+    if (!id.version) return null;
     return this.loadComponentFromModel(id).catch((err) => {
       if (err instanceof ComponentNotFound) return null;
       throw err;
@@ -529,7 +531,7 @@ export default class Consumer {
       status.staged = componentFromModel.isLocallyChanged();
       const versionFromFs = componentFromFileSystem.id.version;
       const idStr = id.toString();
-      if (!status.staged && !componentFromFileSystem.id.hasVersion()) {
+      if (!componentFromFileSystem.id.hasVersion()) {
         throw new GeneralError(`component ${idStr} has an invalid state.
            it is saved in the scope so it's not new. however, it doesn't have a version in the .bitmap file, indicating that the component is new.
            if possible, remove the component and re-import or re-create it.
@@ -799,11 +801,7 @@ export default class Consumer {
     track: boolean,
     deleteFiles: boolean
   }): Promise<{ localResult: RemovedLocalObjects, remoteResult: Object[] }> {
-    logger.debug(`consumer.remove: ${ids.toString()}. force: ${force.toString()}`);
-    Analytics.addBreadCrumb(
-      'remove',
-      `consumer.remove: ${Analytics.hashData(ids)}. force: ${Analytics.hashData(force.toString())}`
-    );
+    logger.debugAndAddBreadCrumb('consumer.remove', `{ids}. force: ${force.toString()}`, { ids: ids.toString() });
     // added this to remove support for remove only one version from a component
     const bitIdsLatest = BitIds.fromArray(
       ids.map((id) => {
