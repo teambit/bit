@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve Bit load time by changing bit-javascript to use lazy loading
 - show an error when deleting a global remote without `--global` flag
 - show an error when deleting a non-exist remote
 - enable custom resolve of aliases to symlink packages (bit-javascript)
