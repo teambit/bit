@@ -3,6 +3,8 @@
   <a href="https://bitsrc.io"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
 
+https://storage.googleapis.com/bit-docs/Component-design-system-bit.png
+
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
   [![Gitter chat](https://badgen.now.sh/badge/chat/on%20gitter/cyan)](https://gitter.im/bit-src/Bit)
@@ -12,7 +14,7 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bit_src&url=https://bitsrc.io&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Website](https://bitsrc.io) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bitsrc.io/) • [Examples](https://bitsrc.io/bit/movie-app)
+[Share components](https://bitsrc.io) • [Discover components](https://bitsrc.io/components) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bitsrc.io/) • [Examples](https://bitsrc.io/bit/movie-app)
 
 ## About  
 
@@ -20,7 +22,8 @@
 
 Bit integrates to **Git**, **package managers** and other **tools in the ecosystem** to bring a better experience for sharing code between apps and developers.  
 
-With Bit, any repository or library becomes a multi-component monorepo.
+With Bit, any repository or library becomes a multi-component monorepo.  
+
 It eliminates the overhead around code sharing by letting you quickly share and reuse components without boilerplating, refactoring or configurations. It provides discoverability and collaboration over components through [Bit’s community hub](https://bitsrc.io/components).  
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.  
@@ -34,19 +37,17 @@ It eliminates the overhead around code sharing by letting you quickly share and 
 - [Bit in the wild](#bit-in-the-wild)
   - [Bit monorepo](#bit-monorepo)
   - [Bit across apps](#bit-across-apps)
-  - [Component design system](Component-design-system)
+  - [Component design system](#component-design-system)
 - [Motivation](#motivation)
 - [Contributing](#contributing)  
 
 ## Examples  
 
-Bit is used to quickly share and reuse code from any JavaScript project. Every component can be installed, developed and used in any other project. Popular use cases are [UI components](https://bitsrc.io/components?labels=ui%20components) and [React components](https://bitsrc.io/components?labels=react), [JavaScript utility functions](https://bitsrc.io/components?labels=utils) and more.  
+Bit is used to quickly share and reuse code from any JavaScript project. Every component can be installed, developed and used in any other project. Popular use cases are [UI components](https://bitsrc.io/components?labels=ui%20components) and [React components](https://bitsrc.io/components?labels=react), [JavaScript functions](https://bitsrc.io/components?labels=utils) and more.  
 
 ### UI components
 
-Share components from UI libraries and projects, and use them to build new apps.  
-
-#### [Discover components](https://bitsrc.io/components?labels=react).  
+Share components from UI libraries and projects, and use them to build new apps. [Discover components](https://bitsrc.io/components?labels=react) from the community, to add to your apps. Example:
 
 **React spinners**:  
 
@@ -81,9 +82,11 @@ Bit turns components into isolated and reusable building blocks you can run and 
 
 ### Component isolation and sharing
 
-When running the `bit add` command Bit will isolate components in the existing project structure. Meaning, Bit will [track the components](https://docs.bitsrc.io/docs/add-and-isolate-components.html) and create a dependency graph for each of them. With this data, Bit creates an isolated environment for each component, which lets the component run and work in any other project.  
+When running the `bit add` command Bit will isolate components in the existing project structure. Meaning, Bit will [track the components](https://docs.bitsrc.io/docs/add-and-isolate-components.html) and create a dependency graph for each of them. With this data, Bit creates an isolated environment for each component, which lets the component run and work in any other project. For example, components written in typescript can be used and developed in a project written in flow-typed.
 
-Then, you can `tag` the [components’ version](https://docs.bitsrc.io/docs/tag-component-version.html) and `export` them to a [remote collection](https://docs.bitsrc.io/docs/organizing-components.html) from which they can be installed in other projects.  
+To [tag a version]((https://docs.bitsrc.io/docs/tag-component-version.html)) for the components, use the `bit tag` command. At any point, you can use the `bit status` command to learn more.  
+
+Then, `bit export` them to a [remote collection](https://docs.bitsrc.io/docs/organizing-components.html) from which they can be installed in other projects. You can set up a collection on any server, or use [Bit’s component hub](https://bitsrc.io). Here’s a quick demo.
 
 **Exporting 256 Radma components (functions) from the repository to Bit’s hub in 2 minutes**:  
 
@@ -104,7 +107,7 @@ Once components are shared to Bit’s hub (which isn’t mandatory; Bit is distr
 
 #### Installing components with npm/yarn
 
-You can install components shared to [Bit’s hub](https://bitsrc.io/components) from Bit’s package registry via the NPM or Yarn clients.  
+You can install components shared to [Bit’s hub](https://bitsrc.io/components) from Bit’s [package registry](https://blog.bitsrc.io/introducing-bits-npm-package-registry-f4892de57b0c) via the NPM or Yarn clients. This means Bit can turn any repository and library into a multi-package monorepo almost instantly, without refactoring, and with advanced discoverability.
 
 #### Importing components with Bit
 
@@ -120,15 +123,13 @@ This creates a distributed workflow in which your team can collaborate and sugge
 
 Bit can be extended to play with the tools you work with, including [build and test environments](https://bitsrc.io/bit/envs) to test and compile your components. 
 
-Pre-made environments, which are also Bit components that can be imported into your project before tagging the components, save the overhead of configurations for each component. You can use the [example environments](https://bitsrc.io/bit/envs) in Bit’s hub, or create your own. 
-
-You can learn more about it [in the docs](https://docs.bitsrc.io/docs/building-components.html).
+Pre-made environments, which are also Bit components that can be imported into your project before tagging the components, save the overhead of configurations for each component. You can use the [example environments](https://bitsrc.io/bit/envs) in Bit’s hub, or create your own. You can learn more about it [in the docs](https://docs.bitsrc.io/docs/building-components.html).
 
 Update: An extensive extension system is in the works and should become availabe within weeks. This will make the process of creating extensions effortless, and open new possibilities to integrate any tool or workflow into Bit’s code-sharing workflow.
 
 ## Bit in the wild
 
-## Bit monorepo
+### Bit monorepo
 
 Any repository or library containing components is already a Bit monorepo.  
 
@@ -143,12 +144,11 @@ This means that your React UI library + Bit will become a monorepo from which co
 
 [Semantic UI React library with Bit](https://github.com/teambit/Semantic-UI-React/tree/addBit)
 
-[Semantic UI components with Bit](https://bitsrc.io/semantic-org/semantic-ui-react): Choose, play, use.  
-
+[Semantic UI components in Bit’s hub](https://bitsrc.io/semantic-org/semantic-ui-react)
 
 #### [Bit with and without Lerna](https://blog.bitsrc.io/monorepo-architecture-simplified-with-bit-and-npm-b1354be62870).  
 
-## Bit across apps
+### Bit across apps
 
 Many teams keep separate repositories for different parts of their codebase.  
 
@@ -162,11 +162,15 @@ Creating a collaborative code-sharing workflow where everyone, given permissions
 
 As a result, you can share more code in less time and manage it at scale without having to “force” adoption or get lost in the overhead around the process.
 
-##  Component design system
+### Component design system
 
 Bit is a quick and effective way to create a design system from your components.  
 
-You can organize components for your team to share, view and try them hands-on in Bit’s hub component playground (useful for designers), and use components directly your projects.  
+<p align="center">
+  <a href="https://bitsrc.io/components?labels=ui%20components"><img src="https://storage.googleapis.com/bit-docs/Component-design-system-bit.png"></a>
+</p>
+
+You can organize components for your team to share, view and try them hands-on in Bit’s hub component playground, and use components directly your projects.  
 
 Developers, designers and other team members can share, view and work with components to build faster together. [Learn more](https://blog.bitsrc.io/building-a-consistent-ui-design-system-4481fb37470f).
 
