@@ -3,8 +3,6 @@
   <a href="https://bitsrc.io"><img src="https://storage.googleapis.com/bit-docs/component-discovery-bit-react-gif.gif"></a>
 </p>
 
-https://storage.googleapis.com/bit-docs/Component-design-system-bit.png
-
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="apache" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg"></a>
   <a href="https://github.com/teambit/bit/blob/master/CONTRIBUTING.md"><img alt="prs" src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg"></a>
   [![Gitter chat](https://badgen.now.sh/badge/chat/on%20gitter/cyan)](https://gitter.im/bit-src/Bit)
