@@ -16,7 +16,7 @@ export default class Export extends Command {
   alias = 'e';
   opts = [
     ['f', 'forget', 'do not save to bit.json after export'],
-    ['e', 'eject', 'once the export is done, remove the exported components locally and install them by the NPM client']
+    ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages']
   ];
   loader = true;
   migration = true;
