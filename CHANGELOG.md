@@ -7,16 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [2.0.3-dev.3] - 2019-02-24
+## [2.0.3] - 2019-02-24
 
 - upgrade to babel 7
-
-## [2.0.3-dev.2] - 2019-02-21
-
 - resolve symlink packages as packages when custom-resolve-modules is used
-
-## [2.0.3-dev.1] - 2019-02-11
-
 - fix resolve dependencies cache to include parsing errors
 
 ## [2.0.2] - 2019-02-08
