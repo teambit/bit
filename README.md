@@ -180,6 +180,12 @@ Looking into the future, smaller components are the [composable building blocks]
 
 And, it’s only the beginning.
 
+## Supported Languages
+
+Bit's design is language agnostic. Still, as of today, it requires language-specific drivers for language-sensitive features (binding etc). We released Bit’s driver for Javascript, and will be releasing more drivers in the future. You are also welcome to add your own.
+
+- [bit-javascript](https://github.com/teambit/bit-javascript).
+
 ## Contributing
 
 Contributions are always welcome, no matter how large or small. Before contributing, please read the [code of conduct](CODE_OF_CONDUCT.md).
