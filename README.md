@@ -18,7 +18,7 @@
 
 **Bit helps you share, discover and compose components to build software applications**.  
 
-Bit integrates to **Git**, **package managers** and other **tools in the ecosystem** to bring a better experience for sharing code between apps and developers.  
+Bit integrates to Git, package managers and other tools in the ecosystem to bring a better experience for sharing code between apps and developers.  
 
 With Bit, any repository or library becomes a multi-component monorepo. It eliminates the overhead around code sharing by letting you quickly share and reuse components without boilerplating, refactoring or configurations. It provides discoverability and collaboration over components through [Bit’s community hub](https://bitsrc.io/components).  
 
