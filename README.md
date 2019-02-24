@@ -12,7 +12,7 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bit_src&url=https://bitsrc.io&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Share components](https://bitsrc.io) • [Discover components](https://bitsrc.io/components) • [Docs](https://docs.bitsrc.io) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bitsrc.io/) • [Examples](https://bitsrc.io/bit/movie-app)
+[Share components](https://bitsrc.io) • [Discover components](https://bitsrc.io/components) • [Docs](https://docs.bitsrc.io) • [Blog](https://blog.bitsrc.io/) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bitsrc.io/)
 
 ## About  
 
@@ -20,9 +20,7 @@
 
 Bit integrates to **Git**, **package managers** and other **tools in the ecosystem** to bring a better experience for sharing code between apps and developers.  
 
-With Bit, any repository or library becomes a multi-component monorepo.  
-
-It eliminates the overhead around code sharing by letting you quickly share and reuse components without boilerplating, refactoring or configurations. It provides discoverability and collaboration over components through [Bit’s community hub](https://bitsrc.io/components).  
+With Bit, any repository or library becomes a multi-component monorepo. It eliminates the overhead around code sharing by letting you quickly share and reuse components without boilerplating, refactoring or configurations. It provides discoverability and collaboration over components through [Bit’s community hub](https://bitsrc.io/components).  
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.  
 
@@ -41,7 +39,7 @@ It eliminates the overhead around code sharing by letting you quickly share and 
 
 ## Examples  
 
-Bit is used to quickly share and reuse code from any JavaScript project. Every component can be installed, developed and used in any other project. Popular use cases are [UI components](https://bitsrc.io/components?labels=ui%20components) and [React components](https://bitsrc.io/components?labels=react), [JavaScript functions](https://bitsrc.io/components?labels=utils) and more.  
+Bit is used to quickly share and reuse code from any project. Every component can be installed, developed and used in any other project. Popular use cases are [UI components](https://bitsrc.io/components?labels=ui%20components) and [React components](https://bitsrc.io/components?labels=react), [JavaScript functions](https://bitsrc.io/components?labels=utils) and more.  
 
 ### UI components
 
@@ -144,7 +142,7 @@ This means that your React UI library + Bit will become a monorepo from which co
 
 [Semantic UI components in Bit’s hub](https://bitsrc.io/semantic-org/semantic-ui-react)
 
-#### [Bit with and without Lerna](https://blog.bitsrc.io/monorepo-architecture-simplified-with-bit-and-npm-b1354be62870).  
+[Learn more: Bit with and without Lerna](https://blog.bitsrc.io/monorepo-architecture-simplified-with-bit-and-npm-b1354be62870).  
 
 ### Bit across apps
 
@@ -154,9 +152,9 @@ When the same code is needed in different places, effective code-sharing becomes
 
 Bit makes this process more effective by:  
 
-Eliminating the overhead around “publishing” code directly from any repository.
-Organizing and making these code units discoverable and manageable.
-Creating a collaborative code-sharing workflow where everyone, given permissions, can make changes, suggest updates and stay in sync.  
+- Eliminating the overhead around “publishing” code directly from any repository.
+- Organizing and making these code units discoverable and manageable.
+- Creating a collaborative code-sharing workflow where everyone, given permissions, can make changes, suggest updates and stay in sync.  
 
 As a result, you can share more code in less time and manage it at scale without having to “force” adoption or get lost in the overhead around the process.
 
@@ -178,7 +176,9 @@ Developers, designers and other team members can share, view and work with compo
 
 In today’s ecosystem, the tools and technologies we use across our stack are built for modularity, from React/Vue/Angular/Web components in the front to GraphQL and NodeJS in the back, and even serverless functions. 
 
-Looking into the future, smaller components are the [composable building blocks](https://addyosmani.com/first) of our software applications. Instead of having to reinvent the wheel every time or having to work hard and long to share and reuse them, we should make it easy -and even fun- to discover, share and build with components. To that purpose, Bit was created. And, it’s only the beginning.
+Looking into the future, smaller components are the [composable building blocks](https://addyosmani.com/first) of our software applications. Instead of having to reinvent the wheel every time or having to work hard and long to share and reuse them, we should make it easy -and even fun- to discover, share and build with components. To that purpose, Bit was created.  
+
+And, it’s only the beginning.
 
 ## Contributing
 
