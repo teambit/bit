@@ -449,10 +449,7 @@ export default class Version extends BitObject {
    * used by raw-object.toRealObject()
    */
   static from(versionProps: VersionProps): Version {
-    const compiler = versionProps.compiler ? parseEnv(versionProps.compiler) : null;
-    const tester = versionProps.tester ? parseEnv(versionProps.tester) : null;
-    const actualVersionProps = { ...versionProps, compiler, tester };
-    return new Version(actualVersionProps);
+    return Version.parse(JSON.stringify(versionProps));
   }
 
   /**
