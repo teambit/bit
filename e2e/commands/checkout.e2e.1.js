@@ -761,6 +761,38 @@ describe('bit checkout command', function () {
       });
     });
   });
+  describe('checkout with latest --all when multiple components have conflicts', () => {
+    let output;
+    before(() => {
+      helper.createFile('bar', 'foo.js', barFooV1);
+      helper.createFile('bar', 'foo2.js', barFooV1);
+      helper.createFile('bar', 'foo3.js', barFooV1);
+      helper.createFile('bar', 'foo4.js', barFooV1);
+      helper.createFile('bar', 'foo5.js', barFooV1);
+      helper.addComponent('bar/*');
+      helper.tagAllComponents();
+      helper.createFile('bar', 'foo.js', barFooV2);
+      helper.createFile('bar', 'foo2.js', barFooV2);
+      helper.createFile('bar', 'foo3.js', barFooV2);
+      helper.createFile('bar', 'foo4.js', barFooV2);
+      helper.createFile('bar', 'foo5.js', barFooV2);
+      helper.tagAllComponents();
+      helper.checkout('0.0.1 --all');
+      helper.createFile('bar', 'foo.js', barFooV3);
+      helper.createFile('bar', 'foo2.js', barFooV3);
+      helper.createFile('bar', 'foo3.js', barFooV3);
+      helper.createFile('bar', 'foo4.js', barFooV3);
+      helper.createFile('bar', 'foo5.js', barFooV3);
+      // intermediate step, make sure it's shows as modified
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput).to.have.string('modified');
+
+      output = helper.checkout('latest --all --theirs');
+    });
+    it('should display a successful message', () => {
+      expect(output).to.have.string(successOutput);
+    });
+  });
   describe('using a combination of values and flags that are not making sense', () => {
     before(() => {
       helper.reInitLocalScope();
