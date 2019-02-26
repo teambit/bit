@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "JavaScript heap out of memory" when loading a large amount of components
+- improve `bit tag` performance by decreasing hook logging
+
 ## [[14.0.1] - 2019-02-24](https://github.com/teambit/bit/releases/tag/v14.0.1)
 
 - show an error when deleting a global remote without `--global` flag
