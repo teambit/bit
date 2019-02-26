@@ -31,7 +31,7 @@ describe('many components', function () {
         }
         return `require('./comp${index - 1}');`;
       };
-      for (let i = 0; i < maxComponents; i++) {
+      for (let i = 0; i < maxComponents; i += 1) {
         helper.createFile('bar', `comp${i}.js`, getImp(i));
       }
     });
