@@ -62,10 +62,6 @@ export default class BitIds extends Array<BitId> {
     return this.filter(id => id.hasSameName(bitId));
   }
 
-  getUniq(): BitIds {
-    return BitIds.fromArray(R.uniqBy(JSON.stringify, this));
-  }
-
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
     return BitIds.fromArray(this.filter(id => !id.isEqualWithoutVersion(bitId)));
   }
