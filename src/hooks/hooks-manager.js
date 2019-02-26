@@ -113,11 +113,13 @@ export default class HooksManager {
       logger.warn(`trying to trigger a non existing hook ${hookName}`);
       throw new errors.HookNotExists(hookName);
     }
-    logger.info(
-      `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(
-        _stripArgs(args)
-      )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))}`
-    );
+    // un-comment for debugging. This is disabled by default due to performance implications
+    // logger.info(
+    //   `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(
+    //     _stripArgs(args)
+    //   )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))}`
+    // );
+    logger.info(`triggering hook ${hookName}`);
     const actions = this.hooks.get(hookName);
     const actionsP = actions.map((action) => {
       // Catch errors in order to aggregate them
