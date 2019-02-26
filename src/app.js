@@ -1,12 +1,14 @@
 /** @flow */
+import * as Promise from 'bluebird';
 import loudRejection from 'loud-rejection';
 import buildRegistrar from './cli/command-registrar-builder';
 import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
 import loadVersionHandler from './cli/version-command';
 
-// un-comment the next line to get more than 10 lines in the error stacktrace
-// Error.stackTraceLimit = Infinity;
+Promise.config({
+  longStackTraces: false // change it to true for easy debugging. by default, leave it as false for better performance
+});
 
 loadVersionHandler();
 loudRejection();
