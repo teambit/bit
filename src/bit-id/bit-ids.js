@@ -96,6 +96,11 @@ export default class BitIds extends Array<BitId> {
     return new BitIds(...bitIds);
   }
 
+  static uniqFromArray(bitIds: BitId[]): BitIds {
+    const uniq = R.uniqBy(JSON.stringify, bitIds);
+    return BitIds.fromArray(uniq);
+  }
+
   clone(): BitIds {
     const cloneIds = this.map(id => id.clone());
     return new BitIds(...cloneIds);
