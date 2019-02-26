@@ -441,7 +441,7 @@ export default class Scope {
       });
 
       if (!R.isEmpty(dependencies)) {
-        dependentBits[bitId.toStringWithoutVersion()] = BitIds.fromArray(dependencies).getUniq();
+        dependentBits[bitId.toStringWithoutVersion()] = BitIds.uniqFromArray(dependencies);
       }
     });
     return Promise.resolve(dependentBits);
