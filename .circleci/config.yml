@@ -428,14 +428,11 @@ workflows:
   performence_tests:
     triggers:
       - schedule:
-          # cron: "0 0 * * *"
-          cron: "31 15 * * *"
-          # cron: "*/5 * * * *"
+          cron: "0 9 * * *"
           filters:
             branches:
               only:
                 - master
-                - circle-performence
     jobs:
       - checkout_code
       -
