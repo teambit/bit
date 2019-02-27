@@ -330,13 +330,109 @@ jobs:
       -
         store_artifacts:
           path: ~/Library/Caches/Bit/logs/debug.log
+  performence_test:
+    docker:
+      -
+        image: 'circleci/node:6.14.3'
+    working_directory: ~/bit
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
+    parallelism: 1
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'cd bit && mkdir junit'
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && npm link ../bit-javascript'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: 'cd bit && npm link'
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bitsrc.io'
+      -
+        # uncomment to configure circle to run against stg enviorment
+        run: 'bit config set hub_domain hub-stg.bitsrc.io'
+      -
+        run:
+          name: 'Run performance tests'
+          command: 'cd bit && npm run performance-test-circle'
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      -
+        store_test_results:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: ~/Library/Caches/Bit/logs/debug.log
 workflows:
   version: 2
-  build_and_test:
+  # build_and_test:
+  #   jobs:
+  #     - checkout_code
+  #     - set_ssh_key
+  #     - set_bitsrc_registry
+  #     -
+  #       install_npm_deps:
+  #         requires:
+  #           - checkout_code
+  #     -
+  #       install_bit_javascript_npm_deps:
+  #         requires:
+  #           - checkout_code
+  #     -
+  #       build:
+  #         requires:
+  #           - install_npm_deps
+  #     -
+  #       build_bit_javascript:
+  #         requires:
+  #           - install_bit_javascript_npm_deps
+  #     -
+  #       unit_test:
+  #         requires:
+  #           - build
+  #     -
+  #       unit_test_bit_javascript:
+  #         requires:
+  #           - build_bit_javascript
+  #     -
+  #       lint:
+  #         requires:
+  #           - install_npm_deps
+  #     -
+  #       e2e_test:
+  #         requires:
+  #           - build
+  #           - build_bit_javascript
+  #           - set_ssh_key
+  #           - set_bitsrc_registry
+  performence_tests:
+    # triggers:
+    #   - schedule:
+    #       cron: "0 0 * * *"
+    #       filters:
+    #         branches:
+    #           only:
+    #             - master
     jobs:
       - checkout_code
-      - set_ssh_key
-      - set_bitsrc_registry
       -
         install_npm_deps:
           requires:
@@ -354,21 +450,7 @@ workflows:
           requires:
             - install_bit_javascript_npm_deps
       -
-        unit_test:
-          requires:
-            - build
-      -
-        unit_test_bit_javascript:
-          requires:
-            - build_bit_javascript
-      -
-        lint:
-          requires:
-            - install_npm_deps
-      -
-        e2e_test:
+        performence_test:
           requires:
             - build
             - build_bit_javascript
-            - set_ssh_key
-            - set_bitsrc_registry
