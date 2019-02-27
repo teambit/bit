@@ -426,13 +426,14 @@ workflows:
   #           - set_ssh_key
   #           - set_bitsrc_registry
   performence_tests:
-    # triggers:
-    #   - schedule:
-    #       cron: "0 0 * * *"
-    #       filters:
-    #         branches:
-    #           only:
-    #             - master
+    triggers:
+      - schedule:
+          # cron: "0 0 * * *"
+          cron: "*/5 * * * *"
+          filters:
+            branches:
+              only:
+                - master
     jobs:
       - checkout_code
       -
