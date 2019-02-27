@@ -385,46 +385,46 @@ jobs:
           path: ~/Library/Caches/Bit/logs/debug.log
 workflows:
   version: 2
-  # build_and_test:
-  #   jobs:
-  #     - checkout_code
-  #     - set_ssh_key
-  #     - set_bitsrc_registry
-  #     -
-  #       install_npm_deps:
-  #         requires:
-  #           - checkout_code
-  #     -
-  #       install_bit_javascript_npm_deps:
-  #         requires:
-  #           - checkout_code
-  #     -
-  #       build:
-  #         requires:
-  #           - install_npm_deps
-  #     -
-  #       build_bit_javascript:
-  #         requires:
-  #           - install_bit_javascript_npm_deps
-  #     -
-  #       unit_test:
-  #         requires:
-  #           - build
-  #     -
-  #       unit_test_bit_javascript:
-  #         requires:
-  #           - build_bit_javascript
-  #     -
-  #       lint:
-  #         requires:
-  #           - install_npm_deps
-  #     -
-  #       e2e_test:
-  #         requires:
-  #           - build
-  #           - build_bit_javascript
-  #           - set_ssh_key
-  #           - set_bitsrc_registry
+  build_and_test:
+    jobs:
+      - checkout_code
+      - set_ssh_key
+      - set_bitsrc_registry
+      -
+        install_npm_deps:
+          requires:
+            - checkout_code
+      -
+        install_bit_javascript_npm_deps:
+          requires:
+            - checkout_code
+      -
+        build:
+          requires:
+            - install_npm_deps
+      -
+        build_bit_javascript:
+          requires:
+            - install_bit_javascript_npm_deps
+      -
+        unit_test:
+          requires:
+            - build
+      -
+        unit_test_bit_javascript:
+          requires:
+            - build_bit_javascript
+      -
+        lint:
+          requires:
+            - install_npm_deps
+      -
+        e2e_test:
+          requires:
+            - build
+            - build_bit_javascript
+            - set_ssh_key
+            - set_bitsrc_registry
   performence_tests:
     triggers:
       - schedule:
