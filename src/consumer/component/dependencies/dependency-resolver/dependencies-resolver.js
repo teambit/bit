@@ -234,6 +234,7 @@ export default class DependencyResolver {
     }
 
     componentId = this.consumer.bitMap.getComponentIdByPath(depFileRelative);
+    if (!componentId) componentId = this._getComponentIdFromCustomResolveToPackageWithDist(depFileRelative);
     // if not found here, the file is not a component file. It might be a bit-auto-generated file.
     // find the component file by the auto-generated file.
     // We make sure also that rootDir is there, otherwise, it's an AUTHORED component, which shouldn't have
@@ -275,6 +276,34 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     }
 
     return { componentId, depFileRelative, destination };
+  }
+
+  /**
+   * this is a workaround for cases where an alias points to a package with dist.
+   * normally, aliases are created for local directories.
+   * they can be however useful when a source code can't be touched and `require` to one package
+   * needs to be replaced with a `require` to a component. in that case, our options are:
+   * 1) point the alias to the package name.
+   * 2) point the alias to the relative directory of the imported component
+   * the ideal solution is #1, however, it requires changes in the Tree structure, which should
+   * allow "bits" to have more data, such as importSource.
+   * here, we go option #2, the alias is a relative path to the component. however, when there is
+   * dist directory, the resolved path contains the "dist", which doesn't exist in the ComponentMap,
+   * the solution we take is to identify such cases, strip the dist, then try to find them again.
+   */
+  _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): ?BitId {
+    if (!depFile.includes('dist')) return null;
+    const resolveModules = this.consumer.bitJson.resolveModules;
+    if (!resolveModules || !resolveModules.aliases) return null;
+    const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
+      depFile.startsWith(resolveModules.aliases[alias])
+    );
+    if (!foundAlias) return null;
+    const newDepFile = depFile.replace(
+      `${resolveModules.aliases[foundAlias]}/dist`,
+      resolveModules.aliases[foundAlias]
+    );
+    return this.consumer.bitMap.getComponentIdByPath(newDepFile);
   }
 
   getDependencyPathsFromModel(componentId: BitId, depFile: PathLinux, rootDir: PathLinux) {
@@ -414,12 +443,13 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
 
     if (
       depComponentMap &&
+      !depFileObject.isCustomResolveUsed && // for custom resolve, the link is written in node_modules, so it doesn't matter
       ((depComponentMap.origin === COMPONENT_ORIGINS.IMPORTED &&
         this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) ||
         (depComponentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
           this.componentMap.origin === COMPONENT_ORIGINS.IMPORTED))
     ) {
-      // prevent author using relative paths for IMPORTED component
+      // prevent author using relative paths for IMPORTED component (to avoid long paths)
       // also prevent adding AUTHORED component to an IMPORTED component using relative syntax. The reason is that when
       // this component is imported somewhere else, a link-file between the IMPORTED and the AUTHORED must be written
       // outside the component directory, which might override user files.
