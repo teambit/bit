@@ -428,8 +428,8 @@ workflows:
   performence_tests:
     triggers:
       - schedule:
-          # cron: "0 0 * * *"
-          cron: "*/5 * * * *"
+          cron: "0 0 * * *"
+          # cron: "*/5 * * * *"
           filters:
             branches:
               only:
