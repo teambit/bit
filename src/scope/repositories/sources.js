@@ -95,9 +95,9 @@ export default class SourceRepository {
     const foundComponent = await this.objects().findOne(realModelComponent.hash());
     if (!foundComponent) {
       throw new Error(
-        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}". Hash: ${symlink
-          .hash()
-          .toString()}`
+        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}".
+if you have the steps to reproduce the issue, please open a Github issue with the details.
+to quickly fix the issue, please delete the object at "${this.objects().objectPath(symlink.hash())}"`
       );
     }
     return foundComponent;
