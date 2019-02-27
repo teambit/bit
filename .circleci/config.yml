@@ -345,6 +345,8 @@ jobs:
         attach_workspace:
           at: ./
       -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
         run: 'cd bit && mkdir junit'
       -
         run:
