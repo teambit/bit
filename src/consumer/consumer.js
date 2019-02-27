@@ -64,6 +64,7 @@ import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
+import ComponentOutOfSync from './exceptions/component-out-of-sync';
 
 type ConsumerProps = {
   projectPath: string,
@@ -532,10 +533,7 @@ export default class Consumer {
       const versionFromFs = componentFromFileSystem.id.version;
       const idStr = id.toString();
       if (!componentFromFileSystem.id.hasVersion()) {
-        throw new GeneralError(`component ${idStr} has an invalid state.
-           it is saved in the scope so it's not new. however, it doesn't have a version in the .bitmap file, indicating that the component is new.
-           if possible, remove the component and re-import or re-create it.
-           `);
+        throw new ComponentOutOfSync(idStr);
       }
       // TODO: instead of doing that like this we should use:
       // const versionFromModel = await componentFromModel.loadVersion(versionFromFs, this.scope.objects);

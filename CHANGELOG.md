@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- enable removing a component that its workspace and scope representations are not in sync
 - fix "JavaScript heap out of memory" when loading a large amount of components
 - improve `bit tag` performance by decreasing hook logging
 
