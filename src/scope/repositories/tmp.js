@@ -17,14 +17,9 @@ export default class Tmp extends Repository {
   }
 
   save(data: string, ext: string = '.js'): Promise<PathOsBased> {
-    return new Promise((resolve, reject) => {
-      const fileName = v4();
-      const filePath = this.composePath(`${fileName}${ext}`);
-      fs.outputFile(filePath, data, (err) => {
-        if (err) return reject(err);
-        return resolve(filePath);
-      });
-    });
+    const fileName = v4();
+    const filePath = this.composePath(`${fileName}${ext}`);
+    return fs.outputFile(filePath, data);
   }
 
   saveSync(data: string, ext: string = '.js'): PathOsBased {
