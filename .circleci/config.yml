@@ -430,10 +430,10 @@ workflows:
       - schedule:
           # cron: "0 0 * * *"
           cron: "*/5 * * * *"
-          filters:
-            branches:
-              only:
-                - master
+          # filters:
+          #   branches:
+          #     only:
+          #       - master
     jobs:
       - checkout_code
       -
