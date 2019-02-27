@@ -7,15 +7,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "JavaScript heap out of memory" when loading a large amount of components
+- improve `bit tag` performance by decreasing hook logging
+
+## [[14.0.1] - 2019-02-24](https://github.com/teambit/bit/releases/tag/v14.0.1)
+
+- show an error when deleting a global remote without `--global` flag
+- show an error when deleting a non-exist remote
 - enable custom resolve of aliases to symlink packages (bit-javascript)
-
-## [14.0.1-dev.2] - 2019-02-20
-
 - fix error "toAbsolutePath expects relative path"
 - improve errors stack-trace readability
-
-## [14.0.1-dev.1] - 2019-02-18
-
 - index scope components to improve memory consumption and performance
 - extract docs from non-tests files only
 - fix `bit show --remote --json` to not crash when a component has a compiler

@@ -82,7 +82,7 @@ const allCommands = [
       },
       {
         name: 'eject',
-        description: 'remove components from the local scope and install them by the NPM client.'
+        description: 'replaces the components from the local scope with the corresponding packages.'
       },
       {
         name: 'link',
