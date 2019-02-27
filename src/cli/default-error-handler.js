@@ -92,6 +92,7 @@ import { COMPONENT_DIR, DEBUG_LOG } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
+import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -477,6 +478,15 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   [
     AuthenticationFailed,
     err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
+  ],
+  [
+    ObjectsWithoutConsumer,
+    err => `error: unable to initialize a bit workspace. bit has found undeleted local objects at ${chalk.bold(
+      err.scopePath
+    )}.
+1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
+2. if deleted by mistake, please restore .bitmap and bit.json.
+3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`
   ]
 ];
 
