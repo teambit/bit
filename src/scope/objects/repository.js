@@ -50,12 +50,16 @@ export default class Repository {
     return ComponentsIndex.reset(scopePath);
   }
 
+  static getPathByScopePath(scopePath: string) {
+    return path.join(scopePath, OBJECTS_DIR);
+  }
+
   ensureDir() {
     return mkdirp(this.getPath());
   }
 
   getPath() {
-    return path.join(this.scopePath, OBJECTS_DIR);
+    return Repository.getPathByScopePath(this.scopePath);
   }
 
   getBackupPath(dirName?: string): string {

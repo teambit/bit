@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
 - fix "JavaScript heap out of memory" when loading a large amount of components
 - improve `bit tag` performance by decreasing hook logging
 
