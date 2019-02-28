@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix error "consumer.loadComponentFromModel, version is missing from the id"
 - enable removing a component that its workspace and scope representations are not in sync
 - fix "error: Could not stat (filename) No such file or directory" when bit-checkout updates multiple files
 - prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
