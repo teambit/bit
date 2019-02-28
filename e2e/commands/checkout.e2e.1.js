@@ -769,6 +769,7 @@ describe('bit checkout command', function () {
     // `Promise.all` somehow. also, with 5 components, it was happening in about 30% of the times.
     const numOfComponents = 5;
     before(() => {
+      helper.reInitLocalScope();
       for (let index = 0; index < numOfComponents; index += 1) {
         helper.createFile('bar', `foo${index}.js`, barFooV1);
       }
@@ -782,7 +783,7 @@ describe('bit checkout command', function () {
       for (let index = 0; index < numOfComponents; index += 1) {
         helper.createFile('bar', `foo${index}.js`, barFooV3);
       }
-      // intermediate step, make sure it's shows as modified
+      // intermediate step, make sure it shows as modified
       const statusOutput = helper.runCmd('bit status');
       expect(statusOutput).to.have.string('modified');
       scopeBeforeModified = helper.cloneLocalScope();
