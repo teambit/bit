@@ -65,6 +65,7 @@ import buildComponent from '../component-ops/build-component';
 import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-not-found';
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
 import DataToPersist from './sources/data-to-persist';
+import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -838,6 +839,7 @@ export default class Component {
       MainFileRemoved,
       MissingFilesFromComponent,
       ComponentNotFoundInPath,
+      ComponentOutOfSync,
       ExtensionFileNotFound
     ];
     return invalidComponentErrors.some(errorType => err instanceof errorType);

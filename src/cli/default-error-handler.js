@@ -9,6 +9,7 @@ import {
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
+  ComponentOutOfSync,
   MissingDependencies,
   NewerVersionFound,
   LoginFailed
@@ -253,6 +254,13 @@ Original Error: ${err.message}`
       `${
         err.specsResultsAndIdPretty
       }component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command`
+  ],
+  [
+    ComponentOutOfSync,
+    err => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
+if it is originated from another git branch, go back to that branch to continue working on the component.
+if possible, remove the component using "bit remove" and re-import or re-create it.
+to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`
   ],
   [
     MissingDependencies,
