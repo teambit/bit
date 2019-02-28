@@ -15,6 +15,7 @@ import type { MergeStrategy, ApplyVersionResults, ApplyVersionResult, FailedComp
 import type { MergeResultsThreeWay } from './merge-version/three-way-merge';
 import GeneralError from '../../error/general-error';
 import ManyComponentsWriter from '../component-ops/many-components-writer';
+import { Tmp } from '../../scope/repositories';
 
 export type CheckoutProps = {
   version?: string, // if reset is true, the version is undefined
@@ -42,11 +43,8 @@ export default (async function checkoutVersion(
 ): Promise<ApplyVersionResults> {
   const { version, ids, promptMergeOptions } = checkoutProps;
   const { components } = await consumer.loadComponents(ids);
-  const allComponentsP = components.map((component: ConsumerComponent) => {
-    return getComponentStatus(consumer, component, checkoutProps);
-  });
-  const allComponents: ComponentStatus[] = await Promise.all(allComponentsP);
-  const componentWithConflict = allComponents.find(
+  const allComponentsStatus: ComponentStatus[] = await getAllComponentsStatus();
+  const componentWithConflict = allComponentsStatus.find(
     component => component.mergeResults && component.mergeResults.hasConflicts
   );
   if (componentWithConflict) {
@@ -57,11 +55,11 @@ export default (async function checkoutVersion(
     }
     if (!checkoutProps.mergeStrategy) checkoutProps.mergeStrategy = await getMergeStrategyInteractive();
   }
-  const failedComponents: FailedComponents[] = allComponents
+  const failedComponents: FailedComponents[] = allComponentsStatus
     .filter(componentStatus => componentStatus.failureMessage) // $FlowFixMe componentStatus.failureMessage is set
     .map(componentStatus => ({ id: componentStatus.id, failureMessage: componentStatus.failureMessage }));
 
-  const succeededComponents = allComponents.filter(componentStatus => !componentStatus.failureMessage);
+  const succeededComponents = allComponentsStatus.filter(componentStatus => !componentStatus.failureMessage);
   // do not use Promise.all for applyVersion. otherwise, it'll write all components in parallel,
   // which can be an issue when some components are also dependencies of others
   const componentsResults = await pMapSeries(succeededComponents, ({ id, componentFromFS, mergeResults }) => {
@@ -69,6 +67,20 @@ export default (async function checkoutVersion(
   });
 
   return { components: componentsResults, version, failedComponents };
+
+  async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
+    const tmp = new Tmp(consumer.scope);
+    try {
+      const componentsStatus = await Promise.all(
+        components.map(component => getComponentStatus(consumer, component, checkoutProps))
+      );
+      await tmp.clear();
+      return componentsStatus;
+    } catch (err) {
+      await tmp.clear();
+      throw err;
+    }
+  }
 });
 
 async function getComponentStatus(

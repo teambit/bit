@@ -33,26 +33,26 @@ export default class Tmp extends Repository {
   remove(fileNameOrPath: string, ext: string = '.js'): Promise<any> {
     const fileName = path.parse(fileNameOrPath).name;
     const filePath = this.composePath(`${fileName}${ext}`);
-    logger.info(`tmp, deleting ${filePath}`);
+    logger.info(`tmp.remove, deleting ${filePath}`);
     return fs.remove(filePath);
   }
 
   removeSync(fileNameOrPath: string, ext: string = '.js'): any {
     const fileName = path.parse(fileNameOrPath).name;
     const filePath = this.composePath(`${fileName}${ext}`);
-    logger.info(`tmp, deleting ${filePath}`);
+    logger.info(`tmp.removeSync, deleting ${filePath}`);
     return fs.removeSync(filePath);
   }
 
   clear(): Promise<any> {
     const dirToDelete = this.getPath();
-    logger.info(`tmp, deleting ${dirToDelete}`);
+    logger.info(`tmp.clear, deleting ${dirToDelete}`);
     return fs.emptyDir(dirToDelete);
   }
 
   clearSync(): any {
     const dirToDelete = this.getPath();
-    logger.info(`tmp, deleting ${dirToDelete}`);
+    logger.info(`tmp.clearSync, deleting ${dirToDelete}`);
     return fs.emptyDirSync(dirToDelete);
   }
 }

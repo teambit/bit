@@ -123,12 +123,5 @@ async function getMergeResults(
     };
     return mergeFiles(mergeFilesParams);
   });
-  try {
-    const conflictResults = await Promise.all(conflictResultsP);
-    await tmp.clear();
-    return conflictResults;
-  } catch (err) {
-    await tmp.clear();
-    throw err;
-  }
+  return Promise.all(conflictResultsP);
 }
