@@ -120,33 +120,38 @@ export default class BitMap {
   }
 
   static load(dirPath: PathOsBasedAbsolute): BitMap {
-    const standardLocation = path.join(dirPath, BIT_MAP);
-    const oldLocation = path.join(dirPath, OLD_BIT_MAP);
-    const getBitMapLocation = (): ?PathOsBased => {
-      if (fs.existsSync(standardLocation)) return standardLocation;
-      if (fs.existsSync(oldLocation)) return oldLocation;
-      return null;
-    };
-    const bitMapLocation = getBitMapLocation();
-    if (!bitMapLocation) {
+    const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
+    if (!currentLocation) {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
-      return new BitMap(dirPath, standardLocation, BIT_VERSION);
+      return new BitMap(dirPath, defaultLocation, BIT_VERSION);
     }
-    const mapFileContent = fs.readFileSync(bitMapLocation);
+    const mapFileContent = fs.readFileSync(currentLocation);
     let componentsJson;
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
     } catch (e) {
       logger.error(e);
-      throw new InvalidBitMap(bitMapLocation, e.message);
+      throw new InvalidBitMap(currentLocation, e.message);
     }
     const version = componentsJson.version;
     // Don't treat version like component
     delete componentsJson.version;
 
-    const bitMap = new BitMap(dirPath, bitMapLocation, version);
+    const bitMap = new BitMap(dirPath, currentLocation, version);
     bitMap.loadComponents(componentsJson);
     return bitMap;
+  }
+
+  static getBitMapLocation(dirPath: PathOsBasedAbsolute) {
+    const defaultLocation = path.join(dirPath, BIT_MAP);
+    const oldLocation = path.join(dirPath, OLD_BIT_MAP);
+    const getCurrentLocation = (): ?PathOsBased => {
+      if (fs.existsSync(defaultLocation)) return defaultLocation;
+      if (fs.existsSync(oldLocation)) return oldLocation;
+      return null;
+    };
+    const currentLocation = getCurrentLocation();
+    return { currentLocation, defaultLocation };
   }
 
   /**
