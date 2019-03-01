@@ -2293,6 +2293,24 @@ console.log(barFoo.default());`;
       expect(run).not.to.throw();
     });
   });
+  describe('adding a scoped package to an imported component', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagComponentBarFoo();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      helper.createFile('components/bar/foo', 'foo.js', 'require("@babel/core");');
+      helper.addNpmPackage('@babel/core');
+    });
+    it('bit show should include the new package', () => {
+      const show = helper.showComponentParsed('bar/foo');
+      expect(show.packageDependencies).to.have.property('@babel/core');
+    });
+  });
   describe.skip('Import compiler', () => {
     before(() => {
       helper.reInitLocalScope();
