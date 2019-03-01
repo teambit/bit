@@ -40,6 +40,7 @@ import {
   InvalidIndexJson,
   HashMismatch,
   MergeConflictOnRemote,
+  OutdatedIndexJson,
   VersionNotFound,
   CyclicDependencies,
   HashNotFound
@@ -94,6 +95,9 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
+
+const reportIssueToGithubMsg =
+  'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -168,7 +172,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err =>
       `error: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
         err.version
-      } is missing. please report this issue on Github https://github.com/teambit/bit/issues`
+      } is missing.\n${reportIssueToGithubMsg}`
   ],
   [
     DependencyNotFound,
@@ -178,10 +182,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`
   ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
-  [
-    ValidationError,
-    err => `${err.message}\nThis error should have never happened. Please open a new Github issue with the bug details`
-  ],
+  [ValidationError, err => `${err.message}\n${reportIssueToGithubMsg}`],
   [ComponentNotFoundInPath, err => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [
     PermissionDenied,
@@ -223,6 +224,14 @@ to resolve this conflict and merge your remote and local changes, please do the 
 2) bit import
 3) bit checkout [version] [id]
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
+  ],
+  [
+    OutdatedIndexJson,
+    err => `error: component ${chalk.bold(
+      err.componentId
+    )} found in the index.json file, however, is missing from the scope.
+to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIssueToGithubMsg}
+`
   ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [
