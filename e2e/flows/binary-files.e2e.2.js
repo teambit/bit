@@ -72,6 +72,14 @@ describe('binary files', function () {
       expect(files).to.be.lengthOf(1);
       expect(files[0]).to.have.string('png_fixture.png');
     });
+    it('should create the file in node_modules/@bit as a symlink', () => {
+      const symlinkPath = path.join(
+        helper.localScopePath,
+        `node_modules/@bit/${helper.remoteScope}.bar.foo/bar/png_fixture.png`
+      );
+      const symlinkValue = fs.readlinkSync(symlinkPath);
+      expect(symlinkValue).to.have.string(path.join('bar', 'png_fixture.png'));
+    });
     it('should not install a package "undefined" ', () => {
       expect(path.join(helper.localScopePath, 'node_modules/undefined')).to.not.be.a.path;
     });

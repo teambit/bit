@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
+- recognize scoped packages that were newly introduced to imported components
 - fix error "consumer.loadComponentFromModel, version is missing from the id"
 - enable removing a component that its workspace and scope representations are not in sync
 - fix "error: Could not stat (filename) No such file or directory" when bit-checkout updates multiple files
