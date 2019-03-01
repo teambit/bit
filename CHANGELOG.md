@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.4-dev.1] - 2019-03-01
+
+- support scoped packages when resolving package.json directory of a package
+
 ## [2.0.3] - 2019-02-24
 
 - upgrade to babel 7

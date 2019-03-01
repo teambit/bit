@@ -74,9 +74,7 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
   }
 
   // Get the package relative path to the node_modules dir
-  const indexOfLastNodeModules = packageFullPath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1;
-  const indexOfPackageFolderEnd = packageFullPath.indexOf(path.sep, indexOfLastNodeModules);
-  const packageDir = packageFullPath.substring(0, indexOfPackageFolderEnd);
+  const packageDir = resolvePackageDirFromFilePath(packageFullPath);
 
   // don't propagate here since loading a package.json of another folder and taking the version from it will result wrong version
   // This for example happen in the following case:
@@ -90,6 +88,27 @@ export function resolveNodePackage(cwd: string, packageFullPath: string): Object
   if (!packageInfo || !packageInfo.name || !packageInfo.version) return null;
   result[packageInfo.name] = packageInfo.version;
   return result;
+}
+
+/**
+ * given the full path of a package file, returns the root dir of the package, so then we could
+ * find the package.json in that directory.
+ *
+ * example of a normal package:
+ * absolutePackageFilePath: /user/workspace/node_modules/lodash.isboolean/index.js
+ * returns: /user/workspace/node_modules/lodash.isboolean
+ *
+ * example of a scoped package:
+ * absolutePackageFilePath: /user/workspace/node_modules/@babel/core/lib/index.js
+ * returns: /user/workspace/node_modules/@babel/core
+ */
+function resolvePackageDirFromFilePath(absolutePackageFilePath: string): string {
+  const NODE_MODULES = 'node_modules';
+  const indexOfLastNodeModules = absolutePackageFilePath.lastIndexOf(NODE_MODULES) + NODE_MODULES.length + 1;
+  const pathInsideNodeModules = absolutePackageFilePath.substring(indexOfLastNodeModules);
+  const packageName = resolvePackageNameByPath(pathInsideNodeModules);
+  const pathUntilNodeModules = absolutePackageFilePath.substring(0, indexOfLastNodeModules);
+  return pathUntilNodeModules + packageName;
 }
 
 /**
