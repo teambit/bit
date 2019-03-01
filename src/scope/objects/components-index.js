@@ -49,6 +49,11 @@ export default class ComponentsIndex {
   getIdsIncludesSymlinks(): BitId[] {
     return this.index.map(indexItem => this.indexItemToBitId(indexItem));
   }
+  getIdByHash(hash: string): ?BitId {
+    const foundIndexItem = this.index.find(indexItem => indexItem.hash === hash);
+    if (!foundIndexItem) return null;
+    return this.indexItemToBitId(foundIndexItem);
+  }
   getHashes(): string[] {
     return this.index.filter(indexItem => !indexItem.isSymlink).map(indexItem => indexItem.hash);
   }
@@ -83,6 +88,9 @@ export default class ComponentsIndex {
     if (!found) return false;
     this.index = R.without([found], this.index);
     return true;
+  }
+  getPath() {
+    return this.indexPath;
   }
   _find(hash: string): ?IndexItem {
     return this.index.find(indexItem => indexItem.hash === hash);
