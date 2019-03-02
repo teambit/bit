@@ -43,6 +43,8 @@ export default class DataToPersist {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
   }
   addSymlink(symlink: Symlink) {
+    if (!symlink.src) throw new Error('failed adding a symlink into DataToPersist, src is empty');
+    if (!symlink.dest) throw new Error('failed adding a symlink into DataToPersist, dest is empty');
     this.symlinks.push(symlink);
   }
   addManySymlinks(symlinks: Symlink[] = []) {

@@ -15,7 +15,6 @@ import type { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import type { Dependency } from '../consumer/component/dependencies';
 import BitMap from '../consumer/bit-map/bit-map';
-import AbstractVinyl from '../consumer/component/sources/abstract-vinyl';
 import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
@@ -35,12 +34,12 @@ export default class NodeModuleLinker {
   components: Component[];
   consumer: ?Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
-  symlinks: Symlink[] = [];
-  files: AbstractVinyl[] = [];
+  dataToPersist: DataToPersist;
   constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
     this.components = ComponentsList.getUniqueComponents(components);
     this.consumer = consumer; // $FlowFixMe
     this.bitMap = bitMap || consumer.bitMap;
+    this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<LinksResult[]> {
     const links = await this.getLinks();
@@ -50,6 +49,7 @@ export default class NodeModuleLinker {
     return linksResults;
   }
   async getLinks(): Promise<DataToPersist> {
+    this.dataToPersist = new DataToPersist();
     await Promise.all(
       this.components.map((component) => {
         const componentId = component.id.toString();
@@ -68,10 +68,8 @@ export default class NodeModuleLinker {
         }
       })
     );
-    const dataToPersist = new DataToPersist();
-    dataToPersist.addManyFiles(this.files);
-    dataToPersist.addManySymlinks(this.symlinks);
-    return dataToPersist;
+
+    return this.dataToPersist;
   }
   getLinksResults(): LinksResult[] {
     const linksResults: LinksResult[] = [];
@@ -85,10 +83,10 @@ export default class NodeModuleLinker {
         linksResults.push({ id, bound: [{ from, to }] });
       }
     };
-    this.symlinks.forEach((symlink: Symlink) => {
+    this.dataToPersist.symlinks.forEach((symlink: Symlink) => {
       addLinkResult(symlink.componentId, symlink.src, symlink.dest);
     });
-    this.files.forEach((file: LinkFile) => {
+    this.dataToPersist.files.forEach((file: LinkFile) => {
       addLinkResult(file.componentId, file.srcPath, file.path);
     });
     this.components.forEach((component) => {
@@ -116,23 +114,23 @@ export default class NodeModuleLinker {
     ) {
       const distTarget = component.dists.getDistDir(this.consumer, componentMap.rootDir);
       const packagesSymlinks = this._getSymlinkPackages(srcTarget, distTarget, component);
-      this.symlinks.push(...packagesSymlinks);
-      this.symlinks.push(Symlink.makeInstance(distTarget, linkPath, componentId));
+      this.dataToPersist.addManySymlinks(packagesSymlinks);
+      this.dataToPersist.addSymlink(Symlink.makeInstance(distTarget, linkPath, componentId));
     } else {
-      this.symlinks.push(Symlink.makeInstance(srcTarget, linkPath, componentId));
+      this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
 
     if (component.hasDependencies()) {
       const dependenciesLinks = this._getDependenciesLinks(component);
-      this.symlinks.push(...dependenciesLinks);
+      this.dataToPersist.addManySymlinks(dependenciesLinks);
     }
     const missingDependenciesLinks =
       this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
-    this.symlinks.push(...missingDependenciesLinks);
+    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
     if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
       const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
-      this.files.push(...missingCustomResolvedLinks.files);
-      this.symlinks.push(...missingCustomResolvedLinks.symlinks);
+      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
+      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
     }
   }
   /**
@@ -142,7 +140,7 @@ export default class NodeModuleLinker {
   _populateNestedComponentsLinks(component: Component): void {
     if (component.hasDependencies()) {
       const dependenciesLinks = this._getDependenciesLinks(component);
-      this.symlinks.push(...dependenciesLinks);
+      this.dataToPersist.addManySymlinks(dependenciesLinks);
     }
   }
   /**
@@ -158,10 +156,10 @@ export default class NodeModuleLinker {
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
         const linkFile = LinkFile.load({ filePath: dest, content: fileContent, srcPath: file, componentId });
-        this.files.push(linkFile);
+        this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
-        this.symlinks.push(Symlink.makeInstance(file, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
       }
     });
     this._populateLinkToMainFile(component);
@@ -301,7 +299,7 @@ export default class NodeModuleLinker {
         srcPath: mainFile,
         componentId: component.id
       });
-      this.files.push(linkFile);
+      this.dataToPersist.addFile(linkFile);
     }
   }
 }
