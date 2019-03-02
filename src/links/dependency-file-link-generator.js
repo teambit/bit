@@ -219,14 +219,21 @@ export default class DependencyFileLinkGenerator {
   }
 
   getTargetDir(): PathOsBasedRelative {
-    if (this.targetDir) return this.targetDir;
-    const writtenPath = this.component.writtenPath;
-    // $FlowFixMe when running from bit build, the writtenPath is not available but it should have rootDir as it's related to the dists links
-    if (!writtenPath) return this.componentMap.rootDir;
-    if (path.isAbsolute(writtenPath)) {
-      throw new Error('getTargetDir: component.writtenPath should be relative');
+    const determineTargetDir = () => {
+      if (this.targetDir) return this.targetDir;
+      const writtenPath = this.component.writtenPath;
+      // $FlowFixMe when running from bit build, the writtenPath is not available but it should have rootDir as it's related to the dists links
+      if (!writtenPath) return this.componentMap.rootDir;
+      if (path.isAbsolute(writtenPath)) {
+        throw new Error('getTargetDir: component.writtenPath should be relative');
+      }
+      return writtenPath;
+    };
+    const targetDir = determineTargetDir();
+    if (!targetDir || !(typeof targetDir === 'string')) {
+      throw new Error('targetDir must be of type string');
     }
-    return writtenPath;
+    return targetDir;
   }
 
   getLinkPath(): PathOsBased {
