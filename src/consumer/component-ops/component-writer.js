@@ -189,7 +189,7 @@ export default class ComponentWriter {
   }
 
   _updateComponentRootPathAccordingToBitMap() {
-    this.writeToPath = this.componentMap.rootDir || '.';
+    this.writeToPath = this.componentMap.getRootDir();
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();
   }
@@ -287,7 +287,7 @@ export default class ComponentWriter {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
         const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.bitJson.bindingPrefix, this.component.id);
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
-          path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
+          path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
         );
         logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
         return fs.remove(nodeModulesLinkAbs);

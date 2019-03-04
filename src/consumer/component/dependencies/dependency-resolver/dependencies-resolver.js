@@ -811,7 +811,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
 
   getRelativeEnvFiles(files: Object[]): PathLinux[] {
     const getPathsRelativeToComponentRoot = () => {
-      const rootDirAbsolute = this.consumer.toAbsolutePath(this.componentMap.rootDir || '.');
+      const rootDirAbsolute = this.consumer.toAbsolutePath(this.componentMap.getRootDir());
       return files.map((file) => {
         const envAbsolute = file.path;
         return path.relative(rootDirAbsolute, envAbsolute);
