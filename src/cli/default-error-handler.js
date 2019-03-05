@@ -564,7 +564,7 @@ function sendToAnalyticsAndSentry(err) {
   const possiblyHashedError = hashErrorIfNeeded(err);
   // only level FATAL are reported to Sentry.
   // $FlowFixMe
-  const level = err.userError ? LEVEL.INFO : LEVEL.FATAL;
+  const level = err.isUserError ? LEVEL.INFO : LEVEL.FATAL;
   Analytics.setError(level, possiblyHashedError);
 }
 

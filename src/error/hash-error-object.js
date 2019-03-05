@@ -11,7 +11,7 @@ export default function hashErrorIfNeeded(error: Error) {
   const shouldHash = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
   if (!shouldHash) return clonedError;
   const fields = Object.getOwnPropertyNames(clonedError);
-  const fieldToHash = fields.filter(field => !systemFields.includes(field));
+  const fieldToHash = fields.filter(field => !systemFields.includes(field) && field !== 'message');
   if (!fieldToHash.length) return clonedError;
   fieldToHash.forEach((field) => {
     // $FlowFixMe
