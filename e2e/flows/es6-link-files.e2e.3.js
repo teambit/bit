@@ -113,7 +113,7 @@ describe('es6 components with link files', function () {
     });
     describe('when importing the component', () => {
       before(() => {
-        helper.importCompiler('bit.envs/compilers/babel@6.0.0');
+        helper.importCompiler('bit.envs/compilers/babel@0.0.20');
         helper.tagAllComponents();
         helper.exportAllComponents();
         helper.reInitLocalScope();

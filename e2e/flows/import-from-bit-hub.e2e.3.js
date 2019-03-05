@@ -35,7 +35,7 @@ chai.use(require('chai-fs'));
         scopeAfterExport = helper.cloneLocalScope();
 
         helper.reInitLocalScope();
-        helper.importCompiler('bit.envs/compilers/babel@6.0.0');
+        helper.importCompiler('bit.envs/compilers/babel@0.0.20');
         helper.createFile('utils', 'is-type-es6.js', fixtures.isTypeES6);
         helper.addComponent('utils/is-type-es6.js', { i: 'utils/is-type-es6' });
         helper.createFile(
