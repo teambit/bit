@@ -7,6 +7,7 @@ import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { ComponentNotFound } from '../../src/scope/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -2311,19 +2312,15 @@ console.log(barFoo.default());`;
       expect(show.packageDependencies).to.have.property('@babel/core');
     });
   });
-  describe.skip('Import compiler', () => {
+  describe('import compiler with a non-exist version', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.addRemoteScope();
     });
-    it('should install package dependencies', () => {});
-  });
-
-  describe.skip('Import tester', () => {
-    before(() => {
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
+    it('should throw an error that a component does not exist', () => {
+      const compiler = 'bit.envs/compilers/babel@1000.0.0';
+      const error = new ComponentNotFound(compiler);
+      const importCmd = () => helper.importCompiler(compiler);
+      helper.expectToThrow(importCmd, error);
     });
-    it('should install package dependencies', () => {});
   });
 });
