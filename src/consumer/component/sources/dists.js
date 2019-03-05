@@ -92,16 +92,15 @@ export default class Dists {
     return this.distsRootDir;
   }
 
-  getDistDir(consumer: ?Consumer, componentRootDir: ?PathLinux): PathOsBasedRelative {
-    const rootDir = componentRootDir || '.';
-    if (consumer) return this.getDistDirForConsumer(consumer, rootDir);
-    this.distsRootDir = path.join(componentRootDir || '.', rootDir);
+  getDistDir(consumer: ?Consumer, componentRootDir: PathLinux): PathOsBasedRelative {
+    if (consumer) return this.getDistDirForConsumer(consumer, componentRootDir);
+    this.distsRootDir = path.join(componentRootDir, DEFAULT_DIST_DIRNAME);
     return this.distsRootDir;
   }
 
   updateDistsPerConsumerBitJson(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
     if (this._distsPathsAreUpdated || this.isEmpty()) return;
-    const newDistBase = this.getDistDir(consumer, componentMap.rootDir);
+    const newDistBase = this.getDistDir(consumer, componentMap.getRootDir());
     const distEntry = consumer ? consumer.bitJson.distEntry : undefined;
     const shouldDistEntryBeStripped = () => {
       if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;

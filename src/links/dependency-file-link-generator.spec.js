@@ -13,7 +13,12 @@ import * as globalConfig from '../api/consumer/lib/global-config';
 
 const mockBitMap = () => {
   return {
-    getComponent: () => ({ rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1' })
+    getComponent: () => ({
+      rootDir: '.dependencies/utils/is-string/remote-scope/0.0.1',
+      getRootDir() {
+        return this.rootDir;
+      }
+    })
   };
 };
 
@@ -47,7 +52,10 @@ describe('DependencyFileLinkGenerator', () => {
       before(async () => {
         const component = await Component.fromString(JSON.stringify(barFoo));
         component.componentMap = {
-          rootDir: 'components/bar/foo'
+          rootDir: 'components/bar/foo',
+          getRootDir() {
+            return this.rootDir;
+          }
         };
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsString));
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
@@ -101,7 +109,10 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooEs6));
           component.componentMap = {
-            rootDir: 'components/bar/foo'
+            rootDir: 'components/bar/foo',
+            getRootDir() {
+              return this.rootDir;
+            }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
@@ -201,7 +212,10 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooEs6));
           component.componentMap = {
-            rootDir: 'components/bar/foo'
+            rootDir: 'components/bar/foo',
+            getRootDir() {
+              return this.rootDir;
+            }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
@@ -304,7 +318,10 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
           component.componentMap = {
-            rootDir: 'components/bar/foo'
+            rootDir: 'components/bar/foo',
+            getRootDir() {
+              return this.rootDir;
+            }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
@@ -363,7 +380,10 @@ describe('DependencyFileLinkGenerator', () => {
         before(async () => {
           const component = await Component.fromString(JSON.stringify(barFooCustomResolved));
           component.componentMap = {
-            rootDir: 'components/bar/foo'
+            rootDir: 'components/bar/foo',
+            getRootDir() {
+              return this.rootDir;
+            }
           };
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({

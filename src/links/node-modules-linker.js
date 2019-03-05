@@ -112,7 +112,7 @@ export default class NodeModuleLinker {
       component.dists.writeDistsFiles &&
       !shouldDistsBeInsideTheComponent
     ) {
-      const distTarget = component.dists.getDistDir(this.consumer, componentMap.rootDir);
+      const distTarget = component.dists.getDistDir(this.consumer, componentMap.getRootDir());
       const packagesSymlinks = this._getSymlinkPackages(srcTarget, distTarget, component);
       this.dataToPersist.addManySymlinks(packagesSymlinks);
       this.dataToPersist.addSymlink(Symlink.makeInstance(distTarget, linkPath, componentId));
@@ -201,21 +201,17 @@ export default class NodeModuleLinker {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap) return dependenciesLinks;
-      const parentRootDir = componentMap.rootDir || '.'; // compilers/testers don't have rootDir
+      const parentRootDir = componentMap.getRootDir();
+      const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(
-        this._getDependencyLink(
-          parentRootDir,
-          dependency.id,
-          dependencyComponentMap.rootDir || '.',
-          component.bindingPrefix
-        )
+        this._getDependencyLink(parentRootDir, dependency.id, dependencyRootDir, component.bindingPrefix)
       );
       if (this.consumer && !this.consumer.shouldDistsBeInsideTheComponent()) {
         // when dists are written outside the component, it doesn't matter whether a component
         // has dists files or not, in case it doesn't have, the files are copied from the component
         // dir into the dist dir. (see consumer-component.write())
-        const from = component.dists.getDistDirForConsumer(this.consumer, componentMap.rootDir);
-        const to = component.dists.getDistDirForConsumer(this.consumer, dependencyComponentMap.rootDir);
+        const from = component.dists.getDistDirForConsumer(this.consumer, parentRootDir);
+        const to = component.dists.getDistDirForConsumer(this.consumer, dependencyRootDir);
         dependenciesLinks.push(this._getDependencyLink(from, dependency.id, to, component.bindingPrefix));
       }
       return dependenciesLinks;

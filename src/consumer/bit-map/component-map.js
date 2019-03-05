@@ -5,7 +5,7 @@ import path from 'path';
 import logger from '../../logger/logger';
 import { COMPONENT_ORIGINS, BIT_MAP } from '../../constants';
 import { pathNormalizeToLinux, pathJoinLinux, pathRelativeLinux, isValidPath } from '../../utils';
-import type { PathOsBasedRelative, PathLinux, PathOsBased } from '../../utils/path';
+import type { PathOsBasedRelative, PathLinux, PathOsBased, PathLinuxRelative } from '../../utils/path';
 import type Consumer from '../consumer';
 import { BitId } from '../../bit-id';
 import AddComponents from '../component-ops/add-components';
@@ -268,6 +268,14 @@ export default class ComponentMap {
     }
     // DO NOT track nested components!
     return null;
+  }
+
+  /**
+   * this.rootDir is not defined for author. instead, the current workspace is the rootDir
+   * also, for imported environments (compiler/tester) components the rootDir is empty
+   */
+  getRootDir(): PathLinuxRelative {
+    return this.rootDir || '.';
   }
 
   /**

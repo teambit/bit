@@ -192,7 +192,7 @@ const _runBuild = async ({
 
   let componentDir = '';
   if (componentMap) {
-    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.rootDir);
+    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.getRootDir());
     if (consumer) rootDistDir = consumer.toAbsolutePath(rootDistDirRelative);
     if (consumerPath && componentMap.getComponentDir()) {
       componentDir = componentMap.getComponentDir() || '';

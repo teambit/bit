@@ -250,7 +250,7 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getDistRoot(): PathOsBasedRelative {
-    return this.component.dists.getDistDir(this.consumer, this.componentMap.rootDir);
+    return this.component.dists.getDistDir(this.consumer, this.componentMap.getRootDir());
   }
 
   _getRelativeDistPathInDependency() {
@@ -277,7 +277,7 @@ export default class DependencyFileLinkGenerator {
 
   _getDepRootDir(): ?PathOsBasedRelative {
     if (!this.dependencyComponentMap) return undefined;
-    return this.dependencyComponentMap.rootDir || '.';
+    return this.dependencyComponentMap.getRootDir();
   }
 
   _getDepRootDirDist(): ?PathOsBasedRelative {
