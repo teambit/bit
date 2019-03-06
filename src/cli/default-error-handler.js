@@ -507,11 +507,6 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ]
 ];
 
-function formatUnhandled(err: Error): string {
-  Analytics.setError(LEVEL.FATAL, err);
-  return chalk.red(err.message || err);
-}
-
 function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {
     return err instanceof ErrorType || err.name === ErrorType.name; // in some cases, such as forked process, the received err is serialized.
@@ -559,16 +554,25 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
   return result;
 }
 
+/**
+ * if err.userError is set, it inherits from AbstractError, which are user errors not Bit errors
+ * and should not be reported to Sentry.
+ * reason why we don't check (err instanceof AbstractError) is that it could be thrown from a fork,
+ * in which case, it loses its class and has only the fields.
+ */
+function sendToAnalyticsAndSentry(err) {
+  const possiblyHashedError = hashErrorIfNeeded(err);
+  // only level FATAL are reported to Sentry.
+  // $FlowFixMe
+  const level = err.isUserError ? LEVEL.INFO : LEVEL.FATAL;
+  Analytics.setError(level, possiblyHashedError);
+}
+
 export default (err: Error): ?string => {
   const errorDefinition = findErrorDefinition(err);
-
-  if (!errorDefinition) return formatUnhandled(err);
-  /* this is an error that bit knows how to handle dont send to sentry */
-
-  if (err instanceof AbstractError) {
-    Analytics.setError(LEVEL.INFO, hashErrorIfNeeded(err));
-  } else {
-    Analytics.setError(LEVEL.FATAL, err);
+  sendToAnalyticsAndSentry(err);
+  if (!errorDefinition) {
+    return chalk.red(err.message || err);
   }
   const func = getErrorFunc(errorDefinition);
   const errorMessage = getErrorMessage(err, func) || 'unknown error';
