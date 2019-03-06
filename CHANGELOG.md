@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
 - fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
 - recognize scoped packages that were newly introduced to imported components
 - fix error "consumer.loadComponentFromModel, version is missing from the id"
