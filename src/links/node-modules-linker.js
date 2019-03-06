@@ -155,7 +155,13 @@ export default class NodeModuleLinker {
       const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), file);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
-        const linkFile = LinkFile.load({ filePath: dest, content: fileContent, srcPath: file, componentId });
+        const linkFile = LinkFile.load({
+          filePath: dest,
+          content: fileContent,
+          srcPath: file,
+          componentId,
+          override: true
+        });
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
@@ -293,7 +299,8 @@ export default class NodeModuleLinker {
         filePath: dest,
         content: fileContent,
         srcPath: mainFile,
-        componentId: component.id
+        componentId: component.id,
+        override: true
       });
       this.dataToPersist.addFile(linkFile);
     }
