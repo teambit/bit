@@ -154,7 +154,7 @@ export default class DataToPersist {
    */
   _throwForDirectoryCollision(file: AbstractVinyl) {
     const directoryCollision = this.files.find(
-      f => `${f.path}${path.sep}`.startsWith(file.path) || `${file.path}${path.sep}`.startsWith(f.path)
+      f => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}${path.sep}`.startsWith(f.path)
     );
     if (directoryCollision) {
       throw new Error(`unable to add the file "${file.path}", because another file "${
