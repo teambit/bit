@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
+
 ## [14.0.2-dev.1] - 2019-03-06
 
 - fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
