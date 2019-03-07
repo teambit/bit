@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.2-dev.1] - 2019-03-06
+
 - fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
 - recognize scoped packages that were newly introduced to imported components
 - fix error "consumer.loadComponentFromModel, version is missing from the id"
