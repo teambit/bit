@@ -1,5 +1,6 @@
 // @flow
 import execa from 'execa';
+import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -8,7 +9,7 @@ import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
-import semver from 'semver';
+import { Analytics } from '../analytics/analytics';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -198,6 +199,7 @@ async function parseNpmListJsonGracefully(str: string, packageManager: string): 
     logger.error(err);
     if (packageManager === 'npm') {
       const version = await getNpmVersion();
+      Analytics.setExtraData('npmVersion', version);
       if (version && semver.gte(version, '5.0.0') && semver.lt(version, '5.1.0')) {
         // see here for more info about this issue with npm 5.0.0
         // https://github.com/npm/npm/issues/17331
