@@ -212,7 +212,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory };
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
-      if (!isValidPath(pathToValidate)) {
+      if (pathToValidate && !isValidPath(pathToValidate)) {
         throw new InvalidBitJsonPropPath(fieldName, pathToValidate);
       }
     }
