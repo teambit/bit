@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- show a descriptive error when npm 5.0.0 fails with `--json` flag
 - fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
 
 ## [14.0.2-dev.1] - 2019-03-06
