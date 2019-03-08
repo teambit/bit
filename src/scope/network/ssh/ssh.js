@@ -286,7 +286,7 @@ export default class SSH implements Network {
     return this;
   }
 
-  comoseBaseObject(passphrase: ?string) {
+  composeBaseObject(passphrase: ?string) {
     return {
       username: this.username,
       host: this.host,
@@ -301,7 +301,7 @@ export default class SSH implements Network {
     if (token) {
       logger.debug('SSH: connecting using token');
       this._sshUsername = 'token';
-      return merge(this.comoseBaseObject(), { username: 'token', password: token });
+      return merge(this.composeBaseObject(), { username: 'token', password: token });
     }
     logger.debug('SSH: there is no token configured)');
   }
@@ -314,7 +314,7 @@ export default class SSH implements Network {
     if (this.hasAgentSocket() && !skipAgent) {
       logger.debug('SSH: connecting using ssh agent socket');
       Analytics.setExtraData('authentication_method', 'ssh-agent');
-      return merge(this.comoseBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
+      return merge(this.composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
     }
     logger.debug('SSH: there is no ssh agent socket (or its been disabled)');
     Analytics.addBreadCrumb('ssh', 'there is no ssh agent socket (or its been disabled)');
@@ -324,7 +324,7 @@ export default class SSH implements Network {
     const keyBuffer = keyGetter(key);
     if (keyBuffer) {
       Analytics.setExtraData('authentication_method', 'ssh-key');
-      return merge(this.comoseBaseObject(), { privateKey: keyBuffer });
+      return merge(this.composeBaseObject(), { privateKey: keyBuffer });
     }
     Analytics.addBreadCrumb('ssh', 'reading ssh key file failed');
     logger.debug('SSH: reading ssh key file failed');
@@ -334,7 +334,7 @@ export default class SSH implements Network {
     return promptUserpass().then(({ username, password }) => {
       Analytics.setExtraData('authentication_method', 'user_password');
       this._sshUsername = username;
-      return merge(this.comoseBaseObject(), { username, password });
+      return merge(this.composeBaseObject(), { username, password });
     });
   }
 
