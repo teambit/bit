@@ -11,7 +11,8 @@ import {
   VersionShouldBeRemoved,
   MissingMainFileMultipleComponents,
   MissingComponentIdForImportedComponent,
-  MainFileIsDir
+  MainFileIsDir,
+  PathOutsideConsumer
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
@@ -1166,6 +1167,36 @@ describe('bit add command', function () {
         expect(files).not.to.include('bar/foo.js');
         expect(files).not.to.include('bar/foo.js');
       }
+    });
+  });
+  describe('adding a file outside the consumer dir', () => {
+    let consumerDir;
+    before(() => {
+      helper.cleanEnv();
+      consumerDir = path.join(helper.localScopePath, 'bar');
+      fs.mkdirSync(consumerDir);
+      helper.createFile('', 'foo.js');
+      helper.runCmd('bit init', consumerDir);
+    });
+    it('should throw PathOutsideConsumer error', () => {
+      const addCmd = () => helper.runCmd('bit add ../foo.js', consumerDir);
+      const error = new PathOutsideConsumer('../foo.js');
+      helper.expectToThrow(addCmd, error);
+    });
+  });
+  describe('adding a directory outside the consumer dir', () => {
+    let consumerDir;
+    before(() => {
+      helper.cleanEnv();
+      consumerDir = path.join(helper.localScopePath, 'bar');
+      fs.mkdirSync(consumerDir);
+      helper.createFile('foo', 'foo.js');
+      helper.runCmd('bit init', consumerDir);
+    });
+    it('should throw PathOutsideConsumer error', () => {
+      const addCmd = () => helper.runCmd('bit add ../foo', consumerDir);
+      const error = new PathOutsideConsumer('../foo');
+      helper.expectToThrow(addCmd, error);
     });
   });
 });

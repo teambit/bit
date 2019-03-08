@@ -43,6 +43,7 @@ import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
+import PathOutsideConsumer from './exceptions/path-outside-consumer';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
@@ -442,7 +443,7 @@ export default class AddComponents {
     const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath: PathOsBased) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
-
+        this._throwForOutsideConsumer(relativeComponentPath);
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
           nodir: true
@@ -495,6 +496,7 @@ export default class AddComponents {
       const absolutePath = path.resolve(componentPath);
       const pathParsed = path.parse(absolutePath);
       const relativeFilePath = this.consumer.getPathRelativeToConsumer(componentPath);
+      this._throwForOutsideConsumer(relativeFilePath);
       if (!finalBitId) {
         let dirName = pathParsed.dir;
         if (!dirName) {
@@ -684,6 +686,12 @@ export default class AddComponents {
     });
     const added = await Promise.all(addedP);
     return R.reject(R.isNil, added);
+  }
+
+  _throwForOutsideConsumer(relativeToConsumerPath: PathOsBased) {
+    if (relativeToConsumerPath.startsWith('..')) {
+      throw new PathOutsideConsumer(relativeToConsumerPath);
+    }
   }
 }
 
