@@ -1172,6 +1172,7 @@ describe('bit add command', function () {
   describe('adding a file outside the consumer dir', () => {
     let consumerDir;
     before(() => {
+      helper.cleanEnv();
       consumerDir = path.join(helper.localScopePath, 'bar');
       fs.mkdirSync(consumerDir);
       helper.createFile('', 'foo.js');
@@ -1186,6 +1187,7 @@ describe('bit add command', function () {
   describe('adding a directory outside the consumer dir', () => {
     let consumerDir;
     before(() => {
+      helper.cleanEnv();
       consumerDir = path.join(helper.localScopePath, 'bar');
       fs.mkdirSync(consumerDir);
       helper.createFile('foo', 'foo.js');
