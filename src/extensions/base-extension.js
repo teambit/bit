@@ -308,7 +308,7 @@ export default class BaseExtension {
   }
 
   static loadFromModelObject(modelObject: string | BaseExtensionModel) {
-    Analytics.addBreadCrumb('base-extension', 'load extension from model object');
+    logger.debug('base-extension, load extension from model object');
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {

@@ -1,5 +1,6 @@
 // @flow
 import execa from 'execa';
+import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -8,7 +9,7 @@ import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
-import semver from 'semver';
+import { Analytics } from '../analytics/analytics';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -173,18 +174,43 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
     return result;
   };
 
-  return execa(packageManager, ['list', '-j'], { cwd: dir })
-    .then((res) => {
-      const resObject = JSON.parse(res.stdout);
-      const peers = parsePeers(resObject.dependencies);
-      return peers;
-    })
-    .catch((err) => {
-      const resObject = JSON.parse(err.stdout);
-      const peers = parsePeers(resObject.dependencies);
-      return peers;
-    });
+  let npmList;
+  try {
+    npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
+  } catch (err) {
+    if (err.stdout && err.stdout.startsWith('{')) {
+      // it's probably a valid json with errors, that's fine, parse it.
+      npmList = err;
+    } else {
+      logger.error(err);
+      throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
+    }
+  }
+  const npmListObject = await parseNpmListJsonGracefully(npmList.stdout, packageManager);
+  const peers = parsePeers(npmListObject.dependencies);
+  return peers;
 };
+
+async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
+  try {
+    const json = JSON.parse(str);
+    return json;
+  } catch (err) {
+    logger.error(err);
+    if (packageManager === 'npm') {
+      const version = await getNpmVersion();
+      Analytics.setExtraData('npmVersion', version);
+      if (version && semver.gte(version, '5.0.0') && semver.lt(version, '5.1.0')) {
+        // see here for more info about this issue with npm 5.0.0
+        // https://github.com/npm/npm/issues/17331
+        throw new Error(
+          `error: your npm version "${version}" has issues returning json, please upgrade to 5.1.0 or above (npm install -g npm@5.1.0)`
+        );
+      }
+    }
+    throw new Error(`failed parsing the output of npm list due to an error: ${err.message}`);
+  }
+}
 
 /**
  * A wrapper function to call the install
