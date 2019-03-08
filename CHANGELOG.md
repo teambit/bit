@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve error message when adding files outside the workspace
 - fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
 
 ## [14.0.2-dev.1] - 2019-03-06

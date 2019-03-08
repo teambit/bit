@@ -68,6 +68,7 @@ import {
   VersionShouldBeRemoved,
   TestIsDirectory,
   MainFileIsDir,
+  PathOutsideConsumer,
   MissingMainFileMultipleComponents,
   ExcludedMainFile
 } from '../consumer/component-ops/add-components/exceptions';
@@ -378,6 +379,10 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [
+    PathOutsideConsumer,
+    err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
+  ],
   [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
