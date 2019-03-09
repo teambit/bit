@@ -141,7 +141,7 @@ export default class SSH implements Network {
       checkVersionCompatibility(headers.version);
       parsedError = payload;
     } catch (e) {
-      // be greacfull when can't parse error message
+      // be graceful when can't parse error message
       logger.error(`ssh: failed parsing error as JSON, error: ${err}`);
     }
 
@@ -165,7 +165,7 @@ export default class SSH implements Network {
     }
   }
 
-  _unpack(data, base64 = true) {
+  _unpack(data, base64: boolean = true) {
     try {
       return unpackCommand(data, base64);
     } catch (err) {
@@ -299,26 +299,26 @@ export default class SSH implements Network {
   composeTokenAuthObject() {
     const token = getSync(CFG_USER_TOKEN_KEY);
     if (token) {
-      logger.debug('SSH: connecting using token');
+      logger.debug('ssh, connecting using token');
       this._sshUsername = 'token';
       return merge(this.composeBaseObject(), { username: 'token', password: token });
     }
-    logger.debug('SSH: there is no token configured)');
+    logger.debug('ssh, there is no token configured)');
   }
 
   composeSshAuthObject(key: ?string, skipAgent: ?boolean) {
-    logger.debug(`SSH: reading ssh key file ${key}`);
-    logger.debug('SSH: checking if ssh agent has socket');
+    logger.debug(`ssh, reading ssh key file ${key}`);
+    logger.debug('ssh, checking if ssh agent has socket');
     Analytics.addBreadCrumb('ssh', 'reading ssh key file');
     // if ssh-agent socket exists, use it.
     if (this.hasAgentSocket() && !skipAgent) {
-      logger.debug('SSH: connecting using ssh agent socket');
+      logger.debug('ssh, connecting using ssh agent socket');
       Analytics.setExtraData('authentication_method', 'ssh-agent');
       return merge(this.composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
     }
-    logger.debug('SSH: there is no ssh agent socket (or its been disabled)');
+    logger.debug('ssh, there is no ssh agent socket (or its been disabled)');
     Analytics.addBreadCrumb('ssh', 'there is no ssh agent socket (or its been disabled)');
-    logger.debug(`SSH: reading ssh key file ${key}`);
+    logger.debug(`ssh, reading ssh key file ${key}`);
 
     // otherwise just search for merge
     const keyBuffer = keyGetter(key);
@@ -327,7 +327,7 @@ export default class SSH implements Network {
       return merge(this.composeBaseObject(), { privateKey: keyBuffer });
     }
     Analytics.addBreadCrumb('ssh', 'reading ssh key file failed');
-    logger.debug('SSH: reading ssh key file failed');
+    logger.debug('ssh, reading ssh key file failed');
   }
 
   composeUserPassObject() {
@@ -391,25 +391,25 @@ export default class SSH implements Network {
       if (!sshConfig) reject();
       conn
         .on('error', (err) => {
-          logger.debug('SSH: connection on error event');
+          logger.debug('ssh, connection on error event');
           Analytics.addBreadCrumb('ssh', 'connection on error event');
           if (this.hasAgentSocket() && err.message === AUTH_FAILED_MESSAGE) {
-            logger.debug('SSH: retry in case ssh-agent failed');
+            logger.debug('ssh, retry in case ssh-agent failed');
             Analytics.addBreadCrumb('ssh', 'retry in case ssh-agent failed');
             // retry in case ssh-agent failed
             if (err.message === PASSPHRASE_MESSAGE) {
-              logger.debug('SSH: Encrypted private key detected, but no passphrase given');
+              logger.debug('ssh, Encrypted private key detected, but no passphrase given');
               Analytics.addBreadCrumb('ssh', 'Encrypted private key detected, but no passphrase given');
               if (cachedPassphrase) {
-                logger.debug('SSH: trying to use cached passphrase');
+                logger.debug('ssh, trying to use cached passphrase');
                 return this.sshAuthentication(key, cachedPassphrase);
               }
-              logger.debug('SSH: prompt for passphrase');
+              logger.debug('ssh, prompt for passphrase');
               Analytics.addBreadCrumb('ssh', 'prompt for passphrase');
               return promptPassphrase().then((res) => {
                 cachedPassphrase = res.passphrase;
                 return this.sshAuthentication(key, cachedPassphrase).catch(() => {
-                  logger.debug('SSH: connecting using passphrase failed, trying again');
+                  logger.debug('ssh, connecting using passphrase failed, trying again');
                   Analytics.addBreadCrumb('ssh', 'connecting using passphrase failed, trying again');
                   cachedPassphrase = undefined;
                   return this.sshAuthentication(key, cachedPassphrase);
@@ -419,7 +419,7 @@ export default class SSH implements Network {
             return reject(err);
           }
 
-          logger.debug('SSH: auth failed', err);
+          logger.debug('ssh, auth failed', err);
           Analytics.addBreadCrumb('ssh', 'auth failed');
           if (err.message === AUTH_FAILED_MESSAGE) {
             return reject(new AuthenticationFailed());
@@ -435,27 +435,35 @@ export default class SSH implements Network {
     });
   }
 
-  // @TODO refactor this method
-  connect(key: ?string, passphrase: ?string): Promise<SSH> {
-    logger.debug('SSH: starting ssh connection process');
-    Analytics.addBreadCrumb('ssh', 'starting ssh connection process');
-    return this.tokenAuthentication().catch(() =>
-      this.sshAuthentication(key, passphrase)
-        .catch(() => this.sshAuthentication(key, passphrase, true).catch(() => this.userPassAuthentication()))
-        .catch((e) => {
-          if (e.skip) {
-            return this.connect(key, passphrase);
-          }
-          logger.debug('SSH: connection failed', e);
-          Analytics.addBreadCrumb('ssh', 'connection failed');
-          if (e.code === 'ENOTFOUND') {
-            throw new GeneralError(
-              `unable to find the SSH server. host: ${e.host}, port: ${e.port}. Original error message: ${e.message}`
-            );
-          }
+  /**
+   * strategies:
+   * 1) using token (generated by bit-login command)
+   * 2) using ssh authentication (user needs to paste his key in bitsrc profile settings)
+   * 3) using prompt of user/password
+   */
+  async connect(key: ?string, passphrase: ?string): Promise<SSH> {
+    logger.debugAndAddBreadCrumb('ssh', 'trying to connect using token');
+    return this.tokenAuthentication()
+      .catch(() => {
+        logger.debugAndAddBreadCrumb('ssh', 'failed connecting with token, trying with ssh authentication');
+        return this.sshAuthentication(key, passphrase);
+      })
+      .catch(() => {
+        logger.debugAndAddBreadCrumb(
+          'ssh',
+          'failed connecting with ssh authentication, trying with user/password prompt'
+        );
+        return this.userPassAuthentication();
+      })
+      .catch((e) => {
+        logger.errorAndAddBreadCrumb('ssh', 'all connection strategies have been failed!', e);
+        if (e.code === 'ENOTFOUND') {
+          throw new GeneralError(
+            `unable to find the SSH server. host: ${e.host}, port: ${e.port}. Original error message: ${e.message}`
+          );
+        }
 
-          throw e;
-        })
-    );
+        throw e;
+      });
   }
 }
