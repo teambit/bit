@@ -96,6 +96,7 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
+import InvalidBitJsonPropPath from '../consumer/bit-json/exceptions/invalid-bit-json-prop-path';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -311,6 +312,13 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     InvalidBitJson,
     err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
     consider running ${chalk.bold('bit init --reset')} to recreate the file`
+  ],
+  [
+    InvalidBitJsonPropPath,
+    err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
+      err.fieldName
+    )}" in your bit.json file is invalid.
+please make sure it's not absolute and doesn't contain invalid characters`
   ],
   [
     DriverNotFound,

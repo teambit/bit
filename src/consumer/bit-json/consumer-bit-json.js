@@ -14,6 +14,8 @@ import filterObject from '../../utils/filter-object';
 import type { ResolveModulesConfig } from '../component/dependencies/dependency-resolver/types/dependency-tree-type';
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
+import { isValidPath } from '../../utils';
+import InvalidBitJsonPropPath from './exceptions/invalid-bit-json-prop-path';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -148,8 +150,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
+    ConsumerBitJson.validate(object);
     const {
-      sources,
       env,
       dependencies,
       lang,
@@ -194,13 +196,25 @@ export default class ConsumerBitJson extends AbstractBitJson {
     const isExisting = await AbstractBitJson.hasExisting(dirPath);
     if (!isExisting) throw new BitJsonNotFound();
     const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    let file;
     try {
-      const file = await fs.readJson(bitJsonPath);
-      const consumerBitJson = this.fromPlainObject(file);
-      consumerBitJson.path = bitJsonPath;
-      return consumerBitJson;
+      file = await fs.readJson(bitJsonPath);
     } catch (e) {
       throw new InvalidBitJson(bitJsonPath);
+    }
+    const consumerBitJson = this.fromPlainObject(file);
+    consumerBitJson.path = bitJsonPath;
+    return consumerBitJson;
+  }
+
+  static validate(object: Object) {
+    const { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory } = object;
+    const pathsToValidate = { componentsDefaultDirectory, dependenciesDirectory, ejectedEnvsDirectory };
+    Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
+    function throwForInvalidPath(fieldName, pathToValidate): void {
+      if (pathToValidate && !isValidPath(pathToValidate)) {
+        throw new InvalidBitJsonPropPath(fieldName, pathToValidate);
+      }
     }
   }
 }

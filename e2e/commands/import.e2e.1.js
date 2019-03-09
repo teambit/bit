@@ -8,6 +8,7 @@ import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
+import InvalidBitJsonPropPath from '../../src/consumer/bit-json/exceptions/invalid-bit-json-prop-path';
 
 chai.use(require('chai-fs'));
 
@@ -2321,6 +2322,34 @@ console.log(barFoo.default());`;
       const error = new ComponentNotFound(compiler);
       const importCmd = () => helper.importCompiler(compiler);
       helper.expectToThrow(importCmd, error);
+    });
+  });
+  describe('import component with invalid bit.json paths properties', () => {
+    describe('when componentsDefaultDirectory is invalid', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const bitJson = helper.readBitJson();
+        bitJson.componentsDefaultDirectory = '/components/{name}';
+        helper.writeBitJson(bitJson);
+      });
+      it('should throw a descriptive error pointing to the bit.json property', () => {
+        const importCmd = () => helper.importComponent('any-comp');
+        const error = new InvalidBitJsonPropPath('componentsDefaultDirectory', '/components/{name}');
+        helper.expectToThrow(importCmd, error);
+      });
+    });
+    describe('when dependenciesDirectory is invalid', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const bitJson = helper.readBitJson();
+        bitJson.dependenciesDirectory = '/components/.dependencies';
+        helper.writeBitJson(bitJson);
+      });
+      it('should throw a descriptive error pointing to the bit.json property', () => {
+        const importCmd = () => helper.importComponent('any-comp');
+        const error = new InvalidBitJsonPropPath('dependenciesDirectory', '/components/.dependencies');
+        helper.expectToThrow(importCmd, error);
+      });
     });
   });
 });
