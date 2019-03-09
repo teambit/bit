@@ -128,10 +128,27 @@ function addToLoggerAndToBreadCrumb(
   addBreakCrumb(category, message, data, extraData);
 }
 
+/**
+ * prefix BIT_LOG to the command, provides the ability to log into the console.
+ * two options are available here:
+ * 1) use the level. e.g. `BIT_LOG=error bit import`.
+ * 2) use the message prefix, e.g. `BIT_LOG=ssh bit import`.
+ * 3) use multiple message prefixes, e.g. `BIT_LOG=ssh,env bit import`.
+ */
 if (process.env.BIT_LOG) {
-  const level = process.env.BIT_LOG;
-  logger.add(winston.transports.Console, { level });
-  logger.cli();
+  const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
+  if (levels.includes(process.env.BIT_LOG)) {
+    const level = process.env.BIT_LOG;
+    logger.add(winston.transports.Console, { level });
+    logger.cli();
+  } else {
+    const prefixes = process.env.BIT_LOG.split(',');
+    logger.on('logging', (transport, level, msg) => {
+      if (prefixes.some(prefix => msg.startsWith(prefix))) {
+        console.log(msg);
+      }
+    });
+  }
 }
 
 export default logger;

@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
-
+- enable print log messages that start with a specific string to the console by prefixing the command with BIT_LOG=str
 - improve error message when adding files outside the workspace
 - show a descriptive error when npm 5.0.0 fails with `--json` flag
 - fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
