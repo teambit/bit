@@ -94,7 +94,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
 }
 
 async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
-  const consumer: Consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer(undefined, true);
   let ejectResults: EjectResults;
   try {
     const ejectComponents = new EjectComponents(consumer, componentsIds);
