@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.2-dev.2] - 2019-03-10
+
 - validate paths properties of the consumer bit.json
 - enable print log messages that start with a specific string to the console by prefixing the command with BIT_LOG=str
 - improve error message when adding files outside the workspace
