@@ -149,7 +149,7 @@
     "prettier-eslint-cli": "^4.7.1",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
-    "verdaccio": "^3.10.2"
+    "verdaccio": "^3.11.6"
   },
   "optionalDependencies": {
     "posix": "^4.1.1"
