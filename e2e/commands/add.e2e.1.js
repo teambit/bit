@@ -1180,7 +1180,7 @@ describe('bit add command', function () {
     });
     it('should throw PathOutsideConsumer error', () => {
       const addCmd = () => helper.runCmd('bit add ../foo.js', consumerDir);
-      const error = new PathOutsideConsumer('../foo.js');
+      const error = new PathOutsideConsumer(path.normalize('../foo.js'));
       helper.expectToThrow(addCmd, error);
     });
   });
@@ -1195,7 +1195,7 @@ describe('bit add command', function () {
     });
     it('should throw PathOutsideConsumer error', () => {
       const addCmd = () => helper.runCmd('bit add ../foo', consumerDir);
-      const error = new PathOutsideConsumer('../foo');
+      const error = new PathOutsideConsumer(path.normalize('../foo'));
       helper.expectToThrow(addCmd, error);
     });
   });
