@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.0.2-dev.1",
+  "version": "14.0.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -46,7 +46,7 @@
     "array-difference": "^0.0.1",
     "async-exit-hook": "^2.0.1",
     "babel-runtime": "^6.23.0",
-    "bit-javascript": "^2.0.4-dev.1",
+    "bit-javascript": "^2.0.4",
     "bluebird": "^3.5.3",
     "chalk": "^2.4.1",
     "chokidar": "^2.0.3",
@@ -149,7 +149,7 @@
     "prettier-eslint-cli": "^4.7.1",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
-    "verdaccio": "^3.10.2"
+    "verdaccio": "^3.11.6"
   },
   "optionalDependencies": {
     "posix": "^4.1.1"

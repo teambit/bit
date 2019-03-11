@@ -7,20 +7,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.2] - 2019-03-10
+
+- prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
+- improve `bit tag` performance by decreasing hook logging
+- validate paths properties of the workspace bit.json
+- enable print log messages that start with a specific string to the console by prefixing the command with BIT_LOG=str
 - improve error message when adding files outside the workspace
 - show a descriptive error when npm 5.0.0 fails with `--json` flag
 - fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
-
-## [14.0.2-dev.1] - 2019-03-06
-
 - fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
 - recognize scoped packages that were newly introduced to imported components
 - fix error "consumer.loadComponentFromModel, version is missing from the id"
 - enable removing a component that its workspace and scope representations are not in sync
 - fix "error: Could not stat (filename) No such file or directory" when bit-checkout updates multiple files
-- prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
 - fix "JavaScript heap out of memory" when loading a large amount of components
-- improve `bit tag` performance by decreasing hook logging
 
 ## [[14.0.1] - 2019-02-24](https://github.com/teambit/bit/releases/tag/v14.0.1)
 
