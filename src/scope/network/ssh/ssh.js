@@ -83,46 +83,53 @@ export default class SSH implements Network {
       'user-password': this._userPassAuthentication
     };
     const strategiesNames: string[] = Object.keys(strategies);
+    const strategiesFailures: string[] = [];
     for (const strategyName of strategiesNames) {
       logger.debug(`ssh, trying to connect using ${strategyName}`);
       const strategyFunc = strategies[strategyName].bind(this);
-      const strategyResult = await strategyFunc(); // eslint-disable-line
-      if (strategyResult) return strategyResult;
-      logger.debug(`ssh, failed to connect using ${strategyName}`);
+      try {
+        const strategyResult = await strategyFunc(); // eslint-disable-line
+        if (strategyResult) return strategyResult;
+      } catch (err) {
+        logger.debug(`ssh, failed to connect using ${strategyName}. ${err.message}`);
+        if (err instanceof AuthenticationStrategyFailed) {
+          strategiesFailures.push(err.message);
+        } else {
+          throw err;
+        }
+      }
     }
     logger.errorAndAddBreadCrumb('ssh', 'all connection strategies have been failed!');
-    throw new AuthenticationFailed();
+    strategiesFailures.unshift('The following strategies were failed');
+    throw new AuthenticationFailed(strategiesFailures.join('\n[-] '));
   }
 
-  async _tokenAuthentication(): Promise<?SSH> {
+  async _tokenAuthentication(): Promise<SSH> {
     const sshConfig = this._composeTokenAuthObject();
     if (!sshConfig) {
-      logger.debug('ssh, no token configured');
-      return null;
+      throw new AuthenticationStrategyFailed('no token configured');
     }
     const authFailedMsg = 'token exists but failed to authenticate. either, the token is invalid or invoked';
     return this._connectWithConfig(sshConfig, 'token', authFailedMsg);
   }
-  async _sshAgentAuthentication(): Promise<?SSH> {
+  async _sshAgentAuthentication(): Promise<SSH> {
     if (!this._hasAgentSocket()) {
-      logger.debugAndAddBreadCrumb('ssh', 'there is no ssh-agent socket or it has been disabled');
-      return null;
+      throw new AuthenticationStrategyFailed('there is no ssh-agent socket or it has been disabled');
     }
     const sshConfig = merge(this._composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
-    const authFailedMsg = 'ssh-agent is enabled but failed to connect';
+    const authFailedMsg = 'ssh-agent is enabled but failed to authenticate';
     return this._connectWithConfig(sshConfig, 'ssh-agent', authFailedMsg);
   }
-  async _sshKeyAuthentication(): Promise<?SSH> {
+  async _sshKeyAuthentication(): Promise<SSH> {
     const keyBuffer = await keyGetter();
     if (!keyBuffer) {
-      logger.debugAndAddBreadCrumb('ssh', 'failed reading ssh-key');
-      return null;
+      throw new AuthenticationStrategyFailed('failed reading ssh-key');
     }
     const sshConfig = merge(this._composeBaseObject(), { privateKey: keyBuffer });
     const authFailedMsg = 'ssh-key exists but failed to connect';
     return this._connectWithConfig(sshConfig, 'ssh-key', authFailedMsg);
   }
-  async _userPassAuthentication(): Promise<?SSH> {
+  async _userPassAuthentication(): Promise<SSH> {
     const sshConfig = await this._composeUserPassObject();
     const authFailedMsg = 'user and password were entered but failed to connect';
     return this._connectWithConfig(sshConfig, 'user-password', authFailedMsg);
@@ -160,7 +167,7 @@ export default class SSH implements Network {
   _hasAgentSocket() {
     return !!process.env.SSH_AUTH_SOCK;
   }
-  async _connectWithConfig(sshConfig: Object, authenticationType: string, authFailedMsg: string): Promise<?SSH> {
+  async _connectWithConfig(sshConfig: Object, authenticationType: string, authFailedMsg: string): Promise<SSH> {
     const connectWithConfigP = () => {
       const conn = new SSH2();
       return new Promise((resolve, reject) => {
@@ -181,8 +188,7 @@ export default class SSH implements Network {
       return this;
     } catch (err) {
       if (err.message === AUTH_FAILED_MESSAGE) {
-        logger.debug(`ssh, ${authFailedMsg}`);
-        return null;
+        throw new AuthenticationStrategyFailed(authFailedMsg);
       }
       logger.error(err);
       if (err.code === 'ENOTFOUND') {
@@ -191,12 +197,11 @@ export default class SSH implements Network {
         );
       }
       if (err.message === PASSPHRASE_POSSIBLY_MISSING_MESSAGE) {
-        logger.error(
-          'ssh, got an error connecting with ssh-key, in case passphrase is used, try to enable the ssh-agent'
+        throw new AuthenticationStrategyFailed(
+          'got an error connecting with ssh-key, in case passphrase is used, try to enable the ssh-agent'
         );
       }
-      logger.errorAndAddBreadCrumb('ssh', `${authFailedMsg} due to an error "${err.message}"`);
-      return null;
+      throw new AuthenticationStrategyFailed(`${authFailedMsg} due to an error "${err.message}"`);
     }
   }
 
@@ -414,3 +419,5 @@ export default class SSH implements Network {
     });
   }
 }
+
+class AuthenticationStrategyFailed extends Error {}

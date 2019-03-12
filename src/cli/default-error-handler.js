@@ -507,7 +507,10 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [
     AuthenticationFailed,
-    err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
+    err =>
+      `authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html\n\n${
+        err.debugInfo
+      }`
   ],
   [
     ObjectsWithoutConsumer,
