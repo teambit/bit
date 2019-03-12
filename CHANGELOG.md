@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Summary
 
-*Bit’s v14 is released side-by-side with the release of the v2 for [bitsrc.io](https://bitsrc.io), Bit’s component community hub. New features for bitsrc.io v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
+*Bit’s v14 is released side-by-side with the release of the v2 for [bit.dev](https://bit.dev), Bit’s component community hub. New features for bit.dev v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
 
 With over 65 new features, changes and bug fixes, v14 is Bit’s largest and richest release to date. V14 is focused on increased **stability**, **agility** and **performance**. It is is fully backwards compatible, and provides a faster and smoother workflow with improved compatibility throughout the ecosystem.
 
@@ -397,7 +397,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 ## [0.12.0] - 2018-01-18
 
 ### New
-- [extension system (beta)](https://docs.bitsrc.io/docs/ext-concepts.html)
+- [extension system (beta)](https://docs.bit.dev/docs/ext-concepts.html)
 - [#540](https://github.com/teambit/bit/issues/540) support Yarn as package manager
 - `bit import`: install hub dependencies as npm packages by default
 - `bit import`: install npm packages by default

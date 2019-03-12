@@ -39,7 +39,8 @@ import {
   COMPONENT_ORIGINS,
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
-  BIT_WORKSPACE_TMP_DIRNAME
+  BIT_WORKSPACE_TMP_DIRNAME,
+  BASE_WEB_DOMAIN
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import * as packageJson from './package-json';
@@ -330,7 +331,7 @@ export default class Component {
 
   _getHomepage() {
     // TODO: Validate somehow that this scope is really on bitsrc (maybe check if it contains . ?)
-    const homepage = this.scope ? `https://bitsrc.io/${this.scope.replace('.', '/')}/${this.name}` : undefined;
+    const homepage = this.scope ? `https://${BASE_WEB_DOMAIN}/${this.scope.replace('.', '/')}/${this.name}` : undefined;
     return homepage;
   }
 

@@ -120,19 +120,25 @@ export const DEFAULT_DEPENDENCIES = {};
 
 export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
-export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
+export const BASE_WEB_DOMAIN = 'bit.dev';
 
-export const BASE_DOCS_DOMAIN = 'docs.bitsrc.io';
+export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
 
-export const DEFAULT_HUB_LOGIN = 'https://bitsrc.io/bit-login';
+export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
+
+export const DEFAULT_HUB_LOGIN = `https://${BASE_WEB_DOMAIN}/bit-login`;
 
 export const DEFAULT_BIT_ENV = 'production';
 
-export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';
+export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_WEB_DOMAIN}/`;
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const SEARCH_DOMAIN = 'api.bitsrc.io';
+export const SEARCH_DOMAIN = `api.${BASE_WEB_DOMAIN}`;
+
+export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
+
+export const DEFAULT_REGISTRY_URL = `https://node.${BASE_WEB_DOMAIN}`;
 
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 
@@ -326,10 +332,6 @@ export const DEFAULT_RESOLVER = () => '';
 export const BIT_VERSION = packageFile.version;
 
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
-
-export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
-
-export const DEFAULT_REGISTRY_URL = 'https://node.bitsrc.io';
 
 export const SKIP_UPDATE_FLAG = '--skip-update';
 

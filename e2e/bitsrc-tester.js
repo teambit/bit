@@ -1,12 +1,14 @@
 import requestify from 'requestify';
+import { BASE_WEB_DOMAIN } from '../src/constants';
 
-// const apiBaseUrl = process.env.NODE_ENV === 'production' ? 'https://api.bitsrc.io' : 'https://api-stg.bitsrc.io';
+// const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_WEB_DOMAIN}` : `https://api-stg.${BASE_WEB_DOMAIN}`;
 const isAppVeyor = process.env.APPVEYOR === 'True';
 const supportTestingOnBitsrc = !isAppVeyor;
 // const supportTestingOnBitsrc = true;
-const apiBaseUrl = process.env.BITSRC_ENV === 'stg' ? 'https://api-stg.bitsrc.io' : 'https://api.bitsrc.io';
-const username = process.env.testerBitsrcUsername || 'tester';
-const password = process.env.testerBitsrcPassword;
+const apiBaseUrl =
+  process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${BASE_WEB_DOMAIN}` : `https://api.${BASE_WEB_DOMAIN}`;
+const username = process.env.testerBitDevUsername || 'tester';
+const password = process.env.testerBitDevPassword;
 
 export { username, supportTestingOnBitsrc };
 const debugMode = !!process.env.npm_config_debug;

@@ -91,7 +91,7 @@ import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir'
 import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR, DEBUG_LOG } from '../constants';
+import { COMPONENT_DIR, DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
@@ -191,7 +191,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err =>
       `error: permission to scope ${
         err.scope
-      } was denied\nsee troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html`
+      } was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
@@ -332,14 +332,14 @@ please make sure it's not absolute and doesn't contain invalid characters`
     err =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html#define-a-components-main-file`
   ],
   [
     MissingMainFileMultipleComponents,
     err =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html#define-a-components-main-file`
   ],
   [
     InvalidBitMap,
@@ -507,7 +507,7 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [
     AuthenticationFailed,
-    err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
+    err => `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
   ],
   [
     ObjectsWithoutConsumer,
