@@ -150,11 +150,12 @@ export default class DataToPersist {
    *
    * to check for this possibility, we need to consider two scenarios:
    * 1) "bar/foo" is there and now adding "bar" => check whether one of the files starts with "bar/"
-   * 2) "bar" is there and now adding "bar/foo" => check whether this file "bar/" starts with one of the files
+   * 2) "bar" is there and now adding "bar/foo" => check whether this file "bar/foo" starts with one of the files with '/'
+   * practically, it runs `("bar/foo".startsWith("bar/"))` for both cases above.
    */
   _throwForDirectoryCollision(file: AbstractVinyl) {
     const directoryCollision = this.files.find(
-      f => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}${path.sep}`.startsWith(f.path)
+      f => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}`.startsWith(`${f.path}${path.sep}`)
     );
     if (directoryCollision) {
       throw new Error(`unable to add the file "${file.path}", because another file "${
