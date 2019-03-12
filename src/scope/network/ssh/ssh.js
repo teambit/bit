@@ -33,6 +33,7 @@ import CustomError from '../../../error/custom-error';
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
 const AUTH_FAILED_MESSAGE = 'All configured authentication methods failed';
+const PASSPHRASE_POSSIBLY_MISSING_MESSAGE = 'Cannot parse privateKey: Unsupported key format';
 
 const cachedPassphrase = null;
 
@@ -75,65 +76,55 @@ export default class SSH implements Network {
    * 4) prompt of user/password
    */
   async connect(): Promise<SSH> {
-    logger.debugAndAddBreadCrumb('ssh', 'trying to connect using token');
-    return this._tokenAuthentication()
-      .catch(() => {
-        logger.debugAndAddBreadCrumb('ssh', 'failed connecting with token, trying with ssh-agent authentication');
-        return this._sshAgentAuthentication();
-      })
-      .catch(() => {
-        logger.debugAndAddBreadCrumb('ssh', 'failed connecting with ssh-agent, trying with ssh-key authentication');
-        return this._sshKeyAuthentication();
-      })
-      .catch(() => {
-        logger.debugAndAddBreadCrumb(
-          'ssh',
-          'failed connecting with ssh-key authentication, trying with user/password prompt'
-        );
-        return this._userPassAuthentication();
-      })
-      .catch((e) => {
-        logger.errorAndAddBreadCrumb('ssh', 'all connection strategies have been failed!', e);
-        if (e.code === 'ENOTFOUND') {
-          throw new GeneralError(
-            `unable to find the SSH server. host: ${e.host}, port: ${e.port}. Original error message: ${e.message}`
-          );
-        }
-        throw e;
-      });
+    const strategies: { [string]: Function } = {
+      token: this._tokenAuthentication,
+      'ssh-agent': this._sshAgentAuthentication,
+      'ssh-key': this._sshKeyAuthentication,
+      'user-password': this._userPassAuthentication
+    };
+    const strategiesNames: string[] = Object.keys(strategies);
+    for (const strategyName of strategiesNames) {
+      logger.debug(`ssh, trying to connect using ${strategyName}`);
+      const strategyFunc = strategies[strategyName].bind(this);
+      const strategyResult = await strategyFunc(); // eslint-disable-line
+      if (strategyResult) return strategyResult;
+      logger.debug(`ssh, failed to connect using ${strategyName}`);
+    }
+    logger.errorAndAddBreadCrumb('ssh', 'all connection strategies have been failed!');
+    throw new AuthenticationFailed();
   }
 
-  _tokenAuthentication(): Promise<SSH> {
+  async _tokenAuthentication(): Promise<?SSH> {
     const sshConfig = this._composeTokenAuthObject();
     if (!sshConfig) {
       logger.debug('ssh, no token configured');
-      return Promise.reject();
+      return null;
     }
-    const authFailedMsg = 'ssh, token exists but failed to authenticate. either, the token is invalid or invoked';
+    const authFailedMsg = 'token exists but failed to authenticate. either, the token is invalid or invoked';
     return this._connectWithConfig(sshConfig, 'token', authFailedMsg);
   }
-  _sshAgentAuthentication(): Promise<SSH> {
+  async _sshAgentAuthentication(): Promise<?SSH> {
     if (!this._hasAgentSocket()) {
       logger.debugAndAddBreadCrumb('ssh', 'there is no ssh-agent socket or it has been disabled');
-      return Promise.reject();
+      return null;
     }
     const sshConfig = merge(this._composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
-    const authFailedMsg = 'ssh, ssh-agent is enabled but failed to connect';
+    const authFailedMsg = 'ssh-agent is enabled but failed to connect';
     return this._connectWithConfig(sshConfig, 'ssh-agent', authFailedMsg);
   }
-  async _sshKeyAuthentication(): Promise<SSH> {
+  async _sshKeyAuthentication(): Promise<?SSH> {
     const keyBuffer = await keyGetter();
     if (!keyBuffer) {
       logger.debugAndAddBreadCrumb('ssh', 'failed reading ssh-key');
-      return Promise.reject();
+      return null;
     }
     const sshConfig = merge(this._composeBaseObject(), { privateKey: keyBuffer });
-    const authFailedMsg = 'ssh, ssh-key exists but failed to connect';
+    const authFailedMsg = 'ssh-key exists but failed to connect';
     return this._connectWithConfig(sshConfig, 'ssh-key', authFailedMsg);
   }
-  async _userPassAuthentication(): Promise<SSH> {
+  async _userPassAuthentication(): Promise<?SSH> {
     const sshConfig = await this._composeUserPassObject();
-    const authFailedMsg = 'ssh, failed connecting using the provided user and password';
+    const authFailedMsg = 'user and password were entered but failed to connect';
     return this._connectWithConfig(sshConfig, 'user-password', authFailedMsg);
   }
 
@@ -169,31 +160,44 @@ export default class SSH implements Network {
   _hasAgentSocket() {
     return !!process.env.SSH_AUTH_SOCK;
   }
-  _connectWithConfig(sshConfig: Object, authenticationType: string, authFailedMsg: string): Promise<SSH> {
-    const conn = new SSH2();
-    return new Promise((resolve, reject) => {
-      conn
-        .on('error', (err) => {
-          if (err.message === AUTH_FAILED_MESSAGE) {
-            logger.debug(authFailedMsg);
-            return reject(new AuthenticationFailed());
-          }
-          logger.errorAndAddBreadCrumb(
-            'ssh',
-            `got an error while trying to connect using ${authenticationType}. "${err.message}"`,
-            err
-          );
-          logger.error(err);
-          return reject(err);
-        })
-        .on('ready', () => {
-          Analytics.setExtraData('authentication_method', authenticationType);
-          logger.debug(`ssh, authenticated successfully using ${authenticationType}`);
-          this.connection = conn;
-          resolve(this);
-        })
-        .connect(sshConfig);
-    });
+  async _connectWithConfig(sshConfig: Object, authenticationType: string, authFailedMsg: string): Promise<?SSH> {
+    const connectWithConfigP = () => {
+      const conn = new SSH2();
+      return new Promise((resolve, reject) => {
+        conn
+          .on('error', (err) => {
+            reject(err);
+          })
+          .on('ready', () => {
+            resolve(conn);
+          })
+          .connect(sshConfig);
+      });
+    };
+    try {
+      this.connection = await connectWithConfigP();
+      Analytics.setExtraData('authentication_method', authenticationType);
+      logger.debug(`ssh, authenticated successfully using ${authenticationType}`);
+      return this;
+    } catch (err) {
+      if (err.message === AUTH_FAILED_MESSAGE) {
+        logger.debug(`ssh, ${authFailedMsg}`);
+        return null;
+      }
+      logger.error(err);
+      if (err.code === 'ENOTFOUND') {
+        throw new GeneralError(
+          `unable to find the SSH server. host: ${err.host}, port: ${err.port}. Original error message: ${err.message}`
+        );
+      }
+      if (err.message === PASSPHRASE_POSSIBLY_MISSING_MESSAGE) {
+        logger.error(
+          'ssh, got an error connecting with ssh-key, in case passphrase is used, try to enable the ssh-agent'
+        );
+      }
+      logger.errorAndAddBreadCrumb('ssh', `${authFailedMsg} due to an error "${err.message}"`);
+      return null;
+    }
   }
 
   buildCmd(commandName: string, path: string, payload: any, context: any): string {
