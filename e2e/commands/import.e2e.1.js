@@ -2352,4 +2352,21 @@ console.log(barFoo.default());`;
       });
     });
   });
+  describe('when one file is a prefix of the other', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo.json');
+      helper.addComponent('bar/foo.js bar/foo.json', { m: 'bar/foo.js', i: 'bar/foo' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      output = helper.importComponent('bar/foo');
+    });
+    it('should import with no error', () => {
+      expect(output).to.have.string('successfully');
+    });
+  });
 });
