@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
 - improve ssh log messages to clearly indicate the various authentication strategies and fallbacks
 
+## [14.0.3] - 2019-03-12
+
+- fix importing components when one file is a prefix of the other in the same directory
+
 ## [14.0.2] - 2019-03-10
 
 - prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
