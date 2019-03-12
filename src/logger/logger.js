@@ -145,7 +145,7 @@ if (process.env.BIT_LOG) {
     const prefixes = process.env.BIT_LOG.split(',');
     logger.on('logging', (transport, level, msg) => {
       if (prefixes.some(prefix => msg.startsWith(prefix))) {
-        console.log(msg);
+        console.log(`\n${msg}`);
       }
     });
   }
