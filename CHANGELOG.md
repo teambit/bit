@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- generate package.json with the main property on node_modules for authored exported components instead of creating an entry point file
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
 - improve authentication error message to clearly indicate the various strategies failures
 

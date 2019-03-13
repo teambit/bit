@@ -12,7 +12,7 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
-import { preparePackageJsonToWrite } from '../component/package-json';
+import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import JSONFile from '../component/sources/json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
@@ -133,7 +133,7 @@ export default class ComponentWriter {
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
     if (this.writePackageJson && (this.consumer.isolated || this.writeToPath !== this.consumer.getPath())) {
-      const packageJson = await preparePackageJsonToWrite(
+      const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.consumer,
         this.component,
         this.writeToPath,
@@ -141,9 +141,8 @@ export default class ComponentWriter {
         this.writeBitDependencies,
         this.excludeRegistryPrefix
       );
-      const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
-      const jsonFile = JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson });
-      this.component.dataToPersist.addFile(jsonFile);
+      addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
+      if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
       this.component.packageJsonInstance = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
