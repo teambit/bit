@@ -140,7 +140,7 @@
     "flow-bin": "^0.75.0",
     "flow-coverage-report": "^0.6.1",
     "husky": "^0.14.3",
-    "lint-staged": "^7.1.0",
+    "lint-staged": "^7.3.0",
     "mocha": "^5.1.1",
     "mocha-appveyor-reporter": "^0.4.2",
     "mocha-circleci-reporter": "0.0.3",
