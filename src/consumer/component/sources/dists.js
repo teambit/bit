@@ -194,20 +194,20 @@ export default class Dists {
 
   /**
    * authored components have the dists outside the components dir and they don't have rootDir.
-   * it returns the main file or main dist file relative to consumer-root.
+   * it returns the file or dist file relative to consumer-root.
    */
-  calculateMainDistFileForAuthored(componentMainFile: PathOsBased, consumer: Consumer): PathOsBased {
-    if (this.isEmpty()) return componentMainFile;
-    const getMainFileToSearch = (): PathOsBased => {
-      if (!consumer.bitJson.distEntry) return componentMainFile;
+  calculateDistFileForAuthored(componentFile: PathOsBased, consumer: Consumer): PathOsBased {
+    if (this.isEmpty()) return componentFile;
+    const getFileToSearch = (): PathOsBased => {
+      if (!consumer.bitJson.distEntry) return componentFile;
       const distEntryNormalized = path.normalize(consumer.bitJson.distEntry);
-      return componentMainFile.replace(`${distEntryNormalized}${path.sep}`, '');
+      return componentFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
-    const mainFileToSearch = getMainFileToSearch();
-    const distMainFile = searchFilesIgnoreExt(this.dists, mainFileToSearch, 'relative', 'relative');
-    if (!distMainFile) return componentMainFile;
+    const fileToSearch = getFileToSearch();
+    const distFile = searchFilesIgnoreExt(this.dists, fileToSearch, 'relative', 'relative');
+    if (!distFile) return componentFile;
     const distTarget = consumer.bitJson.distTarget || DEFAULT_DIST_DIRNAME;
-    return path.join(distTarget, distMainFile);
+    return path.join(distTarget, distFile);
   }
 
   toDistFilesModel(

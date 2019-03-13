@@ -9,11 +9,10 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
+import { COMPONENT_ORIGINS } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
-import JSONFile from '../component/sources/json-file';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 
