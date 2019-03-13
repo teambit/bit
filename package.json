@@ -114,7 +114,7 @@
     "yn": "^2.0.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.18.0",
+    "babel-cli": "^6.26.0",
     "babel-core": "^6.26.3",
     "babel-eslint": "^8.2.3",
     "babel-plugin-syntax-async-functions": "^6.13.0",
