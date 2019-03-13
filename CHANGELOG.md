@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
+- improve authentication error message to clearly indicate the various strategies failures
+
 ## [14.0.3] - 2019-03-12
 
 - fix importing components when one file is a prefix of the other in the same directory
