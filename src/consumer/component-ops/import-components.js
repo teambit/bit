@@ -2,7 +2,7 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import { NothingToImport } from '../exceptions';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Consumer } from '../../consumer';
 import { ComponentWithDependencies, Scope } from '../../scope';
