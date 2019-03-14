@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- obsolete the "dependencies" property of consumer bit.json
 - avoid installing "undefined" npm package when importing authored components
 
 ## [14.0.4-dev.1] - 2019-03-14
