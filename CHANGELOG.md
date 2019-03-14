@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid installing "undefined" npm package when importing authored components
+
 ## [14.0.4-dev.1] - 2019-03-14
 
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate

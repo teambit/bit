@@ -528,6 +528,17 @@ describe('bit import', function () {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
+    describe('importing the component again', () => {
+      before(() => {
+        helper.importComponent('bar/foo');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should not create an "undefined" package on node_modules', () => {
+        localConsumerFiles.forEach((fileName) => {
+          expect(fileName.startsWith(path.join('node_modules', 'undefined'))).to.be.false;
+        });
+      });
+    });
   });
 
   describe('import from bit json', () => {

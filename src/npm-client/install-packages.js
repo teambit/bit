@@ -78,7 +78,9 @@ export async function installNpmPackagesForComponents({
     })
   );
 
-  const componentDirsRelative = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+  const componentDirsRelative = componentsWithDependenciesFlatten
+    .map(component => component.writtenPath)
+    .filter(dir => dir !== '.'); // don't install packages for author on the workspace root dir
   const componentDirsRelativeUniq = R.uniq(componentDirsRelative);
   const componentDirs = componentDirsRelativeUniq.map(dir => (basePath ? path.join(basePath, dir) : dir));
   return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
