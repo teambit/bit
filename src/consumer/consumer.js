@@ -36,7 +36,7 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { pathNormalizeToLinux, sortObject } from '../utils';
-import type { ModelComponent } from '../scope/models';
+import { ModelComponent } from '../scope/models';
 import { Version } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
@@ -65,6 +65,7 @@ import ScopeComponentsImporter from '../scope/component-ops/scope-components-imp
 import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
+import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 
 type ConsumerProps = {
   projectPath: string,
@@ -589,32 +590,34 @@ export default class Consumer {
       verbose
     });
 
-    // update bitmap with the new version
-    const taggedComponentIds = taggedComponents.map((component: Component) => {
-      this.bitMap.updateComponentId(component.id);
-      const { detachedCompiler, detachedTester } = component.pendingVersion;
-      this.bitMap.setDetachedCompilerAndTester(component.id, { detachedCompiler, detachedTester });
-      return component.id;
-    });
-    const autoTaggedComponentIds = autoTaggedComponents.map((component: ModelComponent) => {
-      const id = component.toBitId();
-      const newId = id.changeVersion(component.latest());
-      this.bitMap.updateComponentId(newId);
-      return newId;
-    });
+    const allComponents = [...taggedComponents, ...autoTaggedComponents];
+    await this._updateComponentsVersions(allComponents);
 
-    // update package.json with the new version
-    const allComponentIds = taggedComponentIds.concat(autoTaggedComponentIds);
-    const updatePackageJsonP = allComponentIds.map((componentId: BitId) => {
-      const componentMap = this.bitMap.getComponent(componentId);
-      if (componentMap.rootDir) {
-        return packageJson.updateAttribute(this, componentMap.rootDir, 'version', componentId.version);
-      }
-      return null;
-    });
-
-    await Promise.all(updatePackageJsonP);
     return { taggedComponents, autoTaggedComponents };
+  }
+
+  _updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
+    const getPackageJsonDir = (componentMap: ComponentMap, bitId: BitId, bindingPrefix: string): ?PathRelative => {
+      if (componentMap.rootDir) return componentMap.rootDir;
+      // it's author
+      if (!bitId.hasScope()) return null;
+      return getNodeModulesPathOfComponent(bindingPrefix, bitId);
+    };
+
+    const updateVersionsP = components.map((component) => {
+      const id: BitId = component instanceof ModelComponent ? component.toBitIdWithLatestVersion() : component.id;
+      this.bitMap.updateComponentId(id);
+      if (component.pendingVersion) {
+        const { detachedCompiler, detachedTester } = component.pendingVersion;
+        this.bitMap.setDetachedCompilerAndTester(id, { detachedCompiler, detachedTester });
+      }
+      const componentMap = this.bitMap.getComponent(id);
+      const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
+      return packageJsonDir
+        ? packageJson.updateAttribute(this, path.join(this.getPath(), packageJsonDir), 'version', id.version)
+        : Promise.resolve();
+    });
+    return Promise.all(updateVersionsP);
   }
 
   getComponentIdFromNodeModulesPath(requirePath: string, bindingPrefix: string): BitId {
