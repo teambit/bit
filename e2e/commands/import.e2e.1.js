@@ -541,7 +541,6 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
     });
     describe('components with shared nested deps', () => {
-      let myBitJsonPath;
       let localConsumerFiles;
       before(() => {
         helper.createFile('', 'level1.js');
@@ -558,12 +557,7 @@ describe('bit import', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
-        helper.addBitJsonDependencies(myBitJsonPath, {
-          [`${helper.remoteScope}/comp/comp1`]: '0.0.1',
-          [`${helper.remoteScope}/comp/comp2`]: '0.0.1'
-        });
-        output = helper.importAllComponents(true);
+        output = helper.importManyComponents(['comp/comp1', 'comp/comp2']);
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should print the imported component correctly', () => {
