@@ -24,7 +24,6 @@ const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 type consumerBitJsonProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
-  dependencies?: { [string]: string },
   saveDependenciesAsComponents?: boolean,
   lang?: string,
   distTarget?: ?string,
@@ -61,7 +60,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
   constructor({
     compiler,
     tester,
-    dependencies,
     saveDependenciesAsComponents = DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
     lang,
     distTarget,
@@ -78,7 +76,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules
   }: consumerBitJsonProps) {
-    super({ compiler, tester, dependencies, lang, bindingPrefix, extensions });
+    super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory;
@@ -153,7 +151,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
     ConsumerBitJson.validate(object);
     const {
       env,
-      dependencies,
       lang,
       componentsDefaultDirectory,
       dependenciesDirectory,
@@ -176,7 +173,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
       lang,
       bindingPrefix,
       extensions,
-      dependencies,
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
