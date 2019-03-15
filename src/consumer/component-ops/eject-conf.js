@@ -17,7 +17,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import JSONFile from '../component/sources/json-file';
 import RemovePath from '../component/sources/remove-path';
-import AbstractBitJson from '../bit-json/abstract-bit-json';
+import AbstractBitConfig from '../bit-json/abstract-bit-json';
 
 export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
 export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath: string, dataToPersist: DataToPersist };
@@ -125,7 +125,7 @@ export async function getEjectConfDataToPersist(
       const oldBitJsonDir = oldConfigDir.getResolved({ componentDir }).getEnvTypeCleaned();
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
       if (bitJsonDirFullPath !== oldBitJsonDirFullPath) {
-        const bitJsonToRemove = AbstractBitJson.composePath(oldBitJsonDir.dirPath);
+        const bitJsonToRemove = AbstractBitConfig.composePath(oldBitJsonDir.dirPath);
         dataToPersist.removePath(new RemovePath(bitJsonToRemove, true));
       }
     }

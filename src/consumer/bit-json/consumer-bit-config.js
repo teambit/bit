@@ -1,7 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import R from 'ramda';
-import AbstractBitJson from './abstract-bit-json';
+import AbstractBitConfig from './abstract-bit-json';
 import type { Extensions, Compilers, Testers } from './abstract-bit-json';
 import { BitJsonNotFound, InvalidBitJson } from './exceptions';
 import {
@@ -41,7 +41,7 @@ type consumerBitConfigProps = {
   resolveModules?: ResolveModulesConfig
 };
 
-export default class ConsumerBitConfig extends AbstractBitJson {
+export default class ConsumerBitConfig extends AbstractBitConfig {
   distTarget: ?string; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
@@ -140,7 +140,7 @@ export default class ConsumerBitConfig extends AbstractBitJson {
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const deleteBitJsonFile = async () => {
-      const bitJsonPath = AbstractBitJson.composePath(dirPath);
+      const bitJsonPath = AbstractBitConfig.composePath(dirPath);
       logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
@@ -189,9 +189,9 @@ export default class ConsumerBitConfig extends AbstractBitJson {
   }
 
   static async load(dirPath: string): Promise<ConsumerBitConfig> {
-    const isExisting = await AbstractBitJson.hasExisting(dirPath);
+    const isExisting = await AbstractBitConfig.hasExisting(dirPath);
     if (!isExisting) throw new BitJsonNotFound();
-    const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    const bitJsonPath = AbstractBitConfig.composePath(dirPath);
     let file;
     try {
       file = await fs.readJson(bitJsonPath);

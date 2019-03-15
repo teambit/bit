@@ -2,7 +2,7 @@
 import R from 'ramda';
 import fs from 'fs-extra';
 import { InvalidBitJson } from './exceptions';
-import AbstractBitJson from './abstract-bit-json';
+import AbstractBitConfig from './abstract-bit-json';
 import type { Compilers, Testers } from './abstract-bit-json';
 import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
@@ -22,7 +22,7 @@ export type BitJsonProps = {
   extensions?: Object
 };
 
-export default class ComponentBitConfig extends AbstractBitJson {
+export default class ComponentBitConfig extends AbstractBitConfig {
   packageDependencies: { [string]: string };
   devPackageDependencies: ?Object;
   peerPackageDependencies: ?Object;
@@ -130,7 +130,7 @@ export default class ComponentBitConfig extends AbstractBitJson {
   static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
     if (!dirPath) throw new TypeError('bit-json.loadSync missing dirPath arg');
     let thisBJ = {};
-    const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    const bitJsonPath = AbstractBitConfig.composePath(dirPath);
     if (fs.existsSync(bitJsonPath)) {
       try {
         thisBJ = fs.readJsonSync(bitJsonPath);

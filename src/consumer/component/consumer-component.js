@@ -50,7 +50,7 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
-import AbstractBitJson from '../bit-json/abstract-bit-json';
+import AbstractBitConfig from '../bit-json/abstract-bit-json';
 import { Analytics } from '../../analytics/analytics';
 import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
@@ -1044,7 +1044,7 @@ export default class Component {
       peerPackageDependencies = componentBitConfig.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitConfigFileExist = await AbstractBitJson.hasExisting(configDir);
+      componentBitConfigFileExist = await AbstractBitConfig.hasExisting(configDir);
       if (componentBitConfigFileExist) {
         rawComponentBitConfig = componentBitConfig;
       }

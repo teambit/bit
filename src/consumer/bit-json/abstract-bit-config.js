@@ -46,7 +46,7 @@ export type Envs = { [envName: string]: CompilerExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
 
-export type AbstractBitJsonProps = {
+export type AbstractBitConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
   dependencies?: Object,
@@ -58,7 +58,7 @@ export type AbstractBitJsonProps = {
   extensions?: Extensions
 };
 
-export default class AbstractBitJson {
+export default class AbstractBitConfig {
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
@@ -70,7 +70,7 @@ export default class AbstractBitJson {
   bindingPrefix: string;
   extensions: Extensions;
 
-  constructor(props: AbstractBitJsonProps) {
+  constructor(props: AbstractBitConfigProps) {
     this._compiler = props.compiler || {};
     this._tester = props.tester || {};
     this.dependencies = props.dependencies || DEFAULT_DEPENDENCIES;
@@ -228,14 +228,14 @@ export default class AbstractBitJson {
     let isExisting = false;
     const isBitDirExisting = await fs.exists(bitDir);
     if (isBitDirExisting) {
-      isExisting = await AbstractBitJson.hasExisting(bitDir);
+      isExisting = await AbstractBitConfig.hasExisting(bitDir);
     }
     if (!override && isExisting) {
       return null;
     }
 
     return {
-      pathToWrite: AbstractBitJson.composePath(bitDir),
+      pathToWrite: AbstractBitConfig.composePath(bitDir),
       content: this.toPlainObject()
     };
   }
