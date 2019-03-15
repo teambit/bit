@@ -89,6 +89,10 @@ export default class BitMap {
     return componentMap;
   }
 
+  isEmpty() {
+    return R.isEmpty(this.components);
+  }
+
   removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     // $FlowFixMe
