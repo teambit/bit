@@ -64,13 +64,14 @@ describe('binary files', function () {
       expect(output.includes('found 1 components')).to.be.true;
       expect(output.includes('bar/foo')).to.be.true;
     });
-    it('should not create any other file in node_modules/@bit other than the binary file itself', () => {
+    it('should not create any other file in node_modules/@bit other than the binary file itself and package.json', () => {
       const files = glob.sync(path.normalize('**/*'), {
         cwd: path.join(helper.localScopePath, 'node_modules/@bit'),
         nodir: true
       });
-      expect(files).to.be.lengthOf(1);
-      expect(files[0]).to.have.string('png_fixture.png');
+      expect(files).to.be.lengthOf(2);
+      expect(files.some(f => f.includes('png_fixture.png'))).to.be.true;
+      expect(files.some(f => f.includes('package.json'))).to.be.true;
     });
     it('should create the file in node_modules/@bit as a symlink', () => {
       const symlinkPath = path.join(
