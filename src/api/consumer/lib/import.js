@@ -37,33 +37,33 @@ export default (async function importAction(
     const id = envComponents[0].component.id.toString();
     function writeBitConfigIfNeeded() {
       if (environmentOptions.compiler) {
-        consumer.bitJson.compiler = id;
+        consumer.bitConfig.compiler = id;
         Analytics.setExtraData('build_env', id);
-        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        return consumer.bitConfig.write({ bitDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
-        consumer.bitJson.tester = id;
+        consumer.bitConfig.tester = id;
         Analytics.setExtraData('test_env', id);
-        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        return consumer.bitConfig.write({ bitDir: consumer.getPath() });
       }
 
       if (environmentOptions.extension) {
         const idWithoutVersion = BitId.getStringWithoutVersion(id);
         // don't create the same extension twice - check if older version exists and override it
-        const oldVersion = Object.keys(consumer.bitJson.extensions).find((ext) => {
+        const oldVersion = Object.keys(consumer.bitConfig.extensions).find((ext) => {
           return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
         });
         if (oldVersion) {
-          consumer.bitJson.extensions[id] = consumer.bitJson.extensions[oldVersion];
-          delete consumer.bitJson.extensions[oldVersion];
-          return consumer.bitJson.write({ bitDir: consumer.getPath() });
+          consumer.bitConfig.extensions[id] = consumer.bitConfig.extensions[oldVersion];
+          delete consumer.bitConfig.extensions[oldVersion];
+          return consumer.bitConfig.write({ bitDir: consumer.getPath() });
         }
-        consumer.bitJson.extensions[id] = {
+        consumer.bitConfig.extensions[id] = {
           options: {},
           config: {}
         };
-        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        return consumer.bitConfig.write({ bitDir: consumer.getPath() });
       }
 
       return Promise.resolve(true);

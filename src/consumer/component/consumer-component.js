@@ -981,7 +981,7 @@ export default class Component {
     componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const consumerBitConfig: ConsumerBitConfig = consumer.bitJson;
+    const consumerBitConfig: ConsumerBitConfig = consumer.bitConfig;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     let configDir = consumer.getPath();

@@ -254,12 +254,12 @@ async function updateAttribute(
  */
 async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
   if (
-    consumer.bitJson.manageWorkspaces &&
-    consumer.bitJson.packageManager === 'yarn' &&
-    consumer.bitJson.useWorkspaces
+    consumer.bitConfig.manageWorkspaces &&
+    consumer.bitConfig.packageManager === 'yarn' &&
+    consumer.bitConfig.useWorkspaces
   ) {
     const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.bitJson.dependenciesDirectory;
+    const dependenciesDirectory = consumer.bitConfig.dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
@@ -293,9 +293,9 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   if (
-    consumer.bitJson.manageWorkspaces &&
-    consumer.bitJson.packageManager === 'yarn' &&
-    consumer.bitJson.useWorkspaces
+    consumer.bitConfig.manageWorkspaces &&
+    consumer.bitConfig.packageManager === 'yarn' &&
+    consumer.bitConfig.useWorkspaces
   ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);

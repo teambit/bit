@@ -283,7 +283,10 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-        const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.bitJson.bindingPrefix, this.component.id);
+        const relativeLinkPath = getNodeModulesPathOfComponent(
+          this.consumer.bitConfig.bindingPrefix,
+          this.component.id
+        );
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
         );

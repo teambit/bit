@@ -69,7 +69,7 @@ import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-p
 
 type ConsumerProps = {
   projectPath: string,
-  bitJson: ConsumerBitConfig,
+  bitConfig: ConsumerBitConfig,
   scope: Scope,
   created?: boolean,
   isolated?: boolean,
@@ -90,7 +90,7 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  bitJson: ConsumerBitConfig;
+  bitConfig: ConsumerBitConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
@@ -104,7 +104,7 @@ export default class Consumer {
 
   constructor({
     projectPath,
-    bitJson,
+    bitConfig,
     scope,
     created = false,
     isolated = false,
@@ -113,7 +113,7 @@ export default class Consumer {
     existingGitHooks
   }: ConsumerProps) {
     this.projectPath = projectPath;
-    this.bitJson = bitJson;
+    this.bitConfig = bitConfig;
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
@@ -124,16 +124,16 @@ export default class Consumer {
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<?CompilerExtension> {
-    return this.bitJson.loadCompiler(this.projectPath, this.scope.getPath());
+    return this.bitConfig.loadCompiler(this.projectPath, this.scope.getPath());
   }
 
   get tester(): Promise<?TesterExtension> {
-    return this.bitJson.loadTester(this.projectPath, this.scope.getPath());
+    return this.bitConfig.loadTester(this.projectPath, this.scope.getPath());
   }
 
   get driver(): Driver {
     if (!this._driver) {
-      this._driver = Driver.load(this.bitJson.lang);
+      this._driver = Driver.load(this.bitConfig.lang);
     }
     return this._driver;
   }
@@ -141,9 +141,9 @@ export default class Consumer {
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
-        this.bitJson.componentsDefaultDirectory,
-        this.bitJson.dependenciesDirectory,
-        this.bitJson.ejectedEnvsDirectory
+        this.bitConfig.componentsDefaultDirectory,
+        this.bitConfig.dependenciesDirectory,
+        this.bitConfig.ejectedEnvsDirectory
       );
     }
     return this._dirStructure;
@@ -192,7 +192,7 @@ export default class Consumer {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
       throw new GeneralError(
-        `Failed loading the driver for ${this.bitJson.lang}. Got an error from the driver: ${err}`
+        `Failed loading the driver for ${this.bitConfig.lang}. Got an error from the driver: ${err}`
       );
     }
   }
@@ -242,7 +242,7 @@ export default class Consumer {
 
   async write({ overrideBitJson = false }: { overrideBitJson: boolean }): Promise<Consumer> {
     await Promise.all([
-      this.bitJson.write({ bitDir: this.projectPath, override: overrideBitJson }),
+      this.bitConfig.write({ bitDir: this.projectPath, override: overrideBitJson }),
       this.scope.ensureDir()
     ]);
     this.bitMap.markAsChanged();
@@ -377,7 +377,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.bitJson.saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.bitConfig.saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -394,7 +394,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.bitJson.distEntry && !this.bitJson.distTarget;
+    return !this.bitConfig.distEntry && !this.bitConfig.distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -746,7 +746,7 @@ export default class Consumer {
     }
     if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
       const consumer = await Consumer.create(currentPath);
-      await Promise.all([consumer.bitJson.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
+      await Promise.all([consumer.bitConfig.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
