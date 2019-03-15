@@ -22,10 +22,6 @@ describe('bit export command', function () {
       helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
     });
-    it('should not write the exported component into bit.json', () => {
-      const bitJson = helper.readBitJson();
-      expect(bitJson.dependencies).not.to.have.property(`${helper.remoteScope}/bar/foo`);
-    });
     it('should write the exported component into bit.map', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo${VERSION_DELIMITER}0.0.1`);

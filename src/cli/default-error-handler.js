@@ -280,13 +280,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
-  [
-    NothingToImport,
-    () =>
-      chalk.yellow(
-        'nothing to import. please use `bit import [component_id]` or configure your dependencies in bit.json'
-      )
-  ],
+  [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
     InvalidIdChunk,
     err =>
