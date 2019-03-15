@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
 import type { Compilers, Testers } from './abstract-bit-json';
-import type ConsumerBitJson from './consumer-bit-config';
+import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';
 
@@ -104,19 +104,19 @@ export default class ComponentBitConfig extends AbstractBitJson {
   }
 
   /**
-   * Use the consumerBitJson as a base. Override values if exist in componentBitConfig
+   * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
    */
-  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): ComponentBitConfig {
+  static mergeWithProto(json, protoBJ: ?ConsumerBitConfig): ComponentBitConfig {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
     return ComponentBitConfig.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 
-  static create(json = {}, protoBJ: ConsumerBitJson) {
+  static create(json = {}, protoBJ: ConsumerBitConfig) {
     return ComponentBitConfig.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<ComponentBitConfig> {
+  static load(dirPath: string, protoBJ?: ConsumerBitConfig): Promise<ComponentBitConfig> {
     return new Promise((resolve, reject) => {
       try {
         const result = this.loadSync(dirPath, protoBJ);
@@ -127,7 +127,7 @@ export default class ComponentBitConfig extends AbstractBitJson {
     });
   }
 
-  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitConfig {
+  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
     if (!dirPath) throw new TypeError('bit-json.loadSync missing dirPath arg');
     let thisBJ = {};
     const bitJsonPath = AbstractBitJson.composePath(dirPath);

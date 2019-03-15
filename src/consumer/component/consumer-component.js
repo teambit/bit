@@ -7,7 +7,7 @@ import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import ComponentBitConfig from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
-import type ConsumerBitJson from '../bit-json/consumer-bit-config';
+import type ConsumerBitConfig from '../bit-json/consumer-bit-config';
 import type Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import type Scope from '../../scope/scope';
@@ -981,7 +981,7 @@ export default class Component {
     componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const consumerBitJson: ConsumerBitJson = consumer.bitJson;
+    const consumerBitConfig: ConsumerBitConfig = consumer.bitJson;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     let configDir = consumer.getPath();
@@ -999,7 +999,7 @@ export default class Component {
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
-          const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
+          const sourceFile = SourceFile.load(filePath, consumerBitConfig.distTarget, bitDir, consumerPath, {
             test: file.test
           });
           sourceFiles.push(sourceFile);
@@ -1038,7 +1038,7 @@ export default class Component {
     let componentBitConfigFileExist = false;
     let rawComponentBitConfig;
     if (configDir !== consumerPath) {
-      componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitJson);
+      componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitConfig);
       packageDependencies = componentBitConfig.packageDependencies;
       devPackageDependencies = componentBitConfig.devPackageDependencies;
       peerPackageDependencies = componentBitConfig.peerPackageDependencies;
@@ -1053,7 +1053,7 @@ export default class Component {
       }
     }
     // for authored componentBitConfig is normally undefined
-    const bitJson = componentBitConfig || consumerBitJson;
+    const bitJson = componentBitConfig || consumerBitConfig;
 
     // Remove dists if compiler has been deleted
     if (dists && !bitJson.hasCompiler()) {
@@ -1071,7 +1071,7 @@ export default class Component {
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
-      consumerBitJson,
+      consumerBitConfig,
       componentBitConfig: rawComponentBitConfig,
       context: envsContext,
       detached: componentMap.detachedCompiler

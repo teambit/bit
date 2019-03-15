@@ -21,7 +21,7 @@ const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
-type consumerBitJsonProps = {
+type consumerBitConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
   saveDependenciesAsComponents?: boolean,
@@ -41,7 +41,7 @@ type consumerBitJsonProps = {
   resolveModules?: ResolveModulesConfig
 };
 
-export default class ConsumerBitJson extends AbstractBitJson {
+export default class ConsumerBitConfig extends AbstractBitJson {
   distTarget: ?string; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
@@ -75,7 +75,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules
-  }: consumerBitJsonProps) {
+  }: consumerBitConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
@@ -125,14 +125,14 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  static create(): ConsumerBitJson {
-    return new ConsumerBitJson({});
+  static create(): ConsumerBitConfig {
+    return new ConsumerBitConfig({});
   }
 
-  static async ensure(dirPath: PathOsBasedAbsolute): Promise<ConsumerBitJson> {
+  static async ensure(dirPath: PathOsBasedAbsolute): Promise<ConsumerBitConfig> {
     try {
-      const consumerBitJson = await this.load(dirPath);
-      return consumerBitJson;
+      const consumerBitConfig = await this.load(dirPath);
+      return consumerBitConfig;
     } catch (err) {
       return this.create();
     }
@@ -148,7 +148,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
-    ConsumerBitJson.validate(object);
+    ConsumerBitConfig.validate(object);
     const {
       env,
       lang,
@@ -167,7 +167,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
       resolveModules
     } = object;
 
-    return new ConsumerBitJson({
+    return new ConsumerBitConfig({
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,
@@ -188,7 +188,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     });
   }
 
-  static async load(dirPath: string): Promise<ConsumerBitJson> {
+  static async load(dirPath: string): Promise<ConsumerBitConfig> {
     const isExisting = await AbstractBitJson.hasExisting(dirPath);
     if (!isExisting) throw new BitJsonNotFound();
     const bitJsonPath = AbstractBitJson.composePath(dirPath);
@@ -198,9 +198,9 @@ export default class ConsumerBitJson extends AbstractBitJson {
     } catch (e) {
       throw new InvalidBitJson(bitJsonPath);
     }
-    const consumerBitJson = this.fromPlainObject(file);
-    consumerBitJson.path = bitJsonPath;
-    return consumerBitJson;
+    const consumerBitConfig = this.fromPlainObject(file);
+    consumerBitConfig.path = bitJsonPath;
+    return consumerBitConfig;
   }
 
   static validate(object: Object) {

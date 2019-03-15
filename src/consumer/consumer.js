@@ -11,7 +11,7 @@ import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locat
 import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import ConsumerBitJson from './bit-json/consumer-bit-config';
+import ConsumerBitConfig from './bit-json/consumer-bit-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -69,7 +69,7 @@ import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-p
 
 type ConsumerProps = {
   projectPath: string,
-  bitJson: ConsumerBitJson,
+  bitJson: ConsumerBitConfig,
   scope: Scope,
   created?: boolean,
   isolated?: boolean,
@@ -90,7 +90,7 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  bitJson: ConsumerBitJson;
+  bitJson: ConsumerBitConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
@@ -692,7 +692,7 @@ export default class Consumer {
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
-    const bitJsonP = ConsumerBitJson.ensure(projectPath);
+    const bitJsonP = ConsumerBitConfig.ensure(projectPath);
     const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
     return new Consumer({
       projectPath,
@@ -712,7 +712,7 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const bitJsonP = ConsumerBitJson.reset(projectPath, resetHard);
+    const bitJsonP = ConsumerBitConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, bitJsonP]);
   }
 
@@ -723,7 +723,7 @@ export default class Consumer {
   ): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
-    const bitJson = await ConsumerBitJson.ensure(consumerPath);
+    const bitJson = await ConsumerBitConfig.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
@@ -750,7 +750,7 @@ export default class Consumer {
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
-    const bitJsonP = ConsumerBitJson.load(projectPath);
+    const bitJsonP = ConsumerBitConfig.load(projectPath);
     const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
     return new Consumer({
       projectPath,

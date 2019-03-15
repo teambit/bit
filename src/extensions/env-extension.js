@@ -22,7 +22,7 @@ import type TesterExtension from './tester-extension';
 import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
-import type ConsumerBitJson from '../consumer/bit-json/consumer-bit-config';
+import type ConsumerBitConfig from '../consumer/bit-json/consumer-bit-config';
 import type ComponentBitConfig from '../consumer/bit-json';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
@@ -338,7 +338,7 @@ export default class EnvExtension extends BaseExtension {
     scopePath,
     componentOrigin,
     componentFromModel,
-    consumerBitJson,
+    consumerBitConfig,
     componentBitConfig,
     detached,
     envType,
@@ -348,7 +348,7 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    consumerBitJson: ConsumerBitJson,
+    consumerBitConfig: ConsumerBitConfig,
     componentBitConfig: ?ComponentBitConfig,
     detached: ?boolean,
     envType: EnvType,
@@ -360,7 +360,7 @@ export default class EnvExtension extends BaseExtension {
     if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
       // The component is not detached - load from the consumer bit.json
       if (!detached) {
-        return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
+        return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
       }
       // The component is detached - load from the component bit.json or from the models
       return loadFromComponentBitConfigOrFromModel({
@@ -377,7 +377,7 @@ export default class EnvExtension extends BaseExtension {
     // The component is attached - load from the consumer bit.json
     // This is in purpose checking false not a falsy. since by default is undefined which is different from false.
     if (detached === false) {
-      return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
+      return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
     }
     return loadFromComponentBitConfigOrFromModel({
       modelComponent: componentFromModel,
