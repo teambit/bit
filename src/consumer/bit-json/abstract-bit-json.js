@@ -10,7 +10,6 @@ import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
 import type { PathOsBased, PathLinux } from '../../utils/path';
-import { BitJsonAlreadyExists } from './exceptions';
 import {
   BIT_JSON,
   DEFAULT_DEPENDENCIES,
@@ -213,28 +212,18 @@ export default class AbstractBitJson {
     );
   }
 
-  async write({
-    bitDir,
-    override = true,
-    throws = true
-  }: {
-    bitDir: string,
-    override?: boolean,
-    throws?: boolean
-  }): Promise<boolean> {
-    const data = await this.prepareToWrite({ bitDir, override, throws });
+  async write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
+    const data = await this.prepareToWrite({ bitDir, override });
     if (!data) return false;
     return fs.outputJson(data.pathToWrite, data.content, { spaces: 4 });
   }
 
   async prepareToWrite({
     bitDir,
-    override = true,
-    throws = true
+    override = true
   }: {
     bitDir: string,
-    override?: boolean,
-    throws?: boolean
+    override?: boolean
   }): Promise<?{ pathToWrite: PathOsBased, content: Object }> {
     let isExisting = false;
     const isBitDirExisting = await fs.exists(bitDir);
@@ -242,9 +231,6 @@ export default class AbstractBitJson {
       isExisting = await AbstractBitJson.hasExisting(bitDir);
     }
     if (!override && isExisting) {
-      if (throws) {
-        throw new BitJsonAlreadyExists();
-      }
       return null;
     }
 

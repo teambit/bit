@@ -25,14 +25,12 @@ export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath: 
 export default (async function ejectConf(
   component: ConsumerComponent,
   consumer: Consumer,
-  configDir: ConfigDir,
-  override?: boolean = true
+  configDir: ConfigDir
 ): Promise<EjectConfResult> {
   const { id, ejectedPath, ejectedFullPath, dataToPersist } = await getEjectConfDataToPersist(
     component,
     consumer,
-    configDir,
-    override
+    configDir
   );
   if (consumer) dataToPersist.addBasePath(consumer.getPath());
   await dataToPersist.persistAllToFS();
@@ -46,8 +44,7 @@ export default (async function ejectConf(
 export async function getEjectConfDataToPersist(
   component: ConsumerComponent,
   consumer: Consumer,
-  configDir: ConfigDir,
-  override?: boolean = true
+  configDir: ConfigDir
 ): Promise<EjectConfData> {
   const consumerPath: PathOsBased = consumer.getPath();
   const bitMap: BitMap = consumer.bitMap;
@@ -111,13 +108,13 @@ export async function getEjectConfDataToPersist(
     relativeEjectedCompilerDirectory,
     relativeEjectedTesterDirectory
   );
-  const bitJsonDataToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath, override });
+  const bitJsonDataToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
   if (bitJsonDataToWrite) {
     dataToPersist.addFile(
       JSONFile.load({
         base: bitJsonDir.dirPath,
         path: bitJsonDataToWrite.pathToWrite,
-        override,
+        override: true,
         content: bitJsonDataToWrite.content
       })
     );

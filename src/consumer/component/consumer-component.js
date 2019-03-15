@@ -334,22 +334,14 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(
-    consumer: Consumer,
-    configDir: PathOsBased | ConfigDir,
-    override?: boolean = true
-  ): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, configDir, override);
+  async writeConfig(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfResult> {
+    const ejectConfData = await this.getConfigToWrite(consumer, configDir);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
     return ejectConfData;
   }
 
-  async getConfigToWrite(
-    consumer: Consumer,
-    configDir: PathOsBased | ConfigDir,
-    override?: boolean = true
-  ): Promise<EjectConfData> {
+  async getConfigToWrite(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfData> {
     const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
@@ -371,7 +363,7 @@ export default class Component {
       throw new EjectBoundToWorkspace();
     }
 
-    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance, override);
+    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
