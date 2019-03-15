@@ -8,7 +8,6 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
-import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import type { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
@@ -81,15 +80,6 @@ export default (async function importAction(
   const importComponents = new ImportComponents(consumer, importOptions);
   const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
-  const notAuthored = (bitId) => {
-    const componentMap = consumer.bitMap.getComponentIfExist(bitId);
-    return componentMap && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
-  };
-  const notAuthoredBitIds = R.filter(notAuthored, bitIds);
-  if (!R.isEmpty(notAuthoredBitIds)) {
-    // not needed when importing from bit.json/bit.map
-    await consumer.bitJson.addDependencies(notAuthoredBitIds).write({ bitDir: consumer.getPath() });
-  }
 
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
