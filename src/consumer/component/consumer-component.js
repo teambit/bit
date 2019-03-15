@@ -7,7 +7,7 @@ import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
 import ComponentBitJson from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
-import type ConsumerBitJson from '../bit-json/consumer-bit-json';
+import type ConsumerBitJson from '../bit-json/consumer-bit-config';
 import type Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import type Scope from '../../scope/scope';

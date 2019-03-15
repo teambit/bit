@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import { InvalidBitJson } from './exceptions';
 import AbstractBitJson from './abstract-bit-json';
 import type { Compilers, Testers } from './abstract-bit-json';
-import type ConsumerBitJson from './consumer-bit-json';
+import type ConsumerBitJson from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';
 

@@ -22,7 +22,7 @@ import type TesterExtension from './tester-extension';
 import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
-import type ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
+import type ConsumerBitJson from '../consumer/bit-json/consumer-bit-config';
 import type ComponentBitJson from '../consumer/bit-json';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';

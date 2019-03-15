@@ -11,7 +11,7 @@ import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locat
 import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import ConsumerBitJson from './bit-json/consumer-bit-json';
+import ConsumerBitJson from './bit-json/consumer-bit-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
