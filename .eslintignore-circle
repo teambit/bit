@@ -41,7 +41,6 @@ src/utils/is-file-auto-generated.js
 src/utils/object-to-stringified-tuple-array.js
 src/utils/promise-to-result-object.js
 src/utils/string/get-stringify-args.js
-src/api/consumer/lib/import.js
 src/api/scope/lib/resolver.js
 src/cli/cli-utils.js
 src/cli/command.js
@@ -95,7 +94,7 @@ src/scope/objects/repository.js
 src/consumer/component/components-list.js
 src/remotes/remote.js
 src/scope/graph/graph.js
-src/consumer/bit-json/bit-json.js
+src/consumer/bit-config/component-bit-config.js
 src/jsdoc/example-tag-parser.js
 src/scope/objects/raw-object.js
 src/scope/models/version.js

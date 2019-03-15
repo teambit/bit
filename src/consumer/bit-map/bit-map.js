@@ -27,7 +27,7 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, 
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
-import ComponentBitJson from '../bit-json';
+import ComponentBitConfig from '../bit-config';
 import ConfigDir from './config-dir';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
@@ -289,10 +289,10 @@ export default class BitMap {
       if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
-        const compilerObj = R.values(componentBitJson.compiler)[0];
+        const componentBitConfig = ComponentBitConfig.loadSync(fullConfigDir);
+        const compilerObj = R.values(componentBitConfig.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
-        const testerObj = R.values(componentBitJson.tester)[0];
+        const testerObj = R.values(componentBitConfig.tester)[0];
         const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
         const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
         const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];

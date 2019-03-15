@@ -1,14 +1,14 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
-import { InvalidBitJson } from './exceptions';
-import AbstractBitJson from './abstract-bit-json';
-import type { Compilers, Testers } from './abstract-bit-json';
-import type ConsumerBitJson from './consumer-bit-json';
+import { InvalidBitConfig } from './exceptions';
+import AbstractBitConfig from './abstract-bit-config';
+import type { Compilers, Testers } from './abstract-bit-config';
+import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';
 
-export type BitJsonProps = {
+export type BitConfigProps = {
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
@@ -22,7 +22,7 @@ export type BitJsonProps = {
   extensions?: Object
 };
 
-export default class ComponentBitJson extends AbstractBitJson {
+export default class ComponentBitConfig extends AbstractBitConfig {
   packageDependencies: { [string]: string };
   devPackageDependencies: ?Object;
   peerPackageDependencies: ?Object;
@@ -40,7 +40,7 @@ export default class ComponentBitJson extends AbstractBitJson {
     lang,
     bindingPrefix,
     extensions
-  }: BitJsonProps) {
+  }: BitConfigProps) {
     super({
       compiler,
       tester,
@@ -80,14 +80,14 @@ export default class ComponentBitJson extends AbstractBitJson {
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
-      throw new InvalidBitJson(bitJsonPath);
+      throw new InvalidBitConfig(bitJsonPath);
     }
   }
 
-  static fromPlainObject(object: Object): ComponentBitJson {
+  static fromPlainObject(object: Object): ComponentBitConfig {
     const { env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
 
-    return new ComponentBitJson({
+    return new ComponentBitConfig({
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
@@ -104,19 +104,19 @@ export default class ComponentBitJson extends AbstractBitJson {
   }
 
   /**
-   * Use the consumerBitJson as a base. Override values if exist in componentBitJson
+   * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
    */
-  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): ComponentBitJson {
+  static mergeWithProto(json, protoBJ: ?ConsumerBitConfig): ComponentBitConfig {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
-    return ComponentBitJson.fromPlainObject(R.merge(plainProtoBJ, json));
+    return ComponentBitConfig.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 
-  static create(json = {}, protoBJ: ConsumerBitJson) {
-    return ComponentBitJson.mergeWithProto(json, protoBJ);
+  static create(json = {}, protoBJ: ConsumerBitConfig) {
+    return ComponentBitConfig.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<ComponentBitJson> {
+  static load(dirPath: string, protoBJ?: ConsumerBitConfig): Promise<ComponentBitConfig> {
     return new Promise((resolve, reject) => {
       try {
         const result = this.loadSync(dirPath, protoBJ);
@@ -127,24 +127,24 @@ export default class ComponentBitJson extends AbstractBitJson {
     });
   }
 
-  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitJson {
-    if (!dirPath) throw new TypeError('bit-json.loadSync missing dirPath arg');
+  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
+    if (!dirPath) throw new TypeError('bit-config.loadSync missing dirPath arg');
     let thisBJ = {};
-    const bitJsonPath = AbstractBitJson.composePath(dirPath);
+    const bitJsonPath = AbstractBitConfig.composePath(dirPath);
     if (fs.existsSync(bitJsonPath)) {
       try {
         thisBJ = fs.readJsonSync(bitJsonPath);
       } catch (e) {
-        throw new InvalidBitJson(bitJsonPath);
+        throw new InvalidBitConfig(bitJsonPath);
       }
     } else if (!protoBJ) {
       throw new Error(
-        `bit-json.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
+        `bit-config.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
       );
     }
 
-    const componentBitJson = ComponentBitJson.mergeWithProto(thisBJ, protoBJ);
-    componentBitJson.path = bitJsonPath;
-    return componentBitJson;
+    const componentBitConfig = ComponentBitConfig.mergeWithProto(thisBJ, protoBJ);
+    componentBitConfig.path = bitJsonPath;
+    return componentBitConfig;
   }
 }

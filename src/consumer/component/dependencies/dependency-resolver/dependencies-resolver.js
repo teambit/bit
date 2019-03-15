@@ -119,7 +119,7 @@ export default class DependencyResolver {
         this.consumerPath,
         allFiles,
         this.component.bindingPrefix,
-        this.consumer.bitJson.resolveModules,
+        this.consumer.bitConfig.resolveModules,
         cacheResolvedDependencies
       );
     };
@@ -293,7 +293,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): ?BitId {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.bitJson.resolveModules;
+    const resolveModules = this.consumer.bitConfig.resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
       depFile.startsWith(resolveModules.aliases[alias])

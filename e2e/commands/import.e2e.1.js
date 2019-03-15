@@ -8,7 +8,7 @@ import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
-import InvalidBitJsonPropPath from '../../src/consumer/bit-json/exceptions/invalid-bit-json-prop-path';
+import InvalidBitConfigPropPath from '../../src/consumer/bit-config/exceptions/invalid-bit-config-prop-path';
 
 chai.use(require('chai-fs'));
 
@@ -2325,7 +2325,7 @@ console.log(barFoo.default());`;
       });
       it('should throw a descriptive error pointing to the bit.json property', () => {
         const importCmd = () => helper.importComponent('any-comp');
-        const error = new InvalidBitJsonPropPath('componentsDefaultDirectory', '/components/{name}');
+        const error = new InvalidBitConfigPropPath('componentsDefaultDirectory', '/components/{name}');
         helper.expectToThrow(importCmd, error);
       });
     });
@@ -2338,7 +2338,7 @@ console.log(barFoo.default());`;
       });
       it('should throw a descriptive error pointing to the bit.json property', () => {
         const importCmd = () => helper.importComponent('any-comp');
-        const error = new InvalidBitJsonPropPath('dependenciesDirectory', '/components/.dependencies');
+        const error = new InvalidBitConfigPropPath('dependenciesDirectory', '/components/.dependencies');
         helper.expectToThrow(importCmd, error);
       });
     });
