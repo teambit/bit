@@ -878,19 +878,14 @@ export default class Consumer {
   }
 
   /**
-   * cleanBitMapAndBitJson - clean up removed components from bitmap and bit.json file
+   * clean up removed components from bitmap
    * @param {BitIds} componentsToRemoveFromFs - delete component that are used by other components.
    * @param {BitIds} removedDependencies - delete component that are used by other components.
    */
-  async cleanBitMapAndBitJson(componentsToRemoveFromFs: BitIds, removedDependencies: BitIds) {
-    logger.debug(
-      `consumer.cleanBitMapAndBitJson, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap and bit.json`
-    );
-    const bitJson = this.bitJson;
+  async cleanFromBitMap(componentsToRemoveFromFs: BitIds, removedDependencies: BitIds) {
+    logger.debug(`consumer.cleanFromBitMap, cleaning ${componentsToRemoveFromFs.toString()} from .bitmap`);
     this.bitMap.removeComponents(componentsToRemoveFromFs);
     this.bitMap.removeComponents(removedDependencies);
-    componentsToRemoveFromFs.map(x => delete bitJson.dependencies[x.toStringWithoutVersion()]);
-    await bitJson.write({ bitDir: this.projectPath });
   }
   /**
    * removeLocal - remove local (imported, new staged components) from modules and bitmap according to flags
@@ -938,7 +933,7 @@ export default class Consumer {
       await this.removeComponentFromFs(removedDependencies, false);
       if (!track) {
         await packageJson.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
-        await this.cleanBitMapAndBitJson(removedComponentIds, removedDependencies);
+        await this.cleanFromBitMap(removedComponentIds, removedDependencies);
       }
     }
     return new RemovedLocalObjects(

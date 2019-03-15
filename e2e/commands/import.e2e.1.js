@@ -48,12 +48,6 @@ describe('bit import', function () {
       expect(importOutput).to.have.string('added');
       expect(importOutput).to.not.have.string('updated');
     });
-    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
-    it('should add the component to bit.json file', () => {
-      const bitJson = helper.readBitJson();
-      const depName = [helper.remoteScope, 'global', 'simple'].join('/');
-      expect(bitJson.dependencies).to.include({ [depName]: '0.0.1' });
-    });
     it('should add the component into bit.map file with the full id', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`);
@@ -528,6 +522,17 @@ describe('bit import', function () {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
+    describe('importing the component again', () => {
+      before(() => {
+        helper.importComponent('bar/foo');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should not create an "undefined" package on node_modules', () => {
+        localConsumerFiles.forEach((fileName) => {
+          expect(fileName.startsWith(path.join('node_modules', 'undefined'))).to.be.false;
+        });
+      });
+    });
   });
 
   describe('import from bit json', () => {
@@ -536,7 +541,6 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
     });
     describe('components with shared nested deps', () => {
-      let myBitJsonPath;
       let localConsumerFiles;
       before(() => {
         helper.createFile('', 'level1.js');
@@ -553,12 +557,7 @@ describe('bit import', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
-        helper.addBitJsonDependencies(myBitJsonPath, {
-          [`${helper.remoteScope}/comp/comp1`]: '0.0.1',
-          [`${helper.remoteScope}/comp/comp2`]: '0.0.1'
-        });
-        output = helper.importAllComponents(true);
+        output = helper.importManyComponents(['comp/comp1', 'comp/comp2']);
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should print the imported component correctly', () => {
@@ -1630,11 +1629,7 @@ console.log(barFoo.default());`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const bitJson = helper.readBitJson();
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.1';
-      helper.writeBitJson(bitJson);
-      helper.importAllComponents(true);
+      helper.importManyComponents(['utils/is-type', 'utils/is-string']);
       localConsumerFiles = helper.getConsumerFiles();
     });
     it('should write is-type directly in components directory', () => {
@@ -1688,11 +1683,7 @@ console.log(barFoo.default());`;
       helper.reInitLocalScope();
       helper.addRemoteScope();
 
-      const bitJson = helper.readBitJson();
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.2';
-      helper.writeBitJson(bitJson);
-      helper.importAllComponents(true);
+      helper.importManyComponents(['utils/is-string@0.0.1', ['utils/is-type@0.0.2']]);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.getRequireBitPath('utils', 'is-string');

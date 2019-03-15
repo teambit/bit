@@ -170,7 +170,7 @@ please use bit remove command to remove them.`,
     // gets the dependencies as npm packages so we don't need to worry much about have extra
     // dependencies on the filesystem
     await this.consumer.removeComponentFromFs(this.componentsToEject, true);
-    await this.consumer.cleanBitMapAndBitJson(this.componentsToEject, new BitIds());
+    await this.consumer.cleanFromBitMap(this.componentsToEject, new BitIds());
   }
 
   throwEjectError(message: string, originalError: Error) {

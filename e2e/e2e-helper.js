@@ -435,6 +435,11 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
+  importManyComponents(ids: string[]) {
+    const idsWithRemote = ids.map(id => `${this.remoteScope}/${id}`);
+    return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
+  }
+
   importComponentWithOptions(id: string = 'bar/foo.js', options: ?Object) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
