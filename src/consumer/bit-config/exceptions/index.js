@@ -1,6 +1,6 @@
 /** @flow */
 import BitJsonNotFound from './bit-json-not-found';
-import InvalidBitJson from './invalid-bit-json';
-import InvalidBitJsonPropPath from './invalid-bit-json-prop-path';
+import InvalidBitConfig from './invalid-bit-config';
+import InvalidBitConfigPropPath from './invalid-bit-config-prop-path';
 
-export { BitJsonNotFound, InvalidBitJson, InvalidBitJsonPropPath };
+export { BitJsonNotFound, InvalidBitConfig, InvalidBitConfigPropPath };

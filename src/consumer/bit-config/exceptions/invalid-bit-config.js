@@ -1,7 +1,7 @@
 /** @flow */
 import AbstractError from '../../../error/abstract-error';
 
-export default class InvalidBitJson extends AbstractError {
+export default class InvalidBitConfig extends AbstractError {
   path: string;
 
   constructor(path: string) {

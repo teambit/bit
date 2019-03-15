@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractBitConfig from './abstract-bit-config';
 import type { Extensions, Compilers, Testers } from './abstract-bit-config';
-import { BitJsonNotFound, InvalidBitJson } from './exceptions';
+import { BitJsonNotFound, InvalidBitConfig } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
@@ -15,7 +15,7 @@ import type { ResolveModulesConfig } from '../component/dependencies/dependency-
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
-import InvalidBitJsonPropPath from './exceptions/invalid-bit-json-prop-path';
+import InvalidBitConfigPropPath from './exceptions/invalid-bit-config-prop-path';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -196,7 +196,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     try {
       file = await fs.readJson(bitJsonPath);
     } catch (e) {
-      throw new InvalidBitJson(bitJsonPath);
+      throw new InvalidBitConfig(bitJsonPath);
     }
     const consumerBitConfig = this.fromPlainObject(file);
     consumerBitConfig.path = bitJsonPath;
@@ -209,7 +209,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
       if (pathToValidate && !isValidPath(pathToValidate)) {
-        throw new InvalidBitJsonPropPath(fieldName, pathToValidate);
+        throw new InvalidBitConfigPropPath(fieldName, pathToValidate);
       }
     }
   }

@@ -1,7 +1,7 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
-import { InvalidBitJson } from './exceptions';
+import { InvalidBitConfig } from './exceptions';
 import AbstractBitConfig from './abstract-bit-config';
 import type { Compilers, Testers } from './abstract-bit-config';
 import type ConsumerBitConfig from './consumer-bit-config';
@@ -80,7 +80,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
-      throw new InvalidBitJson(bitJsonPath);
+      throw new InvalidBitConfig(bitJsonPath);
     }
   }
 
@@ -135,7 +135,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       try {
         thisBJ = fs.readJsonSync(bitJsonPath);
       } catch (e) {
-        throw new InvalidBitJson(bitJsonPath);
+        throw new InvalidBitConfig(bitJsonPath);
       }
     } else if (!protoBJ) {
       throw new Error(
