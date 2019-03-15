@@ -12,6 +12,10 @@ import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 
 export type InjectConfResult = { id: string };
 
+/**
+ * the opposite of 'eject-conf'.
+ * delete configuration files on the fs.
+ */
 export default (async function injectConf(
   component: ConsumerComponent,
   consumerPath: string,
@@ -26,7 +30,7 @@ export default (async function injectConf(
   const componentDir = componentMap.getComponentDir();
 
   if (!force && areEnvsModified(component, component.componentFromModel)) {
-    throw new Error(
+    throw new GeneralError(
       'unable to inject-conf, some or all configuration files are modified. please use "--force" flag to force removing the configuration files'
     );
   }
