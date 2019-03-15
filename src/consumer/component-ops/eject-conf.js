@@ -17,7 +17,7 @@ import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import JSONFile from '../component/sources/json-file';
 import RemovePath from '../component/sources/remove-path';
-import AbstractBitConfig from '../bit-json/abstract-bit-json';
+import AbstractBitConfig from '../bit-json/abstract-bit-config';
 
 export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
 export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath: string, dataToPersist: DataToPersist };

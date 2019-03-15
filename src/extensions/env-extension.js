@@ -13,7 +13,7 @@ import { Repository } from '../scope/objects';
 import { pathJoinLinux } from '../utils';
 import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
 import type { PathOsBased } from '../utils/path';
-import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
+import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-config';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';

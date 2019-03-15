@@ -2,8 +2,8 @@
 import R from 'ramda';
 import fs from 'fs-extra';
 import { InvalidBitJson } from './exceptions';
-import AbstractBitConfig from './abstract-bit-json';
-import type { Compilers, Testers } from './abstract-bit-json';
+import AbstractBitConfig from './abstract-bit-config';
+import type { Compilers, Testers } from './abstract-bit-config';
 import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';

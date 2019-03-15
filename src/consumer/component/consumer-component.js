@@ -50,7 +50,7 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
-import AbstractBitConfig from '../bit-json/abstract-bit-json';
+import AbstractBitConfig from '../bit-json/abstract-bit-config';
 import { Analytics } from '../../analytics/analytics';
 import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';

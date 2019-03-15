@@ -1,8 +1,8 @@
 /** @flow */
 import fs from 'fs-extra';
 import R from 'ramda';
-import AbstractBitConfig from './abstract-bit-json';
-import type { Extensions, Compilers, Testers } from './abstract-bit-json';
+import AbstractBitConfig from './abstract-bit-config';
+import type { Extensions, Compilers, Testers } from './abstract-bit-config';
 import { BitJsonNotFound, InvalidBitJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
