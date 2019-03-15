@@ -177,11 +177,11 @@ function preparePackageJsonToWrite(
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
 ): { packageJson: PackageJsonInstance, distPackageJson: ?PackageJsonInstance } {
-  logger.debug(`package-json.write. bitDir ${bitDir}. override ${override.toString()}`);
+  logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
-    const dependenciesPackages = dependencies.get().map(async (dep) => {
+    const dependenciesPackages = dependencies.get().map((dep) => {
       const packageDependency = getPackageDependency(consumer, dep.id, component.id);
       return [dep.id.toStringWithoutVersion(), packageDependency];
     });
