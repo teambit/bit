@@ -2,7 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import type ConsumerComponent from '../component/consumer-component';
-import ComponentBitJson from '../bit-json';
+import ComponentBitConfig from '../bit-json';
 import { sharedStartOfArray } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';
@@ -206,8 +206,8 @@ const getBitJsonToWrite = (
   bitJsonDir: string,
   ejectedCompilerDirectory: string,
   ejectedTesterDirectory: string
-): ComponentBitJson => {
-  return new ComponentBitJson({
+): ComponentBitConfig => {
+  return new ComponentBitConfig({
     version: component.version,
     scope: component.scope,
     lang: component.lang,

@@ -154,8 +154,8 @@ const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages
     glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
   );
 
-  dependencies.forEach((dep) => {
-    //eslint-disable-line
+  // eslint-disable-next-line
+  dependencies.forEach(dep => {
     if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
 
     R.forEachObjIndexed((packageDepVersion, packageDepName) => {

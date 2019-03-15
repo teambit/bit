@@ -23,7 +23,7 @@ import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../consta
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
 import type ConsumerBitJson from '../consumer/bit-json/consumer-bit-config';
-import type ComponentBitJson from '../consumer/bit-json';
+import type ComponentBitConfig from '../consumer/bit-json';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
@@ -339,7 +339,7 @@ export default class EnvExtension extends BaseExtension {
     componentOrigin,
     componentFromModel,
     consumerBitJson,
-    componentBitJson,
+    componentBitConfig,
     detached,
     envType,
     context
@@ -349,7 +349,7 @@ export default class EnvExtension extends BaseExtension {
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
     consumerBitJson: ConsumerBitJson,
-    componentBitJson: ?ComponentBitJson,
+    componentBitConfig: ?ComponentBitConfig,
     detached: ?boolean,
     envType: EnvType,
     context?: Object
@@ -363,9 +363,9 @@ export default class EnvExtension extends BaseExtension {
         return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
       }
       // The component is detached - load from the component bit.json or from the models
-      return loadFromComponentBitJsonOrFromModel({
+      return loadFromComponentBitConfigOrFromModel({
         modelComponent: componentFromModel,
-        componentBitJson,
+        componentBitConfig,
         envType,
         consumerPath,
         scopePath,
@@ -379,9 +379,9 @@ export default class EnvExtension extends BaseExtension {
     if (detached === false) {
       return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
     }
-    return loadFromComponentBitJsonOrFromModel({
+    return loadFromComponentBitConfigOrFromModel({
       modelComponent: componentFromModel,
-      componentBitJson,
+      componentBitConfig,
       envType,
       consumerPath,
       scopePath,
@@ -404,26 +404,26 @@ const loadFromBitJson = ({
   return bitJson.loadTester(consumerPath, scopePath, context);
 };
 
-const loadFromComponentBitJsonOrFromModel = async ({
+const loadFromComponentBitConfigOrFromModel = async ({
   modelComponent,
-  componentBitJson,
+  componentBitConfig,
   envType,
   consumerPath,
   scopePath,
   context
 }: {
   modelComponent: ConsumerComponent,
-  componentBitJson: ?ComponentBitJson,
+  componentBitConfig: ?ComponentBitConfig,
   envType: EnvType,
   consumerPath: string,
   scopePath: string,
   context?: Object
 }): Promise<?CompilerExtension | ?TesterExtension> => {
-  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel`);
-  if (componentBitJson) {
-    return loadFromBitJson({ bitJson: componentBitJson, envType, consumerPath, scopePath, context });
+  logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel`);
+  if (componentBitConfig) {
+    return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
   }
-  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel. loading from the model`);
+  logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel. loading from the model`);
   if (envType === COMPILER_ENV_TYPE) {
     return modelComponent ? modelComponent.compiler : undefined;
   }

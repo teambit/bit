@@ -5,7 +5,7 @@ import R from 'ramda';
 import c from 'chalk';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import ComponentBitJson from '../bit-json';
+import ComponentBitConfig from '../bit-json';
 import { Dist, License, SourceFile } from '../component/sources';
 import type ConsumerBitJson from '../bit-json/consumer-bit-config';
 import type Consumer from '../consumer';
@@ -80,7 +80,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
-  bitJson?: ComponentBitJson,
+  bitJson?: ComponentBitConfig,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   compilerDependencies?: Dependency[],
@@ -116,7 +116,7 @@ export default class Component {
   mainFile: PathOsBased;
   compiler: ?CompilerExtension;
   tester: ?TesterExtension;
-  bitJson: ?ComponentBitJson;
+  bitJson: ?ComponentBitConfig;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -1034,26 +1034,26 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentBitJson: ComponentBitJson | typeof undefined;
-    let componentBitJsonFileExist = false;
-    let rawComponentBitJson;
+    let componentBitConfig: ComponentBitConfig | typeof undefined;
+    let componentBitConfigFileExist = false;
+    let rawComponentBitConfig;
     if (configDir !== consumerPath) {
-      componentBitJson = ComponentBitJson.loadSync(configDir, consumerBitJson);
-      packageDependencies = componentBitJson.packageDependencies;
-      devPackageDependencies = componentBitJson.devPackageDependencies;
-      peerPackageDependencies = componentBitJson.peerPackageDependencies;
+      componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitJson);
+      packageDependencies = componentBitConfig.packageDependencies;
+      devPackageDependencies = componentBitConfig.devPackageDependencies;
+      peerPackageDependencies = componentBitConfig.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitJsonFileExist = await AbstractBitJson.hasExisting(configDir);
-      if (componentBitJsonFileExist) {
-        rawComponentBitJson = componentBitJson;
+      componentBitConfigFileExist = await AbstractBitJson.hasExisting(configDir);
+      if (componentBitConfigFileExist) {
+        rawComponentBitConfig = componentBitConfig;
       }
-      if (!componentBitJsonFileExist && componentFromModel) {
-        componentBitJson.mergeWithComponentData(componentFromModel);
+      if (!componentBitConfigFileExist && componentFromModel) {
+        componentBitConfig.mergeWithComponentData(componentFromModel);
       }
     }
-    // for authored componentBitJson is normally undefined
-    const bitJson = componentBitJson || consumerBitJson;
+    // for authored componentBitConfig is normally undefined
+    const bitJson = componentBitConfig || consumerBitJson;
 
     // Remove dists if compiler has been deleted
     if (dists && !bitJson.hasCompiler()) {
@@ -1072,7 +1072,7 @@ export default class Component {
       componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitJson,
-      componentBitJson: rawComponentBitJson,
+      componentBitConfig: rawComponentBitConfig,
       context: envsContext,
       detached: componentMap.detachedCompiler
     };
@@ -1112,7 +1112,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       tester,
-      bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
+      bitJson: componentBitConfigFileExist ? componentBitConfig : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       loadedFromFileSystem: true,

@@ -22,7 +22,7 @@ export type BitJsonProps = {
   extensions?: Object
 };
 
-export default class ComponentBitJson extends AbstractBitJson {
+export default class ComponentBitConfig extends AbstractBitJson {
   packageDependencies: { [string]: string };
   devPackageDependencies: ?Object;
   peerPackageDependencies: ?Object;
@@ -84,10 +84,10 @@ export default class ComponentBitJson extends AbstractBitJson {
     }
   }
 
-  static fromPlainObject(object: Object): ComponentBitJson {
+  static fromPlainObject(object: Object): ComponentBitConfig {
     const { env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
 
-    return new ComponentBitJson({
+    return new ComponentBitConfig({
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       dependencies,
@@ -104,19 +104,19 @@ export default class ComponentBitJson extends AbstractBitJson {
   }
 
   /**
-   * Use the consumerBitJson as a base. Override values if exist in componentBitJson
+   * Use the consumerBitJson as a base. Override values if exist in componentBitConfig
    */
-  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): ComponentBitJson {
+  static mergeWithProto(json, protoBJ: ?ConsumerBitJson): ComponentBitConfig {
     const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
     delete plainProtoBJ.dependencies;
-    return ComponentBitJson.fromPlainObject(R.merge(plainProtoBJ, json));
+    return ComponentBitConfig.fromPlainObject(R.merge(plainProtoBJ, json));
   }
 
   static create(json = {}, protoBJ: ConsumerBitJson) {
-    return ComponentBitJson.mergeWithProto(json, protoBJ);
+    return ComponentBitConfig.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<ComponentBitJson> {
+  static load(dirPath: string, protoBJ?: ConsumerBitJson): Promise<ComponentBitConfig> {
     return new Promise((resolve, reject) => {
       try {
         const result = this.loadSync(dirPath, protoBJ);
@@ -127,7 +127,7 @@ export default class ComponentBitJson extends AbstractBitJson {
     });
   }
 
-  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitJson {
+  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitJson): ComponentBitConfig {
     if (!dirPath) throw new TypeError('bit-json.loadSync missing dirPath arg');
     let thisBJ = {};
     const bitJsonPath = AbstractBitJson.composePath(dirPath);
@@ -143,8 +143,8 @@ export default class ComponentBitJson extends AbstractBitJson {
       );
     }
 
-    const componentBitJson = ComponentBitJson.mergeWithProto(thisBJ, protoBJ);
-    componentBitJson.path = bitJsonPath;
-    return componentBitJson;
+    const componentBitConfig = ComponentBitConfig.mergeWithProto(thisBJ, protoBJ);
+    componentBitConfig.path = bitJsonPath;
+    return componentBitConfig;
   }
 }
