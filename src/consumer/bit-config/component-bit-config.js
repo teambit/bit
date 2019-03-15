@@ -128,7 +128,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   }
 
   static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
-    if (!dirPath) throw new TypeError('bit-json.loadSync missing dirPath arg');
+    if (!dirPath) throw new TypeError('bit-config.loadSync missing dirPath arg');
     let thisBJ = {};
     const bitJsonPath = AbstractBitConfig.composePath(dirPath);
     if (fs.existsSync(bitJsonPath)) {
@@ -139,7 +139,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       }
     } else if (!protoBJ) {
       throw new Error(
-        `bit-json.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
+        `bit-config.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
       );
     }
 

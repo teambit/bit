@@ -9,7 +9,7 @@ import logger from '../../../../logger/logger';
 import type Consumer from '../../../../consumer/consumer';
 import type { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
-import type ComponentBitConfig from '../../../bit-json';
+import type ComponentBitConfig from '../../../bit-config';
 import Dependencies from '../dependencies';
 
 function getIdFromModelDeps(componentFromModel?: Component, componentId: BitId): ?BitId {

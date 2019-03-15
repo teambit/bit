@@ -2,7 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import type ConsumerComponent from '../component/consumer-component';
-import ComponentBitConfig from '../bit-json';
+import ComponentBitConfig from '../bit-config';
 import { sharedStartOfArray } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';

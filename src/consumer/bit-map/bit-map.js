@@ -27,7 +27,7 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, 
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
-import ComponentBitConfig from '../bit-json';
+import ComponentBitConfig from '../bit-config';
 import ConfigDir from './config-dir';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };

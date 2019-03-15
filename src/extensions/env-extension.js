@@ -23,7 +23,7 @@ import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../consta
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
 import type ConsumerBitConfig from '../consumer/bit-config/consumer-bit-config';
-import type ComponentBitConfig from '../consumer/bit-json';
+import type ComponentBitConfig from '../consumer/bit-config';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';

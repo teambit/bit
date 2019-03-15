@@ -692,13 +692,13 @@ export default class Consumer {
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
-    const bitJsonP = ConsumerBitConfig.ensure(projectPath);
-    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    const bitConfigP = ConsumerBitConfig.ensure(projectPath);
+    const [scope, bitConfig] = await Promise.all([scopeP, bitConfigP]);
     return new Consumer({
       projectPath,
       created: true,
       scope,
-      bitJson,
+      bitConfig,
       bitMap,
       existingGitHooks
     });
@@ -712,8 +712,8 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const bitJsonP = ConsumerBitConfig.reset(projectPath, resetHard);
-    await Promise.all([scopeP, bitJsonP]);
+    const bitConfigP = ConsumerBitConfig.reset(projectPath, resetHard);
+    await Promise.all([scopeP, bitConfigP]);
   }
 
   static async createWithExistingScope(
@@ -723,13 +723,13 @@ export default class Consumer {
   ): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
     if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
-    const bitJson = await ConsumerBitConfig.ensure(consumerPath);
+    const bitConfig = await ConsumerBitConfig.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
       isolated,
-      bitJson
+      bitConfig
     });
   }
 
@@ -750,11 +750,11 @@ export default class Consumer {
     }
     const scopePath = Consumer.locateProjectScope(projectPath);
     const scopeP = Scope.load(scopePath);
-    const bitJsonP = ConsumerBitConfig.load(projectPath);
-    const [scope, bitJson] = await Promise.all([scopeP, bitJsonP]);
+    const bitConfigP = ConsumerBitConfig.load(projectPath);
+    const [scope, bitConfig] = await Promise.all([scopeP, bitConfigP]);
     return new Consumer({
       projectPath,
-      bitJson,
+      bitConfig,
       scope
     });
   }

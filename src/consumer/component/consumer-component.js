@@ -5,7 +5,7 @@ import R from 'ramda';
 import c from 'chalk';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import ComponentBitConfig from '../bit-json';
+import ComponentBitConfig from '../bit-config';
 import { Dist, License, SourceFile } from '../component/sources';
 import type ConsumerBitConfig from '../bit-config/consumer-bit-config';
 import type Consumer from '../consumer';
