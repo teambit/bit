@@ -6,7 +6,7 @@ import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/consta
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
-import { InvalidBitConfig } from '../../src/consumer/bit-config/exceptions';
+import { InvalidBitJson } from '../../src/consumer/bit-config/exceptions';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const assertArrays = require('chai-arrays');
@@ -198,10 +198,10 @@ describe('run bit init', function () {
         helper.reInitLocalScope();
         helper.corruptBitJson();
       });
-      it('bit status should throw an exception InvalidBitConfig', () => {
+      it('bit status should throw an exception InvalidBitJson', () => {
         const bitJsonPath = path.join(helper.localScopePath, BIT_JSON);
         const statusCmd = () => helper.runCmd('bit status');
-        const error = new InvalidBitConfig(bitJsonPath, 'Unexpected token t');
+        const error = new InvalidBitJson(bitJsonPath, 'Unexpected token t');
         helper.expectToThrow(statusCmd, error);
       });
       it('should create a new bit.json file', () => {

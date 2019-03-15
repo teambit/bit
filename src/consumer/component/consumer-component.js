@@ -1044,7 +1044,7 @@ export default class Component {
       peerPackageDependencies = componentBitConfig.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitConfigFileExist = await AbstractBitConfig.hasExisting(configDir);
+      componentBitConfigFileExist = await AbstractBitConfig.pathHasBitJson(configDir);
       if (componentBitConfigFileExist) {
         rawComponentBitConfig = componentBitConfig;
       }

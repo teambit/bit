@@ -108,24 +108,15 @@ export async function getEjectConfDataToPersist(
     relativeEjectedCompilerDirectory,
     relativeEjectedTesterDirectory
   );
-  const bitJsonDataToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
-  if (bitJsonDataToWrite) {
-    dataToPersist.addFile(
-      JSONFile.load({
-        base: bitJsonDir.dirPath,
-        path: bitJsonDataToWrite.pathToWrite,
-        override: true,
-        content: bitJsonDataToWrite.content
-      })
-    );
-  }
+  const jsonFilesToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
+  dataToPersist.addManyFiles(jsonFilesToWrite);
 
   if (deleteOldFiles) {
     if (oldConfigDir) {
       const oldBitJsonDir = oldConfigDir.getResolved({ componentDir }).getEnvTypeCleaned();
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
       if (bitJsonDirFullPath !== oldBitJsonDirFullPath) {
-        const bitJsonToRemove = AbstractBitConfig.composePath(oldBitJsonDir.dirPath);
+        const bitJsonToRemove = AbstractBitConfig.composeBitJsonPath(oldBitJsonDir.dirPath);
         dataToPersist.removePath(new RemovePath(bitJsonToRemove, true));
       }
     }

@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import AbstractBitConfig from './abstract-bit-config';
 import type { Extensions, Compilers, Testers } from './abstract-bit-config';
-import { BitJsonNotFound, InvalidBitConfig } from './exceptions';
+import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
@@ -129,18 +129,28 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     return new ConsumerBitConfig({});
   }
 
-  static async ensure(dirPath: PathOsBasedAbsolute): Promise<ConsumerBitConfig> {
+  static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<ConsumerBitConfig> {
     try {
       const consumerBitConfig = await this.load(dirPath);
       return consumerBitConfig;
     } catch (err) {
-      return this.create();
+      if (err instanceof BitConfigNotFound) {
+        const consumerBitJson = this.create();
+        const packageJsonExists = await AbstractBitConfig.pathHasPackageJson(dirPath);
+        if (packageJsonExists && !standAlone) {
+          consumerBitJson.writeToPackageJson = true;
+        } else {
+          consumerBitJson.writeToBitJson = true;
+        }
+        return consumerBitJson;
+      }
+      throw err;
     }
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const deleteBitJsonFile = async () => {
-      const bitJsonPath = AbstractBitConfig.composePath(dirPath);
+      const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
       logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
@@ -189,18 +199,50 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   }
 
   static async load(dirPath: string): Promise<ConsumerBitConfig> {
-    const isExisting = await AbstractBitConfig.hasExisting(dirPath);
-    if (!isExisting) throw new BitJsonNotFound();
-    const bitJsonPath = AbstractBitConfig.composePath(dirPath);
-    let file;
-    try {
-      file = await fs.readJson(bitJsonPath);
-    } catch (e) {
-      throw new InvalidBitConfig(bitJsonPath);
-    }
-    const consumerBitConfig = this.fromPlainObject(file);
+    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
+    const packageJsonPath = AbstractBitConfig.composePackageJsonPath(dirPath);
+
+    const [bitJsonFile, packageJsonFile] = await Promise.all([
+      this.loadBitJson(bitJsonPath),
+      this.loadPackageJson(packageJsonPath)
+    ]);
+    const bitJsonConfig = bitJsonFile || {};
+    const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
+    const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
+    if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) throw new BitConfigNotFound();
+    // in case of conflicts, bit.json wins package.json
+    const config = Object.assign(packageJsonConfig, bitJsonConfig);
+    const consumerBitConfig = this.fromPlainObject(config);
     consumerBitConfig.path = bitJsonPath;
+    consumerBitConfig.writeToBitJson = Boolean(bitJsonFile);
+    consumerBitConfig.writeToPackageJson = packageJsonHasConfig;
     return consumerBitConfig;
+  }
+
+  static async loadJsonFileIfExist(jsonFilePath: string): Promise<?Object> {
+    try {
+      const file = await fs.readJson(jsonFilePath);
+      return file;
+    } catch (e) {
+      if (e.code === 'ENOENT') return null;
+      throw e;
+    }
+  }
+  static async loadBitJson(bitJsonPath: string): Promise<?Object> {
+    try {
+      const file = await this.loadJsonFileIfExist(bitJsonPath);
+      return file;
+    } catch (e) {
+      throw new InvalidBitJson(bitJsonPath);
+    }
+  }
+  static async loadPackageJson(packageJsonPath: string): Promise<?Object> {
+    try {
+      const file = await this.loadJsonFileIfExist(packageJsonPath);
+      return file;
+    } catch (e) {
+      throw new InvalidPackageJson(packageJsonPath);
+    }
   }
 
   static validate(object: Object) {

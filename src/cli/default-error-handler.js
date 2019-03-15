@@ -45,7 +45,7 @@ import {
   CyclicDependencies,
   HashNotFound
 } from '../scope/exceptions';
-import InvalidBitConfig from '../consumer/bit-config/exceptions/invalid-bit-config';
+import InvalidBitJson from '../consumer/bit-config/exceptions/invalid-bit-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -303,7 +303,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
       )}" is invalid, component scope names can only contain alphanumeric, lowercase characters, and the following ["-", "_", "$", "!"]`
   ],
   [
-    InvalidBitConfig,
+    InvalidBitJson,
     err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
     consider running ${chalk.bold('bit init --reset')} to recreate the file`
   ],
@@ -311,7 +311,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
     InvalidBitConfigPropPath,
     err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
       err.fieldName
-    )}" in your bit.json file is invalid.
+    )}" in your bit.json or package.json file is invalid.
 please make sure it's not absolute and doesn't contain invalid characters`
   ],
   [
