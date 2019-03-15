@@ -8,7 +8,7 @@ import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';
 
-export type BitJsonProps = {
+export type BitConfigProps = {
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
@@ -40,7 +40,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     lang,
     bindingPrefix,
     extensions
-  }: BitJsonProps) {
+  }: BitConfigProps) {
     super({
       compiler,
       tester,
