@@ -90,7 +90,7 @@ export default class BitMap {
   }
 
   isEmpty() {
-    return !this.components.length;
+    return R.isEmpty(this.components);
   }
 
   removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
