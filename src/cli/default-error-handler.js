@@ -45,7 +45,7 @@ import {
   CyclicDependencies,
   HashNotFound
 } from '../scope/exceptions';
-import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
+import InvalidBitJson from '../consumer/bit-config/exceptions/invalid-bit-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -96,7 +96,7 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import InvalidBitJsonPropPath from '../consumer/bit-json/exceptions/invalid-bit-json-prop-path';
+import InvalidBitJsonPropPath from '../consumer/bit-config/exceptions/invalid-bit-json-prop-path';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';

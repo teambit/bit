@@ -94,7 +94,7 @@ src/scope/objects/repository.js
 src/consumer/component/components-list.js
 src/remotes/remote.js
 src/scope/graph/graph.js
-src/consumer/bit-json/bit-json.js
+src/consumer/bit-config/bit-config.js
 src/jsdoc/example-tag-parser.js
 src/scope/objects/raw-object.js
 src/scope/models/version.js

@@ -6,7 +6,7 @@ import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/consta
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
 import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
-import { InvalidBitJson } from '../../src/consumer/bit-json/exceptions';
+import { InvalidBitJson } from '../../src/consumer/bit-config/exceptions';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const assertArrays = require('chai-arrays');
