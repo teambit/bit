@@ -134,7 +134,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       const consumerBitConfig = await this.load(dirPath);
       return consumerBitConfig;
     } catch (err) {
-      if (err instanceof BitConfigNotFound) {
+      if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
         const consumerBitJson = this.create();
         const packageJsonExists = await AbstractBitConfig.pathHasPackageJson(dirPath);
         if (packageJsonExists && !standAlone) {
@@ -203,7 +203,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     const packageJsonPath = AbstractBitConfig.composePackageJsonPath(dirPath);
 
     const [bitJsonFile, packageJsonFile] = await Promise.all([
-      this.loadBitJson(bitJsonPath),
+      this.loadBitJson(bitJsonPath), // $FlowFixMe
       this.loadPackageJson(packageJsonPath)
     ]);
     const bitJsonConfig = bitJsonFile || {};

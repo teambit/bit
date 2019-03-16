@@ -15,7 +15,6 @@ import TesterExtension from '../../extensions/tester-extension';
 import type { PathOsBased } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
-import JSONFile from '../component/sources/json-file';
 import RemovePath from '../component/sources/remove-path';
 import AbstractBitConfig from '../bit-config/abstract-bit-config';
 

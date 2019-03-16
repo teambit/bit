@@ -217,7 +217,7 @@ export default class AbstractBitConfig {
     );
   }
 
-  async write({ bitDir }: { bitDir: string }): Promise<boolean> {
+  async write({ bitDir }: { bitDir: string }): Promise<string[]> {
     const jsonFiles = await this.prepareToWrite({ bitDir });
     return Promise.all(jsonFiles.map(jsonFile => jsonFile.write()));
   }
