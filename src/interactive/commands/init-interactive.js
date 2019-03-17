@@ -2,6 +2,8 @@
 import inquirer from 'inquirer';
 import { listScope } from '../../api/consumer';
 
+inquirer.registerPrompt('fuzzypath', require('inquirer-fuzzy-path'));
+
 const finalResult = {};
 
 async function askToSetupCompiler() {
@@ -66,6 +68,38 @@ async function askForPackageManager() {
   finalResult.packageManager = packageManager;
 }
 
+async function askForComponentsDir() {
+  // TODO: 1. the suggestOnly is the opposite, this is a bug in https://github.com/mokkabonna/inquirer-autocomplete-prompt/blob/master/index.js
+  // TODO: 2. add option for the default ./components add support for adding extra values in (https://github.com/adelsz/inquirer-fuzzy-path)
+  const componentsDirQ = {
+    type: 'fuzzypath',
+    name: 'componentsDir',
+    excludePath: (nodePath) => {
+      return nodePath.startsWith('node_modules') || nodePath.startsWith('.bit') || nodePath.startsWith('.git');
+    },
+    // excludePath :: (String) -> Bool
+    // excludePath to exclude some paths from the file-system scan
+    itemType: 'directory',
+    // itemType :: 'any' | 'directory' | 'file'
+    // specify the type of nodes to display
+    // default value: 'any'
+    // example: itemType: 'file' - hides directories from the item list
+    rootPath: '.',
+    // rootPath :: String
+    // Root search directory
+    message: 'Select a default imported components directory',
+    default: './components',
+    suggestOnly: true
+    // suggestOnly :: Bool
+    // Restrict prompt answer to available choices or use them as suggestions
+  };
+  // return inquirer.prompt([
+
+  // ]);
+  const { componentsDir } = await inquirer.prompt([componentsDirQ]);
+  finalResult.componentsDir = componentsDir;
+}
+
 export default (async function initInteractive() {
   const ui = new inquirer.ui.BottomBar();
 
@@ -80,4 +114,5 @@ Press ^C at any time to quit.`);
 
   await askToSetupCompiler();
   await askForPackageManager();
+  await askForComponentsDir();
 });
