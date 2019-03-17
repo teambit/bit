@@ -6,6 +6,7 @@ import { initScope } from '../../../api/scope';
 import { init } from '../../../api/consumer';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
+import { initInteractive } from '../../../interactive';
 
 export default class Init extends Command {
   name = 'init [path]';
@@ -25,6 +26,7 @@ export default class Init extends Command {
   ];
 
   action([path]: [string], { bare, shared, standalone, reset, resetHard, force }: any): Promise<{ [string]: any }> {
+    return initInteractive();
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
