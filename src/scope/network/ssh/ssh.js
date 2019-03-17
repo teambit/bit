@@ -107,31 +107,31 @@ export default class SSH implements Network {
   async _tokenAuthentication(): Promise<SSH> {
     const sshConfig = this._composeTokenAuthObject();
     if (!sshConfig) {
-      throw new AuthenticationStrategyFailed('no token configured');
+      throw new AuthenticationStrategyFailed('user token not defined in bit-config. please run `bit login` to authenticate.');
     }
-    const authFailedMsg = 'token exists but failed to authenticate. either, the token is invalid or invoked';
+    const authFailedMsg = 'failed to authenticate with user token. generate a new token by running `bit logout && bit login`.';
     return this._connectWithConfig(sshConfig, 'token', authFailedMsg);
   }
   async _sshAgentAuthentication(): Promise<SSH> {
     if (!this._hasAgentSocket()) {
-      throw new AuthenticationStrategyFailed('there is no ssh-agent socket or it has been disabled');
+      throw new AuthenticationStrategyFailed('unable to get SSH keys from ssh-agent to. perhaps service is down or disabled.');
     }
     const sshConfig = merge(this._composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
-    const authFailedMsg = 'ssh-agent is enabled but failed to authenticate';
+    const authFailedMsg = 'no matching private key found in ssh-agent to authenticate to remote server.';
     return this._connectWithConfig(sshConfig, 'ssh-agent', authFailedMsg);
   }
   async _sshKeyAuthentication(): Promise<SSH> {
     const keyBuffer = await keyGetter();
     if (!keyBuffer) {
-      throw new AuthenticationStrategyFailed('failed reading ssh-key');
+      throw new AuthenticationStrategyFailed('ssh key defined in `bit config` not found.');
     }
     const sshConfig = merge(this._composeBaseObject(), { privateKey: keyBuffer });
-    const authFailedMsg = 'ssh-key exists but failed to connect';
+    const authFailedMsg = 'failed connecting to remote server using ssh key from `bit config`.';
     return this._connectWithConfig(sshConfig, 'ssh-key', authFailedMsg);
   }
   async _userPassAuthentication(): Promise<SSH> {
     const sshConfig = await this._composeUserPassObject();
-    const authFailedMsg = 'user and password were entered but failed to connect';
+    const authFailedMsg = 'unable to connect using provided username and password combination.';
     return this._connectWithConfig(sshConfig, 'user-password', authFailedMsg);
   }
 
@@ -198,7 +198,7 @@ export default class SSH implements Network {
       }
       if (err.message === PASSPHRASE_POSSIBLY_MISSING_MESSAGE) {
         throw new AuthenticationStrategyFailed(
-          'got an error connecting with ssh-key, in case passphrase is used, try to enable the ssh-agent'
+          'error connecting with private ssh key. in case passphrase is used, use ssh-agent.'
         );
       }
       throw new AuthenticationStrategyFailed(`${authFailedMsg} due to an error "${err.message}"`);
