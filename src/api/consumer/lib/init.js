@@ -12,16 +12,14 @@ export default (async function init(
   resetHard: boolean = false,
   force: boolean = false
 ): Promise<Consumer> {
-  let overrideBitJson = false;
   if (reset || resetHard) {
     await Consumer.reset(absPath, resetHard, noGit);
-    overrideBitJson = true;
   }
   const consumer: Consumer = await Consumer.create(absPath, noGit);
   if (!force) {
     await throwForOutOfSyncScope(consumer);
   }
-  return consumer.write({ overrideBitJson });
+  return consumer.write();
 });
 
 /**

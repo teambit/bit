@@ -754,9 +754,10 @@ export default class Helper {
     this.writeBitJson(bitJson);
   }
   corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson();
-    bitJson.corrupt = '"corrupted';
-    fs.writeFileSync(bitJsonPath, bitJson.toString());
+    fs.writeFileSync(bitJsonPath, '"corrupted');
+  }
+  corruptPackageJson(packageJsonPath: string = path.join(this.localScopePath, 'package.json')) {
+    fs.writeFileSync(packageJsonPath, '{ corrupted');
   }
   modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson();

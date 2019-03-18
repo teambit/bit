@@ -240,11 +240,8 @@ export default class Consumer {
     };
   }
 
-  async write({ overrideBitJson = false }: { overrideBitJson: boolean }): Promise<Consumer> {
-    await Promise.all([
-      this.bitConfig.write({ bitDir: this.projectPath, override: overrideBitJson }),
-      this.scope.ensureDir()
-    ]);
+  async write(): Promise<Consumer> {
+    await Promise.all([this.bitConfig.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.bitMap.write();
     return this;
@@ -687,12 +684,12 @@ export default class Consumer {
     return resolvedScopePath;
   }
 
-  static async ensure(projectPath: PathOsBasedAbsolute, noGit: boolean = false): Promise<Consumer> {
-    const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
+  static async ensure(projectPath: PathOsBasedAbsolute, standAlone: boolean = false): Promise<Consumer> {
+    const resolvedScopePath = Consumer._getScopePath(projectPath, standAlone);
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
-    const bitConfigP = ConsumerBitConfig.ensure(projectPath);
+    const bitConfigP = ConsumerBitConfig.ensure(projectPath, standAlone);
     const [scope, bitConfig] = await Promise.all([scopeP, bitConfigP]);
     return new Consumer({
       projectPath,

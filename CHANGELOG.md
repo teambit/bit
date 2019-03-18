@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- write workspace configuration data to package.json inside `bit` property instead of creating `bit.json` file
 - generate package.json with the main property on node_modules for authored exported components instead of creating an entry point file
 - obsolete the "dependencies" property of consumer bit.json
 - avoid installing "undefined" npm package when importing authored components

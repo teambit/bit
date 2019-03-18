@@ -1,12 +1,13 @@
 /** @flow */
 import R from 'ramda';
 import fs from 'fs-extra';
-import { InvalidBitConfig } from './exceptions';
+import { InvalidBitJson } from './exceptions';
 import AbstractBitConfig from './abstract-bit-config';
 import type { Compilers, Testers } from './abstract-bit-config';
 import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';
+import { DEFAULT_DEPENDENCIES } from '../../constants';
 
 export type BitConfigProps = {
   lang?: string,
@@ -44,17 +45,18 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     super({
       compiler,
       tester,
-      dependencies,
-      devDependencies,
-      compilerDependencies,
-      testerDependencies,
       lang,
       bindingPrefix,
       extensions
     });
+    this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
+    this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
+    this.compilerDependencies = compilerDependencies || DEFAULT_DEPENDENCIES;
+    this.testerDependencies = testerDependencies || DEFAULT_DEPENDENCIES;
     this.packageDependencies = packageDependencies || {};
     this.devPackageDependencies = devPackageDependencies || {};
     this.peerPackageDependencies = peerPackageDependencies || {};
+    this.writeToBitJson = true; // will be changed later to work similar to consumer-bit-config
   }
 
   toPlainObject() {
@@ -80,7 +82,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
-      throw new InvalidBitConfig(bitJsonPath);
+      throw new InvalidBitJson(bitJsonPath);
     }
   }
 
@@ -128,14 +130,14 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   }
 
   static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
-    if (!dirPath) throw new TypeError('bit-config.loadSync missing dirPath arg');
+    if (!dirPath) throw new TypeError('component-bit-config.loadSync missing dirPath arg');
     let thisBJ = {};
-    const bitJsonPath = AbstractBitConfig.composePath(dirPath);
+    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
     if (fs.existsSync(bitJsonPath)) {
       try {
         thisBJ = fs.readJsonSync(bitJsonPath);
       } catch (e) {
-        throw new InvalidBitConfig(bitJsonPath);
+        throw new InvalidBitJson(bitJsonPath);
       }
     } else if (!protoBJ) {
       throw new Error(

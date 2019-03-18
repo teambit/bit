@@ -12,15 +12,16 @@ import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../exten
 import type { PathOsBased, PathLinux } from '../../utils/path';
 import {
   BIT_JSON,
-  DEFAULT_DEPENDENCIES,
   NO_PLUGIN_TYPE,
   COMPILER_ENV_TYPE,
   TESTER_ENV_TYPE,
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
-  DEFAULT_EXTENSIONS
+  DEFAULT_EXTENSIONS,
+  PACKAGE_JSON
 } from '../../constants';
 import logger from '../../logger/logger';
+import JSONFile from '../component/sources/json-file';
 
 export type RegularExtensionObject = {
   rawConfig: Object,
@@ -58,6 +59,12 @@ export type AbstractBitConfigProps = {
   extensions?: Extensions
 };
 
+/**
+ * There are two Bit Config: ConsumerBitConfig and ComponentBitConfig, both inherit this class.
+ * The config data can be written in package.json inside "bit" property. And, can be written in
+ * bit.json file. Also, it might be written in both, in which case, if there is any conflict, the
+ * bit.json wins.
+ */
 export default class AbstractBitConfig {
   path: string;
   _compiler: Compilers | string;
@@ -69,14 +76,12 @@ export default class AbstractBitConfig {
   lang: string;
   bindingPrefix: string;
   extensions: Extensions;
+  writeToPackageJson = false;
+  writeToBitJson = false;
 
   constructor(props: AbstractBitConfigProps) {
     this._compiler = props.compiler || {};
     this._tester = props.tester || {};
-    this.dependencies = props.dependencies || DEFAULT_DEPENDENCIES;
-    this.devDependencies = props.devDependencies || DEFAULT_DEPENDENCIES;
-    this.compilerDependencies = props.compilerDependencies || DEFAULT_DEPENDENCIES;
-    this.testerDependencies = props.testerDependencies || DEFAULT_DEPENDENCIES;
     this.lang = props.lang || DEFAULT_LANGUAGE;
     this.bindingPrefix = props.bindingPrefix || DEFAULT_BINDINGS_PREFIX;
     this.extensions = props.extensions || DEFAULT_EXTENSIONS;
@@ -212,32 +217,29 @@ export default class AbstractBitConfig {
     );
   }
 
-  async write({ bitDir, override = true }: { bitDir: string, override?: boolean }): Promise<boolean> {
-    const data = await this.prepareToWrite({ bitDir, override });
-    if (!data) return false;
-    return fs.outputJson(data.pathToWrite, data.content, { spaces: 4 });
+  async write({ bitDir }: { bitDir: string }): Promise<string[]> {
+    const jsonFiles = await this.prepareToWrite({ bitDir });
+    return Promise.all(jsonFiles.map(jsonFile => jsonFile.write()));
   }
 
-  async prepareToWrite({
-    bitDir,
-    override = true
-  }: {
-    bitDir: string,
-    override?: boolean
-  }): Promise<?{ pathToWrite: PathOsBased, content: Object }> {
-    let isExisting = false;
-    const isBitDirExisting = await fs.exists(bitDir);
-    if (isBitDirExisting) {
-      isExisting = await AbstractBitConfig.hasExisting(bitDir);
-    }
-    if (!override && isExisting) {
-      return null;
-    }
-
-    return {
-      pathToWrite: AbstractBitConfig.composePath(bitDir),
-      content: this.toPlainObject()
+  async prepareToWrite({ bitDir }: { bitDir: string }): Promise<JSONFile[]> {
+    const plainObject = this.toPlainObject();
+    const JsonFiles = [];
+    const addJsonFile = (pathStr: string, content: Object) => {
+      const params = { base: bitDir, override: true, path: pathStr, content };
+      JsonFiles.push(JSONFile.load(params));
     };
+    if (this.writeToPackageJson) {
+      const packageJsonPath = AbstractBitConfig.composePackageJsonPath(bitDir);
+      const packageJsonFile = await fs.readJson(packageJsonPath);
+      packageJsonFile.bit = plainObject;
+      addJsonFile(packageJsonPath, packageJsonFile);
+    }
+    if (this.writeToBitJson) {
+      const bitJsonPath = AbstractBitConfig.composeBitJsonPath(bitDir);
+      addJsonFile(bitJsonPath, plainObject);
+    }
+    return JsonFiles;
   }
 
   toJson(readable: boolean = true) {
@@ -245,16 +247,22 @@ export default class AbstractBitConfig {
     return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
-  static composePath(bitPath: PathOsBased): PathOsBased {
+  static composeBitJsonPath(bitPath: PathOsBased): PathOsBased {
     return path.join(bitPath, BIT_JSON);
   }
+  static composePackageJsonPath(bitPath: PathOsBased): PathOsBased {
+    return path.join(bitPath, PACKAGE_JSON);
+  }
 
-  static async hasExisting(bitPath: string): Promise<boolean> {
-    return fs.exists(this.composePath(bitPath));
+  static async pathHasBitJson(bitPath: string): Promise<boolean> {
+    return fs.exists(this.composeBitJsonPath(bitPath));
+  }
+  static async pathHasPackageJson(bitPath: string): Promise<boolean> {
+    return fs.exists(this.composePackageJsonPath(bitPath));
   }
 
   static async removeIfExist(bitPath: string): Promise<boolean> {
-    const dirToRemove = this.composePath(bitPath);
+    const dirToRemove = this.composeBitJsonPath(bitPath);
     if (fs.exists(dirToRemove)) {
       logger.info(`abstract-bit-config, deleting ${dirToRemove}`);
       return fs.remove(dirToRemove);
