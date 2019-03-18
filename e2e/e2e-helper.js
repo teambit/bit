@@ -10,7 +10,7 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
@@ -462,13 +462,13 @@ export default class Helper {
       this.createCompiler();
     }
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
+    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
   importTester(id) {
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
+    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     this.runCmd(`bit import ${id} --tester`);
   }
 
@@ -589,7 +589,7 @@ export default class Helper {
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
-  setHubDomain(domain: string = 'hub.bitsrc.io') {
+  setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
   // #endregion

@@ -1,3 +1,5 @@
+import { BASE_DOCS_DOMAIN, BASE_WEB_DOMAIN } from '../../constants';
+
 const rightpad = require('pad-right');
 const chalk = require('chalk');
 
@@ -147,11 +149,11 @@ const allCommands = [
     commands: [
       {
         name: 'login',
-        description: 'log the CLI into bitsrc.io'
+        description: `log the CLI into ${BASE_WEB_DOMAIN}`
       },
       {
         name: 'logout',
-        description: 'log the CLI out of bitsrc.io'
+        description: `log the CLI out of ${BASE_WEB_DOMAIN}`
       },
       {
         name: 'config',
@@ -173,7 +175,7 @@ const baseTemplate = (commands) => {
   )}
   ${chalk.grey('Easily share, reuse, maintain and discover code components from any project.')}
 
-  ${chalk.grey('Bit documentation: https://docs.bitsrc.io')}
+  ${chalk.grey(`Bit documentation: https://${BASE_DOCS_DOMAIN}`)}
 
 ${commandsTemplate(commands)}
 
