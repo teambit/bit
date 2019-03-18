@@ -1,9 +1,9 @@
 /** @flow */
 import fs from 'fs-extra';
 import R from 'ramda';
-import AbstractBitJson from './abstract-bit-json';
-import type { Extensions, Compilers, Testers } from './abstract-bit-json';
-import { BitJsonNotFound, InvalidBitJson } from './exceptions';
+import AbstractBitConfig from './abstract-bit-config';
+import type { Extensions, Compilers, Testers } from './abstract-bit-config';
+import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
   DEFAULT_DEPENDENCIES_DIR_PATH,
@@ -15,16 +15,15 @@ import type { ResolveModulesConfig } from '../component/dependencies/dependency-
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
-import InvalidBitJsonPropPath from './exceptions/invalid-bit-json-prop-path';
+import InvalidBitConfigPropPath from './exceptions/invalid-bit-config-prop-path';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
-type consumerBitJsonProps = {
+type consumerBitConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
-  dependencies?: { [string]: string },
   saveDependenciesAsComponents?: boolean,
   lang?: string,
   distTarget?: ?string,
@@ -42,7 +41,7 @@ type consumerBitJsonProps = {
   resolveModules?: ResolveModulesConfig
 };
 
-export default class ConsumerBitJson extends AbstractBitJson {
+export default class ConsumerBitConfig extends AbstractBitConfig {
   distTarget: ?string; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
@@ -61,7 +60,6 @@ export default class ConsumerBitJson extends AbstractBitJson {
   constructor({
     compiler,
     tester,
-    dependencies,
     saveDependenciesAsComponents = DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS,
     lang,
     distTarget,
@@ -77,8 +75,8 @@ export default class ConsumerBitJson extends AbstractBitJson {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules
-  }: consumerBitJsonProps) {
-    super({ compiler, tester, dependencies, lang, bindingPrefix, extensions });
+  }: consumerBitConfigProps) {
+    super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
     this.componentsDefaultDirectory = componentsDefaultDirectory;
@@ -127,22 +125,32 @@ export default class ConsumerBitJson extends AbstractBitJson {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  static create(): ConsumerBitJson {
-    return new ConsumerBitJson({});
+  static create(): ConsumerBitConfig {
+    return new ConsumerBitConfig({});
   }
 
-  static async ensure(dirPath: PathOsBasedAbsolute): Promise<ConsumerBitJson> {
+  static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<ConsumerBitConfig> {
     try {
-      const consumerBitJson = await this.load(dirPath);
-      return consumerBitJson;
+      const consumerBitConfig = await this.load(dirPath);
+      return consumerBitConfig;
     } catch (err) {
-      return this.create();
+      if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
+        const consumerBitJson = this.create();
+        const packageJsonExists = await AbstractBitConfig.pathHasPackageJson(dirPath);
+        if (packageJsonExists && !standAlone) {
+          consumerBitJson.writeToPackageJson = true;
+        } else {
+          consumerBitJson.writeToBitJson = true;
+        }
+        return consumerBitJson;
+      }
+      throw err;
     }
   }
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const deleteBitJsonFile = async () => {
-      const bitJsonPath = AbstractBitJson.composePath(dirPath);
+      const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
       logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
@@ -150,10 +158,9 @@ export default class ConsumerBitJson extends AbstractBitJson {
   }
 
   static fromPlainObject(object: Object) {
-    ConsumerBitJson.validate(object);
+    ConsumerBitConfig.validate(object);
     const {
       env,
-      dependencies,
       lang,
       componentsDefaultDirectory,
       dependenciesDirectory,
@@ -170,13 +177,12 @@ export default class ConsumerBitJson extends AbstractBitJson {
       resolveModules
     } = object;
 
-    return new ConsumerBitJson({
+    return new ConsumerBitConfig({
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,
       bindingPrefix,
       extensions,
-      dependencies,
       saveDependenciesAsComponents,
       componentsDefaultDirectory,
       dependenciesDirectory,
@@ -192,19 +198,51 @@ export default class ConsumerBitJson extends AbstractBitJson {
     });
   }
 
-  static async load(dirPath: string): Promise<ConsumerBitJson> {
-    const isExisting = await AbstractBitJson.hasExisting(dirPath);
-    if (!isExisting) throw new BitJsonNotFound();
-    const bitJsonPath = AbstractBitJson.composePath(dirPath);
-    let file;
+  static async load(dirPath: string): Promise<ConsumerBitConfig> {
+    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
+    const packageJsonPath = AbstractBitConfig.composePackageJsonPath(dirPath);
+
+    const [bitJsonFile, packageJsonFile] = await Promise.all([
+      this.loadBitJson(bitJsonPath), // $FlowFixMe
+      this.loadPackageJson(packageJsonPath)
+    ]);
+    const bitJsonConfig = bitJsonFile || {};
+    const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
+    const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
+    if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) throw new BitConfigNotFound();
+    // in case of conflicts, bit.json wins package.json
+    const config = Object.assign(packageJsonConfig, bitJsonConfig);
+    const consumerBitConfig = this.fromPlainObject(config);
+    consumerBitConfig.path = bitJsonPath;
+    consumerBitConfig.writeToBitJson = Boolean(bitJsonFile);
+    consumerBitConfig.writeToPackageJson = packageJsonHasConfig;
+    return consumerBitConfig;
+  }
+
+  static async loadJsonFileIfExist(jsonFilePath: string): Promise<?Object> {
     try {
-      file = await fs.readJson(bitJsonPath);
+      const file = await fs.readJson(jsonFilePath);
+      return file;
+    } catch (e) {
+      if (e.code === 'ENOENT') return null;
+      throw e;
+    }
+  }
+  static async loadBitJson(bitJsonPath: string): Promise<?Object> {
+    try {
+      const file = await this.loadJsonFileIfExist(bitJsonPath);
+      return file;
     } catch (e) {
       throw new InvalidBitJson(bitJsonPath);
     }
-    const consumerBitJson = this.fromPlainObject(file);
-    consumerBitJson.path = bitJsonPath;
-    return consumerBitJson;
+  }
+  static async loadPackageJson(packageJsonPath: string): Promise<?Object> {
+    try {
+      const file = await this.loadJsonFileIfExist(packageJsonPath);
+      return file;
+    } catch (e) {
+      throw new InvalidPackageJson(packageJsonPath);
+    }
   }
 
   static validate(object: Object) {
@@ -213,7 +251,7 @@ export default class ConsumerBitJson extends AbstractBitJson {
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
       if (pathToValidate && !isValidPath(pathToValidate)) {
-        throw new InvalidBitJsonPropPath(fieldName, pathToValidate);
+        throw new InvalidBitConfigPropPath(fieldName, pathToValidate);
       }
     }
   }

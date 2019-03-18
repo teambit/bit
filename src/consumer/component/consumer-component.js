@@ -5,9 +5,9 @@ import R from 'ramda';
 import c from 'chalk';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import ComponentBitJson from '../bit-json';
+import ComponentBitConfig from '../bit-config';
 import { Dist, License, SourceFile } from '../component/sources';
-import type ConsumerBitJson from '../bit-json/consumer-bit-json';
+import type ConsumerBitConfig from '../bit-config/consumer-bit-config';
 import type Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import type Scope from '../../scope/scope';
@@ -51,7 +51,7 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
-import AbstractBitJson from '../bit-json/abstract-bit-json';
+import AbstractBitConfig from '../bit-config/abstract-bit-config';
 import { Analytics } from '../../analytics/analytics';
 import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
@@ -81,7 +81,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
-  bitJson?: ComponentBitJson,
+  bitJson?: ComponentBitConfig,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   compilerDependencies?: Dependency[],
@@ -117,7 +117,7 @@ export default class Component {
   mainFile: PathOsBased;
   compiler: ?CompilerExtension;
   tester: ?TesterExtension;
-  bitJson: ?ComponentBitJson;
+  bitJson: ?ComponentBitConfig;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -335,22 +335,14 @@ export default class Component {
     return homepage;
   }
 
-  async writeConfig(
-    consumer: Consumer,
-    configDir: PathOsBased | ConfigDir,
-    override?: boolean = true
-  ): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, configDir, override);
+  async writeConfig(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfResult> {
+    const ejectConfData = await this.getConfigToWrite(consumer, configDir);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
     return ejectConfData;
   }
 
-  async getConfigToWrite(
-    consumer: Consumer,
-    configDir: PathOsBased | ConfigDir,
-    override?: boolean = true
-  ): Promise<EjectConfData> {
+  async getConfigToWrite(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfData> {
     const bitMap: BitMap = consumer.bitMap;
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
@@ -372,7 +364,7 @@ export default class Component {
       throw new EjectBoundToWorkspace();
     }
 
-    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance, override);
+    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -990,7 +982,7 @@ export default class Component {
     componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const consumerBitJson: ConsumerBitJson = consumer.bitJson;
+    const consumerBitConfig: ConsumerBitConfig = consumer.bitConfig;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     let configDir = consumer.getPath();
@@ -1008,7 +1000,7 @@ export default class Component {
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
-          const sourceFile = SourceFile.load(filePath, consumerBitJson.distTarget, bitDir, consumerPath, {
+          const sourceFile = SourceFile.load(filePath, consumerBitConfig.distTarget, bitDir, consumerPath, {
             test: file.test
           });
           sourceFiles.push(sourceFile);
@@ -1043,26 +1035,26 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentBitJson: ComponentBitJson | typeof undefined;
-    let componentBitJsonFileExist = false;
-    let rawComponentBitJson;
+    let componentBitConfig: ComponentBitConfig | typeof undefined;
+    let componentBitConfigFileExist = false;
+    let rawComponentBitConfig;
     if (configDir !== consumerPath) {
-      componentBitJson = ComponentBitJson.loadSync(configDir, consumerBitJson);
-      packageDependencies = componentBitJson.packageDependencies;
-      devPackageDependencies = componentBitJson.devPackageDependencies;
-      peerPackageDependencies = componentBitJson.peerPackageDependencies;
+      componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitConfig);
+      packageDependencies = componentBitConfig.packageDependencies;
+      devPackageDependencies = componentBitConfig.devPackageDependencies;
+      peerPackageDependencies = componentBitConfig.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitJsonFileExist = await AbstractBitJson.hasExisting(configDir);
-      if (componentBitJsonFileExist) {
-        rawComponentBitJson = componentBitJson;
+      componentBitConfigFileExist = await AbstractBitConfig.pathHasBitJson(configDir);
+      if (componentBitConfigFileExist) {
+        rawComponentBitConfig = componentBitConfig;
       }
-      if (!componentBitJsonFileExist && componentFromModel) {
-        componentBitJson.mergeWithComponentData(componentFromModel);
+      if (!componentBitConfigFileExist && componentFromModel) {
+        componentBitConfig.mergeWithComponentData(componentFromModel);
       }
     }
-    // for authored componentBitJson is normally undefined
-    const bitJson = componentBitJson || consumerBitJson;
+    // for authored componentBitConfig is normally undefined
+    const bitJson = componentBitConfig || consumerBitConfig;
 
     // Remove dists if compiler has been deleted
     if (dists && !bitJson.hasCompiler()) {
@@ -1080,8 +1072,8 @@ export default class Component {
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
-      consumerBitJson,
-      componentBitJson: rawComponentBitJson,
+      consumerBitConfig,
+      componentBitConfig: rawComponentBitConfig,
       context: envsContext,
       detached: componentMap.detachedCompiler
     };
@@ -1121,7 +1113,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       tester,
-      bitJson: componentBitJsonFileExist ? componentBitJson : undefined,
+      bitJson: componentBitConfigFileExist ? componentBitConfig : undefined,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       loadedFromFileSystem: true,

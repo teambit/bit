@@ -19,6 +19,7 @@ import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
+import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../consumer/component/package-json';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -100,7 +101,7 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
-    const bindingPrefix = this.consumer ? this.consumer.bitJson.bindingPrefix : null;
+    const bindingPrefix = this.consumer ? this.consumer.bitConfig.bindingPrefix : null;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
@@ -150,9 +151,11 @@ export default class NodeModuleLinker {
     const componentId = component.id;
     if (!componentId.scope) return; // scope is a must to generate the link
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
+    component.dists.updateDistsPerConsumerBitConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
+      const possiblyDist = component.dists.calculateDistFileForAuthored(file, this.consumer);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), file);
+      const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
         const linkFile = LinkFile.load({
@@ -168,7 +171,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
       }
     });
-    this._populateLinkToMainFile(component);
+    this._createPackageJsonForAuthor(component);
   }
   /**
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
@@ -185,7 +188,7 @@ export default class NodeModuleLinker {
     const unfilteredDirs = glob.sync('*', { cwd: fromNodeModules });
     // when dependenciesSavedAsComponents the node_modules/@bit has real link files, we don't want to touch them
     // otherwise, node_modules/@bit has packages as any other directory in node_modules
-    const dirsToFilter = dependenciesSavedAsComponents ? [this.consumer.bitJson.bindingPrefix] : [];
+    const dirsToFilter = dependenciesSavedAsComponents ? [this.consumer.bitConfig.bindingPrefix] : [];
     const customResolvedData = component.dependencies.getCustomResolvedData();
     if (!R.isEmpty(customResolvedData)) {
       // filter out packages that are actually symlinks to dependencies
@@ -281,28 +284,15 @@ export default class NodeModuleLinker {
   }
 
   /**
-   * Link from node_modules/@bit/component-name/index.js to the component's main file.
+   * create package.json on node_modules/@bit/component-name/package.json with a property 'main'
+   * pointing to the component's main file.
    * It is needed for Authored components only.
    * Since an authored component doesn't have rootDir, it's impossible to symlink to the component directory.
    * It makes it easier for Author to use absolute syntax between their own components.
    */
-  _populateLinkToMainFile(component: Component) {
-    component.dists.updateDistsPerConsumerBitJson(component.id, this.consumer, component.componentMap);
-    const mainFile = component.dists.calculateMainDistFileForAuthored(component.mainFile, this.consumer);
-    const indexFileName = getIndexFileName(mainFile);
-    const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id), indexFileName);
-    const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), mainFile);
-    const fileContent = getLinkToFileContent(destRelative);
-    if (fileContent) {
-      // otherwise, the file type is not supported, no need to write anything
-      const linkFile = LinkFile.load({
-        filePath: dest,
-        content: fileContent,
-        srcPath: mainFile,
-        componentId: component.id,
-        override: true
-      });
-      this.dataToPersist.addFile(linkFile);
-    }
+  _createPackageJsonForAuthor(component: Component) {
+    const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
+    const { packageJson } = preparePackageJsonToWrite(this.consumer, component, dest, true);
+    addPackageJsonDataToPersist(packageJson, this.dataToPersist);
   }
 }

@@ -192,7 +192,6 @@ export default class ManyComponentsWriter {
   }
   _getDefaultWriteParams(): Object {
     return {
-      override: true,
       writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,

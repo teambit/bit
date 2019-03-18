@@ -30,18 +30,4 @@ describe('link generation', function () {
       expect(path.join(helper.localScopePath, `node_modules/@bit/${helper.remoteScope}.bar.foo/bar`)).to.be.a.file();
     });
   });
-  describe('component with a directory named index.js', () => {
-    let output;
-    before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      helper.createFile('index.js', 'foo.js');
-      helper.addComponent('index.js/foo.js');
-      helper.tagAllComponents();
-      // a previous bug was throwing an error upon export "EEXIST: file already exists, mkdir"
-      output = helper.runWithTryCatch(`bit export ${helper.remoteScope}`);
-    });
-    it('should show a descriptive error, saying it can not create the link file', () => {
-      expect(output).to.have.string('unable to add the file');
-    });
-  });
 });

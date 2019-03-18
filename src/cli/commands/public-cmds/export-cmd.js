@@ -14,15 +14,12 @@ export default class Export extends Command {
   https://${BASE_DOCS_DOMAIN}/docs/organizing-components-in-scopes.html
   the id can be used with wildcards (e.g. bit export remote-scope "utils/*")`;
   alias = 'e';
-  opts = [
-    ['f', 'forget', 'do not save to bit.json after export'],
-    ['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages']
-  ];
+  opts = [['e', 'eject', 'replaces the exported components from the local scope with the corresponding packages']];
   loader = true;
   migration = true;
 
-  action([remote, ids]: [string, string[]], { forget, eject }: any): Promise<*> {
-    return exportAction(ids, remote, !forget, eject).then(({ componentsIds, ejectResults }) => ({
+  action([remote, ids]: [string, string[]], { eject }: any): Promise<*> {
+    return exportAction(ids, remote, eject).then(({ componentsIds, ejectResults }) => ({
       componentsIds,
       ejectResults,
       remote

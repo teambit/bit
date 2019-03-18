@@ -9,11 +9,10 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
+import { COMPONENT_ORIGINS } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
-import { preparePackageJsonToWrite } from '../component/package-json';
-import JSONFile from '../component/sources/json-file';
+import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 
@@ -126,14 +125,14 @@ export default class ComponentWriter {
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {
       const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir, this.override);
+      const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir);
       this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
     if (this.writePackageJson && (this.consumer.isolated || this.writeToPath !== this.consumer.getPath())) {
-      const packageJson = await preparePackageJsonToWrite(
+      const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.consumer,
         this.component,
         this.writeToPath,
@@ -141,9 +140,8 @@ export default class ComponentWriter {
         this.writeBitDependencies,
         this.excludeRegistryPrefix
       );
-      const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
-      const jsonFile = JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson });
-      this.component.dataToPersist.addFile(jsonFile);
+      addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
+      if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
       this.component.packageJsonInstance = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
@@ -285,7 +283,10 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-        const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.bitJson.bindingPrefix, this.component.id);
+        const relativeLinkPath = getNodeModulesPathOfComponent(
+          this.consumer.bitConfig.bindingPrefix,
+          this.component.id
+        );
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
         );

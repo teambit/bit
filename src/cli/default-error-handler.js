@@ -45,7 +45,8 @@ import {
   CyclicDependencies,
   HashNotFound
 } from '../scope/exceptions';
-import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
+import InvalidBitJson from '../consumer/bit-config/exceptions/invalid-bit-json';
+import InvalidPackageJson from '../consumer/bit-config/exceptions/invalid-package-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -96,7 +97,7 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import InvalidBitJsonPropPath from '../consumer/bit-json/exceptions/invalid-bit-json-prop-path';
+import InvalidBitConfigPropPath from '../consumer/bit-config/exceptions/invalid-bit-config-prop-path';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -280,13 +281,7 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
-  [
-    NothingToImport,
-    () =>
-      chalk.yellow(
-        'nothing to import. please use `bit import [component_id]` or configure your dependencies in bit.json'
-      )
-  ],
+  [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
     InvalidIdChunk,
     err =>
@@ -311,13 +306,18 @@ to re-start Bit from scratch, deleting all objects from the scope, use "bit init
   [
     InvalidBitJson,
     err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
-    consider running ${chalk.bold('bit init --reset')} to recreate the file`
+consider running ${chalk.bold('bit init --reset')} to recreate the file`
   ],
   [
-    InvalidBitJsonPropPath,
+    InvalidPackageJson,
+    err => `error: package.json at ${chalk.bold(err.path)} is not a valid JSON file.
+please fix the file in order to run bit commands`
+  ],
+  [
+    InvalidBitConfigPropPath,
     err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
       err.fieldName
-    )}" in your bit.json file is invalid.
+    )}" in your bit.json or package.json file is invalid.
 please make sure it's not absolute and doesn't contain invalid characters`
   ],
   [
@@ -507,7 +507,10 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [
     AuthenticationFailed,
-    err => `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
+    err =>
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${
+        err.debugInfo
+      }`
   ],
   [
     ObjectsWithoutConsumer,

@@ -435,6 +435,11 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
+  importManyComponents(ids: string[]) {
+    const idsWithRemote = ids.map(id => `${this.remoteScope}/${id}`);
+    return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
+  }
+
   importComponentWithOptions(id: string = 'bar/foo.js', options: ?Object) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
@@ -749,9 +754,10 @@ export default class Helper {
     this.writeBitJson(bitJson);
   }
   corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson();
-    bitJson.corrupt = '"corrupted';
-    fs.writeFileSync(bitJsonPath, bitJson.toString());
+    fs.writeFileSync(bitJsonPath, '"corrupted');
+  }
+  corruptPackageJson(packageJsonPath: string = path.join(this.localScopePath, 'package.json')) {
+    fs.writeFileSync(packageJsonPath, '{ corrupted');
   }
   modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
     const bitJson = this.readBitJson();
