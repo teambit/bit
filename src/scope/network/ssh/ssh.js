@@ -1,6 +1,7 @@
 /** @flow */
 import SSH2 from 'ssh2';
 import R from 'ramda';
+import * as os from 'os';
 import merge from 'lodash.merge';
 import { passphrase as promptPassphrase, userpass as promptUserpass } from '../../../prompts';
 import keyGetter from './key-getter';
@@ -107,14 +108,19 @@ export default class SSH implements Network {
   async _tokenAuthentication(): Promise<SSH> {
     const sshConfig = this._composeTokenAuthObject();
     if (!sshConfig) {
-      throw new AuthenticationStrategyFailed('user token not defined in bit-config. please run `bit login` to authenticate.');
+      throw new AuthenticationStrategyFailed(
+        'user token not defined in bit-config. please run `bit login` to authenticate.'
+      );
     }
-    const authFailedMsg = 'failed to authenticate with user token. generate a new token by running `bit logout && bit login`.';
+    const authFailedMsg =
+      'failed to authenticate with user token. generate a new token by running `bit logout && bit login`.';
     return this._connectWithConfig(sshConfig, 'token', authFailedMsg);
   }
   async _sshAgentAuthentication(): Promise<SSH> {
     if (!this._hasAgentSocket()) {
-      throw new AuthenticationStrategyFailed('unable to get SSH keys from ssh-agent to. perhaps service is down or disabled.');
+      throw new AuthenticationStrategyFailed(
+        'unable to get SSH keys from ssh-agent to. perhaps service is down or disabled.'
+      );
     }
     const sshConfig = merge(this._composeBaseObject(), { agent: process.env.SSH_AUTH_SOCK });
     const authFailedMsg = 'no matching private key found in ssh-agent to authenticate to remote server.';
@@ -123,7 +129,9 @@ export default class SSH implements Network {
   async _sshKeyAuthentication(): Promise<SSH> {
     const keyBuffer = await keyGetter();
     if (!keyBuffer) {
-      throw new AuthenticationStrategyFailed('SSH key not found in `~/.ssh/id_rsa` or `ssh_key_file` config in `bit config` either not configured or refers to wrong path.');
+      throw new AuthenticationStrategyFailed(
+        'SSH key not found in `~/.ssh/id_rsa` or `ssh_key_file` config in `bit config` either not configured or refers to wrong path.'
+      );
     }
     const sshConfig = merge(this._composeBaseObject(), { privateKey: keyBuffer });
     const authFailedMsg = 'failed connecting to remote server using `~/.ssh/id_rsa` or `ssh_key_file` in `bit config`.';
@@ -197,9 +205,14 @@ export default class SSH implements Network {
         );
       }
       if (err.message === PASSPHRASE_POSSIBLY_MISSING_MESSAGE) {
-        throw new AuthenticationStrategyFailed(
-          'error connecting with private ssh key. in case passphrase is used, use ssh-agent.'
-        );
+        const macMojaveOs = process.platform === 'darwin' && os.release() === '18.2.0';
+        let passphrasePossiblyMissing =
+          'error connecting with private ssh key. in case passphrase is used, use ssh-agent.';
+        if (macMojaveOs) {
+          passphrasePossiblyMissing +=
+            ' for macOS Mojave users, use `-m PEM` for `ssh-keygen` command to generate a valid SSH key';
+        }
+        throw new AuthenticationStrategyFailed(passphrasePossiblyMissing);
       }
       throw new AuthenticationStrategyFailed(`${authFailedMsg} due to an error "${err.message}"`);
     }
