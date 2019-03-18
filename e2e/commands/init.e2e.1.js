@@ -302,4 +302,38 @@ describe('run bit init', function () {
       });
     });
   });
+  describe('when a project has package.json file', () => {
+    describe('without --standalone flag', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        helper.runCmd('bit init');
+      });
+      it('should write the bit.json content into the package.json inside "bit" property', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.have.property('bit');
+        expect(packageJson.bit).to.have.property('componentsDefaultDirectory');
+        expect(packageJson.bit.componentsDefaultDirectory).to.equal('components/{name}');
+      });
+      it('should not create bit.json file', () => {
+        expect(path.join(helper.localScopePath, 'bit.json')).to.not.be.a.path();
+      });
+    });
+    describe('with --standalone flag', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        helper.runCmd('bit init --standalone');
+      });
+      it('should not write the bit.json content into the package.json file', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.not.have.property('bit');
+      });
+      it('should create bit.json file', () => {
+        expect(path.join(helper.localScopePath, 'bit.json')).to.be.a.file();
+        const bitJson = helper.readBitJson();
+        expect(bitJson).to.have.property('componentsDefaultDirectory');
+      });
+    });
+  });
 });
