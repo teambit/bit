@@ -8,6 +8,7 @@ import { ScopeJsonNotFound } from '../../src/scope/exceptions';
 import { InvalidBitMap } from '../../src/consumer/bit-map/exceptions';
 import { InvalidBitJson } from '../../src/consumer/bit-config/exceptions';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import InvalidPackageJson from '../../src/consumer/bit-config/exceptions/invalid-package-json';
 
 const assertArrays = require('chai-arrays');
 
@@ -333,6 +334,17 @@ describe('run bit init', function () {
         expect(path.join(helper.localScopePath, 'bit.json')).to.be.a.file();
         const bitJson = helper.readBitJson();
         expect(bitJson).to.have.property('componentsDefaultDirectory');
+      });
+    });
+    describe('when the package.json is corrupted', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.corruptPackageJson();
+      });
+      it('should throw InvalidPackageJson error', () => {
+        const initCmd = () => helper.runCmd('bit init');
+        const error = new InvalidPackageJson(path.join(helper.localScopePath, 'package.json'));
+        helper.expectToThrow(initCmd, error);
       });
     });
   });
