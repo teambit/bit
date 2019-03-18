@@ -123,10 +123,10 @@ export default class SSH implements Network {
   async _sshKeyAuthentication(): Promise<SSH> {
     const keyBuffer = await keyGetter();
     if (!keyBuffer) {
-      throw new AuthenticationStrategyFailed('ssh key defined in `bit config` not found.');
+      throw new AuthenticationStrategyFailed('SSH key not found in `~/.ssh/id_rsa` or `ssh_key_file` config in `bit config` either not configured or refers to wrong path.');
     }
     const sshConfig = merge(this._composeBaseObject(), { privateKey: keyBuffer });
-    const authFailedMsg = 'failed connecting to remote server using ssh key from `bit config`.';
+    const authFailedMsg = 'failed connecting to remote server using `~/.ssh/id_rsa` or `ssh_key_file` in `bit config`.';
     return this._connectWithConfig(sshConfig, 'ssh-key', authFailedMsg);
   }
   async _userPassAuthentication(): Promise<SSH> {
