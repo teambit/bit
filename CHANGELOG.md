@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.4-domain.1] - 2019-03-18
+
+- replace bitsrc.io domain to bit.dev
+
 ## [14.0.3] - 2019-03-12
 
 - fix importing components when one file is a prefix of the other in the same directory
