@@ -115,4 +115,13 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     componentBitConfig.path = bitJsonPath;
     return componentBitConfig;
   }
+
+  getAllDependenciesOverrides() {
+    if (!this.overrides) return {};
+    return Object.assign(
+      this.overrides.dependencies || {},
+      this.overrides.devDependencies || {},
+      this.overrides.peerDependencies
+    );
+  }
 }
