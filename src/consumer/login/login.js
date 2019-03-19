@@ -12,7 +12,8 @@ import {
   CFG_HUB_LOGIN_KEY,
   DEFAULT_LANGUAGE,
   DEFAULT_REGISTRY_URL,
-  CFG_REGISTRY_URL_KEY
+  CFG_REGISTRY_URL_KEY,
+  PREVIOUSLY_DEFAULT_REGISTRY_URL
 } from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
@@ -66,9 +67,16 @@ export default function loginToBitSrc(
           reject(new LoginFailed());
         }
         setSync(CFG_USER_TOKEN_KEY, token);
+        const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
         if (!skipRegistryConfig) {
           try {
-            actualNpmrcPath = driver.npmLogin(token, npmrcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
+            if (!configuredRegistry) {
+              // some packages might have links in package-lock.json to the previous registry
+              // this makes sure to have also the auth-token of the previous registry.
+              // (the @bit:registry part points only to the current registry).
+              actualNpmrcPath = driver.npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
+            }
+            actualNpmrcPath = driver.npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
           } catch (e) {
             actualNpmrcPath = e.path;
             writeToNpmrcError = true;
