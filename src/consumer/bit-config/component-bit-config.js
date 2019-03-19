@@ -7,41 +7,19 @@ import type { Compilers, Testers } from './abstract-bit-config';
 import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBased } from '../../utils/path';
 import type Component from '../component/consumer-component';
-import { DEFAULT_DEPENDENCIES } from '../../constants';
 
 export type BitConfigProps = {
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
-  dependencies?: Object,
-  devDependencies?: Object,
-  compilerDependencies?: Object,
-  testerDependencies?: Object,
-  packageDependencies?: Object,
-  devPackageDependencies?: Object,
-  peerPackageDependencies?: Object,
-  extensions?: Object
+  bindingPrefix: string,
+  extensions?: Object,
+  overrides?: Object
 };
 
 export default class ComponentBitConfig extends AbstractBitConfig {
-  packageDependencies: { [string]: string };
-  devPackageDependencies: ?Object;
-  peerPackageDependencies: ?Object;
-
-  constructor({
-    compiler,
-    tester,
-    dependencies,
-    devDependencies,
-    compilerDependencies,
-    testerDependencies,
-    packageDependencies,
-    devPackageDependencies,
-    peerPackageDependencies,
-    lang,
-    bindingPrefix,
-    extensions
-  }: BitConfigProps) {
+  overrides: ?Object;
+  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: BitConfigProps) {
     super({
       compiler,
       tester,
@@ -49,25 +27,15 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       bindingPrefix,
       extensions
     });
-    this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
-    this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
-    this.compilerDependencies = compilerDependencies || DEFAULT_DEPENDENCIES;
-    this.testerDependencies = testerDependencies || DEFAULT_DEPENDENCIES;
-    this.packageDependencies = packageDependencies || {};
-    this.devPackageDependencies = devPackageDependencies || {};
-    this.peerPackageDependencies = peerPackageDependencies || {};
+    this.overrides = overrides;
     this.writeToBitJson = true; // will be changed later to work similar to consumer-bit-config
   }
 
   toPlainObject() {
     const superObject = super.toPlainObject();
     return R.merge(superObject, {
-      packageDependencies: this.getPackageDependencies()
+      overrides: this.overrides
     });
-  }
-
-  getPackageDependencies(): Object {
-    return this.packageDependencies;
   }
 
   toJson(readable: boolean = true) {
@@ -79,7 +47,6 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     if (
       typeof this.compiler !== 'object' ||
       typeof this.tester !== 'object' ||
-      (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
       throw new InvalidBitJson(bitJsonPath);
@@ -87,16 +54,15 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   }
 
   static fromPlainObject(object: Object): ComponentBitConfig {
-    const { env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
+    const { env, lang, bindingPrefix, extensions, overrides } = object;
 
     return new ComponentBitConfig({
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
-      dependencies,
       extensions,
       lang,
       bindingPrefix,
-      packageDependencies
+      overrides
     });
   }
 

@@ -62,7 +62,7 @@ describe('workspace config', function () {
       });
     });
   });
-  describe.only('overrides components', () => {
+  describe('overrides components', () => {
     describe('changing dependencies versions', () => {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
