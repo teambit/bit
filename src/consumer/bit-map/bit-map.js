@@ -278,18 +278,18 @@ export default class BitMap {
    * Files might be on the root dir then we need to ignore them directly by taking them from the bit.json
    * They might be in internal dirs then we need to ignore the dir completely
    */
-  getConfigDirsAndFilesToIgnore(consumerPath: PathLinux): IgnoreFilesDirs {
+  async getConfigDirsAndFilesToIgnore(consumerPath: PathLinux): Promise<IgnoreFilesDirs> {
     const ignoreList = {
       files: [],
       dirs: []
     };
-    R.values(this.components).forEach((component: ComponentMap) => {
+    const populateIgnoreListP = R.values(this.components).map(async (component: ComponentMap) => {
       const configDir = component.configDir;
       const componentDir = component.getComponentDir();
       if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentBitConfig = ComponentBitConfig.loadSync(fullConfigDir);
+        const componentBitConfig = await ComponentBitConfig.load(fullConfigDir);
         const compilerObj = R.values(componentBitConfig.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
         const testerObj = R.values(componentBitConfig.tester)[0];
@@ -310,6 +310,7 @@ export default class BitMap {
         ignoreList.dirs = ignoreList.dirs.concat(toIgnore.dirs);
       }
     });
+    await Promise.all(populateIgnoreListP);
     return ignoreList;
   }
 

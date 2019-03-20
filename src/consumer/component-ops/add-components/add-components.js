@@ -550,14 +550,14 @@ export default class AddComponents {
     };
   }
 
-  getIgnoreList(): string[] {
+  async getIgnoreList(): Promise<string[]> {
     const consumerPath = this.consumer.getPath();
     let ignoreList = retrieveIgnoreList(consumerPath);
     const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
     const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
       pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
-    const configsToIgnore = this.bitMap.getConfigDirsAndFilesToIgnore(this.consumer.getPath());
+    const configsToIgnore = await this.bitMap.getConfigDirsAndFilesToIgnore(this.consumer.getPath());
     const configDirs = configsToIgnore.dirs.map(dir => pathJoinLinux(dir, '**'));
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
     ignoreList = ignoreList.concat(configsToIgnore.files);
@@ -566,7 +566,7 @@ export default class AddComponents {
   }
 
   async add(): Promise<AddActionResults> {
-    this.ignoreList = this.getIgnoreList();
+    this.ignoreList = await this.getIgnoreList();
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     // check unknown test files

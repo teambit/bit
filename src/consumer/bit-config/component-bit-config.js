@@ -95,24 +95,14 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     return ComponentBitConfig.mergeWithProto(json, protoBJ);
   }
 
-  static load(dirPath: string, protoBJ?: ConsumerBitConfig): Promise<ComponentBitConfig> {
-    return new Promise((resolve, reject) => {
-      try {
-        const result = this.loadSync(dirPath, protoBJ);
-        return resolve(result);
-      } catch (e) {
-        return reject(dirPath);
-      }
-    });
-  }
-
-  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
+  static async load(dirPath: string, protoBJ?: ConsumerBitConfig): Promise<ComponentBitConfig> {
     if (!dirPath) throw new TypeError('component-bit-config.loadSync missing dirPath arg');
     let thisBJ = {};
     const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
-    if (fs.existsSync(bitJsonPath)) {
+    const fileExist = await fs.exists(bitJsonPath);
+    if (fileExist) {
       try {
-        thisBJ = fs.readJsonSync(bitJsonPath);
+        thisBJ = await fs.readJson(bitJsonPath);
       } catch (e) {
         throw new InvalidBitJson(bitJsonPath);
       }

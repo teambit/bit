@@ -1035,7 +1035,7 @@ export default class Component {
     let componentBitConfigFileExist = false;
     let rawComponentBitConfig;
     if (configDir !== consumerPath) {
-      componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitConfig);
+      componentBitConfig = await ComponentBitConfig.load(configDir, consumerBitConfig);
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       componentBitConfigFileExist = await AbstractBitConfig.pathHasBitJson(configDir);
