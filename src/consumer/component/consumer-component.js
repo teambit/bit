@@ -81,7 +81,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
-  bitJson?: ComponentBitConfig,
+  bitJson: ?ComponentBitConfig,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   compilerDependencies?: Dependency[],
@@ -985,9 +985,7 @@ export default class Component {
     const consumerBitConfig: ConsumerBitConfig = consumer.bitConfig;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
-    let configDir = consumer.getPath();
     const componentDir = componentMap.getComponentDir();
-    configDir = componentDir ? path.join(configDir, componentDir) : configDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
@@ -1020,6 +1018,7 @@ export default class Component {
     };
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
+    let configDir = componentDir ? path.join(consumerPath, componentDir) : consumerPath;
     if (componentMap.configDir) {
       await componentMap.deleteConfigDirIfNotExists();
       const resolvedBaseConfigDir = componentMap.getBaseConfigDir();
@@ -1032,17 +1031,13 @@ export default class Component {
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
     let componentBitConfig: ?ComponentBitConfig;
-    let componentBitConfigFileExist = false;
-    let rawComponentBitConfig;
     if (configDir !== consumerPath) {
-      componentBitConfig = await ComponentBitConfig.load(configDir, consumerBitConfig);
+      const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
+      // $FlowFixMe unclear error
+      componentBitConfig = await ComponentBitConfig.load(componentPkgJsonDir, configDir, consumerBitConfig);
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitConfigFileExist = await AbstractBitConfig.pathHasBitJson(configDir);
-      if (componentBitConfigFileExist) {
-        rawComponentBitConfig = componentBitConfig;
-      }
-      if (!componentBitConfigFileExist && componentFromModel) {
+      if (componentFromModel) {
         componentBitConfig.mergeWithComponentData(componentFromModel);
       }
     }
@@ -1066,7 +1061,7 @@ export default class Component {
       componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitConfig,
-      componentBitConfig: rawComponentBitConfig,
+      componentBitConfig,
       context: envsContext,
       detached: componentMap.detachedCompiler
     };
@@ -1106,7 +1101,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       tester,
-      bitJson: componentBitConfigFileExist ? componentBitConfig : undefined,
+      bitJson: componentBitConfig,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       loadedFromFileSystem: true,

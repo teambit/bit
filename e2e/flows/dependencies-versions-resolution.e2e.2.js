@@ -30,28 +30,8 @@ describe('dependencies versions resolution', function () {
       const output = helper.showComponentParsed('bar/foo -c');
       expect(output.componentFromFileSystem.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@0.0.1`);
     });
-    describe('when bit.json overrides the version', () => {
-      before(() => {
-        helper.importComponent('bar/foo --conf');
-        const bitJsonDir = path.join(helper.localScopePath, 'components/bar/foo');
-        const bitJson = helper.readBitJson(bitJsonDir);
-        bitJson.overrides = {
-          dependencies: {
-            'utils/is-string': '0.0.2'
-          }
-        };
-        helper.writeBitJson(bitJson, bitJsonDir);
-      });
-      it('should use the dependency version from bit.json', () => {
-        const output = helper.showComponentParsed('bar/foo -c');
-        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.remoteScope}/utils/is-string@0.0.2`
-        );
-      });
-    });
     describe('when package.json overrides the version', () => {
       before(() => {
-        helper.getClonedLocalScope(scopeAfterImport);
         const componentPath = path.join(helper.localScopePath, 'components/bar/foo');
         const packageJson = helper.readPackageJson(componentPath);
         packageJson.bit = {};
@@ -69,9 +49,48 @@ describe('dependencies versions resolution', function () {
         );
       });
     });
+    describe('when bit.json overrides the version', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        helper.importComponent('bar/foo --conf');
+        const bitJsonDir = path.join(helper.localScopePath, 'components/bar/foo');
+        const bitJson = helper.readBitJson(bitJsonDir);
+        bitJson.overrides = {
+          dependencies: {
+            'utils/is-string': '0.0.2'
+          }
+        };
+        helper.writeBitJson(bitJson, bitJsonDir);
+      });
+      it('should use the dependency version from bit.json', () => {
+        const output = helper.showComponentParsed('bar/foo -c');
+        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
+          `${helper.remoteScope}/utils/is-string@0.0.2`
+        );
+      });
+      describe('when package.json and bit.json override the version differently', () => {
+        before(() => {
+          const componentPath = path.join(helper.localScopePath, 'components/bar/foo');
+          const packageJson = helper.readPackageJson(componentPath);
+          packageJson.bit = {};
+          packageJson.bit.overrides = {
+            dependencies: {
+              'utils/is-string': '0.0.10'
+            }
+          };
+          helper.writePackageJson(packageJson, componentPath);
+        });
+        it('bit.json should win', () => {
+          const output = helper.showComponentParsed('bar/foo -c');
+          expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
+            `${helper.remoteScope}/utils/is-string@0.0.2`
+          );
+        });
+      });
+    });
   });
 
-  describe('when package.json has different version than the model', () => {
+  describe.skip('when package.json has different version than the model', () => {
     describe('when the package.json of the dependents is different', () => {
       it('should use the dependency version from package.json', () => {});
     });
@@ -88,10 +107,10 @@ describe('dependencies versions resolution', function () {
       it('should find the dependency version from the root package.json', () => {});
     });
   });
-  describe('when bitmap has different version than the model', () => {
+  describe.skip('when bitmap has different version than the model', () => {
     it('should use the dependency version from the bitmap', () => {});
   });
-  describe('when only the model has a version', () => {
+  describe.skip('when only the model has a version', () => {
     it('should use the dependency version from the model', () => {});
   });
 });

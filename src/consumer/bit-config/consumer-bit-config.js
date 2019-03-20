@@ -226,19 +226,9 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     consumerBitConfig.writeToPackageJson = packageJsonHasConfig;
     return consumerBitConfig;
   }
-
-  static async loadJsonFileIfExist(jsonFilePath: string): Promise<?Object> {
-    try {
-      const file = await fs.readJson(jsonFilePath);
-      return file;
-    } catch (e) {
-      if (e.code === 'ENOENT') return null;
-      throw e;
-    }
-  }
   static async loadBitJson(bitJsonPath: string): Promise<?Object> {
     try {
-      const file = await this.loadJsonFileIfExist(bitJsonPath);
+      const file = await AbstractBitConfig.loadJsonFileIfExist(bitJsonPath);
       return file;
     } catch (e) {
       throw new InvalidBitJson(bitJsonPath);
@@ -246,7 +236,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   }
   static async loadPackageJson(packageJsonPath: string): Promise<?Object> {
     try {
-      const file = await this.loadJsonFileIfExist(packageJsonPath);
+      const file = await AbstractBitConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
     } catch (e) {
       throw new InvalidPackageJson(packageJsonPath);

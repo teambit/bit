@@ -1,12 +1,11 @@
 /** @flow */
 import R from 'ramda';
-import fs from 'fs-extra';
-import { InvalidBitJson } from './exceptions';
 import AbstractBitConfig from './abstract-bit-config';
 import type { Compilers, Testers } from './abstract-bit-config';
 import type ConsumerBitConfig from './consumer-bit-config';
-import type { PathOsBased } from '../../utils/path';
+import type { PathOsBasedAbsolute } from '../../utils/path';
 import type Component from '../component/consumer-component';
+import GeneralError from '../../error/general-error';
 
 export type BitConfigProps = {
   lang?: string,
@@ -49,7 +48,9 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       typeof this.tester !== 'object' ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
-      throw new InvalidBitJson(bitJsonPath);
+      throw new GeneralError(
+        `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
+      );
     }
   }
 
@@ -78,8 +79,8 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   }
 
   mergeWithComponentData(component: Component) {
-    this.bindingPrefix = component.bindingPrefix;
-    this.lang = component.lang;
+    this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
+    this.lang = this.lang || component.lang;
   }
 
   /**
@@ -90,20 +91,52 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     return ComponentBitConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
   }
 
-  static async load(dirPath: string, consumerConfig: ConsumerBitConfig): Promise<ComponentBitConfig> {
-    if (!dirPath) throw new TypeError('component-bit-config.load missing dirPath arg');
-    let thisConfig = {};
-    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
-    const fileExist = await fs.exists(bitJsonPath);
-    if (fileExist) {
+  /**
+   * component config is written by default to package.json inside "bit" property.
+   * in case "eject-conf" was running or the component was imported with "--conf" flag, the
+   * bit.json is written as well.
+   *
+   * @param {*} componentDir root component directory, needed for loading package.json file.
+   * in case a component is authored, leave this param empty to not load the project package.json
+   * @param {*} configDir dir where bit.json and other envs files are written (by eject-conf or import --conf)
+   * @param {*} consumerConfig
+   */
+  static async load(
+    componentDir: ?PathOsBasedAbsolute,
+    configDir: PathOsBasedAbsolute,
+    consumerConfig: ConsumerBitConfig
+  ): Promise<ComponentBitConfig> {
+    if (!configDir) throw new TypeError('component-bit-config.load configDir arg is empty');
+    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(configDir);
+    const packageJsonPath = componentDir ? AbstractBitConfig.composePackageJsonPath(componentDir) : null;
+    const loadBitJson = async () => {
       try {
-        thisConfig = await fs.readJson(bitJsonPath);
+        const file = await AbstractBitConfig.loadJsonFileIfExist(bitJsonPath);
+        return file;
       } catch (e) {
-        throw new InvalidBitJson(bitJsonPath);
+        throw new GeneralError(
+          `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
+        );
       }
-    }
-
-    const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(thisConfig, consumerConfig);
+    };
+    const loadPackageJson = async () => {
+      if (!packageJsonPath) return null;
+      try {
+        const file = await AbstractBitConfig.loadJsonFileIfExist(packageJsonPath);
+        return file;
+      } catch (e) {
+        throw new GeneralError(
+          `package.json at ${packageJsonPath} is not a valid JSON file, consider to re-import the file to re-generate the file`
+        );
+      }
+    };
+    const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
+    const bitJsonConfig = bitJsonFile || {};
+    const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
+    const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
+    // in case of conflicts, bit.json wins package.json
+    const config = Object.assign(packageJsonConfig, bitJsonConfig);
+    const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(config, consumerConfig);
     componentBitConfig.path = bitJsonPath;
     return componentBitConfig;
   }

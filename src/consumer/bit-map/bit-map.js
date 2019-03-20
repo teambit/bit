@@ -293,7 +293,8 @@ export default class BitMap {
       if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentBitConfig = await ComponentBitConfig.load(fullConfigDir, consumerConfig);
+        const componentPkgJsonDir = component.rootDir ? path.join(consumerPath, component.rootDir) : null;
+        const componentBitConfig = await ComponentBitConfig.load(componentPkgJsonDir, fullConfigDir, consumerConfig);
         const compilerObj = R.values(componentBitConfig.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
         const testerObj = R.values(componentBitConfig.tester)[0];
