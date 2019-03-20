@@ -40,7 +40,7 @@ type consumerBitConfigProps = {
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
   resolveModules?: ResolveModulesConfig,
-  componentsOverrides: ComponentsOverrides
+  componentsOverrides?: ComponentsOverrides
 };
 
 export default class ConsumerBitConfig extends AbstractBitConfig {
@@ -58,7 +58,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ?ResolveModulesConfig;
-  componentsOverrides: ComponentsOverrides;
+  componentsOverrides: ?ComponentsOverrides;
 
   constructor({
     compiler,

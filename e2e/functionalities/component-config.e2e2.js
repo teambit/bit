@@ -5,7 +5,7 @@ import * as fixtures from '../fixtures/fixtures';
 
 chai.use(require('chai-fs'));
 
-describe.only('component config', function () {
+describe('component config', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -29,14 +29,20 @@ describe.only('component config', function () {
       before(() => {
         helper.importComponent('bar/foo');
       });
-      it('should write the configuration data into the component package.json file', () => {});
+      it('should write the configuration data into the component package.json file', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        expect(packageJson).to.have.property('bit');
+        expect(packageJson.bit).to.have.property('env');
+      });
       describe('adding override to the package.json of the component', () => {});
     });
     describe('importing with --conf flag', () => {
       before(() => {
         helper.importComponent('bar/foo --conf');
       });
-      it('should write the configuration data also to bit.json file', () => {});
+      it('should write the configuration data also to bit.json file', () => {
+        expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.file();
+      });
       it('bit.json should not include the "dependencies" property anymore', () => {
         const bitJson = helper.readBitJson('components/bar/foo');
         expect(bitJson).to.not.have.property('dependencies');

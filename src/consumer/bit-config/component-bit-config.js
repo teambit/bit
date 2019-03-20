@@ -66,6 +66,17 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     });
   }
 
+  static fromComponent(component: Component) {
+    return new ComponentBitConfig({
+      version: component.version,
+      scope: component.scope,
+      lang: component.lang,
+      bindingPrefix: component.bindingPrefix,
+      compiler: component.compiler || {},
+      tester: component.tester || {}
+    });
+  }
+
   mergeWithComponentData(component: Component) {
     this.bindingPrefix = component.bindingPrefix;
     this.lang = component.lang;

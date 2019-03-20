@@ -10,6 +10,7 @@ import type Consumer from '../../../../consumer/consumer';
 import type { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
 import Dependencies from '../dependencies';
+import ComponentBitConfig from '../../../bit-config/component-bit-config';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -126,6 +127,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   function getIdFromConsumerBitConfig(componentId: BitId): ?BitId {
+    if (!consumer.bitConfig.componentsOverrides) return null;
     const dependencies = consumer.bitConfig.componentsOverrides.getAllDependenciesOverridesOfComponents(component.id);
     if (R.isEmpty(dependencies)) return null;
     const dependency = Object.keys(dependencies).find(
@@ -135,7 +137,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return componentId.changeVersion(dependencies[dependency]);
   }
 
-  function getIdFromComponentBitConfig(bitJson?: ComponentBitConfig, componentId: BitId): ?BitId {
+  function getIdFromComponentBitConfig(bitJson: ?ComponentBitConfig, componentId: BitId): ?BitId {
     if (!bitJson || R.isEmpty(bitJson.overrides)) return null;
     const dependencies = bitJson.getAllDependenciesOverrides();
     if (R.isEmpty(dependencies)) return null;
