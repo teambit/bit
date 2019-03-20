@@ -1031,7 +1031,7 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentBitConfig: ComponentBitConfig | typeof undefined;
+    let componentBitConfig: ?ComponentBitConfig;
     let componentBitConfigFileExist = false;
     let rawComponentBitConfig;
     if (configDir !== consumerPath) {
