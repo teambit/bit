@@ -675,7 +675,7 @@ export default class Helper {
   // #region bit.json manipulation
   readBitJson(bitJsonDir: string = this.localScopePath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
-    return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonDir) : {};
+    return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
   writeBitJson(bitJson: Object, bitJsonDir: string = this.localScopePath) {
     const bitJsonPath = path.join(bitJsonDir, 'bit.json');
@@ -751,10 +751,10 @@ export default class Helper {
   corruptPackageJson(packageJsonPath: string = path.join(this.localScopePath, 'package.json')) {
     fs.writeFileSync(packageJsonPath, '{ corrupted');
   }
-  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  modifyFieldInBitJson(key: string, value: string) {
     const bitJson = this.readBitJson();
     bitJson[key] = value;
-    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson);
   }
   // #endregion
 
