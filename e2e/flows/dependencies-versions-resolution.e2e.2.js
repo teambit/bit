@@ -33,14 +33,14 @@ describe('dependencies versions resolution', function () {
     describe('when bit.json overrides the version', () => {
       before(() => {
         helper.importComponent('bar/foo --conf');
-        const bitJsonPath = path.join(helper.localScopePath, 'components/bar/foo/bit.json');
-        const bitJson = helper.readBitJson(bitJsonPath);
+        const bitJsonDir = path.join(helper.localScopePath, 'components/bar/foo');
+        const bitJson = helper.readBitJson(bitJsonDir);
         bitJson.overrides = {
           dependencies: {
             'utils/is-string': '0.0.2'
           }
         };
-        helper.writeBitJson(bitJson, bitJsonPath);
+        helper.writeBitJson(bitJson, bitJsonDir);
       });
       it('should use the dependency version from bit.json', () => {
         const output = helper.showComponentParsed('bar/foo -c');

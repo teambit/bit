@@ -1141,8 +1141,7 @@ describe('envs', function () {
           let bitJson;
           before(() => {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
-            bitJsonPath = path.join(fullComponentFolder, 'bit.json');
-            bitJson = helper.readBitJson(bitJsonPath);
+            bitJson = helper.readBitJson(fullComponentFolder);
           });
           it('should write the compiler dynamic config as raw config', () => {
             const env = helper.getEnvFromBitJsonByType(bitJson, COMPILER_ENV_TYPE);
@@ -1386,8 +1385,11 @@ describe('envs', function () {
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.addRemoteEnvironment();
-          const rootBitJsonPath = path.join(helper.localScopePath, 'bit.json');
-          helper.addKeyValToBitJson(rootBitJsonPath, 'ejectedEnvsDirectory', `${ejectedEnvsDirectory}/{ENV_TYPE}`);
+          helper.addKeyValToBitJson(
+            helper.localScopePath,
+            'ejectedEnvsDirectory',
+            `${ejectedEnvsDirectory}/{ENV_TYPE}`
+          );
           helper.importComponentWithOptions('comp/my-comp', { '-conf': '' });
           fullComponentFolder = path.join(helper.localScopePath, 'components', 'comp', 'my-comp');
           bitJsonPath = path.join(fullComponentFolder, 'bit.json');

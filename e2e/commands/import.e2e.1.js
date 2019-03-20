@@ -1426,7 +1426,7 @@ console.log(barFoo.default());`;
         helper.importComponent('bar/foo --conf');
       });
       it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo/bit.json'));
+        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('compiler');
         expect(bitJson.env.compiler).to.equal(`${helper.envScope}/compilers/babel@0.0.1`);
