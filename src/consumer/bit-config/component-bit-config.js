@@ -85,34 +85,25 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   /**
    * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
    */
-  static mergeWithProto(json, protoBJ: ?ConsumerBitConfig): ComponentBitConfig {
-    const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
-    delete plainProtoBJ.dependencies;
-    return ComponentBitConfig.fromPlainObject(R.merge(plainProtoBJ, json));
+  static mergeWithConsumerBitConfig(componentConfig: Object, consumerConfig: ?ConsumerBitConfig): ComponentBitConfig {
+    const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
+    return ComponentBitConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
   }
 
-  static create(json = {}, protoBJ: ConsumerBitConfig) {
-    return ComponentBitConfig.mergeWithProto(json, protoBJ);
-  }
-
-  static async load(dirPath: string, protoBJ?: ConsumerBitConfig): Promise<ComponentBitConfig> {
-    if (!dirPath) throw new TypeError('component-bit-config.loadSync missing dirPath arg');
-    let thisBJ = {};
+  static async load(dirPath: string, consumerConfig: ConsumerBitConfig): Promise<ComponentBitConfig> {
+    if (!dirPath) throw new TypeError('component-bit-config.load missing dirPath arg');
+    let thisConfig = {};
     const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
     const fileExist = await fs.exists(bitJsonPath);
     if (fileExist) {
       try {
-        thisBJ = await fs.readJson(bitJsonPath);
+        thisConfig = await fs.readJson(bitJsonPath);
       } catch (e) {
         throw new InvalidBitJson(bitJsonPath);
       }
-    } else if (!protoBJ) {
-      throw new Error(
-        `bit-config.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
-      );
     }
 
-    const componentBitConfig = ComponentBitConfig.mergeWithProto(thisBJ, protoBJ);
+    const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(thisConfig, consumerConfig);
     componentBitConfig.path = bitJsonPath;
     return componentBitConfig;
   }
