@@ -53,7 +53,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       const getFromPackageJsonIfChanged = () => {
         if (!idFromPackageJson) return null;
         if (!idFromModel) return idFromPackageJson;
-        if (idFromPackageJson !== idFromModel) return idFromPackageJson;
+        if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
         return null;
       };
       const getFromConsumerBitConfig = () => idFromConsumerBitConfig || null;

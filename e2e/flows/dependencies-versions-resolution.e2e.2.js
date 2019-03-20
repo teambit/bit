@@ -88,6 +88,45 @@ describe('dependencies versions resolution', function () {
         });
       });
     });
+    describe('when consumer config overrides the version of this component', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        const bitJson = helper.readBitJson();
+        bitJson.overrides = {
+          'bar/foo': {
+            dependencies: {
+              'utils/is-string': '0.0.5'
+            }
+          }
+        };
+        helper.writeBitJson(bitJson);
+      });
+      it('should use the dependency version from the consumer config', () => {
+        const output = helper.showComponentParsed('bar/foo -c');
+        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
+          `${helper.remoteScope}/utils/is-string@0.0.5`
+        );
+      });
+      describe('when the consumer config conflicts the component config', () => {
+        before(() => {
+          const componentPath = path.join(helper.localScopePath, 'components/bar/foo');
+          const packageJson = helper.readPackageJson(componentPath);
+          packageJson.bit = {};
+          packageJson.bit.overrides = {
+            dependencies: {
+              'utils/is-string': '0.0.10'
+            }
+          };
+          helper.writePackageJson(packageJson, componentPath);
+        });
+        it('component config should win', () => {
+          const output = helper.showComponentParsed('bar/foo -c');
+          expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
+            `${helper.remoteScope}/utils/is-string@0.0.10`
+          );
+        });
+      });
+    });
   });
 
   describe.skip('when package.json has different version than the model', () => {
