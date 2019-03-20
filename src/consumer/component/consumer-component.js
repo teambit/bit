@@ -1061,7 +1061,7 @@ export default class Component {
       componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitConfig,
-      componentBitConfig,
+      componentBitConfig: componentMap.configDir ? componentBitConfig : null,
       context: envsContext,
       detached: componentMap.detachedCompiler
     };
