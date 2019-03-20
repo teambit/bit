@@ -989,14 +989,10 @@ export default class Component {
     const componentDir = componentMap.getComponentDir();
     configDir = componentDir ? path.join(configDir, componentDir) : configDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
-    let packageDependencies;
-    let devPackageDependencies;
-    let peerPackageDependencies;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
-      const origin = componentMap.origin;
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
@@ -1040,9 +1036,6 @@ export default class Component {
     let rawComponentBitConfig;
     if (configDir !== consumerPath) {
       componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitConfig);
-      packageDependencies = componentBitConfig.packageDependencies;
-      devPackageDependencies = componentBitConfig.devPackageDependencies;
-      peerPackageDependencies = componentBitConfig.peerPackageDependencies;
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       componentBitConfigFileExist = await AbstractBitConfig.pathHasBitJson(configDir);
@@ -1119,9 +1112,6 @@ export default class Component {
       loadedFromFileSystem: true,
       componentMap,
       dists,
-      packageDependencies,
-      devPackageDependencies,
-      peerPackageDependencies,
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,
