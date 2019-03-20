@@ -16,7 +16,7 @@
 
 ## About  
 
-**Bit helps you increase code reuse by easily packaging components (bits) within git repos, and offering discoverability + collaboartion on top of them**.
+**Bit helps you share, discover and compose components to build software applications**.
 
 Bit integrates to Git, package managers and other tools in the ecosystem to bring a better experience for sharing code between apps and developers.  
 
