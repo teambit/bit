@@ -26,8 +26,10 @@ describe('component config', function () {
       helper.addRemoteScope();
     });
     describe('importing without --conf flag', () => {
+      let scopeAfterImport;
       before(() => {
         helper.importComponent('bar/foo');
+        scopeAfterImport = helper.cloneLocalScope();
       });
       it('should write the configuration data into the component package.json file', () => {
         const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
@@ -35,6 +37,27 @@ describe('component config', function () {
         expect(packageJson.bit).to.have.property('env');
       });
       describe('adding override to the package.json of the component', () => {});
+      describe('backward compatibility. saving the dependencies into bit.json as it was before v14.0.5', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+          const bitJson = helper.readBitJson(componentDir);
+          bitJson.dependencies = { [`${helper.remoteScope}/utils/is-string`]: '0.0.1' };
+          helper.writeBitJson(bitJson, componentDir);
+
+          const consumerBitJson = helper.readBitJson();
+          consumerBitJson.dependencies = { [`${helper.remoteScope}/bar/foo`]: '0.0.1' };
+          helper.writeBitJson(bitJson);
+        });
+        it('Bit should not explode', () => {
+          helper.showComponent('bar/foo');
+          helper.status();
+          helper.listLocalScope();
+          helper.createFile('components/bar/foo/bar', 'foo.js', 'console.log("hello");');
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+        });
+      });
     });
     describe('importing with --conf flag', () => {
       before(() => {
