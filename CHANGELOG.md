@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support changing dependencies versions by adding them to the "overrides" property of the component configuration or workspace configuration
+- obsolete the `*dependencies` properties of component bit.json.
+- write component configuration data to package.json inside `bit` property on import. write to `bit.json` if `--conf` flag was used
+
 ## [14.0.5-dev.1] - 2019-03-18
 
 - write workspace configuration data to package.json inside `bit` property instead of creating `bit.json` file
