@@ -112,7 +112,7 @@ describe('detective-es6', () => {
 
   it('does not throw on an async ES7 function', function () {
     assert.doesNotThrow(function () {
-      detective("import foo from 'foo'; export default async function foo() {}");
+      detective("import foo from 'foo'; export default async function bar() {}");
     });
   });
 
