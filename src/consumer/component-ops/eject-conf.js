@@ -101,12 +101,7 @@ export async function getEjectConfDataToPersist(
   const dataToPersist = new DataToPersist();
   if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
   if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
-  const bitJson = getBitJsonToWrite(
-    component,
-    bitJsonDir.dirPath,
-    relativeEjectedCompilerDirectory,
-    relativeEjectedTesterDirectory
-  );
+  const bitJson = getBitJsonToWrite(component, relativeEjectedCompilerDirectory, relativeEjectedTesterDirectory);
   const jsonFilesToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
   dataToPersist.addManyFiles(jsonFilesToWrite);
 
@@ -193,23 +188,13 @@ export async function populateEnvFilesToWrite({
 
 const getBitJsonToWrite = (
   component: ConsumerComponent,
-  bitJsonDir: string,
   ejectedCompilerDirectory: string,
   ejectedTesterDirectory: string
 ): ComponentBitConfig => {
-  return new ComponentBitConfig({
-    version: component.version,
-    scope: component.scope,
-    lang: component.lang,
-    bindingPrefix: component.bindingPrefix,
-    compiler: component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {},
-    tester: component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {},
-    dependencies: component.dependencies.asWritableObject(),
-    devDependencies: component.devDependencies.asWritableObject(),
-    packageDependencies: component.packageDependencies,
-    devPackageDependencies: component.devPackageDependencies,
-    peerPackageDependencies: component.peerPackageDependencies
-  });
+  const componentBitConfig = ComponentBitConfig.fromComponent(component);
+  componentBitConfig.compiler = component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {};
+  componentBitConfig.tester = component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {};
+  return componentBitConfig;
 };
 
 const _getRelativeDir = (bitJsonDir, envDir) => {

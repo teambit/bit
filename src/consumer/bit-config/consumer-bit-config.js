@@ -16,6 +16,7 @@ import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidBitConfigPropPath from './exceptions/invalid-bit-config-prop-path';
+import ComponentsOverrides from './components-overrides';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -38,7 +39,8 @@ type consumerBitConfigProps = {
   packageManagerProcessOptions?: Object,
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
-  resolveModules?: ResolveModulesConfig
+  resolveModules?: ResolveModulesConfig,
+  componentsOverrides?: ComponentsOverrides
 };
 
 export default class ConsumerBitConfig extends AbstractBitConfig {
@@ -56,6 +58,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ?ResolveModulesConfig;
+  componentsOverrides: ?ComponentsOverrides;
 
   constructor({
     compiler,
@@ -74,7 +77,8 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     packageManagerProcessOptions,
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
-    resolveModules
+    resolveModules,
+    componentsOverrides
   }: consumerBitConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
@@ -89,6 +93,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
     this.resolveModules = resolveModules;
+    this.componentsOverrides = componentsOverrides;
   }
 
   toPlainObject() {
@@ -119,6 +124,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       if (key === 'manageWorkspaces') return val !== DEFAULT_MANAGE_WORKSPACES;
       if (key === 'saveDependenciesAsComponents') return val !== DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS;
       if (key === 'resolveModules') return !R.isEmpty(val);
+      if (key === 'overrides') return !R.isEmpty(val);
       return true;
     };
 
@@ -174,7 +180,8 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       packageManagerProcessOptions,
       useWorkspaces,
       manageWorkspaces,
-      resolveModules
+      resolveModules,
+      overrides
     } = object;
 
     return new ConsumerBitConfig({
@@ -194,7 +201,8 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       manageWorkspaces,
       resolveModules,
       distTarget: R.propOr(undefined, 'target', dist),
-      distEntry: R.propOr(undefined, 'entry', dist)
+      distEntry: R.propOr(undefined, 'entry', dist),
+      componentsOverrides: ComponentsOverrides.load(overrides)
     });
   }
 
@@ -218,19 +226,9 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     consumerBitConfig.writeToPackageJson = packageJsonHasConfig;
     return consumerBitConfig;
   }
-
-  static async loadJsonFileIfExist(jsonFilePath: string): Promise<?Object> {
-    try {
-      const file = await fs.readJson(jsonFilePath);
-      return file;
-    } catch (e) {
-      if (e.code === 'ENOENT') return null;
-      throw e;
-    }
-  }
   static async loadBitJson(bitJsonPath: string): Promise<?Object> {
     try {
-      const file = await this.loadJsonFileIfExist(bitJsonPath);
+      const file = await AbstractBitConfig.loadJsonFileIfExist(bitJsonPath);
       return file;
     } catch (e) {
       throw new InvalidBitJson(bitJsonPath);
@@ -238,7 +236,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   }
   static async loadPackageJson(packageJsonPath: string): Promise<?Object> {
     try {
-      const file = await this.loadJsonFileIfExist(packageJsonPath);
+      const file = await AbstractBitConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
     } catch (e) {
       throw new InvalidPackageJson(packageJsonPath);

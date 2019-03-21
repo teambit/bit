@@ -261,6 +261,16 @@ export default class AbstractBitConfig {
     return fs.exists(this.composePackageJsonPath(bitPath));
   }
 
+  static async loadJsonFileIfExist(jsonFilePath: string): Promise<?Object> {
+    try {
+      const file = await fs.readJson(jsonFilePath);
+      return file;
+    } catch (e) {
+      if (e.code === 'ENOENT') return null;
+      throw e;
+    }
+  }
+
   static async removeIfExist(bitPath: string): Promise<boolean> {
     const dirToRemove = this.composeBitJsonPath(bitPath);
     if (fs.exists(dirToRemove)) {

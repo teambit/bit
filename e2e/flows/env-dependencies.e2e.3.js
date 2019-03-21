@@ -156,6 +156,12 @@ describe('environments with dependencies', function () {
           const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
           expect(linkFile).to.not.be.a.path();
         });
+        it('package.json should contain the env name only without the files', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          expect(packageJson.bit.env.compiler)
+            .to.be.a('string')
+            .that.equals(`${helper.envScope}/compilers/webpack@0.0.1`);
+        });
         describe('ejecting the environment configuration to component dir', () => {
           before(() => {
             helper.ejectConf('bar/foo');

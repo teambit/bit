@@ -182,6 +182,7 @@ export default class DependencyResolver {
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
+    // this.overrideFromBitConfig();
   }
 
   traverseTreeForComponentId(depFile: PathLinux): ?BitId {
@@ -794,6 +795,23 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     const notEmpty = item => !R.isEmpty(item);
     this.issues = R.filter(notEmpty, this.issues);
   }
+
+  // overrideFromBitConfig() {
+  //   const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
+  //   if (!overrideData) return;
+  //   const mergeDependencies = (field: string) => {
+  //     if (!overrideData[field]) return;
+  //     Object.keys(overrideData[field]).forEach((idStr) => {
+  //       this.allDependencies[field].forEach((dependency) => {
+  //         if (dependency.id.toStringWithoutVersion() === idStr || dependency.id.toStringWithoutScopeAndVersion() === idStr) {
+  //           dependency.id = dependency.id.changeVersion(overrideData[field][idStr]);
+  //         }
+  //       });
+  //     });
+  //   };
+  //   mergeDependencies('dependencies');
+  //   mergeDependencies('devDependencies');
+  // }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
     return dependencies.find(d => d.id.isEqual(id));

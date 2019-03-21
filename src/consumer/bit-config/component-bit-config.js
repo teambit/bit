@@ -1,47 +1,24 @@
 /** @flow */
 import R from 'ramda';
-import fs from 'fs-extra';
-import { InvalidBitJson } from './exceptions';
 import AbstractBitConfig from './abstract-bit-config';
 import type { Compilers, Testers } from './abstract-bit-config';
 import type ConsumerBitConfig from './consumer-bit-config';
-import type { PathOsBased } from '../../utils/path';
+import type { PathOsBasedAbsolute } from '../../utils/path';
 import type Component from '../component/consumer-component';
-import { DEFAULT_DEPENDENCIES } from '../../constants';
+import GeneralError from '../../error/general-error';
 
 export type BitConfigProps = {
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
-  dependencies?: Object,
-  devDependencies?: Object,
-  compilerDependencies?: Object,
-  testerDependencies?: Object,
-  packageDependencies?: Object,
-  devPackageDependencies?: Object,
-  peerPackageDependencies?: Object,
-  extensions?: Object
+  bindingPrefix: string,
+  extensions?: Object,
+  overrides?: Object
 };
 
 export default class ComponentBitConfig extends AbstractBitConfig {
-  packageDependencies: { [string]: string };
-  devPackageDependencies: ?Object;
-  peerPackageDependencies: ?Object;
-
-  constructor({
-    compiler,
-    tester,
-    dependencies,
-    devDependencies,
-    compilerDependencies,
-    testerDependencies,
-    packageDependencies,
-    devPackageDependencies,
-    peerPackageDependencies,
-    lang,
-    bindingPrefix,
-    extensions
-  }: BitConfigProps) {
+  overrides: ?Object;
+  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: BitConfigProps) {
     super({
       compiler,
       tester,
@@ -49,25 +26,15 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       bindingPrefix,
       extensions
     });
-    this.dependencies = dependencies || DEFAULT_DEPENDENCIES;
-    this.devDependencies = devDependencies || DEFAULT_DEPENDENCIES;
-    this.compilerDependencies = compilerDependencies || DEFAULT_DEPENDENCIES;
-    this.testerDependencies = testerDependencies || DEFAULT_DEPENDENCIES;
-    this.packageDependencies = packageDependencies || {};
-    this.devPackageDependencies = devPackageDependencies || {};
-    this.peerPackageDependencies = peerPackageDependencies || {};
+    this.overrides = overrides;
     this.writeToBitJson = true; // will be changed later to work similar to consumer-bit-config
   }
 
   toPlainObject() {
     const superObject = super.toPlainObject();
     return R.merge(superObject, {
-      packageDependencies: this.getPackageDependencies()
+      overrides: this.overrides
     });
-  }
-
-  getPackageDependencies(): Object {
-    return this.packageDependencies;
   }
 
   toJson(readable: boolean = true) {
@@ -79,74 +46,107 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     if (
       typeof this.compiler !== 'object' ||
       typeof this.tester !== 'object' ||
-      (this.getDependencies() && typeof this.getDependencies() !== 'object') ||
       (this.extensions() && typeof this.extensions() !== 'object')
     ) {
-      throw new InvalidBitJson(bitJsonPath);
+      throw new GeneralError(
+        `bit.json at "${bitJsonPath}" is invalid, re-import the component with "--conf" flag to recreate it`
+      );
     }
   }
 
   static fromPlainObject(object: Object): ComponentBitConfig {
-    const { env, dependencies, packageDependencies, lang, bindingPrefix, extensions } = object;
+    const { env, lang, bindingPrefix, extensions, overrides } = object;
 
     return new ComponentBitConfig({
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
-      dependencies,
       extensions,
       lang,
       bindingPrefix,
-      packageDependencies
+      overrides
+    });
+  }
+
+  static fromComponent(component: Component) {
+    return new ComponentBitConfig({
+      version: component.version,
+      scope: component.scope,
+      lang: component.lang,
+      bindingPrefix: component.bindingPrefix,
+      compiler: component.compiler || {},
+      tester: component.tester || {}
     });
   }
 
   mergeWithComponentData(component: Component) {
-    this.bindingPrefix = component.bindingPrefix;
-    this.lang = component.lang;
+    this.bindingPrefix = this.bindingPrefix || component.bindingPrefix;
+    this.lang = this.lang || component.lang;
   }
 
   /**
    * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
    */
-  static mergeWithProto(json, protoBJ: ?ConsumerBitConfig): ComponentBitConfig {
-    const plainProtoBJ = protoBJ ? protoBJ.toPlainObject() : {};
-    delete plainProtoBJ.dependencies;
-    return ComponentBitConfig.fromPlainObject(R.merge(plainProtoBJ, json));
+  static mergeWithConsumerBitConfig(componentConfig: Object, consumerConfig: ?ConsumerBitConfig): ComponentBitConfig {
+    const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
+    return ComponentBitConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
   }
 
-  static create(json = {}, protoBJ: ConsumerBitConfig) {
-    return ComponentBitConfig.mergeWithProto(json, protoBJ);
-  }
-
-  static load(dirPath: string, protoBJ?: ConsumerBitConfig): Promise<ComponentBitConfig> {
-    return new Promise((resolve, reject) => {
+  /**
+   * component config is written by default to package.json inside "bit" property.
+   * in case "eject-conf" was running or the component was imported with "--conf" flag, the
+   * bit.json is written as well.
+   *
+   * @param {*} componentDir root component directory, needed for loading package.json file.
+   * in case a component is authored, leave this param empty to not load the project package.json
+   * @param {*} configDir dir where bit.json and other envs files are written (by eject-conf or import --conf)
+   * @param {*} consumerConfig
+   */
+  static async load(
+    componentDir: ?PathOsBasedAbsolute,
+    configDir: PathOsBasedAbsolute,
+    consumerConfig: ConsumerBitConfig
+  ): Promise<ComponentBitConfig> {
+    if (!configDir) throw new TypeError('component-bit-config.load configDir arg is empty');
+    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(configDir);
+    const packageJsonPath = componentDir ? AbstractBitConfig.composePackageJsonPath(componentDir) : null;
+    const loadBitJson = async () => {
       try {
-        const result = this.loadSync(dirPath, protoBJ);
-        return resolve(result);
+        const file = await AbstractBitConfig.loadJsonFileIfExist(bitJsonPath);
+        return file;
       } catch (e) {
-        return reject(dirPath);
+        throw new GeneralError(
+          `bit.json at "${bitJsonPath}" is not a valid JSON file, re-import the component with "--conf" flag to recreate it`
+        );
       }
-    });
-  }
-
-  static loadSync(dirPath: PathOsBased, protoBJ?: ConsumerBitConfig): ComponentBitConfig {
-    if (!dirPath) throw new TypeError('component-bit-config.loadSync missing dirPath arg');
-    let thisBJ = {};
-    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
-    if (fs.existsSync(bitJsonPath)) {
+    };
+    const loadPackageJson = async () => {
+      if (!packageJsonPath) return null;
       try {
-        thisBJ = fs.readJsonSync(bitJsonPath);
+        const file = await AbstractBitConfig.loadJsonFileIfExist(packageJsonPath);
+        return file;
       } catch (e) {
-        throw new InvalidBitJson(bitJsonPath);
+        throw new GeneralError(
+          `package.json at ${packageJsonPath} is not a valid JSON file, consider to re-import the file to re-generate the file`
+        );
       }
-    } else if (!protoBJ) {
-      throw new Error(
-        `bit-config.loadSync expects "protoBJ" to be set because component bit.json does not exist at "${dirPath}"`
-      );
-    }
-
-    const componentBitConfig = ComponentBitConfig.mergeWithProto(thisBJ, protoBJ);
+    };
+    const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
+    const bitJsonConfig = bitJsonFile || {};
+    const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
+    const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
+    // in case of conflicts, bit.json wins package.json
+    const config = Object.assign(packageJsonConfig, bitJsonConfig);
+    const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(config, consumerConfig);
     componentBitConfig.path = bitJsonPath;
     return componentBitConfig;
+  }
+
+  getAllDependenciesOverrides() {
+    if (!this.overrides) return {};
+    return Object.assign(
+      this.overrides.dependencies || {},
+      this.overrides.devDependencies || {},
+      this.overrides.peerDependencies
+    );
   }
 }

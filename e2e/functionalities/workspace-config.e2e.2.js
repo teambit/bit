@@ -10,7 +10,7 @@ describe('workspace config', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('when the config exists in both bit.json and package.json', () => {
+  describe('when the, config exists in both bit.json and package.json', () => {
     let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -59,6 +59,95 @@ describe('workspace config', function () {
         const packageJson = helper.readPackageJson();
         expect(packageJson.bit.env).to.have.property('compiler');
         expect(packageJson.bit.env.compiler).to.equal(`${helper.remoteScope}/bar/foo@0.0.1`);
+      });
+    });
+  });
+  describe('overrides components', () => {
+    describe('changing dependencies versions', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createFile('', 'foo.js');
+        helper.createFile('', 'bar.js', "require('./foo');");
+        helper.addComponent('foo.js');
+        helper.addComponent('bar.js');
+        helper.tagAllComponents();
+        helper.tagScope('2.0.0');
+
+        const bitJson = helper.readBitJson();
+        bitJson.overrides = {
+          bar: {
+            dependencies: {
+              foo: '0.0.1'
+            }
+          }
+        };
+        helper.writeBitJson(bitJson);
+      });
+      it('bit diff should show the tagged dependency version vs the version from overrides', () => {
+        const diff = helper.diff('bar');
+        expect(diff).to.have.string('- [ foo@2.0.0 ]');
+        expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should save the overridden dependency version', () => {
+          const bar = helper.catComponent('bar@latest');
+          expect(bar.dependencies[0].id.version).to.equal('0.0.1');
+          expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
+        });
+      });
+    });
+    describe.skip('removing dependencies', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createFile('', 'foo1.js');
+        helper.createFile('', 'foo2.js');
+        helper.createFile('', 'bar.js', "require('./foo1'); require('./foo2'); ");
+        helper.addComponent('foo1.js');
+        helper.addComponent('foo2.js');
+        helper.addComponent('bar.js');
+        helper.tagComponent('foo1');
+
+        // as an intermediate step, make sure that tagging 'bar' throws an error because the dependency
+        // foo2 was not tagged.
+        const tagBar = () => helper.tagComponent('bar');
+        expect(tagBar).to.throw();
+
+        const bitJson = helper.readBitJson();
+        bitJson.overrides = {
+          bar: {
+            dependencies: {
+              foo2: '-'
+            }
+          }
+        };
+        helper.writeBitJson(bitJson);
+      });
+      describe('tagging the component', () => {
+        let output;
+        before(() => {
+          output = helper.runWithTryCatch('bit tag bar');
+        });
+        it('should be able to tag successfully', () => {
+          expect(output).to.have.string('1 components tagged');
+        });
+        it('should remove the dependency and save the overrides data into the model', () => {
+          const bar = helper.catComponent('bar@latest');
+          expect(bar.dependencies).to.have.lengthOf(1);
+          expect(bar).to.have.property('overrides');
+          // @todo: assert the overrides data here.
+        });
+        describe('importing the component', () => {
+          before(() => {
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('bar');
+          });
+          it('should write the overrides data into the package.json of the component', () => {});
+        });
       });
     });
   });

@@ -110,7 +110,7 @@ export default class ComponentLoader {
     const loadDependencies = async () => {
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(bitDir, this.cacheResolvedDependencies);
-      await updateDependenciesVersions(this.consumer, component);
+      updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
     return component;

@@ -942,22 +942,6 @@ describe('bit import', function () {
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
     });
-    describe('change the dependency version in bit.json', () => {
-      before(() => {
-        helper.getClonedLocalScope(clonedLocalScope);
-        helper.importComponent('bar/foo --conf');
-        const bitJsonPath = path.join(helper.localScopePath, 'components/bar/foo/bit.json');
-        const bitJson = helper.readBitJson(bitJsonPath);
-        bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.2';
-        helper.writeBitJson(bitJson, bitJsonPath);
-      });
-      it('bit show should display the dependency version according to bit.json', () => {
-        const output = helper.showComponentParsed('bar/foo -c');
-        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.remoteScope}/utils/is-string@0.0.2`
-        );
-      });
-    });
     describe('when dist is set to a non-default directory', () => {
       before(() => {
         helper.reInitLocalScope();
@@ -1442,7 +1426,7 @@ console.log(barFoo.default());`;
         helper.importComponent('bar/foo --conf');
       });
       it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo/bit.json'));
+        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('compiler');
         expect(bitJson.env.compiler).to.equal(`${helper.envScope}/compilers/babel@0.0.1`);

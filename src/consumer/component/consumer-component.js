@@ -81,7 +81,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
-  bitJson?: ComponentBitConfig,
+  bitJson: ?ComponentBitConfig,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   compilerDependencies?: Dependency[],
@@ -985,18 +985,12 @@ export default class Component {
     const consumerBitConfig: ConsumerBitConfig = consumer.bitConfig;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
-    let configDir = consumer.getPath();
     const componentDir = componentMap.getComponentDir();
-    configDir = componentDir ? path.join(configDir, componentDir) : configDir;
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
-    let packageDependencies;
-    let devPackageDependencies;
-    let peerPackageDependencies;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
       const filesToDelete = [];
-      const origin = componentMap.origin;
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
@@ -1024,6 +1018,7 @@ export default class Component {
     };
 
     if (!fs.existsSync(bitDir)) throw new ComponentNotFoundInPath(bitDir);
+    let configDir = componentDir ? path.join(consumerPath, componentDir) : consumerPath;
     if (componentMap.configDir) {
       await componentMap.deleteConfigDirIfNotExists();
       const resolvedBaseConfigDir = componentMap.getBaseConfigDir();
@@ -1035,21 +1030,14 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentBitConfig: ComponentBitConfig | typeof undefined;
-    let componentBitConfigFileExist = false;
-    let rawComponentBitConfig;
+    let componentBitConfig: ?ComponentBitConfig;
     if (configDir !== consumerPath) {
-      componentBitConfig = ComponentBitConfig.loadSync(configDir, consumerBitConfig);
-      packageDependencies = componentBitConfig.packageDependencies;
-      devPackageDependencies = componentBitConfig.devPackageDependencies;
-      peerPackageDependencies = componentBitConfig.peerPackageDependencies;
+      const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
+      // $FlowFixMe unclear error
+      componentBitConfig = await ComponentBitConfig.load(componentPkgJsonDir, configDir, consumerBitConfig);
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
-      componentBitConfigFileExist = await AbstractBitConfig.pathHasBitJson(configDir);
-      if (componentBitConfigFileExist) {
-        rawComponentBitConfig = componentBitConfig;
-      }
-      if (!componentBitConfigFileExist && componentFromModel) {
+      if (componentFromModel) {
         componentBitConfig.mergeWithComponentData(componentFromModel);
       }
     }
@@ -1073,7 +1061,7 @@ export default class Component {
       componentOrigin: componentMap.origin,
       componentFromModel,
       consumerBitConfig,
-      componentBitConfig: rawComponentBitConfig,
+      componentBitConfig: componentMap.configDir ? componentBitConfig : null,
       context: envsContext,
       detached: componentMap.detachedCompiler
     };
@@ -1113,15 +1101,12 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       tester,
-      bitJson: componentBitConfigFileExist ? componentBitConfig : undefined,
+      bitJson: componentBitConfig,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       loadedFromFileSystem: true,
       componentMap,
       dists,
-      packageDependencies,
-      devPackageDependencies,
-      peerPackageDependencies,
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,

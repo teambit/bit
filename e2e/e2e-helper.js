@@ -673,23 +673,18 @@ export default class Helper {
   // #endregion
 
   // #region bit.json manipulation
-  addBitJsonDependencies(bitJsonPath: string, dependencies: Object, packageDependencies: Object) {
-    const bitJson = this.readBitJson(bitJsonPath);
-    bitJson.dependencies = bitJson.dependencies || {};
-    bitJson.packageDependencies = bitJson.packageDependencies || {};
-    Object.assign(bitJson.dependencies, dependencies);
-    Object.assign(bitJson.packageDependencies, packageDependencies);
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-
-  readBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  readBitJson(bitJsonDir: string = this.localScopePath) {
+    const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
-
-  addKeyValToBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json'), key: string, val: Any) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  writeBitJson(bitJson: Object, bitJsonDir: string = this.localScopePath) {
+    const bitJsonPath = path.join(bitJsonDir, 'bit.json');
+    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+  }
+  addKeyValToBitJson(bitJsonDir: string = this.localScopePath, key: string, val: any) {
+    const bitJson = this.readBitJson(bitJsonDir);
     bitJson[key] = val;
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson, bitJsonDir);
   }
 
   getEnvNameFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
@@ -706,23 +701,23 @@ export default class Helper {
   }
 
   addKeyValToEnvPropInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonDir: string = this.localScopePath,
     propName: string,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
   ) {
-    const bitJson = this.readBitJson(bitJsonPath);
+    const bitJson = this.readBitJson(bitJsonDir);
     const envName = this.getEnvNameFromBitJsonByType(bitJson, envType);
     const propPath = ['env', envType, envName, propName];
     const prop = R.pathOr({}, propPath, bitJson);
     prop[key] = val;
     set(bitJson, propPath, prop);
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson, bitJsonDir);
   }
 
   addFileToEnvInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonPath: string = this.localScopePath,
     fileName: string,
     filePath: string,
     envType: 'compiler' | 'tester'
@@ -731,25 +726,22 @@ export default class Helper {
   }
 
   addToRawConfigOfEnvInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonPath: string = this.localScopePath,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'rawConfig', key, val, envType);
   }
-  manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  manageWorkspaces(withWorkspaces: boolean = true) {
+    const bitJson = this.readBitJson();
     bitJson.packageManager = 'yarn';
     bitJson.manageWorkspaces = withWorkspaces;
     bitJson.useWorkspaces = withWorkspaces;
     this.writeBitJson(bitJson);
   }
-  writeBitJson(bitJson: Object, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-  setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  setComponentsDirInBitJson(content: string) {
+    const bitJson = this.readBitJson();
     bitJson.componentsDefaultDirectory = content;
     this.writeBitJson(bitJson);
   }
@@ -759,10 +751,10 @@ export default class Helper {
   corruptPackageJson(packageJsonPath: string = path.join(this.localScopePath, 'package.json')) {
     fs.writeFileSync(packageJsonPath, '{ corrupted');
   }
-  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  modifyFieldInBitJson(key: string, value: string) {
     const bitJson = this.readBitJson();
     bitJson[key] = value;
-    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson);
   }
   // #endregion
 
