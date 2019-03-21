@@ -2,7 +2,7 @@ import requestify from 'requestify';
 import { BASE_WEB_DOMAIN } from '../src/constants';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_WEB_DOMAIN}` : `https://api-stg.${BASE_WEB_DOMAIN}`;
-const isAppVeyor = process.env.APPVEYOR === 'True';
+// const isAppVeyor = process.env.APPVEYOR === 'True';
 // const supportTestingOnBitsrc = !isAppVeyor;
 const supportTestingOnBitsrc = false; // temporarily disable it until the changes for the new domain are done
 const apiBaseUrl =
