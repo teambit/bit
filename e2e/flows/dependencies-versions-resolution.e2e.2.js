@@ -127,6 +127,26 @@ describe('dependencies versions resolution', function () {
         });
       });
     });
+    describe('when consumer config overrides with glob patterns', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        const bitJson = helper.readBitJson();
+        bitJson.overrides = {
+          'bar/*': {
+            dependencies: {
+              'utils/is-string': '0.0.5'
+            }
+          }
+        };
+        helper.writeBitJson(bitJson);
+      });
+      it('should use the dependency version from the consumer config', () => {
+        const output = helper.showComponentParsed('bar/foo -c');
+        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
+          `${helper.remoteScope}/utils/is-string@0.0.5`
+        );
+      });
+    });
   });
 
   describe.skip('when package.json has different version than the model', () => {

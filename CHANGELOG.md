@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- `overrides` property of workspace configuration supports component ids with wildcards
 - support changing dependencies versions by adding them to the "overrides" property of the component configuration or workspace configuration
 - obsolete the `*dependencies` properties of component bit.json.
 - write component configuration data to package.json inside `bit` property on import. write to `bit.json` if `--conf` flag was used
