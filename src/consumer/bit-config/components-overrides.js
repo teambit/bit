@@ -1,5 +1,4 @@
 // @flow
-import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
@@ -8,7 +7,7 @@ export type OverrideComponent = {
   dependencies?: Object,
   devDependencies?: Object,
   peerDependencies?: Object,
-  envs?: Object
+  env?: Object
 };
 
 export default class ComponentsOverrides {
@@ -39,6 +38,7 @@ export default class ComponentsOverrides {
         if (!acc[field]) acc[field] = {};
         if (field === 'env') {
           ['compiler', 'tester'].forEach((envField) => {
+            // $FlowFixMe we made sure before that current.env is set
             if (!current.env[envField]) return;
             acc.env[envField] = current.env[envField];
           });
