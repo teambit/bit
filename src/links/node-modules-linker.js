@@ -153,7 +153,7 @@ export default class NodeModuleLinker {
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
     component.dists.updateDistsPerConsumerBitConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
-      const possiblyDist = component.dists.calculateDistFileForAuthored(file, this.consumer);
+      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
       const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
