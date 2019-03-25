@@ -150,15 +150,15 @@ describe('workspace config', function () {
         });
       });
     });
-    describe('ignoring dependencies files', () => {
+    describe('ignoring dependencies', () => {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.createFile('', 'foo1.js');
-        helper.createFile('', 'foo2.js');
-        helper.createFile('', 'bar.js', "require('./foo1'); require('./foo2'); ");
-        helper.addComponent('foo1.js');
-        helper.addComponent('foo2.js');
-        helper.addComponent('bar.js');
+        helper.createFile('foo-dir', 'foo1.js');
+        helper.createFile('foo-dir', 'foo2.js');
+        helper.createFile('bar-dir', 'bar.js', "require('../foo-dir/foo1'); require('../foo-dir/foo2'); ");
+        helper.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
+        helper.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
+        helper.addComponent('bar-dir/bar.js', { i: 'bar' });
       });
       describe('ignoring the component file altogether', () => {
         let showBar;
@@ -167,7 +167,7 @@ describe('workspace config', function () {
           bitJson.overrides = {
             bar: {
               dependencies: {
-                'bar.js': '-'
+                'bar-dir/bar.js': '-'
               }
             }
           };
@@ -180,7 +180,7 @@ describe('workspace config', function () {
         it('should show the component file as ignored', () => {
           expect(showBar).to.have.property('ignoredDependencies');
           expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('bar.js');
+          expect(showBar.ignoredDependencies.dependencies).to.include('bar-dir/bar.js');
         });
       });
       describe('ignoring a dependency file', () => {
@@ -190,7 +190,7 @@ describe('workspace config', function () {
           bitJson.overrides = {
             bar: {
               dependencies: {
-                'foo2.js': '-'
+                'foo-dir/foo2.js': '-'
               }
             }
           };
@@ -199,12 +199,84 @@ describe('workspace config', function () {
         });
         it('should not add the removed dependency to the component', () => {
           expect(showBar.dependencies).to.have.lengthOf(1);
-          expect(showBar.dependencies[0].id).to.not.equal('foo2');
+          expect(showBar.dependencies[0].id).to.not.have.string('foo2');
         });
         it('should show the dependency file as ignored', () => {
           expect(showBar).to.have.property('ignoredDependencies');
           expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo2.js');
+          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo2.js');
+        });
+      });
+      describe('ignoring a dependencies files with a glob pattern', () => {
+        let showBar;
+        before(() => {
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'foo-dir/*': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should remove all dependencies matching the glob pattern', () => {
+          expect(showBar.dependencies).to.have.lengthOf(0);
+        });
+        it('should show the dependencies files as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo2.js');
+          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo1.js');
+        });
+      });
+      describe('ignoring a dependency component', () => {
+        let showBar;
+        before(() => {
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'utils/foo/foo1': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should not add the removed dependency to the component', () => {
+          expect(showBar.dependencies).to.have.lengthOf(1);
+          expect(showBar.dependencies[0].id).to.not.equal('foo1');
+        });
+        it('should show the dependency component as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
+        });
+      });
+      describe('ignoring a dependencies components by wildcards', () => {
+        let showBar;
+        before(() => {
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'utils/foo/*': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should not add the removed dependencies to the component', () => {
+          expect(showBar.dependencies).to.have.lengthOf(0);
+        });
+        it('should show the dependencies component as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
+          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo2');
         });
       });
     });

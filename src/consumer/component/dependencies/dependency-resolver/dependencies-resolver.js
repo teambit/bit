@@ -2,6 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
+import minimatch from 'minimatch';
 import { COMPONENT_ORIGINS, IGNORE_DEPENDENCY } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -19,6 +20,8 @@ import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
+import hasWildcard from '../../../../utils/string/has-wildcard';
+import isBitIdMatchByWildcards from '../../../../utils/bit/is-bit-id-match-by-wildcards';
 
 type AllDependencies = {
   dependencies: Dependency[],
@@ -201,12 +204,12 @@ export default class DependencyResolver {
   }
 
   shouldIgnoreFile(file: string, fileType: FileType): boolean {
-    const shouldIgnoreByRegex = (patterns: string[]) => {
-      return patterns.some(pattern => new RegExp(pattern).test(file));
+    const shouldIgnoreByGlobMatch = (patterns: string[]) => {
+      return patterns.some(pattern => minimatch(file, pattern));
     };
     if (fileType.isTestFile) {
       const ignoreDev = this.getIgnoredDevDependencies();
-      const ignore = shouldIgnoreByRegex(ignoreDev);
+      const ignore = shouldIgnoreByGlobMatch(ignoreDev);
       if (ignore) {
         this.ignoredDependencies.devDependencies
           ? this.ignoredDependencies.devDependencies.push(file)
@@ -215,11 +218,41 @@ export default class DependencyResolver {
       return ignore;
     }
     const ignoreProd = this.getIgnoredDependencies();
-    const ignore = shouldIgnoreByRegex(ignoreProd);
+    const ignore = shouldIgnoreByGlobMatch(ignoreProd);
     if (ignore) {
       this.ignoredDependencies.dependencies
         ? this.ignoredDependencies.dependencies.push(file)
         : (this.ignoredDependencies.dependencies = [file]);
+    }
+    return ignore;
+  }
+
+  shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
+    const componentIdStr = componentId.toStringWithoutVersion();
+    const shouldIgnoreByPotentiallyWildcards = (ids: string[]) => {
+      return ids.some((idStr) => {
+        if (hasWildcard(idStr)) {
+          return isBitIdMatchByWildcards(componentId, idStr);
+        }
+        return componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr;
+      });
+    };
+    if (fileType.isTestFile) {
+      const ignoreDev = this.getIgnoredDevDependencies();
+      const ignore = shouldIgnoreByPotentiallyWildcards(ignoreDev);
+      if (ignore) {
+        this.ignoredDependencies.devDependencies
+          ? this.ignoredDependencies.devDependencies.push(componentIdStr)
+          : (this.ignoredDependencies.devDependencies = [componentIdStr]);
+      }
+      return ignore;
+    }
+    const ignoreProd = this.getIgnoredDependencies();
+    const ignore = shouldIgnoreByPotentiallyWildcards(ignoreProd);
+    if (ignore) {
+      this.ignoredDependencies.dependencies
+        ? this.ignoredDependencies.dependencies.push(componentIdStr)
+        : (this.ignoredDependencies.dependencies = [componentIdStr]);
     }
     return ignore;
   }
@@ -446,7 +479,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       }
       return;
     }
-
+    if (this.shouldIgnoreComponent(componentId, fileType)) return;
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId)) {
