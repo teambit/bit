@@ -122,6 +122,8 @@ export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
+export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
+
 export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
 
 export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
@@ -139,6 +141,8 @@ export const SEARCH_DOMAIN = `api.${BASE_WEB_DOMAIN}`;
 export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
 
 export const DEFAULT_REGISTRY_URL = `https://node.${BASE_WEB_DOMAIN}`;
+
+export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 
