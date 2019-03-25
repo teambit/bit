@@ -7,8 +7,8 @@ import { BASE_WEB_DOMAIN } from '../src/constants';
 const supportTestingOnBitsrc = false; // temporarily disable it until the changes for the new domain are done
 const apiBaseUrl =
   process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${BASE_WEB_DOMAIN}` : `https://api.${BASE_WEB_DOMAIN}`;
-const username = process.env.testerBitDevUsername || 'tester';
-const password = process.env.testerBitDevPassword;
+const username = process.env.testerBitsrcUsername || 'tester';
+const password = process.env.testerBitsrcPassword;
 
 export { username, supportTestingOnBitsrc };
 const debugMode = !!process.env.npm_config_debug;
