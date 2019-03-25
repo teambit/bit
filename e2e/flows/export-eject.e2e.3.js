@@ -25,7 +25,7 @@ chai.use(require('chai-fs'));
       helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
-    describe('as author', () => {
+    describe.only('as author', () => {
       before(() => {
         helper.reInitLocalScope();
         helper.createComponentBarFoo();
