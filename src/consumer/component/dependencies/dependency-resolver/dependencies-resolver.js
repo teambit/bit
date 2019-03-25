@@ -2,6 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
 import minimatch from 'minimatch';
 import { COMPONENT_ORIGINS, IGNORE_DEPENDENCY } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
@@ -181,7 +182,7 @@ export default class DependencyResolver {
       if (this.shouldIgnoreFile(file, fileType)) {
         return;
       }
-      this.processMissing(file);
+      this.processMissing(file, fileType);
       this.processErrors(file);
       this.processPackages(file, fileType);
       this.processBits(file, fileType);
@@ -223,6 +224,30 @@ export default class DependencyResolver {
       this.ignoredDependencies.dependencies
         ? this.ignoredDependencies.dependencies.push(file)
         : (this.ignoredDependencies.dependencies = [file]);
+    }
+    return ignore;
+  }
+
+  shouldIgnorePackage(packageName: string, fileType: FileType): boolean {
+    const shouldIgnorePackage = (packages: string[]) => {
+      return packages.some(pkg => pkg === packageName);
+    };
+    if (fileType.isTestFile) {
+      const ignoreDev = this.getIgnoredDevDependencies();
+      const ignore = shouldIgnorePackage(ignoreDev);
+      if (ignore) {
+        this.ignoredDependencies.devDependencies
+          ? this.ignoredDependencies.devDependencies.push(packageName)
+          : (this.ignoredDependencies.devDependencies = [packageName]);
+      }
+      return ignore;
+    }
+    const ignoreProd = this.getIgnoredDependencies();
+    const ignore = shouldIgnorePackage(ignoreProd);
+    if (ignore) {
+      this.ignoredDependencies.dependencies
+        ? this.ignoredDependencies.dependencies.push(packageName)
+        : (this.ignoredDependencies.dependencies = [packageName]);
     }
     return ignore;
   }
@@ -654,16 +679,28 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     }
   }
 
-  processMissing(originFile: PathLinuxRelative) {
+  processMissing(originFile: PathLinuxRelative, fileType: FileType) {
     const missing = this.tree[originFile].missing;
     if (!missing) return;
-    if (missing.files && !R.isEmpty(missing.files)) {
+    const processMissingFiles = () => {
+      if (RA.isNilOrEmpty(missing.files)) return;
+      const absOriginFile = this.consumer.toAbsolutePath(originFile);
+      const missingFiles = missing.files.filter((missingFile) => {
+        // convert from importSource (the string inside the require/import call) to the path relative to consumer
+        const resolvedPath = path.resolve(path.dirname(absOriginFile), missingFile);
+        const relativeToConsumer = this.consumer.getPathRelativeToConsumer(resolvedPath);
+        return !this.shouldIgnoreFile(relativeToConsumer, fileType);
+      });
+      if (R.isEmpty(missingFiles)) return;
       if (this.issues.missingDependenciesOnFs[originFile]) {
-        this.issues.missingDependenciesOnFs[originFile].concat(missing.files);
-      } else this.issues.missingDependenciesOnFs[originFile] = missing.files;
-    }
-    if (missing.packages && !R.isEmpty(missing.packages)) {
-      const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missing.packages);
+        this.issues.missingDependenciesOnFs[originFile].concat(missingFiles);
+      } else this.issues.missingDependenciesOnFs[originFile] = missingFiles;
+    };
+    const processMissingPackages = () => {
+      if (RA.isNilOrEmpty(missing.packages)) return;
+      const missingPackages = missing.packages.filter(pkg => !this.shouldIgnorePackage(pkg, fileType));
+      if (R.isEmpty(missingPackages)) return;
+      const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missingPackages);
       if (customResolvedDependencies) {
         Object.keys(customResolvedDependencies).forEach((missingPackage) => {
           const componentId = customResolvedDependencies[missingPackage].toString();
@@ -672,20 +709,24 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
           } else this.issues.missingCustomModuleResolutionLinks[originFile] = [componentId];
         });
       }
-      const missingPackages = customResolvedDependencies
-        ? R.difference(missing.packages, Object.keys(customResolvedDependencies))
-        : missing.packages;
+      const missingPackagesWithoutCustomResolved = customResolvedDependencies
+        ? R.difference(missingPackages, Object.keys(customResolvedDependencies))
+        : missingPackages;
 
-      if (!R.isEmpty(missingPackages)) {
+      if (!R.isEmpty(missingPackagesWithoutCustomResolved)) {
         if (this.issues.missingPackagesDependenciesOnFs[originFile]) {
-          this.issues.missingPackagesDependenciesOnFs[originFile].concat(missing.packages);
-        } else this.issues.missingPackagesDependenciesOnFs[originFile] = missing.packages;
+          this.issues.missingPackagesDependenciesOnFs[originFile].concat(missingPackages);
+        } else this.issues.missingPackagesDependenciesOnFs[originFile] = missingPackages;
       }
-    }
-
-    if (missing.bits && !R.isEmpty(missing.bits)) {
+    };
+    const processMissingComponents = () => {
+      if (RA.isNilOrEmpty(missing.bits)) return;
       missing.bits.forEach((missingBit) => {
-        const componentId = this.consumer.getComponentIdFromNodeModulesPath(missingBit, this.component.bindingPrefix);
+        const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
+          missingBit,
+          this.component.bindingPrefix
+        );
+        if (this.shouldIgnoreComponent(componentId, fileType)) return;
         // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
         if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
           if (this.issues.missingLinks[originFile]) this.issues.missingLinks[originFile].push(componentId);
@@ -696,7 +737,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
           this.issues.missingComponents[originFile] = [componentId];
         }
       });
-    }
+    };
+    processMissingFiles();
+    processMissingPackages();
+    processMissingComponents();
   }
 
   processErrors(originFile: PathLinuxRelative) {

@@ -1,6 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -151,6 +152,7 @@ describe('workspace config', function () {
       });
     });
     describe('ignoring dependencies', () => {
+      let scopeAfterAdding;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('foo-dir', 'foo1.js');
@@ -159,6 +161,7 @@ describe('workspace config', function () {
         helper.addComponent('foo-dir/foo1.js', { i: 'utils/foo/foo1' });
         helper.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
         helper.addComponent('bar-dir/bar.js', { i: 'bar' });
+        scopeAfterAdding = helper.cloneLocalScope();
       });
       describe('ignoring the component file altogether', () => {
         let showBar;
@@ -277,6 +280,110 @@ describe('workspace config', function () {
           expect(showBar.ignoredDependencies).to.have.property('dependencies');
           expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
           expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo2');
+        });
+      });
+      describe('ignoring a missing file', () => {
+        let showBar;
+        before(() => {
+          helper.createFile(
+            'bar-dir',
+            'bar.js',
+            "require('../foo-dir/foo1'); require('../foo-dir/foo2'); require('../foo-dir/foo3')"
+          );
+
+          // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          const status = helper.status();
+          expect(status).to.have.string(statusFailureMsg);
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'foo-dir/foo3*': '-' // we don't enter the entire file foo-dir/foo3.js because the require string doesn't have the extension
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('bit status should not show the component as missing files', () => {
+          const status = helper.status();
+          expect(status).to.not.have.string(statusFailureMsg);
+        });
+        it('should show the dependency file as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo3');
+        });
+      });
+      describe('ignoring a missing package', () => {
+        let showBar;
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.createFile(
+            'bar-dir',
+            'bar.js',
+            "require('../foo-dir/foo1'); require('../foo-dir/foo2'); require('non-exist-package')"
+          );
+
+          // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          const status = helper.status();
+          expect(status).to.have.string(statusFailureMsg);
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'non-exist-package': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('bit status should not show the component as missing packages', () => {
+          const status = helper.status();
+          expect(status).to.not.have.string(statusFailureMsg);
+        });
+        it('should show the package as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('non-exist-package');
+        });
+      });
+      describe('ignoring a missing component', () => {
+        let showBar;
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.createFile(
+            'bar-dir',
+            'bar.js',
+            "require('../foo-dir/foo1'); require('../foo-dir/foo2'); require('@bit/bit.utils.is-string')"
+          );
+
+          // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          const status = helper.status();
+          expect(status).to.have.string(statusFailureMsg);
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'bit.utils/*': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('bit status should not show the component as missing component', () => {
+          const status = helper.status();
+          expect(status).to.not.have.string(statusFailureMsg);
+        });
+        it('should show the component as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('bit.utils/is-string');
         });
       });
     });
