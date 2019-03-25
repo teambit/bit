@@ -23,6 +23,10 @@ export function componentToPrintableForDiff(component: Component): Object {
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
   };
+  const parseIgnoredDeps = (field): string[] => {
+    if (!field) return [];
+    return field.map(str => `ignored: ${str}`);
+  };
   const {
     lang,
     compiler,
@@ -61,12 +65,14 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.dependencies = dependencies
     .toStringOfIds()
     .concat(parsePackages(packageDependencies))
+    .concat(parseIgnoredDeps(component.ignoredDependencies.dependencies))
     .filter(x => x);
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .concat(printableDevPackageDependencies)
     .concat(printableCompilerDependencies)
     .concat(printableTesterDependencies)
+    .concat(parseIgnoredDeps(component.ignoredDependencies.devDependencies))
     .filter(x => x);
   obj.peerDependencies = parsePackages(peerPackageDependencies);
 

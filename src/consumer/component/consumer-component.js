@@ -67,6 +67,7 @@ import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-no
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
 import DataToPersist from './sources/data-to-persist';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+import type { IgnoredDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -131,6 +132,7 @@ export default class Component {
   peerPackageDependencies: Object;
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
+  ignoredDependencies: IgnoredDependencies;
   _docs: ?(Doclet[]);
   files: SourceFile[];
   dists: Dists;
@@ -801,6 +803,7 @@ export default class Component {
       peerPackageDependencies: this.peerPackageDependencies,
       compilerPackageDependencies: this.compilerPackageDependencies,
       testerPackageDependencies: this.testerPackageDependencies,
+      ignoredDependencies: this.ignoredDependencies,
       files: this.files,
       docs: this.docs,
       dists: this.dists,

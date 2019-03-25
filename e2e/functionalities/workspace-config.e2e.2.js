@@ -99,7 +99,7 @@ describe('workspace config', function () {
         });
       });
     });
-    describe.skip('removing dependencies', () => {
+    describe.skip('ignoring dependencies components', () => {
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('', 'foo1.js');
@@ -128,7 +128,7 @@ describe('workspace config', function () {
       describe('tagging the component', () => {
         let output;
         before(() => {
-          output = helper.runWithTryCatch('bit tag bar');
+          // output = helper.runWithTryCatch('bit tag bar');
         });
         it('should be able to tag successfully', () => {
           expect(output).to.have.string('1 components tagged');
@@ -147,6 +147,64 @@ describe('workspace config', function () {
             helper.importComponent('bar');
           });
           it('should write the overrides data into the package.json of the component', () => {});
+        });
+      });
+    });
+    describe('ignoring dependencies files', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createFile('', 'foo1.js');
+        helper.createFile('', 'foo2.js');
+        helper.createFile('', 'bar.js', "require('./foo1'); require('./foo2'); ");
+        helper.addComponent('foo1.js');
+        helper.addComponent('foo2.js');
+        helper.addComponent('bar.js');
+      });
+      describe('ignoring the component file altogether', () => {
+        let showBar;
+        before(() => {
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'bar.js': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should not add any dependency to the component', () => {
+          expect(showBar.dependencies).to.have.lengthOf(0);
+        });
+        it('should show the component file as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('bar.js');
+        });
+      });
+      describe('ignoring a dependency file', () => {
+        let showBar;
+        before(() => {
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'foo2.js': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should not add the removed dependency to the component', () => {
+          expect(showBar.dependencies).to.have.lengthOf(1);
+          expect(showBar.dependencies[0].id).to.not.equal('foo2');
+        });
+        it('should show the dependency file as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('foo2.js');
         });
       });
     });

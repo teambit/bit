@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
-import { COMPONENT_ORIGINS } from '../../../../constants';
+import { COMPONENT_ORIGINS, IGNORE_DEPENDENCY } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
@@ -40,6 +40,8 @@ type FileType = {
   isTesterFile: boolean
 };
 
+export type IgnoredDependencies = { dependencies?: string[], devDependencies?: string[], peerDependencies?: string[] };
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -54,6 +56,9 @@ export default class DependencyResolver {
   processedFiles: string[];
   compilerFiles: PathLinux[];
   testerFiles: PathLinux[];
+  overriddenDependencies: { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
+  manuallyAddedDependencies: { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
+  ignoredDependencies: IgnoredDependencies = {};
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -125,6 +130,8 @@ export default class DependencyResolver {
     };
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependenciesTree();
+    this.overriddenDependencies =
+      this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId) || {};
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
@@ -145,6 +152,7 @@ export default class DependencyResolver {
     );
     this.component.peerPackageDependencies = findPeerDependencies(this.consumerPath, this.component);
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
+    this.component.ignoredDependencies = this.ignoredDependencies;
 
     return this.component;
   }
@@ -166,10 +174,9 @@ export default class DependencyResolver {
         isCompilerFile: R.contains(file, this.compilerFiles),
         isTesterFile: R.contains(file, this.testerFiles)
       };
-      if (!this.tree[file]) {
-        throw new Error(
-          `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
-        );
+      this.throwForNonExistFile(file);
+      if (this.shouldIgnoreFile(file, fileType)) {
+        return;
       }
       this.processMissing(file);
       this.processErrors(file);
@@ -182,7 +189,46 @@ export default class DependencyResolver {
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
-    // this.overrideFromBitConfig();
+    this.overrideFromBitConfig();
+  }
+
+  throwForNonExistFile(file: string) {
+    if (!this.tree[file]) {
+      throw new Error(
+        `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
+      );
+    }
+  }
+
+  shouldIgnoreFile(file: string, fileType: FileType): boolean {
+    const shouldIgnoreByRegex = (patterns: string[]) => {
+      return patterns.some(pattern => new RegExp(pattern).test(file));
+    };
+    if (fileType.isTestFile) {
+      const ignoreDev = this.getIgnoredDevDependencies();
+      const ignore = shouldIgnoreByRegex(ignoreDev);
+      if (ignore) {
+        this.ignoredDependencies.devDependencies
+          ? this.ignoredDependencies.devDependencies.push(file)
+          : (this.ignoredDependencies.devDependencies = [file]);
+      }
+      return ignore;
+    }
+    const ignoreProd = this.getIgnoredDependencies();
+    const ignore = shouldIgnoreByRegex(ignoreProd);
+    if (ignore) {
+      this.ignoredDependencies.dependencies
+        ? this.ignoredDependencies.dependencies.push(file)
+        : (this.ignoredDependencies.dependencies = [file]);
+    }
+    return ignore;
+  }
+
+  getIgnoredDevDependencies(): string[] {
+    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.devDependencies || {}));
+  }
+  getIgnoredDependencies(): string[] {
+    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.dependencies || {}));
   }
 
   traverseTreeForComponentId(depFile: PathLinux): ?BitId {
@@ -367,6 +413,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     const allDepsFiles = this.tree[originFile].files;
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
+      if (this.shouldIgnoreFile(depFile.file, fileType)) return;
       if (depFile.isLink) this.processLinkFile(originFile, depFile, fileType);
       else {
         this.processOneDepFile(originFile, depFile.file, depFile.importSpecifiers, undefined, fileType, depFile);
@@ -796,22 +843,26 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     this.issues = R.filter(notEmpty, this.issues);
   }
 
-  // overrideFromBitConfig() {
-  //   const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
-  //   if (!overrideData) return;
-  //   const mergeDependencies = (field: string) => {
-  //     if (!overrideData[field]) return;
-  //     Object.keys(overrideData[field]).forEach((idStr) => {
-  //       this.allDependencies[field].forEach((dependency) => {
-  //         if (dependency.id.toStringWithoutVersion() === idStr || dependency.id.toStringWithoutScopeAndVersion() === idStr) {
-  //           dependency.id = dependency.id.changeVersion(overrideData[field][idStr]);
-  //         }
-  //       });
-  //     });
-  //   };
-  //   mergeDependencies('dependencies');
-  //   mergeDependencies('devDependencies');
-  // }
+  overrideFromBitConfig() {
+    const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
+    if (!overrideData) return;
+    const mergeDependencies = (field: string) => {
+      if (!overrideData[field]) return;
+      Object.keys(overrideData[field]).forEach((idStr) => {
+        this.allDependencies[field].forEach((dependency) => {
+          if (
+            dependency.id.toStringWithoutVersion() === idStr ||
+            dependency.id.toStringWithoutScopeAndVersion() === idStr
+          ) {
+            this.allDependencies[field] = R.without(dependency, this.allDependencies[field]);
+          }
+        });
+      });
+    };
+    mergeDependencies('dependencies');
+    mergeDependencies('devDependencies');
+    mergeDependencies('peerDependencies');
+  }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
     return dependencies.find(d => d.id.isEqual(id));
