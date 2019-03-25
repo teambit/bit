@@ -253,7 +253,7 @@ jobs:
     environment:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
-      BITSRC_ENV: prod
+      BITSRC_ENV: stg
     parallelism: 1
     steps:
       -
