@@ -73,6 +73,8 @@ export type customResolvedPath = { destinationPath: PathLinux, importSource: str
 
 export type InvalidComponent = { id: BitId, error: Error };
 
+export type Overrides = { dependencies?: string[], devDependencies?: string[], peerDependencies?: string[] };
+
 export type ComponentProps = {
   name: string,
   version?: ?string,
@@ -97,6 +99,7 @@ export type ComponentProps = {
   compilerPackageDependencies?: ?Object,
   testerPackageDependencies?: ?Object,
   customResolvedPaths?: ?(customResolvedPath[]),
+  overrides: Overrides,
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -133,6 +136,7 @@ export default class Component {
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
   ignoredDependencies: IgnoredDependencies = {};
+  overrides: Overrides = {};
   _docs: ?(Doclet[]);
   files: SourceFile[];
   dists: Dists;
@@ -209,6 +213,7 @@ export default class Component {
     peerPackageDependencies,
     compilerPackageDependencies,
     testerPackageDependencies,
+    overrides,
     docs,
     dists,
     specsResults,
@@ -243,6 +248,7 @@ export default class Component {
     this.peerPackageDependencies = peerPackageDependencies || {};
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
+    this.overrides = overrides || {};
     this._docs = docs;
     this.setDists(dists);
     this.specsResults = specsResults;
@@ -1095,6 +1101,7 @@ export default class Component {
       ...modelTesterPackageDependencies,
       ...testerDynamicPackageDependencies
     };
+    const overrides = consumerBitConfig.componentsOverrides.getOverrideComponentData(id);
 
     return new Component({
       name: id.name,
@@ -1115,7 +1122,8 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       detachedCompiler: componentMap.detachedCompiler,
-      detachedTester: componentMap.detachedTester
+      detachedTester: componentMap.detachedTester,
+      overrides
     });
   }
 }

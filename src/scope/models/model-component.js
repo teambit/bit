@@ -345,6 +345,7 @@ export default class Component extends BitObject {
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
+      overrides: version.overrides, // @todo: make clone here
       deprecated: this.deprecated
     });
     if (manipulateDirData) {

@@ -100,57 +100,6 @@ describe('workspace config', function () {
         });
       });
     });
-    describe.skip('ignoring dependencies components', () => {
-      before(() => {
-        helper.setNewLocalAndRemoteScopes();
-        helper.createFile('', 'foo1.js');
-        helper.createFile('', 'foo2.js');
-        helper.createFile('', 'bar.js', "require('./foo1'); require('./foo2'); ");
-        helper.addComponent('foo1.js');
-        helper.addComponent('foo2.js');
-        helper.addComponent('bar.js');
-        helper.tagComponent('foo1');
-
-        // as an intermediate step, make sure that tagging 'bar' throws an error because the dependency
-        // foo2 was not tagged.
-        const tagBar = () => helper.tagComponent('bar');
-        expect(tagBar).to.throw();
-
-        const bitJson = helper.readBitJson();
-        bitJson.overrides = {
-          bar: {
-            dependencies: {
-              foo2: '-'
-            }
-          }
-        };
-        helper.writeBitJson(bitJson);
-      });
-      describe('tagging the component', () => {
-        let output;
-        before(() => {
-          // output = helper.runWithTryCatch('bit tag bar');
-        });
-        it('should be able to tag successfully', () => {
-          expect(output).to.have.string('1 components tagged');
-        });
-        it('should remove the dependency and save the overrides data into the model', () => {
-          const bar = helper.catComponent('bar@latest');
-          expect(bar.dependencies).to.have.lengthOf(1);
-          expect(bar).to.have.property('overrides');
-          // @todo: assert the overrides data here.
-        });
-        describe('importing the component', () => {
-          before(() => {
-            helper.exportAllComponents();
-            helper.reInitLocalScope();
-            helper.addRemoteScope();
-            helper.importComponent('bar');
-          });
-          it('should write the overrides data into the package.json of the component', () => {});
-        });
-      });
-    });
     describe('ignoring files and components dependencies', () => {
       let scopeAfterAdding;
       before(() => {
@@ -523,6 +472,62 @@ describe('workspace config', function () {
         it('should not confuse ignore of dependencies/devDependencies with ignore of peerDependencies', () => {
           expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
           expect(showBar.ignoredDependencies).to.not.have.property('devDependencies');
+        });
+      });
+    });
+    describe('ignoring dependencies components entire flow', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createFile('', 'foo1.js');
+        helper.createFile('', 'foo2.js');
+        helper.createFile('', 'bar.js', "require('./foo1'); require('./foo2'); ");
+        helper.addComponent('foo1.js');
+        helper.addComponent('foo2.js');
+        helper.addComponent('bar.js');
+        helper.tagComponent('foo1');
+
+        // as an intermediate step, make sure that tagging 'bar' throws an error because the dependency
+        // foo2 was not tagged.
+        const tagBar = () => helper.tagComponent('bar');
+        expect(tagBar).to.throw();
+
+        const bitJson = helper.readBitJson();
+        bitJson.overrides = {
+          bar: {
+            dependencies: {
+              foo2: '-'
+            }
+          }
+        };
+        helper.writeBitJson(bitJson);
+      });
+      describe('tagging the component', () => {
+        let output;
+        let catBar;
+        before(() => {
+          output = helper.runWithTryCatch('bit tag bar');
+          catBar = helper.catComponent('bar@latest');
+        });
+        it('should be able to tag successfully', () => {
+          expect(output).to.have.string('1 components tagged');
+        });
+        it('should remove the dependency from the model', () => {
+          expect(catBar.dependencies).to.have.lengthOf(1);
+        });
+        it('should save the overrides data into the model', () => {
+          expect(catBar).to.have.property('overrides');
+          expect(catBar.overrides).to.have.property('dependencies');
+          expect(catBar.overrides.dependencies).to.have.property('foo2');
+          expect(catBar.overrides.dependencies.foo2).to.equal('-');
+        });
+        describe('importing the component', () => {
+          before(() => {
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('bar');
+          });
+          it('should write the overrides data into the package.json of the component', () => {});
         });
       });
     });

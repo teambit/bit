@@ -173,4 +173,19 @@ export default function validateVersionInstance(version: Version): void {
   if (version.bindingPrefix) {
     validateType(message, version.bindingPrefix, 'bindingPrefix', 'string');
   }
+  const overridesAllowedKeys = ['dependencies', 'devDependencies', 'peerDependencies'];
+  const validateOverrides = (dependencies: Object, fieldName) => {
+    const field = `overrides.${fieldName}`;
+    validateType(message, dependencies, field, 'object');
+    Object.keys(dependencies).forEach((key) => {
+      validateType(message, key, `property name of ${field}`, 'string');
+      validateType(message, dependencies[key], `version of "${field}.${key}"`, 'string');
+    });
+  };
+  Object.keys(version.overrides).forEach((field) => {
+    if (!overridesAllowedKeys.includes(field)) {
+      throw new VersionInvalid(`${message}, the "overrides" has unidentified key "${field}"`);
+    }
+    validateOverrides(version.overrides[field], field);
+  });
 }

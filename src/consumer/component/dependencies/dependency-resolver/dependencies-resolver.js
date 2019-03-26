@@ -134,8 +134,7 @@ export default class DependencyResolver {
     };
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependenciesTree();
-    this.overriddenDependencies =
-      this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId) || {};
+    this.overriddenDependencies = this.component.overrides;
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);

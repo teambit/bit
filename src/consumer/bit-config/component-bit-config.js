@@ -74,7 +74,8 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       lang: component.lang,
       bindingPrefix: component.bindingPrefix,
       compiler: component.compiler || {},
-      tester: component.tester || {}
+      tester: component.tester || {},
+      overrides: component.overrides
     });
   }
 
