@@ -132,7 +132,7 @@ export default class Component {
   peerPackageDependencies: Object;
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
-  ignoredDependencies: IgnoredDependencies;
+  ignoredDependencies: IgnoredDependencies = {};
   _docs: ?(Doclet[]);
   files: SourceFile[];
   dists: Dists;
