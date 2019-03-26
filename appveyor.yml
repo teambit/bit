@@ -73,6 +73,7 @@ environment:
     secure: v5l1kiPQwyt21xAht4eEL97w2g4XQbMMmBk7Iu8YQ2OIHzs2SmYC4fKZ7oZvKohH
   testerBitsrcPassword:
     secure: tR01IIjMw35fBOFhTQd9jw==
+  BITSRC_ENV: stg
   matrix:
   - ruby_version: Ruby23-x64
 install:
