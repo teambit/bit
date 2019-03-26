@@ -145,6 +145,7 @@ describe('JSDoc Parser', () => {
           .that.equals('Get the y value.');
       });
       it('should recognize the fromString method as the last doclet', () => {
+        this.timeout(0);
         const doclet = doclets[doclets.length - 1];
         expect(doclet)
           .to.have.property('name')

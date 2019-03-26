@@ -13,6 +13,7 @@ describe('ComponentList', () => {
   describe('listLocalScope', () => {
     let modelComponent;
     before(() => {
+      this.timeout(0);
       modelComponent = getModelComponent();
     });
     it('should return an empty array when there are no components in the scope', async () => {
