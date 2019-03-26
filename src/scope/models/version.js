@@ -131,7 +131,7 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.detachedCompiler = props.detachedCompiler;
     this.detachedTester = props.detachedTester;
-    this.overrides = props.overrides;
+    this.overrides = props.overrides || {};
     this.validateVersion();
   }
 
