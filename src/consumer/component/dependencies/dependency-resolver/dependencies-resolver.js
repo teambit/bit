@@ -620,6 +620,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
+      if (this.shouldIgnoreComponent(componentId, fileType)) return;
       const getExistingId = (): ?BitId => {
         let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
@@ -665,7 +666,13 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const packages = this.tree[originFile].packages;
+    const getPackages = () => {
+      const packages = this.tree[originFile].packages;
+      if (RA.isNilOrEmpty(packages)) return null;
+      const shouldBeIncluded = (pkgVersion, pkgName) => !this.shouldIgnorePackage(pkgName, fileType);
+      return R.pickBy(shouldBeIncluded, packages);
+    };
+    const packages = getPackages();
     if (packages && !R.isEmpty(packages)) {
       if (fileType.isTestFile) {
         Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);

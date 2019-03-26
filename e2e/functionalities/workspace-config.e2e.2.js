@@ -386,6 +386,68 @@ describe('workspace config', function () {
           expect(showBar.ignoredDependencies.dependencies).to.include('bit.utils/is-string');
         });
       });
+      describe('ignoring an existing package', () => {
+        let showBar;
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.addNpmPackage('existing-package');
+          helper.addNpmPackage('another-existing-package');
+          helper.createFile('bar-dir', 'bar.js', "require('existing-package'); require('another-existing-package');");
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'existing-package': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should ignore the specified package but keep other packages intact', () => {
+          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(1);
+          expect(Object.keys(showBar.packageDependencies)[0]).to.equal('another-existing-package');
+        });
+        it('should show the package as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('existing-package');
+        });
+      });
+      describe('ignoring an existing component required as a package', () => {
+        let showBar;
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          helper.createFile(
+            'bar-dir',
+            'bar.js',
+            `require('@bit/${helper.remoteScope}.utils.foo.foo1'); require('../foo-dir/foo2');`
+          );
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'utils/foo/foo1': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should ignore the specified component dependency', () => {
+          expect(showBar.dependencies).to.have.lengthOf(1);
+          expect(showBar.dependencies[0].id).to.have.string('foo2');
+        });
+        it('should show the component dependency as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+        });
+      });
     });
   });
 });
