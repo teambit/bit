@@ -151,7 +151,7 @@ describe('workspace config', function () {
         });
       });
     });
-    describe('ignoring dependencies', () => {
+    describe('ignoring files and components dependencies', () => {
       let scopeAfterAdding;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
@@ -316,41 +316,6 @@ describe('workspace config', function () {
           expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo3');
         });
       });
-      describe('ignoring a missing package', () => {
-        let showBar;
-        before(() => {
-          helper.getClonedLocalScope(scopeAfterAdding);
-          helper.createFile(
-            'bar-dir',
-            'bar.js',
-            "require('../foo-dir/foo1'); require('../foo-dir/foo2'); require('non-exist-package')"
-          );
-
-          // an intermediate step, make sure bit status shows the component with an issue of a missing file
-          const status = helper.status();
-          expect(status).to.have.string(statusFailureMsg);
-
-          const bitJson = helper.readBitJson();
-          bitJson.overrides = {
-            bar: {
-              dependencies: {
-                'non-exist-package': '-'
-              }
-            }
-          };
-          helper.writeBitJson(bitJson);
-          showBar = helper.showComponentParsed('bar');
-        });
-        it('bit status should not show the component as missing packages', () => {
-          const status = helper.status();
-          expect(status).to.not.have.string(statusFailureMsg);
-        });
-        it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('non-exist-package');
-        });
-      });
       describe('ignoring a missing component', () => {
         let showBar;
         before(() => {
@@ -386,35 +351,6 @@ describe('workspace config', function () {
           expect(showBar.ignoredDependencies.dependencies).to.include('bit.utils/is-string');
         });
       });
-      describe('ignoring an existing package', () => {
-        let showBar;
-        before(() => {
-          helper.getClonedLocalScope(scopeAfterAdding);
-          helper.addNpmPackage('existing-package');
-          helper.addNpmPackage('another-existing-package');
-          helper.createFile('bar-dir', 'bar.js', "require('existing-package'); require('another-existing-package');");
-
-          const bitJson = helper.readBitJson();
-          bitJson.overrides = {
-            bar: {
-              dependencies: {
-                'existing-package': '-'
-              }
-            }
-          };
-          helper.writeBitJson(bitJson);
-          showBar = helper.showComponentParsed('bar');
-        });
-        it('should ignore the specified package but keep other packages intact', () => {
-          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(1);
-          expect(Object.keys(showBar.packageDependencies)[0]).to.equal('another-existing-package');
-        });
-        it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('existing-package');
-        });
-      });
       describe('ignoring an existing component required as a package', () => {
         let showBar;
         before(() => {
@@ -446,6 +382,147 @@ describe('workspace config', function () {
           expect(showBar).to.have.property('ignoredDependencies');
           expect(showBar.ignoredDependencies).to.have.property('dependencies');
           expect(showBar.ignoredDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+        });
+      });
+    });
+    describe('ignoring packages dependencies', () => {
+      describe('ignoring a missing package', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createFile('bar-dir', 'bar.js', "require('non-exist-package')");
+          helper.addComponent('bar-dir/bar.js', { i: 'bar' });
+
+          // an intermediate step, make sure bit status shows the component with an issue of a missing file
+          const status = helper.status();
+          expect(status).to.have.string(statusFailureMsg);
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'non-exist-package': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('bit status should not show the component as missing packages', () => {
+          const status = helper.status();
+          expect(status).to.not.have.string(statusFailureMsg);
+        });
+        it('should show the package as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('non-exist-package');
+        });
+      });
+      describe('ignoring an existing package', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addNpmPackage('existing-package');
+          helper.addNpmPackage('another-existing-package');
+          helper.createFile('bar-dir', 'bar.js', "require('existing-package'); require('another-existing-package');");
+          helper.addComponent('bar-dir/bar.js', { i: 'bar' });
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                'existing-package': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should ignore the specified package but keep other packages intact', () => {
+          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(1);
+          expect(Object.keys(showBar.packageDependencies)[0]).to.equal('another-existing-package');
+        });
+        it('should show the package as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('existing-package');
+        });
+      });
+      describe('ignoring an existing devDependency package', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addNpmPackage('existing-package');
+          helper.addNpmPackage('another-existing-package');
+          helper.createFile('bar-dir', 'bar.js');
+          helper.createFile(
+            'bar-dir',
+            'bar.spec.js',
+            "require('existing-package'); require('another-existing-package');"
+          );
+          helper.addComponent('bar-dir/*', { i: 'bar', m: 'bar-dir/bar.js', t: 'bar-dir/bar.spec.js' });
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              devDependencies: {
+                'existing-package': '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should ignore the specified package but keep other packages intact', () => {
+          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(0);
+          expect(Object.keys(showBar.devPackageDependencies)).to.have.lengthOf(1);
+          expect(Object.keys(showBar.devPackageDependencies)[0]).to.equal('another-existing-package');
+        });
+        it('should show the package as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('devDependencies');
+          expect(showBar.ignoredDependencies.devDependencies).to.include('existing-package');
+        });
+        it('should not confuse ignore of dependencies with ignore of devDependencies', () => {
+          expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
+        });
+      });
+      describe('ignoring an existing peerDependency package', () => {
+        let showBar;
+        before(() => {
+          // keep in mind that the 'chai' dependency is a regular package dependency, which
+          // also saved as a peerDependency
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addNpmPackage('chai', '2.4');
+          helper.createPackageJson({ peerDependencies: { chai: '>= 2.1.2 < 5' } });
+          helper.addComponentBarFoo();
+
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            'bar/foo': {
+              peerDependencies: {
+                chai: '-'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+          showBar = helper.showComponentParsed('bar/foo');
+        });
+        it('should ignore the specified peer package', () => {
+          expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(0);
+        });
+        it('should keep the dependency package intact', () => {
+          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(1);
+        });
+        it('should show the package as ignored', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('peerDependencies');
+          expect(showBar.ignoredDependencies.peerDependencies).to.include('chai');
+        });
+        it('should not confuse ignore of dependencies/devDependencies with ignore of peerDependencies', () => {
+          expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
+          expect(showBar.ignoredDependencies).to.not.have.property('devDependencies');
         });
       });
     });

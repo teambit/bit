@@ -154,7 +154,7 @@ export default class DependencyResolver {
       this.allPackagesDependencies.testerPackageDependencies,
       this.component.testerPackageDependencies
     );
-    this.component.peerPackageDependencies = findPeerDependencies(this.consumerPath, this.component);
+    this.component.peerPackageDependencies = this.findPeerDependencies();
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.ignoredDependencies = this.ignoredDependencies;
 
@@ -193,7 +193,7 @@ export default class DependencyResolver {
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
-    this.overrideFromBitConfig();
+    // this.overrideFromBitConfig();
   }
 
   throwForNonExistFile(file: string) {
@@ -252,6 +252,20 @@ export default class DependencyResolver {
     return ignore;
   }
 
+  shouldIgnorePeerPackage(packageName: string): boolean {
+    const shouldIgnorePackage = (packages: string[]) => {
+      return packages.some(pkg => pkg === packageName);
+    };
+    const ignorePeer = this.getIgnoredPeerDependencies();
+    const ignore = shouldIgnorePackage(ignorePeer);
+    if (ignore) {
+      this.ignoredDependencies.peerDependencies
+        ? this.ignoredDependencies.peerDependencies.push(packageName)
+        : (this.ignoredDependencies.peerDependencies = [packageName]);
+    }
+    return ignore;
+  }
+
   shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
     const componentIdStr = componentId.toStringWithoutVersion();
     const shouldIgnoreByPotentiallyWildcards = (ids: string[]) => {
@@ -282,11 +296,14 @@ export default class DependencyResolver {
     return ignore;
   }
 
+  getIgnoredDependencies(): string[] {
+    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.dependencies || {}));
+  }
   getIgnoredDevDependencies(): string[] {
     return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.devDependencies || {}));
   }
-  getIgnoredDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.dependencies || {}));
+  getIgnoredPeerDependencies(): string[] {
+    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.peerDependencies || {}));
   }
 
   traverseTreeForComponentId(depFile: PathLinux): ?BitId {
@@ -927,26 +944,26 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     this.issues = R.filter(notEmpty, this.issues);
   }
 
-  overrideFromBitConfig() {
-    const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
-    if (!overrideData) return;
-    const mergeDependencies = (field: string) => {
-      if (!overrideData[field]) return;
-      Object.keys(overrideData[field]).forEach((idStr) => {
-        this.allDependencies[field].forEach((dependency) => {
-          if (
-            dependency.id.toStringWithoutVersion() === idStr ||
-            dependency.id.toStringWithoutScopeAndVersion() === idStr
-          ) {
-            this.allDependencies[field] = R.without(dependency, this.allDependencies[field]);
-          }
-        });
-      });
-    };
-    mergeDependencies('dependencies');
-    mergeDependencies('devDependencies');
-    mergeDependencies('peerDependencies');
-  }
+  // overrideFromBitConfig() {
+  //   const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
+  //   if (!overrideData) return;
+  //   const mergeDependencies = (field: string) => {
+  //     if (!overrideData[field]) return;
+  //     Object.keys(overrideData[field]).forEach((idStr) => {
+  //       this.allDependencies[field].forEach((dependency) => {
+  //         if (
+  //           dependency.id.toStringWithoutVersion() === idStr ||
+  //           dependency.id.toStringWithoutScopeAndVersion() === idStr
+  //         ) {
+  //           this.allDependencies[field] = R.without(dependency, this.allDependencies[field]);
+  //         }
+  //       });
+  //     });
+  //   };
+  //   mergeDependencies('dependencies');
+  //   mergeDependencies('devDependencies');
+  //   mergeDependencies('peerDependencies');
+  // }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
     return dependencies.find(d => d.id.isEqual(id));
@@ -972,51 +989,53 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     };
     return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
   }
-}
+  /**
+   * For author, the peer-dependencies are set in the root package.json
+   * For imported components, we don't want to change the peerDependencies of the author, unless
+   * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
+   * the package.json in the component's directory.
+   */
+  findPeerDependencies(): Object {
+    const componentMap = this.component.componentMap;
+    const getPeerDependencies = (): Object => {
+      const componentRoot =
+        componentMap.origin === COMPONENT_ORIGINS.AUTHORED ? this.consumerPath : componentMap.rootDir;
+      const packageJsonLocation = path.join(componentRoot, 'package.json');
+      if (fs.existsSync(packageJsonLocation)) {
+        try {
+          const packageJson = fs.readJsonSync(packageJsonLocation);
+          if (packageJson.peerDependencies) return packageJson.peerDependencies;
+        } catch (err) {
+          logger.errorAndAddBreadCrumb(
+            'dependency-resolver.findPeerDependencies',
+            'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
+            { packageJsonLocation, message: err.message }
+          );
+        }
+      }
+      if (this.component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+        return this.component.componentFromModel.peerPackageDependencies;
+      }
+      return {};
+    };
+    const projectPeerDependencies = getPeerDependencies();
+    const peerPackages = {};
+    if (R.isEmpty(projectPeerDependencies)) return {};
 
-// @todo: move to bit-javascript
-/**
- * For author, the peer-dependencies are set in the root package.json
- * For imported components, we don't want to change the peerDependencies of the author, unless
- * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
- * the package.json in the component's directory.
- */
-function findPeerDependencies(consumerPath: string, component: Component): Object {
-  const componentMap = component.componentMap;
-  const getPeerDependencies = (): Object => {
-    const componentRoot = componentMap.origin === COMPONENT_ORIGINS.AUTHORED ? consumerPath : componentMap.rootDir;
-    const packageJsonLocation = path.join(componentRoot, 'package.json');
-    if (fs.existsSync(packageJsonLocation)) {
-      try {
-        const packageJson = fs.readJsonSync(packageJsonLocation);
-        if (packageJson.peerDependencies) return packageJson.peerDependencies;
-      } catch (err) {
-        logger.errorAndAddBreadCrumb(
-          'dependency-resolver.findPeerDependencies',
-          'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
-          { packageJsonLocation, message: err.message }
-        );
-      }
-    }
-    if (component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      return component.componentFromModel.peerPackageDependencies;
-    }
-    return {};
-  };
-  const projectPeerDependencies = getPeerDependencies();
-  const peerPackages = {};
-  if (R.isEmpty(projectPeerDependencies)) return {};
-  // check whether the peer-dependencies was actually require in the code. if so, remove it from
-  // the packages/dev-packages and add it as a peer-package.
-  Object.keys(projectPeerDependencies).forEach((pkg) => {
-    ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
-      if (Object.keys(component[field]).includes(pkg)) {
-        delete component[field][pkg];
-        peerPackages[pkg] = projectPeerDependencies[pkg];
-      }
+    // check whether the peer-dependencies was actually require in the code. if so, remove it from
+    // the packages/dev-packages and add it as a peer-package.
+    // if it was not required in the code, don't add it to the peerPackages
+    Object.keys(projectPeerDependencies).forEach((pkg) => {
+      if (this.shouldIgnorePeerPackage(pkg)) return;
+      ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
+        if (Object.keys(this.component[field]).includes(pkg)) {
+          delete this.component[field][pkg];
+          peerPackages[pkg] = projectPeerDependencies[pkg];
+        }
+      });
     });
-  });
-  return peerPackages;
+    return peerPackages;
+  }
 }
 
 /**

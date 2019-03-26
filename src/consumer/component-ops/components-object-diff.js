@@ -37,7 +37,6 @@ export function componentToPrintableForDiff(component: Component): Object {
     testerDependencies,
     packageDependencies,
     devPackageDependencies,
-    peerPackageDependencies,
     compilerPackageDependencies,
     testerPackageDependencies,
     files,
@@ -54,6 +53,10 @@ export function componentToPrintableForDiff(component: Component): Object {
   ];
   const printableCompilerDependencies = compilerDependencies.toStringOfIds();
   const printableTesterDependencies = testerDependencies.toStringOfIds();
+  const peerPackageDependencies = []
+    .concat(parsePackages(component.peerPackageDependencies))
+    .concat(parseIgnoredDeps(component.ignoredDependencies.peerDependencies))
+    .filter(x => x);
 
   obj.id = component.id.toStringWithoutScope();
   obj.compiler = compiler ? compiler.name : null;
@@ -74,7 +77,7 @@ export function componentToPrintableForDiff(component: Component): Object {
     .concat(printableTesterDependencies)
     .concat(parseIgnoredDeps(component.ignoredDependencies.devDependencies))
     .filter(x => x);
-  obj.peerDependencies = parsePackages(peerPackageDependencies);
+  obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
 
   obj.files =
     files && !R.isEmpty(files) && !R.isNil(files)
