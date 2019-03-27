@@ -1,11 +1,11 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
-import { statusFailureMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
-describe('workspace config', function () {
+describe.only('workspace config', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -521,13 +521,37 @@ describe('workspace config', function () {
           expect(catBar.overrides.dependencies.foo2).to.equal('-');
         });
         describe('importing the component', () => {
+          const barRoot = path.join(helper.localScopePath, 'components/bar/');
           before(() => {
             helper.exportAllComponents();
             helper.reInitLocalScope();
             helper.addRemoteScope();
             helper.importComponent('bar');
           });
-          it('should write the overrides data into the package.json of the component', () => {});
+          it('should write the overrides data into the package.json of the component', () => {
+            const packageJson = helper.readPackageJson(barRoot);
+            expect(packageJson).to.have.property('bit');
+            expect(packageJson.bit).to.have.property('overrides');
+            expect(packageJson.bit.overrides).to.have.property('dependencies');
+            expect(packageJson.bit.overrides.dependencies).to.have.property('foo2');
+            expect(packageJson.bit.overrides.dependencies.foo2).to.equal('-');
+          });
+          it('bit status should not show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          });
+          describe.skip('changing the imported component to not ignore the dependency', () => {
+            before(() => {
+              const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/'));
+              packageJson.bit.overrides.dependencies = {};
+              helper.writePackageJson(barRoot);
+            });
+            it('bit status should show the component as modified', () => {
+              const status = helper.status();
+              expect(status).to.not.have.string(statusWorkspaceIsCleanMsg);
+            });
+            it('should show the previously ignored dependency as a regular dependency', () => {});
+          });
         });
       });
     });

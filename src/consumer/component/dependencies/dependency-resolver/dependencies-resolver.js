@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import minimatch from 'minimatch';
-import { COMPONENT_ORIGINS, IGNORE_DEPENDENCY } from '../../../../constants';
+import { COMPONENT_ORIGINS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
@@ -134,7 +134,6 @@ export default class DependencyResolver {
     };
     // find the dependencies (internal files and packages) through automatic dependency resolution
     const dependenciesTree = await getDependenciesTree();
-    this.overriddenDependencies = this.component.overrides;
     // we have the files dependencies, these files should be components that are registered in bit.map. Otherwise,
     // they are referred as "untracked components" and the user should add them later on in order to tag
     this.setTree(dependenciesTree.tree);
@@ -192,7 +191,6 @@ export default class DependencyResolver {
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
-    // this.overrideFromBitConfig();
   }
 
   throwForNonExistFile(file: string) {
@@ -208,7 +206,7 @@ export default class DependencyResolver {
       return patterns.some(pattern => minimatch(file, pattern));
     };
     if (fileType.isTestFile) {
-      const ignoreDev = this.getIgnoredDevDependencies();
+      const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
       const ignore = shouldIgnoreByGlobMatch(ignoreDev);
       if (ignore) {
         this.ignoredDependencies.devDependencies
@@ -217,7 +215,7 @@ export default class DependencyResolver {
       }
       return ignore;
     }
-    const ignoreProd = this.getIgnoredDependencies();
+    const ignoreProd = this.component.overrides.getIgnoredDependencies();
     const ignore = shouldIgnoreByGlobMatch(ignoreProd);
     if (ignore) {
       this.ignoredDependencies.dependencies
@@ -232,7 +230,7 @@ export default class DependencyResolver {
       return packages.some(pkg => pkg === packageName);
     };
     if (fileType.isTestFile) {
-      const ignoreDev = this.getIgnoredDevDependencies();
+      const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
       const ignore = shouldIgnorePackage(ignoreDev);
       if (ignore) {
         this.ignoredDependencies.devDependencies
@@ -241,7 +239,7 @@ export default class DependencyResolver {
       }
       return ignore;
     }
-    const ignoreProd = this.getIgnoredDependencies();
+    const ignoreProd = this.component.overrides.getIgnoredDependencies();
     const ignore = shouldIgnorePackage(ignoreProd);
     if (ignore) {
       this.ignoredDependencies.dependencies
@@ -255,7 +253,7 @@ export default class DependencyResolver {
     const shouldIgnorePackage = (packages: string[]) => {
       return packages.some(pkg => pkg === packageName);
     };
-    const ignorePeer = this.getIgnoredPeerDependencies();
+    const ignorePeer = this.component.overrides.getIgnoredPeerDependencies();
     const ignore = shouldIgnorePackage(ignorePeer);
     if (ignore) {
       this.ignoredDependencies.peerDependencies
@@ -276,7 +274,7 @@ export default class DependencyResolver {
       });
     };
     if (fileType.isTestFile) {
-      const ignoreDev = this.getIgnoredDevDependencies();
+      const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
       const ignore = shouldIgnoreByPotentiallyWildcards(ignoreDev);
       if (ignore) {
         this.ignoredDependencies.devDependencies
@@ -285,7 +283,7 @@ export default class DependencyResolver {
       }
       return ignore;
     }
-    const ignoreProd = this.getIgnoredDependencies();
+    const ignoreProd = this.component.overrides.getIgnoredDependencies();
     const ignore = shouldIgnoreByPotentiallyWildcards(ignoreProd);
     if (ignore) {
       this.ignoredDependencies.dependencies
@@ -293,16 +291,6 @@ export default class DependencyResolver {
         : (this.ignoredDependencies.dependencies = [componentIdStr]);
     }
     return ignore;
-  }
-
-  getIgnoredDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.dependencies || {}));
-  }
-  getIgnoredDevDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.devDependencies || {}));
-  }
-  getIgnoredPeerDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overriddenDependencies.peerDependencies || {}));
   }
 
   traverseTreeForComponentId(depFile: PathLinux): ?BitId {
@@ -942,27 +930,6 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     const notEmpty = item => !R.isEmpty(item);
     this.issues = R.filter(notEmpty, this.issues);
   }
-
-  // overrideFromBitConfig() {
-  //   const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
-  //   if (!overrideData) return;
-  //   const mergeDependencies = (field: string) => {
-  //     if (!overrideData[field]) return;
-  //     Object.keys(overrideData[field]).forEach((idStr) => {
-  //       this.allDependencies[field].forEach((dependency) => {
-  //         if (
-  //           dependency.id.toStringWithoutVersion() === idStr ||
-  //           dependency.id.toStringWithoutScopeAndVersion() === idStr
-  //         ) {
-  //           this.allDependencies[field] = R.without(dependency, this.allDependencies[field]);
-  //         }
-  //       });
-  //     });
-  //   };
-  //   mergeDependencies('dependencies');
-  //   mergeDependencies('devDependencies');
-  //   mergeDependencies('peerDependencies');
-  // }
 
   getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
     return dependencies.find(d => d.id.isEqual(id));

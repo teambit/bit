@@ -16,7 +16,7 @@ import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidBitConfigPropPath from './exceptions/invalid-bit-config-prop-path';
-import ComponentsOverrides from './components-overrides';
+import ConsumerOverrides from './consumer-overrides';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -40,7 +40,7 @@ type consumerBitConfigProps = {
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
   resolveModules?: ResolveModulesConfig,
-  componentsOverrides?: ComponentsOverrides
+  overrides?: ConsumerOverrides
 };
 
 export default class ConsumerBitConfig extends AbstractBitConfig {
@@ -58,7 +58,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ?ResolveModulesConfig;
-  componentsOverrides: ?ComponentsOverrides;
+  overrides: ?ConsumerOverrides;
 
   constructor({
     compiler,
@@ -78,7 +78,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
-    componentsOverrides
+    overrides
   }: consumerBitConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
@@ -93,7 +93,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     this.useWorkspaces = useWorkspaces;
     this.manageWorkspaces = manageWorkspaces;
     this.resolveModules = resolveModules;
-    this.componentsOverrides = componentsOverrides;
+    this.overrides = overrides;
   }
 
   toPlainObject() {
@@ -202,7 +202,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       resolveModules,
       distTarget: R.propOr(undefined, 'target', dist),
       distEntry: R.propOr(undefined, 'entry', dist),
-      componentsOverrides: ComponentsOverrides.load(overrides)
+      overrides: ConsumerOverrides.load(overrides)
     });
   }
 

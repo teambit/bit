@@ -3,7 +3,8 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, bufferFrom, getStringifyArgs, sha1, sortObject } from '../../utils';
-import type ConsumerComponent, { customResolvedPath, Overrides } from '../../consumer/component';
+import type { customResolvedPath } from '../../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
@@ -18,6 +19,7 @@ import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
+import type { ComponentOverridesData } from '../../consumer/bit-config/component-overrides';
 
 type CiProps = {
   error: Object,
@@ -68,7 +70,7 @@ export type VersionProps = {
   testerPackageDependencies?: { [string]: string },
   bindingPrefix?: string,
   customResolvedPaths?: customResolvedPath[],
-  overrides: Overrides
+  overrides: ComponentOverridesData
 };
 
 /**
@@ -101,7 +103,7 @@ export default class Version extends BitObject {
   testerPackageDependencies: { [string]: string };
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
-  overrides: Overrides;
+  overrides: ComponentOverridesData;
 
   constructor(props: VersionProps) {
     super();
@@ -578,7 +580,6 @@ export default class Version extends BitObject {
         component.detachedTester = detachedTester;
       }
     }
-
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -616,7 +617,7 @@ export default class Version extends BitObject {
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       customResolvedPaths: component.customResolvedPaths,
-      overrides: component.overrides
+      overrides: component.overrides.componentOverridesData
     });
   }
 

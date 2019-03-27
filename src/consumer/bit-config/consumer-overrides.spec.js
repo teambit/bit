@@ -1,6 +1,6 @@
 import { expect } from 'chai';
-import ComponentsOverrides from './components-overrides';
 import BitId from '../../bit-id/bit-id';
+import ConsumerOverrides from './consumer-overrides';
 
 describe('componentsOverrides', () => {
   describe('getOverrideComponentData', () => {
@@ -9,7 +9,7 @@ describe('componentsOverrides', () => {
         'src/*': { env: { compiler: 'bit.envs/compiler/babel@7.0.0', tester: 'bit.envs/tester/jest@0.0.1' } },
         'src/utils/javascript/is-string': { env: { compiler: 'bit.envs/compiler/babel@0.0.20' } }
       };
-      const componentsOverrides = new ComponentsOverrides(overridesFixture);
+      const componentsOverrides = new ConsumerOverrides(overridesFixture);
       const id = new BitId({ name: 'src/utils/javascript/is-string' });
       const result = componentsOverrides.getOverrideComponentData(id);
       expect(result.env)
@@ -26,7 +26,7 @@ describe('componentsOverrides', () => {
         'src/utils/*': { env: { compiler: 'bit.envs/compiler/babel@0.0.20' } },
         'utils/*': { env: { compiler: 'bit.envs/compiler/somethingelse@0.0.20' } }
       };
-      const componentsOverrides = new ComponentsOverrides(overridesFixture);
+      const componentsOverrides = new ConsumerOverrides(overridesFixture);
       const id = new BitId({ name: 'src/utils/javascript/is-string' });
       const result = componentsOverrides.getOverrideComponentData(id);
       expect(result.env)
@@ -44,7 +44,7 @@ describe('componentsOverrides', () => {
         'src/utils/javascript/is-string': { dependencies: { foo: '0.0.5' } },
         'utils/*': { dependencies: { 'something/else': '0.0.1' } }
       };
-      const componentsOverrides = new ComponentsOverrides(overridesFixture);
+      const componentsOverrides = new ConsumerOverrides(overridesFixture);
       const id = new BitId({ name: 'src/utils/javascript/is-string' });
       const result = componentsOverrides.getOverrideComponentData(id);
       expect(result)

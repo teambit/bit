@@ -6,6 +6,7 @@ import type ConsumerBitConfig from './consumer-bit-config';
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
+import type { ComponentOverridesData } from './component-overrides';
 
 export type BitConfigProps = {
   lang?: string,
@@ -13,11 +14,12 @@ export type BitConfigProps = {
   tester?: string | Testers,
   bindingPrefix: string,
   extensions?: Object,
-  overrides?: Object
+  overrides?: ComponentOverridesData
 };
 
 export default class ComponentBitConfig extends AbstractBitConfig {
-  overrides: ?Object;
+  overrides: ?ComponentOverridesData;
+  componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: BitConfigProps) {
     super({
       compiler,
@@ -75,7 +77,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       bindingPrefix: component.bindingPrefix,
       compiler: component.compiler || {},
       tester: component.tester || {},
-      overrides: component.overrides
+      overrides: component.overrides.componentOverridesData
     });
   }
 
@@ -139,15 +141,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
     const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(config, consumerConfig);
     componentBitConfig.path = bitJsonPath;
+    componentBitConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
     return componentBitConfig;
-  }
-
-  getAllDependenciesOverrides() {
-    if (!this.overrides) return {};
-    return Object.assign(
-      this.overrides.dependencies || {},
-      this.overrides.devDependencies || {},
-      this.overrides.peerDependencies
-    );
   }
 }

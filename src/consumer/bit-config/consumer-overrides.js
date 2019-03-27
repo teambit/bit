@@ -3,22 +3,24 @@ import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 
-export type OverrideComponent = {
+export type ConsumerOverridesOfComponent = {
   dependencies?: Object,
   devDependencies?: Object,
   peerDependencies?: Object,
   env?: Object
 };
 
-export default class ComponentsOverrides {
-  overrides: { [string]: OverrideComponent };
-  constructor(overrides: { [string]: OverrideComponent }) {
+export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
+
+export default class ConsumerOverrides {
+  overrides: ConsumerOverridesConfig;
+  constructor(overrides: ConsumerOverridesConfig) {
     this.overrides = overrides;
   }
   static load(overrides: Object = {}) {
-    return new ComponentsOverrides(overrides);
+    return new ConsumerOverrides(overrides);
   }
-  getOverrideComponentData(bitId: BitId): ?OverrideComponent {
+  getOverrideComponentData(bitId: BitId): ?ConsumerOverridesOfComponent {
     const exactMatch = Object.keys(this.overrides).find(
       idStr => bitId.toStringWithoutVersion() === idStr || bitId.toStringWithoutScopeAndVersion() === idStr
     );
@@ -48,15 +50,6 @@ export default class ComponentsOverrides {
       });
       return acc;
     }, {});
-  }
-  getAllDependenciesOverridesOfComponents(bitId: BitId): Object {
-    const componentData = this.getOverrideComponentData(bitId);
-    if (!componentData) return {};
-    return Object.assign(
-      componentData.dependencies || {},
-      componentData.devDependencies || {},
-      componentData.peerDependencies
-    );
   }
   isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
