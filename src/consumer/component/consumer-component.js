@@ -808,6 +808,7 @@ export default class Component {
       compilerPackageDependencies: this.compilerPackageDependencies,
       testerPackageDependencies: this.testerPackageDependencies,
       ignoredDependencies: this.ignoredDependencies,
+      overrides: this.overrides.componentOverridesData,
       files: this.files,
       docs: this.docs,
       dists: this.dists,

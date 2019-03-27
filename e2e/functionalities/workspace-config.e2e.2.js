@@ -5,7 +5,7 @@ import { statusFailureMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/comma
 
 chai.use(require('chai-fs'));
 
-describe.only('workspace config', function () {
+describe('workspace config', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -540,17 +540,30 @@ describe.only('workspace config', function () {
             const status = helper.status();
             expect(status).to.have.string(statusWorkspaceIsCleanMsg);
           });
-          describe.skip('changing the imported component to not ignore the dependency', () => {
+          it('bit diff should not show any diff', () => {
+            const diff = helper.diff('bar');
+            expect(diff).to.have.string('no diff');
+          });
+          describe('changing the imported component to not ignore the dependency', () => {
             before(() => {
               const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/'));
               packageJson.bit.overrides.dependencies = {};
-              helper.writePackageJson(barRoot);
+              helper.writePackageJson(packageJson, barRoot);
             });
             it('bit status should show the component as modified', () => {
               const status = helper.status();
               expect(status).to.not.have.string(statusWorkspaceIsCleanMsg);
             });
-            it('should show the previously ignored dependency as a regular dependency', () => {});
+            it('should show the previously ignored dependency as a missing file', () => {
+              const status = helper.status();
+              expect(status).to.have.string('non-existing dependency files');
+            });
+            it('bit diff should show the overrides differences', () => {
+              const diff = helper.diff('bar');
+              expect(diff).to.have.string('--- Overrides Dependencies (0.0.1 original)');
+              expect(diff).to.have.string('+++ Overrides Dependencies (0.0.1 modified)');
+              expect(diff).to.have.string('- [ foo2@- ]');
+            });
           });
         });
       });

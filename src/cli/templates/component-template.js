@@ -39,6 +39,9 @@ const fields = [
   'packages',
   'devPackages',
   'peerDependencies',
+  'overridesDependencies',
+  'overridesDevDependencies',
+  'overridesPeerDependencies',
   'files',
   'specs',
   'deprecated'

@@ -23,10 +23,6 @@ export function componentToPrintableForDiff(component: Component): Object {
     // $FlowFixMe sadly, Flow doesn't know what isNilOrEmpty does
     return envExtension.files.map(file => `${file.name} => ${file.relative}`).sort();
   };
-  const parseIgnoredDeps = (field): string[] => {
-    if (!field) return [];
-    return field.map(str => `ignored: ${str}`);
-  };
   const {
     lang,
     compiler,
@@ -53,10 +49,8 @@ export function componentToPrintableForDiff(component: Component): Object {
   ];
   const printableCompilerDependencies = compilerDependencies.toStringOfIds();
   const printableTesterDependencies = testerDependencies.toStringOfIds();
-  const peerPackageDependencies = []
-    .concat(parsePackages(component.peerPackageDependencies))
-    .concat(parseIgnoredDeps(component.ignoredDependencies.peerDependencies))
-    .filter(x => x);
+  const peerPackageDependencies = [].concat(parsePackages(component.peerPackageDependencies)).filter(x => x);
+  const overrides = component.overrides.componentOverridesData;
 
   obj.id = component.id.toStringWithoutScope();
   obj.compiler = compiler ? compiler.name : null;
@@ -68,14 +62,12 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.dependencies = dependencies
     .toStringOfIds()
     .concat(parsePackages(packageDependencies))
-    .concat(parseIgnoredDeps(component.ignoredDependencies.dependencies))
     .filter(x => x);
   obj.devDependencies = devDependencies
     .toStringOfIds()
     .concat(printableDevPackageDependencies)
     .concat(printableCompilerDependencies)
     .concat(printableTesterDependencies)
-    .concat(parseIgnoredDeps(component.ignoredDependencies.devDependencies))
     .filter(x => x);
   obj.peerDependencies = peerPackageDependencies.length ? peerPackageDependencies : undefined;
 
@@ -88,6 +80,9 @@ export function componentToPrintableForDiff(component: Component): Object {
       ? files.filter(file => file.test).map(file => normalize(file.relative))
       : null;
   obj.deprecated = deprecated ? 'True' : null;
+  obj.overridesDependencies = parsePackages(overrides.dependencies);
+  obj.overridesDevDependencies = parsePackages(overrides.devDependencies);
+  obj.overridesPeerDependencies = parsePackages(overrides.peerDependencies);
   return obj;
 }
 

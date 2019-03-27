@@ -199,7 +199,8 @@ export default class Version extends BitObject {
           peerPackageDependencies: obj.peerPackageDependencies,
           compilerPackageDependencies: obj.compilerPackageDependencies,
           testerPackageDependencies: obj.testerPackageDependencies,
-          bindingPrefix: obj.bindingPrefix
+          bindingPrefix: obj.bindingPrefix,
+          overrides: obj.overrides
         },
         filterFunction
       )
