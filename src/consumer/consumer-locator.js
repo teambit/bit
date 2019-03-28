@@ -40,7 +40,7 @@ export function pathHasLocalScope(path: string) {
  */
 export async function getConsumerInfo(
   absPath: string
-): Promise<?{ path: string, consumerConfig: ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean }> {
+): Promise<?{ path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean }> {
   const searchPaths = buildPropagationPaths();
   searchPaths.push(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {
@@ -82,15 +82,13 @@ export async function getConsumerInfo(
   }
 
   async function getConsumerConfigIfExists(path: string): Promise<?ConsumerBitConfig> {
-    let consumerConfig;
     try {
-      consumerConfig = await ConsumerBitConfig.load(path);
+      return await ConsumerBitConfig.load(path);
     } catch (err) {
       if (err instanceof BitConfigNotFound) {
         return null;
       }
       throw err;
     }
-    return consumerConfig;
   }
 }
