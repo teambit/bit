@@ -58,11 +58,14 @@ export default class ComponentOverrides {
       }
     });
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((dependencyField) => {
-      overrides[dependencyField] = Object.assign(
+      const dependencyValue = Object.assign(
         // $FlowFixMe
         overridesFromConsumer[dependencyField] || {}, // $FlowFixMe
         overridesFromComponent[dependencyField] || {}
       );
+      if (!R.isEmpty(dependencyValue)) {
+        overrides[dependencyField] = dependencyValue;
+      }
     });
 
     return overrides;
@@ -77,15 +80,17 @@ export default class ComponentOverrides {
   }
   getAllDependenciesOverrides(): Object {
     return Object.assign(
-      this.overrides.dependencies || {},
-      this.overrides.devDependencies || {},
+      {},
+      this.overrides.dependencies,
+      this.overrides.devDependencies,
       this.overrides.peerDependencies
     );
   }
   getAllDependenciesOverridesFromConsumer(): Object {
     return Object.assign(
-      this.overridesFromConsumer.dependencies || {},
-      this.overridesFromConsumer.devDependencies || {},
+      {},
+      this.overridesFromConsumer.dependencies,
+      this.overridesFromConsumer.devDependencies,
       this.overridesFromConsumer.peerDependencies
     );
   }

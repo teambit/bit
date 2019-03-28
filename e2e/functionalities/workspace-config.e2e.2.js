@@ -520,6 +520,10 @@ describe('workspace config', function () {
           expect(catBar.overrides.dependencies).to.have.property('foo2');
           expect(catBar.overrides.dependencies.foo2).to.equal('-');
         });
+        it('should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.not.have.string('modified components');
+        });
         describe('importing the component', () => {
           const barRoot = path.join(helper.localScopePath, 'components/bar/');
           before(() => {
