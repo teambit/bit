@@ -536,6 +536,10 @@ describe('bit tag command', function () {
         const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
         expect(packageJson.version).to.equal('0.0.2');
       });
+      it('should not delete "bit" property from package.json', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
+        expect(packageJson).to.have.property('bit');
+      });
     });
 
     describe('require the index file of the imported component', () => {
