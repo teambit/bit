@@ -242,15 +242,11 @@ async function updateAttribute(
   attributeValue: string,
   writeFile: ?boolean = true
 ): Promise<*> {
-  const PackageJson = consumer.driver.getDriver(false).PackageJson;
-  try {
-    const packageJson = await PackageJson.load(componentDir);
-    packageJson[attributeName] = attributeValue;
-    return writeFile ? packageJson.write({ override: true }) : packageJson;
-  } catch (e) {
-    // package.json doesn't exist, that's fine, no need to update anything
-    return Promise.resolve();
-  }
+  const packageJson = await getPackageJsonObject(componentDir);
+  if (!packageJson) return null; // package.json doesn't exist, that's fine, no need to update anything
+  packageJson[attributeName] = attributeValue;
+  if (writeFile) await writePackageJsonFromObject(componentDir, packageJson);
+  return packageJson;
 }
 
 /**

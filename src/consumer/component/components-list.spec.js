@@ -10,7 +10,7 @@ describe('ComponentList', () => {
       return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
     }
   });
-  describe('listLocalScope', () => {
+  describe('listLocalScope', function () {
     let modelComponent;
     before(() => {
       this.timeout(0);
