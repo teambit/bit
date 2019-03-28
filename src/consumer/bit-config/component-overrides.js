@@ -58,8 +58,9 @@ export default class ComponentOverrides {
       }
     });
     ['dependencies', 'devDependencies', 'peerDependencies'].forEach((dependencyField) => {
-      overrides[dependencyField] = Object.assign( // $FlowFixMe
-        overridesFromConsumer[dependencyField] || {},
+      overrides[dependencyField] = Object.assign(
+        // $FlowFixMe
+        overridesFromConsumer[dependencyField] || {}, // $FlowFixMe
         overridesFromComponent[dependencyField] || {}
       );
     });

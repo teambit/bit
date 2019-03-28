@@ -187,6 +187,7 @@ export default function validateVersionInstance(version: Version): void {
     if (!overridesAllowedKeys.includes(field)) {
       throw new VersionInvalid(`${message}, the "overrides" has unidentified key "${field}"`);
     }
+    // $FlowFixMe
     validateOverrides(version.overrides[field], field);
   });
 }
