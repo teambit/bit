@@ -10,9 +10,10 @@ describe('ComponentList', () => {
       return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
     }
   });
-  describe('listLocalScope', () => {
+  describe('listLocalScope', function () {
     let modelComponent;
     before(() => {
+      this.timeout(0);
       modelComponent = getModelComponent();
     });
     it('should return an empty array when there are no components in the scope', async () => {
