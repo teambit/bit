@@ -252,5 +252,6 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
         throw new InvalidBitConfigPropPath(fieldName, pathToValidate);
       }
     }
+    ConsumerOverrides.validate(object.overrides);
   }
 }

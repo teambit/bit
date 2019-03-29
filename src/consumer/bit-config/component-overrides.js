@@ -4,6 +4,7 @@ import * as RA from 'ramda-adjunct';
 import ComponentBitConfig from './component-bit-config';
 import { IGNORE_DEPENDENCY } from '../../constants';
 import type { ConsumerOverridesOfComponent, ConsumerOverridesConfig } from './consumer-overrides';
+import { dependenciesFields } from './consumer-overrides';
 
 export type ComponentOverridesData = {
   dependencies?: Object,
@@ -49,29 +50,11 @@ export default class ComponentOverrides {
     // at least one overrides is defined
     if (RA.isNilOrEmpty(overridesFromConsumer)) return overridesFromComponent;
     if (RA.isNilOrEmpty(overridesFromComponent)) return overridesFromConsumer;
-    // both overrides were defined, merge them.
-    const overrides = {};
-    ['compiler', 'tester'].forEach((envField) => {
-      // $FlowFixMe
-      if (overridesFromConsumer.env && overridesFromConsumer.env[envField]) {
-        overrides.env[envField] = overridesFromConsumer.env[envField];
-      }
-    });
-    ['dependencies', 'devDependencies', 'peerDependencies'].forEach((dependencyField) => {
-      const dependencyValue = Object.assign(
-        // $FlowFixMe
-        overridesFromConsumer[dependencyField] || {}, // $FlowFixMe
-        overridesFromComponent[dependencyField] || {}
-      );
-      if (!R.isEmpty(dependencyValue)) {
-        overrides[dependencyField] = dependencyValue;
-      }
-    });
-
-    return overrides;
+    // we don't propagate by default. so if overrides from component is found, just use it.
+    return overridesFromComponent;
   }
   static componentOverridesDataFields() {
-    return ['dependencies', 'devDependencies', 'peerDependencies'];
+    return dependenciesFields;
   }
   get componentOverridesData() {
     const fields = ComponentOverrides.componentOverridesDataFields();
