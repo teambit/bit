@@ -348,4 +348,16 @@ describe('run bit init', function () {
       });
     });
   });
+  describe('when there is .bitmap, bit.json but not .bit dir', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createBitMap();
+      helper.deleteFile('.bit');
+    });
+    it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
+      const lsCmd = () => helper.listLocalScope();
+      expect(lsCmd).to.not.throw();
+      expect(path.join(helper.localScopePath, '.bit')).to.be.a.directory();
+    });
+  });
 });
