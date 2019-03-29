@@ -3,7 +3,7 @@ import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import ComponentBitConfig from './component-bit-config';
 import { IGNORE_DEPENDENCY } from '../../constants';
-import type { ConsumerOverridesOfComponent, ConsumerOverridesConfig } from './consumer-overrides';
+import type { ConsumerOverridesOfComponent } from './consumer-overrides';
 import { dependenciesFields } from './consumer-overrides';
 
 export type ComponentOverridesData = {
@@ -13,11 +13,11 @@ export type ComponentOverridesData = {
 };
 
 export default class ComponentOverrides {
-  overridesFromConsumer: ConsumerOverridesConfig;
   overrides: ConsumerOverridesOfComponent;
+  overridesFromConsumer: ConsumerOverridesOfComponent;
   constructor(overrides: ?ConsumerOverridesOfComponent, overridesFromConsumer: ?ConsumerOverridesOfComponent) {
-    this.overridesFromConsumer = overridesFromConsumer || {};
     this.overrides = overrides || {};
+    this.overridesFromConsumer = overridesFromConsumer || {};
   }
   /**
    * overrides of component can be determined by three different sources.

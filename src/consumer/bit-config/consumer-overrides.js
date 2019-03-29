@@ -54,6 +54,7 @@ export default class ConsumerOverrides {
             acc.env[envField] = current.env[envField];
           });
         } else if (dependenciesFields.includes(field)) {
+          // $FlowFixMe
           acc[field] = Object.assign(current[field], acc[field]);
         } else {
           throw new Error(`consumer-overrides, ${field} does not have a merge strategy`);
