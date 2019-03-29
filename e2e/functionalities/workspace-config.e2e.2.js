@@ -65,6 +65,7 @@ describe('workspace config', function () {
   });
   describe('overrides components', () => {
     describe('changing dependencies versions', () => {
+      let localScope;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('', 'foo.js');
@@ -73,30 +74,73 @@ describe('workspace config', function () {
         helper.addComponent('bar.js');
         helper.tagAllComponents();
         helper.tagScope('2.0.0');
-
-        const bitJson = helper.readBitJson();
-        bitJson.overrides = {
-          bar: {
-            dependencies: {
-              foo: '0.0.1'
-            }
-          }
-        };
-        helper.writeBitJson(bitJson);
+        localScope = helper.cloneLocalScope();
       });
-      it('bit diff should show the tagged dependency version vs the version from overrides', () => {
-        const diff = helper.diff('bar');
-        expect(diff).to.have.string('- [ foo@2.0.0 ]');
-        expect(diff).to.have.string('+ [ foo@0.0.1 ]');
-      });
-      describe('tagging the component', () => {
+      describe('from bit.json', () => {
         before(() => {
-          helper.tagAllComponents();
+          const bitJson = helper.readBitJson();
+          bitJson.overrides = {
+            bar: {
+              dependencies: {
+                foo: '0.0.1'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
         });
-        it('should save the overridden dependency version', () => {
-          const bar = helper.catComponent('bar@latest');
-          expect(bar.dependencies[0].id.version).to.equal('0.0.1');
-          expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
+        it('bit diff should show the tagged dependency version vs the version from overrides', () => {
+          const diff = helper.diff('bar');
+          expect(diff).to.have.string('- [ foo@2.0.0 ]');
+          expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+        });
+        describe('tagging the component', () => {
+          before(() => {
+            helper.tagAllComponents();
+          });
+          it('should save the overridden dependency version', () => {
+            const bar = helper.catComponent('bar@latest');
+            expect(bar.dependencies[0].id.version).to.equal('0.0.1');
+            expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
+          });
+        });
+      });
+      describe('from package.json', () => {
+        before(() => {
+          helper.getClonedLocalScope(localScope);
+          helper.deleteFile('bit.json');
+          helper.initNpm();
+          helper.runCmd('bit init');
+          const packageJson = helper.readPackageJson();
+          expect(packageJson).to.have.property('bit');
+          packageJson.bit.overrides = {
+            bar: {
+              dependencies: {
+                foo: '0.0.1'
+              }
+            }
+          };
+          helper.writePackageJson(packageJson);
+        });
+        it('bit status should not delete "bit.overrides" property of package.json', () => {
+          helper.status();
+          const packageJson = helper.readPackageJson();
+          expect(packageJson).to.have.property('bit');
+          expect(packageJson.bit).to.have.property('overrides');
+        });
+        it('bit diff should show the tagged dependency version vs the version from overrides', () => {
+          const diff = helper.diff('bar');
+          expect(diff).to.have.string('- [ foo@2.0.0 ]');
+          expect(diff).to.have.string('+ [ foo@0.0.1 ]');
+        });
+        describe('tagging the component', () => {
+          before(() => {
+            helper.tagAllComponents();
+          });
+          it('should save the overridden dependency version', () => {
+            const bar = helper.catComponent('bar@latest');
+            expect(bar.dependencies[0].id.version).to.equal('0.0.1');
+            expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
+          });
         });
       });
     });
