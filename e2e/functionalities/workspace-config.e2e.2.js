@@ -597,6 +597,123 @@ describe('workspace config', function () {
         });
       });
     });
+    describe('author ignored package, imported changed to not ignore', () => {
+      let authorScope;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo("import chai from 'chai';");
+        helper.addNpmPackage('chai', '2.4');
+        helper.addComponentBarFoo();
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              chai: '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        authorScope = helper.cloneLocalScope();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.addNpmPackage('chai', '2.4');
+        const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+        const packageJson = helper.readPackageJson(componentDir);
+        // an intermediate step to make sure we're good so far
+        expect(packageJson.bit.overrides.dependencies).to.deep.equal({ chai: '-' });
+        packageJson.bit.overrides.dependencies = {};
+        helper.writePackageJson(packageJson, componentDir);
+        // an intermediate step to make sure we're good so far
+        const diff = helper.diff();
+        expect(diff).to.have.string('- [ chai@- ]');
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+      });
+      it('should be saved into the model with an empty overrides', () => {
+        const barFoo = helper.catComponent('bar/foo@latest');
+        expect(barFoo.overrides).to.have.property('dependencies');
+        expect(barFoo.overrides.dependencies).to.be.empty;
+      });
+      it('should be saved into the model with the package in place', () => {
+        const barFoo = helper.catComponent('bar/foo@latest');
+        expect(barFoo.packageDependencies).to.deep.equal({ chai: '2.4' });
+      });
+      describe('then, author re-import', () => {
+        before(() => {
+          helper.getClonedLocalScope(authorScope);
+          helper.importComponent('bar/foo');
+        });
+        it('bit status should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        it('should save the new overrides to the consumer config', () => {
+          const bitJson = helper.readBitJson();
+          expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
+        });
+      });
+    });
+    describe('changing overrides of a component in consumer config after tag', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo("require('chai');");
+        helper.addNpmPackage('chai', '2.4');
+        helper.addComponentBarFoo();
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              chai: '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+        const overridesChangedOrder = {
+          'bar/foo': {
+            dependencies: {}
+          }
+        };
+        helper.addOverridesToBitJson(overridesChangedOrder);
+      });
+      it('bit status should show the component as modified', () => {
+        const status = helper.status();
+        expect(status).to.have.string('modified components');
+      });
+    });
+    describe('changing order of the overrides dependencies after tag', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo("require('chai'); require('lodash')");
+        helper.addNpmPackage('chai', '2.4');
+        helper.addNpmPackage('lodash', '2.4');
+        helper.addComponentBarFoo();
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              chai: '-',
+              lodash: '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+        const overridesChangedOrder = {
+          'bar/foo': {
+            dependencies: {
+              lodash: '-',
+              chai: '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overridesChangedOrder);
+      });
+      it('bit status should not show the component as modified', () => {
+        const status = helper.status();
+        expect(status).to.not.have.string('modified components');
+      });
+    });
   });
   describe('basic validations', () => {
     before(() => {

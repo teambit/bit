@@ -66,6 +66,7 @@ import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
+import { dependenciesFields } from './bit-config/consumer-overrides';
 
 type ConsumerProps = {
   projectPath: string,
@@ -458,21 +459,8 @@ export default class Consumer {
       copyDependenciesVersionsFromModelToFS(version.compilerDependencies, componentFromModel.compilerDependencies);
       copyDependenciesVersionsFromModelToFS(version.testerDependencies, componentFromModel.testerDependencies);
 
-      // sort the files by 'relativePath' because the order can be changed when adding or renaming
-      // files in bitmap, which affects later on the model.
-      version.files = R.sortBy(R.prop('relativePath'), version.files);
-      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      sortProperties(version);
 
-      version.packageDependencies = sortObject(version.packageDependencies);
-      version.devPackageDependencies = sortObject(version.devPackageDependencies);
-      version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
-      version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
-      version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
-      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
-      componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
-      componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
-      componentFromModel.testerPackageDependencies = sortObject(componentFromModel.testerPackageDependencies);
-      componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
       // prefix your command with "BIT_LOG=*" to see the actual id changes
       if (process.env.BIT_LOG && componentFromModel.hash().hash !== version.hash().hash) {
         console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
@@ -484,6 +472,31 @@ export default class Consumer {
       componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
     }
     return componentFromFileSystem._isModified;
+
+    function sortProperties(version) {
+      // sort the files by 'relativePath' because the order can be changed when adding or renaming
+      // files in bitmap, which affects later on the model.
+      version.files = R.sortBy(R.prop('relativePath'), version.files);
+      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      version.packageDependencies = sortObject(version.packageDependencies);
+      version.devPackageDependencies = sortObject(version.devPackageDependencies);
+      version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
+      version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
+      version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
+      sortOverrides(version.overrides);
+      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
+      componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
+      componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
+      componentFromModel.testerPackageDependencies = sortObject(componentFromModel.testerPackageDependencies);
+      componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
+      sortOverrides(componentFromModel.overrides);
+    }
+    function sortOverrides(overrides) {
+      if (!overrides) return;
+      dependenciesFields.forEach((field) => {
+        if (overrides[field]) overrides[field] = sortObject(overrides[field]);
+      });
+    }
   }
 
   /**

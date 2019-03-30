@@ -1,4 +1,5 @@
 // @flow
+import R from 'ramda';
 import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
@@ -18,6 +19,7 @@ export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDepen
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
+  hasChanged: boolean; // whether the overrides has been changed (so then it should write them to fs)
   constructor(overrides: ConsumerOverridesConfig) {
     this.overrides = overrides;
   }
@@ -26,9 +28,7 @@ export default class ConsumerOverrides {
   }
   getOverrideComponentData(bitId: BitId): ?ConsumerOverridesOfComponent {
     const getMatches = (): string[] => {
-      const exactMatch = Object.keys(this.overrides).find(
-        idStr => bitId.toStringWithoutVersion() === idStr || bitId.toStringWithoutScopeAndVersion() === idStr
-      );
+      const exactMatch = this.findExactMatch(bitId);
       const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this.isMatchByWildcard(bitId, idStr));
       const allMatches = matchByGlobPattern.sort(this.sortWildcardsByNamespaceLength);
       if (exactMatch) allMatches.unshift(exactMatch);
@@ -67,7 +67,6 @@ export default class ConsumerOverrides {
     if (!hasWildcard(idWithPossibleWildcard)) return false;
     return isBitIdMatchByWildcards(bitId, idWithPossibleWildcard);
   }
-
   /**
    * sort from the more specific (more namespaces) to the more generic (less namespaces)
    * e.g.
@@ -78,6 +77,31 @@ export default class ConsumerOverrides {
   sortWildcardsByNamespaceLength(a: string, b: string): number {
     const numOfNamespaces = str => (str.match(/\//g) || []).length;
     return numOfNamespaces(b) - numOfNamespaces(a);
+  }
+
+  updateOverridesIfChanged(id: BitId, overrides: ConsumerOverridesOfComponent): boolean {
+    const existingOverrides = this.getOverrideComponentData(id);
+    if (this.areOverridesObjectsEqual(existingOverrides, overrides)) return false;
+    const exactMatch = this.findExactMatch(id);
+    const key = exactMatch || id.toStringWithoutVersion();
+    this.overrides[key] = overrides;
+    this.hasChanged = true;
+    return true;
+  }
+
+  areOverridesObjectsEqual(
+    overridesA: ?ConsumerOverridesOfComponent,
+    overridesB: ConsumerOverridesOfComponent
+  ): boolean {
+    // seems like R.equals does a great job here. it compares objects by values (not by reference).
+    // also it disregards the keys order.
+    return R.equals(overridesA, overridesB);
+  }
+
+  findExactMatch(bitId: BitId): ?string {
+    return Object.keys(this.overrides).find(
+      idStr => bitId.toStringWithoutVersion() === idStr || bitId.toStringWithoutScopeAndVersion() === idStr
+    );
   }
 
   static validate(overrides: Object): void {

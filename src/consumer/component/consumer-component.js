@@ -1105,7 +1105,8 @@ export default class Component {
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
     const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
-    const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig);
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig, isAuthor);
 
     return new Component({
       name: id.name,

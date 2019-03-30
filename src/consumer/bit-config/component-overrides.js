@@ -27,18 +27,26 @@ export default class ComponentOverrides {
    * 3. model. (when the component is tagged, the overrides data is saved into the model).
    *
    * the strategy of loading them is simple:
-   * if the component config is written to the filesystem, use it (#1). otherwise, use the config
-   * from the model. once you have the config, merge it with the consumer-config.
+   * if the component config is written to the filesystem, use it (#1).
+   * if the component config is not written, it can be for two reasons:
+   * a) it's author. in this case, the config is written into consumer-config (if not exist) on import.
+   * b) it's imported when user chose not to write package.json nor bit.json. in that case, use
+   * component from the model.
+   * once you have the config, merge it with the consumer-config.
    */
   static load(
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
     overridesFromModel: ?ComponentOverridesData,
-    componentBitConfig: ?ComponentBitConfig
+    componentBitConfig: ?ComponentBitConfig,
+    isAuthor?: boolean = false
   ): ComponentOverrides {
-    const overridesFromComponent =
-      componentBitConfig && componentBitConfig.componentHasWrittenConfig
+    const getOverridesFromComponent = () => {
+      if (isAuthor) return null;
+      return componentBitConfig && componentBitConfig.componentHasWrittenConfig
         ? componentBitConfig.overrides
         : overridesFromModel;
+    };
+    const overridesFromComponent = getOverridesFromComponent();
     const overrides = this.mergeConsumerAndComponentOverrides(overridesFromComponent, overridesFromConsumer);
     return new ComponentOverrides(overrides, overridesFromConsumer);
   }

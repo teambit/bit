@@ -40,7 +40,7 @@ type consumerBitConfigProps = {
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
   resolveModules?: ResolveModulesConfig,
-  overrides?: ConsumerOverrides
+  overrides: ConsumerOverrides
 };
 
 export default class ConsumerBitConfig extends AbstractBitConfig {
@@ -58,7 +58,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   useWorkspaces: boolean; // Enables integration with Yarn Workspaces
   manageWorkspaces: boolean; // manage workspaces with yarn
   resolveModules: ?ResolveModulesConfig;
-  overrides: ?ConsumerOverrides;
+  overrides: ConsumerOverrides;
 
   constructor({
     compiler,
@@ -78,7 +78,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     useWorkspaces = DEFAULT_USE_WORKSPACES,
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
-    overrides
+    overrides = ConsumerOverrides.load()
   }: consumerBitConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
@@ -108,7 +108,8 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       packageManagerProcessOptions: this.packageManagerProcessOptions,
       useWorkspaces: this.useWorkspaces,
       manageWorkspaces: this.manageWorkspaces,
-      resolveModules: this.resolveModules
+      resolveModules: this.resolveModules,
+      overrides: this.overrides.overrides
     });
     if (this.distEntry || this.distTarget) {
       const dist = {};
