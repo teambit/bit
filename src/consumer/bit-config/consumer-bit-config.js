@@ -40,7 +40,7 @@ type consumerBitConfigProps = {
   useWorkspaces?: boolean,
   manageWorkspaces?: boolean,
   resolveModules?: ResolveModulesConfig,
-  overrides: ConsumerOverrides
+  overrides?: ConsumerOverrides
 };
 
 export default class ConsumerBitConfig extends AbstractBitConfig {
