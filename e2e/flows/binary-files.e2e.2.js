@@ -254,12 +254,12 @@ describe('binary files', function () {
         barPngPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.png`);
       });
       after(() => {
-        // npmCiRegistry.destroy();
+        npmCiRegistry.destroy();
       });
       it('should generate .bit.postinstall.js file', () => {
         expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
       });
-      it.only('should create a symlink on node_modules pointing to the unsupported file', () => {
+      it('should create a symlink on node_modules pointing to the unsupported file', () => {
         const expectedDest = path.join(helper.localScopePath, barFooPath, 'node_modules/bar/png_fixture.png');
         expect(expectedDest).to.be.a.file();
 

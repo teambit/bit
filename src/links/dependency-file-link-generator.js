@@ -187,7 +187,7 @@ export default class DependencyFileLinkGenerator {
 
   _getSymlinkDest(filePath: PathOsBased): string {
     if (this.relativePath.isCustomResolveUsed && this.isLinkToPackage) {
-      return `node_modules/${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
+      return `${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
     }
     return filePath;
   }
