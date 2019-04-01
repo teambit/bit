@@ -24,6 +24,12 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * 4. run `helper.removeRemoteScope();` otherwise, it'll save components as dependencies
  * 5. run `this.publishComponent(your-component)`.
  * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
+ *
+ * in case you need to init ciRegistry a few times on the same e2e-test file, it's better to
+ * re-init the helper, and pass the new instance to this init. (`helper = new Helper(); const npmCiRegistry = new NpmCiRegistry(helper);`)
+ * so then it'll create new local and remote scope. otherwise, the tests might publish the same packages.
+ * keep in mind that even when the registry is destroyed, the data is still there and is loaded the next
+ * time the registry is running. this solution makes sure the package-names are different.
  */
 export default class NpmCiRegistry {
   registryServer: ChildProcess;

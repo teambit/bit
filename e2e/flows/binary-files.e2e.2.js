@@ -10,7 +10,7 @@ chai.use(require('chai-fs'));
 
 describe('binary files', function () {
   this.timeout(0);
-  const helper = new Helper();
+  let helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
@@ -205,8 +205,10 @@ describe('binary files', function () {
   });
   describe('import a PNG file as a dependency', () => {
     let destPngFile;
-    const npmCiRegistry = new NpmCiRegistry(helper);
+    let npmCiRegistry;
     before(() => {
+      helper = new Helper();
+      npmCiRegistry = new NpmCiRegistry(helper);
       helper.setNewLocalAndRemoteScopes();
       npmCiRegistry.setCiScopeInBitJson();
       const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
@@ -246,25 +248,46 @@ describe('binary files', function () {
         npmCiRegistry.publishComponent('bar/png');
         npmCiRegistry.publishComponent('bar/foo');
 
-        helper.reInitLocalScope();
-        helper.runCmd('npm init -y');
-        helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
-
         barFooPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.foo`);
         barPngPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.png`);
       });
       after(() => {
         npmCiRegistry.destroy();
       });
-      it('should generate .bit.postinstall.js file', () => {
-        expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
-      });
-      it('should create a symlink on node_modules pointing to the unsupported file', () => {
-        const expectedDest = path.join(helper.localScopePath, barFooPath, 'node_modules/bar/png_fixture.png');
-        expect(expectedDest).to.be.a.file();
+      describe('installing a component using NPM', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        it('should generate .bit.postinstall.js file', () => {
+          expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
+        });
+        it('should create a symlink pointing to the package of the unsupported file', () => {
+          const expectedDest = path.join(helper.localScopePath, barFooPath, 'bar/png_fixture.png');
+          expect(expectedDest).to.be.a.file();
 
-        const symlinkValue = fs.readlinkSync(expectedDest);
-        expect(symlinkValue).to.have.string(path.join(barPngPath, 'png_fixture.png'));
+          const symlinkValue = fs.readlinkSync(expectedDest);
+          expect(symlinkValue).to.have.string(path.join(barPngPath, 'png_fixture.png'));
+        });
+      });
+      describe('installing a component using bit import', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          npmCiRegistry.setResolver();
+          helper.importComponent('bar/foo');
+        });
+        it('should create a symlink pointing to the package of the unsupported file', () => {
+          const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
+          const expectedDest = path.join(barFooDir, 'bar/png_fixture.png');
+          expect(expectedDest).to.be.a.file();
+
+          const symlinkValue = fs.readlinkSync(expectedDest);
+          expect(symlinkValue).to.have.string(
+            path.join(barFooDir, 'node_modules/@ci', `${helper.remoteScope}.bar.png`, 'png_fixture.png')
+          );
+        });
       });
     });
   });
