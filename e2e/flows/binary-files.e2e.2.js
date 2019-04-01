@@ -203,4 +203,69 @@ describe('binary files', function () {
       });
     });
   });
+  describe('import a PNG file as a dependency', () => {
+    let destPngFile;
+    const npmCiRegistry = new NpmCiRegistry(helper);
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      npmCiRegistry.setCiScopeInBitJson();
+      const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
+      destPngFile = path.join(helper.localScopePath, 'src/bar', 'png_fixture.png');
+      fs.copySync(sourcePngFile, destPngFile);
+      helper.runCmd('bit add src/bar -m png_fixture.png -i bar/png');
+      const fixture = 'require("../bar/png_fixture.png")';
+      helper.createFile('src/foo', 'foo.js', fixture);
+      helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+    });
+    it('should create a symlink or copy of the dependency file inside the component dir', () => {
+      const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/bar/png_fixture.png');
+      expect(expectedDest).to.be.a.file();
+
+      const symlinkValue = fs.readlinkSync(expectedDest);
+      expect(symlinkValue).to.have.string(
+        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
+      );
+    });
+    it('bit-status should not show the component as modified', () => {
+      const status = helper.status();
+      expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+    });
+    (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
+      let barFooPath;
+      let barPngPath;
+      before(async () => {
+        await npmCiRegistry.init();
+        helper.importNpmPackExtension();
+        helper.removeRemoteScope();
+        npmCiRegistry.publishComponent('bar/png');
+        npmCiRegistry.publishComponent('bar/foo');
+
+        helper.reInitLocalScope();
+        helper.runCmd('npm init -y');
+        helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+
+        barFooPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.foo`);
+        barPngPath = path.join('node_modules/@ci', `${helper.remoteScope}.bar.png`);
+      });
+      after(() => {
+        // npmCiRegistry.destroy();
+      });
+      it('should generate .bit.postinstall.js file', () => {
+        expect(path.join(helper.localScopePath, barFooPath, '.bit.postinstall.js')).to.be.a.file();
+      });
+      it.only('should create a symlink on node_modules pointing to the unsupported file', () => {
+        const expectedDest = path.join(helper.localScopePath, barFooPath, 'node_modules/bar/png_fixture.png');
+        expect(expectedDest).to.be.a.file();
+
+        const symlinkValue = fs.readlinkSync(expectedDest);
+        expect(symlinkValue).to.have.string(path.join(barPngPath, 'png_fixture.png'));
+      });
+    });
+  });
 });
