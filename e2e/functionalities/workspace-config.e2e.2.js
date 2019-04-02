@@ -694,6 +694,33 @@ describe('workspace config', function () {
             expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
           });
         });
+        describe('when the consumer config is saved also in the package.json file', () => {
+          before(() => {
+            helper.getClonedLocalScope(authorScope);
+            helper.initNpm();
+            const packageJson = helper.readPackageJson();
+            packageJson.dependencies = { chai: '2.4' };
+            packageJson.bit = {
+              env: {},
+              componentsDefaultDirectory: 'components/{name}',
+              packageManager: 'npm'
+            };
+            helper.writePackageJson(packageJson);
+            try {
+              helper.importComponent('bar/foo --skip-npm-install');
+            } catch (err) {
+              // ignore. it shows an error because chai is missing, which is missing by purpose
+            }
+          });
+          it('should still update bit.json', () => {
+            const bitJson = helper.readBitJson();
+            expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
+          });
+          it('should also update package.json', () => {
+            const packageJson = helper.readPackageJson();
+            expect(packageJson.bit.overrides['bar/foo'].dependencies).to.be.empty;
+          });
+        });
       });
     });
     describe('changing overrides of a component in consumer config after tag', () => {
