@@ -28,7 +28,7 @@ export default class BitsrcTester {
         console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
         throw new Error(`Failed to login into ${apiBaseUrl}`);
       });
-    function getSession(cookies: string[]) {
+    function getSession(cookies) {
       const sessionPart = cookies.find(str => str.includes('cocyclesSession'));
       if (!sessionPart) {
         throw new Error(`Failed to authenticate to ${apiBaseUrl}, the "cocyclesSession" was not found`);
