@@ -21,16 +21,22 @@ export default class BitsrcTester {
       .post(`${apiBaseUrl}/user/login`, { username, password })
       .then((res) => {
         return {
-          cocyclesSession: res
-            .getHeader('set-cookie')[0]
-            .split(';')[0]
-            .split('cocyclesSession=')[1]
+          cocyclesSession: getSession(res.getHeader('set-cookie'))
         };
       })
       .catch((err) => {
         console.log('Error from BitSrc Server', err); // eslint-disable-line no-console
         throw new Error(`Failed to login into ${apiBaseUrl}`);
       });
+    function getSession(cookies) {
+      const sessionPart = cookies.find(str => str.includes('cocyclesSession'));
+      if (!sessionPart) {
+        throw new Error(`Failed to authenticate to ${apiBaseUrl}, the "cocyclesSession" was not found`);
+      }
+      const cocyclesSessionPart = sessionPart.split(';');
+      const cocyclesSession = cocyclesSessionPart.find(str => str.includes('cocyclesSession'));
+      return cocyclesSession.replace('cocyclesSession=', '');
+    }
   }
 
   loginToBitSrc() {
