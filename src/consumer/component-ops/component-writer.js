@@ -110,6 +110,7 @@ export default class ComponentWriter {
     this._determineWhetherToWriteConfig();
     this._updateComponentRootPathAccordingToBitMap();
     this._updateBitMapIfNeeded();
+    this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
     return this.component;
@@ -214,6 +215,17 @@ export default class ComponentWriter {
         this.consumer.bitMap.removeComponent(this.component.id);
       }
       this.addComponentToBitMap(this.componentMap.rootDir);
+    }
+  }
+
+  _updateConsumerConfigIfNeeded() {
+    // for authored components there is no bit.json/package.json component specific
+    // so if the overrides were changed, it should be written to the consumer-config
+    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      this.consumer.bitConfig.overrides.updateOverridesIfChanged(
+        this.component.id,
+        this.component.overrides.componentOverridesData
+      );
     }
   }
 
