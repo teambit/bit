@@ -1,25 +1,24 @@
 /** @flow */
 
+import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
+import DoctorRegistrar from '../../../doctor/doctor-registrar';
+import Diagnosis from '../../../doctor/Diagnosis';
+import type { ExamineResult } from '../../../doctor/Diagnosis';
+
 // load all diagnosis
 // list checks
 // run all checks
 // run specific check
 
-export default (async function runAll(): Promise<CheckResults[]> {
-  return Promise.resolve([
-    {
-      name: 'check1',
-      description: 'check1 desc',
-      pass: true
-    }
-  ]);
+export default (async function runAll(): Promise<ExamineResult[]> {
+  registerCoreAndExtensionsDiagnoses();
+  const doctorRegistrar = DoctorRegistrar.getInstance();
+  const examineP = doctorRegistrar.diagnoses.map(diagnosis => diagnosis.examine());
+  return Promise.all(examineP);
 });
 
-export async function listChecks(): Promise<ChecksList> {
-  return Promise.resolve([
-    {
-      name: 'check1',
-      description: 'check1 desc'
-    }
-  ]);
+export async function listDiagnoses(): Promise<Diagnosis[]> {
+  registerCoreAndExtensionsDiagnoses();
+  const doctorRegistrar = DoctorRegistrar.getInstance();
+  return Promise.resolve(doctorRegistrar.diagnoses);
 }

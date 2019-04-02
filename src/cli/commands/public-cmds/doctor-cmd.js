@@ -2,7 +2,8 @@
 
 import chalk from 'chalk';
 import Command from '../../command';
-import runAll, { listChecks } from '../../../api/consumer/lib/doctor';
+import runAll, { listDiagnoses } from '../../../api/consumer/lib/doctor';
+import type { ExamineResult } from '../../../doctor/Diagnosis';
 
 export default class Doctor extends Command {
   name = 'doctor';
@@ -16,8 +17,8 @@ export default class Doctor extends Command {
     return runAll();
   }
 
-  report(res): string {
-    return chalk.green('run bit doctor', res);
+  report(res: ExamineResult[]): string {
+    return chalk.green('run bit doctor', JSON.stringify(res));
   }
 }
 
@@ -28,10 +29,11 @@ class DoctorList extends Command {
   opts = [];
 
   action(): Promise<any> {
-    return listChecks();
+    return listDiagnoses();
   }
 
   report(res): string {
-    return chalk.green('run bit doctor list', res);
+    const formatted = res.map(diagnosis => `${diagnosis.name}   ${diagnosis.description}\n`);
+    return chalk.green(formatted);
   }
 }
