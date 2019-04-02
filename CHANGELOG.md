@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix symlink to binary (or unsupported) files dependencies when installed via npm
+
 ## [14.0.4] - 2019-03-18
 
 - replace default bitsrc.io domain to bit.dev

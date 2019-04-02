@@ -86,6 +86,10 @@ export default class DependencyFileLinkGenerator {
       relativePathInDependency: this.relativePathInDependency,
       depRootDir: this._getDepRootDir()
     });
+    if (this.createNpmLinkFiles && !linkFile.linkContent) {
+      // this is a symlink to an unsupported file, it needs to be created after the installation of the packages
+      linkFile.postInstallSymlink = true;
+    }
     this.linkFiles.push(linkFile);
 
     if (this.hasDist) {
@@ -186,8 +190,11 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getSymlinkDest(filePath: PathOsBased): string {
-    if (this.relativePath.isCustomResolveUsed && this.isLinkToPackage) {
-      return `node_modules/${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
+    if (this.isLinkToPackage) {
+      if (this.createNpmLinkFiles) {
+        return `${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
+      }
+      return path.join(this.getTargetDir(), 'node_modules', this._getPackagePath(), pathNormalizeToLinux(filePath));
     }
     return filePath;
   }
