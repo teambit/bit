@@ -641,9 +641,11 @@ describe('workspace config', function () {
         expect(barFoo.packageDependencies).to.deep.equal({ chai: '2.4' });
       });
       describe('then, author re-import', () => {
+        let scopeAfterReImport;
         before(() => {
           helper.getClonedLocalScope(authorScope);
           helper.importComponent('bar/foo');
+          scopeAfterReImport = helper.cloneLocalScope();
         });
         it('bit status should not show the component as modified', () => {
           const status = helper.status();
@@ -652,6 +654,45 @@ describe('workspace config', function () {
         it('should save the new overrides to the consumer config', () => {
           const bitJson = helper.readBitJson();
           expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
+        });
+        describe('then author checkout to the first version', () => {
+          before(() => {
+            helper.checkoutVersion('0.0.1', 'bar/foo');
+          });
+          it('bit status should not show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string('modified components');
+          });
+          it('should show the dependency as ignored', () => {
+            const showBar = helper.showComponentParsed('bar/foo');
+            expect(showBar).to.have.property('ignoredDependencies');
+            expect(showBar.ignoredDependencies).to.have.property('dependencies');
+            expect(showBar.ignoredDependencies.dependencies).to.include('chai');
+          });
+          it('should save the overrides of the first version into consumer config', () => {
+            const bitJson = helper.readBitJson();
+            expect(bitJson.overrides['bar/foo'].dependencies).to.not.be.empty;
+            expect(bitJson.overrides['bar/foo'].dependencies).to.deep.equal({ chai: '-' });
+          });
+        });
+        describe('then author merge the first version', () => {
+          before(() => {
+            helper.getClonedLocalScope(scopeAfterReImport);
+            helper.mergeVersion('0.0.1', 'bar/foo');
+          });
+          it('bit status should not show the component as modified', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string('modified components');
+          });
+          it('should not show the dependency as ignored', () => {
+            const showBar = helper.showComponentParsed('bar/foo');
+            expect(showBar).to.have.property('ignoredDependencies');
+            expect(showBar.ignoredDependencies).to.be.empty;
+          });
+          it('should not change the consumer config', () => {
+            const bitJson = helper.readBitJson();
+            expect(bitJson.overrides['bar/foo'].dependencies).to.be.empty;
+          });
         });
       });
     });
