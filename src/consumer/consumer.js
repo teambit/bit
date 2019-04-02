@@ -750,7 +750,7 @@ export default class Consumer {
       return Promise.reject(new ConsumerNotFound());
     }
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
-      const consumer = await Consumer.create(currentPath);
+      const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.bitConfig.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
       consumerInfo.consumerConfig = await ConsumerBitConfig.load(consumerInfo.path);
     }

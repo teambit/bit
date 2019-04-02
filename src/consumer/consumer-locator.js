@@ -42,7 +42,7 @@ export async function getConsumerInfo(
   absPath: string
 ): Promise<?{ path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean }> {
   const searchPaths = buildPropagationPaths();
-  searchPaths.push(absPath);
+  searchPaths.unshift(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {
     const path = searchPaths[i];
     const hasScope = await pathHasScopeDir(path); // eslint-disable-line no-await-in-loop
