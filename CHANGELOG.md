@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `remove` command to not delete dependencies files from the scope as they might belong to other components
 - `overrides` property supports ignoring dependencies (experimental for now)
 - fix symlink to binary (or unsupported) files dependencies when installed via npm
 - fix tagging imported components to not loose package.json properties
