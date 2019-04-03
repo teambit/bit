@@ -782,6 +782,92 @@ describe('workspace config', function () {
         expect(status).to.not.have.string('modified components');
       });
     });
+    describe('manually adding dependencies', () => {
+      describe('moving a package from dependencies to peerDependencies', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addNpmPackage('chai', '2.4');
+          helper.createPackageJson({ dependencies: { chai: '2.4' } });
+          helper.addComponentBarFoo();
+          const overrides = {
+            'bar/foo': {
+              dependencies: {
+                chai: '-'
+              },
+              peerDependencies: {
+                chai: '+'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+          showBar = helper.showComponentParsed('bar/foo');
+        });
+        it('should ignore the specified package from dependencies', () => {
+          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(0);
+        });
+        it('should add the specified package to peerDependencies', () => {
+          expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(1);
+          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
+        });
+        it('should show the package as ignored from dependencies', () => {
+          expect(showBar).to.have.property('ignoredDependencies');
+          expect(showBar.ignoredDependencies).to.have.property('dependencies');
+          expect(showBar.ignoredDependencies.dependencies).to.include('chai');
+        });
+        it('should show the package as manually added to peerDependencies', () => {
+          expect(showBar).to.have.property('manuallyAddedDependencies');
+          expect(showBar.manuallyAddedDependencies).to.have.property('peerDependencies');
+          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.4']);
+        });
+      });
+      describe('adding a package with version that does not exist in package.json', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addComponentBarFoo();
+          const overrides = {
+            'bar/foo': {
+              peerDependencies: {
+                chai: '2.4'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+          showBar = helper.showComponentParsed('bar/foo');
+        });
+        it('should add the specified package to peerDependencies', () => {
+          expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(1);
+          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
+        });
+        it('should show the package as manually added to peerDependencies', () => {
+          expect(showBar).to.have.property('manuallyAddedDependencies');
+          expect(showBar.manuallyAddedDependencies).to.have.property('peerDependencies');
+          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.4']);
+        });
+      });
+      describe('adding a package without version that does not exist in package.json', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addComponentBarFoo();
+          const overrides = {
+            'bar/foo': {
+              peerDependencies: {
+                chai: '+'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+        });
+        it('should throw an error', () => {
+          const output = helper.runWithTryCatch('bit show bar/foo');
+          expect(output).to.have.string('unable to manually add the dependency "chai" into "bar/foo"');
+        });
+      });
+    });
   });
   describe('basic validations', () => {
     before(() => {

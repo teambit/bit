@@ -66,7 +66,7 @@ import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-no
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
 import DataToPersist from './sources/data-to-persist';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
-import type { IgnoredDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
+import type { OverriddenDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
 import ComponentOverrides from '../bit-config/component-overrides';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
@@ -133,7 +133,8 @@ export default class Component {
   peerPackageDependencies: Object;
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
-  ignoredDependencies: IgnoredDependencies = {};
+  ignoredDependencies: OverriddenDependencies = {};
+  manuallyAddedDependencies: OverriddenDependencies = {};
   overrides: ComponentOverrides;
   _docs: ?(Doclet[]);
   files: SourceFile[];
@@ -808,6 +809,7 @@ export default class Component {
       compilerPackageDependencies: this.compilerPackageDependencies,
       testerPackageDependencies: this.testerPackageDependencies,
       ignoredDependencies: this.ignoredDependencies,
+      manuallyAddedDependencies: this.manuallyAddedDependencies,
       overrides: this.overrides.componentOverridesData,
       files: this.files,
       docs: this.docs,

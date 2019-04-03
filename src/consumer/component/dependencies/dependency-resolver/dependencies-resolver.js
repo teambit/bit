@@ -4,7 +4,7 @@ import fs from 'fs-extra';
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import minimatch from 'minimatch';
-import { COMPONENT_ORIGINS } from '../../../../constants';
+import { COMPONENT_ORIGINS, MANUALLY_REMOVE_DEPENDENCY, MANUALLY_ADD_DEPENDENCY } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
@@ -23,6 +23,7 @@ import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import hasWildcard from '../../../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../../../utils/bit/is-bit-id-match-by-wildcards';
+import { dependenciesFields } from '../../../bit-config/consumer-overrides';
 
 type AllDependencies = {
   dependencies: Dependency[],
@@ -35,7 +36,8 @@ type AllPackagesDependencies = {
   packageDependencies: ?Object,
   devPackageDependencies: ?Object,
   compilerPackageDependencies: ?Object,
-  testerPackageDependencies: ?Object
+  testerPackageDependencies: ?Object,
+  peerPackageDependencies: ?Object
 };
 
 type FileType = {
@@ -44,7 +46,11 @@ type FileType = {
   isTesterFile: boolean
 };
 
-export type IgnoredDependencies = { dependencies?: string[], devDependencies?: string[], peerDependencies?: string[] };
+export type OverriddenDependencies = {
+  dependencies?: string[],
+  devDependencies?: string[],
+  peerDependencies?: string[]
+};
 
 export default class DependencyResolver {
   component: Component;
@@ -60,9 +66,8 @@ export default class DependencyResolver {
   processedFiles: string[];
   compilerFiles: PathLinux[];
   testerFiles: PathLinux[];
-  overriddenDependencies: { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
-  manuallyAddedDependencies: { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
-  ignoredDependencies: IgnoredDependencies = {};
+  manuallyAddedDependencies: OverriddenDependencies = {};
+  ignoredDependencies: OverriddenDependencies = {};
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -80,7 +85,8 @@ export default class DependencyResolver {
       packageDependencies: {},
       devPackageDependencies: {},
       compilerPackageDependencies: {},
-      testerPackageDependencies: {}
+      testerPackageDependencies: {},
+      peerPackageDependencies: {}
     };
     this.processedFiles = [];
     this.issues = {
@@ -152,9 +158,10 @@ export default class DependencyResolver {
       this.allPackagesDependencies.testerPackageDependencies,
       this.component.testerPackageDependencies
     );
-    this.component.peerPackageDependencies = this.findPeerDependencies();
+    this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
     this.component.ignoredDependencies = this.ignoredDependencies;
+    this.component.manuallyAddedDependencies = this.manuallyAddedDependencies;
 
     return this.component;
   }
@@ -191,6 +198,8 @@ export default class DependencyResolver {
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
+    this.populatePeerPackageDependencies();
+    this.manuallyAddDependencies();
   }
 
   throwForNonExistFile(file: string) {
@@ -247,6 +256,75 @@ export default class DependencyResolver {
         : (this.ignoredDependencies.dependencies = [packageName]);
     }
     return ignore;
+  }
+
+  manuallyAddDependencies(): void {
+    const overrides = this.component.overrides.componentOverridesData;
+    if (!overrides) return;
+    const componentsIds = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const packageJson = this._getPackageJson();
+    dependenciesFields.forEach((depField) => {
+      if (!overrides[depField]) return;
+      Object.keys(overrides[depField]).forEach((dependency) => {
+        const dependencyValue = overrides[depField][dependency];
+        if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
+        if (hasWildcard(dependency)) return; // needs to decide whether we support it for non-removal.
+        const added = this._manuallyAddComponent(depField, dependency, dependencyValue, componentsIds);
+        if (added) return;
+        this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
+      });
+    });
+  }
+
+  _manuallyAddComponent(field: string, dependency: string, dependencyValue: string, componentsIds: BitIds): boolean {
+    if (field === 'peerDependencies') return false;
+    const idFromBitMap =
+      componentsIds.searchStrWithoutVersion(dependency) || componentsIds.searchStrWithoutScopeAndVersion(dependency);
+    if (!idFromBitMap) return false;
+    const idToAdd =
+      dependencyValue === MANUALLY_ADD_DEPENDENCY ? idFromBitMap : idFromBitMap.changeVersion(dependencyValue);
+    this.allDependencies[field].push({ id: idToAdd, relativePaths: [] });
+    this.manuallyAddedDependencies[field]
+      ? this.manuallyAddedDependencies[field].push(idToAdd.toString())
+      : (this.manuallyAddedDependencies[field] = [idToAdd.toString()]);
+    return true;
+  }
+
+  _manuallyAddPackage(field: string, dependency: string, dependencyValue: string, packageJson: ?Object): void {
+    const packageVersionToAdd = (): ?string => {
+      if (dependencyValue !== MANUALLY_ADD_DEPENDENCY) {
+        return dependencyValue;
+      }
+      if (!packageJson) return null;
+      for (const depField of dependenciesFields) {
+        if (packageJson[depField]) {
+          const found = Object.keys(packageJson[depField]).find(pkg => pkg === dependency);
+          if (found) return packageJson[depField][dependency];
+        }
+      }
+    };
+    const versionToAdd = packageVersionToAdd();
+    if (!versionToAdd) {
+      throw new GeneralError(`unable to manually add the dependency "${dependency}" into "${this.componentId.toString()}".
+it's not an existing component, nor existing package`);
+    }
+    const fieldToAdd = () => {
+      switch (field) {
+        case 'dependencies':
+          return 'packageDependencies';
+        case 'devDependencies':
+          return 'devPackageDependencies';
+        case 'peerDependencies':
+          return 'peerPackageDependencies';
+        default:
+          throw new Error(`${field} is not recognized`);
+      }
+    };
+    Object.assign(this.allPackagesDependencies[fieldToAdd()], { [dependency]: versionToAdd });
+    const packageStr = `${dependency}@${versionToAdd}`;
+    this.manuallyAddedDependencies[field]
+      ? this.manuallyAddedDependencies[field].push(packageStr)
+      : (this.manuallyAddedDependencies[field] = [packageStr]);
   }
 
   shouldIgnorePeerPackage(packageName: string): boolean {
@@ -955,6 +1033,12 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     };
     return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
   }
+
+  populatePeerPackageDependencies() {
+    const peerDependencies = this.findPeerDependencies();
+    this.allPackagesDependencies.peerPackageDependencies = peerDependencies;
+  }
+
   /**
    * For author, the peer-dependencies are set in the root package.json
    * For imported components, we don't want to change the peerDependencies of the author, unless
@@ -964,21 +1048,8 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
   findPeerDependencies(): Object {
     const componentMap = this.component.componentMap;
     const getPeerDependencies = (): Object => {
-      const componentRoot =
-        componentMap.origin === COMPONENT_ORIGINS.AUTHORED ? this.consumerPath : componentMap.rootDir;
-      const packageJsonLocation = path.join(componentRoot, 'package.json');
-      if (fs.existsSync(packageJsonLocation)) {
-        try {
-          const packageJson = fs.readJsonSync(packageJsonLocation);
-          if (packageJson.peerDependencies) return packageJson.peerDependencies;
-        } catch (err) {
-          logger.errorAndAddBreadCrumb(
-            'dependency-resolver.findPeerDependencies',
-            'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
-            { packageJsonLocation, message: err.message }
-          );
-        }
-      }
+      const packageJson = this._getPackageJson();
+      if (packageJson && packageJson.peerDependencies) return packageJson.peerDependencies;
       if (this.component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
         return this.component.componentFromModel.peerPackageDependencies;
       }
@@ -1001,6 +1072,24 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       });
     });
     return peerPackages;
+  }
+
+  _getPackageJson(): ?Object {
+    const componentMap = this.component.componentMap;
+    // $FlowFixMe
+    const componentRoot = componentMap.getRootDir();
+    const packageJsonLocation = path.join(this.consumer.toAbsolutePath(componentRoot), 'package.json');
+    if (!fs.existsSync(packageJsonLocation)) return null;
+    try {
+      const packageJson = fs.readJsonSync(packageJsonLocation);
+      return packageJson;
+    } catch (err) {
+      logger.errorAndAddBreadCrumb(
+        'dependency-resolver._getPackageJson',
+        'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
+        { packageJsonLocation, message: err.message }
+      );
+    }
   }
 }
 
