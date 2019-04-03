@@ -12,7 +12,7 @@ export default class Doctor extends Command {
   description = 'diagnose bit state';
   alias = '';
   commands = [new DoctorList()];
-  opts = [];
+  opts = [['j', 'json', 'return a json format']];
   migration = false;
 
   action(): Promise<any> {
@@ -30,7 +30,7 @@ class DoctorList extends Command {
   alias = '';
   opts = [['j', 'json', 'return a json format']];
 
-  async action({ json = false }: { json: boolean }): Promise<{ diagnosesList: Diagnosis[], json: boolean }> {
+  async action(args, { json = false }: { json: boolean }): Promise<{ diagnosesList: Diagnosis[], json: boolean }> {
     const diagnosesList = await listDiagnoses();
     return {
       diagnosesList,
