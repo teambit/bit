@@ -686,20 +686,22 @@ export default class Helper {
     bitJson[key] = val;
     this.writeBitJson(bitJson, bitJsonDir);
   }
-
+  addOverridesToBitJson(overrides: Object) {
+    const bitJson = this.readBitJson();
+    bitJson.overrides = overrides;
+    this.writeBitJson(bitJson);
+  }
   getEnvNameFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const env = bitJson.env[envType];
     const envName = typeof env === 'string' ? env : Object.keys(env)[0];
     return envName;
   }
-
   getEnvFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const basePath = ['env', envType];
     const env = R.path(basePath, bitJson);
     const envName = Object.keys(env)[0];
     return env[envName];
   }
-
   addKeyValToEnvPropInBitJson(
     bitJsonDir: string = this.localScopePath,
     propName: string,
@@ -715,7 +717,6 @@ export default class Helper {
     set(bitJson, propPath, prop);
     this.writeBitJson(bitJson, bitJsonDir);
   }
-
   addFileToEnvInBitJson(
     bitJsonPath: string = this.localScopePath,
     fileName: string,
@@ -724,7 +725,6 @@ export default class Helper {
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'files', fileName, filePath, envType);
   }
-
   addToRawConfigOfEnvInBitJson(
     bitJsonPath: string = this.localScopePath,
     key: string,

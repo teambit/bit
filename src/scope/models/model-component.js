@@ -26,6 +26,7 @@ import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
+import ComponentOverrides from '../../consumer/bit-config/component-overrides';
 
 type State = {
   versions?: {
@@ -345,6 +346,7 @@ export default class Component extends BitObject {
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
+      overrides: ComponentOverrides.load(null, version.overrides, null),
       deprecated: this.deprecated
     });
     if (manipulateDirData) {

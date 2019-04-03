@@ -7,6 +7,7 @@ import VersionInvalid from './exceptions/version-invalid';
 import { isValidPath } from '../utils';
 import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
+import ComponentOverrides from '../consumer/bit-config/component-overrides';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.
@@ -173,4 +174,20 @@ export default function validateVersionInstance(version: Version): void {
   if (version.bindingPrefix) {
     validateType(message, version.bindingPrefix, 'bindingPrefix', 'string');
   }
+  const overridesAllowedKeys = ComponentOverrides.componentOverridesDataFields();
+  const validateOverrides = (dependencies: Object, fieldName) => {
+    const field = `overrides.${fieldName}`;
+    validateType(message, dependencies, field, 'object');
+    Object.keys(dependencies).forEach((key) => {
+      validateType(message, key, `property name of ${field}`, 'string');
+      validateType(message, dependencies[key], `version of "${field}.${key}"`, 'string');
+    });
+  };
+  Object.keys(version.overrides).forEach((field) => {
+    if (!overridesAllowedKeys.includes(field)) {
+      throw new VersionInvalid(`${message}, the "overrides" has unidentified key "${field}"`);
+    }
+    // $FlowFixMe
+    validateOverrides(version.overrides[field], field);
+  });
 }

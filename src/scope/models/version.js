@@ -3,7 +3,8 @@ import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
 import { filterObject, first, bufferFrom, getStringifyArgs, sha1, sortObject } from '../../utils';
-import type ConsumerComponent, { customResolvedPath } from '../../consumer/component';
+import type { customResolvedPath } from '../../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
 import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
@@ -18,6 +19,7 @@ import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
+import type { ComponentOverridesData } from '../../consumer/bit-config/component-overrides';
 
 type CiProps = {
   error: Object,
@@ -67,7 +69,8 @@ export type VersionProps = {
   compilerPackageDependencies?: { [string]: string },
   testerPackageDependencies?: { [string]: string },
   bindingPrefix?: string,
-  customResolvedPaths?: customResolvedPath[]
+  customResolvedPaths?: customResolvedPath[],
+  overrides: ComponentOverridesData
 };
 
 /**
@@ -100,6 +103,7 @@ export default class Version extends BitObject {
   testerPackageDependencies: { [string]: string };
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
+  overrides: ComponentOverridesData;
 
   constructor(props: VersionProps) {
     super();
@@ -129,6 +133,7 @@ export default class Version extends BitObject {
     this.customResolvedPaths = props.customResolvedPaths;
     this.detachedCompiler = props.detachedCompiler;
     this.detachedTester = props.detachedTester;
+    this.overrides = props.overrides || {};
     this.validateVersion();
   }
 
@@ -169,7 +174,8 @@ export default class Version extends BitObject {
         key === 'devPackageDependencies' ||
         key === 'peerPackageDependencies' ||
         key === 'compilerPackageDependencies' ||
-        key === 'testerPackageDependencies'
+        key === 'testerPackageDependencies' ||
+        key === 'overrides'
       ) {
         return !R.isEmpty(val);
       }
@@ -193,7 +199,8 @@ export default class Version extends BitObject {
           peerPackageDependencies: obj.peerPackageDependencies,
           compilerPackageDependencies: obj.compilerPackageDependencies,
           testerPackageDependencies: obj.testerPackageDependencies,
-          bindingPrefix: obj.bindingPrefix
+          bindingPrefix: obj.bindingPrefix,
+          overrides: obj.overrides
         },
         filterFunction
       )
@@ -315,7 +322,8 @@ export default class Version extends BitObject {
         peerPackageDependencies: this.peerPackageDependencies,
         compilerPackageDependencies: this.compilerPackageDependencies,
         testerPackageDependencies: this.testerPackageDependencies,
-        customResolvedPaths: this.customResolvedPaths
+        customResolvedPaths: this.customResolvedPaths,
+        overrides: this.overrides
       },
       val => !!val
     );
@@ -365,7 +373,8 @@ export default class Version extends BitObject {
       compilerPackageDependencies,
       testerPackageDependencies,
       packageDependencies,
-      customResolvedPaths
+      customResolvedPaths,
+      overrides
     } = JSON.parse(contents);
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
@@ -441,7 +450,8 @@ export default class Version extends BitObject {
       compilerPackageDependencies,
       testerPackageDependencies,
       packageDependencies,
-      customResolvedPaths
+      customResolvedPaths,
+      overrides
     });
   }
 
@@ -571,7 +581,6 @@ export default class Version extends BitObject {
         component.detachedTester = detachedTester;
       }
     }
-
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -608,7 +617,8 @@ export default class Version extends BitObject {
       flattenedDevDependencies,
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
-      customResolvedPaths: component.customResolvedPaths
+      customResolvedPaths: component.customResolvedPaths,
+      overrides: component.overrides.componentOverridesData
     });
   }
 

@@ -348,4 +348,49 @@ describe('run bit init', function () {
       });
     });
   });
+  describe('when there is .bitmap, bit.json but not .bit dir', () => {
+    describe('when .bit located directly on workspace root', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createBitMap();
+        helper.deleteFile('.bit');
+      });
+      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
+        const lsCmd = () => helper.listLocalScope();
+        expect(lsCmd).to.not.throw();
+        expect(path.join(helper.localScopePath, '.bit')).to.be.a.directory();
+      });
+    });
+    describe('when bit located on .git', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNewGitRepo();
+        helper.initLocalScope();
+        helper.createBitMap();
+        helper.deleteFile('.git/bit');
+      });
+      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
+        const lsCmd = () => helper.listLocalScope();
+        expect(lsCmd).to.not.throw();
+        expect(path.join(helper.localScopePath, '.git/bit')).to.be.a.directory();
+      });
+    });
+    describe('when running from an inner directory that has also .bitmap', () => {
+      let innerDir;
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createBitMap();
+        innerDir = path.join(helper.localScopePath, 'inner');
+        fs.mkdirSync(innerDir);
+        helper.runCmd('bit init', innerDir);
+        fs.removeSync(path.join(innerDir, '.bit'));
+        fs.removeSync(path.join(helper.localScopePath, '.bit'));
+      });
+      it('bit ls (or any other command) should not throw an error and should rebuild .bit dir in the inner directory', () => {
+        const lsCmd = () => helper.runCmd('bit ls ', innerDir);
+        expect(lsCmd).to.not.throw();
+        expect(path.join(helper.localScopePath, 'inner/.bit')).to.be.a.directory();
+      });
+    });
+  });
 });

@@ -2,6 +2,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import R from 'ramda';
+import * as RA from 'ramda-adjunct';
+import minimatch from 'minimatch';
 import { COMPONENT_ORIGINS } from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
@@ -19,6 +21,8 @@ import type { RelativePath } from '../dependency';
 import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
+import hasWildcard from '../../../../utils/string/has-wildcard';
+import isBitIdMatchByWildcards from '../../../../utils/bit/is-bit-id-match-by-wildcards';
 
 type AllDependencies = {
   dependencies: Dependency[],
@@ -40,6 +44,8 @@ type FileType = {
   isTesterFile: boolean
 };
 
+export type IgnoredDependencies = { dependencies?: string[], devDependencies?: string[], peerDependencies?: string[] };
+
 export default class DependencyResolver {
   component: Component;
   consumer: Consumer;
@@ -54,6 +60,9 @@ export default class DependencyResolver {
   processedFiles: string[];
   compilerFiles: PathLinux[];
   testerFiles: PathLinux[];
+  overriddenDependencies: { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
+  manuallyAddedDependencies: { dependencies?: Object, devDependencies?: Object, peerDependencies?: Object };
+  ignoredDependencies: IgnoredDependencies = {};
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -143,8 +152,9 @@ export default class DependencyResolver {
       this.allPackagesDependencies.testerPackageDependencies,
       this.component.testerPackageDependencies
     );
-    this.component.peerPackageDependencies = findPeerDependencies(this.consumerPath, this.component);
+    this.component.peerPackageDependencies = this.findPeerDependencies();
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
+    this.component.ignoredDependencies = this.ignoredDependencies;
 
     return this.component;
   }
@@ -166,12 +176,11 @@ export default class DependencyResolver {
         isCompilerFile: R.contains(file, this.compilerFiles),
         isTesterFile: R.contains(file, this.testerFiles)
       };
-      if (!this.tree[file]) {
-        throw new Error(
-          `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
-        );
+      this.throwForNonExistFile(file);
+      if (this.shouldIgnoreFile(file, fileType)) {
+        return;
       }
-      this.processMissing(file);
+      this.processMissing(file, fileType);
       this.processErrors(file);
       this.processPackages(file, fileType);
       this.processBits(file, fileType);
@@ -182,7 +191,106 @@ export default class DependencyResolver {
     this.copyEnvDependenciesFromModelIfNeeded();
     this.combineIssues();
     this.removeEmptyIssues();
-    // this.overrideFromBitConfig();
+  }
+
+  throwForNonExistFile(file: string) {
+    if (!this.tree[file]) {
+      throw new Error(
+        `DependencyResolver: a file "${file}" was not returned from the driver, its dependencies are unknown`
+      );
+    }
+  }
+
+  shouldIgnoreFile(file: string, fileType: FileType): boolean {
+    const shouldIgnoreByGlobMatch = (patterns: string[]) => {
+      return patterns.some(pattern => minimatch(file, pattern));
+    };
+    if (fileType.isTestFile) {
+      const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
+      const ignore = shouldIgnoreByGlobMatch(ignoreDev);
+      if (ignore) {
+        this.ignoredDependencies.devDependencies
+          ? this.ignoredDependencies.devDependencies.push(file)
+          : (this.ignoredDependencies.devDependencies = [file]);
+      }
+      return ignore;
+    }
+    const ignoreProd = this.component.overrides.getIgnoredDependencies();
+    const ignore = shouldIgnoreByGlobMatch(ignoreProd);
+    if (ignore) {
+      this.ignoredDependencies.dependencies
+        ? this.ignoredDependencies.dependencies.push(file)
+        : (this.ignoredDependencies.dependencies = [file]);
+    }
+    return ignore;
+  }
+
+  shouldIgnorePackage(packageName: string, fileType: FileType): boolean {
+    const shouldIgnorePackage = (packages: string[]) => {
+      return packages.some(pkg => pkg === packageName);
+    };
+    if (fileType.isTestFile) {
+      const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
+      const ignore = shouldIgnorePackage(ignoreDev);
+      if (ignore) {
+        this.ignoredDependencies.devDependencies
+          ? this.ignoredDependencies.devDependencies.push(packageName)
+          : (this.ignoredDependencies.devDependencies = [packageName]);
+      }
+      return ignore;
+    }
+    const ignoreProd = this.component.overrides.getIgnoredDependencies();
+    const ignore = shouldIgnorePackage(ignoreProd);
+    if (ignore) {
+      this.ignoredDependencies.dependencies
+        ? this.ignoredDependencies.dependencies.push(packageName)
+        : (this.ignoredDependencies.dependencies = [packageName]);
+    }
+    return ignore;
+  }
+
+  shouldIgnorePeerPackage(packageName: string): boolean {
+    const shouldIgnorePackage = (packages: string[]) => {
+      return packages.some(pkg => pkg === packageName);
+    };
+    const ignorePeer = this.component.overrides.getIgnoredPeerDependencies();
+    const ignore = shouldIgnorePackage(ignorePeer);
+    if (ignore) {
+      this.ignoredDependencies.peerDependencies
+        ? this.ignoredDependencies.peerDependencies.push(packageName)
+        : (this.ignoredDependencies.peerDependencies = [packageName]);
+    }
+    return ignore;
+  }
+
+  shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
+    const componentIdStr = componentId.toStringWithoutVersion();
+    const shouldIgnoreByPotentiallyWildcards = (ids: string[]) => {
+      return ids.some((idStr) => {
+        if (hasWildcard(idStr)) {
+          return isBitIdMatchByWildcards(componentId, idStr);
+        }
+        return componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr;
+      });
+    };
+    if (fileType.isTestFile) {
+      const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
+      const ignore = shouldIgnoreByPotentiallyWildcards(ignoreDev);
+      if (ignore) {
+        this.ignoredDependencies.devDependencies
+          ? this.ignoredDependencies.devDependencies.push(componentIdStr)
+          : (this.ignoredDependencies.devDependencies = [componentIdStr]);
+      }
+      return ignore;
+    }
+    const ignoreProd = this.component.overrides.getIgnoredDependencies();
+    const ignore = shouldIgnoreByPotentiallyWildcards(ignoreProd);
+    if (ignore) {
+      this.ignoredDependencies.dependencies
+        ? this.ignoredDependencies.dependencies.push(componentIdStr)
+        : (this.ignoredDependencies.dependencies = [componentIdStr]);
+    }
+    return ignore;
   }
 
   traverseTreeForComponentId(depFile: PathLinux): ?BitId {
@@ -367,6 +475,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     const allDepsFiles = this.tree[originFile].files;
     if (!allDepsFiles || R.isEmpty(allDepsFiles)) return;
     allDepsFiles.forEach((depFile: FileObject) => {
+      if (this.shouldIgnoreFile(depFile.file, fileType)) return;
       if (depFile.isLink) this.processLinkFile(originFile, depFile, fileType);
       else {
         this.processOneDepFile(originFile, depFile.file, depFile.importSpecifiers, undefined, fileType, depFile);
@@ -399,7 +508,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       }
       return;
     }
-
+    if (this.shouldIgnoreComponent(componentId, fileType)) return;
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId)) {
@@ -515,6 +624,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     if (!bits || R.isEmpty(bits)) return;
     bits.forEach((bitDep) => {
       const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(bitDep, this.component.bindingPrefix);
+      if (this.shouldIgnoreComponent(componentId, fileType)) return;
       const getExistingId = (): ?BitId => {
         let existingId = this.consumer.bitmapIds.searchWithoutVersion(componentId);
         if (existingId) return existingId;
@@ -560,7 +670,13 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
   }
 
   processPackages(originFile: PathLinuxRelative, fileType: FileType) {
-    const packages = this.tree[originFile].packages;
+    const getPackages = () => {
+      const packages = this.tree[originFile].packages;
+      if (RA.isNilOrEmpty(packages)) return null;
+      const shouldBeIncluded = (pkgVersion, pkgName) => !this.shouldIgnorePackage(pkgName, fileType);
+      return R.pickBy(shouldBeIncluded, packages);
+    };
+    const packages = getPackages();
     if (packages && !R.isEmpty(packages)) {
       if (fileType.isTestFile) {
         Object.assign(this.allPackagesDependencies.devPackageDependencies, packages);
@@ -574,16 +690,28 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     }
   }
 
-  processMissing(originFile: PathLinuxRelative) {
+  processMissing(originFile: PathLinuxRelative, fileType: FileType) {
     const missing = this.tree[originFile].missing;
     if (!missing) return;
-    if (missing.files && !R.isEmpty(missing.files)) {
+    const processMissingFiles = () => {
+      if (RA.isNilOrEmpty(missing.files)) return;
+      const absOriginFile = this.consumer.toAbsolutePath(originFile);
+      const missingFiles = missing.files.filter((missingFile) => {
+        // convert from importSource (the string inside the require/import call) to the path relative to consumer
+        const resolvedPath = path.resolve(path.dirname(absOriginFile), missingFile);
+        const relativeToConsumer = this.consumer.getPathRelativeToConsumer(resolvedPath);
+        return !this.shouldIgnoreFile(relativeToConsumer, fileType);
+      });
+      if (R.isEmpty(missingFiles)) return;
       if (this.issues.missingDependenciesOnFs[originFile]) {
-        this.issues.missingDependenciesOnFs[originFile].concat(missing.files);
-      } else this.issues.missingDependenciesOnFs[originFile] = missing.files;
-    }
-    if (missing.packages && !R.isEmpty(missing.packages)) {
-      const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missing.packages);
+        this.issues.missingDependenciesOnFs[originFile].concat(missingFiles);
+      } else this.issues.missingDependenciesOnFs[originFile] = missingFiles;
+    };
+    const processMissingPackages = () => {
+      if (RA.isNilOrEmpty(missing.packages)) return;
+      const missingPackages = missing.packages.filter(pkg => !this.shouldIgnorePackage(pkg, fileType));
+      if (R.isEmpty(missingPackages)) return;
+      const customResolvedDependencies = this.findOriginallyCustomModuleResolvedDependencies(missingPackages);
       if (customResolvedDependencies) {
         Object.keys(customResolvedDependencies).forEach((missingPackage) => {
           const componentId = customResolvedDependencies[missingPackage].toString();
@@ -592,20 +720,24 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
           } else this.issues.missingCustomModuleResolutionLinks[originFile] = [componentId];
         });
       }
-      const missingPackages = customResolvedDependencies
-        ? R.difference(missing.packages, Object.keys(customResolvedDependencies))
-        : missing.packages;
+      const missingPackagesWithoutCustomResolved = customResolvedDependencies
+        ? R.difference(missingPackages, Object.keys(customResolvedDependencies))
+        : missingPackages;
 
-      if (!R.isEmpty(missingPackages)) {
+      if (!R.isEmpty(missingPackagesWithoutCustomResolved)) {
         if (this.issues.missingPackagesDependenciesOnFs[originFile]) {
-          this.issues.missingPackagesDependenciesOnFs[originFile].concat(missing.packages);
-        } else this.issues.missingPackagesDependenciesOnFs[originFile] = missing.packages;
+          this.issues.missingPackagesDependenciesOnFs[originFile].concat(missingPackages);
+        } else this.issues.missingPackagesDependenciesOnFs[originFile] = missingPackages;
       }
-    }
-
-    if (missing.bits && !R.isEmpty(missing.bits)) {
+    };
+    const processMissingComponents = () => {
+      if (RA.isNilOrEmpty(missing.bits)) return;
       missing.bits.forEach((missingBit) => {
-        const componentId = this.consumer.getComponentIdFromNodeModulesPath(missingBit, this.component.bindingPrefix);
+        const componentId: BitId = this.consumer.getComponentIdFromNodeModulesPath(
+          missingBit,
+          this.component.bindingPrefix
+        );
+        if (this.shouldIgnoreComponent(componentId, fileType)) return;
         // todo: a component might be on bit.map but not on the FS, yet, it's not about missing links.
         if (this.consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true })) {
           if (this.issues.missingLinks[originFile]) this.issues.missingLinks[originFile].push(componentId);
@@ -616,7 +748,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
           this.issues.missingComponents[originFile] = [componentId];
         }
       });
-    }
+    };
+    processMissingFiles();
+    processMissingPackages();
+    processMissingComponents();
   }
 
   processErrors(originFile: PathLinuxRelative) {
@@ -796,23 +931,6 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     this.issues = R.filter(notEmpty, this.issues);
   }
 
-  // overrideFromBitConfig() {
-  //   const overrideData = this.consumer.bitConfig.componentsOverrides.getOverrideComponentData(this.componentId);
-  //   if (!overrideData) return;
-  //   const mergeDependencies = (field: string) => {
-  //     if (!overrideData[field]) return;
-  //     Object.keys(overrideData[field]).forEach((idStr) => {
-  //       this.allDependencies[field].forEach((dependency) => {
-  //         if (dependency.id.toStringWithoutVersion() === idStr || dependency.id.toStringWithoutScopeAndVersion() === idStr) {
-  //           dependency.id = dependency.id.changeVersion(overrideData[field][idStr]);
-  //         }
-  //       });
-  //     });
-  //   };
-  //   mergeDependencies('dependencies');
-  //   mergeDependencies('devDependencies');
-  // }
-
   getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
     return dependencies.find(d => d.id.isEqual(id));
   }
@@ -837,51 +955,53 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     };
     return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
   }
-}
+  /**
+   * For author, the peer-dependencies are set in the root package.json
+   * For imported components, we don't want to change the peerDependencies of the author, unless
+   * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
+   * the package.json in the component's directory.
+   */
+  findPeerDependencies(): Object {
+    const componentMap = this.component.componentMap;
+    const getPeerDependencies = (): Object => {
+      const componentRoot =
+        componentMap.origin === COMPONENT_ORIGINS.AUTHORED ? this.consumerPath : componentMap.rootDir;
+      const packageJsonLocation = path.join(componentRoot, 'package.json');
+      if (fs.existsSync(packageJsonLocation)) {
+        try {
+          const packageJson = fs.readJsonSync(packageJsonLocation);
+          if (packageJson.peerDependencies) return packageJson.peerDependencies;
+        } catch (err) {
+          logger.errorAndAddBreadCrumb(
+            'dependency-resolver.findPeerDependencies',
+            'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
+            { packageJsonLocation, message: err.message }
+          );
+        }
+      }
+      if (this.component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+        return this.component.componentFromModel.peerPackageDependencies;
+      }
+      return {};
+    };
+    const projectPeerDependencies = getPeerDependencies();
+    const peerPackages = {};
+    if (R.isEmpty(projectPeerDependencies)) return {};
 
-// @todo: move to bit-javascript
-/**
- * For author, the peer-dependencies are set in the root package.json
- * For imported components, we don't want to change the peerDependencies of the author, unless
- * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
- * the package.json in the component's directory.
- */
-function findPeerDependencies(consumerPath: string, component: Component): Object {
-  const componentMap = component.componentMap;
-  const getPeerDependencies = (): Object => {
-    const componentRoot = componentMap.origin === COMPONENT_ORIGINS.AUTHORED ? consumerPath : componentMap.rootDir;
-    const packageJsonLocation = path.join(componentRoot, 'package.json');
-    if (fs.existsSync(packageJsonLocation)) {
-      try {
-        const packageJson = fs.readJsonSync(packageJsonLocation);
-        if (packageJson.peerDependencies) return packageJson.peerDependencies;
-      } catch (err) {
-        logger.errorAndAddBreadCrumb(
-          'dependency-resolver.findPeerDependencies',
-          'Failed reading the project package.json at {packageJsonLocation}. Error Message: {message}',
-          { packageJsonLocation, message: err.message }
-        );
-      }
-    }
-    if (component.componentFromModel && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
-      return component.componentFromModel.peerPackageDependencies;
-    }
-    return {};
-  };
-  const projectPeerDependencies = getPeerDependencies();
-  const peerPackages = {};
-  if (R.isEmpty(projectPeerDependencies)) return {};
-  // check whether the peer-dependencies was actually require in the code. if so, remove it from
-  // the packages/dev-packages and add it as a peer-package.
-  Object.keys(projectPeerDependencies).forEach((pkg) => {
-    ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
-      if (Object.keys(component[field]).includes(pkg)) {
-        delete component[field][pkg];
-        peerPackages[pkg] = projectPeerDependencies[pkg];
-      }
+    // check whether the peer-dependencies was actually require in the code. if so, remove it from
+    // the packages/dev-packages and add it as a peer-package.
+    // if it was not required in the code, don't add it to the peerPackages
+    Object.keys(projectPeerDependencies).forEach((pkg) => {
+      if (this.shouldIgnorePeerPackage(pkg)) return;
+      ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
+        if (Object.keys(this.component[field]).includes(pkg)) {
+          delete this.component[field][pkg];
+          peerPackages[pkg] = projectPeerDependencies[pkg];
+        }
+      });
     });
-  });
-  return peerPackages;
+    return peerPackages;
+  }
 }
 
 /**

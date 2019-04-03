@@ -393,11 +393,11 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * @see this.removeComponent()
    *
    */
-  async removeComponentById(bitId: BitId, deepRemove: boolean = false): Promise<void> {
-    logger.debug(`sources.removeComponentById: ${bitId.toString()}, deepRemove: ${deepRemove.toString()}`);
+  async removeComponentById(bitId: BitId): Promise<void> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}`);
     const component = await this.get(bitId);
     if (!component) return;
-    this.removeComponent(component, deepRemove);
+    this.removeComponent(component);
   }
 
   /**
@@ -410,10 +410,10 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
    * @param {ModelComponent} component
    * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
    */
-  removeComponent(component: ModelComponent, deepRemove: boolean = false): void {
+  removeComponent(component: ModelComponent): void {
     const repo = this.objects();
     logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
-    const objectRefs = deepRemove ? component.collectExistingRefs(repo, false).filter(x => x) : component.versionArray;
+    const objectRefs = component.versionArray;
     objectRefs.push(component.hash());
     repo.removeManyObjects(objectRefs);
   }

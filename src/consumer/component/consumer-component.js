@@ -51,7 +51,6 @@ import type { RawTestsResults } from '../specs-results/specs-results';
 import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
-import AbstractBitConfig from '../bit-config/abstract-bit-config';
 import { Analytics } from '../../analytics/analytics';
 import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
@@ -67,6 +66,8 @@ import ExtensionFileNotFound from '../../extensions/exceptions/extension-file-no
 import type { ManipulateDirItem } from '../component-ops/manipulate-dir';
 import DataToPersist from './sources/data-to-persist';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
+import type { IgnoredDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
+import ComponentOverrides from '../bit-config/component-overrides';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -96,6 +97,7 @@ export type ComponentProps = {
   compilerPackageDependencies?: ?Object,
   testerPackageDependencies?: ?Object,
   customResolvedPaths?: ?(customResolvedPath[]),
+  overrides: ComponentOverrides,
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -131,6 +133,8 @@ export default class Component {
   peerPackageDependencies: Object;
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
+  ignoredDependencies: IgnoredDependencies = {};
+  overrides: ComponentOverrides;
   _docs: ?(Doclet[]);
   files: SourceFile[];
   dists: Dists;
@@ -207,6 +211,7 @@ export default class Component {
     peerPackageDependencies,
     compilerPackageDependencies,
     testerPackageDependencies,
+    overrides,
     docs,
     dists,
     specsResults,
@@ -241,6 +246,7 @@ export default class Component {
     this.peerPackageDependencies = peerPackageDependencies || {};
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
+    this.overrides = overrides;
     this._docs = docs;
     this.setDists(dists);
     this.specsResults = specsResults;
@@ -801,6 +807,8 @@ export default class Component {
       peerPackageDependencies: this.peerPackageDependencies,
       compilerPackageDependencies: this.compilerPackageDependencies,
       testerPackageDependencies: this.testerPackageDependencies,
+      ignoredDependencies: this.ignoredDependencies,
+      overrides: this.overrides.componentOverridesData,
       files: this.files,
       docs: this.docs,
       dists: this.dists,
@@ -917,6 +925,7 @@ export default class Component {
       files,
       specsResults,
       license,
+      overrides,
       deprecated
     } = object;
     const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
@@ -950,6 +959,7 @@ export default class Component {
       dists,
       specsResults: specsResults ? SpecsResults.deserialize(specsResults) : null,
       license: license ? License.deserialize(license) : null,
+      overrides: new ComponentOverrides(overrides),
       deprecated: deprecated || false
     });
   }
@@ -1093,6 +1103,11 @@ export default class Component {
       ...testerDynamicPackageDependencies
     };
 
+    const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
+    const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig, isAuthor);
+
     return new Component({
       name: id.name,
       scope: id.scope,
@@ -1112,7 +1127,8 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       detachedCompiler: componentMap.detachedCompiler,
-      detachedTester: componentMap.detachedTester
+      detachedTester: componentMap.detachedTester,
+      overrides
     });
   }
 }

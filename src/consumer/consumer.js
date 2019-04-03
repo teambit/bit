@@ -7,8 +7,8 @@ import R from 'ramda';
 import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
-import { locateConsumer, pathHasConsumer, pathHasBitMap } from './consumer-locator';
-import { ConsumerAlreadyExists, ConsumerNotFound, MissingDependencies } from './exceptions';
+import { getConsumerInfo } from './consumer-locator';
+import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
 import ConsumerBitConfig from './bit-config/consumer-bit-config';
@@ -66,6 +66,7 @@ import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
+import { dependenciesFields } from './bit-config/consumer-overrides';
 
 type ConsumerProps = {
   projectPath: string,
@@ -458,21 +459,8 @@ export default class Consumer {
       copyDependenciesVersionsFromModelToFS(version.compilerDependencies, componentFromModel.compilerDependencies);
       copyDependenciesVersionsFromModelToFS(version.testerDependencies, componentFromModel.testerDependencies);
 
-      // sort the files by 'relativePath' because the order can be changed when adding or renaming
-      // files in bitmap, which affects later on the model.
-      version.files = R.sortBy(R.prop('relativePath'), version.files);
-      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      sortProperties(version);
 
-      version.packageDependencies = sortObject(version.packageDependencies);
-      version.devPackageDependencies = sortObject(version.devPackageDependencies);
-      version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
-      version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
-      version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
-      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
-      componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
-      componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
-      componentFromModel.testerPackageDependencies = sortObject(componentFromModel.testerPackageDependencies);
-      componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
       // prefix your command with "BIT_LOG=*" to see the actual id changes
       if (process.env.BIT_LOG && componentFromModel.hash().hash !== version.hash().hash) {
         console.log('-------------------componentFromModel------------------------'); // eslint-disable-line no-console
@@ -484,6 +472,31 @@ export default class Consumer {
       componentFromFileSystem._isModified = componentFromModel.hash().hash !== version.hash().hash;
     }
     return componentFromFileSystem._isModified;
+
+    function sortProperties(version) {
+      // sort the files by 'relativePath' because the order can be changed when adding or renaming
+      // files in bitmap, which affects later on the model.
+      version.files = R.sortBy(R.prop('relativePath'), version.files);
+      componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      version.packageDependencies = sortObject(version.packageDependencies);
+      version.devPackageDependencies = sortObject(version.devPackageDependencies);
+      version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
+      version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
+      version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
+      sortOverrides(version.overrides);
+      componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
+      componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
+      componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
+      componentFromModel.testerPackageDependencies = sortObject(componentFromModel.testerPackageDependencies);
+      componentFromModel.peerPackageDependencies = sortObject(componentFromModel.peerPackageDependencies);
+      sortOverrides(componentFromModel.overrides);
+    }
+    function sortOverrides(overrides) {
+      if (!overrides) return;
+      dependenciesFields.forEach((field) => {
+        if (overrides[field]) overrides[field] = sortObject(overrides[field]);
+      });
+    }
   }
 
   /**
@@ -713,19 +726,14 @@ export default class Consumer {
     await Promise.all([scopeP, bitConfigP]);
   }
 
-  static async createWithExistingScope(
-    consumerPath: PathOsBased,
-    scope: Scope,
-    isolated: boolean = false
-  ): Promise<Consumer> {
+  static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
-    if (pathHasConsumer(consumerPath) && !isolated) return Promise.reject(new ConsumerAlreadyExists());
     const bitConfig = await ConsumerBitConfig.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
-      isolated,
+      isolated: true,
       bitConfig
     });
   }
@@ -737,21 +745,20 @@ export default class Consumer {
     if (fs.existsSync(path.join(projectPath, BIT_HIDDEN_DIR))) return path.join(projectPath, BIT_HIDDEN_DIR);
   }
   static async load(currentPath: PathOsBasedAbsolute): Promise<Consumer> {
-    const projectPath = locateConsumer(currentPath);
-    if (!projectPath) {
+    const consumerInfo = await getConsumerInfo(currentPath);
+    if (!consumerInfo) {
       return Promise.reject(new ConsumerNotFound());
     }
-    if (!pathHasConsumer(projectPath) && pathHasBitMap(projectPath)) {
-      const consumer = await Consumer.create(currentPath);
+    if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
+      const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.bitConfig.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
+      consumerInfo.consumerConfig = await ConsumerBitConfig.load(consumerInfo.path);
     }
-    const scopePath = Consumer.locateProjectScope(projectPath);
-    const scopeP = Scope.load(scopePath);
-    const bitConfigP = ConsumerBitConfig.load(projectPath);
-    const [scope, bitConfig] = await Promise.all([scopeP, bitConfigP]);
+    const scopePath = Consumer.locateProjectScope(consumerInfo.path);
+    const scope = await Scope.load(scopePath);
     return new Consumer({
-      projectPath,
-      bitConfig,
+      projectPath: consumerInfo.path,
+      bitConfig: consumerInfo.consumerConfig,
       scope
     });
   }

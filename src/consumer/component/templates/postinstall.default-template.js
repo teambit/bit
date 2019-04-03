@@ -34,7 +34,8 @@ Object.keys(linkFiles).map(function (linkFile) {
 Object.keys(symlinks).map(function (symlink) {
   if (!fs.existsSync(symlink)) {
     ensureDir(symlink);
-    fs.symlinkSync(path.join(__dirname, '../../../' ,symlinks[symlink]), symlink);
+    var existingFile = require.resolve(symlinks[symlink]);
+    fs.symlinkSync(existingFile, symlink);
   }
 });
 `;
