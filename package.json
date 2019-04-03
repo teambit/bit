@@ -102,7 +102,7 @@
     "ssh2": "^0.5.4",
     "string-format": "^0.5.0",
     "symlink-or-copy": "^1.1.8",
-    "table": "^4.0.3",
+    "table": "^5.2.3",
     "tty-table": "^2.6.9",
     "typescript": "3.2.4",
     "uniqid": "^5.0.3",
