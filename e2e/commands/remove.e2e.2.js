@@ -448,6 +448,7 @@ describe('bit remove command', function () {
     });
   });
   describe('remove a component when a dependency has a file with the same content as other component file', () => {
+    let output;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -457,8 +458,13 @@ describe('bit remove command', function () {
       helper.createFile('utils', 'is-type2.js', fixtures.isType);
       helper.addComponent('utils/is-type2.js', { i: 'utils/is-type2' });
       helper.tagAllComponents();
-      helper.exportAllComponents();
 
+      // this additional is to prevent another bug, where nested are imported only with their
+      // latest version and then when 'bit remove' tries to remove all versions array of
+      // ModelComponent, it doesn't find some of them and throws ENOENT error
+      helper.tagScope('1.0.0');
+
+      helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.importComponent('utils/is-string');
@@ -469,7 +475,10 @@ describe('bit remove command', function () {
       // deleting utils/is-string, causes removal of its dependency utils/is-type as well.
       // a previous bug, deleted also the files associated with utils/is-type, leaving utils/is-type2
       // with missing files from the scope.
-      helper.removeComponent('utils/is-string -s');
+      output = helper.removeComponent('utils/is-string -s');
+    });
+    it('should successfully remove', () => {
+      expect(output).to.have.string('removed components');
     });
     it('bit status should not throw an error about missing file from the model', () => {
       const statusCmd = () => helper.status();
