@@ -261,28 +261,41 @@ export default class DependencyResolver {
   manuallyAddDependencies(): void {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return;
-    const componentsIds = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
+    const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
     const packageJson = this._getPackageJson();
     dependenciesFields.forEach((depField) => {
       if (!overrides[depField]) return;
+      const idsFromModel = this.componentFromModel ? this.componentFromModel.dependencies.getAllIds() : new BitIds();
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
         if (hasWildcard(dependency)) return; // needs to decide whether we support it for non-removal.
-        const added = this._manuallyAddComponent(depField, dependency, dependencyValue, componentsIds);
+        const added = this._manuallyAddComponent(depField, dependency, dependencyValue, idsFromBitmap, idsFromModel);
         if (added) return;
         this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
       });
     });
   }
 
-  _manuallyAddComponent(field: string, dependency: string, dependencyValue: string, componentsIds: BitIds): boolean {
+  _manuallyAddComponent(
+    field: string,
+    dependency: string,
+    dependencyValue: string,
+    idsFromBitmap: BitIds,
+    idsFromModel: BitIds
+  ): boolean {
     if (field === 'peerDependencies') return false;
     const idFromBitMap =
-      componentsIds.searchStrWithoutVersion(dependency) || componentsIds.searchStrWithoutScopeAndVersion(dependency);
-    if (!idFromBitMap) return false;
-    const idToAdd =
-      dependencyValue === MANUALLY_ADD_DEPENDENCY ? idFromBitMap : idFromBitMap.changeVersion(dependencyValue);
+      idsFromBitmap.searchStrWithoutVersion(dependency) || idsFromBitmap.searchStrWithoutScopeAndVersion(dependency);
+    const idFromModel =
+      idsFromModel.searchStrWithoutVersion(dependency) || idsFromModel.searchStrWithoutScopeAndVersion(dependency);
+    if (!idFromBitMap && !idFromModel) return false;
+    const getIdToAdd = (): BitId => {
+      // $FlowFixMe
+      const id: BitId = idFromModel || idFromBitMap;
+      return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
+    };
+    const idToAdd = getIdToAdd();
     this.allDependencies[field].push({ id: idToAdd, relativePaths: [] });
     this.manuallyAddedDependencies[field]
       ? this.manuallyAddedDependencies[field].push(idToAdd.toString())
