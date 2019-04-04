@@ -67,7 +67,7 @@ export default class DependencyResolver {
   compilerFiles: PathLinux[];
   testerFiles: PathLinux[];
   manuallyAddedDependencies: OverriddenDependencies = {};
-  ignoredDependencies: OverriddenDependencies = {};
+  manuallyRemovedDependencies: OverriddenDependencies = {};
   constructor(component: Component, consumer: Consumer, componentId: BitId) {
     this.component = component;
     this.consumer = consumer;
@@ -160,7 +160,7 @@ export default class DependencyResolver {
     );
     this.component.peerPackageDependencies = this.allPackagesDependencies.peerPackageDependencies;
     if (!R.isEmpty(this.issues)) this.component.issues = this.issues;
-    this.component.ignoredDependencies = this.ignoredDependencies;
+    this.component.manuallyRemovedDependencies = this.manuallyRemovedDependencies;
     this.component.manuallyAddedDependencies = this.manuallyAddedDependencies;
 
     return this.component;
@@ -218,18 +218,18 @@ export default class DependencyResolver {
       const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
       const ignore = shouldIgnoreByGlobMatch(ignoreDev);
       if (ignore) {
-        this.ignoredDependencies.devDependencies
-          ? this.ignoredDependencies.devDependencies.push(file)
-          : (this.ignoredDependencies.devDependencies = [file]);
+        this.manuallyRemovedDependencies.devDependencies
+          ? this.manuallyRemovedDependencies.devDependencies.push(file)
+          : (this.manuallyRemovedDependencies.devDependencies = [file]);
       }
       return ignore;
     }
     const ignoreProd = this.component.overrides.getIgnoredDependencies();
     const ignore = shouldIgnoreByGlobMatch(ignoreProd);
     if (ignore) {
-      this.ignoredDependencies.dependencies
-        ? this.ignoredDependencies.dependencies.push(file)
-        : (this.ignoredDependencies.dependencies = [file]);
+      this.manuallyRemovedDependencies.dependencies
+        ? this.manuallyRemovedDependencies.dependencies.push(file)
+        : (this.manuallyRemovedDependencies.dependencies = [file]);
     }
     return ignore;
   }
@@ -242,18 +242,18 @@ export default class DependencyResolver {
       const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
       const ignore = shouldIgnorePackage(ignoreDev);
       if (ignore) {
-        this.ignoredDependencies.devDependencies
-          ? this.ignoredDependencies.devDependencies.push(packageName)
-          : (this.ignoredDependencies.devDependencies = [packageName]);
+        this.manuallyRemovedDependencies.devDependencies
+          ? this.manuallyRemovedDependencies.devDependencies.push(packageName)
+          : (this.manuallyRemovedDependencies.devDependencies = [packageName]);
       }
       return ignore;
     }
     const ignoreProd = this.component.overrides.getIgnoredDependencies();
     const ignore = shouldIgnorePackage(ignoreProd);
     if (ignore) {
-      this.ignoredDependencies.dependencies
-        ? this.ignoredDependencies.dependencies.push(packageName)
-        : (this.ignoredDependencies.dependencies = [packageName]);
+      this.manuallyRemovedDependencies.dependencies
+        ? this.manuallyRemovedDependencies.dependencies.push(packageName)
+        : (this.manuallyRemovedDependencies.dependencies = [packageName]);
     }
     return ignore;
   }
@@ -347,9 +347,9 @@ it's not an existing component, nor existing package`);
     const ignorePeer = this.component.overrides.getIgnoredPeerDependencies();
     const ignore = shouldIgnorePackage(ignorePeer);
     if (ignore) {
-      this.ignoredDependencies.peerDependencies
-        ? this.ignoredDependencies.peerDependencies.push(packageName)
-        : (this.ignoredDependencies.peerDependencies = [packageName]);
+      this.manuallyRemovedDependencies.peerDependencies
+        ? this.manuallyRemovedDependencies.peerDependencies.push(packageName)
+        : (this.manuallyRemovedDependencies.peerDependencies = [packageName]);
     }
     return ignore;
   }
@@ -371,18 +371,18 @@ it's not an existing component, nor existing package`);
       const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
       const ignore = shouldIgnore(ignoreDev);
       if (ignore) {
-        this.ignoredDependencies.devDependencies
-          ? this.ignoredDependencies.devDependencies.push(componentIdStr)
-          : (this.ignoredDependencies.devDependencies = [componentIdStr]);
+        this.manuallyRemovedDependencies.devDependencies
+          ? this.manuallyRemovedDependencies.devDependencies.push(componentIdStr)
+          : (this.manuallyRemovedDependencies.devDependencies = [componentIdStr]);
       }
       return ignore;
     }
     const ignoreProd = this.component.overrides.getIgnoredDependencies();
     const ignore = shouldIgnore(ignoreProd);
     if (ignore) {
-      this.ignoredDependencies.dependencies
-        ? this.ignoredDependencies.dependencies.push(componentIdStr)
-        : (this.ignoredDependencies.dependencies = [componentIdStr]);
+      this.manuallyRemovedDependencies.dependencies
+        ? this.manuallyRemovedDependencies.dependencies.push(componentIdStr)
+        : (this.manuallyRemovedDependencies.dependencies = [componentIdStr]);
     }
     return ignore;
   }

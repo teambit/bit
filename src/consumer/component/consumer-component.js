@@ -133,7 +133,7 @@ export default class Component {
   peerPackageDependencies: Object;
   compilerPackageDependencies: Object;
   testerPackageDependencies: Object;
-  ignoredDependencies: OverriddenDependencies = {};
+  manuallyRemovedDependencies: OverriddenDependencies = {};
   manuallyAddedDependencies: OverriddenDependencies = {};
   overrides: ComponentOverrides;
   _docs: ?(Doclet[]);
@@ -808,7 +808,7 @@ export default class Component {
       peerPackageDependencies: this.peerPackageDependencies,
       compilerPackageDependencies: this.compilerPackageDependencies,
       testerPackageDependencies: this.testerPackageDependencies,
-      ignoredDependencies: this.ignoredDependencies,
+      manuallyRemovedDependencies: this.manuallyRemovedDependencies,
       manuallyAddedDependencies: this.manuallyAddedDependencies,
       overrides: this.overrides.componentOverridesData,
       files: this.files,
