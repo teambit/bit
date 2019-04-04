@@ -4,7 +4,7 @@ import semver from 'semver';
 import decamelize from 'decamelize';
 import R from 'ramda';
 import { InvalidBitId, InvalidIdChunk, InvalidName, InvalidScopeName } from './exceptions';
-import { LATEST_BIT_VERSION, VERSION_DELIMITER, IGNORE_DEPENDENCY } from '../constants';
+import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../constants';
 import isValidIdChunk from '../utils/is-valid-id-chunk';
 import isValidScopeName from '../utils/is-valid-scope-name';
 import type { PathOsBased } from '../utils/path';
@@ -60,10 +60,6 @@ export default class BitId {
 
   hasVersion(): boolean {
     return Boolean(this.version && this.version !== LATEST_BIT_VERSION);
-  }
-
-  shouldBeIgnored() {
-    return this.version === IGNORE_DEPENDENCY;
   }
 
   hasScope(): boolean {
