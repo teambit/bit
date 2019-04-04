@@ -265,17 +265,20 @@ export default class DependencyResolver {
 
   shouldIgnoreComponent(componentId: BitId, fileType: FileType): boolean {
     const componentIdStr = componentId.toStringWithoutVersion();
-    const shouldIgnoreByPotentiallyWildcards = (ids: string[]) => {
+    const shouldIgnore = (ids: string[]) => {
       return ids.some((idStr) => {
         if (hasWildcard(idStr)) {
-          return isBitIdMatchByWildcards(componentId, idStr);
+          // we don't support wildcards for components for now. it gets things complicated
+          // and may cause unpredicted behavior especially for imported that the originally ignored
+          // wildcards interfere with legit components
+          return null;
         }
         return componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr;
       });
     };
     if (fileType.isTestFile) {
       const ignoreDev = this.component.overrides.getIgnoredDevDependencies();
-      const ignore = shouldIgnoreByPotentiallyWildcards(ignoreDev);
+      const ignore = shouldIgnore(ignoreDev);
       if (ignore) {
         this.ignoredDependencies.devDependencies
           ? this.ignoredDependencies.devDependencies.push(componentIdStr)
@@ -284,7 +287,7 @@ export default class DependencyResolver {
       return ignore;
     }
     const ignoreProd = this.component.overrides.getIgnoredDependencies();
-    const ignore = shouldIgnoreByPotentiallyWildcards(ignoreProd);
+    const ignore = shouldIgnore(ignoreProd);
     if (ignore) {
       this.ignoredDependencies.dependencies
         ? this.ignoredDependencies.dependencies.push(componentIdStr)

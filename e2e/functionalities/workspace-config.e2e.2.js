@@ -259,14 +259,12 @@ describe('workspace config', function () {
           helper.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
-        it('should not add the removed dependencies to the component', () => {
-          expect(showBar.dependencies).to.have.lengthOf(0);
+        it('should not ignore the dependencies as we do not support ignoring dependencies components by wildcards', () => {
+          expect(showBar.dependencies).to.have.lengthOf(2);
         });
-        it('should show the dependencies component as ignored', () => {
+        it('should not show the dependencies component as ignored', () => {
           expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
-          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo2');
+          expect(showBar.ignoredDependencies).to.deep.equal({});
         });
       });
       describe('ignoring a missing file', () => {
@@ -318,7 +316,7 @@ describe('workspace config', function () {
           const overrides = {
             bar: {
               dependencies: {
-                'bit.utils/*': '-'
+                'bit.utils/is-string': '-'
               }
             }
           };
