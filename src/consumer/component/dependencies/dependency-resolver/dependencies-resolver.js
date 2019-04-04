@@ -1034,18 +1034,13 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     return getPathsRelativeToComponentRoot().map(file => pathNormalizeToLinux(file));
   }
 
-  populatePeerPackageDependencies() {
-    const peerDependencies = this.findPeerDependencies();
-    this.allPackagesDependencies.peerPackageDependencies = peerDependencies;
-  }
-
   /**
    * For author, the peer-dependencies are set in the root package.json
    * For imported components, we don't want to change the peerDependencies of the author, unless
    * we're certain the user intent to do so. Therefore, we ignore the root package.json and look for
    * the package.json in the component's directory.
    */
-  findPeerDependencies(): Object {
+  populatePeerPackageDependencies(): void {
     const componentMap = this.component.componentMap;
     const getPeerDependencies = (): Object => {
       const packageJson = this._getPackageJson();
@@ -1057,7 +1052,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     };
     const projectPeerDependencies = getPeerDependencies();
     const peerPackages = {};
-    if (R.isEmpty(projectPeerDependencies)) return {};
+    if (R.isEmpty(projectPeerDependencies)) return;
 
     // check whether the peer-dependencies was actually require in the code. if so, remove it from
     // the packages/dev-packages and add it as a peer-package.
@@ -1065,13 +1060,13 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     Object.keys(projectPeerDependencies).forEach((pkg) => {
       if (this.shouldIgnorePeerPackage(pkg)) return;
       ['packageDependencies', 'devPackageDependencies'].forEach((field) => {
-        if (Object.keys(this.component[field]).includes(pkg)) {
-          delete this.component[field][pkg];
+        if (Object.keys(this.allPackagesDependencies[field]).includes(pkg)) {
+          delete this.allPackagesDependencies[field][pkg];
           peerPackages[pkg] = projectPeerDependencies[pkg];
         }
       });
     });
-    return peerPackages;
+    this.allPackagesDependencies.peerPackageDependencies = peerPackages;
   }
 
   _getPackageJson(): ?Object {
