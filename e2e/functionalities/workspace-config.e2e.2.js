@@ -998,10 +998,10 @@ describe('workspace config', function () {
           showBar = helper.showComponentParsed('bar');
         });
         it('should show the component as manually added dependency', () => {
-          expect(showBar.manuallyAddedDependencies.dependencies).to.deep.equal(['foo@0.0.1']);
+          expect(showBar.manuallyAddedDependencies.dependencies).to.deep.equal(['foo']);
         });
         it('should add the component to the dependencies array with an empty relativePaths', () => {
-          expect(showBar.dependencies[0].id).to.equal('foo@0.0.1');
+          expect(showBar.dependencies[0].id).to.equal('foo');
           expect(showBar.dependencies[0].relativePaths).to.deep.equal([]);
         });
         describe('tagging the components', () => {
@@ -1014,9 +1014,9 @@ describe('workspace config', function () {
             expect(catBar).to.have.property('overrides');
             expect(catBar.overrides)
               .to.have.property('dependencies')
-              .that.deep.equal({ foo: '0.0.1' });
+              .that.deep.equal({ foo: '+' });
           });
-          it('should save the manually added dependency into dependencies', () => {
+          it('should save the manually added dependency into dependencies and resolve its version correctly', () => {
             expect(catBar.dependencies[0].id).to.deep.equal({ name: 'foo', version: '0.0.1' });
             expect(catBar.dependencies[0].relativePaths).to.deep.equal([]);
           });
@@ -1038,7 +1038,7 @@ describe('workspace config', function () {
           it('should add the overrides data into package.json', () => {
             const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar'));
             expect(packageJson).to.have.property('bit');
-            expect(packageJson.bit.overrides.dependencies).to.deep.equal({ foo: '0.0.1' });
+            expect(packageJson.bit.overrides.dependencies).to.deep.equal({ foo: '+' });
           });
           it('bit status should show a clean state', () => {
             const status = helper.status();
