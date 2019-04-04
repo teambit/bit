@@ -85,13 +85,7 @@ export default class ComponentOverrides {
       this.overridesFromConsumer.peerDependencies
     );
   }
-  getIgnoredDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides.dependencies || {}));
-  }
-  getIgnoredDevDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides.devDependencies || {}));
-  }
-  getIgnoredPeerDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides.peerDependencies || {}));
+  getIgnored(field: string) {
+    return R.keys(R.filter(dep => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
   }
 }

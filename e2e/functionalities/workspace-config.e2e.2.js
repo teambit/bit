@@ -172,9 +172,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies).to.have.lengthOf(0);
         });
         it('should show the component file as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('bar-dir/bar.js');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bar-dir/bar.js');
         });
       });
       describe('ignoring a dependency file', () => {
@@ -195,9 +195,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies[0].id).to.not.have.string('foo2');
         });
         it('should show the dependency file as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo2.js');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo2.js');
         });
       });
       describe('ignoring a dependencies files with a glob pattern', () => {
@@ -217,10 +217,10 @@ describe('workspace config', function () {
           expect(showBar.dependencies).to.have.lengthOf(0);
         });
         it('should show the dependencies files as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo2.js');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo1.js');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo2.js');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo1.js');
         });
       });
       describe('ignoring a dependency component', () => {
@@ -241,9 +241,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies[0].id).to.not.equal('foo1');
         });
         it('should show the dependency component as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('utils/foo/foo1');
         });
       });
       describe('ignoring a dependencies components by wildcards', () => {
@@ -263,8 +263,8 @@ describe('workspace config', function () {
           expect(showBar.dependencies).to.have.lengthOf(2);
         });
         it('should not show the dependencies component as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.deep.equal({});
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.deep.equal({});
         });
       });
       describe('ignoring a missing file', () => {
@@ -295,9 +295,9 @@ describe('workspace config', function () {
           expect(status).to.not.have.string(statusFailureMsg);
         });
         it('should show the dependency file as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo3');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo3');
         });
       });
       describe('ignoring a missing component', () => {
@@ -328,9 +328,9 @@ describe('workspace config', function () {
           expect(status).to.not.have.string(statusFailureMsg);
         });
         it('should show the component as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('bit.utils/is-string');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bit.utils/is-string');
         });
       });
       describe('ignoring an existing component required as a package', () => {
@@ -359,9 +359,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies[0].id).to.have.string('foo2');
         });
         it('should show the component dependency as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
         });
       });
     });
@@ -391,9 +391,9 @@ describe('workspace config', function () {
           expect(status).to.not.have.string(statusFailureMsg);
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('non-exist-package');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('non-exist-package');
         });
       });
       describe('ignoring an existing package', () => {
@@ -419,9 +419,9 @@ describe('workspace config', function () {
           expect(Object.keys(showBar.packageDependencies)[0]).to.equal('another-existing-package');
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('existing-package');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('existing-package');
         });
       });
       describe('ignoring an existing devDependency package', () => {
@@ -454,12 +454,12 @@ describe('workspace config', function () {
           expect(Object.keys(showBar.devPackageDependencies)[0]).to.equal('another-existing-package');
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('devDependencies');
-          expect(showBar.ignoredDependencies.devDependencies).to.include('existing-package');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('devDependencies');
+          expect(showBar.manuallyRemovedDependencies.devDependencies).to.include('existing-package');
         });
         it('should not confuse ignore of dependencies with ignore of devDependencies', () => {
-          expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies).to.not.have.property('dependencies');
         });
       });
       describe('ignoring an existing peerDependency package', () => {
@@ -489,13 +489,13 @@ describe('workspace config', function () {
           expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(1);
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('peerDependencies');
-          expect(showBar.ignoredDependencies.peerDependencies).to.include('chai');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('peerDependencies');
+          expect(showBar.manuallyRemovedDependencies.peerDependencies).to.include('chai');
         });
         it('should not confuse ignore of dependencies/devDependencies with ignore of peerDependencies', () => {
-          expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
-          expect(showBar.ignoredDependencies).to.not.have.property('devDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.not.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies).to.not.have.property('devDependencies');
         });
       });
     });
@@ -663,9 +663,9 @@ describe('workspace config', function () {
           });
           it('should show the dependency as ignored', () => {
             const showBar = helper.showComponentParsed('bar/foo');
-            expect(showBar).to.have.property('ignoredDependencies');
-            expect(showBar.ignoredDependencies).to.have.property('dependencies');
-            expect(showBar.ignoredDependencies.dependencies).to.include('chai');
+            expect(showBar).to.have.property('manuallyRemovedDependencies');
+            expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+            expect(showBar.manuallyRemovedDependencies.dependencies).to.include('chai');
           });
           it('should save the overrides of the first version into consumer config', () => {
             const bitJson = helper.readBitJson();
@@ -684,8 +684,8 @@ describe('workspace config', function () {
           });
           it('should not show the dependency as ignored', () => {
             const showBar = helper.showComponentParsed('bar/foo');
-            expect(showBar).to.have.property('ignoredDependencies');
-            expect(showBar.ignoredDependencies).to.be.empty;
+            expect(showBar).to.have.property('manuallyRemovedDependencies');
+            expect(showBar.manuallyRemovedDependencies).to.be.empty;
           });
           it('should not change the consumer config', () => {
             const bitJson = helper.readBitJson();
@@ -810,9 +810,9 @@ describe('workspace config', function () {
           expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
         });
         it('should show the package as ignored from dependencies', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('chai');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('chai');
         });
         it('should show the package as manually added to peerDependencies', () => {
           expect(showBar).to.have.property('manuallyAddedDependencies');
