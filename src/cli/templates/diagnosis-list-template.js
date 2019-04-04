@@ -17,14 +17,19 @@ const tableColumnConfig = {
     2: {
       alignment: 'left'
       // width: DESCRIPTION_COLUMN_WIDTH
+    },
+    // $FlowFixMe
+    3: {
+      alignment: 'left'
+      // width: DESCRIPTION_COLUMN_WIDTH
     }
   }
 };
 
-type DiagnosisRow = [string, string];
+type DiagnosisRow = [string, string, string];
 
 function createRow(diagnosis: Diagnosis): DiagnosisRow {
-  return [diagnosis.name, diagnosis.description];
+  return [diagnosis.category, diagnosis.name, diagnosis.description];
 }
 
 export default function formatDiagnosesList(diagnosesList: Diagnosis[]): string {
