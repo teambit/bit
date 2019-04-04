@@ -14,7 +14,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   category = 'bit-core-files';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
-    const bitJsonPath = R.path(bareResult, ['data', 'bitJsonPath']);
+    const bitJsonPath = R.path(['data', 'bitJsonPath'], bareResult);
     return `invalid bit.json: ${bitJsonPath} is not a valid JSON file.`;
   }
 
