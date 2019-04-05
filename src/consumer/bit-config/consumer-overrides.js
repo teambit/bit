@@ -4,6 +4,7 @@ import BitId from '../../bit-id/bit-id';
 import hasWildcard from '../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import { validateUserInputType } from '../../utils/validate-type';
+import type Component from '../component/consumer-component';
 
 export type ConsumerOverridesOfComponent = {
   dependencies?: Object,
@@ -79,11 +80,21 @@ export default class ConsumerOverrides {
     return numOfNamespaces(b) - numOfNamespaces(a);
   }
 
-  updateOverridesIfChanged(id: BitId, overrides: ConsumerOverridesOfComponent): boolean {
+  async updateOverridesIfChanged(component: Component, areEnvsChanged: boolean): Promise<boolean> {
+    const overrides: ConsumerOverridesOfComponent = component.overrides.componentOverridesData;
+    const id: BitId = component.id;
     const existingOverrides = this.getOverrideComponentData(id);
-    if (this.areOverridesObjectsEqual(existingOverrides, overrides)) return false;
+    if (!areEnvsChanged && this.areOverridesObjectsEqual(existingOverrides, overrides)) return false;
     const exactMatch = this.findExactMatch(id);
     const key = exactMatch || id.toStringWithoutVersion();
+    const env = {};
+    if (component.compiler) {
+      env.compiler = component.compiler.toBitJsonObject('.');
+    }
+    if (component.tester) {
+      env.tester = component.tester.toBitJsonObject('.');
+    }
+    if (!R.isEmpty(env)) overrides.env = env;
     this.overrides[key] = overrides;
     this.hasChanged = true;
     return true;

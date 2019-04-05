@@ -15,6 +15,7 @@ import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
+import EnvExtension from '../../extensions/env-extension';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -110,7 +111,7 @@ export default class ComponentWriter {
     this._determineWhetherToWriteConfig();
     this._updateComponentRootPathAccordingToBitMap();
     this._updateBitMapIfNeeded();
-    this._updateConsumerConfigIfNeeded();
+    await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
     return this.component;
@@ -218,14 +219,29 @@ export default class ComponentWriter {
     }
   }
 
-  _updateConsumerConfigIfNeeded() {
+  async _updateConsumerConfigIfNeeded() {
     // for authored components there is no bit.json/package.json component specific
-    // so if the overrides were changed, it should be written to the consumer-config
-    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      this.consumer.bitConfig.overrides.updateOverridesIfChanged(
-        this.component.id,
-        this.component.overrides.componentOverridesData
+    // so if the overrides or envs were changed, it should be written to the consumer-config
+    const areEnvsChanged = async (): Promise<boolean> => {
+      const context = { componentDir: this.componentMap.getRootDir() };
+      const loadEnvArgs = [this.consumer.getPath(), this.consumer.scope.getPath(), context];
+      const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
+      const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
+      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
+      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
+      return (
+        EnvExtension.areEnvsDifferent(
+          compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
+          compilerFromComponent
+        ) ||
+        EnvExtension.areEnvsDifferent(
+          testerFromConsumer ? testerFromConsumer.toModelObject() : null,
+          testerFromComponent
+        )
       );
+    };
+    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      this.consumer.bitConfig.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 

@@ -10,7 +10,7 @@ import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
 import { Repository } from '../scope/objects';
-import { pathJoinLinux } from '../utils';
+import { pathJoinLinux, sortObject, sha1 } from '../utils';
 import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
 import type { PathOsBased } from '../utils/path';
 import type { EnvExtensionObject } from '../consumer/bit-config/abstract-bit-config';
@@ -387,6 +387,30 @@ export default class EnvExtension extends BaseExtension {
       scopePath,
       context
     });
+  }
+
+  /**
+   * are two envs (in the model/scope format) different
+   */
+  static areEnvsDifferent(envModelA: ?EnvExtensionModel, envModelB: ?EnvExtensionModel) {
+    const sortEnv = (env) => {
+      env.files = R.sortBy(R.prop('name'), env.files);
+      env.config = sortObject(env.config);
+      const result = sortObject(env);
+      return result;
+    };
+    const stringifyEnv = (env) => {
+      if (!env) {
+        return '';
+      }
+      if (typeof env === 'string') {
+        return env;
+      }
+      return JSON.stringify(sortEnv(env));
+    };
+    const envModelAString = stringifyEnv(envModelA);
+    const envModelBString = stringifyEnv(envModelB);
+    return sha1(envModelAString) !== sha1(envModelBString);
   }
 }
 

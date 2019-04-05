@@ -251,6 +251,25 @@ describe('envs', function () {
           valToDynamic: 'dyanamicValue'
         });
       });
+      it('should write the modified envs into consumer config overrides', () => {
+        const bitJson = helper.readBitJson();
+        const compName = `${helper.remoteScope}/comp/my-comp`;
+        expect(bitJson.overrides).to.have.property(compName);
+        expect(bitJson.overrides[compName]).to.have.property('env');
+        expect(bitJson.overrides[compName].env).to.have.property('compiler');
+        const compilerConfig = bitJson.overrides[compName].env.compiler[`${helper.envScope}/compilers/new-babel@0.0.1`];
+        expect(compilerConfig.rawConfig).to.deep.equal({
+          a: 'compiler',
+          valToDynamic: 'dyanamicValue'
+        });
+        expect(compilerConfig.files).to.deep.equal({ '.babelrc': './.babelrc' });
+        const testerConfig = bitJson.overrides[compName].env.tester[`${helper.envScope}/testers/new-mocha@0.0.1`];
+        expect(testerConfig.rawConfig).to.deep.equal({
+          a: 'tester',
+          valToDynamic: 'dyanamicValue'
+        });
+        expect(testerConfig.files).to.deep.equal({ config: './mocha-config.opts' });
+      });
       describe('tagging detached component', () => {
         before(() => {
           // Change the component

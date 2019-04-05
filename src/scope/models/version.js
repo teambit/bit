@@ -2,7 +2,7 @@
 import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs, sha1, sortObject } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs } from '../../utils';
 import type { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
@@ -20,6 +20,7 @@ import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import type { ComponentOverridesData } from '../../consumer/bit-config/component-overrides';
+import EnvExtension from '../../extensions/env-extension';
 
 type CiProps = {
   error: Object,
@@ -503,32 +504,6 @@ export default class Version extends BitObject {
     };
 
     /**
-     * Get to envs models and check if they are different
-     * @param {*} envModelFromFs
-     * @param {*} envModelFromModel
-     */
-    const areEnvsDifferent = (envModelFromFs, envModelFromModel) => {
-      const sortEnv = (env) => {
-        env.files = R.sortBy(R.prop('name'), env.files);
-        env.config = sortObject(env.config);
-        const result = sortObject(env);
-        return result;
-      };
-      const stringifyEnv = (env) => {
-        if (!env) {
-          return '';
-        }
-        if (typeof env === 'string') {
-          return env;
-        }
-        return JSON.stringify(sortEnv(env));
-      };
-      const envModelFromFsString = stringifyEnv(envModelFromFs);
-      const envModelFromModelString = stringifyEnv(envModelFromModel);
-      return sha1(envModelFromFsString) !== sha1(envModelFromModelString);
-    };
-
-    /**
      * Calculate the detach status based on the component origin, the component detach status from bitmap and comparison
      * between the env in fs and the env in models
      * @param {*} origin
@@ -541,7 +516,7 @@ export default class Version extends BitObject {
       if (detachFromFs) return detachFromFs;
       // In case i'm the author and it's not already detached it can't be changed here
       if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
-      const envDiff = areEnvsDifferent(envModelFromFs, envModelFromModel);
+      const envDiff = EnvExtension.areEnvsDifferent(envModelFromFs, envModelFromModel);
       if (!envDiff) return undefined;
       return true;
     };
