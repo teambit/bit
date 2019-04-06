@@ -31,7 +31,7 @@ export default class ConsumerOverrides {
     const getMatches = (): string[] => {
       const exactMatch = this.findExactMatch(bitId);
       const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this.isMatchByWildcard(bitId, idStr));
-      const allMatches = matchByGlobPattern.sort(this.sortWildcardsByNamespaceLength);
+      const allMatches = matchByGlobPattern.sort(ConsumerOverrides.sortWildcards);
       if (exactMatch) allMatches.unshift(exactMatch);
       return allMatches;
     };
@@ -72,12 +72,33 @@ export default class ConsumerOverrides {
    * sort from the more specific (more namespaces) to the more generic (less namespaces)
    * e.g.
    * src/utils/javascript/*
+   * src/utils/javascript/*
    * src/utils/*
    * src/*
+   *
+   * more namespaces (slashes) === more specific
+   * more wildcards === less specific
+   *
+   * if both have the same number of namespaces (slashes), the one with less wildcards is first.
+   * if both have the same number of wildcards, the one with more namespaces is first.
+   *
+   * a reminder about compare function:
+   * If the result is negative a is sorted before b.
+   * If the result is positive b is sorted before a.
+   * If the result is 0 no changes is done with the sort order of the two values.
    */
-  sortWildcardsByNamespaceLength(a: string, b: string): number {
+  static sortWildcards(a: string, b: string): number {
     const numOfNamespaces = str => (str.match(/\//g) || []).length;
-    return numOfNamespaces(b) - numOfNamespaces(a);
+    const numOfWildcards = str => (str.match(/\*/g) || []).length;
+    const indexOfFirstWildcard = str => str.indexOf('*');
+    const byNamespaces = numOfNamespaces(b) - numOfNamespaces(a);
+    if (byNamespaces !== 0) return byNamespaces;
+    const byWildcards = numOfWildcards(a) - numOfWildcards(b);
+    if (byWildcards !== 0) return byWildcards;
+    // both have the same number of namespaces and the same number of wildcards
+    // e.g. a component `utils/is-string` matches two rules: `utils/*` and `*/is-string`.
+    // the one with the wildcard more left should be first as it is more specific.
+    return indexOfFirstWildcard(a) - indexOfFirstWildcard(b);
   }
 
   async updateOverridesIfChanged(component: Component, areEnvsChanged: boolean): Promise<boolean> {

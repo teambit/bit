@@ -79,4 +79,21 @@ describe('componentsOverrides', () => {
       });
     });
   });
+  describe('sortWildcards', () => {
+    it('more namespaces should be first', () => {
+      const arr = ['bar/*', 'bar/foo/baz/*', 'bar/foo/*'];
+      arr.sort(ConsumerOverrides.sortWildcards);
+      expect(arr).to.deep.equal(['bar/foo/baz/*', 'bar/foo/*', 'bar/*']);
+    });
+    it('less wildcards should be first', () => {
+      const arr = ['bar/foo/baz/*', 'bar/*/*/*', 'bar/foo/*/*'];
+      arr.sort(ConsumerOverrides.sortWildcards);
+      expect(arr).to.deep.equal(['bar/foo/baz/*', 'bar/foo/*/*', 'bar/*/*/*']);
+    });
+    it('wildcards located most left should be first', () => {
+      const arr = ['foo/*', '*/foo'];
+      arr.sort(ConsumerOverrides.sortWildcards);
+      expect(arr).to.deep.equal(['*/foo', 'foo/*']);
+    });
+  });
 });
