@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [14.0.6-dev.1] - 2019-04-07
 
 - `overrides` property supports manually adding dependencies (experimental for now)
 - `overrides` property supports ignoring dependencies (experimental for now)
