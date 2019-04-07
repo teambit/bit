@@ -532,7 +532,7 @@ describe('workspace config', function () {
           catBar = helper.catComponent('bar@latest');
         });
         it('should be able to tag successfully', () => {
-          expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('1 component(s) tagged');
         });
         it('should remove the dependency from the model', () => {
           expect(catBar.dependencies).to.have.lengthOf(1);
