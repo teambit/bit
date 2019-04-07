@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.0.5] - 2019-04-03
+## [14.0.5-dev.2] - 2019-04-07
 
 - fix `remove` command to not delete dependencies files from the scope as they might belong to other components
 - fix symlink to binary (or unsupported) files dependencies when installed via npm
