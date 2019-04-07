@@ -7,22 +7,8 @@ import Diagnosis from '../../doctor/Diagnosis';
 // const DESCRIPTION_COLUMN_WIDTH = 30;
 
 const tableColumnConfig = {
-  columns: {
-    // $FlowFixMe
-    1: {
-      alignment: 'left'
-      // width: NAME_COLUMN_WIDTH
-    },
-    // $FlowFixMe
-    2: {
-      alignment: 'left'
-      // width: DESCRIPTION_COLUMN_WIDTH
-    },
-    // $FlowFixMe
-    3: {
-      alignment: 'left'
-      // width: DESCRIPTION_COLUMN_WIDTH
-    }
+  columnDefault: {
+    alignment: 'left'
   }
 };
 
