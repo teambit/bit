@@ -10,6 +10,9 @@ import type Consumer from '../../../../consumer/consumer';
 import type { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
 import Dependencies from '../dependencies';
+import { MANUALLY_ADD_DEPENDENCY, MANUALLY_REMOVE_DEPENDENCY } from '../../../../constants';
+
+const isValidVersion = ver => ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -126,7 +129,8 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   function getIdFromConsumerBitConfig(componentId: BitId): ?BitId {
-    const dependencies = component.overrides.getAllDependenciesOverridesFromConsumer();
+    const allDependenciesOverrides = component.overrides.getAllDependenciesOverridesFromConsumer();
+    const dependencies = R.filter(isValidVersion, allDependenciesOverrides);
     if (R.isEmpty(dependencies)) return null;
     const dependency = Object.keys(dependencies).find(
       idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr
@@ -136,7 +140,8 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   function getIdFromComponentBitConfig(componentId: BitId): ?BitId {
-    const dependencies = component.overrides.getAllDependenciesOverrides();
+    const allDependenciesOverrides = component.overrides.getAllDependenciesOverrides();
+    const dependencies = R.filter(isValidVersion, allDependenciesOverrides);
     if (R.isEmpty(dependencies)) return null;
     const dependency = Object.keys(dependencies).find(
       idStr => componentId.toStringWithoutVersion() === idStr || componentId.toStringWithoutScopeAndVersion() === idStr

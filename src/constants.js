@@ -355,4 +355,6 @@ export const TESTER_ENV_TYPE = 'tester';
 
 export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
 
-export const IGNORE_DEPENDENCY = '-';
+export const MANUALLY_REMOVE_DEPENDENCY = '-';
+
+export const MANUALLY_ADD_DEPENDENCY = '+';

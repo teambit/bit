@@ -2,7 +2,7 @@
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import ComponentBitConfig from './component-bit-config';
-import { IGNORE_DEPENDENCY } from '../../constants';
+import { MANUALLY_REMOVE_DEPENDENCY } from '../../constants';
 import type { ConsumerOverridesOfComponent } from './consumer-overrides';
 import { dependenciesFields } from './consumer-overrides';
 
@@ -85,13 +85,7 @@ export default class ComponentOverrides {
       this.overridesFromConsumer.peerDependencies
     );
   }
-  getIgnoredDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overrides.dependencies || {}));
-  }
-  getIgnoredDevDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overrides.devDependencies || {}));
-  }
-  getIgnoredPeerDependencies(): string[] {
-    return R.keys(R.filter(dep => dep === IGNORE_DEPENDENCY, this.overrides.peerDependencies || {}));
+  getIgnored(field: string) {
+    return R.keys(R.filter(dep => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
   }
 }

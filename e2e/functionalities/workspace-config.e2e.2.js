@@ -172,9 +172,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies).to.have.lengthOf(0);
         });
         it('should show the component file as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('bar-dir/bar.js');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bar-dir/bar.js');
         });
       });
       describe('ignoring a dependency file', () => {
@@ -195,9 +195,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies[0].id).to.not.have.string('foo2');
         });
         it('should show the dependency file as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo2.js');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo2.js');
         });
       });
       describe('ignoring a dependencies files with a glob pattern', () => {
@@ -217,10 +217,10 @@ describe('workspace config', function () {
           expect(showBar.dependencies).to.have.lengthOf(0);
         });
         it('should show the dependencies files as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo2.js');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo1.js');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo2.js');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo1.js');
         });
       });
       describe('ignoring a dependency component', () => {
@@ -241,9 +241,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies[0].id).to.not.equal('foo1');
         });
         it('should show the dependency component as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('utils/foo/foo1');
         });
       });
       describe('ignoring a dependencies components by wildcards', () => {
@@ -259,14 +259,12 @@ describe('workspace config', function () {
           helper.addOverridesToBitJson(overrides);
           showBar = helper.showComponentParsed('bar');
         });
-        it('should not add the removed dependencies to the component', () => {
-          expect(showBar.dependencies).to.have.lengthOf(0);
+        it('should not ignore the dependencies as we do not support ignoring dependencies components by wildcards', () => {
+          expect(showBar.dependencies).to.have.lengthOf(2);
         });
-        it('should show the dependencies component as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo1');
-          expect(showBar.ignoredDependencies.dependencies).to.include('utils/foo/foo2');
+        it('should not show the dependencies component as ignored', () => {
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.deep.equal({});
         });
       });
       describe('ignoring a missing file', () => {
@@ -297,9 +295,9 @@ describe('workspace config', function () {
           expect(status).to.not.have.string(statusFailureMsg);
         });
         it('should show the dependency file as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('foo-dir/foo3');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo3');
         });
       });
       describe('ignoring a missing component', () => {
@@ -318,7 +316,7 @@ describe('workspace config', function () {
           const overrides = {
             bar: {
               dependencies: {
-                'bit.utils/*': '-'
+                'bit.utils/is-string': '-'
               }
             }
           };
@@ -330,9 +328,9 @@ describe('workspace config', function () {
           expect(status).to.not.have.string(statusFailureMsg);
         });
         it('should show the component as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('bit.utils/is-string');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('bit.utils/is-string');
         });
       });
       describe('ignoring an existing component required as a package', () => {
@@ -361,9 +359,9 @@ describe('workspace config', function () {
           expect(showBar.dependencies[0].id).to.have.string('foo2');
         });
         it('should show the component dependency as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
         });
       });
     });
@@ -393,9 +391,9 @@ describe('workspace config', function () {
           expect(status).to.not.have.string(statusFailureMsg);
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('non-exist-package');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('non-exist-package');
         });
       });
       describe('ignoring an existing package', () => {
@@ -421,9 +419,9 @@ describe('workspace config', function () {
           expect(Object.keys(showBar.packageDependencies)[0]).to.equal('another-existing-package');
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('dependencies');
-          expect(showBar.ignoredDependencies.dependencies).to.include('existing-package');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('existing-package');
         });
       });
       describe('ignoring an existing devDependency package', () => {
@@ -456,12 +454,12 @@ describe('workspace config', function () {
           expect(Object.keys(showBar.devPackageDependencies)[0]).to.equal('another-existing-package');
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('devDependencies');
-          expect(showBar.ignoredDependencies.devDependencies).to.include('existing-package');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('devDependencies');
+          expect(showBar.manuallyRemovedDependencies.devDependencies).to.include('existing-package');
         });
         it('should not confuse ignore of dependencies with ignore of devDependencies', () => {
-          expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies).to.not.have.property('dependencies');
         });
       });
       describe('ignoring an existing peerDependency package', () => {
@@ -491,13 +489,13 @@ describe('workspace config', function () {
           expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(1);
         });
         it('should show the package as ignored', () => {
-          expect(showBar).to.have.property('ignoredDependencies');
-          expect(showBar.ignoredDependencies).to.have.property('peerDependencies');
-          expect(showBar.ignoredDependencies.peerDependencies).to.include('chai');
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('peerDependencies');
+          expect(showBar.manuallyRemovedDependencies.peerDependencies).to.include('chai');
         });
         it('should not confuse ignore of dependencies/devDependencies with ignore of peerDependencies', () => {
-          expect(showBar.ignoredDependencies).to.not.have.property('dependencies');
-          expect(showBar.ignoredDependencies).to.not.have.property('devDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.not.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies).to.not.have.property('devDependencies');
         });
       });
     });
@@ -665,9 +663,9 @@ describe('workspace config', function () {
           });
           it('should show the dependency as ignored', () => {
             const showBar = helper.showComponentParsed('bar/foo');
-            expect(showBar).to.have.property('ignoredDependencies');
-            expect(showBar.ignoredDependencies).to.have.property('dependencies');
-            expect(showBar.ignoredDependencies.dependencies).to.include('chai');
+            expect(showBar).to.have.property('manuallyRemovedDependencies');
+            expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+            expect(showBar.manuallyRemovedDependencies.dependencies).to.include('chai');
           });
           it('should save the overrides of the first version into consumer config', () => {
             const bitJson = helper.readBitJson();
@@ -686,8 +684,8 @@ describe('workspace config', function () {
           });
           it('should not show the dependency as ignored', () => {
             const showBar = helper.showComponentParsed('bar/foo');
-            expect(showBar).to.have.property('ignoredDependencies');
-            expect(showBar.ignoredDependencies).to.be.empty;
+            expect(showBar).to.have.property('manuallyRemovedDependencies');
+            expect(showBar.manuallyRemovedDependencies).to.be.empty;
           });
           it('should not change the consumer config', () => {
             const bitJson = helper.readBitJson();
@@ -780,6 +778,271 @@ describe('workspace config', function () {
       it('bit status should not show the component as modified', () => {
         const status = helper.status();
         expect(status).to.not.have.string('modified components');
+      });
+    });
+    describe('manually adding dependencies', () => {
+      describe('moving a package from dependencies to peerDependencies', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addNpmPackage('chai', '2.4');
+          helper.createPackageJson({ dependencies: { chai: '2.4' } });
+          helper.addComponentBarFoo();
+          const overrides = {
+            'bar/foo': {
+              dependencies: {
+                chai: '-'
+              },
+              peerDependencies: {
+                chai: '+'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+          showBar = helper.showComponentParsed('bar/foo');
+        });
+        it('should ignore the specified package from dependencies', () => {
+          expect(Object.keys(showBar.packageDependencies)).to.have.lengthOf(0);
+        });
+        it('should add the specified package to peerDependencies', () => {
+          expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(1);
+          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
+        });
+        it('should show the package as ignored from dependencies', () => {
+          expect(showBar).to.have.property('manuallyRemovedDependencies');
+          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('chai');
+        });
+        it('should show the package as manually added to peerDependencies', () => {
+          expect(showBar).to.have.property('manuallyAddedDependencies');
+          expect(showBar.manuallyAddedDependencies).to.have.property('peerDependencies');
+          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.4']);
+        });
+      });
+      describe('adding a package with version that does not exist in package.json', () => {
+        let showBar;
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addComponentBarFoo();
+          const overrides = {
+            'bar/foo': {
+              peerDependencies: {
+                chai: '2.4'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+          showBar = helper.showComponentParsed('bar/foo');
+        });
+        it('should add the specified package to peerDependencies', () => {
+          expect(Object.keys(showBar.peerPackageDependencies)).to.have.lengthOf(1);
+          expect(showBar.peerPackageDependencies).to.deep.equal({ chai: '2.4' });
+        });
+        it('should show the package as manually added to peerDependencies', () => {
+          expect(showBar).to.have.property('manuallyAddedDependencies');
+          expect(showBar.manuallyAddedDependencies).to.have.property('peerDependencies');
+          expect(showBar.manuallyAddedDependencies.peerDependencies).to.deep.equal(['chai@2.4']);
+        });
+      });
+      describe('adding a package without version that does not exist in package.json', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createComponentBarFoo("import chai from 'chai';");
+          helper.addComponentBarFoo();
+          const overrides = {
+            'bar/foo': {
+              peerDependencies: {
+                chai: '+'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+        });
+        it('should throw an error', () => {
+          const output = helper.runWithTryCatch('bit show bar/foo');
+          expect(output).to.have.string('unable to manually add the dependency "chai" into "bar/foo"');
+        });
+      });
+      describe('adding a component with a version', () => {
+        let showBar;
+        before(() => {
+          helper.setNewLocalAndRemoteScopes();
+          helper.createFile('', 'bar.js');
+          helper.createFile('', 'foo.js');
+          helper.addComponent('bar.js');
+          helper.addComponent('foo.js');
+          const overrides = {
+            bar: {
+              dependencies: {
+                foo: '0.0.1'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should show the component as manually added dependency', () => {
+          expect(showBar.manuallyAddedDependencies.dependencies).to.deep.equal(['foo@0.0.1']);
+        });
+        it('should add the component to the dependencies array with an empty relativePaths', () => {
+          expect(showBar.dependencies[0].id).to.equal('foo@0.0.1');
+          expect(showBar.dependencies[0].relativePaths).to.deep.equal([]);
+        });
+        describe('tagging the components', () => {
+          let catBar;
+          before(() => {
+            helper.tagAllComponents();
+            catBar = helper.catComponent('bar@latest');
+          });
+          it('should save the overrides data into the scope', () => {
+            expect(catBar).to.have.property('overrides');
+            expect(catBar.overrides)
+              .to.have.property('dependencies')
+              .that.deep.equal({ foo: '0.0.1' });
+          });
+          it('should save the manually added dependency into dependencies', () => {
+            expect(catBar.dependencies[0].id).to.deep.equal({ name: 'foo', version: '0.0.1' });
+            expect(catBar.dependencies[0].relativePaths).to.deep.equal([]);
+          });
+          it('should save the manually added dependency into flattenedDependencies', () => {
+            expect(catBar.flattenedDependencies[0]).to.deep.equal({ name: 'foo', version: '0.0.1' });
+          });
+          describe('importing the component', () => {
+            let originalAuthorScope;
+            before(() => {
+              helper.exportAllComponents();
+              originalAuthorScope = helper.cloneLocalScope();
+              helper.reInitLocalScope();
+              helper.addRemoteScope();
+              helper.importComponent('bar');
+            });
+            it('should also import the manually added dependency', () => {
+              const fooPath = path.join(helper.localScopePath, 'components/.dependencies/foo');
+              expect(fooPath).to.be.a.directory();
+            });
+            it('should add the overrides data into package.json', () => {
+              const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar'));
+              expect(packageJson).to.have.property('bit');
+              expect(packageJson.bit.overrides.dependencies).to.deep.equal({ foo: '0.0.1' });
+            });
+            it('bit status should show a clean state', () => {
+              const status = helper.status();
+              expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+            });
+            describe('removing the manually added dependency from the imported', () => {
+              before(() => {
+                const barPath = path.join(helper.localScopePath, 'components/bar');
+                const packageJson = helper.readPackageJson(barPath);
+                packageJson.bit.overrides.dependencies = {};
+                helper.writePackageJson(packageJson, barPath);
+              });
+              it('bit diff should show the removed dependency', () => {
+                const diff = helper.diff();
+                expect(diff).to.have.string('--- Dependencies (0.0.1 original)');
+                expect(diff).to.have.string('+++ Dependencies (0.0.1 modified)');
+                expect(diff).to.have.string(`- [ ${helper.remoteScope}/foo@0.0.1 ]`);
+                expect(diff).to.have.string('--- Overrides Dependencies (0.0.1 original)');
+                expect(diff).to.have.string('+++ Overrides Dependencies (0.0.1 modified)');
+                expect(diff).to.have.string('- [ foo@0.0.1 ]');
+              });
+              describe('tagging, exporting the component and then re-import for original author', () => {
+                before(() => {
+                  helper.tagAllComponents();
+                  helper.exportAllComponents();
+                  helper.reInitLocalScope();
+                  helper.getClonedLocalScope(originalAuthorScope);
+                  helper.importComponent('bar');
+                });
+                it('bit status should show a clean state', () => {
+                  const status = helper.status();
+                  expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+                });
+                it('should remove the added dependencies from consumer-config', () => {
+                  const bitJson = helper.readBitJson();
+                  expect(bitJson.overrides.bar.dependencies).to.be.empty;
+                });
+                it('should remove the dependency from the model', () => {
+                  catBar = helper.catComponent('bar@0.0.2');
+                  expect(catBar.dependencies).to.deep.equal([]);
+                  expect(catBar.overrides.dependencies).to.deep.equal({});
+                });
+                it('bit show should have the manuallyAddedDependencies empty', () => {
+                  showBar = helper.showComponentParsed('bar');
+                  expect(showBar.manuallyAddedDependencies).to.deep.equal({});
+                });
+              });
+            });
+          });
+        });
+      });
+      describe('adding a component without a version', () => {
+        let showBar;
+        before(() => {
+          helper.setNewLocalAndRemoteScopes();
+          helper.createFile('', 'bar.js');
+          helper.createFile('', 'foo.js');
+          helper.addComponent('bar.js');
+          helper.addComponent('foo.js');
+          const overrides = {
+            bar: {
+              dependencies: {
+                foo: '+'
+              }
+            }
+          };
+          helper.addOverridesToBitJson(overrides);
+          showBar = helper.showComponentParsed('bar');
+        });
+        it('should show the component as manually added dependency', () => {
+          expect(showBar.manuallyAddedDependencies.dependencies).to.deep.equal(['foo']);
+        });
+        it('should add the component to the dependencies array with an empty relativePaths', () => {
+          expect(showBar.dependencies[0].id).to.equal('foo');
+          expect(showBar.dependencies[0].relativePaths).to.deep.equal([]);
+        });
+        describe('tagging the components', () => {
+          let catBar;
+          before(() => {
+            helper.tagAllComponents();
+            catBar = helper.catComponent('bar@latest');
+          });
+          it('should save the overrides data into the scope', () => {
+            expect(catBar).to.have.property('overrides');
+            expect(catBar.overrides)
+              .to.have.property('dependencies')
+              .that.deep.equal({ foo: '+' });
+          });
+          it('should save the manually added dependency into dependencies and resolve its version correctly', () => {
+            expect(catBar.dependencies[0].id).to.deep.equal({ name: 'foo', version: '0.0.1' });
+            expect(catBar.dependencies[0].relativePaths).to.deep.equal([]);
+          });
+          it('should save the manually added dependency into flattenedDependencies', () => {
+            expect(catBar.flattenedDependencies[0]).to.deep.equal({ name: 'foo', version: '0.0.1' });
+          });
+        });
+        describe('importing the component', () => {
+          before(() => {
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('bar');
+          });
+          it('should also import the manually added dependency', () => {
+            const fooPath = path.join(helper.localScopePath, 'components/.dependencies/foo');
+            expect(fooPath).to.be.a.directory();
+          });
+          it('should add the overrides data into package.json', () => {
+            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar'));
+            expect(packageJson).to.have.property('bit');
+            expect(packageJson.bit.overrides.dependencies).to.deep.equal({ foo: '+' });
+          });
+          it('bit status should show a clean state', () => {
+            const status = helper.status();
+            expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+          });
+        });
       });
     });
   });
