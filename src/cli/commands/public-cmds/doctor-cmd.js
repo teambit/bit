@@ -1,10 +1,10 @@
 /** @flow */
 
-import chalk from 'chalk';
 import Command from '../../command';
 import runAll, { listDiagnoses } from '../../../api/consumer/lib/doctor';
 import type { ExamineResult } from '../../../doctor/Diagnosis';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
+import formatDiagnosesResult from '../../templates/doctor-results-template';
 import Diagnosis from '../../../doctor/Diagnosis';
 
 export default class Doctor extends Command {
@@ -20,7 +20,8 @@ export default class Doctor extends Command {
   }
 
   report(res: ExamineResult[]): string {
-    return chalk.green('run bit doctor', JSON.stringify(res));
+    const formatted = formatDiagnosesResult(res);
+    return formatted;
   }
 }
 
