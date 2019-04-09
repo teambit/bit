@@ -21,6 +21,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - avoid installing "undefined" npm package when importing authored components
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
 - improve authentication error message to clearly indicate the various strategies failures
+- fix `build` command with no cache flag 
 
 ## [14.0.5] - 2019-04-07
 
