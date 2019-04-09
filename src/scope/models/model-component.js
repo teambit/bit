@@ -324,8 +324,6 @@ export default class Component extends BitObject {
       mainFile: version.mainFile || null,
       compiler,
       tester,
-      detachedCompiler: version.detachedCompiler,
-      detachedTester: version.detachedTester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       compilerDependencies: version.compilerDependencies.getClone(),

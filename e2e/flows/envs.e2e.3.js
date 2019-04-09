@@ -228,12 +228,6 @@ describe('envs', function () {
         compilerModel = componentModel.compiler;
         testerModel = componentModel.tester;
       });
-      it('should mark the compiler as detached in .bitmap if the compiler is detached', () => {
-        expect(componentMap.detachedCompiler).to.be.true;
-      });
-      it('should mark the tester as detached in .bitmap if the tester is detached', () => {
-        expect(componentMap.detachedTester).to.be.true;
-      });
       it('should show error when trying to eject conf without path provided', () => {
         const error = new EjectNoDir(`${helper.remoteScope}/comp/my-comp`);
         const ejectFunc = () => helper.ejectConf('comp/my-comp');
@@ -278,24 +272,25 @@ describe('envs', function () {
           compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
           componentModel = helper.catComponent(compId);
         });
-        it('should mark the compiler as detached in models when tagging again', () => {
-          expect(componentModel.detachedCompiler).to.be.true;
-        });
-        it('should mark the tester as detached in models when tagging again', () => {
-          expect(componentModel.detachedTester).to.be.true;
+        it('should leave the overrides in the model as is (empty)', () => {
+          expect(componentModel).to.have.property('overrides').to.be.empty;
         });
         describe('attach back', () => {
-          let output;
+          // let output;
           before(() => {
-            output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
+            const bitJson = helper.readBitJson();
+            const compName = `${helper.remoteScope}/comp/my-comp`;
+            delete bitJson[compName];
+            helper.writeBitJson(bitJson);
+            // output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
             componentModel = helper.showComponentParsed('comp/my-comp');
             compilerModel = componentModel.compiler;
             testerModel = componentModel.tester;
           });
-          it('should print to output the attached components', () => {
-            expect(output).to.have.string('the following components has been attached to the workspace environments');
-            expect(output).to.have.string('comp/my-comp');
-          });
+          // it('should print to output the attached components', () => {
+          //   expect(output).to.have.string('the following components has been attached to the workspace environments');
+          //   expect(output).to.have.string('comp/my-comp');
+          // });
           it('should load the compiler from workspace bit.json after attach compiler back', () => {
             expect(compilerModel.config).to.include({
               a: 'b',

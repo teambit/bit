@@ -50,8 +50,6 @@ export type VersionProps = {
   dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtensionModel,
   tester?: ?TesterExtensionModel,
-  detachedCompiler?: ?boolean,
-  detachedTester?: ?boolean,
   log: Log,
   ci?: CiProps,
   specsResults?: ?Results,
@@ -83,8 +81,6 @@ export default class Version extends BitObject {
   dists: ?Array<DistFileModel>;
   compiler: ?CompilerExtensionModel;
   tester: ?TesterExtensionModel;
-  detachedCompiler: ?boolean;
-  detachedTester: ?boolean;
   log: Log;
   ci: CiProps | {};
   specsResults: ?Results;
@@ -132,8 +128,6 @@ export default class Version extends BitObject {
     this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
     this.customResolvedPaths = props.customResolvedPaths;
-    this.detachedCompiler = props.detachedCompiler;
-    this.detachedTester = props.detachedTester;
     this.overrides = props.overrides || {};
     this.validateVersion();
   }
@@ -299,8 +293,6 @@ export default class Version extends BitObject {
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
-        detachedCompiler: this.detachedCompiler,
-        detachedTester: this.detachedTester,
         log: {
           message: this.log.message,
           date: this.log.date,
@@ -355,8 +347,6 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix,
       tester,
-      detachedCompiler,
-      detachedTester,
       log,
       docs,
       ci,
@@ -427,8 +417,6 @@ export default class Version extends BitObject {
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
       tester: tester ? parseEnv(tester) : null,
-      detachedCompiler,
-      detachedTester,
       log: {
         message: log.message,
         date: log.date,
@@ -511,15 +499,15 @@ export default class Version extends BitObject {
      * @param {*} envModelFromFs
      * @param {*} envModelFromModel
      */
-    const calculateDetach = (origin: ComponentOrigin, detachFromFs: ?boolean, envModelFromFs, envModelFromModel) => {
-      // In case it's already detached keep the state as is
-      if (detachFromFs) return detachFromFs;
-      // In case i'm the author and it's not already detached it can't be changed here
-      if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
-      const envDiff = EnvExtension.areEnvsDifferent(envModelFromFs, envModelFromModel);
-      if (!envDiff) return undefined;
-      return true;
-    };
+    // const calculateDetach = (origin: ComponentOrigin, detachFromFs: ?boolean, envModelFromFs, envModelFromModel) => {
+    //   // In case it's already detached keep the state as is
+    //   if (detachFromFs) return detachFromFs;
+    //   // In case i'm the author and it's not already detached it can't be changed here
+    //   if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
+    //   const envDiff = EnvExtension.areEnvsDifferent(envModelFromFs, envModelFromModel);
+    //   if (!envDiff) return undefined;
+    //   return true;
+    // };
 
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
@@ -528,34 +516,8 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
-    let detachedCompiler;
-    let detachedTester;
     const compilerFromModel = R.path(['compiler'], versionFromModel);
     const testerFromModel = R.path(['tester'], versionFromModel);
-    if (compiler) {
-      detachedCompiler = calculateDetach(
-        component.origin,
-        component.detachedCompiler,
-        getEnvModelOrName(compiler),
-        compilerFromModel
-      );
-      if (detachedCompiler) {
-        // Save it on the component for future use
-        component.detachedCompiler = detachedCompiler;
-      }
-    }
-    if (tester) {
-      detachedTester = calculateDetach(
-        component.origin,
-        component.detachedTester,
-        getEnvModelOrName(tester),
-        testerFromModel
-      );
-      if (detachedTester) {
-        // Save it on the component for future use
-        component.detachedTester = detachedTester;
-      }
-    }
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -563,8 +525,6 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,
-      detachedCompiler,
-      detachedTester,
       log: {
         message,
         username,

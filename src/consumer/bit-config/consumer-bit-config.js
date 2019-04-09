@@ -17,6 +17,8 @@ import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
 import InvalidBitConfigPropPath from './exceptions/invalid-bit-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
+import type { ConsumerOverridesOfComponent } from './consumer-overrides';
+import BitId from '../../bit-id/bit-id';
 
 const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
@@ -130,6 +132,14 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     };
 
     return filterObject(consumerObject, isPropDefault);
+  }
+
+  getComponentData(id: BitId): ?ConsumerOverridesOfComponent {
+    const env = {
+      compiler: this.compiler,
+      tester: this.tester
+    };
+    return this.overrides.getOverrideComponentData(id, { env });
   }
 
   static create(): ConsumerBitConfig {

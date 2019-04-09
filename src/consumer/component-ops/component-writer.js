@@ -171,8 +171,6 @@ export default class ComponentWriter {
       mainFile: this.component.mainFile, // $FlowFixMe
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
-      detachedCompiler: this.component.detachedCompiler,
-      detachedTester: this.component.detachedTester,
       origin: this.origin,
       parent: this.parent,
       originallySharedDir: this.component.originallySharedDir,

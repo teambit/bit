@@ -43,7 +43,7 @@ export type TesterExtensionObject = EnvExtensionObject;
 export type CompilerExtensionObject = EnvExtensionObject;
 
 export type Extensions = { [extensionName: string]: RegularExtensionObject };
-export type Envs = { [envName: string]: CompilerExtensionObject };
+export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
 
@@ -88,23 +88,23 @@ export default class AbstractBitConfig {
   }
 
   get compiler(): ?Compilers {
-    const compilerObj = transformEnvToObject(this._compiler);
+    const compilerObj = AbstractBitConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
   set compiler(compiler: string | Compilers) {
-    this._compiler = transformEnvToObject(compiler);
+    this._compiler = AbstractBitConfig.transformEnvToObject(compiler);
   }
 
   get tester(): ?Testers {
-    const testerObj = transformEnvToObject(this._tester);
+    const testerObj = AbstractBitConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
   set tester(tester: string | Testers) {
-    this._tester = transformEnvToObject(tester);
+    this._tester = AbstractBitConfig.transformEnvToObject(tester);
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -279,17 +279,17 @@ export default class AbstractBitConfig {
     }
     return false;
   }
-}
 
-const transformEnvToObject = (env): Envs => {
-  if (typeof env === 'string') {
-    if (env === NO_PLUGIN_TYPE) return {};
-    return {
-      [env]: {}
-    };
+  static transformEnvToObject(env: string | Object): Envs {
+    if (typeof env === 'string') {
+      if (env === NO_PLUGIN_TYPE) return {};
+      return {
+        [env]: {}
+      };
+    }
+    return env;
   }
-  return env;
-};
+}
 
 const getEnvsProps = (
   consumerPath: string,

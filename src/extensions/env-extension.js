@@ -17,8 +17,8 @@ import type { EnvExtensionObject } from '../consumer/bit-config/abstract-bit-con
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import type CompilerExtension from './compiler-extension';
-import type TesterExtension from './tester-extension';
+import CompilerExtension from './compiler-extension';
+import TesterExtension from './tester-extension';
 import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
@@ -32,6 +32,8 @@ import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
 import type Consumer from '../consumer/consumer';
+import type { ConsumerOverridesOfComponent } from '../consumer/bit-config/consumer-overrides';
+import AbstractBitConfig from '../consumer/bit-config/abstract-bit-config';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -325,22 +327,20 @@ export default class EnvExtension extends BaseExtension {
   }
 
   /**
-   * Load the compiler / tester from the correct place
-   * This take into account the component origin (authored / imported)
-   * And the detach status of the env
-   * If a component has a bit.json with compiler defined take it
-   * Else if a component is not authored take if from the models
-   * Else, for authored component check if the compiler has been changed
-   *
+   * load the compiler/tester according to the following strategies:
+   * 1. from component config. (bit.json/package.json of the component) if it was written.
+   * for author, it's irrelevant, as the config is only written on the consumer config.
+   * 2. from component model. an imported component might not have the config written.
+   * for author, it's irrelevant, because upon import it's written to consumer config (if changed).
+   * 3. from consumer config. (bit.json/package.json of the consumer).
    */
   static async loadFromCorrectSource({
     consumerPath,
     scopePath,
     componentOrigin,
     componentFromModel,
-    consumerBitConfig,
     componentBitConfig,
-    detached,
+    overridesFromConsumer,
     envType,
     context
   }: {
@@ -348,45 +348,59 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    consumerBitConfig: ConsumerBitConfig,
     componentBitConfig: ?ComponentBitConfig,
-    detached: ?boolean,
+    overridesFromConsumer: ?ConsumerOverridesOfComponent,
     envType: EnvType,
     context?: Object
   }): Promise<?CompilerExtension | ?TesterExtension> {
+    if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
+      // load from component config.
+      // return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
+      const envConfig = { [envType]: componentBitConfig[envType] };
+      const configPath = componentBitConfig.path;
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
+    }
+    if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
+      // config was not written into component dir, load the config from the model
+      logger.debug(`env-extension, loading ${envType} from the model`);
+      return componentFromModel ? componentFromModel[envType] : undefined;
+    }
+    // load from consumer config
+    if (!overridesFromConsumer || !overridesFromConsumer.env || !overridesFromConsumer.env[envType]) return null;
+    const envConfig = AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]);
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
+    return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
+    // // Authored component
+    // if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
+    //   // The component is not detached - load from the consumer bit.json
+    //   if (!detached) {
+    //     return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
+    //   }
+    //   // The component is detached - load from the component bit.json or from the models
+    //   return loadFromComponentBitConfigOrFromModel({
+    //     modelComponent: componentFromModel,
+    //     componentBitConfig,
+    //     envType,
+    //     consumerPath,
+    //     scopePath,
+    //     context
+    //   });
+    // }
 
-    // Authored component
-    if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
-      // The component is not detached - load from the consumer bit.json
-      if (!detached) {
-        return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
-      }
-      // The component is detached - load from the component bit.json or from the models
-      return loadFromComponentBitConfigOrFromModel({
-        modelComponent: componentFromModel,
-        componentBitConfig,
-        envType,
-        consumerPath,
-        scopePath,
-        context
-      });
-    }
-
-    // Not authored components
-    // The component is attached - load from the consumer bit.json
-    // This is in purpose checking false not a falsy. since by default is undefined which is different from false.
-    if (detached === false) {
-      return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
-    }
-    return loadFromComponentBitConfigOrFromModel({
-      modelComponent: componentFromModel,
-      componentBitConfig,
-      envType,
-      consumerPath,
-      scopePath,
-      context
-    });
+    // // Not authored components
+    // // The component is attached - load from the consumer bit.json
+    // // This is in purpose checking false not a falsy. since by default is undefined which is different from false.
+    // if (detached === false) {
+    //   return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
+    // }
+    // return loadFromComponentBitConfigOrFromModel({
+    //   modelComponent: componentFromModel,
+    //   componentBitConfig,
+    //   envType,
+    //   consumerPath,
+    //   scopePath,
+    //   context
+    // });
   }
 
   /**
@@ -414,46 +428,81 @@ export default class EnvExtension extends BaseExtension {
   }
 }
 
-const loadFromBitJson = ({
-  bitJson,
+async function loadFromConfig({
+  envConfig,
   envType,
   consumerPath,
   scopePath,
+  configPath,
   context
-}): Promise<?CompilerExtension | ?TesterExtension> => {
-  logger.debug(`env-extension (${envType}) loadFromBitJson`);
-  if (envType === COMPILER_ENV_TYPE) {
-    return bitJson.loadCompiler(consumerPath, scopePath, context);
-  }
-  return bitJson.loadTester(consumerPath, scopePath, context);
-};
+}): Promise<?CompilerExtension | ?TesterExtension> {
+  logger.debug(`env-extension (${envType}) loadFromConfig`);
+  const env = envConfig[envType];
+  if (!env) return null;
+  // this.loadEnv(COMPILER_ENV_TYPE, consumerPath, scopePath, CompilerExtension.load, context)
+  const envName = Object.keys(env)[0];
+  const envObject = env[envName];
+  // const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, envType, context);
+  const envProps = {
+    name: envName,
+    consumerPath,
+    scopePath,
+    rawConfig: envObject.rawConfig,
+    files: envObject.files,
+    bitJsonPath: configPath, // @TODO: FIX! this is needed in order to load the environment files, however, they're not necessarily needed.
+    options: envObject.options,
+    envType,
+    context
+  };
+  const loadFunc = envType === COMPILER_ENV_TYPE ? CompilerExtension.load : TesterExtension.load;
+  return loadFunc(envProps);
 
-const loadFromComponentBitConfigOrFromModel = async ({
-  modelComponent,
-  componentBitConfig,
-  envType,
-  consumerPath,
-  scopePath,
-  context
-}: {
-  modelComponent: ConsumerComponent,
-  componentBitConfig: ?ComponentBitConfig,
-  envType: EnvType,
-  consumerPath: string,
-  scopePath: string,
-  context?: Object
-}): Promise<?CompilerExtension | ?TesterExtension> => {
-  logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel`);
-  if (componentBitConfig) {
-    return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
-  }
-  logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel. loading from the model`);
-  if (envType === COMPILER_ENV_TYPE) {
-    return modelComponent ? modelComponent.compiler : undefined;
-  }
-  if (envType === TESTER_ENV_TYPE) {
-    return modelComponent ? modelComponent.tester : undefined;
-  }
+  // if (envType === COMPILER_ENV_TYPE) {
+  //   return bitJson.loadCompiler(consumerPath, scopePath, context);
+  // }
+  // return bitJson.loadTester(consumerPath, scopePath, context);
+}
 
-  return undefined;
-};
+// const loadFromBitJson = ({
+//   bitJson,
+//   envType,
+//   consumerPath,
+//   scopePath,
+//   context
+// }): Promise<?CompilerExtension | ?TesterExtension> => {
+//   logger.debug(`env-extension (${envType}) loadFromBitJson`);
+//   if (envType === COMPILER_ENV_TYPE) {
+//     return bitJson.loadCompiler(consumerPath, scopePath, context);
+//   }
+//   return bitJson.loadTester(consumerPath, scopePath, context);
+// };
+
+// const loadFromComponentBitConfigOrFromModel = async ({
+//   modelComponent,
+//   componentBitConfig,
+//   envType,
+//   consumerPath,
+//   scopePath,
+//   context
+// }: {
+//   modelComponent: ConsumerComponent,
+//   componentBitConfig: ?ComponentBitConfig,
+//   envType: EnvType,
+//   consumerPath: string,
+//   scopePath: string,
+//   context?: Object
+// }): Promise<?CompilerExtension | ?TesterExtension> => {
+//   logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel`);
+//   if (componentBitConfig) {
+//     return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
+//   }
+//   logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel. loading from the model`);
+//   if (envType === COMPILER_ENV_TYPE) {
+//     return modelComponent ? modelComponent.compiler : undefined;
+//   }
+//   if (envType === TESTER_ENV_TYPE) {
+//     return modelComponent ? modelComponent.tester : undefined;
+//   }
+
+//   return undefined;
+// };

@@ -105,8 +105,6 @@ export type ComponentProps = {
   license?: ?License,
   deprecated: ?boolean,
   origin: ComponentOrigin,
-  detachedCompiler?: ?boolean,
-  detachedTester?: ?boolean,
   log?: ?Log
 };
 
@@ -154,8 +152,6 @@ export default class Component {
   issues: { [label: $Keys<typeof componentIssuesLabels>]: { [fileName: string]: string[] | BitId[] | string | BitId } };
   deprecated: boolean;
   origin: ComponentOrigin;
-  detachedCompiler: ?boolean;
-  detachedTester: ?boolean;
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   _driver: Driver;
   _isModified: boolean;
@@ -220,8 +216,6 @@ export default class Component {
     log,
     deprecated,
     origin,
-    detachedCompiler,
-    detachedTester,
     customResolvedPaths
   }: ComponentProps) {
     this.name = name;
@@ -255,8 +249,6 @@ export default class Component {
     this.log = log;
     this.deprecated = deprecated || false;
     this.origin = origin;
-    this.detachedCompiler = detachedCompiler;
-    this.detachedTester = detachedTester;
     this.customResolvedPaths = customResolvedPaths || [];
     this.validateComponent();
   }
@@ -328,12 +320,30 @@ export default class Component {
     }
   }
 
-  getDetachedCompiler(): boolean {
-    return _calculateDetachByOrigin(this.detachedCompiler, this.origin);
+  async getDetachedCompiler(consumer: ?Consumer): Promise<boolean> {
+    // return _calculateDetachByOrigin(this.detachedCompiler, this.origin);
+    return this._isEnvDetach(consumer, true);
   }
 
-  getDetachedTester(): boolean {
-    return _calculateDetachByOrigin(this.detachedTester, this.origin);
+  async getDetachedTester(consumer: ?Consumer): Promise<boolean> {
+    // return _calculateDetachByOrigin(this.detachedTester, this.origin);
+    return this._isEnvDetach(consumer, false);
+  }
+
+  async _isEnvDetach(consumer: ?Consumer, isCompiler?: boolean): Promise<boolean> {
+    if (this.origin !== COMPONENT_ORIGINS.AUTHORED || !consumer) return true;
+
+    const context = { componentDir: '' };
+    const loadEnvArgs = [consumer.getPath(), consumer.scope.getPath(), context];
+    const fromConsumer = isCompiler
+      ? await consumer.bitConfig.loadCompiler(...loadEnvArgs)
+      : await consumer.bitConfig.loadTester(...loadEnvArgs);
+    const getFromComponent = () => {
+      if (isCompiler) return this.compiler ? this.compiler.toModelObject() : null;
+      return this.tester ? this.tester.toModelObject() : null;
+    };
+    const fromComponent = getFromComponent();
+    return EnvExtension.areEnvsDifferent(fromConsumer ? fromConsumer.toModelObject() : null, fromComponent);
   }
 
   _getHomepage() {
@@ -361,14 +371,11 @@ export default class Component {
       throw new EjectToWorkspace();
     }
     // Nothing is detached.. no reason to eject
-    if (
-      (componentMap.origin === COMPONENT_ORIGINS.AUTHORED &&
-        !componentMap.detachedCompiler &&
-        !componentMap.detachedTester) ||
-      // Need to be check for false and not falsy for imported components
-      (componentMap.detachedCompiler === false && componentMap.detachedTester === false)
-    ) {
-      throw new EjectBoundToWorkspace();
+
+    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      const isCompilerDetached = await this.getDetachedCompiler(consumer);
+      const isTesterDetached = await this.getDetachedTester(consumer);
+      if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
     const res = await getEjectConfDataToPersist(this, consumer, configDirInstance);
@@ -633,7 +640,8 @@ export default class Component {
         if (tester && tester.action) {
           logger.debug('running tests using new format');
           Analytics.addBreadCrumb('runSpecs.run', 'running tests using new format');
-          const shouldWriteConfig = tester.writeConfigFilesOnAction && component.getDetachedTester();
+          const isTesterDetached = await component.getDetachedTester(consumer);
+          const shouldWriteConfig = tester.writeConfigFilesOnAction && isTesterDetached;
           if (shouldWriteConfig) {
             tmpFolderFullPath = component.getTmpFolder(consumerPath);
             if (verbose) {
@@ -797,8 +805,6 @@ export default class Component {
       bindingPrefix: this.bindingPrefix,
       compiler: this.compiler ? this.compiler.toObject() : null,
       tester: this.tester ? this.tester.toObject() : null,
-      detachedCompiler: this.detachedCompiler,
-      detachedTester: this.detachedTester,
       dependencies: this.dependencies.serialize(),
       devDependencies: this.devDependencies.serialize(),
       compilerDependencies: this.compilerDependencies.serialize(),
@@ -910,8 +916,6 @@ export default class Component {
       bindingPrefix,
       compiler,
       tester,
-      detachedCompiler,
-      detachedTester,
       dependencies,
       devDependencies,
       compilerDependencies,
@@ -944,8 +948,6 @@ export default class Component {
       bindingPrefix,
       compiler: compilerInstance,
       tester: testerInstance,
-      detachedCompiler,
-      detachedTester,
       dependencies,
       devDependencies,
       compilerDependencies,
@@ -1072,14 +1074,12 @@ export default class Component {
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
-      consumerBitConfig,
+      overridesFromConsumer: consumerBitConfig.getComponentData(id),
       componentBitConfig: componentMap.configDir ? componentBitConfig : null,
-      context: envsContext,
-      detached: componentMap.detachedCompiler
+      context: envsContext
     };
 
     const compilerP = EnvExtension.loadFromCorrectSource(propsToLoadEnvs);
-    propsToLoadEnvs.detached = componentMap.detachedTester;
     propsToLoadEnvs.envType = TESTER_ENV_TYPE;
     const testerP = EnvExtension.loadFromCorrectSource(propsToLoadEnvs);
 
@@ -1106,8 +1106,8 @@ export default class Component {
     };
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
-    const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
     const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig, isAuthor);
 
     return new Component({
@@ -1128,14 +1128,30 @@ export default class Component {
       testerPackageDependencies,
       deprecated,
       origin: componentMap.origin,
-      detachedCompiler: componentMap.detachedCompiler,
-      detachedTester: componentMap.detachedTester,
       overrides
     });
   }
 }
 
 function _calculateDetachByOrigin(detachVal: ?boolean, origin: ComponentOrigin): boolean {
+  // const areEnvsChanged = async (): Promise<boolean> => {
+  //   const context = { componentDir: this.componentMap.getRootDir() };
+  //   const loadEnvArgs = [this.consumer.getPath(), this.consumer.scope.getPath(), context];
+  //   const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
+  //   const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
+  //   const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
+  //   const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
+  //   return (
+  //     EnvExtension.areEnvsDifferent(
+  //       compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
+  //       compilerFromComponent
+  //     ) ||
+  //     EnvExtension.areEnvsDifferent(
+  //       testerFromConsumer ? testerFromConsumer.toModelObject() : null,
+  //       testerFromComponent
+  //     )
+  //   );
+  // };
   // If it was set to true it's the strongest
   if (detachVal) {
     return detachVal;

@@ -617,10 +617,6 @@ export default class Consumer {
     const updateVersionsP = components.map((component) => {
       const id: BitId = component instanceof ModelComponent ? component.toBitIdWithLatestVersion() : component.id;
       this.bitMap.updateComponentId(id);
-      if (component.pendingVersion) {
-        const { detachedCompiler, detachedTester } = component.pendingVersion;
-        this.bitMap.setDetachedCompilerAndTester(id, { detachedCompiler, detachedTester });
-      }
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
