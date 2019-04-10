@@ -170,7 +170,7 @@ describe('bit test command', function () {
         output = helper.tagAllComponents('--force');
       });
       it('should tag the component successfully', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
     });
   });

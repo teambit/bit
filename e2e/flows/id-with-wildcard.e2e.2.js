@@ -26,7 +26,7 @@ describe('component id with wildcard', function () {
       describe('when wildcard does not match any component', () => {
         it('should not tag any component', () => {
           const output = helper.tagComponent('none/*');
-          expect(output).to.have.string('0 components tagged');
+          expect(output).to.have.string('0 component(s) tagged');
         });
       });
       describe('when wildcard match some of the components', () => {
@@ -35,7 +35,7 @@ describe('component id with wildcard', function () {
           output = helper.tagComponent('"utils/is/*"');
         });
         it('should indicate the tagged components', () => {
-          expect(output).to.have.string('2 components tagged');
+          expect(output).to.have.string('2 component(s) tagged');
           expect(output).to.have.string('utils/is/string');
           expect(output).to.have.string('utils/is/type');
         });

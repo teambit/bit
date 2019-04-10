@@ -159,7 +159,7 @@ export default class Tag extends Command {
 
     return (
       warningsOutput +
-      chalk.green(`${taggedComponents.length + autoTaggedCount} components tagged`) +
+      chalk.green(`${taggedComponents.length + autoTaggedCount} component(s) tagged`) +
       chalk.gray(
         ` | ${addedComponents.length} added, ${changedComponents.length} changed, ${autoTaggedCount} auto-tagged`
       ) +
