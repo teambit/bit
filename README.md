@@ -84,7 +84,7 @@ To [tag a version]((https://docs.bit.dev/docs/tag-component-version.html)) for t
 
 Then, `bit export` them to a [remote collection](https://docs.bit.dev/docs/organizing-components.html) from which they can be installed in other projects. You can set up a collection on any server, or use [Bit’s component hub](https://bit.dev). Here’s a quick demo.
 
-**Exporting 256 Radma components (functions) from the repository to Bit’s hub in 2 minutes**:  
+**Exporting 256 Ramda components (functions) from the repository to Bit’s hub in 2 minutes**:  
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=pz0y2GTsSrU"><img width="460" height="300" src="https://storage.googleapis.com/bit-docs/image-ramda-256-components.png"></a>

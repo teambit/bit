@@ -5,19 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [14.0.6-dev.1] - 2019-04-07
 
 - `overrides` property supports manually adding dependencies (experimental for now)
-- fix `remove` command to not delete dependencies files from the scope as they might belong to other components
 - `overrides` property supports ignoring dependencies (experimental for now)
-- fix symlink to binary (or unsupported) files dependencies when installed via npm
 - fix tagging imported components to not loose package.json properties
 - `overrides` property of workspace configuration supports component ids with wildcards
 - support changing dependencies versions by adding them to the "overrides" property of the component configuration or workspace configuration
 - obsolete the `*dependencies` properties of component bit.json.
 - write component configuration data to package.json inside `bit` property on import. write to `bit.json` if `--conf` flag was used
-
-## [14.0.5-dev.1] - 2019-03-18
 
 - write workspace configuration data to package.json inside `bit` property instead of creating `bit.json` file
 - generate package.json with the main property on node_modules for authored exported components instead of creating an entry point file
@@ -25,6 +21,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - avoid installing "undefined" npm package when importing authored components
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
 - improve authentication error message to clearly indicate the various strategies failures
+
+## [14.0.5] - 2019-04-07
+
+- fix `remove` command to not delete dependencies files from the scope as they might belong to other components
+- fix symlink to binary (or unsupported) files dependencies when installed via npm
+
 
 ## [14.0.4] - 2019-03-18
 
