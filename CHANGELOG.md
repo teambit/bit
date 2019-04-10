@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
+- fix dependencies version resolution from package.json to support versions with range
 
 ## [14.0.5] - 2019-04-07
 
