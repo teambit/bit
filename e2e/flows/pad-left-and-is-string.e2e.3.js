@@ -432,7 +432,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       });
       it('should be able to tag the component with no error thrown', () => {
         const output = helper.tagAllComponents();
-        expect(output).to.has.string('1 components tagged');
+        expect(output).to.has.string('1 component(s) tagged');
       });
     });
   });
