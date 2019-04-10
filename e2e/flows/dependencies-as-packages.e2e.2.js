@@ -152,6 +152,19 @@ chai.use(require('chai-fs'));
             });
           });
         });
+        describe('updating dependency version from the dependent package.json', () => {
+          before(() => {
+            helper.getClonedLocalScope(afterImportScope);
+            const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
+            const packageJson = helper.readPackageJson(barFooDir);
+            packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`] = '^1.0.0';
+            helper.writePackageJson(packageJson, barFooDir);
+          });
+          it('should show the dependency version from the package.json even when using caret (^) in the version', () => {
+            const barFoo = helper.showComponentParsed('bar/foo');
+            expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@1.0.0`);
+          });
+        });
       });
     });
   }
