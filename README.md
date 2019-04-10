@@ -41,6 +41,8 @@ With Bit, any repository or library becomes a multi-component monorepo. It elimi
 
 Bit is used to quickly share and reuse code from any project. Every component can be installed, developed and used in any other project. Popular use cases are [UI components](https://bit.dev/components?labels=ui%20components) and [React components](https://bit.dev/components?labels=react), [JavaScript functions](https://bit.dev/components?labels=utils) and more.  
 
+Learn: **[Build a Super-Modular Todo App with React and Bit Components](https://blog.bitsrc.io/build-a-super-modular-todo-app-with-react-and-bit-components-aa06bbac4084)**.
+
 ### UI components
 
 Share components from UI libraries and projects, and use them to build new apps. [Discover components](https://bit.dev/components?labels=react) from the community, to add to your apps. Example:
