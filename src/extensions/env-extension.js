@@ -367,7 +367,7 @@ export default class EnvExtension extends BaseExtension {
     }
     // load from consumer config
     if (!overridesFromConsumer || !overridesFromConsumer.env || !overridesFromConsumer.env[envType]) return null;
-    const envConfig = AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]);
+    const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
     return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     // // Authored component

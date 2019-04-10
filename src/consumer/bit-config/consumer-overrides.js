@@ -36,7 +36,7 @@ export default class ConsumerOverrides {
       return allMatches;
     };
     const matches = getMatches();
-    if (!matches.length) return null;
+    if (!matches.length && R.isEmpty(consumerConfig)) return null;
     const overrideValues = matches.map(match => this.overrides[match]);
     const fields = ['env', 'dependencies', 'devDependencies', 'peerDependencies'];
     let stopPropagation = false;
