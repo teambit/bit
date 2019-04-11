@@ -82,7 +82,7 @@ function execAction(command, concrete, args) {
           data = res.data;
           code = res.__code;
         }
-        return logAndExit(command.report(data), command.name, code);
+        return logAndExit(command.report(data, relevantArgs, flags), command.name, code);
       });
     })
     .catch((err) => {
