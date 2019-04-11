@@ -1,4 +1,5 @@
 /** @flow */
+import os from 'os';
 import tar from 'tar-stream';
 import fs from 'fs-extra';
 import Stream from 'stream';
@@ -8,7 +9,8 @@ import Diagnosis from '../../../doctor/Diagnosis';
 import { getWithoutExt, getExt } from '../../../utils';
 import type { ExamineResult } from '../../../doctor/Diagnosis';
 import logger from '../../../logger/logger';
-import { DEBUG_LOG } from '../../../constants';
+import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../../constants';
+import * as globalConfig from './global-config';
 
 // load all diagnosis
 // list checks
@@ -17,8 +19,11 @@ import { DEBUG_LOG } from '../../../constants';
 
 export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: ?string };
 
+let runningTimeStamp;
+
 export default (async function runAll({ filePath }: { filePath?: string }): Promise<DoctorRunAllResults> {
   registerCoreAndExtensionsDiagnoses();
+  runningTimeStamp = _getTimeStamp();
   const doctorRegistrar = DoctorRegistrar.getInstance();
   const examineP = doctorRegistrar.diagnoses.map(diagnosis => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
@@ -68,17 +73,21 @@ function _calculateFinalFileName(fileName: string): string {
 }
 
 function _getDefaultFileName() {
+  const timestamp = runningTimeStamp || _getTimeStamp();
+  return `doctor-results-${timestamp}.tar`;
+}
+
+// TODO: move to utils
+function _getTimeStamp() {
   const d = new Date();
   const timestamp = d.getTime();
-  return `doctor-results-${timestamp}.tar`;
+  return timestamp;
 }
 
 async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): Promise<Stream.Readable> {
   const pack = tar.pack(); // pack is a streams2 stream
   const debugLog = await _getDebugLogAsStream();
-  const env = {
-    'node-version': process.version
-  };
+  const env = _getEnvMeta();
   pack.entry({ name: 'env-meta.json' }, JSON.stringify(env, null, 2));
   pack.entry({ name: 'doc-results.json' }, JSON.stringify(examineResults, null, 2));
   if (debugLog) {
@@ -87,6 +96,24 @@ async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): 
   pack.finalize();
 
   return pack;
+}
+
+function _getEnvMeta(): Object {
+  const env = {
+    'node-version': process.version,
+    'running-timestamp': runningTimeStamp || _getTimeStamp(),
+    platform: os.platform(),
+    'bit-version': BIT_VERSION,
+    'user-details': _getUserDetails()
+  };
+
+  return env;
+}
+
+function _getUserDetails(): string {
+  const name = globalConfig.getSync(CFG_USER_NAME_KEY) || '';
+  const email = globalConfig.getSync(CFG_USER_EMAIL_KEY) || '';
+  return `${name}<${email}>`;
 }
 
 async function _getDebugLogAsStream(): Promise<?Buffer> {
