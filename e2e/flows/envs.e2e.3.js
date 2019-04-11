@@ -89,7 +89,18 @@ describe('envs', function () {
   after(() => {
     helper.destroyEnv();
   });
-
+  const envConfigOriginal = {
+    a: 'b',
+    valToDynamic: 'dyanamicValue'
+  };
+  const compilerConfigChanged = {
+    a: 'compiler',
+    valToDynamic: 'dyanamicValue'
+  };
+  const testerConfigChanged = {
+    a: 'tester',
+    valToDynamic: 'dyanamicValue'
+  };
   describe('author environment', () => {
     // TODO: reimport component on author after changing file/config of its env in different project
     // (should load env from model)
@@ -116,16 +127,10 @@ describe('envs', function () {
         expect(testerModel.name).to.equal(`${helper.envScope}/${testerId}@0.0.1`);
       });
       it('should store the compiler dynamic config in the model', () => {
-        expect(compilerModel.config).to.include({
-          a: 'b',
-          valToDynamic: 'dyanamicValue'
-        });
+        expect(compilerModel.config).to.include(envConfigOriginal);
       });
       it('should store the tester dynamic config in the model', () => {
-        expect(testerModel.config).to.include({
-          a: 'b',
-          valToDynamic: 'dyanamicValue'
-        });
+        expect(testerModel.config).to.include(envConfigOriginal);
       });
       it('should store the compiler files metadata in the model', () => {
         expect(compilerModel.files).to.have.lengthOf(1);
@@ -234,16 +239,10 @@ describe('envs', function () {
         helper.expectToThrow(ejectFunc, error);
       });
       it('should load the compiler from models if the compiler is detached', () => {
-        expect(compilerModel.config).to.include({
-          a: 'compiler',
-          valToDynamic: 'dyanamicValue'
-        });
+        expect(compilerModel.config).to.include(compilerConfigChanged);
       });
       it('should load the tester from models if the compiler is detached', () => {
-        expect(testerModel.config).to.include({
-          a: 'tester',
-          valToDynamic: 'dyanamicValue'
-        });
+        expect(testerModel.config).to.include(testerConfigChanged);
       });
       it('should write the modified envs into consumer config overrides', () => {
         const bitJson = helper.readBitJson();
@@ -252,16 +251,10 @@ describe('envs', function () {
         expect(bitJson.overrides[compName]).to.have.property('env');
         expect(bitJson.overrides[compName].env).to.have.property('compiler');
         const compilerConfig = bitJson.overrides[compName].env.compiler[`${helper.envScope}/compilers/new-babel@0.0.1`];
-        expect(compilerConfig.rawConfig).to.deep.equal({
-          a: 'compiler',
-          valToDynamic: 'dyanamicValue'
-        });
+        expect(compilerConfig.rawConfig).to.deep.equal(compilerConfigChanged);
         expect(compilerConfig.files).to.deep.equal({ '.babelrc': './.babelrc' });
         const testerConfig = bitJson.overrides[compName].env.tester[`${helper.envScope}/testers/new-mocha@0.0.1`];
-        expect(testerConfig.rawConfig).to.deep.equal({
-          a: 'tester',
-          valToDynamic: 'dyanamicValue'
-        });
+        expect(testerConfig.rawConfig).to.deep.equal(testerConfigChanged);
         expect(testerConfig.files).to.deep.equal({ config: './mocha-config.opts' });
       });
       describe('tagging detached component', () => {
@@ -292,16 +285,10 @@ describe('envs', function () {
           //   expect(output).to.have.string('comp/my-comp');
           // });
           it('should load the compiler from workspace bit.json after attach compiler back', () => {
-            expect(compilerModel.config).to.include({
-              a: 'b',
-              valToDynamic: 'dyanamicValue'
-            });
+            expect(compilerModel.config).to.include(envConfigOriginal);
           });
           it('should load the tester from workspace bit.json after attach tester back', () => {
-            expect(testerModel.config).to.include({
-              a: 'b',
-              valToDynamic: 'dyanamicValue'
-            });
+            expect(testerModel.config).to.include(envConfigOriginal);
           });
           describe('tagging re-attached component', () => {
             before(() => {
@@ -310,16 +297,10 @@ describe('envs', function () {
               componentModel = helper.catComponent(compId);
             });
             it('should save the compiler config according to the workspace config', () => {
-              expect(componentModel.compiler.config).to.include({
-                a: 'b',
-                valToDynamic: 'dyanamicValue'
-              });
+              expect(componentModel.compiler.config).to.include(envConfigOriginal);
             });
             it('should save the tester config according to the workspace config', () => {
-              expect(componentModel.tester.config).to.include({
-                a: 'b',
-                valToDynamic: 'dyanamicValue'
-              });
+              expect(componentModel.tester.config).to.include(envConfigOriginal);
             });
           });
         });
@@ -1053,7 +1034,7 @@ describe('envs', function () {
       });
     });
 
-    describe.only('with ejecting (--conf)', () => {
+    describe('with ejecting (--conf)', () => {
       let fullComponentFolder;
       let bitJsonPath;
 
@@ -1163,17 +1144,11 @@ describe('envs', function () {
           });
           it('should write the compiler dynamic config as raw config', () => {
             const env = helper.getEnvFromBitJsonByType(bitJson, COMPILER_ENV_TYPE);
-            expect(env.rawConfig).to.include({
-              a: 'b',
-              valToDynamic: 'dyanamicValue'
-            });
+            expect(env.rawConfig).to.include(envConfigOriginal);
           });
           it('should write the tester dynamic config as raw config', () => {
             const env = helper.getEnvFromBitJsonByType(bitJson, TESTER_ENV_TYPE);
-            expect(env.rawConfig).to.include({
-              a: 'b',
-              valToDynamic: 'dyanamicValue'
-            });
+            expect(env.rawConfig).to.include(envConfigOriginal);
           });
         });
         describe('attach - detach envs', () => {
@@ -1192,34 +1167,17 @@ describe('envs', function () {
               const bitmap = helper.readBitMap();
               componentMap = bitmap[compId];
             });
-            it('should mark the compiler as detached in the models', () => {
-              expect(componentModel.detachedCompiler).to.be.true;
+            it('should save the new config into the model', () => {
+              expect(componentModel.compiler.config).to.include(compilerConfigChanged);
+              expect(componentModel.tester.config).to.include(testerConfigChanged);
             });
-            it('should mark the tester as detached in the models', () => {
-              expect(componentModel.detachedTester).to.be.true;
-            });
-            it('should mark the compiler as detached in .bitmap if the compiler is detached', () => {
-              expect(componentMap.detachedCompiler).to.be.true;
-            });
-            it('should mark the tester as detached in .bitmap if the tester is detached', () => {
-              expect(componentMap.detachedTester).to.be.true;
-            });
-            describe('tagging already detached component (without new envs changes)', () => {
-              before(() => {
-                helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
-                helper.tagAllComponents();
-                compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
-                componentModel = helper.catComponent(compId);
-              });
-              it('should mark the compiler as detached in the models', () => {
-                expect(componentModel.detachedCompiler).to.be.true;
-              });
-              it('should mark the tester as detached in the models', () => {
-                expect(componentModel.detachedTester).to.be.true;
-              });
+            it('should not show the component as modified', () => {
+              const statusOutput = helper.status();
+              expect(statusOutput).to.not.have.string('modified components');
             });
           });
-          describe('attach imported component', () => {
+          // @todo: this functionality won't work anymore, make sure it's fine.
+          describe.skip('attach imported component', () => {
             let output;
             let compilerModel;
             let testerModel;

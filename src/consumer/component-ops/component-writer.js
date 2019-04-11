@@ -227,8 +227,8 @@ export default class ComponentWriter {
       const compilerProps = this.consumer.getEnvProps(COMPILER_ENV_TYPE, context);
       const testerProps = this.consumer.getEnvProps(TESTER_ENV_TYPE, context);
       // const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
-      const compilerFromConsumer = await makeEnv(COMPILER_ENV_TYPE, compilerProps);
-      const testerFromConsumer = await makeEnv(TESTER_ENV_TYPE, testerProps);
+      const compilerFromConsumer = compilerProps ? await makeEnv(COMPILER_ENV_TYPE, compilerProps) : null;
+      const testerFromConsumer = testerProps ? await makeEnv(TESTER_ENV_TYPE, testerProps) : null;
       // const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
       const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;

@@ -337,7 +337,7 @@ export default class Component {
     const context = { workspaceDir: consumer.getPath() };
     // const loadEnvArgs = [consumer.getPath(), consumer.scope.getPath(), context];
     const envConsumerArgs = consumer.getEnvProps(envType, context);
-    const fromConsumer = await makeEnv(envType, envConsumerArgs);
+    const fromConsumer = envConsumerArgs ? await makeEnv(envType, envConsumerArgs) : null;
     const getFromComponent = () => {
       return this[envType] ? this[envType].toModelObject() : null;
       // if (isCompiler) return this.compiler ? this.compiler.toModelObject() : null;
