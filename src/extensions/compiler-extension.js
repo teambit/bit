@@ -24,24 +24,24 @@ export default class CompilerExtension extends EnvExtension {
     return modelObject;
   }
 
-  /**
-   * Loading from props (usually from bit.json)
-   * @param {*} props
-   */
-  // $FlowFixMe
-  static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
-    logger.debug('compiler-extension', 'load');
-    props.envType = COMPILER_ENV_TYPE;
-    // Throw error if compiler not loaded
-    props.throws = true;
-    const envExtensionProps: EnvExtensionProps = await super.load(props);
-    const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
-    if (extension.loaded) {
-      const throws = true;
-      await extension.init(throws);
-    }
-    return extension;
-  }
+  // /**
+  //  * Loading from props (usually from bit.json)
+  //  * @param {*} props
+  //  */
+  // // $FlowFixMe
+  // static async load(props: EnvLoadArgsProps): Promise<CompilerExtension> {
+  //   logger.debug('compiler-extension', 'load');
+  //   props.envType = COMPILER_ENV_TYPE;
+  //   // Throw error if compiler not loaded
+  //   props.throws = true;
+  //   const envExtensionProps: EnvExtensionProps = await super.load(props);
+  //   const extension: CompilerExtension = new CompilerExtension(envExtensionProps);
+  //   if (extension.loaded) {
+  //     const throws = true;
+  //     await extension.init(throws);
+  //   }
+  //   return extension;
+  // }
 
   static async loadFromModelObject(
     modelObject: string | CompilerExtensionModel,

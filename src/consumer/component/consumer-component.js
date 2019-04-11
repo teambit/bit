@@ -68,6 +68,7 @@ import DataToPersist from './sources/data-to-persist';
 import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import type { OverriddenDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
 import ComponentOverrides from '../bit-config/component-overrides';
+import makeEnv from '../../extensions/env-factory';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -322,25 +323,25 @@ export default class Component {
 
   async getDetachedCompiler(consumer: ?Consumer): Promise<boolean> {
     // return _calculateDetachByOrigin(this.detachedCompiler, this.origin);
-    return this._isEnvDetach(consumer, true);
+    return this._isEnvDetach(consumer, COMPILER_ENV_TYPE);
   }
 
   async getDetachedTester(consumer: ?Consumer): Promise<boolean> {
     // return _calculateDetachByOrigin(this.detachedTester, this.origin);
-    return this._isEnvDetach(consumer, false);
+    return this._isEnvDetach(consumer, TESTER_ENV_TYPE);
   }
 
-  async _isEnvDetach(consumer: ?Consumer, isCompiler?: boolean): Promise<boolean> {
+  async _isEnvDetach(consumer: ?Consumer, envType: string): Promise<boolean> {
     if (this.origin !== COMPONENT_ORIGINS.AUTHORED || !consumer) return true;
 
-    const context = { componentDir: '' };
-    const loadEnvArgs = [consumer.getPath(), consumer.scope.getPath(), context];
-    const fromConsumer = isCompiler
-      ? await consumer.bitConfig.loadCompiler(...loadEnvArgs)
-      : await consumer.bitConfig.loadTester(...loadEnvArgs);
+    const context = { workspaceDir: consumer.getPath() };
+    // const loadEnvArgs = [consumer.getPath(), consumer.scope.getPath(), context];
+    const envConsumerArgs = consumer.getEnvProps(envType, context);
+    const fromConsumer = await makeEnv(envType, envConsumerArgs);
     const getFromComponent = () => {
-      if (isCompiler) return this.compiler ? this.compiler.toModelObject() : null;
-      return this.tester ? this.tester.toModelObject() : null;
+      return this[envType] ? this[envType].toModelObject() : null;
+      // if (isCompiler) return this.compiler ? this.compiler.toModelObject() : null;
+      // return this.tester ? this.tester.toModelObject() : null;
     };
     const fromComponent = getFromComponent();
     return EnvExtension.areEnvsDifferent(fromConsumer ? fromConsumer.toModelObject() : null, fromComponent);
@@ -936,10 +937,10 @@ export default class Component {
     } = object;
     const compilerProps = compiler ? await CompilerExtension.loadFromSerializedModelObject(compiler) : null;
     // $FlowFixMe
-    const compilerInstance = compilerProps ? await CompilerExtension.load(compilerProps) : null;
+    const compilerInstance = compilerProps ? await makeEnv(COMPILER_ENV_TYPE, compilerProps) : null;
     const testerProps = tester ? await TesterExtension.loadFromSerializedModelObject(tester) : null;
     // $FlowFixMe
-    const testerInstance = testerProps ? await TesterExtension.load(testerProps) : null;
+    const testerInstance = testerProps ? await makeEnv(TESTER_ENV_TYPE, testerProps) : null;
     return new Component({
       name: box ? `${box}/${name}` : name,
       version,
@@ -1067,14 +1068,15 @@ export default class Component {
       componentDir: bitDir,
       workspaceDir: consumerPath
     };
-
+    const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
     const propsToLoadEnvs = {
       consumerPath,
       envType: COMPILER_ENV_TYPE,
       scopePath: consumer.scope.getPath(),
       componentOrigin: componentMap.origin,
       componentFromModel,
-      overridesFromConsumer: consumerBitConfig.getComponentData(id),
+      overridesFromConsumer,
+      consumerBitConfig,
       componentBitConfig: componentMap.configDir ? componentBitConfig : null,
       context: envsContext
     };
@@ -1107,7 +1109,6 @@ export default class Component {
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
-    const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
     const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig, isAuthor);
 
     return new Component({

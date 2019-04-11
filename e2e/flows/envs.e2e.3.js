@@ -205,7 +205,7 @@ describe('envs', function () {
 
     describe('attach - detach envs', () => {
       let fullComponentFolder;
-      let componentMap;
+      // let componentMap;
       let compId;
 
       before(() => {
@@ -223,7 +223,7 @@ describe('envs', function () {
         helper.importComponent('comp/my-comp');
         const bitmap = helper.readBitMap();
         compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
-        componentMap = bitmap[compId];
+        // componentMap = bitmap[compId];
         componentModel = helper.showComponentParsed('comp/my-comp');
         compilerModel = componentModel.compiler;
         testerModel = componentModel.tester;
@@ -280,7 +280,7 @@ describe('envs', function () {
           before(() => {
             const bitJson = helper.readBitJson();
             const compName = `${helper.remoteScope}/comp/my-comp`;
-            delete bitJson[compName];
+            delete bitJson.overrides[compName];
             helper.writeBitJson(bitJson);
             // output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
             componentModel = helper.showComponentParsed('comp/my-comp');
@@ -309,11 +309,17 @@ describe('envs', function () {
               compId = `${helper.remoteScope}/comp/my-comp@0.0.4`;
               componentModel = helper.catComponent(compId);
             });
-            it('should not mark the compiler as detached in models when tagging again', () => {
-              expect(componentModel.detachedCompiler).to.be.undefined;
+            it('should save the compiler config according to the workspace config', () => {
+              expect(componentModel.compiler.config).to.include({
+                a: 'b',
+                valToDynamic: 'dyanamicValue'
+              });
             });
-            it('should not mark the tester as detached in models when tagging again', () => {
-              expect(componentModel.detachedTester).to.be.undefined;
+            it('should save the tester config according to the workspace config', () => {
+              expect(componentModel.tester.config).to.include({
+                a: 'b',
+                valToDynamic: 'dyanamicValue'
+              });
             });
           });
         });
@@ -1047,7 +1053,7 @@ describe('envs', function () {
       });
     });
 
-    describe('with ejecting (--conf)', () => {
+    describe.only('with ejecting (--conf)', () => {
       let fullComponentFolder;
       let bitJsonPath;
 

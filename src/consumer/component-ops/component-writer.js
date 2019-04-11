@@ -9,13 +9,14 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';
+import makeEnv from '../../extensions/env-factory';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -222,9 +223,13 @@ export default class ComponentWriter {
     // so if the overrides or envs were changed, it should be written to the consumer-config
     const areEnvsChanged = async (): Promise<boolean> => {
       const context = { componentDir: this.componentMap.getRootDir() };
-      const loadEnvArgs = [this.consumer.getPath(), this.consumer.scope.getPath(), context];
-      const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
-      const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
+      // const loadEnvArgs = [this.consumer.getPath(), this.consumer.scope.getPath(), context];
+      const compilerProps = this.consumer.getEnvProps(COMPILER_ENV_TYPE, context);
+      const testerProps = this.consumer.getEnvProps(TESTER_ENV_TYPE, context);
+      // const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
+      const compilerFromConsumer = await makeEnv(COMPILER_ENV_TYPE, compilerProps);
+      const testerFromConsumer = await makeEnv(TESTER_ENV_TYPE, testerProps);
+      // const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
       const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
       return (

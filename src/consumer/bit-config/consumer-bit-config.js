@@ -134,14 +134,6 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  getComponentData(id: BitId): ?ConsumerOverridesOfComponent {
-    const env = {
-      compiler: this.compiler,
-      tester: this.tester
-    };
-    return this.overrides.getOverrideComponentData(id, { env });
-  }
-
   static create(): ConsumerBitConfig {
     return new ConsumerBitConfig({});
   }

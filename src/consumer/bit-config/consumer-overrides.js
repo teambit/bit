@@ -27,7 +27,7 @@ export default class ConsumerOverrides {
   static load(overrides: Object = {}) {
     return new ConsumerOverrides(overrides);
   }
-  getOverrideComponentData(bitId: BitId, consumerConfig: ?Object = {}): ?ConsumerOverridesOfComponent {
+  getOverrideComponentData(bitId: BitId): ?ConsumerOverridesOfComponent {
     const getMatches = (): string[] => {
       const exactMatch = this.findExactMatch(bitId);
       const matchByGlobPattern = Object.keys(this.overrides).filter(idStr => this.isMatchByWildcard(bitId, idStr));
@@ -36,7 +36,7 @@ export default class ConsumerOverrides {
       return allMatches;
     };
     const matches = getMatches();
-    if (!matches.length && R.isEmpty(consumerConfig)) return null;
+    if (!matches.length) return null;
     const overrideValues = matches.map(match => this.overrides[match]);
     const fields = ['env', 'dependencies', 'devDependencies', 'peerDependencies'];
     let stopPropagation = false;
@@ -62,7 +62,7 @@ export default class ConsumerOverrides {
         }
       });
       return acc;
-    }, consumerConfig);
+    }, {});
   }
   isMatchByWildcard(bitId: BitId, idWithPossibleWildcard: string): boolean {
     if (!hasWildcard(idWithPossibleWildcard)) return false;

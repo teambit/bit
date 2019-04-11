@@ -34,6 +34,7 @@ import RemovePath from '../consumer/component/sources/remove-path';
 import type Consumer from '../consumer/consumer';
 import type { ConsumerOverridesOfComponent } from '../consumer/bit-config/consumer-overrides';
 import AbstractBitConfig from '../consumer/bit-config/abstract-bit-config';
+import makeEnv from './env-factory';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -341,6 +342,7 @@ export default class EnvExtension extends BaseExtension {
     componentFromModel,
     componentBitConfig,
     overridesFromConsumer,
+    consumerBitConfig,
     envType,
     context
   }: {
@@ -350,14 +352,17 @@ export default class EnvExtension extends BaseExtension {
     componentFromModel: ConsumerComponent,
     componentBitConfig: ?ComponentBitConfig,
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
+    consumerBitConfig: ConsumerBitConfig,
     envType: EnvType,
     context?: Object
   }): Promise<?CompilerExtension | ?TesterExtension> {
+    logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
     if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
       // load from component config.
       // return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
       const envConfig = { [envType]: componentBitConfig[envType] };
-      const configPath = componentBitConfig.path;
+      const configPath = path.dirname(componentBitConfig.path);
+      logger.debug(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
     if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
@@ -365,11 +370,17 @@ export default class EnvExtension extends BaseExtension {
       logger.debug(`env-extension, loading ${envType} from the model`);
       return componentFromModel ? componentFromModel[envType] : undefined;
     }
-    // load from consumer config
-    if (!overridesFromConsumer || !overridesFromConsumer.env || !overridesFromConsumer.env[envType]) return null;
-    const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
-    logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
-    return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
+    if (overridesFromConsumer && overridesFromConsumer.env && overridesFromConsumer.env[envType]) {
+      logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
+      const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
+    }
+    if (consumerBitConfig[envType]) {
+      logger.debug(`env-extension, loading ${envType} from the consumer config`);
+      const envConfig = { [envType]: consumerBitConfig[envType] };
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
+    }
+
     // // Authored component
     // if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
     //   // The component is not detached - load from the consumer bit.json
@@ -454,13 +465,7 @@ async function loadFromConfig({
     envType,
     context
   };
-  const loadFunc = envType === COMPILER_ENV_TYPE ? CompilerExtension.load : TesterExtension.load;
-  return loadFunc(envProps);
-
-  // if (envType === COMPILER_ENV_TYPE) {
-  //   return bitJson.loadCompiler(consumerPath, scopePath, context);
-  // }
-  // return bitJson.loadTester(consumerPath, scopePath, context);
+  return makeEnv(envType, envProps);
 }
 
 // const loadFromBitJson = ({

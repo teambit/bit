@@ -22,7 +22,9 @@ import {
   LATEST_BIT_VERSION,
   BIT_GIT_DIR,
   DOT_GIT_DIR,
-  BIT_WORKSPACE_TMP_DIRNAME
+  BIT_WORKSPACE_TMP_DIRNAME,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -67,6 +69,7 @@ import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { dependenciesFields } from './bit-config/consumer-overrides';
+import makeEnv from '../extensions/env-factory';
 
 type ConsumerProps = {
   projectPath: string,
@@ -125,11 +128,35 @@ export default class Consumer {
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<?CompilerExtension> {
-    return this.bitConfig.loadCompiler(this.projectPath, this.scope.getPath());
+    // return this.bitConfig.loadCompiler(this.projectPath, this.scope.getPath());
+    const props = this.getEnvProps(COMPILER_ENV_TYPE);
+    if (!props) return Promise.resolve(null);
+    return makeEnv(COMPILER_ENV_TYPE, props);
+  }
+
+  getEnvProps(envType: string, context: ?Object) {
+    const envs = this.bitConfig.getEnvsByType(envType);
+    if (!envs) return undefined;
+    const envName = Object.keys(envs)[0];
+    const envObject = envs[envName];
+    return {
+      name: envName,
+      consumerPath: this.getPath(),
+      scopePath: this.scope.getPath(),
+      rawConfig: envObject.rawConfig,
+      files: envObject.files,
+      bitJsonPath: path.dirname(this.bitConfig.path),
+      options: envObject.options,
+      envType,
+      context
+    };
   }
 
   get tester(): Promise<?TesterExtension> {
-    return this.bitConfig.loadTester(this.projectPath, this.scope.getPath());
+    const props = this.getEnvProps(TESTER_ENV_TYPE);
+    if (!props) return Promise.resolve(null);
+    return makeEnv(TESTER_ENV_TYPE, props);
+    // return this.bitConfig.loadTester(this.projectPath, this.scope.getPath());
   }
 
   get driver(): Driver {

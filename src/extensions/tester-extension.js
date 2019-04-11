@@ -24,24 +24,24 @@ export default class TesterExtension extends EnvExtension {
     return modelObject;
   }
 
-  /**
-   * Loading from props (usually from bit.json)
-   * @param {*} props
-   */
-  static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    logger.debug('tester-extension', 'load');
-    props.envType = TESTER_ENV_TYPE;
-    // Throw error if tester not loaded
-    props.throws = true;
-    const envExtensionProps: EnvExtensionProps = await super.load(props);
-    const extension: TesterExtension = new TesterExtension(envExtensionProps);
-    if (extension.loaded) {
-      const throws = true;
-      await extension.init(throws);
-    }
-    // $FlowFixMe
-    return extension;
-  }
+  // /**
+  //  * Loading from props (usually from bit.json)
+  //  * @param {*} props
+  //  */
+  // static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
+  //   logger.debug('tester-extension', 'load');
+  //   props.envType = TESTER_ENV_TYPE;
+  //   // Throw error if tester not loaded
+  //   props.throws = true;
+  //   const envExtensionProps: EnvExtensionProps = await super.load(props);
+  //   const extension: TesterExtension = new TesterExtension(envExtensionProps);
+  //   if (extension.loaded) {
+  //     const throws = true;
+  //     await extension.init(throws);
+  //   }
+  //   // $FlowFixMe
+  //   return extension;
+  // }
 
   static async loadFromModelObject(
     modelObject: string | TesterExtensionModel,
