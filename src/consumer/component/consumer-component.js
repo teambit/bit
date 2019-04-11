@@ -30,6 +30,7 @@ import logger from '../../logger/logger';
 import loader from '../../cli/loader';
 import CompilerExtension from '../../extensions/compiler-extension';
 import TesterExtension from '../../extensions/tester-extension';
+import type { EnvType } from '../../extensions/env-extension';
 import { Driver } from '../../driver';
 import { BEFORE_RUNNING_SPECS } from '../../cli/loader/loader-messages';
 import FileSourceNotFound from './exceptions/file-source-not-found';
@@ -322,28 +323,20 @@ export default class Component {
   }
 
   async getDetachedCompiler(consumer: ?Consumer): Promise<boolean> {
-    // return _calculateDetachByOrigin(this.detachedCompiler, this.origin);
     return this._isEnvDetach(consumer, COMPILER_ENV_TYPE);
   }
 
   async getDetachedTester(consumer: ?Consumer): Promise<boolean> {
-    // return _calculateDetachByOrigin(this.detachedTester, this.origin);
     return this._isEnvDetach(consumer, TESTER_ENV_TYPE);
   }
 
-  async _isEnvDetach(consumer: ?Consumer, envType: string): Promise<boolean> {
+  async _isEnvDetach(consumer: ?Consumer, envType: EnvType): Promise<boolean> {
     if (this.origin !== COMPONENT_ORIGINS.AUTHORED || !consumer) return true;
 
     const context = { workspaceDir: consumer.getPath() };
-    // const loadEnvArgs = [consumer.getPath(), consumer.scope.getPath(), context];
     const envConsumerArgs = consumer.getEnvProps(envType, context);
     const fromConsumer = envConsumerArgs ? await makeEnv(envType, envConsumerArgs) : null;
-    const getFromComponent = () => {
-      return this[envType] ? this[envType].toModelObject() : null;
-      // if (isCompiler) return this.compiler ? this.compiler.toModelObject() : null;
-      // return this.tester ? this.tester.toModelObject() : null;
-    };
-    const fromComponent = getFromComponent();
+    const fromComponent = this[envType] ? this[envType].toModelObject() : null;
     return EnvExtension.areEnvsDifferent(fromConsumer ? fromConsumer.toModelObject() : null, fromComponent);
   }
 
@@ -1132,35 +1125,4 @@ export default class Component {
       overrides
     });
   }
-}
-
-function _calculateDetachByOrigin(detachVal: ?boolean, origin: ComponentOrigin): boolean {
-  // const areEnvsChanged = async (): Promise<boolean> => {
-  //   const context = { componentDir: this.componentMap.getRootDir() };
-  //   const loadEnvArgs = [this.consumer.getPath(), this.consumer.scope.getPath(), context];
-  //   const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
-  //   const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
-  //   const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
-  //   const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
-  //   return (
-  //     EnvExtension.areEnvsDifferent(
-  //       compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
-  //       compilerFromComponent
-  //     ) ||
-  //     EnvExtension.areEnvsDifferent(
-  //       testerFromConsumer ? testerFromConsumer.toModelObject() : null,
-  //       testerFromComponent
-  //     )
-  //   );
-  // };
-  // If it was set to true it's the strongest
-  if (detachVal) {
-    return detachVal;
-  }
-  // Authored components are by default attached
-  if (origin === COMPONENT_ORIGINS.AUTHORED) {
-    return false;
-  }
-  // Not authored components are by default detached
-  return true;
 }

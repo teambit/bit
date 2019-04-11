@@ -19,7 +19,7 @@ import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
 import CompilerExtension from './compiler-extension';
 import TesterExtension from './tester-extension';
-import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
+import { COMPONENT_ORIGINS } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
 import type ConsumerBitConfig from '../consumer/bit-config/consumer-bit-config';
@@ -380,38 +380,6 @@ export default class EnvExtension extends BaseExtension {
       const envConfig = { [envType]: consumerBitConfig[envType] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
-
-    // // Authored component
-    // if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
-    //   // The component is not detached - load from the consumer bit.json
-    //   if (!detached) {
-    //     return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
-    //   }
-    //   // The component is detached - load from the component bit.json or from the models
-    //   return loadFromComponentBitConfigOrFromModel({
-    //     modelComponent: componentFromModel,
-    //     componentBitConfig,
-    //     envType,
-    //     consumerPath,
-    //     scopePath,
-    //     context
-    //   });
-    // }
-
-    // // Not authored components
-    // // The component is attached - load from the consumer bit.json
-    // // This is in purpose checking false not a falsy. since by default is undefined which is different from false.
-    // if (detached === false) {
-    //   return loadFromBitJson({ bitJson: consumerBitConfig, envType, consumerPath, scopePath, context });
-    // }
-    // return loadFromComponentBitConfigOrFromModel({
-    //   modelComponent: componentFromModel,
-    //   componentBitConfig,
-    //   envType,
-    //   consumerPath,
-    //   scopePath,
-    //   context
-    // });
   }
 
   /**
