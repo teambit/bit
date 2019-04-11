@@ -3,6 +3,7 @@
 import { table } from 'table';
 import chalk from 'chalk';
 import type { ExamineResult } from '../../doctor/Diagnosis';
+import type { DoctorRunAllResults } from '../../api/consumer/lib/doctor';
 
 // const NAME_COLUMN_WIDTH = 100;
 // const DESCRIPTION_COLUMN_WIDTH = 30;
@@ -72,10 +73,16 @@ function _createFullReportSection(examineResult: ExamineResult[]): string {
 ${fullDiagnosesReport}`;
 }
 
-export default function render(examineResult: ExamineResult[]): string {
-  const summerySection = _createSummerySection(examineResult);
-  const fullReportSection = _createFullReportSection(examineResult);
+function _createWrittenFileSection(savedFilePath) {
+  return `File has been written to ${savedFilePath}`;
+}
+
+export default function render({ examineResults, savedFilePath }: DoctorRunAllResults): string {
+  const summerySection = _createSummerySection(examineResults);
+  const fullReportSection = _createFullReportSection(examineResults);
+  const writtenFileSection = _createWrittenFileSection(savedFilePath);
   const output = `${summerySection}
-${fullReportSection}`;
+${fullReportSection}
+${writtenFileSection}`;
   return output;
 }

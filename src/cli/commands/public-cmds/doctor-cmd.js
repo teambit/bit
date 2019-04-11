@@ -2,7 +2,7 @@
 
 import Command from '../../command';
 import runAll, { listDiagnoses } from '../../../api/consumer/lib/doctor';
-import type { ExamineResult } from '../../../doctor/Diagnosis';
+import type { DoctorRunAllResults } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
 import Diagnosis from '../../../doctor/Diagnosis';
@@ -12,15 +12,32 @@ export default class Doctor extends Command {
   description = 'diagnose bit state';
   alias = '';
   commands = [new DoctorList()];
-  opts = [['j', 'json', 'return a json format']];
+  opts = [['j', 'json', 'return a json format'], ['s', 'save [filePath]', 'save results to file']];
   migration = false;
 
-  action(): Promise<any> {
-    return runAll();
+  action(
+    args: any,
+    {
+      json = false,
+      save
+    }: {
+      json?: boolean,
+      save?: string
+    }
+  ): Promise<DoctorRunAllResults> {
+    let filePath = save;
+    // Happen when used --save without specify the location
+    if (save === true) {
+      filePath = '.';
+    }
+    return runAll({ json, filePath });
   }
 
-  report(res: ExamineResult[]): string {
-    const formatted = formatDiagnosesResult(res);
+  report({ examineResults, savedFilePath }: DoctorRunAllResults, args: any, flags: Object): string {
+    if (flags.json) {
+      return JSON.stringify(examineResults, null, 2);
+    }
+    const formatted = formatDiagnosesResult({ examineResults, savedFilePath });
     return formatted;
   }
 }
@@ -31,20 +48,16 @@ class DoctorList extends Command {
   alias = '';
   opts = [['j', 'json', 'return a json format']];
 
-  async action(args, { json = false }: { json: boolean }): Promise<{ diagnosesList: Diagnosis[], json: boolean }> {
-    const diagnosesList = await listDiagnoses();
-    return {
-      diagnosesList,
-      json
-    };
+  async action(): Promise<Diagnosis[]> {
+    return listDiagnoses();
   }
 
-  report(res): string {
-    if (res.json) {
-      return JSON.stringify(res.diagnosesList, null, 2);
+  report(res, args, flags): string {
+    if (flags.json) {
+      return JSON.stringify(res, null, 2);
     }
     // const formatted = res.map(diagnosis => `${diagnosis.name}   ${diagnosis.description}\n`);
-    const formatted = formatDiagnosesList(res.diagnosesList);
+    const formatted = formatDiagnosesList(res);
     return formatted;
   }
 }
