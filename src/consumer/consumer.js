@@ -70,6 +70,8 @@ import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { dependenciesFields } from './bit-config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
+import EnvExtension from '../extensions/env-extension';
+import type { EnvType } from '../extensions/env-extension';
 
 type ConsumerProps = {
   projectPath: string,
@@ -128,35 +130,13 @@ export default class Consumer {
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<?CompilerExtension> {
-    // return this.bitConfig.loadCompiler(this.projectPath, this.scope.getPath());
-    const props = this.getEnvProps(COMPILER_ENV_TYPE);
-    if (!props) return Promise.resolve(null);
-    return makeEnv(COMPILER_ENV_TYPE, props);
-  }
-
-  getEnvProps(envType: string, context: ?Object) {
-    const envs = this.bitConfig.getEnvsByType(envType);
-    if (!envs) return undefined;
-    const envName = Object.keys(envs)[0];
-    const envObject = envs[envName];
-    return {
-      name: envName,
-      consumerPath: this.getPath(),
-      scopePath: this.scope.getPath(),
-      rawConfig: envObject.rawConfig,
-      files: envObject.files,
-      bitJsonPath: path.dirname(this.bitConfig.path),
-      options: envObject.options,
-      envType,
-      context
-    };
+    // $FlowFixMe
+    return this.getEnv(COMPILER_ENV_TYPE);
   }
 
   get tester(): Promise<?TesterExtension> {
-    const props = this.getEnvProps(TESTER_ENV_TYPE);
-    if (!props) return Promise.resolve(null);
-    return makeEnv(TESTER_ENV_TYPE, props);
-    // return this.bitConfig.loadTester(this.projectPath, this.scope.getPath());
+    // $FlowFixMe
+    return this.getEnv(TESTER_ENV_TYPE);
   }
 
   get driver(): Driver {
@@ -179,6 +159,12 @@ export default class Consumer {
 
   get bitmapIds(): BitIds {
     return this.bitMap.getAllBitIds();
+  }
+
+  async getEnv(envType: EnvType, context: ?Object): Promise<?EnvExtension> {
+    const props = this._getEnvProps(envType, context);
+    if (!props) return null;
+    return makeEnv(envType, props);
   }
 
   getTmpFolder(fullPath: boolean = false): PathOsBased {
@@ -1033,6 +1019,24 @@ export default class Consumer {
   async injectConf(componentId: BitId, force: boolean) {
     const component = await this.loadComponent(componentId);
     return component.injectConfig(this.getPath(), this.bitMap, force);
+  }
+
+  _getEnvProps(envType: EnvType, context: ?Object) {
+    const envs = this.bitConfig.getEnvsByType(envType);
+    if (!envs) return undefined;
+    const envName = Object.keys(envs)[0];
+    const envObject = envs[envName];
+    return {
+      name: envName,
+      consumerPath: this.getPath(),
+      scopePath: this.scope.getPath(),
+      rawConfig: envObject.rawConfig,
+      files: envObject.files,
+      bitJsonPath: path.dirname(this.bitConfig.path),
+      options: envObject.options,
+      envType,
+      context
+    };
   }
 
   async onDestroy() {

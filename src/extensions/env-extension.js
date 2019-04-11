@@ -17,8 +17,6 @@ import type { EnvExtensionObject } from '../consumer/bit-config/abstract-bit-con
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import CompilerExtension from './compiler-extension';
-import TesterExtension from './tester-extension';
 import { COMPONENT_ORIGINS } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
@@ -330,10 +328,11 @@ export default class EnvExtension extends BaseExtension {
   /**
    * load the compiler/tester according to the following strategies:
    * 1. from component config. (bit.json/package.json of the component) if it was written.
-   * for author, it's irrelevant, as the config is only written on the consumer config.
    * 2. from component model. an imported component might not have the config written.
    * for author, it's irrelevant, because upon import it's written to consumer config (if changed).
-   * 3. from consumer config. (bit.json/package.json of the consumer).
+   * 3. from consumer config overrides. (bit.json/package.json of the consumer when this component
+   * overrides the general env config).
+   * 4. from consumer config.
    */
   static async loadFromCorrectSource({
     consumerPath,
@@ -355,7 +354,7 @@ export default class EnvExtension extends BaseExtension {
     consumerBitConfig: ConsumerBitConfig,
     envType: EnvType,
     context?: Object
-  }): Promise<?CompilerExtension | ?TesterExtension> {
+  }): Promise<?EnvExtension> {
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
     if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
       // load from component config.
@@ -414,7 +413,7 @@ async function loadFromConfig({
   scopePath,
   configPath,
   context
-}): Promise<?CompilerExtension | ?TesterExtension> {
+}): Promise<?EnvExtension> {
   logger.debug(`env-extension (${envType}) loadFromConfig`);
   const env = envConfig[envType];
   if (!env) return null;

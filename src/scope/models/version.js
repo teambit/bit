@@ -491,24 +491,6 @@ export default class Version extends BitObject {
       };
     };
 
-    /**
-     * Calculate the detach status based on the component origin, the component detach status from bitmap and comparison
-     * between the env in fs and the env in models
-     * @param {*} origin
-     * @param {*} detachFromFs
-     * @param {*} envModelFromFs
-     * @param {*} envModelFromModel
-     */
-    // const calculateDetach = (origin: ComponentOrigin, detachFromFs: ?boolean, envModelFromFs, envModelFromModel) => {
-    //   // In case it's already detached keep the state as is
-    //   if (detachFromFs) return detachFromFs;
-    //   // In case i'm the author and it's not already detached it can't be changed here
-    //   if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
-    //   const envDiff = EnvExtension.areEnvsDifferent(envModelFromFs, envModelFromModel);
-    //   if (!envDiff) return undefined;
-    //   return true;
-    // };
-
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
 

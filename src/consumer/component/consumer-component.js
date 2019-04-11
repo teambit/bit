@@ -334,8 +334,7 @@ export default class Component {
     if (this.origin !== COMPONENT_ORIGINS.AUTHORED || !consumer) return true;
 
     const context = { workspaceDir: consumer.getPath() };
-    const envConsumerArgs = consumer.getEnvProps(envType, context);
-    const fromConsumer = envConsumerArgs ? await makeEnv(envType, envConsumerArgs) : null;
+    const fromConsumer = await consumer.getEnv(envType, context);
     const fromComponent = this[envType] ? this[envType].toModelObject() : null;
     return EnvExtension.areEnvsDifferent(fromConsumer ? fromConsumer.toModelObject() : null, fromComponent);
   }

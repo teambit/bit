@@ -4,9 +4,12 @@ import logger from '../logger/logger';
 import TesterExtension from './tester-extension';
 import CompilerExtension from './compiler-extension';
 import EnvExtension from './env-extension';
-import type { EnvLoadArgsProps, EnvExtensionProps } from './env-extension';
+import type { EnvType, EnvLoadArgsProps, EnvExtensionProps } from './env-extension';
+import BaseExtension from './base-extension';
+import type { BaseExtensionModel } from './base-extension';
+import Repository from '../scope/objects/repository';
 
-export default (async function makeEnv(envType: string, props: EnvLoadArgsProps): Promise<EnvExtension> {
+export default (async function makeEnv(envType: EnvType, props: EnvLoadArgsProps): Promise<EnvExtension> {
   logger.debug(`env-factory, create ${envType}`);
   props.envType = envType;
   props.throws = true;
@@ -19,7 +22,23 @@ export default (async function makeEnv(envType: string, props: EnvLoadArgsProps)
   return extension;
 });
 
-function getEnvInstance(envType: string, envExtensionProps: EnvExtensionProps): EnvExtension {
+export async function makeEnvFromModel(
+  envType: EnvType,
+  modelObject: string | BaseExtensionModel,
+  repository: Repository
+): Promise<?EnvExtension> {
+  logger.debug(`env-factory, create ${envType} from model`);
+  if (!modelObject) return undefined;
+  const actualObject =
+    typeof modelObject === 'string'
+      ? { envType, ...BaseExtension.transformStringToModelObject(modelObject) }
+      : { envType, ...modelObject };
+  const envExtensionProps: EnvExtensionProps = await EnvExtension.loadFromModelObject(actualObject, repository);
+  const extension = getEnvInstance(envType, envExtensionProps);
+  return extension;
+}
+
+function getEnvInstance(envType: EnvType, envExtensionProps: EnvExtensionProps): EnvExtension {
   switch (envType) {
     case COMPILER_ENV_TYPE:
       return new CompilerExtension(envExtensionProps);

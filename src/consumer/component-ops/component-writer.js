@@ -223,13 +223,8 @@ export default class ComponentWriter {
     // so if the overrides or envs were changed, it should be written to the consumer-config
     const areEnvsChanged = async (): Promise<boolean> => {
       const context = { componentDir: this.componentMap.getRootDir() };
-      // const loadEnvArgs = [this.consumer.getPath(), this.consumer.scope.getPath(), context];
-      const compilerProps = this.consumer.getEnvProps(COMPILER_ENV_TYPE, context);
-      const testerProps = this.consumer.getEnvProps(TESTER_ENV_TYPE, context);
-      // const compilerFromConsumer = await this.consumer.bitConfig.loadCompiler(...loadEnvArgs);
-      const compilerFromConsumer = compilerProps ? await makeEnv(COMPILER_ENV_TYPE, compilerProps) : null;
-      const testerFromConsumer = testerProps ? await makeEnv(TESTER_ENV_TYPE, testerProps) : null;
-      // const testerFromConsumer = await this.consumer.bitConfig.loadTester(...loadEnvArgs);
+      const compilerFromConsumer = await this.consumer.getEnv(COMPILER_ENV_TYPE, context);
+      const testerFromConsumer = await this.consumer.getEnv(TESTER_ENV_TYPE, context);
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
       const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
       return (

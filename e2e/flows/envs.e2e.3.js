@@ -1143,7 +1143,7 @@ describe('envs', function () {
           });
         });
         describe('attach - detach envs', () => {
-          let compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+          const compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
           let componentModel;
           let componentMap;
           before(() => {
@@ -1168,82 +1168,82 @@ describe('envs', function () {
             });
           });
           // this functionality won't work anymore. we might add it later by an extension
-          describe.skip('attach imported component', () => {
-            let output;
-            let compilerModel;
-            let testerModel;
-            before(() => {
-              helper.getClonedLocalScope(importedScopeBeforeChanges);
-              output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
-              const mockEnvs = {
-                compiler: {
-                  [`${helper.envScope}/compilers/new-babel@0.0.1`]: {
-                    rawConfig: {
-                      a: 'my-compiler',
-                      valToDynamic: 'dyanamicValue'
-                    }
-                  }
-                },
-                tester: {
-                  [`${helper.envScope}/testers/new-mocha@0.0.1`]: {
-                    rawConfig: {
-                      a: 'my-tester',
-                      valToDynamic: 'dyanamicValue'
-                    }
-                  }
-                }
-              };
-              helper.addKeyValToBitJson(undefined, 'env', mockEnvs);
-              componentModel = helper.showComponentParsed('comp/my-comp');
-              compilerModel = componentModel.compiler;
-              testerModel = componentModel.tester;
-              compId = `${helper.remoteScope}/comp/my-comp@0.0.1`;
-              const bitmap = helper.readBitMap();
-              componentMap = bitmap[compId];
-            });
-            it('should print to output the attached components', () => {
-              expect(output).to.have.string('the following components has been attached to the workspace environments');
-              expect(output).to.have.string('comp/my-comp');
-            });
-            it('should show error if trying to eject config if the component is bound to the workspace config', () => {
-              const error = new EjectBoundToWorkspace();
-              const ejectFunc = () => helper.ejectConf('comp/my-comp');
-              helper.expectToThrow(ejectFunc, error);
-            });
-            it('should load the compiler from workspace bit.json after attach compiler back', () => {
-              expect(compilerModel.config).to.include({
-                a: 'my-compiler',
-                valToDynamic: 'dyanamicValue'
-              });
-            });
-            it('should load the tester from workspace bit.json after attach tester back', () => {
-              expect(testerModel.config).to.include({
-                a: 'my-tester',
-                valToDynamic: 'dyanamicValue'
-              });
-            });
-            it('should mark the compiler as not detached in .bitmap if the compiler is attached', () => {
-              expect(componentMap.detachedCompiler).to.be.false;
-            });
-            it('should mark the tester as not detached in .bitmap if the tester is attached', () => {
-              expect(componentMap.detachedTester).to.be.false;
-            });
-            describe('tagging attached imported component', () => {
-              before(() => {
-                helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
-                helper.addRemoteEnvironment();
-                helper.tagAllComponents();
-                compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
-                componentModel = helper.catComponent(compId);
-              });
-              it('should mark the compiler as detached in the models since it was changed', () => {
-                expect(componentModel.detachedCompiler).to.be.true;
-              });
-              it('should mark the tester as detached in the models since it was changed', () => {
-                expect(componentModel.detachedTester).to.be.true;
-              });
-            });
-          });
+          // describe.skip('attach imported component', () => {
+          //   let output;
+          //   let compilerModel;
+          //   let testerModel;
+          //   before(() => {
+          //     helper.getClonedLocalScope(importedScopeBeforeChanges);
+          //     output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
+          //     const mockEnvs = {
+          //       compiler: {
+          //         [`${helper.envScope}/compilers/new-babel@0.0.1`]: {
+          //           rawConfig: {
+          //             a: 'my-compiler',
+          //             valToDynamic: 'dyanamicValue'
+          //           }
+          //         }
+          //       },
+          //       tester: {
+          //         [`${helper.envScope}/testers/new-mocha@0.0.1`]: {
+          //           rawConfig: {
+          //             a: 'my-tester',
+          //             valToDynamic: 'dyanamicValue'
+          //           }
+          //         }
+          //       }
+          //     };
+          //     helper.addKeyValToBitJson(undefined, 'env', mockEnvs);
+          //     componentModel = helper.showComponentParsed('comp/my-comp');
+          //     compilerModel = componentModel.compiler;
+          //     testerModel = componentModel.tester;
+          //     compId = `${helper.remoteScope}/comp/my-comp@0.0.1`;
+          //     const bitmap = helper.readBitMap();
+          //     componentMap = bitmap[compId];
+          //   });
+          //   it('should print to output the attached components', () => {
+          //     expect(output).to.have.string('the following components has been attached to the workspace environments');
+          //     expect(output).to.have.string('comp/my-comp');
+          //   });
+          //   it('should show error if trying to eject config if the component is bound to the workspace config', () => {
+          //     const error = new EjectBoundToWorkspace();
+          //     const ejectFunc = () => helper.ejectConf('comp/my-comp');
+          //     helper.expectToThrow(ejectFunc, error);
+          //   });
+          //   it('should load the compiler from workspace bit.json after attach compiler back', () => {
+          //     expect(compilerModel.config).to.include({
+          //       a: 'my-compiler',
+          //       valToDynamic: 'dyanamicValue'
+          //     });
+          //   });
+          //   it('should load the tester from workspace bit.json after attach tester back', () => {
+          //     expect(testerModel.config).to.include({
+          //       a: 'my-tester',
+          //       valToDynamic: 'dyanamicValue'
+          //     });
+          //   });
+          //   it('should mark the compiler as not detached in .bitmap if the compiler is attached', () => {
+          //     expect(componentMap.detachedCompiler).to.be.false;
+          //   });
+          //   it('should mark the tester as not detached in .bitmap if the tester is attached', () => {
+          //     expect(componentMap.detachedTester).to.be.false;
+          //   });
+          //   describe('tagging attached imported component', () => {
+          //     before(() => {
+          //       helper.createFile(componentFolder, 'objRestSpread.js', 'const g = 5;');
+          //       helper.addRemoteEnvironment();
+          //       helper.tagAllComponents();
+          //       compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
+          //       componentModel = helper.catComponent(compId);
+          //     });
+          //     it('should mark the compiler as detached in the models since it was changed', () => {
+          //       expect(componentModel.detachedCompiler).to.be.true;
+          //     });
+          //     it('should mark the tester as detached in the models since it was changed', () => {
+          //       expect(componentModel.detachedTester).to.be.true;
+          //     });
+          //   });
+          // });
         });
         describe('change envs config', () => {
           beforeEach(() => {
