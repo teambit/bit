@@ -208,9 +208,8 @@ describe('envs', function () {
       });
     });
 
-    describe('attach - detach envs', () => {
+    describe('attach - detach envs from consumer config', () => {
       let fullComponentFolder;
-      // let componentMap;
       let compId;
 
       before(() => {
@@ -226,9 +225,7 @@ describe('envs', function () {
         helper.exportAllComponents();
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         helper.importComponent('comp/my-comp');
-        const bitmap = helper.readBitMap();
         compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
-        // componentMap = bitmap[compId];
         componentModel = helper.showComponentParsed('comp/my-comp');
         compilerModel = componentModel.compiler;
         testerModel = componentModel.tester;
@@ -268,22 +265,16 @@ describe('envs', function () {
         it('should leave the overrides in the model as is (empty)', () => {
           expect(componentModel).to.have.property('overrides').to.be.empty;
         });
-        describe('attach back', () => {
-          // let output;
+        describe('attach back to consumer config', () => {
           before(() => {
             const bitJson = helper.readBitJson();
             const compName = `${helper.remoteScope}/comp/my-comp`;
             delete bitJson.overrides[compName];
             helper.writeBitJson(bitJson);
-            // output = helper.envsAttach(['comp/my-comp'], { c: '', t: '' });
             componentModel = helper.showComponentParsed('comp/my-comp');
             compilerModel = componentModel.compiler;
             testerModel = componentModel.tester;
           });
-          // it('should print to output the attached components', () => {
-          //   expect(output).to.have.string('the following components has been attached to the workspace environments');
-          //   expect(output).to.have.string('comp/my-comp');
-          // });
           it('should load the compiler from workspace bit.json after attach compiler back', () => {
             expect(compilerModel.config).to.include(envConfigOriginal);
           });
@@ -1176,7 +1167,7 @@ describe('envs', function () {
               expect(statusOutput).to.not.have.string('modified components');
             });
           });
-          // @todo: this functionality won't work anymore, make sure it's fine.
+          // this functionality won't work anymore. we might add it later by an extension
           describe.skip('attach imported component', () => {
             let output;
             let compilerModel;

@@ -450,10 +450,8 @@ async function loadFromConfig({
   logger.debug(`env-extension (${envType}) loadFromConfig`);
   const env = envConfig[envType];
   if (!env) return null;
-  // this.loadEnv(COMPILER_ENV_TYPE, consumerPath, scopePath, CompilerExtension.load, context)
   const envName = Object.keys(env)[0];
   const envObject = env[envName];
-  // const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, envType, context);
   const envProps = {
     name: envName,
     consumerPath,
@@ -467,47 +465,3 @@ async function loadFromConfig({
   };
   return makeEnv(envType, envProps);
 }
-
-// const loadFromBitJson = ({
-//   bitJson,
-//   envType,
-//   consumerPath,
-//   scopePath,
-//   context
-// }): Promise<?CompilerExtension | ?TesterExtension> => {
-//   logger.debug(`env-extension (${envType}) loadFromBitJson`);
-//   if (envType === COMPILER_ENV_TYPE) {
-//     return bitJson.loadCompiler(consumerPath, scopePath, context);
-//   }
-//   return bitJson.loadTester(consumerPath, scopePath, context);
-// };
-
-// const loadFromComponentBitConfigOrFromModel = async ({
-//   modelComponent,
-//   componentBitConfig,
-//   envType,
-//   consumerPath,
-//   scopePath,
-//   context
-// }: {
-//   modelComponent: ConsumerComponent,
-//   componentBitConfig: ?ComponentBitConfig,
-//   envType: EnvType,
-//   consumerPath: string,
-//   scopePath: string,
-//   context?: Object
-// }): Promise<?CompilerExtension | ?TesterExtension> => {
-//   logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel`);
-//   if (componentBitConfig) {
-//     return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
-//   }
-//   logger.debug(`env-extension (${envType}) loadFromComponentBitConfigOrFromModel. loading from the model`);
-//   if (envType === COMPILER_ENV_TYPE) {
-//     return modelComponent ? modelComponent.compiler : undefined;
-//   }
-//   if (envType === TESTER_ENV_TYPE) {
-//     return modelComponent ? modelComponent.tester : undefined;
-//   }
-
-//   return undefined;
-// };
