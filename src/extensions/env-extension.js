@@ -358,7 +358,7 @@ export default class EnvExtension extends BaseExtension {
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
     if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
       // load from component config.
-      // return loadFromBitJson({ bitJson: componentBitConfig, envType, consumerPath, scopePath, context });
+      // $FlowFixMe
       const envConfig = { [envType]: componentBitConfig[envType] };
       const configPath = path.dirname(componentBitConfig.path);
       logger.debug(`env-extension loading ${envType} from component config`);
@@ -371,14 +371,18 @@ export default class EnvExtension extends BaseExtension {
     }
     if (overridesFromConsumer && overridesFromConsumer.env && overridesFromConsumer.env[envType]) {
       logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
+      // $FlowFixMe
       const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
+    // $FlowFixMe
     if (consumerBitConfig[envType]) {
       logger.debug(`env-extension, loading ${envType} from the consumer config`);
+      // $FlowFixMe
       const envConfig = { [envType]: consumerBitConfig[envType] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
+    return null;
   }
 
   /**
@@ -430,5 +434,6 @@ async function loadFromConfig({
     envType,
     context
   };
+  // $FlowFixMe
   return makeEnv(envType, envProps);
 }

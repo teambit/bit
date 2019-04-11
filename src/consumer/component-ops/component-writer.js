@@ -16,7 +16,6 @@ import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../compo
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';
-import makeEnv from '../../extensions/env-factory';
 
 export type ComponentWriterProps = {
   component: Component,

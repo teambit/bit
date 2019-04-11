@@ -1145,7 +1145,6 @@ describe('envs', function () {
         describe('attach - detach envs', () => {
           const compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
           let componentModel;
-          let componentMap;
           before(() => {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
           });
@@ -1155,8 +1154,6 @@ describe('envs', function () {
               helper.addToRawConfigOfEnvInBitJson(fullComponentFolder, 'a', 'tester', TESTER_ENV_TYPE);
               helper.tagAllComponents();
               componentModel = helper.catComponent(compId);
-              const bitmap = helper.readBitMap();
-              componentMap = bitmap[compId];
             });
             it('should save the new config into the model', () => {
               expect(componentModel.compiler.config).to.include(compilerConfigChanged);

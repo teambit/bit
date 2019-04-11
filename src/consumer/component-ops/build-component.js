@@ -239,6 +239,7 @@ const _runBuild = async ({
           api: compiler.api,
           context
         };
+        // $FlowFixMe we verified above that action is set
         const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {
