@@ -107,54 +107,54 @@ describe('envs', function () {
     // TODO: reimport component on author after changing the component code in different project
     // And change the env config in the root bit.json (should load from root bit.json)
 
-    let componentModel;
-    let compilerModel;
-    let testerModel;
+    let componentFilesystem;
+    let compilerLoaded;
+    let testerLoaded;
     let compilerPackageDependencies;
     let testerPackageDependencies;
     before(() => {
-      componentModel = helper.catComponent('comp/my-comp@0.0.1');
-      compilerModel = componentModel.compiler;
-      testerModel = componentModel.tester;
-      compilerPackageDependencies = componentModel.compilerPackageDependencies;
-      testerPackageDependencies = componentModel.testerPackageDependencies;
+      componentFilesystem = helper.catComponent('comp/my-comp@0.0.1');
+      compilerLoaded = componentFilesystem.compiler;
+      testerLoaded = componentFilesystem.tester;
+      compilerPackageDependencies = componentFilesystem.compilerPackageDependencies;
+      testerPackageDependencies = componentFilesystem.testerPackageDependencies;
     });
     describe('storing envs metadata in the models for author', () => {
       it('should store the compiler name in the model', () => {
-        expect(compilerModel.name).to.equal(`${helper.envScope}/${compilerId}@0.0.1`);
+        expect(compilerLoaded.name).to.equal(`${helper.envScope}/${compilerId}@0.0.1`);
       });
       it('should store the tester name in the model', () => {
-        expect(testerModel.name).to.equal(`${helper.envScope}/${testerId}@0.0.1`);
+        expect(testerLoaded.name).to.equal(`${helper.envScope}/${testerId}@0.0.1`);
       });
       it('should store the compiler dynamic config in the model', () => {
-        expect(compilerModel.config).to.include(envConfigOriginal);
+        expect(compilerLoaded.config).to.include(envConfigOriginal);
       });
       it('should store the tester dynamic config in the model', () => {
-        expect(testerModel.config).to.include(envConfigOriginal);
+        expect(testerLoaded.config).to.include(envConfigOriginal);
       });
       it('should store the compiler files metadata in the model', () => {
-        expect(compilerModel.files).to.have.lengthOf(1);
-        expect(compilerModel.files[0]).to.include({ name: '.babelrc' });
-        expect(compilerModel.files[0])
+        expect(compilerLoaded.files).to.have.lengthOf(1);
+        expect(compilerLoaded.files[0]).to.include({ name: '.babelrc' });
+        expect(compilerLoaded.files[0])
           .to.have.property('file')
           .that.is.a('string');
       });
       it('should store the tester files metadata in the model', () => {
-        expect(testerModel.files).to.have.lengthOf(1);
-        expect(testerModel.files[0]).to.include({ name: 'config' });
-        expect(testerModel.files[0])
+        expect(testerLoaded.files).to.have.lengthOf(1);
+        expect(testerLoaded.files[0]).to.include({ name: 'config' });
+        expect(testerLoaded.files[0])
           .to.have.property('file')
           .that.is.a('string');
       });
       it('should store the compiler files in the model', () => {
-        const babelRcObjectHash = compilerModel.files[0].file;
+        const babelRcObjectHash = compilerLoaded.files[0].file;
         const babelRcFromModel = helper.catObject(babelRcObjectHash).trim();
         const babelRcPath = path.join(helper.localScopePath, '.babelrc');
         const babelRcFromFS = eol.lf(fs.readFileSync(babelRcPath).toString(), babelRcPath);
         expect(babelRcFromModel).to.equal(babelRcFromFS);
       });
       it('should store the tester files in the model', () => {
-        const mochaConfigHash = testerModel.files[0].file;
+        const mochaConfigHash = testerLoaded.files[0].file;
         const mochaConfigFromModel = helper.catObject(mochaConfigHash).trim();
         const mochaConfigPath = path.join(helper.localScopePath, 'mocha-config.opts');
         const mochaConfigFromFS = fs.readFileSync(mochaConfigPath).toString();
@@ -208,10 +208,10 @@ describe('envs', function () {
       });
     });
 
-    describe('attach - detach envs from consumer config', () => {
+    describe('detach envs from consumer config', () => {
       let fullComponentFolder;
       let compId;
-
+      let scopeAfterDetach;
       before(() => {
         // Change the component envs in imported environment to make sure they are detached
         helper.reInitLocalScope();
@@ -226,20 +226,18 @@ describe('envs', function () {
         helper.getClonedLocalScope(authorScopeBeforeChanges);
         helper.importComponent('comp/my-comp');
         compId = `${helper.remoteScope}/comp/my-comp@0.0.2`;
-        componentModel = helper.showComponentParsed('comp/my-comp');
-        compilerModel = componentModel.compiler;
-        testerModel = componentModel.tester;
+        componentFilesystem = helper.showComponentParsed('comp/my-comp');
+        compilerLoaded = componentFilesystem.compiler;
+        testerLoaded = componentFilesystem.tester;
+        scopeAfterDetach = helper.cloneLocalScope();
+      });
+      after(() => {
+        helper.getClonedRemoteScope(remoteScopeBeforeChanges);
       });
       it('should show error when trying to eject conf without path provided', () => {
         const error = new EjectNoDir(`${helper.remoteScope}/comp/my-comp`);
         const ejectFunc = () => helper.ejectConf('comp/my-comp');
         helper.expectToThrow(ejectFunc, error);
-      });
-      it('should load the compiler from models if the compiler is detached', () => {
-        expect(compilerModel.config).to.include(compilerConfigChanged);
-      });
-      it('should load the tester from models if the compiler is detached', () => {
-        expect(testerModel.config).to.include(testerConfigChanged);
       });
       it('should write the modified envs into consumer config overrides', () => {
         const bitJson = helper.readBitJson();
@@ -254,16 +252,22 @@ describe('envs', function () {
         expect(testerConfig.rawConfig).to.deep.equal(testerConfigChanged);
         expect(testerConfig.files).to.deep.equal({ config: './mocha-config.opts' });
       });
+      it('should load the compiler from consumer config overrides', () => {
+        expect(compilerLoaded.config).to.include(compilerConfigChanged);
+      });
+      it('should load the tester from consumer config overrides', () => {
+        expect(testerLoaded.config).to.include(testerConfigChanged);
+      });
       describe('tagging detached component', () => {
         before(() => {
           // Change the component
           helper.createFile('', 'objRestSpread.js', 'const a = 3');
           helper.tagAllComponents();
           compId = `${helper.remoteScope}/comp/my-comp@0.0.3`;
-          componentModel = helper.catComponent(compId);
+          componentFilesystem = helper.catComponent(compId);
         });
         it('should leave the overrides in the model as is (empty)', () => {
-          expect(componentModel).to.have.property('overrides').to.be.empty;
+          expect(componentFilesystem).to.have.property('overrides').to.be.empty;
         });
         describe('attach back to consumer config', () => {
           before(() => {
@@ -271,34 +275,40 @@ describe('envs', function () {
             const compName = `${helper.remoteScope}/comp/my-comp`;
             delete bitJson.overrides[compName];
             helper.writeBitJson(bitJson);
-            componentModel = helper.showComponentParsed('comp/my-comp');
-            compilerModel = componentModel.compiler;
-            testerModel = componentModel.tester;
+            componentFilesystem = helper.showComponentParsed('comp/my-comp');
+            compilerLoaded = componentFilesystem.compiler;
+            testerLoaded = componentFilesystem.tester;
           });
           it('should load the compiler from workspace bit.json after attach compiler back', () => {
-            expect(compilerModel.config).to.include(envConfigOriginal);
+            expect(compilerLoaded.config).to.include(envConfigOriginal);
           });
           it('should load the tester from workspace bit.json after attach tester back', () => {
-            expect(testerModel.config).to.include(envConfigOriginal);
+            expect(testerLoaded.config).to.include(envConfigOriginal);
           });
           describe('tagging re-attached component', () => {
             before(() => {
               helper.tagAllComponents();
               compId = `${helper.remoteScope}/comp/my-comp@0.0.4`;
-              componentModel = helper.catComponent(compId);
+              componentFilesystem = helper.catComponent(compId);
             });
             it('should save the compiler config according to the workspace config', () => {
-              expect(componentModel.compiler.config).to.include(envConfigOriginal);
+              expect(componentFilesystem.compiler.config).to.include(envConfigOriginal);
             });
             it('should save the tester config according to the workspace config', () => {
-              expect(componentModel.tester.config).to.include(envConfigOriginal);
+              expect(componentFilesystem.tester.config).to.include(envConfigOriginal);
             });
           });
         });
       });
-
-      after(() => {
-        helper.getClonedRemoteScope(remoteScopeBeforeChanges);
+      describe('ejecting conf', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterDetach);
+          helper.ejectConf('comp/my-comp', { p: 'my-config-dir' });
+        });
+        it('should delete the component from the consumer config overrides', () => {
+          const bitJson = helper.readBitJson();
+          expect(bitJson).to.not.have.property('overrides');
+        });
       });
     });
     describe('testing components', () => {

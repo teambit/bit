@@ -136,6 +136,13 @@ export default class ConsumerOverrides {
     );
   }
 
+  removeExactMatch(bitId: BitId): boolean {
+    const exactMatch = this.findExactMatch(bitId);
+    if (!exactMatch) return false;
+    delete this.overrides[exactMatch];
+    return true;
+  }
+
   static validate(overrides: Object): void {
     if (typeof overrides === 'undefined') return;
     const message = 'consumer-config (either bit.json or package.json "bit")';

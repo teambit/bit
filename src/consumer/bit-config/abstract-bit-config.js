@@ -133,43 +133,6 @@ export default class AbstractBitConfig {
     return this.tester;
   }
 
-  async loadCompiler(consumerPath: string, scopePath: string, context?: Object): Promise<?CompilerExtension> {
-    if (!this.hasCompiler()) {
-      return null;
-    }
-
-    const compilerP = this.loadEnv(COMPILER_ENV_TYPE, consumerPath, scopePath, CompilerExtension.load, context);
-    const compiler: CompilerExtension = ((await compilerP: any): CompilerExtension);
-    return compiler;
-  }
-
-  async loadTester(consumerPath: string, scopePath: string, context?: Object): Promise<?TesterExtension> {
-    if (!this.hasTester()) {
-      return null;
-    }
-    const testerP = this.loadEnv(TESTER_ENV_TYPE, consumerPath, scopePath, TesterExtension.load, context);
-
-    const tester: ?TesterExtension = ((await testerP: any): TesterExtension);
-    return tester;
-  }
-
-  async loadEnv(
-    envType: EnvType,
-    consumerPath: string,
-    scopePath: string,
-    loadFunc: Function,
-    context?: Object
-  ): Promise<?CompilerExtension | ?TesterExtension> {
-    const envs = this.getEnvsByType(envType);
-    if (!envs) return undefined;
-    // TODO: Gilad - support more than one key of compiler
-    const envName = Object.keys(envs)[0];
-    const envObject = envs[envName];
-    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, envType, context);
-    const env = await loadFunc(envProps);
-    return env;
-  }
-
   /**
    * before v13, envs were strings of bit-id.
    * to be backward compatible, if an env doesn't have any files/config, convert it to a string
@@ -290,26 +253,3 @@ export default class AbstractBitConfig {
     return env;
   }
 }
-
-const getEnvsProps = (
-  consumerPath: string,
-  scopePath: string,
-  envName: string,
-  envObject: EnvExtensionObject,
-  bitJsonPath: string,
-  envType: EnvType,
-  context?: Object
-): EnvLoadArgsProps => {
-  const envProps = {
-    name: envName,
-    consumerPath,
-    scopePath,
-    rawConfig: envObject.rawConfig,
-    files: envObject.files,
-    bitJsonPath,
-    options: envObject.options,
-    envType,
-    context
-  };
-  return envProps;
-};
