@@ -16,7 +16,6 @@ export default class TesterExtension extends EnvExtension {
   }
 
   toModelObject(): TesterExtensionModel {
-    logger.debug('tester-extension', 'toModelObject');
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;

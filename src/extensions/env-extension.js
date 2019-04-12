@@ -121,7 +121,6 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toModelObject(): EnvExtensionModel {
-    logger.debug('env-extension', 'toModelObject');
     const baseObject: BaseExtensionModel = super.toModelObject();
     const files = this.files.map(file => file.toModelObject());
     const modelObject = { files, ...baseObject };
@@ -129,7 +128,6 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toObject(): Object {
-    logger.debug('env-extension', 'toObject');
     const baseObject: Object = super.toObject();
     const files = this.files;
     const object = { ...baseObject, files };
@@ -233,7 +231,6 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    logger.debug('env-extension', 'load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(
@@ -253,7 +250,6 @@ export default class EnvExtension extends BaseExtension {
   }
 
   static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?Object {
-    logger.debug('env-extension', 'loadDynamicPackageDependencies');
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       try {
@@ -273,7 +269,6 @@ export default class EnvExtension extends BaseExtension {
 
   // $FlowFixMe
   static loadDynamicConfig(envExtensionProps: EnvExtensionProps): ?Object {
-    logger.debug('env-extension', 'loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
@@ -298,7 +293,6 @@ export default class EnvExtension extends BaseExtension {
     modelObject: EnvExtensionModel & { envType: EnvType },
     repository: Repository
   ): Promise<EnvExtensionProps> {
-    logger.debug('env-extension', 'loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -418,7 +412,6 @@ async function loadFromConfig({
   configPath,
   context
 }): Promise<?EnvExtension> {
-  logger.debug(`env-extension (${envType}) loadFromConfig`);
   const env = envConfig[envType];
   if (!env) return null;
   const envName = Object.keys(env)[0];
@@ -429,7 +422,7 @@ async function loadFromConfig({
     scopePath,
     rawConfig: envObject.rawConfig,
     files: envObject.files,
-    bitJsonPath: configPath, // @TODO: FIX! this is needed in order to load the environment files, however, they're not necessarily needed.
+    bitJsonPath: configPath,
     options: envObject.options,
     envType,
     context

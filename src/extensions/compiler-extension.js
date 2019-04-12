@@ -16,7 +16,6 @@ export default class CompilerExtension extends EnvExtension {
   }
 
   toModelObject(): CompilerExtensionModel {
-    logger.debug('compiler-extension', 'toModelObject');
     const envModelObject: EnvExtensionModel = super.toModelObject();
     const modelObject = { ...envModelObject };
     return modelObject;
