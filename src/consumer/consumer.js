@@ -22,7 +22,9 @@ import {
   LATEST_BIT_VERSION,
   BIT_GIT_DIR,
   DOT_GIT_DIR,
-  BIT_WORKSPACE_TMP_DIRNAME
+  BIT_WORKSPACE_TMP_DIRNAME,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -67,6 +69,9 @@ import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { dependenciesFields } from './bit-config/consumer-overrides';
+import makeEnv from '../extensions/env-factory';
+import EnvExtension from '../extensions/env-extension';
+import type { EnvType } from '../extensions/env-extension';
 
 type ConsumerProps = {
   projectPath: string,
@@ -125,11 +130,13 @@ export default class Consumer {
     this.componentLoader = ComponentLoader.getInstance(this);
   }
   get compiler(): Promise<?CompilerExtension> {
-    return this.bitConfig.loadCompiler(this.projectPath, this.scope.getPath());
+    // $FlowFixMe
+    return this.getEnv(COMPILER_ENV_TYPE);
   }
 
   get tester(): Promise<?TesterExtension> {
-    return this.bitConfig.loadTester(this.projectPath, this.scope.getPath());
+    // $FlowFixMe
+    return this.getEnv(TESTER_ENV_TYPE);
   }
 
   get driver(): Driver {
@@ -152,6 +159,12 @@ export default class Consumer {
 
   get bitmapIds(): BitIds {
     return this.bitMap.getAllBitIds();
+  }
+
+  async getEnv(envType: EnvType, context: ?Object): Promise<?EnvExtension> {
+    const props = this._getEnvProps(envType, context);
+    if (!props) return null;
+    return makeEnv(envType, props);
   }
 
   getTmpFolder(fullPath: boolean = false): PathOsBased {
@@ -617,10 +630,6 @@ export default class Consumer {
     const updateVersionsP = components.map((component) => {
       const id: BitId = component instanceof ModelComponent ? component.toBitIdWithLatestVersion() : component.id;
       this.bitMap.updateComponentId(id);
-      if (component.pendingVersion) {
-        const { detachedCompiler, detachedTester } = component.pendingVersion;
-        this.bitMap.setDetachedCompilerAndTester(id, { detachedCompiler, detachedTester });
-      }
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
@@ -1010,6 +1019,24 @@ export default class Consumer {
   async injectConf(componentId: BitId, force: boolean) {
     const component = await this.loadComponent(componentId);
     return component.injectConfig(this.getPath(), this.bitMap, force);
+  }
+
+  _getEnvProps(envType: EnvType, context: ?Object) {
+    const envs = this.bitConfig.getEnvsByType(envType);
+    if (!envs) return undefined;
+    const envName = Object.keys(envs)[0];
+    const envObject = envs[envName];
+    return {
+      name: envName,
+      consumerPath: this.getPath(),
+      scopePath: this.scope.getPath(),
+      rawConfig: envObject.rawConfig,
+      files: envObject.files,
+      bitJsonPath: path.dirname(this.bitConfig.path),
+      options: envObject.options,
+      envType,
+      context
+    };
   }
 
   async onDestroy() {

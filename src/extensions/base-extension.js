@@ -308,7 +308,6 @@ export default class BaseExtension {
   }
 
   static loadFromModelObject(modelObject: string | BaseExtensionModel) {
-    logger.debug('base-extension, load extension from model object');
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {

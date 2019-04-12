@@ -9,12 +9,13 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
+import EnvExtension from '../../extensions/env-extension';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -110,7 +111,7 @@ export default class ComponentWriter {
     this._determineWhetherToWriteConfig();
     this._updateComponentRootPathAccordingToBitMap();
     this._updateBitMapIfNeeded();
-    this._updateConsumerConfigIfNeeded();
+    await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
     return this.component;
@@ -170,8 +171,6 @@ export default class ComponentWriter {
       mainFile: this.component.mainFile, // $FlowFixMe
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
-      detachedCompiler: this.component.detachedCompiler,
-      detachedTester: this.component.detachedTester,
       origin: this.origin,
       parent: this.parent,
       originallySharedDir: this.component.originallySharedDir,
@@ -218,14 +217,28 @@ export default class ComponentWriter {
     }
   }
 
-  _updateConsumerConfigIfNeeded() {
+  async _updateConsumerConfigIfNeeded() {
     // for authored components there is no bit.json/package.json component specific
-    // so if the overrides were changed, it should be written to the consumer-config
-    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      this.consumer.bitConfig.overrides.updateOverridesIfChanged(
-        this.component.id,
-        this.component.overrides.componentOverridesData
+    // so if the overrides or envs were changed, it should be written to the consumer-config
+    const areEnvsChanged = async (): Promise<boolean> => {
+      const context = { componentDir: this.componentMap.getRootDir() };
+      const compilerFromConsumer = await this.consumer.getEnv(COMPILER_ENV_TYPE, context);
+      const testerFromConsumer = await this.consumer.getEnv(TESTER_ENV_TYPE, context);
+      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
+      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
+      return (
+        EnvExtension.areEnvsDifferent(
+          compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
+          compilerFromComponent
+        ) ||
+        EnvExtension.areEnvsDifferent(
+          testerFromConsumer ? testerFromConsumer.toModelObject() : null,
+          testerFromComponent
+        )
       );
+    };
+    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      this.consumer.bitConfig.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
