@@ -6,9 +6,7 @@ import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
-import CompilerExtension from '../../extensions/compiler-extension';
-import TesterExtension from '../../extensions/tester-extension';
-import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
+import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension';
 import type { PathOsBased, PathLinux } from '../../utils/path';
 import {
   BIT_JSON,
