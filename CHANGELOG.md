@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [unreleased]
+
+- support overriding environments (compiler/tester) per component
+
 ## [14.0.6-dev.1] - 2019-04-07
 
 - `overrides` property supports manually adding dependencies (experimental for now)
@@ -21,7 +25,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - avoid installing "undefined" npm package when importing authored components
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
 - improve authentication error message to clearly indicate the various strategies failures
-- reintroduce `-c` alias for `--no-cache` flag in `bit build` command 
+- reintroduce `-c` alias for `--no-cache` flag in `bit build` command
 
 ## [14.0.5] - 2019-04-07
 
