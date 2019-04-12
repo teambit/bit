@@ -28,6 +28,8 @@ chai.use(require('chai-string'));
 // TODO: Tests
 // should skip the test running if --skip-test flag provided during tag (move to tag.e2e)
 // test with dynamicPackageDependencies should work (make sure the dynamicPackageDependencies are resolved correctly)
+// in the compiler used in these tests, the config "valToDynamic", always return the same value "dyanamicValue"
+// don't try to change this val and expect to be changed. use other vals.
 
 describe('envs', function () {
   this.timeout(0);
@@ -182,15 +184,15 @@ describe('envs', function () {
     });
     it('should build the component successfully', () => {
       const output = helper.buildComponentWithOptions('comp/my-comp', { v: '', '-no-cache': '' });
-      const alignedOuput = Helper.alignOutput(output);
+      const alignedOutput = Helper.alignOutput(output);
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js.map'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       expect(output).to.have.string(path.join('dist', 'objRestSpread.js'));
       const tmpFolder = path.join(helper.localScopePath, BIT_WORKSPACE_TMP_DIRNAME, 'comp/my-comp');
-      expect(alignedOuput).to.not.have.string('writing config files to');
+      expect(alignedOutput).to.not.have.string('writing config files to');
       const babelRcWriteMessage = abstractVinylVerboseMsg(path.join(tmpFolder, '.babelrc'), true);
-      expect(alignedOuput).to.not.have.string(babelRcWriteMessage);
-      expect(alignedOuput).to.not.have.string('deleting tmp directory');
+      expect(alignedOutput).to.not.have.string(babelRcWriteMessage);
+      expect(alignedOutput).to.not.have.string('deleting tmp directory');
       const distFilePath = path.join(helper.localScopePath, 'dist', 'objRestSpread.js');
       const distContent = fs.readFileSync(distFilePath).toString();
       expect(distContent).to.have.string(
@@ -308,6 +310,19 @@ describe('envs', function () {
         it('should delete the component from the consumer config overrides', () => {
           const bitJson = helper.readBitJson();
           expect(bitJson).to.not.have.property('overrides');
+        });
+        describe('changing compiler config for author inside ejected config dir', () => {
+          before(() => {
+            const configDir = path.join(helper.localScopePath, 'my-config-dir');
+            const bitJson = helper.readBitJson(configDir);
+            const fullCompilerId = `${helper.envScope}/${compilerId}@0.0.1`;
+            bitJson.env.compiler[fullCompilerId].rawConfig.a = 'compiler-changed';
+            helper.writeBitJson(bitJson, configDir);
+            componentFilesystem = helper.showComponentParsed('comp/my-comp');
+          });
+          it('should load the config from the customized config dir', () => {
+            expect(componentFilesystem.compiler.config.a).to.equal('compiler-changed');
+          });
         });
       });
     });
