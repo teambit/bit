@@ -2,7 +2,6 @@
 
 import EnvExtension from './env-extension';
 import type { EnvExtensionProps, EnvExtensionOptions, EnvExtensionModel } from './env-extension';
-import logger from '../logger/logger';
 import { COMPILER_ENV_TYPE } from '../constants';
 
 export type CompilerExtensionOptions = EnvExtensionOptions;
