@@ -16,9 +16,6 @@ import { getConsumerInfo } from '../../../consumer/consumer-locator';
 import BitMap from '../../../consumer/bit-map';
 import type { ConsumerInfo } from '../../../consumer/consumer-locator';
 
-// load all diagnosis
-// list checks
-// run all checks
 // run specific check
 
 export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: ?string };
@@ -115,8 +112,6 @@ async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): 
 }
 
 async function _getEnvMeta(): Object {
-  // npm version
-  // yarn version
   const env = {
     'node-version': process.version,
     'running-timestamp': runningTimeStamp || _getTimeStamp(),
@@ -126,7 +121,6 @@ async function _getEnvMeta(): Object {
     'yarn-version': await _getYarnVersion(),
     'user-details': _getUserDetails()
   };
-  console.log(env);
 
   return env;
 }
