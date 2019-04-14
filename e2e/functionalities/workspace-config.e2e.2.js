@@ -532,7 +532,7 @@ describe('workspace config', function () {
           catBar = helper.catComponent('bar@latest');
         });
         it('should be able to tag successfully', () => {
-          expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('1 component(s) tagged');
         });
         it('should remove the dependency from the model', () => {
           expect(catBar.dependencies).to.have.lengthOf(1);
@@ -1042,6 +1042,42 @@ describe('workspace config', function () {
             const status = helper.status();
             expect(status).to.have.string(statusWorkspaceIsCleanMsg);
           });
+        });
+      });
+    });
+    describe('override environments', () => {
+      describe('default workspace compiler and different compilers for different components', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.createFile('bar', 'foo-default.js');
+          helper.createFile('bar', 'foo1.js');
+          helper.createFile('bar', 'foo2.js');
+          helper.addComponent('bar/*');
+          const bitJson = helper.readBitJson();
+          bitJson.env = { compiler: 'my-scope/default-compiler@0.0.1' };
+          bitJson.overrides = {
+            foo1: {
+              env: {
+                compiler: 'my-scope/foo1-compiler@0.0.1'
+              }
+            },
+            foo2: {
+              env: {
+                compiler: 'my-scope/foo2-compiler@0.0.1'
+              }
+            }
+          };
+          helper.writeBitJson(bitJson);
+        });
+        it('should set the compiler with no overrides to the workspace default', () => {
+          const fooDefault = helper.showComponentParsed('foo-default');
+          expect(fooDefault.compiler.name).to.equal('my-scope/default-compiler@0.0.1');
+        });
+        it('should set the components with overrides compilers with the appropriate compilers', () => {
+          const foo1 = helper.showComponentParsed('foo1');
+          const foo2 = helper.showComponentParsed('foo2');
+          expect(foo1.compiler.name).to.equal('my-scope/foo1-compiler@0.0.1');
+          expect(foo2.compiler.name).to.equal('my-scope/foo2-compiler@0.0.1');
         });
       });
     });

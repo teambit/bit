@@ -6,9 +6,7 @@ import fs from 'fs-extra';
 import { BitIds, BitId } from '../../bit-id';
 import { filterObject } from '../../utils';
 import type { ExtensionOptions } from '../../extensions/extension';
-import CompilerExtension from '../../extensions/compiler-extension';
-import TesterExtension from '../../extensions/tester-extension';
-import type { EnvExtensionOptions, EnvType, EnvLoadArgsProps } from '../../extensions/env-extension';
+import type { EnvExtensionOptions, EnvType } from '../../extensions/env-extension';
 import type { PathOsBased, PathLinux } from '../../utils/path';
 import {
   BIT_JSON,
@@ -43,7 +41,7 @@ export type TesterExtensionObject = EnvExtensionObject;
 export type CompilerExtensionObject = EnvExtensionObject;
 
 export type Extensions = { [extensionName: string]: RegularExtensionObject };
-export type Envs = { [envName: string]: CompilerExtensionObject };
+export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
 
@@ -88,23 +86,23 @@ export default class AbstractBitConfig {
   }
 
   get compiler(): ?Compilers {
-    const compilerObj = transformEnvToObject(this._compiler);
+    const compilerObj = AbstractBitConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
   set compiler(compiler: string | Compilers) {
-    this._compiler = transformEnvToObject(compiler);
+    this._compiler = AbstractBitConfig.transformEnvToObject(compiler);
   }
 
   get tester(): ?Testers {
-    const testerObj = transformEnvToObject(this._tester);
+    const testerObj = AbstractBitConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
   set tester(tester: string | Testers) {
-    this._tester = transformEnvToObject(tester);
+    this._tester = AbstractBitConfig.transformEnvToObject(tester);
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -131,43 +129,6 @@ export default class AbstractBitConfig {
       return this.compiler;
     }
     return this.tester;
-  }
-
-  async loadCompiler(consumerPath: string, scopePath: string, context?: Object): Promise<?CompilerExtension> {
-    if (!this.hasCompiler()) {
-      return null;
-    }
-
-    const compilerP = this.loadEnv(COMPILER_ENV_TYPE, consumerPath, scopePath, CompilerExtension.load, context);
-    const compiler: CompilerExtension = ((await compilerP: any): CompilerExtension);
-    return compiler;
-  }
-
-  async loadTester(consumerPath: string, scopePath: string, context?: Object): Promise<?TesterExtension> {
-    if (!this.hasTester()) {
-      return null;
-    }
-    const testerP = this.loadEnv(TESTER_ENV_TYPE, consumerPath, scopePath, TesterExtension.load, context);
-
-    const tester: ?TesterExtension = ((await testerP: any): TesterExtension);
-    return tester;
-  }
-
-  async loadEnv(
-    envType: EnvType,
-    consumerPath: string,
-    scopePath: string,
-    loadFunc: Function,
-    context?: Object
-  ): Promise<?CompilerExtension | ?TesterExtension> {
-    const envs = this.getEnvsByType(envType);
-    if (!envs) return undefined;
-    // TODO: Gilad - support more than one key of compiler
-    const envName = Object.keys(envs)[0];
-    const envObject = envs[envName];
-    const envProps = getEnvsProps(consumerPath, scopePath, envName, envObject, this.path, envType, context);
-    const env = await loadFunc(envProps);
-    return env;
   }
 
   /**
@@ -279,37 +240,14 @@ export default class AbstractBitConfig {
     }
     return false;
   }
-}
 
-const transformEnvToObject = (env): Envs => {
-  if (typeof env === 'string') {
-    if (env === NO_PLUGIN_TYPE) return {};
-    return {
-      [env]: {}
-    };
+  static transformEnvToObject(env: string | Object): Envs {
+    if (typeof env === 'string') {
+      if (env === NO_PLUGIN_TYPE) return {};
+      return {
+        [env]: {}
+      };
+    }
+    return env;
   }
-  return env;
-};
-
-const getEnvsProps = (
-  consumerPath: string,
-  scopePath: string,
-  envName: string,
-  envObject: EnvExtensionObject,
-  bitJsonPath: string,
-  envType: EnvType,
-  context?: Object
-): EnvLoadArgsProps => {
-  const envProps = {
-    name: envName,
-    consumerPath,
-    scopePath,
-    rawConfig: envObject.rawConfig,
-    files: envObject.files,
-    bitJsonPath,
-    options: envObject.options,
-    envType,
-    context
-  };
-  return envProps;
-};
+}

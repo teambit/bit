@@ -11,7 +11,9 @@ import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION
+  DEFAULT_BIT_VERSION,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 import ConsumerComponent from '../../consumer/component';
@@ -22,11 +24,10 @@ import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import CompilerExtension from '../../extensions/compiler-extension';
-import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
 import ComponentOverrides from '../../consumer/bit-config/component-overrides';
+import { makeEnvFromModel } from '../../extensions/env-factory';
 
 type State = {
   versions?: {
@@ -299,8 +300,8 @@ export default class Component extends BitObject {
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
-    const testerP = TesterExtension.loadFromModelObject(version.tester, repository);
+    const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
+    const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
     const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
       filesP,
       distsP,
@@ -324,8 +325,6 @@ export default class Component extends BitObject {
       mainFile: version.mainFile || null,
       compiler,
       tester,
-      detachedCompiler: version.detachedCompiler,
-      detachedTester: version.detachedTester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       compilerDependencies: version.compilerDependencies.getClone(),

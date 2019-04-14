@@ -41,6 +41,8 @@ With Bit, any repository or library becomes a multi-component monorepo. It elimi
 
 Bit is used to quickly share and reuse code from any project. Every component can be installed, developed and used in any other project. Popular use cases are [UI components](https://bit.dev/components?labels=ui%20components) and [React components](https://bit.dev/components?labels=react), [JavaScript functions](https://bit.dev/components?labels=utils) and more.  
 
+Learn: **[Build a Super-Modular Todo App with React and Bit Components](https://blog.bitsrc.io/build-a-super-modular-todo-app-with-react-and-bit-components-aa06bbac4084)**.
+
 ### UI components
 
 Share components from UI libraries and projects, and use them to build new apps. [Discover components](https://bit.dev/components?labels=react) from the community, to add to your apps. Example:
@@ -84,7 +86,7 @@ To [tag a version]((https://docs.bit.dev/docs/tag-component-version.html)) for t
 
 Then, `bit export` them to a [remote collection](https://docs.bit.dev/docs/organizing-components.html) from which they can be installed in other projects. You can set up a collection on any server, or use [Bit’s component hub](https://bit.dev). Here’s a quick demo.
 
-**Exporting 256 Radma components (functions) from the repository to Bit’s hub in 2 minutes**:  
+**Exporting 256 Ramda components (functions) from the repository to Bit’s hub in 2 minutes**:  
 
 <p align="center">
   <a href="https://www.youtube.com/watch?v=pz0y2GTsSrU"><img width="460" height="300" src="https://storage.googleapis.com/bit-docs/image-ramda-256-components.png"></a>
@@ -129,7 +131,7 @@ Update: An extensive extension system is in the works and should become availabe
 
 Any repository or library containing components is already a Bit monorepo.  
 
-Adding Bit to the repository will not change its structure, source code or configurations. You won’t need to refactor or create separate directories and configurations for every components.  
+Adding Bit to the repository will not change its structure, source code or configurations. You won’t need to refactor or create separate directories and configurations for every component.  
 Instead, you can use Bit to track and share the components from your library directly to Bit’s hub. Then, they become availabe to install as individual NPM packages.   
 
 This means that your React UI library + Bit will become a monorepo from which components can be individually discovered and installed, without changing the library. Component dependencies will be automatically defined by Bit, and build/test configurations will be [applied to all the components](https://docs.bit.dev/docs/building-components.html) using [Bit’s environments](https://bit.dev/bit/envs). In addition, you will get discoverability for the components across your team, community or organization.

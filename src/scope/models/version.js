@@ -2,7 +2,7 @@
 import R from 'ramda';
 import { Ref, BitObject } from '../objects';
 import Source from './source';
-import { filterObject, first, bufferFrom, getStringifyArgs, sha1, sortObject } from '../../utils';
+import { filterObject, first, bufferFrom, getStringifyArgs } from '../../utils';
 import type { customResolvedPath } from '../../consumer/component';
 import ConsumerComponent from '../../consumer/component';
 import { BitIds, BitId } from '../../bit-id';
@@ -20,6 +20,7 @@ import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
 import type { ComponentOverridesData } from '../../consumer/bit-config/component-overrides';
+import EnvExtension from '../../extensions/env-extension';
 
 type CiProps = {
   error: Object,
@@ -49,8 +50,6 @@ export type VersionProps = {
   dists?: ?Array<DistFileModel>,
   compiler?: ?CompilerExtensionModel,
   tester?: ?TesterExtensionModel,
-  detachedCompiler?: ?boolean,
-  detachedTester?: ?boolean,
   log: Log,
   ci?: CiProps,
   specsResults?: ?Results,
@@ -82,8 +81,6 @@ export default class Version extends BitObject {
   dists: ?Array<DistFileModel>;
   compiler: ?CompilerExtensionModel;
   tester: ?TesterExtensionModel;
-  detachedCompiler: ?boolean;
-  detachedTester: ?boolean;
   log: Log;
   ci: CiProps | {};
   specsResults: ?Results;
@@ -131,8 +128,6 @@ export default class Version extends BitObject {
     this.testerPackageDependencies = props.testerPackageDependencies || {};
     this.bindingPrefix = props.bindingPrefix;
     this.customResolvedPaths = props.customResolvedPaths;
-    this.detachedCompiler = props.detachedCompiler;
-    this.detachedTester = props.detachedTester;
     this.overrides = props.overrides || {};
     this.validateVersion();
   }
@@ -298,8 +293,6 @@ export default class Version extends BitObject {
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
-        detachedCompiler: this.detachedCompiler,
-        detachedTester: this.detachedTester,
         log: {
           message: this.log.message,
           date: this.log.date,
@@ -354,8 +347,6 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix,
       tester,
-      detachedCompiler,
-      detachedTester,
       log,
       docs,
       ci,
@@ -426,8 +417,6 @@ export default class Version extends BitObject {
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
       tester: tester ? parseEnv(tester) : null,
-      detachedCompiler,
-      detachedTester,
       log: {
         message: log.message,
         date: log.date,
@@ -502,50 +491,6 @@ export default class Version extends BitObject {
       };
     };
 
-    /**
-     * Get to envs models and check if they are different
-     * @param {*} envModelFromFs
-     * @param {*} envModelFromModel
-     */
-    const areEnvsDifferent = (envModelFromFs, envModelFromModel) => {
-      const sortEnv = (env) => {
-        env.files = R.sortBy(R.prop('name'), env.files);
-        env.config = sortObject(env.config);
-        const result = sortObject(env);
-        return result;
-      };
-      const stringifyEnv = (env) => {
-        if (!env) {
-          return '';
-        }
-        if (typeof env === 'string') {
-          return env;
-        }
-        return JSON.stringify(sortEnv(env));
-      };
-      const envModelFromFsString = stringifyEnv(envModelFromFs);
-      const envModelFromModelString = stringifyEnv(envModelFromModel);
-      return sha1(envModelFromFsString) !== sha1(envModelFromModelString);
-    };
-
-    /**
-     * Calculate the detach status based on the component origin, the component detach status from bitmap and comparison
-     * between the env in fs and the env in models
-     * @param {*} origin
-     * @param {*} detachFromFs
-     * @param {*} envModelFromFs
-     * @param {*} envModelFromModel
-     */
-    const calculateDetach = (origin: ComponentOrigin, detachFromFs: ?boolean, envModelFromFs, envModelFromModel) => {
-      // In case it's already detached keep the state as is
-      if (detachFromFs) return detachFromFs;
-      // In case i'm the author and it's not already detached it can't be changed here
-      if (origin === COMPONENT_ORIGINS.AUTHORED) return undefined;
-      const envDiff = areEnvsDifferent(envModelFromFs, envModelFromModel);
-      if (!envDiff) return undefined;
-      return true;
-    };
-
     const compiler = component.compiler ? component.compiler.toModelObject() : undefined;
     const tester = component.tester ? component.tester.toModelObject() : undefined;
 
@@ -553,34 +498,8 @@ export default class Version extends BitObject {
       ? component.compiler.dynamicPackageDependencies
       : undefined;
     const testerDynamicPakageDependencies = component.tester ? component.tester.dynamicPackageDependencies : undefined;
-    let detachedCompiler;
-    let detachedTester;
     const compilerFromModel = R.path(['compiler'], versionFromModel);
     const testerFromModel = R.path(['tester'], versionFromModel);
-    if (compiler) {
-      detachedCompiler = calculateDetach(
-        component.origin,
-        component.detachedCompiler,
-        getEnvModelOrName(compiler),
-        compilerFromModel
-      );
-      if (detachedCompiler) {
-        // Save it on the component for future use
-        component.detachedCompiler = detachedCompiler;
-      }
-    }
-    if (tester) {
-      detachedTester = calculateDetach(
-        component.origin,
-        component.detachedTester,
-        getEnvModelOrName(tester),
-        testerFromModel
-      );
-      if (detachedTester) {
-        // Save it on the component for future use
-        component.detachedTester = detachedTester;
-      }
-    }
     return new Version({
       mainFile: component.mainFile,
       files: files.map(parseFile),
@@ -588,8 +507,6 @@ export default class Version extends BitObject {
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,
-      detachedCompiler,
-      detachedTester,
       log: {
         message,
         username,
