@@ -11,6 +11,9 @@ import type { ExamineResult } from '../../../doctor/Diagnosis';
 import logger from '../../../logger/logger';
 import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../../constants';
 import * as globalConfig from './global-config';
+import { getConsumerInfo } from '../../../consumer/consumer-locator';
+import BitMap from '../../../consumer/bit-map';
+import type { ConsumerInfo } from '../../../consumer/consumer-locator';
 
 // load all diagnosis
 // list checks
@@ -87,18 +90,32 @@ function _getTimeStamp() {
 async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): Promise<Stream.Readable> {
   const pack = tar.pack(); // pack is a streams2 stream
   const debugLog = await _getDebugLogAsStream();
-  const env = _getEnvMeta();
+  const consumerInfo = await _getConsumerInfo();
+  let bitmap;
+  if (consumerInfo && consumerInfo.path) {
+    bitmap = _getBitMap(consumerInfo.path);
+  }
+  const env = await _getEnvMeta();
   pack.entry({ name: 'env-meta.json' }, JSON.stringify(env, null, 2));
   pack.entry({ name: 'doc-results.json' }, JSON.stringify(examineResults, null, 2));
   if (debugLog) {
     pack.entry({ name: 'debug.log' }, debugLog);
   }
+  if (bitmap) {
+    pack.entry({ name: '.bitmap' }, bitmap);
+  }
+  if (consumerInfo && consumerInfo.consumerConfig) {
+    pack.entry({ name: 'config.json' }, consumerInfo.consumerConfig.toJson());
+  }
+
   pack.finalize();
 
   return pack;
 }
 
-function _getEnvMeta(): Object {
+async function _getEnvMeta(): Object {
+  // npm version
+  // yarn version
   const env = {
     'node-version': process.version,
     'running-timestamp': runningTimeStamp || _getTimeStamp(),
@@ -122,4 +139,13 @@ async function _getDebugLogAsStream(): Promise<?Buffer> {
     return fs.readFile(DEBUG_LOG);
   }
   return Promise.resolve(undefined);
+}
+
+async function _getConsumerInfo(): Promise<?ConsumerInfo> {
+  const consumerInfo = await getConsumerInfo(process.cwd());
+  return consumerInfo;
+}
+
+function _getBitMap(workspaceDir): ?Buffer {
+  return BitMap.loadRawSync(workspaceDir);
 }
