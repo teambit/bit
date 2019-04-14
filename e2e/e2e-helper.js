@@ -58,6 +58,16 @@ export default class Helper {
     return cmdOutput.toString();
   }
 
+  parseOptions(options: Object): string {
+    const value = Object.keys(options)
+      .map((key) => {
+        const keyStr = key.length === 1 ? `-${key}` : `--${key}`;
+        return `${keyStr} ${options[key]}`;
+      })
+      .join(' ');
+    return value;
+  }
+
   runWithTryCatch(cmd: string, cwd: string = this.localScopePath) {
     let output;
     try {
@@ -614,6 +624,16 @@ export default class Helper {
 
   tagComponentBarFoo() {
     return this.tagComponent('bar/foo');
+  }
+
+  doctor(options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor ${parsedOpts}`);
+  }
+
+  doctorList(options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor list ${parsedOpts}`);
   }
 
   createCompiler() {
