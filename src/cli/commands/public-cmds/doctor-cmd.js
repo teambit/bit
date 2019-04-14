@@ -35,7 +35,11 @@ export default class Doctor extends Command {
 
   report({ examineResults, savedFilePath }: DoctorRunAllResults, args: any, flags: Object): string {
     if (flags.json) {
-      return JSON.stringify(examineResults, null, 2);
+      const fullJson = {
+        savedFilePath,
+        examineResults
+      };
+      return JSON.stringify(fullJson, null, 2);
     }
     const formatted = formatDiagnosesResult({ examineResults, savedFilePath });
     return formatted;
