@@ -1,5 +1,6 @@
 /** @flow */
 import os from 'os';
+import execa from 'execa';
 import tar from 'tar-stream';
 import fs from 'fs-extra';
 import Stream from 'stream';
@@ -121,10 +122,33 @@ async function _getEnvMeta(): Object {
     'running-timestamp': runningTimeStamp || _getTimeStamp(),
     platform: os.platform(),
     'bit-version': BIT_VERSION,
+    'npm-version': await _getNpmVersion(),
+    'yarn-version': await _getYarnVersion(),
     'user-details': _getUserDetails()
   };
+  console.log(env);
 
   return env;
+}
+
+async function _getNpmVersion(): Promise<string> {
+  try {
+    const { stdout } = await execa('npm', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb("can't find npm version by running npm -v", e.message);
+  }
+  return 'unknown';
+}
+
+async function _getYarnVersion(): Promise<string> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb("can't find yarn version by running yarn -v", e.message);
+  }
+  return 'unknown';
 }
 
 function _getUserDetails(): string {
