@@ -235,6 +235,19 @@ describe('workspace config', function () {
           expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
           expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo2.js');
         });
+        describe('when running from an inner directory', () => {
+          before(() => {
+            const showBarStr = helper.runCmd('bit show bar --json', path.join(helper.localScopePath, 'bar-dir'));
+            showBar = JSON.parse(showBarStr);
+          });
+          it('should behave the same as if was running from consumer root', () => {
+            expect(showBar.dependencies).to.have.lengthOf(1);
+            expect(showBar.dependencies[0].id).to.not.have.string('foo2');
+            expect(showBar).to.have.property('manuallyRemovedDependencies');
+            expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+            expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo2.js');
+          });
+        });
       });
       describe('ignoring a dependencies files with a glob pattern', () => {
         let showBar;
@@ -1170,6 +1183,41 @@ describe('workspace config', function () {
           const catFoo = helper.catComponent(`${helper.remoteScope}/foo@latest`);
           expect(catFoo.overrides.dependencies).to.deep.equal({ 'file://src/utils/*': '-' });
         });
+      });
+    });
+    describe('adding overrides data on consumer-config to imported component', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        const overrides = {
+          'bar/*': {
+            peerDependencies: {
+              chai: '2.4.0'
+            },
+            env: {
+              compiler: 'bit.env/my-special-compiler@0.0.1'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('bit status should not show the component as modified', () => {
+        const status = helper.status();
+        expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+      });
+      it('bit diff should not show any diff', () => {
+        const diff = helper.diff('bar/foo');
+        expect(diff).to.have.string('no diff');
+      });
+      it('bit show should not display any compiler', () => {
+        const showBar = helper.showComponentParsed('bar/foo');
+        expect(showBar.compiler).to.be.null;
       });
     });
   });

@@ -27,26 +27,26 @@ export default class ComponentOverrides {
   /**
    * overrides of component can be determined by three different sources.
    * 1. component-config. (bit.json/package.json of the component itself).
-   *    authored don't have it, most imported have it, unless they choose not to write package.json/bit.json.
+   *    authored normally don't have it, most imported have it, unless they choose not to write package.json/bit.json.
    * 2. consumer-config. (bit.json/package.json of the consumer when it has overrides of the component).
    * 3. model. (when the component is tagged, the overrides data is saved into the model).
    *
    * the strategy of loading them is simple:
    * if the component config is written to the filesystem, use it (#1).
    * if the component config is not written, it can be for two reasons:
-   * a) it's author. in this case, the config is written into consumer-config (if not exist) on import.
-   * b) it's imported when user chose not to write package.json nor bit.json. in that case, use
+   * a) it's imported and the user chose not to write package.json nor bit.json. in this case, use
    * component from the model.
-   * once you have the config, merge it with the consumer-config.
+   * b) it's author. by default, the config is written into consumer-config (if not exist) on import.
+   * which, in this case, use only consumer-config.
+   * an exception is when an author runs `eject-conf` command to explicitly write the config, then,
+   * use the component-config.
    */
   static load(
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
     overridesFromModel: ?ComponentOverridesData,
-    componentBitConfig: ?ComponentBitConfig,
-    isAuthor?: boolean = false
+    componentBitConfig: ?ComponentBitConfig
   ): ComponentOverrides {
     const getOverridesFromComponent = () => {
-      if (isAuthor) return null;
       return componentBitConfig && componentBitConfig.componentHasWrittenConfig
         ? componentBitConfig.overrides
         : overridesFromModel;
