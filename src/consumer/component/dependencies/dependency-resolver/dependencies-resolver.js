@@ -23,14 +23,14 @@ import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
 import { dependenciesFields } from '../../../bit-config/consumer-overrides';
 
-type AllDependencies = {
+export type AllDependencies = {
   dependencies: Dependency[],
   devDependencies: Dependency[],
   compilerDependencies: Dependency[],
   testerDependencies: Dependency[]
 };
 
-type AllPackagesDependencies = {
+export type AllPackagesDependencies = {
   packageDependencies: ?Object,
   devPackageDependencies: ?Object,
   compilerPackageDependencies: ?Object,
@@ -204,7 +204,11 @@ export default class DependencyResolver {
 
   manuallyAddDependencies() {
     const packageJson = this._getPackageJson();
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson);
+    const dependencies = this.overridesDependencies.getDependenciesToAddManually(
+      packageJson,
+      this.allDependencies,
+      this.allPackagesDependencies
+    );
     if (!dependencies) return;
     const { components, packages } = dependencies;
     dependenciesFields.forEach((depField) => {

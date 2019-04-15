@@ -2,7 +2,12 @@
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import ComponentBitConfig from './component-bit-config';
-import { MANUALLY_REMOVE_DEPENDENCY } from '../../constants';
+import {
+  MANUALLY_REMOVE_DEPENDENCY,
+  MANUALLY_ADD_DEPENDENCY,
+  OVERRIDE_FILE_PREFIX,
+  OVERRIDE_COMPONENT_PREFIX
+} from '../../constants';
 import type { ConsumerOverridesOfComponent } from './consumer-overrides';
 import { dependenciesFields } from './consumer-overrides';
 
@@ -69,23 +74,53 @@ export default class ComponentOverrides {
     const isDependencyField = (val, field) => fields.includes(field);
     return R.pickBy(isDependencyField, this.overrides);
   }
-  getAllDependenciesOverrides(): Object {
-    return Object.assign(
+  getComponentDependenciesWithVersion(): Object {
+    const allDeps = Object.assign(
       {},
       this.overrides.dependencies,
       this.overrides.devDependencies,
       this.overrides.peerDependencies
     );
+    return this._filterForComponentWithValidVersion(allDeps);
   }
-  getAllDependenciesOverridesFromConsumer(): Object {
-    return Object.assign(
+  getComponentDependenciesWithVersionFromConsumer(): Object {
+    const allDeps = Object.assign(
       {},
       this.overridesFromConsumer.dependencies,
       this.overridesFromConsumer.devDependencies,
       this.overridesFromConsumer.peerDependencies
     );
+    return this._filterForComponentWithValidVersion(allDeps);
   }
-  getIgnored(field: string) {
+  _filterForComponentWithValidVersion(deps: Object): Object {
+    return Object.keys(deps).reduce((acc, current) => {
+      if (this._isValidVersion(deps[current]) && current.startsWith(OVERRIDE_COMPONENT_PREFIX)) {
+        const component = current.replace(OVERRIDE_COMPONENT_PREFIX, '');
+        acc[component] = deps[current];
+      }
+      return acc;
+    }, {});
+  }
+  _isValidVersion(ver: string) {
+    return ver !== MANUALLY_ADD_DEPENDENCY && ver !== MANUALLY_REMOVE_DEPENDENCY;
+  }
+  getIgnored(field: string): string[] {
     return R.keys(R.filter(dep => dep === MANUALLY_REMOVE_DEPENDENCY, this.overrides[field] || {}));
+  }
+  getIgnoredFiles(field: string): string[] {
+    const ignoredRules = this.getIgnored(field);
+    return ignoredRules
+      .filter(rule => rule.startsWith(OVERRIDE_FILE_PREFIX))
+      .map(rule => rule.replace(OVERRIDE_FILE_PREFIX, ''));
+  }
+  getIgnoredComponents(field: string): string[] {
+    const ignoredRules = this.getIgnored(field);
+    return ignoredRules
+      .filter(rule => rule.startsWith(OVERRIDE_COMPONENT_PREFIX))
+      .map(rule => rule.replace(OVERRIDE_COMPONENT_PREFIX, ''));
+  }
+  getIgnoredPackages(field: string): string[] {
+    const ignoredRules = this.getIgnored(field);
+    return ignoredRules.filter(rule => !rule.startsWith(OVERRIDE_FILE_PREFIX));
   }
 }

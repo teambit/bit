@@ -1,6 +1,11 @@
 // @flow
 import minimatch from 'minimatch';
-import { COMPONENT_ORIGINS, MANUALLY_REMOVE_DEPENDENCY, MANUALLY_ADD_DEPENDENCY } from '../../../../constants';
+import {
+  COMPONENT_ORIGINS,
+  MANUALLY_REMOVE_DEPENDENCY,
+  MANUALLY_ADD_DEPENDENCY,
+  OVERRIDE_COMPONENT_PREFIX
+} from '../../../../constants';
 import ComponentMap from '../../../bit-map/component-map';
 import { BitId, BitIds } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
@@ -8,7 +13,7 @@ import type Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import hasWildcard from '../../../../utils/string/has-wildcard';
 import { dependenciesFields } from '../../../bit-config/consumer-overrides';
-import type { FileType } from './dependencies-resolver';
+import type { FileType, AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[],
@@ -37,7 +42,7 @@ export default class OverridesDependencies {
       return patterns.some(pattern => minimatch(file, pattern));
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
-    const ignoreField = this.component.overrides.getIgnored(field);
+    const ignoreField = this.component.overrides.getIgnoredFiles(field);
     const ignore = shouldIgnoreByGlobMatch(ignoreField);
     if (ignore) {
       this._addManuallyRemovedDep(field, file);
@@ -50,7 +55,7 @@ export default class OverridesDependencies {
       return packages.some(pkg => pkg === packageName);
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
-    const ignoreField = this.component.overrides.getIgnored(field);
+    const ignoreField = this.component.overrides.getIgnoredPackages(field);
     const ignore = shouldIgnorePackage(ignoreField);
     if (ignore) {
       this._addManuallyRemovedDep(field, packageName);
@@ -63,7 +68,7 @@ export default class OverridesDependencies {
       return packages.some(pkg => pkg === packageName);
     };
     const field = 'peerDependencies';
-    const ignorePeer = this.component.overrides.getIgnored(field);
+    const ignorePeer = this.component.overrides.getIgnoredPackages(field);
     const ignore = shouldIgnorePackage(ignorePeer);
     if (ignore) {
       this._addManuallyRemovedDep(field, packageName);
@@ -85,7 +90,7 @@ export default class OverridesDependencies {
       });
     };
     const field = fileType.isTestFile ? 'devDependencies' : 'dependencies';
-    const ignoreField = this.component.overrides.getIgnored(field);
+    const ignoreField = this.component.overrides.getIgnoredComponents(field);
     const ignore = shouldIgnore(ignoreField);
     if (ignore) {
       this._addManuallyRemovedDep(field, componentIdStr);
@@ -93,7 +98,11 @@ export default class OverridesDependencies {
     return ignore;
   }
 
-  getDependenciesToAddManually(packageJson: ?Object): ?{ components: Object, packages: Object } {
+  getDependenciesToAddManually(
+    packageJson: ?Object,
+    existingDependencies: AllDependencies,
+    existingPackages: AllPackagesDependencies
+  ): ?{ components: Object, packages: Object } {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;
     const idsFromBitmap = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.AUTHORED, COMPONENT_ORIGINS.IMPORTED]);
@@ -105,10 +114,22 @@ export default class OverridesDependencies {
       Object.keys(overrides[depField]).forEach((dependency) => {
         const dependencyValue = overrides[depField][dependency];
         if (dependencyValue === MANUALLY_REMOVE_DEPENDENCY) return;
-        if (hasWildcard(dependency)) return; // needs to decide whether we support it for non-removal.
-        const added = this._manuallyAddComponent(depField, dependency, dependencyValue, idsFromBitmap, idsFromModel);
-        if (added) {
-          components[depField] ? components[depField].push(added) : (components[depField] = [added]);
+        const componentId = this._getComponentIdToAdd(
+          depField,
+          dependency,
+          dependencyValue,
+          idsFromBitmap,
+          idsFromModel
+        );
+        if (componentId) {
+          // $FlowFixMe
+          const dependencyExist = existingDependencies[depField].find(d =>
+            d.id.isEqualWithoutScopeAndVersion(componentId)
+          );
+          if (!dependencyExist) {
+            this._addManuallyAddedDep(depField, componentId.toString());
+            components[depField] ? components[depField].push(componentId) : (components[depField] = [componentId]);
+          }
           return;
         }
         const addedPkg = this._manuallyAddPackage(depField, dependency, dependencyValue, packageJson);
@@ -120,7 +141,7 @@ export default class OverridesDependencies {
     return { components, packages };
   }
 
-  _manuallyAddComponent(
+  _getComponentIdToAdd(
     field: string,
     dependency: string,
     dependencyValue: string,
@@ -128,20 +149,16 @@ export default class OverridesDependencies {
     idsFromModel: BitIds
   ): ?BitId {
     if (field === 'peerDependencies') return null;
+    if (!dependency.startsWith(OVERRIDE_COMPONENT_PREFIX)) return null;
+    dependency = dependency.replace(OVERRIDE_COMPONENT_PREFIX, '');
     const idFromBitMap =
       idsFromBitmap.searchStrWithoutVersion(dependency) || idsFromBitmap.searchStrWithoutScopeAndVersion(dependency);
     const idFromModel =
       idsFromModel.searchStrWithoutVersion(dependency) || idsFromModel.searchStrWithoutScopeAndVersion(dependency);
     if (!idFromBitMap && !idFromModel) return null;
-    const getIdToAdd = (): BitId => {
-      // $FlowFixMe
-      const id: BitId = idFromModel || idFromBitMap;
-      return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
-    };
-    const idToAdd = getIdToAdd();
-    this._addManuallyAddedDep(field, idToAdd.toString());
-
-    return idToAdd;
+    // $FlowFixMe one of them must be set (see one line above)
+    const id: BitId = idFromModel || idFromBitMap;
+    return dependencyValue === MANUALLY_ADD_DEPENDENCY ? id : id.changeVersion(dependencyValue);
   }
 
   _manuallyAddPackage(field: string, dependency: string, dependencyValue: string, packageJson: ?Object): ?Object {
