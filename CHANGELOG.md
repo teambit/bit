@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - support overriding environments (compiler/tester) per component
+- fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
+- fix dependencies version resolution from package.json to support versions with range
 
 ## [14.0.6-dev.1] - 2019-04-07
 

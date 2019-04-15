@@ -105,7 +105,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     if (!packageObject || R.isEmpty(packageObject)) return null;
     const packageId = Object.keys(packageObject)[0];
     const version = packageObject[packageId];
-    if (!semver.valid(version)) return null; // it's probably a relative path to the component
+    if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
     const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
     return componentId.changeVersion(validVersion);
   }
