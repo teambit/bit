@@ -1119,6 +1119,59 @@ describe('workspace config', function () {
         });
       });
     });
+    describe('ignoring files with originallySharedDir', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        const fooFixture = 'require("../utils/is-string");';
+        helper.createFile('src/bar', 'foo.js', fooFixture);
+        helper.createFile('src/utils', 'is-string.js');
+        helper.addComponent('src/bar/foo.js');
+        helper.addComponent('src/utils/is-string.js');
+        const overrides = {
+          foo: {
+            dependencies: {
+              [`${OVERRIDE_FILE_PREFIX}src/utils/*`]: '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+        // intermediate step, make sure the dependency is-string is ignored
+        const foo = helper.catComponent('foo@latest');
+        expect(foo.dependencies).to.have.lengthOf(0);
+        expect(Object.keys(foo.overrides.dependencies)).to.have.lengthOf(1);
+
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('foo');
+        // change the file to have it as modified.
+        helper.createFile('components/foo/bar', 'foo.js', `${fooFixture}\n console.log('hello');`);
+      });
+      it('bit status should not show the component as missing dependencies', () => {
+        const status = helper.status();
+        expect(status).to.not.have.string(statusFailureMsg);
+      });
+      it('the originallySharedDir should take into account the overrides file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap[`${helper.remoteScope}/foo@0.0.1`].originallySharedDir).to.equal('src');
+        // without file overrides, the originallySharedDir is 'src/bar'.
+      });
+      it('should write the dependencies without the sharedDir', () => {
+        const componentDir = path.join(helper.localScopePath, 'components/foo');
+        const packageJson = helper.readPackageJson(componentDir);
+        expect(packageJson.bit.overrides.dependencies).to.deep.equal({ 'file://utils/*': '-' });
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should add back the sharedDir into the overrides', () => {
+          const catFoo = helper.catComponent(`${helper.remoteScope}/foo@latest`);
+          expect(catFoo.overrides.dependencies).to.deep.equal({ 'file://src/utils/*': '-' });
+        });
+      });
+    });
   });
   describe('basic validations', () => {
     before(() => {

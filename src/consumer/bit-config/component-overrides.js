@@ -123,4 +123,50 @@ export default class ComponentOverrides {
     const ignoredRules = this.getIgnored(field);
     return ignoredRules.filter(rule => !rule.startsWith(OVERRIDE_FILE_PREFIX));
   }
+  stripOriginallySharedDir(sharedDir: ?string) {
+    if (!sharedDir) return;
+    dependenciesFields.forEach((field) => {
+      if (!this.overrides[field]) return;
+      Object.keys(this.overrides[field]).forEach((rule) => {
+        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
+        const fileWithSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
+        // $FlowFixMe we made sure that sharedDir is not empty
+        const fileWithoutSharedDir = fileWithSharedDir.replace(`${sharedDir}/`, '');
+        // $FlowFixMe
+        const value = this.overrides[field][rule];
+        // $FlowFixMe
+        delete this.overrides[field][rule];
+        // $FlowFixMe
+        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithoutSharedDir}`] = value;
+      });
+    });
+  }
+  addOriginallySharedDir(sharedDir: ?string) {
+    if (!sharedDir) return;
+    dependenciesFields.forEach((field) => {
+      if (!this.overrides[field]) return;
+      Object.keys(this.overrides[field]).forEach((rule) => {
+        if (!rule.startsWith(OVERRIDE_FILE_PREFIX)) return;
+        const fileWithoutSharedDir = rule.replace(OVERRIDE_FILE_PREFIX, '');
+        // $FlowFixMe
+        const fileWithSharedDir = `${sharedDir}/${fileWithoutSharedDir}`;
+        // $FlowFixMe
+        const value = this.overrides[field][rule];
+        // $FlowFixMe
+        delete this.overrides[field][rule];
+        // $FlowFixMe
+        this.overrides[field][`${OVERRIDE_FILE_PREFIX}${fileWithSharedDir}`] = value;
+      });
+    });
+  }
+  static getAllFilesPaths(overrides: Object): string[] {
+    if (!overrides) return [];
+    const allDeps = Object.assign({}, overrides.dependencies, overrides.devDependencies, overrides.peerDependencies);
+    return Object.keys(allDeps)
+      .filter(rule => rule.startsWith(OVERRIDE_FILE_PREFIX))
+      .map(rule => rule.replace(OVERRIDE_FILE_PREFIX, ''));
+  }
+  clone(): ComponentOverrides {
+    return new ComponentOverrides(R.clone(this.overrides), R.clone(this.overridesFromConsumer));
+  }
 }

@@ -275,6 +275,7 @@ export default class Component {
     newInstance.setDevDependencies(this.devDependencies.getClone());
     newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
     newInstance.setTesterDependencies(this.testerDependencies.getClone());
+    newInstance.overrides = this.overrides.clone();
     return newInstance;
   }
 
@@ -518,6 +519,7 @@ export default class Component {
         pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
       );
     });
+    this.overrides.stripOriginallySharedDir(originallySharedDir);
     this._wasOriginallySharedDirStripped = true;
   }
 
