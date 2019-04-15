@@ -65,7 +65,7 @@ describe('workspace config', function () {
     });
   });
   describe('overrides components', () => {
-    describe('changing dependencies versions', () => {
+    describe('changing component dependencies versions', () => {
       let localScope;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
@@ -146,6 +146,36 @@ describe('workspace config', function () {
             expect(bar.dependencies[0].id.version).to.equal('0.0.1');
             expect(bar.flattenedDependencies[0].version).to.equal('0.0.1');
           });
+        });
+      });
+    });
+    describe('changing packages dependencies versions', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo('require("chai");');
+        helper.addComponentBarFoo();
+        helper.addNpmPackage('chai', '2.4.0');
+        const overrides = {
+          'bar/foo': {
+            dependencies: {
+              chai: '4.0.0'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('should show the overridden package version', () => {
+        const bar = helper.showComponentParsed('bar/foo');
+        expect(Object.keys(bar.packageDependencies)).to.have.lengthOf(1);
+        expect(bar.packageDependencies).to.deep.equal({ chai: '4.0.0' });
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should save the overridden package version', () => {
+          const bar = helper.catComponent('bar/foo@latest');
+          expect(bar.packageDependencies).to.deep.equal({ chai: '4.0.0' });
         });
       });
     });

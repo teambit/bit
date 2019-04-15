@@ -13,7 +13,7 @@ import type Consumer from '../../../../consumer/consumer';
 import GeneralError from '../../../../error/general-error';
 import hasWildcard from '../../../../utils/string/has-wildcard';
 import { dependenciesFields } from '../../../bit-config/consumer-overrides';
-import type { FileType, AllDependencies, AllPackagesDependencies } from './dependencies-resolver';
+import type { FileType, AllDependencies } from './dependencies-resolver';
 
 export type ManuallyChangedDependencies = {
   dependencies?: string[],
@@ -100,8 +100,7 @@ export default class OverridesDependencies {
 
   getDependenciesToAddManually(
     packageJson: ?Object,
-    existingDependencies: AllDependencies,
-    existingPackages: AllPackagesDependencies
+    existingDependencies: AllDependencies
   ): ?{ components: Object, packages: Object } {
     const overrides = this.component.overrides.componentOverridesData;
     if (!overrides) return null;

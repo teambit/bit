@@ -204,11 +204,7 @@ export default class DependencyResolver {
 
   manuallyAddDependencies() {
     const packageJson = this._getPackageJson();
-    const dependencies = this.overridesDependencies.getDependenciesToAddManually(
-      packageJson,
-      this.allDependencies,
-      this.allPackagesDependencies
-    );
+    const dependencies = this.overridesDependencies.getDependenciesToAddManually(packageJson, this.allDependencies);
     if (!dependencies) return;
     const { components, packages } = dependencies;
     dependenciesFields.forEach((depField) => {
