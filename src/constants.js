@@ -358,3 +358,7 @@ export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
 export const MANUALLY_REMOVE_DEPENDENCY = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
+
+export const OVERRIDE_FILE_PREFIX = 'file://';
+
+export const OVERRIDE_COMPONENT_PREFIX = '@bit/';

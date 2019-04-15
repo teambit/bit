@@ -159,11 +159,16 @@ export default class Dependencies {
   validate(): void {
     let message = 'failed validating the dependencies.';
     validateType(message, this.dependencies, 'dependencies', 'array');
+    const allIds = this.getAllIds();
     this.dependencies.forEach((dependency) => {
       validateType(message, dependency, 'dependency', 'object');
       if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
       if (!dependency.relativePaths) {
         throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePaths`);
+      }
+      const sameIds = allIds.filterExact(dependency.id);
+      if (sameIds.length > 1) {
+        throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
       }
       const permittedProperties = ['id', 'relativePaths'];
       const currentProperties = Object.keys(dependency);
