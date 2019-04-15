@@ -2,9 +2,9 @@ import requestify from 'requestify';
 import { BASE_WEB_DOMAIN } from '../src/constants';
 
 // const apiBaseUrl = process.env.NODE_ENV === 'production' ? `https://api.${BASE_WEB_DOMAIN}` : `https://api-stg.${BASE_WEB_DOMAIN}`;
-// const isAppVeyor = process.env.APPVEYOR === 'True';
-// const supportTestingOnBitsrc = !isAppVeyor;
-const supportTestingOnBitsrc = true;
+const isAppVeyor = process.env.APPVEYOR === 'True';
+const supportTestingOnBitsrc = !isAppVeyor;
+// const supportTestingOnBitsrc = true;
 const apiBaseUrl =
   process.env.BITSRC_ENV === 'stg' ? `https://api-stg.${BASE_WEB_DOMAIN}` : `https://api.${BASE_WEB_DOMAIN}`;
 const username = process.env.testerBitsrcUsername || 'tester';

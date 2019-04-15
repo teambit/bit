@@ -333,7 +333,7 @@ describe('workspace config', function () {
         it('should show the dependency file as ignored', () => {
           expect(showBar).to.have.property('manuallyRemovedDependencies');
           expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('foo-dir/foo3');
+          expect(showBar.manuallyRemovedDependencies.dependencies).to.include(path.normalize('foo-dir/foo3'));
         });
       });
       describe('ignoring a missing component', () => {
