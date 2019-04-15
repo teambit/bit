@@ -1,5 +1,6 @@
 /** @flow */
 
+import chalk from 'chalk';
 import { table } from 'table';
 import Diagnosis from '../../doctor/Diagnosis';
 
@@ -19,7 +20,9 @@ function createRow(diagnosis: Diagnosis): DiagnosisRow {
 }
 
 export default function formatDiagnosesList(diagnosesList: Diagnosis[]): string {
+  const header = [chalk.bold('category'), chalk.bold('name'), chalk.bold('description')];
   const rows = diagnosesList.map(createRow);
+  rows.unshift(header);
   const output = table(rows, tableColumnConfig);
   return output;
 }

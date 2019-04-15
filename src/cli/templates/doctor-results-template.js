@@ -30,7 +30,9 @@ function _createSummeryRow(examineResult: ExamineResult): SummeryRow {
 }
 
 function _createSummeryTable(examineResult: ExamineResult[]): string {
+  const header = [chalk.bold('category'), chalk.bold('name'), chalk.bold('description'), chalk.bold('status')];
   const rows = examineResult.map(_createSummeryRow);
+  rows.unshift(header);
   const output = table(rows, summeryTableColumnConfig);
   return output;
 }
