@@ -76,6 +76,9 @@ ${fullDiagnosesReport}`;
 }
 
 function _createWrittenFileSection(savedFilePath) {
+  if (!savedFilePath) {
+    return '';
+  }
   return `File has been written to ${savedFilePath}`;
 }
 

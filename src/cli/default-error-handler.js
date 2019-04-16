@@ -98,6 +98,8 @@ import ExtensionSchemaError from '../extensions/exceptions/extension-schema-erro
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
 import InvalidBitConfigPropPath from '../consumer/bit-config/exceptions/invalid-bit-config-prop-path';
+import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
+import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -260,6 +262,8 @@ Original Error: ${err.message}`
         'bit init'
       )} to recreate the file`
   ],
+  [MissingDiagnosisName, err => 'error: you must provide a diagnosis name'],
+  [DiagnosisNotFound, err => `error: diagnosis with name ${chalk.bold(err.diagnosisName)} not found`],
   [
     ComponentSpecsFailed,
     err =>

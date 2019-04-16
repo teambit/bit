@@ -14,11 +14,14 @@ import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '.
 import * as globalConfig from './global-config';
 import { getConsumerInfo } from '../../../consumer/consumer-locator';
 import BitMap from '../../../consumer/bit-map';
+import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
+import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import type { ConsumerInfo } from '../../../consumer/consumer-locator';
 
 // run specific check
 
 export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: ?string };
+export type DoctorRunOneResult = { examineResult: ExamineResult, savedFilePath: ?string };
 
 let runningTimeStamp;
 
@@ -32,13 +35,38 @@ export default (async function runAll({ filePath }: { filePath?: string }): Prom
   return { examineResults, savedFilePath };
 });
 
+export async function runOne({
+  diagnosisName,
+  filePath
+}: {
+  diagnosisName: string,
+  filePath?: string
+}): Promise<DoctorRunOneResult> {
+  if (!diagnosisName) {
+    throw new MissingDiagnosisName();
+  }
+  registerCoreAndExtensionsDiagnoses();
+  runningTimeStamp = _getTimeStamp();
+  const doctorRegistrar = DoctorRegistrar.getInstance();
+  const diagnosis = doctorRegistrar.getDiagnosisByName(diagnosisName);
+  if (!diagnosis) {
+    throw new DiagnosisNotFound(diagnosisName);
+  }
+  const examineResult = await diagnosis.examine();
+  const savedFilePath = await _saveExamineResultsToFile(examineResult, filePath);
+  return { examineResult, savedFilePath };
+}
+
 export async function listDiagnoses(): Promise<Diagnosis[]> {
   registerCoreAndExtensionsDiagnoses();
   const doctorRegistrar = DoctorRegistrar.getInstance();
   return Promise.resolve(doctorRegistrar.diagnoses);
 }
 
-async function _saveExamineResultsToFile(examineResults: ExamineResult[], filePath: ?string): Promise<?string> {
+async function _saveExamineResultsToFile(
+  examineResults: ExamineResult[] | ExamineResult,
+  filePath: ?string
+): Promise<?string> {
   if (!filePath) {
     return Promise.resolve(undefined);
   }

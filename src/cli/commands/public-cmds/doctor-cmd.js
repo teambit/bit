@@ -1,67 +1,89 @@
 /** @flow */
 
 import Command from '../../command';
-import runAll, { listDiagnoses } from '../../../api/consumer/lib/doctor';
-import type { DoctorRunAllResults } from '../../../api/consumer/lib/doctor';
+import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor';
+import type { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
 import Diagnosis from '../../../doctor/Diagnosis';
 
 export default class Doctor extends Command {
-  name = 'doctor';
+  name = 'doctor [diagnosis-name]';
   description = 'diagnose bit state';
   alias = '';
-  commands = [new DoctorList()];
-  opts = [['j', 'json', 'return a json format'], ['s', 'save [filePath]', 'save results to file']];
+  opts = [
+    ['j', 'json', 'return a json format'],
+    ['', 'list', 'list all registered diagnosis'],
+    ['s', 'save [filePath]', 'save results to file']
+  ];
   migration = false;
 
   action(
-    args: any,
+    [diagnosisName]: string[],
     {
-      json = false,
+      list = false,
       save
     }: {
-      json?: boolean,
+      list?: boolean,
       save?: string
     }
-  ): Promise<DoctorRunAllResults> {
+  ): Promise<DoctorRunAllResults | Diagnosis[] | DoctorRunOneResult> {
+    if (list) {
+      return listDiagnoses();
+    }
     let filePath = save;
     // Happen when used --save without specify the location
     if (save === true) {
       filePath = '.';
     }
-    return runAll({ json, filePath });
+    if (diagnosisName) {
+      return runOne({ diagnosisName, filePath });
+    }
+    return runAll({ filePath });
   }
 
-  report({ examineResults, savedFilePath }: DoctorRunAllResults, args: any, flags: Object): string {
-    if (flags.json) {
-      const fullJson = {
-        savedFilePath,
-        examineResults
-      };
-      return JSON.stringify(fullJson, null, 2);
+  report(res: DoctorRunAllResults | Diagnosis[], args: any, flags: Object): string {
+    if (flags.list) {
+      return _listReport(((res: any): Diagnosis[]), flags.json);
     }
-    const formatted = formatDiagnosesResult({ examineResults, savedFilePath });
-    return formatted;
+    if (args && args[0]) {
+      return _runOneReport(((res: any): DoctorRunOneResult), flags.json);
+    }
+    return _runAllReport(((res: any): DoctorRunAllResults), flags.json);
   }
 }
 
-class DoctorList extends Command {
-  name = 'list';
-  description = 'list all registered diagnosis';
-  alias = '';
-  opts = [['j', 'json', 'return a json format']];
-
-  async action(): Promise<Diagnosis[]> {
-    return listDiagnoses();
+function _listReport(res: Diagnosis[], json: boolean): string {
+  if (json) {
+    return JSON.stringify(res, null, 2);
   }
+  // const formatted = res.map(diagnosis => `${diagnosis.name}   ${diagnosis.description}\n`);
+  const formatted = formatDiagnosesList(res);
+  return formatted;
+}
 
-  report(res, args, flags): string {
-    if (flags.json) {
-      return JSON.stringify(res, null, 2);
-    }
-    // const formatted = res.map(diagnosis => `${diagnosis.name}   ${diagnosis.description}\n`);
-    const formatted = formatDiagnosesList(res);
-    return formatted;
+function _runOneReport(res: DoctorRunOneResult, json: boolean): string {
+  const { examineResult, savedFilePath } = res;
+  if (json) {
+    const fullJson = {
+      savedFilePath,
+      examineResult
+    };
+    return JSON.stringify(fullJson, null, 2);
   }
+  const formatted = formatDiagnosesResult({ examineResults: [examineResult], savedFilePath });
+  return formatted;
+}
+
+function _runAllReport(res: DoctorRunAllResults, json: boolean): string {
+  const { examineResults, savedFilePath } = res;
+  if (json) {
+    const fullJson = {
+      savedFilePath,
+      examineResults
+    };
+    return JSON.stringify(fullJson, null, 2);
+  }
+  const formatted = formatDiagnosesResult({ examineResults, savedFilePath });
+  return formatted;
 }

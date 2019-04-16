@@ -47,4 +47,12 @@ export default class DoctorRegistrar {
   registerDiagnosis(diagnosis: Diagnosis) {
     this.diagnoses.push(diagnosis);
   }
+
+  getDiagnosisByName(name: string) {
+    return this.diagnoses.find(_checkName(name));
+  }
 }
+
+const _checkName = name => (diagnosis: Diagnosis) => {
+  return diagnosis.name === name;
+};
