@@ -1,16 +1,21 @@
 import assert from 'assert';
-import { expect } from 'chai';
 import sinon from 'sinon';
 import mockfs from 'mock-fs';
 import path from 'path';
-import precinct from '../precinct';
 import rewire from 'rewire';
-import Config from './Config';
 
-// Bootstrap lazy requires
-import resolve from 'resolve';
-import typescript from 'typescript';
-import moduleDefinition from 'module-definition';
+const expect = require('chai').expect;
+const precinct = require('../precinct');
+const Config = require('./Config');
+
+// needed for the lazy loading.
+require('module-definition');
+require('detective-stylus');
+require('../../constants');
+require('../../utils');
+require('../../utils/is-relative-import');
+require('../../dependency-builder/detectives/detective-css-and-preprocessors');
+require('../../dependency-builder/detectives/detective-typescript');
 
 const dependencyTree = rewire('./');
 const fixtures = path.resolve(`${__dirname}/../../../fixtures/dependency-tree`);

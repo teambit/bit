@@ -1,25 +1,23 @@
 /**
  * this file had been forked from https://github.com/dependents/node-precinct
  */
+import fs from 'fs';
+import path from 'path';
+import getModuleType from 'module-definition';
+import Walker from 'node-source-walk';
+import detectiveAmd from 'detective-amd';
+import detectiveStylus from 'detective-stylus';
+import detectiveEs6 from '../detectives/detective-es6';
+import detectiveLess from '../detectives/detective-less';
+import detectiveSass from '../detectives/detective-sass';
+import detectiveScss from '../detectives/detective-scss';
+import detectiveCss from '../detectives/detective-css';
+import detectiveTypeScript from '../detectives/detective-typescript';
+import detectiveStylable from '../detectives/detective-stylable';
+import detectiveVue from '../detectives/detective-vue';
 import { SUPPORTED_EXTENSIONS } from '../../constants';
 
-const getModuleType = require('module-definition');
 const debug = require('debug')('precinct');
-const Walker = require('node-source-walk');
-
-const detectiveAmd = require('detective-amd');
-const detectiveEs6 = require('../detectives/detective-es6');
-const detectiveLess = require('../detectives/detective-less');
-const detectiveSass = require('../detectives/detective-sass');
-const detectiveScss = require('../detectives/detective-scss');
-const detectiveCss = require('../detectives/detective-css');
-const detectiveStylus = require('detective-stylus');
-const detectiveTypeScript = require('../detectives/detective-typescript');
-const detectiveStylable = require('../detectives/detective-stylable');
-const detectiveVue = require('../detectives/detective-vue');
-
-const fs = require('fs');
-const path = require('path');
 
 const natives = process.binding('natives');
 

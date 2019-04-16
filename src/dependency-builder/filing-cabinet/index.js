@@ -3,26 +3,22 @@
 /**
  * this file had been forked from https://github.com/dependents/node-filing-cabinet
  */
+import ts from 'typescript';
+import path from 'path';
+import getModuleType from 'module-definition';
+import resolve from 'resolve';
+import amdLookup from 'module-lookup-amd';
+import stylusLookup from 'stylus-lookup';
+import sassLookup from 'sass-lookup';
+import resolveDependencyPath from 'resolve-dependency-path';
+import appModulePath from 'app-module-path';
+import webpackResolve from 'enhanced-resolve';
+import isRelative from 'is-relative-path';
+import objectAssign from 'object-assign';
 import { isRelativeImport } from '../../utils';
+import vueLookUp from '../lookups/vue-lookup';
 
-const path = require('path');
 const debug = require('debug')('cabinet');
-
-const getModuleType = require('module-definition');
-const resolve = require('resolve');
-
-const amdLookup = require('module-lookup-amd');
-const stylusLookup = require('stylus-lookup');
-const sassLookup = require('sass-lookup');
-const ts = require('typescript');
-
-const resolveDependencyPath = require('resolve-dependency-path');
-const appModulePath = require('app-module-path');
-const webpackResolve = require('enhanced-resolve');
-const isRelative = require('is-relative-path');
-const objectAssign = require('object-assign');
-
-const vueLookUp = require('../lookups/vue-lookup');
 
 const defaultLookups = {
   '.js': jsLookup,

@@ -1,4 +1,3 @@
-import R from 'ramda';
 import { isRelativeImport } from '../../utils';
 
 /**
@@ -78,7 +77,9 @@ module.exports._getDependencies = function (config) {
     dependenciesRaw = [];
   }
   const dependencies =
-    R.is(Object, dependenciesRaw) && !Array.isArray(dependenciesRaw) ? Object.keys(dependenciesRaw) : dependenciesRaw;
+    typeof dependenciesRaw === 'object' && !Array.isArray(dependenciesRaw)
+      ? Object.keys(dependenciesRaw)
+      : dependenciesRaw;
   const isDependenciesArray = Array.isArray(dependenciesRaw);
   debug(`extracted ${dependencies.length} dependencies: `, dependencies);
 

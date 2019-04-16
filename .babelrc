@@ -15,6 +15,9 @@
     [
       "@babel/plugin-transform-flow-strip-types"
     ],
+    ["@babel/plugin-transform-modules-commonjs", {
+      "lazy": ["*"]
+    }],
     [
       "babel-plugin-transform-builtin-extend",
       {

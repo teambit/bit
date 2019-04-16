@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.5-dev.1] - 2019-03-10
+
+- improve performance by lazy load all external packages and internal files
+
 ## [2.0.4] - 2019-03-10
 
 - support scoped packages when resolving package.json directory of a package

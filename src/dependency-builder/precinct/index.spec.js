@@ -182,8 +182,6 @@ describe('node-precinct', () => {
     });
 
     it('supports passing detective configuration', () => {
-      const stub = sinon.stub().returns([]);
-      const revert = precinct.__set__('detectiveAmd', stub);
       const config = {
         amd: {
           skipLazyLoaded: true
@@ -194,9 +192,7 @@ describe('node-precinct', () => {
         includeCore: false,
         amd: config.amd
       });
-
-      assert.deepEqual(stub.args[0][1], config.amd);
-      revert();
+      assert.deepEqual(deps, ['./a', './b']);
     });
 
     describe('when given detective configuration', () => {
@@ -218,18 +214,14 @@ describe('node-precinct', () => {
 
   describe('when given a configuration object', () => {
     it('passes amd config to the amd detective', () => {
-      const stub = sinon.stub();
-      const revert = precinct.__set__('detectiveAmd', stub);
       const config = {
         amd: {
           skipLazyLoaded: true
         }
       };
 
-      precinct(read('amd.js'), config);
-
-      assert.deepEqual(stub.args[0][1], config.amd);
-      revert();
+      const deps = precinct(read('amd.js'), config);
+      assert.deepEqual(deps, ['./a', './b']);
     });
 
     describe('that sets mixedImports for es6', () => {
