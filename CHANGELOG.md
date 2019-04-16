@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [14.0.6-dev.1] - 2019-04-07
 
+- new `bit doctor` command
 - `overrides` property supports manually adding dependencies (experimental for now)
 - `overrides` property supports ignoring dependencies (experimental for now)
 - fix tagging imported components to not loose package.json properties
