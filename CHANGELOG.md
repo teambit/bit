@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve Bit load time by changing bit-javascript to use lazy loading
+
 ## [14.0.7-dev.1] - 2019-04-16
 
 - support overriding environments (compiler/tester) per component
