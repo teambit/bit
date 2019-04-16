@@ -1104,7 +1104,12 @@ export default class Component {
     };
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
-    const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig);
+    const overrides = ComponentOverrides.loadFromConsumer(
+      overridesFromConsumer,
+      overridesFromModel,
+      componentBitConfig,
+      isAuthor
+    );
 
     return new Component({
       name: id.name,

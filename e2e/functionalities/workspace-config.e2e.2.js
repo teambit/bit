@@ -1206,6 +1206,9 @@ describe('workspace config', function () {
           }
         };
         helper.addOverridesToBitJson(overrides);
+        const bitJson = helper.readBitJson();
+        bitJson.env = { compiler: 'bit.env/my-special-compiler2@0.0.1' };
+        helper.writeBitJson(bitJson);
       });
       it('bit status should not show the component as modified', () => {
         const status = helper.status();

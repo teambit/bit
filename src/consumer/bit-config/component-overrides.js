@@ -1,6 +1,5 @@
 // @flow
 import R from 'ramda';
-import * as RA from 'ramda-adjunct';
 import ComponentBitConfig from './component-bit-config';
 import {
   MANUALLY_REMOVE_DEPENDENCY,
@@ -41,31 +40,24 @@ export default class ComponentOverrides {
    * an exception is when an author runs `eject-conf` command to explicitly write the config, then,
    * use the component-config.
    */
-  static load(
+  static loadFromConsumer(
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
     overridesFromModel: ?ComponentOverridesData,
-    componentBitConfig: ?ComponentBitConfig
+    componentBitConfig: ?ComponentBitConfig,
+    isAuthor: boolean
   ): ComponentOverrides {
-    const getOverridesFromComponent = () => {
-      return componentBitConfig && componentBitConfig.componentHasWrittenConfig
-        ? componentBitConfig.overrides
-        : overridesFromModel;
-    };
-    const overridesFromComponent = getOverridesFromComponent();
-    const overrides = this.mergeConsumerAndComponentOverrides(overridesFromComponent, overridesFromConsumer);
-    return new ComponentOverrides(overrides, overridesFromConsumer);
+    if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
+      return new ComponentOverrides(componentBitConfig.overrides, overridesFromConsumer);
+    }
+    if (!isAuthor) {
+      return ComponentOverrides.loadFromScope(overridesFromModel);
+    }
+    return new ComponentOverrides(overridesFromConsumer, overridesFromConsumer);
   }
-  static mergeConsumerAndComponentOverrides(
-    overridesFromComponent: ?ComponentOverridesData,
-    overridesFromConsumer: ?ConsumerOverridesOfComponent
-  ): ?Object {
-    if (RA.isNilOrEmpty(overridesFromComponent) && RA.isNilOrEmpty(overridesFromConsumer)) return null;
-    // at least one overrides is defined
-    if (RA.isNilOrEmpty(overridesFromConsumer)) return overridesFromComponent;
-    if (RA.isNilOrEmpty(overridesFromComponent)) return overridesFromConsumer;
-    // we don't propagate by default. so if overrides from component is found, just use it.
-    return overridesFromComponent;
+  static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
+    return new ComponentOverrides(overridesFromModel, {});
   }
+
   static componentOverridesDataFields() {
     return dependenciesFields;
   }
