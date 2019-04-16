@@ -47,6 +47,7 @@ export default class ComponentOverrides {
     isAuthor: boolean
   ): ComponentOverrides {
     if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
+      // $FlowFixMe
       return new ComponentOverrides(componentBitConfig.overrides, overridesFromConsumer);
     }
     if (!isAuthor) {
@@ -55,6 +56,7 @@ export default class ComponentOverrides {
     return new ComponentOverrides(overridesFromConsumer, overridesFromConsumer);
   }
   static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
+    // $FlowFixMe
     return new ComponentOverrides(overridesFromModel, {});
   }
 
