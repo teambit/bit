@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import BitId from '../../bit-id/bit-id';
 import ConsumerOverrides from './consumer-overrides';
 
-describe('componentsOverrides', () => {
+describe('ConsumerOverrides', () => {
   describe('getOverrideComponentData()', () => {
     describe('when propagation is not set', () => {
       it('should use only the most specific match', () => {
