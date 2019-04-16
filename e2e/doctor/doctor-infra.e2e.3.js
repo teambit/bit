@@ -27,7 +27,7 @@ describe('bit doctor infra', function () {
     });
     it('should return all the fields for each check', () => {
       const examineResults = parsedOutput.examineResults;
-      expect(examineResults).to.be.an.array();
+      expect(examineResults).to.be.an('array');
       examineResults.forEach((checkResult) => {
         expect(checkResult).to.satisfy(_validateCheckResultFormat);
       });
@@ -85,7 +85,7 @@ describe('bit doctor infra', function () {
       parsedOutput = JSON.parse(output);
     });
     it('should return all the fields for each check item', () => {
-      expect(parsedOutput).to.be.an.array();
+      expect(parsedOutput).to.be.an('array');
       parsedOutput.forEach((checkResult) => {
         expect(checkResult).to.satisfy(_validateCheckItemFormat);
       });
