@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import pMapSeries from 'p-map-series';
 import type Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
@@ -51,14 +52,9 @@ export default class ComponentLoader {
       'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run tag again.'
     );
 
-    const components = idsToProcess.map(async (id: BitId) => {
-      return this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
-    });
-
     const allComponents = [];
-    for (const componentP of components) {
-      // load the components one after another (not in parallel).
-      const component = await componentP; // eslint-disable-line no-await-in-loop
+    await pMapSeries(idsToProcess, async (id: BitId) => {
+      const component = await this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
       if (component) {
         this._componentsCache[component.id.toString()] = component;
         logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
@@ -66,7 +62,7 @@ export default class ComponentLoader {
         });
         allComponents.push(component);
       }
-    }
+    });
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
@@ -114,7 +110,7 @@ export default class ComponentLoader {
     const loadDependencies = async () => {
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(bitDir, this.cacheResolvedDependencies);
-      await updateDependenciesVersions(this.consumer, component);
+      updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
     return component;

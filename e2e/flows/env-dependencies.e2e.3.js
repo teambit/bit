@@ -113,7 +113,7 @@ describe('environments with dependencies', function () {
       let catComponent;
       before(() => {
         const output = helper.tagAllComponents();
-        expect(output).to.have.string('2 components tagged');
+        expect(output).to.have.string('2 component(s) tagged');
         catComponent = helper.catComponent('bar/foo@latest');
       });
       it('should save the compilerDependencies in the model', () => {
@@ -155,6 +155,12 @@ describe('environments with dependencies', function () {
         it('should not generate the links for environment component when --conf was not used', () => {
           const linkFile = path.join(helper.localScopePath, 'components/bar/foo/base.config.js');
           expect(linkFile).to.not.be.a.path();
+        });
+        it('package.json should contain the env name only without the files', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          expect(packageJson.bit.env.compiler)
+            .to.be.a('string')
+            .that.equals(`${helper.envScope}/compilers/webpack@0.0.1`);
         });
         describe('ejecting the environment configuration to component dir', () => {
           before(() => {

@@ -14,14 +14,14 @@ import hasWildcard from '../../../utils/string/has-wildcard';
 import { exportMany } from '../../../scope/component-ops/export-scope-components';
 import { NodeModuleLinker } from '../../../links';
 
-export default (async function exportAction(ids?: string[], remote: string, save: ?boolean, eject: ?boolean) {
-  const componentsIds = await exportComponents(ids, remote, save);
+export default (async function exportAction(ids?: string[], remote: string, eject: ?boolean) {
+  const componentsIds = await exportComponents(ids, remote);
   let ejectResults;
   if (eject) ejectResults = await ejectExportedComponents(componentsIds);
   return { componentsIds, ejectResults };
 });
 
-async function exportComponents(ids?: string[], remote: string, save: ?boolean): Promise<BitId[]> {
+async function exportComponents(ids?: string[], remote: string): Promise<BitId[]> {
   const consumer: Consumer = await loadConsumer();
   const idsToExport = await getComponentsToExport(ids, consumer, remote);
   // todo: what happens when some failed? we might consider avoid Promise.all
@@ -29,7 +29,6 @@ async function exportComponents(ids?: string[], remote: string, save: ?boolean):
   if (R.isEmpty(idsToExport)) return [];
 
   const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
-  if (save) await addToBitJson(componentsIds, consumer);
   componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
   await linkComponents(componentsIds, consumer);
   Analytics.setExtraData('num_components', componentsIds.length);
@@ -67,23 +66,6 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   return BitIds.fromArray(idsToExport);
 }
 
-async function addToBitJson(ids: BitId[], consumer: Consumer) {
-  const bitJsonDependencies = consumer.bitJson.getDependencies();
-  const shouldWriteBitJson = ids.map((componentId: BitId) => {
-    // add to bit.json only if the component is already there. So then the version will be updated. It's applicable
-    // mainly when a component was imported first. For authored components, no need to save them in bit.json, they are
-    // already in bit.map
-    if (bitJsonDependencies.searchWithoutVersion(componentId)) {
-      consumer.bitJson.addDependency(componentId);
-      return true;
-    }
-    return false;
-  });
-  if (shouldWriteBitJson.includes(true)) {
-    await consumer.bitJson.write({ bitDir: consumer.getPath() });
-  }
-}
-
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // we don't have much of a choice here, we have to load all the exported components in order to link them
   // some of the components might but authored, some might be imported.
@@ -94,7 +76,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
 }
 
 async function ejectExportedComponents(componentsIds): Promise<EjectResults> {
-  const consumer: Consumer = await loadConsumer();
+  const consumer: Consumer = await loadConsumer(undefined, true);
   let ejectResults: EjectResults;
   try {
     const ejectComponents = new EjectComponents(consumer, componentsIds);

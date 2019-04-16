@@ -137,19 +137,25 @@ chai.use(require('chai-fs'));
             it('should not crash and show a success message', () => {
               expect(checkoutOutput).to.have.string('successfully switched');
             });
-            it('should update the bit.json of all components to the old version', () => {
-              const bitJson = helper.readBitJson();
-              const dependencies = bitJson.dependencies;
-              expect(dependencies[`${helper.remoteScope}/bar/foo`]).to.equal('0.0.1');
-              expect(dependencies[`${helper.remoteScope}/utils/is-string`]).to.equal('0.0.1');
-              expect(dependencies[`${helper.remoteScope}/utils/is-type`]).to.equal('0.0.1');
-            });
             it('should be able to require its direct dependency and print results from all dependencies', () => {
               const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
               fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
               const result = helper.runCmd('node app.js');
               expect(result.trim()).to.equal('got is-type and got is-string and got foo');
             });
+          });
+        });
+        describe('updating dependency version from the dependent package.json', () => {
+          before(() => {
+            helper.getClonedLocalScope(afterImportScope);
+            const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
+            const packageJson = helper.readPackageJson(barFooDir);
+            packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`] = '^1.0.0';
+            helper.writePackageJson(packageJson, barFooDir);
+          });
+          it('should show the dependency version from the package.json even when using caret (^) in the version', () => {
+            const barFoo = helper.showComponentParsed('bar/foo');
+            expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@1.0.0`);
           });
         });
       });

@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
+import * as fixtures from '../fixtures/fixtures';
 import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
@@ -444,6 +445,48 @@ describe('bit remove command', function () {
     });
     it('should remove the component successfully', () => {
       expect(output).to.have.string('successfully removed component');
+    });
+  });
+  describe('remove a component when a dependency has a file with the same content as other component file', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('utils', 'is-type.js', fixtures.isType);
+      helper.addComponentUtilsIsType();
+      helper.createFile('utils', 'is-string.js', fixtures.isString);
+      helper.addComponentUtilsIsString();
+      helper.createFile('utils', 'is-type2.js', fixtures.isType);
+      helper.addComponent('utils/is-type2.js', { i: 'utils/is-type2' });
+      helper.tagAllComponents();
+
+      // this additional is to prevent another bug, where nested are imported only with their
+      // latest version and then when 'bit remove' tries to remove all versions array of
+      // ModelComponent, it doesn't find some of them and throws ENOENT error
+      helper.tagScope('1.0.0');
+
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.importComponent('utils/is-string');
+      helper.importComponent('utils/is-type2');
+
+      // now, the hash "b417426ea2f7f0e80fa2ee2e6c825e18fcb8a897", which has the content of fixtures.isType
+      // is shared between two components: utils/is-type and utils/is-type2
+      // deleting utils/is-string, causes removal of its dependency utils/is-type as well.
+      // a previous bug, deleted also the files associated with utils/is-type, leaving utils/is-type2
+      // with missing files from the scope.
+      output = helper.removeComponent('utils/is-string -s');
+    });
+    it('should successfully remove', () => {
+      expect(output).to.have.string('removed components');
+    });
+    it('bit status should not throw an error about missing file from the model', () => {
+      const statusCmd = () => helper.status();
+      expect(statusCmd).to.not.throw();
+    });
+    it('expect the shared hash to not be deleted', () => {
+      const hashLocation = path.join(helper.localScopePath, '.bit/objects/b4/17426ea2f7f0e80fa2ee2e6c825e18fcb8a897');
+      expect(hashLocation).to.be.a.file();
     });
   });
 });

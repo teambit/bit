@@ -8,17 +8,69 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - improve Bit load time by changing bit-javascript to use lazy loading
+
+## [14.0.7-dev.1] - 2019-04-16
+
+- support overriding environments (compiler/tester) per component
+- `overrides` property supports manually adding dependencies (experimental for now)
+- `overrides` property supports ignoring dependencies (experimental for now)
+- fix tagging imported components to not loose package.json properties
+- `overrides` property of workspace configuration supports component ids with wildcards
+- support changing dependencies versions by adding them to the "overrides" property of the component configuration or workspace configuration
+- obsolete the `*dependencies` properties of component bit.json.
+- write component configuration data to package.json inside `bit` property on import. write to `bit.json` if `--conf` flag was used
+
+- write workspace configuration data to package.json inside `bit` property instead of creating `bit.json` file
+- generate package.json with the main property on node_modules for authored exported components instead of creating an entry point file
+- obsolete the "dependencies" property of consumer bit.json
+- avoid installing "undefined" npm package when importing authored components
+- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
+- improve authentication error message to clearly indicate the various strategies failures
+- reintroduce `-c` alias for `--no-cache` flag in `bit build` command
+
+## [14.0.6] - 2019-04-16
+
+- fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
+- fix dependencies version resolution from package.json to support versions with range
+
+
+## [14.0.5] - 2019-04-07
+
+- fix `remove` command to not delete dependencies files from the scope as they might belong to other components
+- fix symlink to binary (or unsupported) files dependencies when installed via npm
+
+
+## [14.0.4] - 2019-03-18
+
+- replace default bitsrc.io domain to bit.dev
+
+## [14.0.3] - 2019-03-12
+
+- fix importing components when one file is a prefix of the other in the same directory
+
+## [14.0.2] - 2019-03-10
+
+- prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
+- improve `bit tag` performance by decreasing hook logging
+- validate paths properties of the workspace bit.json
+- enable print log messages that start with a specific string to the console by prefixing the command with BIT_LOG=str
+- improve error message when adding files outside the workspace
+- show a descriptive error when npm 5.0.0 fails with `--json` flag
+- fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
+- fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
+- recognize scoped packages that were newly introduced to imported components
+- fix error "consumer.loadComponentFromModel, version is missing from the id"
+- enable removing a component that its workspace and scope representations are not in sync
+- fix "error: Could not stat (filename) No such file or directory" when bit-checkout updates multiple files
+- fix "JavaScript heap out of memory" when loading a large amount of components
+
+## [[14.0.1] - 2019-02-24](https://github.com/teambit/bit/releases/tag/v14.0.1)
+
 - show an error when deleting a global remote without `--global` flag
 - show an error when deleting a non-exist remote
 - enable custom resolve of aliases to symlink packages (bit-javascript)
-
-## [14.0.1-dev.2] - 2019-02-20
-
 - fix error "toAbsolutePath expects relative path"
 - improve errors stack-trace readability
-
-## [14.0.1-dev.1] - 2019-02-18
-
 - index scope components to improve memory consumption and performance
 - extract docs from non-tests files only
 - fix `bit show --remote --json` to not crash when a component has a compiler
@@ -35,7 +87,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Summary
 
-*Bit’s v14 is released side-by-side with the release of the v2 for [bitsrc.io](https://bitsrc.io), Bit’s component community hub. New features for bitsrc.io v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
+*Bit’s v14 is released side-by-side with the release of the v2 for [bit.dev](https://bit.dev), Bit’s component community hub. New features for bit.dev v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
 
 With over 65 new features, changes and bug fixes, v14 is Bit’s largest and richest release to date. V14 is focused on increased **stability**, **agility** and **performance**. It is is fully backwards compatible, and provides a faster and smoother workflow with improved compatibility throughout the ecosystem.
 
@@ -386,7 +438,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 ## [0.12.0] - 2018-01-18
 
 ### New
-- [extension system (beta)](https://docs.bitsrc.io/docs/ext-concepts.html)
+- [extension system (beta)](https://docs.bit.dev/docs/ext-concepts.html)
 - [#540](https://github.com/teambit/bit/issues/540) support Yarn as package manager
 - `bit import`: install hub dependencies as npm packages by default
 - `bit import`: install npm packages by default

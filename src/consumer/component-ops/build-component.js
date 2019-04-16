@@ -192,7 +192,7 @@ const _runBuild = async ({
 
   let componentDir = '';
   if (componentMap) {
-    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.rootDir);
+    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.getRootDir());
     if (consumer) rootDistDir = consumer.toAbsolutePath(rootDistDirRelative);
     if (consumerPath && componentMap.getComponentDir()) {
       componentDir = componentMap.getComponentDir() || '';
@@ -213,7 +213,8 @@ const _runBuild = async ({
       // Change the cwd to make sure we found the needed files
       process.chdir(componentRoot);
       if (compiler.action) {
-        const shouldWriteConfig = compiler.writeConfigFilesOnAction && component.getDetachedCompiler();
+        const isCompilerDetached = await component.getDetachedCompiler(consumer);
+        const shouldWriteConfig = compiler.writeConfigFilesOnAction && isCompilerDetached;
         // Write config files to tmp folder
         if (shouldWriteConfig) {
           tmpFolderFullPath = component.getTmpFolder(consumerPath);
@@ -238,6 +239,7 @@ const _runBuild = async ({
           api: compiler.api,
           context
         };
+        // $FlowFixMe we verified above that action is set
         const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {

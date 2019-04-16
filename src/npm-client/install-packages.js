@@ -1,11 +1,15 @@
 // @flow
 import R from 'ramda';
+import fs from 'fs-extra';
 import path from 'path';
 import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
 import type { ComponentWithDependencies } from '../scope';
 import type Consumer from '../consumer/consumer';
+import type { PathAbsolute } from '../utils/path';
+import filterAsync from '../utils/array/filter-async';
+import { PACKAGE_JSON } from '../constants';
 
 export async function installPackages(
   consumer: Consumer,
@@ -15,12 +19,13 @@ export async function installPackages(
   silentPackageManagerResult: boolean = false, // don't shows packageManager results at all
   installPeerDependencies: boolean = false // also install peer dependencies
 ) {
-  const packageManager = consumer.bitJson.packageManager;
+  const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
+  const packageManager = consumer.bitConfig.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.bitJson.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.bitJson.packageManagerProcessOptions;
-  const useWorkspaces = consumer.bitJson.useWorkspaces;
+    : consumer.bitConfig.packageManagerArgs;
+  const packageManagerProcessOptions = consumer.bitConfig.packageManagerProcessOptions;
+  const useWorkspaces = consumer.bitConfig.useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
@@ -34,7 +39,7 @@ export async function installPackages(
     packageManagerArgs,
     packageManagerProcessOptions,
     useWorkspaces,
-    dirs,
+    dirs: dirsWithPkgJson,
     rootDir: consumer.getPath(),
     installRootPackageJson,
     installPeerDependencies,
@@ -82,4 +87,8 @@ export async function installNpmPackagesForComponents({
   const componentDirsRelativeUniq = R.uniq(componentDirsRelative);
   const componentDirs = componentDirsRelativeUniq.map(dir => (basePath ? path.join(basePath, dir) : dir));
   return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
+}
+
+async function filterDirsWithoutPackageJson(dirs: PathAbsolute[]): Promise<PathAbsolute[]> {
+  return filterAsync(dirs, dir => fs.exists(path.join(dir, PACKAGE_JSON)));
 }

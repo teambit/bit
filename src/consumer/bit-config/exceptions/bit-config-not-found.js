@@ -1,4 +1,4 @@
 /** @flow */
 import AbstractError from '../../../error/abstract-error';
 
-export default class BitJsonAlreadyExists extends AbstractError {}
+export default class BitConfigNotFound extends AbstractError {}

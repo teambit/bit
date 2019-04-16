@@ -67,7 +67,7 @@ export default class RemoveModelComponents {
       bitId
     );
 
-    await this._removeComponent(bitId, componentList, false);
+    await this._removeComponent(bitId, componentList);
     const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
 
     return { bitId: bitId.changeVersion(version), removedDependencies };
@@ -98,7 +98,7 @@ export default class RemoveModelComponents {
         (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
         isNested
       ) {
-        await this._removeComponent(dependencyId, componentList, true);
+        await this._removeComponent(dependencyId, componentList);
         return dependencyId;
       }
       return null;
@@ -108,11 +108,11 @@ export default class RemoveModelComponents {
     return BitIds.fromArray(removedDependencies);
   }
 
-  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>, removeRefs: boolean = false) {
+  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>) {
     const symlink = componentList.filter(
       component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
-    await this.scope.sources.removeComponentById(id, removeRefs);
+    await this.scope.sources.removeComponentById(id);
     if (!R.isEmpty(symlink)) this.scope.objects.removeObject(symlink[0].hash());
   }
 }

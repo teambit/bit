@@ -7,6 +7,8 @@ import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { ComponentNotFound } from '../../src/scope/exceptions';
+import InvalidBitConfigPropPath from '../../src/consumer/bit-config/exceptions/invalid-bit-config-prop-path';
 
 chai.use(require('chai-fs'));
 
@@ -45,12 +47,6 @@ describe('bit import', function () {
     it('should indicate that the imported component is new', () => {
       expect(importOutput).to.have.string('added');
       expect(importOutput).to.not.have.string('updated');
-    });
-    it.skip('should throw an error if there is already component with the same name and namespace and different scope', () => {});
-    it('should add the component to bit.json file', () => {
-      const bitJson = helper.readBitJson();
-      const depName = [helper.remoteScope, 'global', 'simple'].join('/');
-      expect(bitJson.dependencies).to.include({ [depName]: '0.0.1' });
     });
     it('should add the component into bit.map file with the full id', () => {
       const bitMap = helper.readBitMap();
@@ -526,6 +522,17 @@ describe('bit import', function () {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
+    describe('importing the component again', () => {
+      before(() => {
+        helper.importComponent('bar/foo');
+        localConsumerFiles = helper.getConsumerFiles();
+      });
+      it('should not create an "undefined" package on node_modules', () => {
+        localConsumerFiles.forEach((fileName) => {
+          expect(fileName.startsWith(path.join('node_modules', 'undefined'))).to.be.false;
+        });
+      });
+    });
   });
 
   describe('import from bit json', () => {
@@ -534,7 +541,6 @@ describe('bit import', function () {
       helper.setNewLocalAndRemoteScopes();
     });
     describe('components with shared nested deps', () => {
-      let myBitJsonPath;
       let localConsumerFiles;
       before(() => {
         helper.createFile('', 'level1.js');
@@ -551,12 +557,7 @@ describe('bit import', function () {
         helper.exportAllComponents();
         helper.reInitLocalScope();
         helper.addRemoteScope();
-        myBitJsonPath = path.join(helper.localScopePath, 'bit.json');
-        helper.addBitJsonDependencies(myBitJsonPath, {
-          [`${helper.remoteScope}/comp/comp1`]: '0.0.1',
-          [`${helper.remoteScope}/comp/comp2`]: '0.0.1'
-        });
-        output = helper.importAllComponents(true);
+        output = helper.importManyComponents(['comp/comp1', 'comp/comp2']);
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should print the imported component correctly', () => {
@@ -939,22 +940,6 @@ describe('bit import', function () {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
-      });
-    });
-    describe('change the dependency version in bit.json', () => {
-      before(() => {
-        helper.getClonedLocalScope(clonedLocalScope);
-        helper.importComponent('bar/foo --conf');
-        const bitJsonPath = path.join(helper.localScopePath, 'components/bar/foo/bit.json');
-        const bitJson = helper.readBitJson(bitJsonPath);
-        bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.2';
-        helper.writeBitJson(bitJson, bitJsonPath);
-      });
-      it('bit show should display the dependency version according to bit.json', () => {
-        const output = helper.showComponentParsed('bar/foo -c');
-        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.remoteScope}/utils/is-string@0.0.2`
-        );
       });
     });
     describe('when dist is set to a non-default directory', () => {
@@ -1441,7 +1426,7 @@ console.log(barFoo.default());`;
         helper.importComponent('bar/foo --conf');
       });
       it('should save the compiler with id only without files and config because it does not use them', () => {
-        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo/bit.json'));
+        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/bar/foo'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('compiler');
         expect(bitJson.env.compiler).to.equal(`${helper.envScope}/compilers/babel@0.0.1`);
@@ -1628,11 +1613,7 @@ console.log(barFoo.default());`;
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
-      const bitJson = helper.readBitJson();
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.1';
-      helper.writeBitJson(bitJson);
-      helper.importAllComponents(true);
+      helper.importManyComponents(['utils/is-type', 'utils/is-string']);
       localConsumerFiles = helper.getConsumerFiles();
     });
     it('should write is-type directly in components directory', () => {
@@ -1686,11 +1667,7 @@ console.log(barFoo.default());`;
       helper.reInitLocalScope();
       helper.addRemoteScope();
 
-      const bitJson = helper.readBitJson();
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-string`] = '0.0.1';
-      bitJson.dependencies[`${helper.remoteScope}/utils/is-type`] = '0.0.2';
-      helper.writeBitJson(bitJson);
-      helper.importAllComponents(true);
+      helper.importManyComponents(['utils/is-string@0.0.1', ['utils/is-type@0.0.2']]);
     });
     it('should successfully print results of is-type@0.0.1 when requiring it indirectly by is-string', () => {
       const requirePath = helper.getRequireBitPath('utils', 'is-string');
@@ -2293,19 +2270,78 @@ console.log(barFoo.default());`;
       expect(run).not.to.throw();
     });
   });
-  describe.skip('Import compiler', () => {
+  describe('adding a scoped package to an imported component', () => {
     before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagComponentBarFoo();
+      helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
+      helper.importComponent('bar/foo');
+      helper.createFile('components/bar/foo', 'foo.js', 'require("@babel/core");');
+      helper.addNpmPackage('@babel/core');
     });
-    it('should install package dependencies', () => {});
+    it('bit show should include the new package', () => {
+      const show = helper.showComponentParsed('bar/foo');
+      expect(show.packageDependencies).to.have.property('@babel/core');
+    });
   });
-
-  describe.skip('Import tester', () => {
+  describe('import compiler with a non-exist version', () => {
     before(() => {
       helper.reInitLocalScope();
-      helper.addRemoteScope();
     });
-    it('should install package dependencies', () => {});
+    it('should throw an error that a component does not exist', () => {
+      const compiler = 'bit.envs/compilers/babel@1000.0.0';
+      const error = new ComponentNotFound(compiler);
+      const importCmd = () => helper.importCompiler(compiler);
+      helper.expectToThrow(importCmd, error);
+    });
+  });
+  describe('import component with invalid bit.json paths properties', () => {
+    describe('when componentsDefaultDirectory is invalid', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const bitJson = helper.readBitJson();
+        bitJson.componentsDefaultDirectory = '/components/{name}';
+        helper.writeBitJson(bitJson);
+      });
+      it('should throw a descriptive error pointing to the bit.json property', () => {
+        const importCmd = () => helper.importComponent('any-comp');
+        const error = new InvalidBitConfigPropPath('componentsDefaultDirectory', '/components/{name}');
+        helper.expectToThrow(importCmd, error);
+      });
+    });
+    describe('when dependenciesDirectory is invalid', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        const bitJson = helper.readBitJson();
+        bitJson.dependenciesDirectory = '/components/.dependencies';
+        helper.writeBitJson(bitJson);
+      });
+      it('should throw a descriptive error pointing to the bit.json property', () => {
+        const importCmd = () => helper.importComponent('any-comp');
+        const error = new InvalidBitConfigPropPath('dependenciesDirectory', '/components/.dependencies');
+        helper.expectToThrow(importCmd, error);
+      });
+    });
+  });
+  describe('when one file is a prefix of the other', () => {
+    let output;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'foo.js');
+      helper.createFile('bar', 'foo.json');
+      helper.addComponent('bar/foo.js bar/foo.json', { m: 'bar/foo.js', i: 'bar/foo' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      output = helper.importComponent('bar/foo');
+    });
+    it('should import with no error', () => {
+      expect(output).to.have.string('successfully');
+    });
   });
 });

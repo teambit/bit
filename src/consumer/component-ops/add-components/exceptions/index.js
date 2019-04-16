@@ -10,6 +10,7 @@ import VersionShouldBeRemoved from './version-should-be-removed';
 import TestIsDirectory from './test-is-directory';
 import MainFileIsDir from './main-file-is-dir';
 import MissingMainFileMultipleComponents from './missing-main-file-multiple-components';
+import PathOutsideConsumer from './path-outside-consumer';
 
 export {
   DuplicateIds,
@@ -22,5 +23,6 @@ export {
   ExcludedMainFile,
   MainFileIsDir,
   MissingMainFileMultipleComponents,
-  TestIsDirectory
+  TestIsDirectory,
+  PathOutsideConsumer
 };

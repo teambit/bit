@@ -9,6 +9,7 @@ import {
   NothingToImport,
   ConsumerNotFound,
   ComponentSpecsFailed,
+  ComponentOutOfSync,
   MissingDependencies,
   NewerVersionFound,
   LoginFailed
@@ -39,11 +40,13 @@ import {
   InvalidIndexJson,
   HashMismatch,
   MergeConflictOnRemote,
+  OutdatedIndexJson,
   VersionNotFound,
   CyclicDependencies,
   HashNotFound
 } from '../scope/exceptions';
-import InvalidBitJson from '../consumer/bit-json/exceptions/invalid-bit-json';
+import InvalidBitJson from '../consumer/bit-config/exceptions/invalid-bit-json';
+import InvalidPackageJson from '../consumer/bit-config/exceptions/invalid-package-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -66,6 +69,7 @@ import {
   VersionShouldBeRemoved,
   TestIsDirectory,
   MainFileIsDir,
+  PathOutsideConsumer,
   MissingMainFileMultipleComponents,
   ExcludedMainFile
 } from '../consumer/component-ops/add-components/exceptions';
@@ -88,10 +92,15 @@ import InvalidConfigDir from '../consumer/bit-map/exceptions/invalid-config-dir'
 import EjectToWorkspace from '../consumer/component/exceptions/eject-to-workspace';
 import EjectBoundToWorkspace from '../consumer/component/exceptions/eject-bound-to-workspace';
 import EjectNoDir from '../consumer/component-ops/exceptions/eject-no-dir';
-import { COMPONENT_DIR, DEBUG_LOG } from '../constants';
+import { COMPONENT_DIR, DEBUG_LOG, BASE_DOCS_DOMAIN } from '../constants';
 import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejected';
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
+import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
+import InvalidBitConfigPropPath from '../consumer/bit-config/exceptions/invalid-bit-config-prop-path';
+
+const reportIssueToGithubMsg =
+  'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
 
 const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
   [
@@ -166,7 +175,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     err =>
       `error: the model representation of "${chalk.bold(err.id)}" is corrupted, the object of version ${
         err.version
-      } is missing. please report this issue on Github https://github.com/teambit/bit/issues`
+      } is missing.\n${reportIssueToGithubMsg}`
   ],
   [
     DependencyNotFound,
@@ -176,17 +185,14 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
       )}" was not found. please track this component or use --ignore-unresolved-dependencies flag (not recommended)`
   ],
   [EmptyDirectory, () => chalk.yellow('directory is empty, no files to add')],
-  [
-    ValidationError,
-    err => `${err.message}\nThis error should have never happened. Please open a new Github issue with the bug details`
-  ],
+  [ValidationError, err => `${err.message}\n${reportIssueToGithubMsg}`],
   [ComponentNotFoundInPath, err => `error: component in path "${chalk.bold(err.path)}" was not found`],
   [
     PermissionDenied,
     err =>
       `error: permission to scope ${
         err.scope
-      } was denied\nsee troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html`
+      } was denied\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html`
   ],
   [RemoteNotFound, err => `error: remote "${chalk.bold(err.name)}" was not found`],
   [NetworkError, err => `error: remote failed with error the following error:\n "${chalk.bold(err.remoteErr)}"`],
@@ -222,6 +228,14 @@ to resolve this conflict and merge your remote and local changes, please do the 
 3) bit checkout [version] [id]
 once your changes are merged with the new remote version, please tag and export a new version of the component to the remote scope.`
   ],
+  [
+    OutdatedIndexJson,
+    err => `error: component ${chalk.bold(
+      err.componentId
+    )} found in the index.json file, however, is missing from the scope.
+to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIssueToGithubMsg}
+`
+  ],
   [CyclicDependencies, err => `${err.msg.toString().toLocaleLowerCase()}`],
   [
     UnexpectedNetworkError,
@@ -254,19 +268,20 @@ Original Error: ${err.message}`
       }component tests failed. please make sure all tests pass before tagging a new version or use the "--force" flag to force-tag components.\nto view test failures, please use the "--verbose" flag or use the "bit test" command`
   ],
   [
+    ComponentOutOfSync,
+    err => `component ${chalk.bold(err.id)} is not in-sync between the consumer and the scope.
+if it is originated from another git branch, go back to that branch to continue working on the component.
+if possible, remove the component using "bit remove" and re-import or re-create it.
+to re-start Bit from scratch, deleting all objects from the scope, use "bit init --reset-hard"`
+  ],
+  [
     MissingDependencies,
     (err) => {
       const missingDepsColored = componentIssuesTemplate(err.components);
       return `error: issues found with the following component dependencies\n${missingDepsColored}`;
     }
   ],
-  [
-    NothingToImport,
-    () =>
-      chalk.yellow(
-        'nothing to import. please use `bit import [component_id]` or configure your dependencies in bit.json'
-      )
-  ],
+  [NothingToImport, () => chalk.yellow('nothing to import. please use `bit import [component_id]`')],
   [
     InvalidIdChunk,
     err =>
@@ -291,7 +306,19 @@ Original Error: ${err.message}`
   [
     InvalidBitJson,
     err => `error: invalid bit.json: ${chalk.bold(err.path)} is not a valid JSON file.
-    consider running ${chalk.bold('bit init --reset')} to recreate the file`
+consider running ${chalk.bold('bit init --reset')} to recreate the file`
+  ],
+  [
+    InvalidPackageJson,
+    err => `error: package.json at ${chalk.bold(err.path)} is not a valid JSON file.
+please fix the file in order to run bit commands`
+  ],
+  [
+    InvalidBitConfigPropPath,
+    err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
+      err.fieldName
+    )}" in your bit.json or package.json file is invalid.
+please make sure it's not absolute and doesn't contain invalid characters`
   ],
   [
     DriverNotFound,
@@ -305,14 +332,14 @@ Original Error: ${err.message}`
     err =>
       `error: the component ${chalk.bold(
         err.componentId
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html#define-a-components-main-file`
   ],
   [
     MissingMainFileMultipleComponents,
     err =>
       `error: the components ${chalk.bold(
         err.componentIds.join(', ')
-      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://docs.bitsrc.io/docs/isolating-and-tracking-components.html#define-a-components-main-file`
+      )} does not contain a main file.\nplease either use --id to group all added files as one component or use our DSL to define the main file dynamically.\nsee troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html#define-a-components-main-file`
   ],
   [
     InvalidBitMap,
@@ -360,6 +387,10 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
       )}" was not found on your local workspace.\nplease specify a valid component ID or track the component using 'bit add' (see 'bit add --help' for more information)`
   ],
   [PathsNotExist, err => `error: file or directory "${chalk.bold(err.paths.join(', '))}" was not found.`],
+  [
+    PathOutsideConsumer,
+    err => `error: file or directory "${chalk.bold(err.path)}" is located outside of the workspace.`
+  ],
   [WriteToNpmrcError, err => `unable to add @bit as a scoped registry at "${chalk.bold(err.path)}"`],
   [PathToNpmrcNotExist, err => `error: file or directory "${chalk.bold(err.path)}" was not found.`],
 
@@ -476,14 +507,21 @@ please use "bit remove" to delete the component or "bit add" with "--main" and "
   ],
   [
     AuthenticationFailed,
-    err => 'authentication failed. see troubleshooting at https://docs.bitsrc.io/docs/authentication-issues.html'
+    err =>
+      `authentication failed. see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/authentication-issues.html\n\n${
+        err.debugInfo
+      }`
+  ],
+  [
+    ObjectsWithoutConsumer,
+    err => `error: unable to initialize a bit workspace. bit has found undeleted local objects at ${chalk.bold(
+      err.scopePath
+    )}.
+1. use the ${chalk.bold('--reset-hard')} flag to clear all data and initialize an empty workspace.
+2. if deleted by mistake, please restore .bitmap and bit.json.
+3. force workspace initialization without clearing data use the ${chalk.bold('--force')} flag.`
   ]
 ];
-
-function formatUnhandled(err: Error): string {
-  Analytics.setError(LEVEL.FATAL, err);
-  return chalk.red(err.message || err);
-}
 
 function findErrorDefinition(err: Error) {
   const error = errorsMap.find(([ErrorType]) => {
@@ -532,16 +570,25 @@ function getExternalErrorsMessageAndStack(errors: Error[]): string {
   return result;
 }
 
+/**
+ * if err.userError is set, it inherits from AbstractError, which are user errors not Bit errors
+ * and should not be reported to Sentry.
+ * reason why we don't check (err instanceof AbstractError) is that it could be thrown from a fork,
+ * in which case, it loses its class and has only the fields.
+ */
+function sendToAnalyticsAndSentry(err) {
+  const possiblyHashedError = hashErrorIfNeeded(err);
+  // only level FATAL are reported to Sentry.
+  // $FlowFixMe
+  const level = err.isUserError ? LEVEL.INFO : LEVEL.FATAL;
+  Analytics.setError(level, possiblyHashedError);
+}
+
 export default (err: Error): ?string => {
   const errorDefinition = findErrorDefinition(err);
-
-  if (!errorDefinition) return formatUnhandled(err);
-  /* this is an error that bit knows how to handle dont send to sentry */
-
-  if (err instanceof AbstractError) {
-    Analytics.setError(LEVEL.INFO, hashErrorIfNeeded(err));
-  } else {
-    Analytics.setError(LEVEL.FATAL, err);
+  sendToAnalyticsAndSentry(err);
+  if (!errorDefinition) {
+    return chalk.red(err.message || err);
   }
   const func = getErrorFunc(errorDefinition);
   const errorMessage = getErrorMessage(err, func) || 'unknown error';

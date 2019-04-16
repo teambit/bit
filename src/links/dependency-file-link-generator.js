@@ -119,9 +119,8 @@ export default class DependencyFileLinkGenerator {
       relativePathInDependency,
       depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
     });
-    if (this.createNpmLinkFiles) {
-      if (linkFile.linkContent) linkFile.postInstallLink = true;
-      else linkFile.postInstallSymlink = true;
+    if (this.createNpmLinkFiles && linkFile.linkContent) {
+      linkFile.postInstallLink = true;
     }
     this.linkFiles.push(linkFile);
 
@@ -181,13 +180,17 @@ export default class DependencyFileLinkGenerator {
     const isEs6 = Boolean(importSpecifiers && linkPathExt === 'js');
 
     const symlinkTo = linkContent ? undefined : this._getSymlinkDest(actualFilePath);
+    const postInstallSymlink = this.createNpmLinkFiles && !linkContent;
 
-    return { linkPath, linkContent, isEs6, symlinkTo, customResolveMapping };
+    return { linkPath, linkContent, isEs6, symlinkTo, customResolveMapping, postInstallSymlink };
   }
 
   _getSymlinkDest(filePath: PathOsBased): string {
-    if (this.relativePath.isCustomResolveUsed && this.isLinkToPackage) {
-      return `node_modules/${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
+    if (this.isLinkToPackage) {
+      if (this.createNpmLinkFiles) {
+        return this._getPackagePathToInternalFile();
+      }
+      return path.join(this.getTargetDir(), 'node_modules', this._getPackagePathToInternalFile());
     }
     return filePath;
   }
@@ -200,11 +203,19 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePath(): string {
-    const packageName = componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
     if (this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile)) {
-      return packageName;
+      return this._getPackageName();
     }
     // the link is to an internal file, not to the main file
+    return this._getPackagePathToInternalFile();
+  }
+
+  _getPackageName() {
+    return componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
+  }
+
+  _getPackagePathToInternalFile() {
+    const packageName = this._getPackageName();
     const distPrefix =
       this.dependencyComponent.dists.isEmpty() || this.relativePath.isCustomResolveUsed
         ? ''
@@ -219,14 +230,21 @@ export default class DependencyFileLinkGenerator {
   }
 
   getTargetDir(): PathOsBasedRelative {
-    if (this.targetDir) return this.targetDir;
-    const writtenPath = this.component.writtenPath;
-    // $FlowFixMe when running from bit build, the writtenPath is not available but it should have rootDir as it's related to the dists links
-    if (!writtenPath) return this.componentMap.rootDir;
-    if (path.isAbsolute(writtenPath)) {
-      throw new Error('getTargetDir: component.writtenPath should be relative');
+    const determineTargetDir = () => {
+      if (this.targetDir) return this.targetDir;
+      const writtenPath = this.component.writtenPath;
+      // $FlowFixMe when running from bit build, the writtenPath is not available but it should have rootDir as it's related to the dists links
+      if (!writtenPath) return this.componentMap.rootDir;
+      if (path.isAbsolute(writtenPath)) {
+        throw new Error('getTargetDir: component.writtenPath should be relative');
+      }
+      return writtenPath;
+    };
+    const targetDir = determineTargetDir();
+    if (!targetDir || !(typeof targetDir === 'string')) {
+      throw new Error('targetDir must be of type string');
     }
-    return writtenPath;
+    return targetDir;
   }
 
   getLinkPath(): PathOsBased {
@@ -243,7 +261,7 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getDistRoot(): PathOsBasedRelative {
-    return this.component.dists.getDistDir(this.consumer, this.componentMap.rootDir);
+    return this.component.dists.getDistDir(this.consumer, this.componentMap.getRootDir());
   }
 
   _getRelativeDistPathInDependency() {
@@ -270,7 +288,7 @@ export default class DependencyFileLinkGenerator {
 
   _getDepRootDir(): ?PathOsBasedRelative {
     if (!this.dependencyComponentMap) return undefined;
-    return this.dependencyComponentMap.rootDir || '.';
+    return this.dependencyComponentMap.getRootDir();
   }
 
   _getDepRootDirDist(): ?PathOsBasedRelative {

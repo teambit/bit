@@ -50,6 +50,14 @@ export default class BitIds extends Array<BitId> {
     return this.find(id => id.hasSameName(bitId) && id.hasSameVersion(bitId));
   }
 
+  searchStrWithoutVersion(idStr: string): ?BitId {
+    return this.find(id => id.toStringWithoutVersion() === idStr);
+  }
+
+  searchStrWithoutScopeAndVersion(idStr: string): ?BitId {
+    return this.find(id => id.toStringWithoutScopeAndVersion() === idStr);
+  }
+
   filterExact(bitId: BitId): BitId[] {
     return this.filter(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
   }
@@ -60,10 +68,6 @@ export default class BitIds extends Array<BitId> {
 
   filterWithoutScopeAndVersion(bitId: BitId): BitId[] {
     return this.filter(id => id.hasSameName(bitId));
-  }
-
-  getUniq(): BitIds {
-    return BitIds.fromArray(R.uniqBy(JSON.stringify, this));
   }
 
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
@@ -94,6 +98,11 @@ export default class BitIds extends Array<BitId> {
 
   static fromArray(bitIds: BitId[]): BitIds {
     return new BitIds(...bitIds);
+  }
+
+  static uniqFromArray(bitIds: BitId[]): BitIds {
+    const uniq = R.uniqBy(JSON.stringify, bitIds);
+    return BitIds.fromArray(uniq);
   }
 
   clone(): BitIds {

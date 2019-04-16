@@ -10,7 +10,7 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
@@ -435,6 +435,11 @@ export default class Helper {
     return this.runCmd(`bit import ${this.remoteScope}/${id}`);
   }
 
+  importManyComponents(ids: string[]) {
+    const idsWithRemote = ids.map(id => `${this.remoteScope}/${id}`);
+    return this.runCmd(`bit import ${idsWithRemote.join(' ')}`);
+  }
+
   importComponentWithOptions(id: string = 'bar/foo.js', options: ?Object) {
     const value = Object.keys(options)
       .map(key => `-${key} ${options[key]}`)
@@ -457,13 +462,13 @@ export default class Helper {
       this.createCompiler();
     }
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
+    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
   importTester(id) {
     // Temporary - for checking new serialization against the stage env
-    // this.setHubDomain('hub-stg.bitsrc.io');
+    // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
     this.runCmd(`bit import ${id} --tester`);
   }
 
@@ -561,13 +566,6 @@ export default class Helper {
   move(from: string, to: string) {
     return this.runCmd(`bit move ${path.normalize(from)} ${path.normalize(to)}`);
   }
-  envsAttach(ids: string[] = ['bar/foo'], options: ?Object) {
-    const joinedIds = ids.join(' ');
-    const value = Object.keys(options)
-      .map(key => `-${key} ${options[key]}`)
-      .join(' ');
-    return this.runCmd(`bit envs-attach ${joinedIds} ${value}`);
-  }
   ejectConf(id: string = 'bar/foo', options: ?Object) {
     const value = options
       ? Object.keys(options)
@@ -584,7 +582,7 @@ export default class Helper {
       : '';
     return this.runCmd(`bit inject-conf ${id} ${value}`);
   }
-  setHubDomain(domain: string = 'hub.bitsrc.io') {
+  setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
   // #endregion
@@ -668,95 +666,88 @@ export default class Helper {
   // #endregion
 
   // #region bit.json manipulation
-  addBitJsonDependencies(bitJsonPath: string, dependencies: Object, packageDependencies: Object) {
-    const bitJson = this.readBitJson(bitJsonPath);
-    bitJson.dependencies = bitJson.dependencies || {};
-    bitJson.packageDependencies = bitJson.packageDependencies || {};
-    Object.assign(bitJson.dependencies, dependencies);
-    Object.assign(bitJson.packageDependencies, packageDependencies);
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-
-  readBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  readBitJson(bitJsonDir: string = this.localScopePath) {
+    const bitJsonPath = path.join(bitJsonDir, 'bit.json');
     return fs.existsSync(bitJsonPath) ? fs.readJSONSync(bitJsonPath) : {};
   }
-
-  addKeyValToBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json'), key: string, val: Any) {
-    const bitJson = this.readBitJson(bitJsonPath);
-    bitJson[key] = val;
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+  writeBitJson(bitJson: Object, bitJsonDir: string = this.localScopePath) {
+    const bitJsonPath = path.join(bitJsonDir, 'bit.json');
+    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
   }
-
+  addKeyValToBitJson(bitJsonDir: string = this.localScopePath, key: string, val: any) {
+    const bitJson = this.readBitJson(bitJsonDir);
+    bitJson[key] = val;
+    this.writeBitJson(bitJson, bitJsonDir);
+  }
+  addOverridesToBitJson(overrides: Object) {
+    const bitJson = this.readBitJson();
+    bitJson.overrides = overrides;
+    this.writeBitJson(bitJson);
+  }
   getEnvNameFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const env = bitJson.env[envType];
     const envName = typeof env === 'string' ? env : Object.keys(env)[0];
     return envName;
   }
-
   getEnvFromBitJsonByType(bitJson: Object, envType: 'compiler' | 'tester') {
     const basePath = ['env', envType];
     const env = R.path(basePath, bitJson);
     const envName = Object.keys(env)[0];
     return env[envName];
   }
-
   addKeyValToEnvPropInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonDir: string = this.localScopePath,
     propName: string,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
   ) {
-    const bitJson = this.readBitJson(bitJsonPath);
+    const bitJson = this.readBitJson(bitJsonDir);
     const envName = this.getEnvNameFromBitJsonByType(bitJson, envType);
     const propPath = ['env', envType, envName, propName];
     const prop = R.pathOr({}, propPath, bitJson);
     prop[key] = val;
     set(bitJson, propPath, prop);
-    fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson, bitJsonDir);
   }
-
   addFileToEnvInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonPath: string = this.localScopePath,
     fileName: string,
     filePath: string,
     envType: 'compiler' | 'tester'
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'files', fileName, filePath, envType);
   }
-
   addToRawConfigOfEnvInBitJson(
-    bitJsonPath: string = path.join(this.localScopePath, 'bit.json'),
+    bitJsonPath: string = this.localScopePath,
     key: string,
     val: string,
     envType: 'compiler' | 'tester'
   ) {
     this.addKeyValToEnvPropInBitJson(bitJsonPath, 'rawConfig', key, val, envType);
   }
-  manageWorkspaces(withWorkspaces: boolean = true, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  manageWorkspaces(withWorkspaces: boolean = true) {
+    const bitJson = this.readBitJson();
     bitJson.packageManager = 'yarn';
     bitJson.manageWorkspaces = withWorkspaces;
     bitJson.useWorkspaces = withWorkspaces;
     this.writeBitJson(bitJson);
   }
-  writeBitJson(bitJson: Object, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    return fs.writeJSONSync(bitJsonPath, bitJson, { spaces: 2 });
-  }
-  setComponentsDirInBitJson(content: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson(bitJsonPath);
+  setComponentsDirInBitJson(content: string) {
+    const bitJson = this.readBitJson();
     bitJson.componentsDefaultDirectory = content;
     this.writeBitJson(bitJson);
   }
   corruptBitJson(bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
-    const bitJson = this.readBitJson();
-    bitJson.corrupt = '"corrupted';
-    fs.writeFileSync(bitJsonPath, bitJson.toString());
+    fs.writeFileSync(bitJsonPath, '"corrupted');
   }
-  modifyFieldInBitJson(key: string, value: string, bitJsonPath: string = path.join(this.localScopePath, 'bit.json')) {
+  corruptPackageJson(packageJsonPath: string = path.join(this.localScopePath, 'package.json')) {
+    fs.writeFileSync(packageJsonPath, '{ corrupted');
+  }
+  modifyFieldInBitJson(key: string, value: string) {
     const bitJson = this.readBitJson();
     bitJson[key] = value;
-    fs.writeJsonSync(bitJsonPath, bitJson, { spaces: 2 });
+    this.writeBitJson(bitJson);
   }
   // #endregion
 

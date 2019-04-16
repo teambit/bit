@@ -23,7 +23,7 @@ export default function installExtensions({
   dontPrintEnvMsg
 }: {
   ids: [{ componentId: BitId, type?: string }],
-  dependentId: BitId,
+  dependentId?: BitId,
   scope: Scope,
   verbose?: boolean,
   dontPrintEnvMsg?: boolean
@@ -78,7 +78,7 @@ export default function installExtensions({
       return isolatedComponent;
     } catch (e) {
       if (e instanceof ComponentNotFound) {
-        e.dependentId = dependentId.toString();
+        e.dependentId = dependentId ? dependentId.toString() : null;
       }
       throw e;
     }

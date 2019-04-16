@@ -9,13 +9,13 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
-import { preparePackageJsonToWrite } from '../component/package-json';
-import JSONFile from '../component/sources/json-file';
+import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
+import EnvExtension from '../../extensions/env-extension';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -111,6 +111,7 @@ export default class ComponentWriter {
     this._determineWhetherToWriteConfig();
     this._updateComponentRootPathAccordingToBitMap();
     this._updateBitMapIfNeeded();
+    await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
     return this.component;
@@ -126,14 +127,14 @@ export default class ComponentWriter {
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {
       const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
-      const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir, this.override);
+      const configToWrite = await this.component.getConfigToWrite(this.consumer, resolvedConfigDir);
       this.component.dataToPersist.merge(configToWrite.dataToPersist);
     }
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
     if (this.writePackageJson && (this.consumer.isolated || this.writeToPath !== this.consumer.getPath())) {
-      const packageJson = await preparePackageJsonToWrite(
+      const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.consumer,
         this.component,
         this.writeToPath,
@@ -141,9 +142,8 @@ export default class ComponentWriter {
         this.writeBitDependencies,
         this.excludeRegistryPrefix
       );
-      const packageJsonPath = path.join(this.writeToPath, PACKAGE_JSON);
-      const jsonFile = JSONFile.load({ base: this.writeToPath, path: packageJsonPath, content: packageJson });
-      this.component.dataToPersist.addFile(jsonFile);
+      addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
+      if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
       this.component.packageJsonInstance = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
@@ -171,8 +171,6 @@ export default class ComponentWriter {
       mainFile: this.component.mainFile, // $FlowFixMe
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
-      detachedCompiler: this.component.detachedCompiler,
-      detachedTester: this.component.detachedTester,
       origin: this.origin,
       parent: this.parent,
       originallySharedDir: this.component.originallySharedDir,
@@ -189,7 +187,7 @@ export default class ComponentWriter {
   }
 
   _updateComponentRootPathAccordingToBitMap() {
-    this.writeToPath = this.componentMap.rootDir || '.';
+    this.writeToPath = this.componentMap.getRootDir();
     this.component.writtenPath = this.writeToPath;
     this._updateFilesBasePaths();
   }
@@ -216,6 +214,31 @@ export default class ComponentWriter {
         this.consumer.bitMap.removeComponent(this.component.id);
       }
       this.addComponentToBitMap(this.componentMap.rootDir);
+    }
+  }
+
+  async _updateConsumerConfigIfNeeded() {
+    // for authored components there is no bit.json/package.json component specific
+    // so if the overrides or envs were changed, it should be written to the consumer-config
+    const areEnvsChanged = async (): Promise<boolean> => {
+      const context = { componentDir: this.componentMap.getRootDir() };
+      const compilerFromConsumer = await this.consumer.getEnv(COMPILER_ENV_TYPE, context);
+      const testerFromConsumer = await this.consumer.getEnv(TESTER_ENV_TYPE, context);
+      const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
+      const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
+      return (
+        EnvExtension.areEnvsDifferent(
+          compilerFromConsumer ? compilerFromConsumer.toModelObject() : null,
+          compilerFromComponent
+        ) ||
+        EnvExtension.areEnvsDifferent(
+          testerFromConsumer ? testerFromConsumer.toModelObject() : null,
+          testerFromComponent
+        )
+      );
+    };
+    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+      this.consumer.bitConfig.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
@@ -285,9 +308,12 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-        const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.bitJson.bindingPrefix, this.component.id);
+        const relativeLinkPath = getNodeModulesPathOfComponent(
+          this.consumer.bitConfig.bindingPrefix,
+          this.component.id
+        );
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
-          path.join(dependentComponentMap.rootDir || '.', relativeLinkPath)
+          path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
         );
         logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
         return fs.remove(nodeModulesLinkAbs);

@@ -1,5 +1,6 @@
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import OutdatedIndexJson from '../../src/scope/exceptions/outdated-index-json';
 
 chai.use(require('chai-fs'));
 
@@ -128,6 +129,32 @@ describe('scope components index mechanism', function () {
       it('bit list should show 1 component', () => {
         const list = helper.listLocalScopeParsed();
         expect(list).to.have.lengthOf(1);
+      });
+    });
+  });
+  describe('outdated / out-of-sync index.json', () => {
+    describe('adding a non-exist component to index.json', () => {
+      before(() => {
+        helper.reInitLocalScope();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.tagAllComponents();
+        const indexJsonWithBarFoo = helper.getIndexJson();
+        helper.untag('bar/foo');
+        helper.writeIndexJson(indexJsonWithBarFoo);
+        // now, index.json has barFoo, however the scope doesn't have it
+      });
+      it('bit status should throw an error', () => {
+        // used to show "Cannot read property 'scope' of null"
+        const error = new OutdatedIndexJson('bar/foo', helper.indexJsonPath());
+        const statusCmd = () => helper.status();
+        helper.expectToThrow(statusCmd, error);
+      });
+      it('bit ls should throw an error', () => {
+        // used to show "Cannot read property 'toBitIdWithLatestVersion' of null"
+        const error = new OutdatedIndexJson('bar/foo', helper.indexJsonPath());
+        const statusCmd = () => helper.status();
+        helper.expectToThrow(statusCmd, error);
       });
     });
   });

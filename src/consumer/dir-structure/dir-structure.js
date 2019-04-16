@@ -9,11 +9,12 @@ import ConfigDir from '../bit-map/config-dir';
 import logger from '../../logger/logger';
 
 export default class BitStructure {
+  _componentsDefaultDirectoryUnProcessed: string;
   _componentsDefaultDirectory: string;
   dependenciesDirectory: string;
   ejectedEnvsDirectory: string;
   constructor(componentsDefaultDirectory: ?string, dependenciesDirectory: ?string, ejectedEnvsDirectory: ?string) {
-    this._componentsDefaultDirectory = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
+    this._componentsDefaultDirectoryUnProcessed = componentsDefaultDirectory || DEFAULT_COMPONENTS_DIR_PATH;
     this.dependenciesDirectory = dependenciesDirectory || DEFAULT_DEPENDENCIES_DIR_PATH;
     this.ejectedEnvsDirectory = ejectedEnvsDirectory || DEFAULT_EJECTED_ENVS_DIR_PATH;
   }
@@ -27,20 +28,22 @@ export default class BitStructure {
   }
 
   get componentsDefaultDirectory(): string {
-    const dirStructure = this._componentsDefaultDirectory;
-    const dirStructureParsed = [];
-    dirStructure.split('/').forEach((dir) => {
-      if (dir.startsWith('{') && dir.endsWith('}')) {
-        // this is a dynamic parameter
-        const dirStripped = dir.replace(/[{}]/g, '');
-        const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
-        if (componentPart) dirStructureParsed.push(`{${componentPart}}`);
-      } else {
-        dirStructureParsed.push(dir);
-      }
-    });
-
-    return dirStructureParsed.join('/');
+    if (!this._componentsDefaultDirectory) {
+      const dirStructure = this._componentsDefaultDirectoryUnProcessed;
+      const dirStructureParsed = [];
+      dirStructure.split('/').forEach((dir) => {
+        if (dir.startsWith('{') && dir.endsWith('}')) {
+          // this is a dynamic parameter
+          const dirStripped = dir.replace(/[{}]/g, '');
+          const componentPart = this._getComponentStructurePart(dirStructure, dirStripped);
+          if (componentPart) dirStructureParsed.push(`{${componentPart}}`);
+        } else {
+          dirStructureParsed.push(dir);
+        }
+      });
+      this._componentsDefaultDirectory = dirStructureParsed.join('/');
+    }
+    return this._componentsDefaultDirectory;
   }
 
   _getComponentStructurePart(componentStructure: string, componentPart: string): string {

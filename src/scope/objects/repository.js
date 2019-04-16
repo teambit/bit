@@ -6,7 +6,7 @@ import BitObject from './object';
 import BitRawObject from './raw-object';
 import Ref from './ref';
 import { OBJECTS_DIR } from '../../constants';
-import { HashNotFound } from '../exceptions';
+import { HashNotFound, OutdatedIndexJson } from '../exceptions';
 import { resolveGroupId, mkdirp, writeFile, glob } from '../../utils';
 import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
@@ -15,6 +15,7 @@ import ComponentsIndex from './components-index';
 import { BitId } from '../../bit-id';
 import { ScopeJson } from '../scope-json';
 import { typesObj } from '../object-registrar';
+import { ModelComponent } from '../models';
 
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
@@ -50,12 +51,16 @@ export default class Repository {
     return ComponentsIndex.reset(scopePath);
   }
 
+  static getPathByScopePath(scopePath: string) {
+    return path.join(scopePath, OBJECTS_DIR);
+  }
+
   ensureDir() {
     return mkdirp(this.getPath());
   }
 
   getPath() {
-    return path.join(this.scopePath, OBJECTS_DIR);
+    return Repository.getPathByScopePath(this.scopePath);
   }
 
   getBackupPath(dirName?: string): string {
@@ -129,12 +134,26 @@ export default class Repository {
 
   async listComponentsIncludeSymlinks(): Promise<BitObject[]> {
     const hashes = this.componentsIndex.getHashesIncludeSymlinks();
-    return Promise.all(hashes.map(hash => this.load(new Ref(hash))));
+    return this._getBitObjectsByHashes(hashes);
   }
 
-  async listComponents(): Promise<ModelComponent[]> {
+  async listComponents(): Promise<BitObject[]> {
     const hashes = this.componentsIndex.getHashes();
-    return Promise.all(hashes.map(hash => this.load(new Ref(hash))));
+    return this._getBitObjectsByHashes(hashes);
+  }
+
+  async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
+    return Promise.all(
+      hashes.map(async (hash) => {
+        const bitObject = await this.load(new Ref(hash));
+        if (!bitObject) {
+          const componentId = this.componentsIndex.getIdByHash(hash);
+          // $FlowFixMe componentId must be set as it was retrieved from indexPath before
+          throw new OutdatedIndexJson(componentId, this.componentsIndex.getPath());
+        }
+        return bitObject;
+      })
+    );
   }
 
   async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {

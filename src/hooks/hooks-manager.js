@@ -113,11 +113,18 @@ export default class HooksManager {
       logger.warn(`trying to trigger a non existing hook ${hookName}`);
       throw new errors.HookNotExists(hookName);
     }
-    logger.info(
-      `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(
-        _stripArgs(args)
-      )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))}`
-    );
+    if (process.env.BIT_LOG) {
+      // this is disabled by default due to performance implications
+      // prefix your command with "BIT_LOG=*" to log all args and headers
+      logger.info(
+        `triggering hook ${hookName} with args:\n ${_stringifyIfNeeded(
+          _stripArgs(args)
+        )} \n and headers \n ${_stringifyIfNeeded(_stripHeaders(headers))}`
+      );
+    } else {
+      logger.info(`triggering hook ${hookName}`);
+    }
+
     const actions = this.hooks.get(hookName);
     const actionsP = actions.map((action) => {
       // Catch errors in order to aggregate them

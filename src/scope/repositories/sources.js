@@ -95,9 +95,9 @@ export default class SourceRepository {
     const foundComponent = await this.objects().findOne(realModelComponent.hash());
     if (!foundComponent) {
       throw new Error(
-        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}". Hash: ${symlink
-          .hash()
-          .toString()}`
+        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}".
+if you have the steps to reproduce the issue, please open a Github issue with the details.
+to quickly fix the issue, please delete the object at "${this.objects().objectPath(symlink.hash())}"`
       );
     }
     return foundComponent;
@@ -245,6 +245,7 @@ export default class SourceRepository {
         }
       });
     });
+    clonedComponent.overrides.addOriginallySharedDir(clonedComponent.originallySharedDir);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       versionFromModel,
@@ -393,11 +394,11 @@ export default class SourceRepository {
    * @see this.removeComponent()
    *
    */
-  async removeComponentById(bitId: BitId, deepRemove: boolean = false): Promise<void> {
-    logger.debug(`sources.removeComponentById: ${bitId.toString()}, deepRemove: ${deepRemove.toString()}`);
+  async removeComponentById(bitId: BitId): Promise<void> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}`);
     const component = await this.get(bitId);
     if (!component) return;
-    this.removeComponent(component, deepRemove);
+    this.removeComponent(component);
   }
 
   /**
@@ -410,10 +411,10 @@ export default class SourceRepository {
    * @param {ModelComponent} component
    * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
    */
-  removeComponent(component: ModelComponent, deepRemove: boolean = false): void {
+  removeComponent(component: ModelComponent): void {
     const repo = this.objects();
     logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
-    const objectRefs = deepRemove ? component.collectExistingRefs(repo, false).filter(x => x) : component.versionArray;
+    const objectRefs = component.versionArray;
     objectRefs.push(component.hash());
     repo.removeManyObjects(objectRefs);
   }

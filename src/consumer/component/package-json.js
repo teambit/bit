@@ -17,9 +17,11 @@ import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import DataToPersist from './sources/data-to-persist';
+import ComponentBitConfig from '../bit-config';
 
 // the instance comes from bit-javascript PackageJson class
-export type PackageJsonInstance = { write: Function, bit?: Object };
+export type PackageJsonInstance = { write: Function, bit?: Object, componentRootFolder: string };
 
 /**
  * Add components as dependencies to root package.json
@@ -92,7 +94,7 @@ function getPackageDependencyValue(
   return convertToValidPathForPackageManager(rootDirRelative);
 }
 
-async function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): Promise<?string> {
+function getPackageDependency(consumer: Consumer, dependencyId: BitId, parentId: BitId): ?string {
   const parentComponentMap = consumer.bitMap.getComponent(parentId);
   const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyId);
   return getPackageDependencyValue(dependencyId, parentComponentMap, dependencyComponentMap);
@@ -155,7 +157,7 @@ async function write(
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
 ): Promise<PackageJsonInstance> {
-  const packageJson: PackageJsonInstance = await preparePackageJsonToWrite(
+  const { packageJson, distPackageJson } = preparePackageJsonToWrite(
     consumer,
     component,
     bitDir,
@@ -164,31 +166,32 @@ async function write(
     excludeRegistryPrefix
   );
   await packageJson.write({ override });
+  if (distPackageJson) await distPackageJson.write({ override });
   return packageJson;
 }
 
-async function preparePackageJsonToWrite(
+function preparePackageJsonToWrite(
   consumer: Consumer,
   component: Component,
   bitDir: string,
   override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
-): Promise<PackageJsonInstance> {
-  logger.debug(`package-json.write. bitDir ${bitDir}. override ${override.toString()}`);
+): { packageJson: PackageJsonInstance, distPackageJson: ?PackageJsonInstance } {
+  logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
   const PackageJson = consumer.driver.getDriver(false).PackageJson;
-  const getBitDependencies = async (dependencies: Dependencies) => {
+  const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
-    const dependenciesPackages = dependencies.get().map(async (dep) => {
-      const packageDependency = await getPackageDependency(consumer, dep.id, component.id);
+    const dependenciesPackages = dependencies.get().map((dep) => {
+      const packageDependency = getPackageDependency(consumer, dep.id, component.id);
       return [dep.id.toStringWithoutVersion(), packageDependency];
     });
-    return R.fromPairs(await Promise.all(dependenciesPackages));
+    return R.fromPairs(dependenciesPackages);
   };
-  const bitDependencies = await getBitDependencies(component.dependencies);
-  const bitDevDependencies = await getBitDependencies(component.devDependencies);
-  const bitCompilerDependencies = await getBitDependencies(component.compilerDependencies);
-  const bitTesterDependencies = await getBitDependencies(component.testerDependencies);
+  const bitDependencies = getBitDependencies(component.dependencies);
+  const bitDevDependencies = getBitDependencies(component.devDependencies);
+  const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
+  const bitTesterDependencies = getBitDependencies(component.testerDependencies);
   const registryPrefix = component.bindingPrefix || npmRegistryName();
   const name = excludeRegistryPrefix
     ? componentIdToPackageName(component.id, component.bindingPrefix, false)
@@ -218,15 +221,18 @@ async function preparePackageJsonToWrite(
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);
-
+  const componentBitConfig = ComponentBitConfig.fromComponent(component);
+  componentBitConfig.compiler = component.compiler ? component.compiler.name : {};
+  componentBitConfig.tester = component.tester ? component.tester.name : {};
+  packageJson.bit = componentBitConfig.toPlainObject();
+  let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
-    const distPackageJson = getPackageJsonInstance(distRootDir);
-    await distPackageJson.write({ override });
+    distPackageJson = getPackageJsonInstance(distRootDir);
   }
 
-  return packageJson;
+  return { packageJson, distPackageJson };
 }
 
 async function updateAttribute(
@@ -236,15 +242,11 @@ async function updateAttribute(
   attributeValue: string,
   writeFile: ?boolean = true
 ): Promise<*> {
-  const PackageJson = consumer.driver.getDriver(false).PackageJson;
-  try {
-    const packageJson = await PackageJson.load(componentDir);
-    packageJson[attributeName] = attributeValue;
-    return writeFile ? packageJson.write({ override: true }) : packageJson;
-  } catch (e) {
-    // package.json doesn't exist, that's fine, no need to update anything
-    return Promise.resolve();
-  }
+  const packageJson = await getPackageJsonObject(componentDir);
+  if (!packageJson) return null; // package.json doesn't exist, that's fine, no need to update anything
+  packageJson[attributeName] = attributeValue;
+  if (writeFile) await writePackageJsonFromObject(componentDir, packageJson);
+  return packageJson;
 }
 
 /**
@@ -252,12 +254,12 @@ async function updateAttribute(
  */
 async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
   if (
-    consumer.bitJson.manageWorkspaces &&
-    consumer.bitJson.packageManager === 'yarn' &&
-    consumer.bitJson.useWorkspaces
+    consumer.bitConfig.manageWorkspaces &&
+    consumer.bitConfig.packageManager === 'yarn' &&
+    consumer.bitConfig.useWorkspaces
   ) {
     const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.bitJson.dependenciesDirectory;
+    const dependenciesDirectory = consumer.bitConfig.dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
@@ -291,9 +293,9 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
   if (
-    consumer.bitJson.manageWorkspaces &&
-    consumer.bitJson.packageManager === 'yarn' &&
-    consumer.bitJson.useWorkspaces
+    consumer.bitConfig.manageWorkspaces &&
+    consumer.bitConfig.packageManager === 'yarn' &&
+    consumer.bitConfig.useWorkspaces
   ) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
@@ -322,6 +324,16 @@ async function getPackageJsonObject(dir: string): Promise<?Object> {
   }
 }
 
+function addPackageJsonDataToPersist(packageJson: PackageJsonInstance, dataToPersist: DataToPersist) {
+  const packageJsonPath = composePath(packageJson.componentRootFolder);
+  const jsonFile = JSONFile.load({
+    base: packageJson.componentRootFolder,
+    path: packageJsonPath,
+    content: packageJson
+  });
+  dataToPersist.addFile(jsonFile);
+}
+
 async function writePackageJsonFromObject(dir: string, data: Object) {
   return fs.outputJSON(composePath(dir), data, { spaces: 2 });
 }
@@ -336,6 +348,7 @@ export {
   changeDependenciesToRelativeSyntax,
   write,
   preparePackageJsonToWrite,
+  addPackageJsonDataToPersist,
   addComponentsWithVersionToRoot,
   updateAttribute,
   addWorkspacesToPackageJson,

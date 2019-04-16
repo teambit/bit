@@ -154,8 +154,8 @@ describe('bit tag command', function () {
         helper.createFile('components', 'major.js');
         helper.addComponent('components/major.js', { i: 'components/major' });
         const nonFlagedCommit = helper.tagComponent('components/major');
-        expect(majorOutput).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
-        expect(nonFlagedCommit).to.contain('1 components tagged | 1 added, 0 changed, 0 auto-tagged');
+        expect(majorOutput).to.contain('1 component(s) tagged | 1 added, 0 changed, 0 auto-tagged');
+        expect(nonFlagedCommit).to.contain('1 component(s) tagged | 1 added, 0 changed, 0 auto-tagged');
       });
     });
     // TODO: fix all the tests in the following "describe" so they will not rely on the output of the previous test
@@ -342,7 +342,7 @@ describe('bit tag command', function () {
         output = helper.tagWithoutMessage('bar/foo --force');
       });
       it('should tag successfully although the tests failed', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
       it('should not display any data about the tests', () => {
         expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
@@ -356,7 +356,7 @@ describe('bit tag command', function () {
         output = helper.tagWithoutMessage('bar/foo --skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
       it('should not display any data about the tests', () => {
         expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
@@ -371,7 +371,7 @@ describe('bit tag command', function () {
         output = helper.tagAllComponents('--skip-tests');
       });
       it('should tag successfully although the tests failed', () => {
-        expect(output).to.have.string('5 components tagged');
+        expect(output).to.have.string('5 component(s) tagged');
       });
       it('should not display any data about the tests', () => {
         expect(output).to.not.have.string("component's specs does not pass, fix them and tag");
@@ -404,7 +404,7 @@ describe('bit tag command', function () {
 
     it('should successfully tag if there is no special error', () => {
       // Validate output
-      expect(output).to.have.string('1 components tagged');
+      expect(output).to.have.string('1 component(s) tagged');
       // Validate model
     });
 
@@ -499,7 +499,7 @@ describe('bit tag command', function () {
         output = helper.tagAllComponents();
       });
       it('should tag the component', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
     });
   });
@@ -526,7 +526,7 @@ describe('bit tag command', function () {
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
       it('should tag the component', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
       it('should write the dependency to the component model', () => {
         const deps = showOutput.dependencies;
@@ -535,6 +535,10 @@ describe('bit tag command', function () {
       it('should increment the package.json version of the tagged component', () => {
         const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
         expect(packageJson.version).to.equal('0.0.2');
+      });
+      it('should not delete "bit" property from package.json', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/comp/comp'));
+        expect(packageJson).to.have.property('bit');
       });
     });
 
@@ -559,7 +563,7 @@ describe('bit tag command', function () {
         showOutput = JSON.parse(helper.showComponentWithOptions('comp/comp', { j: '' }));
       });
       it('should tag the component', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
       it('should write the dependency to the component model ', () => {
         const deps = showOutput.dependencies;
@@ -690,7 +694,7 @@ describe('bit tag command', function () {
       });
 
       it('Should print that the component is tagged', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
     });
     describe('tag all components with missing dependencies with --ignore-unresolved-dependencies', () => {
@@ -721,7 +725,7 @@ describe('bit tag command', function () {
       });
 
       it('Should print that the components are tagged', () => {
-        expect(output).to.have.string('2 components tagged');
+        expect(output).to.have.string('2 component(s) tagged');
       });
     });
     // We throw this error because we don't know the packege version in this case
@@ -888,7 +892,7 @@ describe('bit tag command', function () {
           output = helper.tagScope('0.0.5', 'msg');
         });
         it('should tag authored components with the specified version', () => {
-          expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('1 component(s) tagged');
           expect(output).to.have.string('bar/foo');
         });
         it('should not tag imported components', () => {
@@ -922,7 +926,7 @@ describe('bit tag command', function () {
           expect(output).to.have.string('warning: bar/foo@0.1.5 has a version greater than 0.1.4');
         });
         it('should continue tagging the authored components', () => {
-          expect(output).to.have.string('1 components tagged');
+          expect(output).to.have.string('1 component(s) tagged');
           expect(output).to.have.string('bar/foo@0.1.4');
         });
       });
@@ -937,7 +941,7 @@ describe('bit tag command', function () {
         it('should tag all components with the specified version including the imported components', () => {
           // this also verifies that the auto-tag feature, doesn't automatically update is-string to its next version
           // current version of is-string is 0.0.1, so auto-tag would tag it to 0.0.2
-          expect(output).to.have.string('2 components tagged');
+          expect(output).to.have.string('2 component(s) tagged');
           expect(output).to.have.string('bar/foo@0.2.0');
           expect(output).to.have.string('utils/is-string@0.2.0');
         });

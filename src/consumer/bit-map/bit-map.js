@@ -27,8 +27,9 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, 
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
-import ComponentBitJson from '../bit-json';
+import ComponentBitConfig from '../bit-config';
 import ConfigDir from './config-dir';
+import ConsumerBitConfig from '../bit-config/consumer-bit-config';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -89,6 +90,10 @@ export default class BitMap {
     return componentMap;
   }
 
+  isEmpty() {
+    return R.isEmpty(this.components);
+  }
+
   removeComponentProp(id: BitId, propName: $Keys<ComponentMap>) {
     const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
     // $FlowFixMe
@@ -97,56 +102,39 @@ export default class BitMap {
     return componentMap;
   }
 
-  attachEnv(id: BitId, { compiler, tester }: { compiler: boolean, tester: boolean }) {
-    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    // For authored component just make sure to remove the detached
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      if (compiler) {
-        this.removeComponentProp(id, 'detachedCompiler');
-      }
-      if (tester) {
-        this.removeComponentProp(id, 'detachedTester');
-      }
-      return true;
-    }
-    // For imported components we want to set the detached to false (which will cause the env loading from the workspace bit.json)
-    if (compiler) {
-      this.setComponentProp(id, 'detachedCompiler', false);
-    }
-    if (tester) {
-      this.setComponentProp(id, 'detachedTester', false);
-    }
-    return true;
-  }
-
   static load(dirPath: PathOsBasedAbsolute): BitMap {
-    const standardLocation = path.join(dirPath, BIT_MAP);
-    const oldLocation = path.join(dirPath, OLD_BIT_MAP);
-    const getBitMapLocation = (): ?PathOsBased => {
-      if (fs.existsSync(standardLocation)) return standardLocation;
-      if (fs.existsSync(oldLocation)) return oldLocation;
-      return null;
-    };
-    const bitMapLocation = getBitMapLocation();
-    if (!bitMapLocation) {
+    const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
+    if (!currentLocation) {
       logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
-      return new BitMap(dirPath, standardLocation, BIT_VERSION);
+      return new BitMap(dirPath, defaultLocation, BIT_VERSION);
     }
-    const mapFileContent = fs.readFileSync(bitMapLocation);
+    const mapFileContent = fs.readFileSync(currentLocation);
     let componentsJson;
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
     } catch (e) {
       logger.error(e);
-      throw new InvalidBitMap(bitMapLocation, e.message);
+      throw new InvalidBitMap(currentLocation, e.message);
     }
     const version = componentsJson.version;
     // Don't treat version like component
     delete componentsJson.version;
 
-    const bitMap = new BitMap(dirPath, bitMapLocation, version);
+    const bitMap = new BitMap(dirPath, currentLocation, version);
     bitMap.loadComponents(componentsJson);
     return bitMap;
+  }
+
+  static getBitMapLocation(dirPath: PathOsBasedAbsolute) {
+    const defaultLocation = path.join(dirPath, BIT_MAP);
+    const oldLocation = path.join(dirPath, OLD_BIT_MAP);
+    const getCurrentLocation = (): ?PathOsBased => {
+      if (fs.existsSync(defaultLocation)) return defaultLocation;
+      if (fs.existsSync(oldLocation)) return oldLocation;
+      return null;
+    };
+    const currentLocation = getCurrentLocation();
+    return { currentLocation, defaultLocation };
   }
 
   /**
@@ -269,21 +257,25 @@ export default class BitMap {
    * Files might be on the root dir then we need to ignore them directly by taking them from the bit.json
    * They might be in internal dirs then we need to ignore the dir completely
    */
-  getConfigDirsAndFilesToIgnore(consumerPath: PathLinux): IgnoreFilesDirs {
+  async getConfigDirsAndFilesToIgnore(
+    consumerPath: PathLinux,
+    consumerConfig: ConsumerBitConfig
+  ): Promise<IgnoreFilesDirs> {
     const ignoreList = {
       files: [],
       dirs: []
     };
-    R.values(this.components).forEach((component: ComponentMap) => {
+    const populateIgnoreListP = R.values(this.components).map(async (component: ComponentMap) => {
       const configDir = component.configDir;
       const componentDir = component.getComponentDir();
       if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentBitJson = ComponentBitJson.loadSync(fullConfigDir);
-        const compilerObj = R.values(componentBitJson.compiler)[0];
+        const componentPkgJsonDir = component.rootDir ? path.join(consumerPath, component.rootDir) : null;
+        const componentBitConfig = await ComponentBitConfig.load(componentPkgJsonDir, fullConfigDir, consumerConfig);
+        const compilerObj = R.values(componentBitConfig.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
-        const testerObj = R.values(componentBitJson.tester)[0];
+        const testerObj = R.values(componentBitConfig.tester)[0];
         const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
         const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
         const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];
@@ -301,6 +293,7 @@ export default class BitMap {
         ignoreList.dirs = ignoreList.dirs.concat(toIgnore.dirs);
       }
     });
+    await Promise.all(populateIgnoreListP);
     return ignoreList;
   }
 
@@ -650,8 +643,6 @@ export default class BitMap {
     configDir,
     trackDir,
     override,
-    detachedCompiler,
-    detachedTester,
     originallySharedDir,
     wrapDir
   }: {
@@ -664,8 +655,6 @@ export default class BitMap {
     configDir?: ?ConfigDir,
     trackDir?: PathOsBased,
     override?: boolean,
-    detachedCompiler: ?boolean,
-    detachedTester: ?boolean,
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
@@ -718,12 +707,6 @@ export default class BitMap {
     }
     if (wrapDir) {
       this.components[componentIdStr].wrapDir = wrapDir;
-    }
-    if (detachedCompiler) {
-      this.components[componentIdStr].detachedCompiler = detachedCompiler;
-    }
-    if (detachedTester) {
-      this.components[componentIdStr].detachedTester = detachedTester;
     }
     this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {
@@ -794,27 +777,6 @@ export default class BitMap {
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
     this.markAsChanged();
-  }
-
-  setDetachedCompiler(id: BitId, val: ?boolean) {
-    if (val === null || val === undefined) {
-      return this.removeComponentProp(id, 'detachedCompiler');
-    }
-    return this.setComponentProp(id, 'detachedCompiler', val);
-  }
-  setDetachedTester(id: BitId, val: ?boolean) {
-    if (val === null || val === undefined) {
-      return this.removeComponentProp(id, 'detachedTester');
-    }
-    return this.setComponentProp(id, 'detachedTester', val);
-  }
-
-  setDetachedCompilerAndTester(
-    id: BitId,
-    { detachedCompiler, detachedTester }: { detachedCompiler: ?boolean, detachedTester: ?boolean }
-  ) {
-    this.setDetachedCompiler(id, detachedCompiler);
-    return this.setDetachedTester(id, detachedTester);
   }
 
   isExistWithSameVersion(id: BitId) {

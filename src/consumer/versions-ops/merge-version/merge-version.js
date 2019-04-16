@@ -12,6 +12,7 @@ import type { MergeResultsTwoWay } from './two-way-merge';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import ComponentWriter from '../../component-ops/component-writer';
+import { Tmp } from '../../../scope/repositories';
 
 export const mergeOptionsCli = { o: 'ours', t: 'theirs', m: 'manual' };
 export const MergeOptions = { ours: 'ours', theirs: 'theirs', manual: 'manual' };
@@ -45,20 +46,31 @@ export async function mergeVersion(
   mergeStrategy: MergeStrategy
 ): Promise<ApplyVersionResults> {
   const { components } = await consumer.loadComponents(BitIds.fromArray(ids));
-  const componentsStatusP = components.map((component: Component) => {
-    return getComponentStatus(consumer, component, version);
-  });
-  const componentsStatus = await Promise.all(componentsStatusP);
-  const componentWithConflict = componentsStatus.find(component => component.mergeResults.hasConflicts);
+  const allComponentsStatus = await getAllComponentsStatus();
+  const componentWithConflict = allComponentsStatus.find(component => component.mergeResults.hasConflicts);
   if (componentWithConflict && !mergeStrategy) {
     mergeStrategy = await getMergeStrategyInteractive();
   }
-  const mergedComponentsP = componentsStatus.map(({ id, componentFromFS, mergeResults }) => {
+  const mergedComponentsP = allComponentsStatus.map(({ id, componentFromFS, mergeResults }) => {
     return applyVersion(consumer, id, componentFromFS, mergeResults, mergeStrategy);
   });
   const mergedComponents = await Promise.all(mergedComponentsP);
 
   return { components: mergedComponents, version };
+
+  async function getAllComponentsStatus(): Promise<ComponentStatus[]> {
+    const tmp = new Tmp(consumer.scope);
+    try {
+      const componentsStatus = await Promise.all(
+        components.map(component => getComponentStatus(consumer, component, version))
+      );
+      await tmp.clear();
+      return componentsStatus;
+    } catch (err) {
+      await tmp.clear();
+      throw err;
+    }
+  }
 }
 
 async function getComponentStatus(consumer: Consumer, component: Component, version: string): Promise<ComponentStatus> {
@@ -133,7 +145,6 @@ async function applyVersion(
   const componentWriter = ComponentWriter.getInstance({
     component,
     writeToPath: component.files[0].base, // find the current path from the files. (we use the first one but it's the same for all)
-    override: true,
     writeConfig: false, // never override the existing bit.json
     writePackageJson: false,
     deleteBitDirContent: false,

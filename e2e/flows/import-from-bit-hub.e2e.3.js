@@ -4,10 +4,11 @@ import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import * as fixtures from '../fixtures/fixtures';
+import { BASE_WEB_DOMAIN } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
-(supportTestingOnBitsrc ? describe : describe.skip)('importing bit components from bitsrc.io', function () {
+(supportTestingOnBitsrc ? describe : describe.skip)(`importing bit components from ${BASE_WEB_DOMAIN}`, function () {
   this.timeout(0);
   const helper = new Helper();
   const bitsrcTester = new BitsrcTester();
@@ -35,7 +36,7 @@ chai.use(require('chai-fs'));
         scopeAfterExport = helper.cloneLocalScope();
 
         helper.reInitLocalScope();
-        helper.importCompiler('bit.envs/compilers/babel');
+        helper.importCompiler('bit.envs/compilers/babel@0.0.20');
         helper.createFile('utils', 'is-type-es6.js', fixtures.isTypeES6);
         helper.addComponent('utils/is-type-es6.js', { i: 'utils/is-type-es6' });
         helper.createFile(
