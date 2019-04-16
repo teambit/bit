@@ -1,6 +1,7 @@
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import DiagnosisNotFound from '../../src/api/consumer/lib/exceptions/diagnosis-not-found';
 
 chai.use(require('chai-fs'));
 
@@ -16,7 +17,7 @@ describe('bit doctor infra', function () {
     helper.reInitLocalScope();
   });
 
-  describe('run all checks', () => {
+  describe('run all diagnoses', () => {
     let output;
     let parsedOutput;
 
@@ -63,6 +64,15 @@ describe('bit doctor infra', function () {
           expect(fileFullPath).to.be.a.file().and.not.empty;
         });
       });
+    });
+  });
+
+  describe('run one diagnosis', () => {
+    it('should show error when the diagnosis not exist', () => {
+      const nonExistingDiagnosis = 'non-existing-diagnosis';
+      const useFunc = () => helper.doctorOne(nonExistingDiagnosis, { j: '' });
+      const error = new DiagnosisNotFound(nonExistingDiagnosis);
+      helper.expectToThrow(useFunc, error);
     });
   });
 
