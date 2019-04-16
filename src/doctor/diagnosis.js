@@ -27,13 +27,13 @@ export default class Diagnosis {
   async _runExamine(): Promise<ExamineBareResult> {
     throw new Error('You must implement this method');
   }
+  // eslint-disable-next-line no-unused-vars
   _formatSymptoms(bareResult: ExamineBareResult): string {
-    // eslint-disable-line no-unused-vars
     throw new Error('You must implement this method');
   }
 
+  // eslint-disable-next-line no-unused-vars
   _formatManualTreat(bareResult: ExamineBareResult): string {
-    // eslint-disable-line no-unused-vars
     throw new Error('You must implement this method');
   }
 
