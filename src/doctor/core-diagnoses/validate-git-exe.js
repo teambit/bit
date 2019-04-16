@@ -2,7 +2,7 @@
 
 import execa from 'execa';
 import R from 'ramda';
-import Diagnosis from '../Diagnosis';
+import Diagnosis from '../diagnosis';
 import getGitExecutablePath from '../../utils/git/git-executable';
 import type { ExamineBareResult } from '../diagnosis';
 

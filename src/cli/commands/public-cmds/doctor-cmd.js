@@ -5,7 +5,7 @@ import runAll, { listDiagnoses, runOne } from '../../../api/consumer/lib/doctor'
 import type { DoctorRunAllResults, DoctorRunOneResult } from '../../../api/consumer/lib/doctor';
 import formatDiagnosesList from '../../templates/diagnosis-list-template';
 import formatDiagnosesResult from '../../templates/doctor-results-template';
-import Diagnosis from '../../../doctor/Diagnosis';
+import Diagnosis from '../../../doctor/diagnosis';
 
 export default class Doctor extends Command {
   name = 'doctor [diagnosis-name]';

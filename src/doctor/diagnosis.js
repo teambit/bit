@@ -29,7 +29,6 @@ export default class Diagnosis {
   }
   _formatSymptoms(bareResult: ExamineBareResult): string {
     // eslint-disable-line no-unused-vars
-    // eslint-disable-line no-unused-vars
     throw new Error('You must implement this method');
   }
 

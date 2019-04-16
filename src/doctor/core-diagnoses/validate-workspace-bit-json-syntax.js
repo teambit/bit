@@ -2,7 +2,7 @@
 
 import R from 'ramda';
 import fs from 'fs-extra';
-import Diagnosis from '../Diagnosis';
+import Diagnosis from '../diagnosis';
 import type { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
 import ConsumerBitConfig from '../../consumer/bit-config/consumer-bit-config';

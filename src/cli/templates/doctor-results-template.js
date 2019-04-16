@@ -2,7 +2,7 @@
 
 import { table } from 'table';
 import chalk from 'chalk';
-import type { ExamineResult } from '../../doctor/Diagnosis';
+import type { ExamineResult } from '../../doctor/diagnosis';
 import type { DoctorRunAllResults } from '../../api/consumer/lib/doctor';
 
 // const NAME_COLUMN_WIDTH = 100;

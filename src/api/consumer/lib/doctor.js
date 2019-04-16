@@ -6,9 +6,9 @@ import fs from 'fs-extra';
 import Stream from 'stream';
 import registerCoreAndExtensionsDiagnoses from '../../../doctor/doctor-registrar-builder';
 import DoctorRegistrar from '../../../doctor/doctor-registrar';
-import Diagnosis from '../../../doctor/Diagnosis';
+import Diagnosis from '../../../doctor/diagnosis';
 import { getWithoutExt, getExt } from '../../../utils';
-import type { ExamineResult } from '../../../doctor/Diagnosis';
+import type { ExamineResult } from '../../../doctor/diagnosis';
 import logger from '../../../logger/logger';
 import { DEBUG_LOG, BIT_VERSION, CFG_USER_NAME_KEY, CFG_USER_EMAIL_KEY } from '../../../constants';
 import * as globalConfig from './global-config';
@@ -53,7 +53,7 @@ export async function runOne({
     throw new DiagnosisNotFound(diagnosisName);
   }
   const examineResult = await diagnosis.examine();
-  const savedFilePath = await _saveExamineResultsToFile(examineResult, filePath);
+  const savedFilePath = await _saveExamineResultsToFile([examineResult], filePath);
   return { examineResult, savedFilePath };
 }
 
@@ -63,10 +63,7 @@ export async function listDiagnoses(): Promise<Diagnosis[]> {
   return Promise.resolve(doctorRegistrar.diagnoses);
 }
 
-async function _saveExamineResultsToFile(
-  examineResults: ExamineResult[] | ExamineResult,
-  filePath: ?string
-): Promise<?string> {
+async function _saveExamineResultsToFile(examineResults: ExamineResult[], filePath: ?string): Promise<?string> {
   if (!filePath) {
     return Promise.resolve(undefined);
   }
