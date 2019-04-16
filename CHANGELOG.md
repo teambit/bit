@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - convert components entered to `overrides` as packages into valid component names
+- improve Bit load time by changing bit-javascript to use lazy loading
 
 ## [14.0.7-dev.1] - 2019-04-16
 
