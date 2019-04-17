@@ -17,8 +17,11 @@ describe('bit doctor - git exe validation', function () {
 
   // This test case assume you have proper configuration of git executable
   describe('without configuration changes', () => {
-    const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
-    const parsedOutput = JSON.parse(output);
+    let parsedOutput;
+    before(() => {
+      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      parsedOutput = JSON.parse(output);
+    });
     it('should run the correct diagnosis', () => {
       expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME);
     });
@@ -31,12 +34,15 @@ describe('bit doctor - git exe validation', function () {
   // In the end it will restore your old value
   // It might crash in the middle and corrupt your git_path config
   describe('with wrong git path', () => {
-    const oldGitPath = helper.getGitPath();
-    // Set the git path to a place where there is no git (the local scope)
-    helper.setGitPath(helper.localScopePath);
-    const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
-    helper.restoreGitPath(oldGitPath);
-    const parsedOutput = JSON.parse(output);
+    let parsedOutput;
+    before(() => {
+      const oldGitPath = helper.getGitPath();
+      // Set the git path to a place where there is no git (the local scope)
+      helper.setGitPath(helper.localScopePath);
+      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
+      helper.restoreGitPath(oldGitPath);
+      parsedOutput = JSON.parse(output);
+    });
     it('should run the correct diagnosis', () => {
       expect(parsedOutput.examineResult.diagnosisMetaData.name).to.equal(DIAGNOSIS_NAME);
     });
