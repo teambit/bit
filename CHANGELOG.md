@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [14.0.7-dev.1] - 2019-04-16
 
+- new `bit doctor` command
 - support overriding environments (compiler/tester) per component
 - `overrides` property supports manually adding dependencies (experimental for now)
 - `overrides` property supports ignoring dependencies (experimental for now)

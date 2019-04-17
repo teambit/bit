@@ -10,7 +10,7 @@ import fs from 'fs-extra';
 import json from 'comment-json';
 import { expect } from 'chai';
 import set from 'lodash.set';
-import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN } from '../src/constants';
+import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN, CFG_GIT_EXECUTABLE_PATH } from '../src/constants';
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
@@ -56,6 +56,16 @@ export default class Helper {
     const cmdOutput = childProcess.execSync(cmd, { cwd });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
+  }
+
+  parseOptions(options: Object): string {
+    const value = Object.keys(options)
+      .map((key) => {
+        const keyStr = key.length === 1 ? `-${key}` : `--${key}`;
+        return `${keyStr} ${options[key]}`;
+      })
+      .join(' ');
+    return value;
   }
 
   runWithTryCatch(cmd: string, cwd: string = this.localScopePath) {
@@ -585,6 +595,26 @@ export default class Helper {
   setHubDomain(domain: string = `hub.${BASE_WEB_DOMAIN}`) {
     this.runCmd(`bit config set hub_domain ${domain}`);
   }
+
+  getGitPath() {
+    this.runCmd(`bit config get ${CFG_GIT_EXECUTABLE_PATH}`);
+  }
+
+  setGitPath(gitPath: string = 'git') {
+    this.runCmd(`bit config set ${CFG_GIT_EXECUTABLE_PATH} ${gitPath}`);
+  }
+
+  deleteGitPath() {
+    this.runCmd(`bit config del ${CFG_GIT_EXECUTABLE_PATH}`);
+  }
+
+  restoreGitPath(oldGitPath: ?string): any {
+    if (!oldGitPath) {
+      return this.deleteGitPath();
+    }
+    return this.setGitPath(oldGitPath);
+  }
+
   // #endregion
 
   // #region bit commands on templates (like add BarFoo / create compiler)
@@ -614,6 +644,21 @@ export default class Helper {
 
   tagComponentBarFoo() {
     return this.tagComponent('bar/foo');
+  }
+
+  doctor(options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor ${parsedOpts}`);
+  }
+
+  doctorOne(diagnosisName: string, options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor ${diagnosisName} ${parsedOpts}`);
+  }
+
+  doctorList(options: Object) {
+    const parsedOpts = this.parseOptions(options);
+    return this.runCmd(`bit doctor --list ${parsedOpts}`);
   }
 
   createCompiler() {

@@ -9,6 +9,8 @@ import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DI
 import ConsumerBitConfig from './bit-config/consumer-bit-config';
 import { BitConfigNotFound } from './bit-config/exceptions';
 
+export type ConsumerInfo = { path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean };
+
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
 }
@@ -38,9 +40,7 @@ export function pathHasLocalScope(path: string) {
 /**
  * propagate from the given directory up to the root to find the consumer
  */
-export async function getConsumerInfo(
-  absPath: string
-): Promise<?{ path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean }> {
+export async function getConsumerInfo(absPath: string): Promise<?ConsumerInfo> {
   const searchPaths = buildPropagationPaths();
   searchPaths.unshift(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {

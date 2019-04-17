@@ -104,11 +104,10 @@ export default class BitMap {
 
   static load(dirPath: PathOsBasedAbsolute): BitMap {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
-    if (!currentLocation) {
-      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
+    const mapFileContent = BitMap.loadRawSync(dirPath);
+    if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, BIT_VERSION);
     }
-    const mapFileContent = fs.readFileSync(currentLocation);
     let componentsJson;
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
@@ -123,6 +122,16 @@ export default class BitMap {
     const bitMap = new BitMap(dirPath, currentLocation, version);
     bitMap.loadComponents(componentsJson);
     return bitMap;
+  }
+
+  static loadRawSync(dirPath: PathOsBasedAbsolute): ?Buffer {
+    const { currentLocation } = BitMap.getBitMapLocation(dirPath);
+    if (!currentLocation) {
+      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
+      return undefined;
+    }
+    const mapFileContent = fs.readFileSync(currentLocation);
+    return mapFileContent;
   }
 
   static getBitMapLocation(dirPath: PathOsBasedAbsolute) {
@@ -921,7 +930,12 @@ export default class BitMap {
   async write(): Promise<any> {
     if (!this.hasChanged) return null;
     logger.debug('writing to bit.map');
-    const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
+    const bitMapContent = this.getContent();
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+  }
+
+  getContent(): Object {
+    const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
+    return bitMapContent;
   }
 }
