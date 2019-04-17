@@ -157,7 +157,7 @@ const allCommands = [
       },
       {
         name: 'doctor',
-        description: 'diagnose bit state'
+        description: 'diagnose a bit workspace'
       },
       {
         name: 'cc',

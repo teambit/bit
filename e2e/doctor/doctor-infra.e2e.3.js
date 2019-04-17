@@ -39,7 +39,7 @@ describe('bit doctor infra', function () {
           output = helper.doctor({ save: '' });
         });
         it('should print the output file name', () => {
-          expect(output).to.have.string('File has been written to doctor-results-');
+          expect(output).to.have.string('File written to doctor-results-');
           expect(output).to.have.string('.tar');
         });
         it('should create a non empty tar file in the file system', () => {

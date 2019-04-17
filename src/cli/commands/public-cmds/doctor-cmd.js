@@ -9,12 +9,12 @@ import Diagnosis from '../../../doctor/diagnosis';
 
 export default class Doctor extends Command {
   name = 'doctor [diagnosis-name]';
-  description = 'diagnose bit state';
+  description = 'diagnose a bit workspace';
   alias = '';
   opts = [
-    ['j', 'json', 'return a json format'],
-    ['', 'list', 'list all registered diagnosis'],
-    ['s', 'save [filePath]', 'save results to file']
+    ['j', 'json', 'return diagnoses in json format'],
+    ['', 'list', 'list all available diagnoses'],
+    ['s', 'save [filePath]', 'save diagnoses to a file']
   ];
   migration = false;
 

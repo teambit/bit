@@ -18,7 +18,7 @@ type SummeryRow = [string, string, string, string];
 
 function _formatStatusCell(status: boolean): string {
   if (status) {
-    return chalk.green('pass');
+    return chalk.green('passed');
   }
   return chalk.red('failed');
 }
@@ -66,7 +66,7 @@ function _createFullReportForDiagnoses(examineResult: ExamineResult[]): string {
 }
 
 function _createFullReportSection(examineResult: ExamineResult[]): string {
-  const title = chalk.underline('Full errors report');
+  const title = chalk.underline('Error report');
   const fullDiagnosesReport = _createFullReportForDiagnoses(examineResult);
   if (fullDiagnosesReport.trim() === '') {
     return '';
@@ -79,7 +79,7 @@ function _createWrittenFileSection(savedFilePath) {
   if (!savedFilePath) {
     return '';
   }
-  return `File has been written to ${savedFilePath}`;
+  return `File written to ${savedFilePath}`;
 }
 
 export default function render({ examineResults, savedFilePath }: DoctorRunAllResults): string {

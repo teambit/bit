@@ -10,7 +10,7 @@ import AbstractBitConfig from '../../consumer/bit-config/abstract-bit-config';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   name = 'validate-workspace-bit-json-syntax';
-  description = 'validate that the workspace bit.json syntax is valid';
+  description = 'validate workspace bit.json';
   category = 'bit-core-files';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
@@ -19,7 +19,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   }
 
   _formatManualTreat() {
-    return 'consider running bit init --reset to recreate the file';
+    return 'Manually fix the bit.json or consider running bit init --reset to recreate the file';
   }
 
   async _runExamine(): Promise<ExamineBareResult> {

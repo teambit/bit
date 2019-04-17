@@ -8,7 +8,7 @@ import type { ExamineBareResult } from '../diagnosis';
 
 export default class ValidateGitExe extends Diagnosis {
   name = 'validate-git-exe';
-  description = 'validate that git exe exist';
+  description = 'validate that git executable found';
   category = '3rd-parties';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {

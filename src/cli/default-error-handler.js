@@ -262,8 +262,8 @@ Original Error: ${err.message}`
         'bit init'
       )} to recreate the file`
   ],
-  [MissingDiagnosisName, err => 'error: you must provide a diagnosis name'],
-  [DiagnosisNotFound, err => `error: diagnosis with name ${chalk.bold(err.diagnosisName)} not found`],
+  [MissingDiagnosisName, err => 'error: please provide a diagnosis name'],
+  [DiagnosisNotFound, err => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
   [
     ComponentSpecsFailed,
     err =>
