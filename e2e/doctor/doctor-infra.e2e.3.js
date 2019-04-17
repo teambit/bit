@@ -57,7 +57,7 @@ describe('bit doctor infra', function () {
           output = helper.doctor({ save: fileNameWithoutExt });
         });
         it('should print the output file name with tar extension', () => {
-          expect(output).to.have.string(`File has been written to ${fileName}`);
+          expect(output).to.have.string(`File written to ${fileName}`);
         });
         it('should create a non empty tar file in the file system', () => {
           const fileFullPath = path.join(helper.localScopePath, fileName);
