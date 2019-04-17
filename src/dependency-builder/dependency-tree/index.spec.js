@@ -865,4 +865,23 @@ describe('dependencyTree', function () {
       expect(dependencies).to.be.ok;
     });
   });
+  describe('files with dynamic import', () => {
+    it('should not', () => {
+      mockfs({
+        [`${__dirname}/dynamic`]: {
+          'foo.js': 'const a = "./b"; import(a); require(a);'
+        }
+      });
+      const directory = path.normalize(`${__dirname}/dynamic`);
+      const filename = path.normalize(`${directory}/foo.js`);
+      const visited = {};
+
+      dependencyTree({
+        filename,
+        directory,
+        visited
+      });
+      expect(visited[filename].missing).to.be.undefined;
+    });
+  });
 });

@@ -68,12 +68,13 @@ module.exports = function (src) {
         }
         break;
       case 'CallExpression':
-        if (node.callee.type === 'Import' && node.arguments.length) {
+        if (node.callee.type === 'Import' && node.arguments.length && node.arguments[0].value) {
           addDependency(node.arguments[0].value);
         }
         if (
           node.callee.type === 'Identifier' && // taken from detective-cjs
           node.callee.name === 'require' &&
+          node.arguments[0].value &&
           node.arguments &&
           node.arguments.length &&
           (node.arguments[0].type === 'Literal' || node.arguments[0].type === 'StringLiteral')
@@ -88,6 +89,7 @@ module.exports = function (src) {
           node.object.callee.name === 'require' &&
           node.object.arguments &&
           node.object.arguments.length &&
+          node.object.arguments[0].value &&
           (node.object.arguments[0].type === 'Literal' || node.object.arguments[0].type === 'StringLiteral')
         ) {
           const depValue = node.object.arguments[0].value;
