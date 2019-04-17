@@ -4,7 +4,11 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import MissingFilesFromComponent from '../../src/consumer/component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from '../../src/consumer/component/exceptions/component-not-found-in-path';
-import { statusInvalidComponentsMsg, statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import {
+  statusInvalidComponentsMsg,
+  statusWorkspaceIsCleanMsg,
+  statusFailureMsg
+} from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../fixtures/fixtures';
 
 const assertArrays = require('chai-arrays');
@@ -584,6 +588,17 @@ describe('bit status command', function () {
     it('should show missing utils/is-type', () => {
       expect(output).to.have.string('non-existing dependency files');
       expect(output).to.have.string('utils/is-string.js -> ./is-type.js');
+    });
+  });
+  describe('dynamic import', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo('const a = "./b"; import(a); require(a);');
+      helper.addComponentBarFoo();
+    });
+    it('status should not show the component as missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.a.string(statusFailureMsg);
     });
   });
 });

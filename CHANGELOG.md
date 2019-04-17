@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid reporting errors on components with dynamic import statements (#1554)
 - convert components entered to `overrides` as packages into valid component names
 - improve Bit load time by changing bit-javascript to use lazy loading
 
