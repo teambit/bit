@@ -86,10 +86,6 @@ export default class DependencyFileLinkGenerator {
       relativePathInDependency: this.relativePathInDependency,
       depRootDir: this._getDepRootDir()
     });
-    if (this.createNpmLinkFiles && !linkFile.linkContent) {
-      // this is a symlink to an unsupported file, it needs to be created after the installation of the packages
-      linkFile.postInstallSymlink = true;
-    }
     this.linkFiles.push(linkFile);
 
     if (this.hasDist) {
@@ -123,9 +119,8 @@ export default class DependencyFileLinkGenerator {
       relativePathInDependency,
       depRootDir: isCustomResolvedWithDistInside ? depRootDirDist : depRootDir
     });
-    if (this.createNpmLinkFiles) {
-      if (linkFile.linkContent) linkFile.postInstallLink = true;
-      else linkFile.postInstallSymlink = true;
+    if (this.createNpmLinkFiles && linkFile.linkContent) {
+      linkFile.postInstallLink = true;
     }
     this.linkFiles.push(linkFile);
 
@@ -185,16 +180,17 @@ export default class DependencyFileLinkGenerator {
     const isEs6 = Boolean(importSpecifiers && linkPathExt === 'js');
 
     const symlinkTo = linkContent ? undefined : this._getSymlinkDest(actualFilePath);
+    const postInstallSymlink = this.createNpmLinkFiles && !linkContent;
 
-    return { linkPath, linkContent, isEs6, symlinkTo, customResolveMapping };
+    return { linkPath, linkContent, isEs6, symlinkTo, customResolveMapping, postInstallSymlink };
   }
 
   _getSymlinkDest(filePath: PathOsBased): string {
     if (this.isLinkToPackage) {
       if (this.createNpmLinkFiles) {
-        return `${this._getPackagePath()}/${pathNormalizeToLinux(filePath)}`;
+        return this._getPackagePathToInternalFile();
       }
-      return path.join(this.getTargetDir(), 'node_modules', this._getPackagePath(), pathNormalizeToLinux(filePath));
+      return path.join(this.getTargetDir(), 'node_modules', this._getPackagePathToInternalFile());
     }
     return filePath;
   }
@@ -207,11 +203,19 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePath(): string {
-    const packageName = componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
     if (this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile)) {
-      return packageName;
+      return this._getPackageName();
     }
     // the link is to an internal file, not to the main file
+    return this._getPackagePathToInternalFile();
+  }
+
+  _getPackageName() {
+    return componentIdToPackageName(this.dependencyId, this.dependencyComponent.bindingPrefix);
+  }
+
+  _getPackagePathToInternalFile() {
+    const packageName = this._getPackageName();
     const distPrefix =
       this.dependencyComponent.dists.isEmpty() || this.relativePath.isCustomResolveUsed
         ? ''

@@ -131,10 +131,6 @@ const allCommands = [
         description: 'watch components and perform `build` on changes'
       }
       // {
-      //   name: 'envs-attach',
-      //   description: 'attach workspace environments to components'
-      // },
-      // {
       //   name: 'eject-conf',
       //   description: 'ejecting components configuration'
       // },

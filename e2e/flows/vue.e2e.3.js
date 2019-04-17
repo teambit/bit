@@ -99,7 +99,7 @@ describe('support vue files', function () {
       });
       it('should find missing vue dependencies', () => {
         const output = helper.tagAllComponents();
-        expect(output).to.have.string('9 components tagged | 9 added, 0 changed, 0 auto-tagged');
+        expect(output).to.have.string('9 component(s) tagged | 9 added, 0 changed, 0 auto-tagged');
       });
       it('should export tagged components', () => {
         const output = helper.exportAllComponents();

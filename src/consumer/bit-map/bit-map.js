@@ -102,28 +102,6 @@ export default class BitMap {
     return componentMap;
   }
 
-  attachEnv(id: BitId, { compiler, tester }: { compiler: boolean, tester: boolean }) {
-    const componentMap = this.getComponent(id, { ignoreScopeAndVersion: true });
-    // For authored component just make sure to remove the detached
-    if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      if (compiler) {
-        this.removeComponentProp(id, 'detachedCompiler');
-      }
-      if (tester) {
-        this.removeComponentProp(id, 'detachedTester');
-      }
-      return true;
-    }
-    // For imported components we want to set the detached to false (which will cause the env loading from the workspace bit.json)
-    if (compiler) {
-      this.setComponentProp(id, 'detachedCompiler', false);
-    }
-    if (tester) {
-      this.setComponentProp(id, 'detachedTester', false);
-    }
-    return true;
-  }
-
   static load(dirPath: PathOsBasedAbsolute): BitMap {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
     if (!currentLocation) {
@@ -665,8 +643,6 @@ export default class BitMap {
     configDir,
     trackDir,
     override,
-    detachedCompiler,
-    detachedTester,
     originallySharedDir,
     wrapDir
   }: {
@@ -679,8 +655,6 @@ export default class BitMap {
     configDir?: ?ConfigDir,
     trackDir?: PathOsBased,
     override?: boolean,
-    detachedCompiler: ?boolean,
-    detachedTester: ?boolean,
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
@@ -733,12 +707,6 @@ export default class BitMap {
     }
     if (wrapDir) {
       this.components[componentIdStr].wrapDir = wrapDir;
-    }
-    if (detachedCompiler) {
-      this.components[componentIdStr].detachedCompiler = detachedCompiler;
-    }
-    if (detachedTester) {
-      this.components[componentIdStr].detachedTester = detachedTester;
     }
     this.components[componentIdStr].removeTrackDirIfNeeded();
     if (originallySharedDir) {
@@ -809,27 +777,6 @@ export default class BitMap {
     }
     this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
     this.markAsChanged();
-  }
-
-  setDetachedCompiler(id: BitId, val: ?boolean) {
-    if (val === null || val === undefined) {
-      return this.removeComponentProp(id, 'detachedCompiler');
-    }
-    return this.setComponentProp(id, 'detachedCompiler', val);
-  }
-  setDetachedTester(id: BitId, val: ?boolean) {
-    if (val === null || val === undefined) {
-      return this.removeComponentProp(id, 'detachedTester');
-    }
-    return this.setComponentProp(id, 'detachedTester', val);
-  }
-
-  setDetachedCompilerAndTester(
-    id: BitId,
-    { detachedCompiler, detachedTester }: { detachedCompiler: ?boolean, detachedTester: ?boolean }
-  ) {
-    this.setDetachedCompiler(id, detachedCompiler);
-    return this.setDetachedTester(id, detachedTester);
   }
 
   isExistWithSameVersion(id: BitId) {

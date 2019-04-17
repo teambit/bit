@@ -101,12 +101,6 @@ export default function validateVersionInstance(version: Version): void {
   if (!foundMainFile) {
     throw new VersionInvalid(`${message}, unable to find the mainFile ${version.mainFile} in the files list`);
   }
-  if (version.detachedCompiler !== undefined) {
-    validateType(message, version.detachedCompiler, 'detachedCompiler', 'boolean');
-  }
-  if (version.detachedTester !== undefined) {
-    validateType(message, version.detachedTester, 'detachedCompiler', 'boolean');
-  }
   const duplicateFiles = filesPaths.filter(
     file => filesPaths.filter(f => file.toLowerCase() === f.toLowerCase()).length > 1
   );

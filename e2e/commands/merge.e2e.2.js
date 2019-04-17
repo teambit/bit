@@ -240,7 +240,7 @@ describe('bit merge command', function () {
           });
           it('bit tag should tag the component when --ignore-unresolved-dependencies flag is used', () => {
             const tagOutput = helper.tagAllComponents('--ignore-unresolved-dependencies');
-            expect(tagOutput).to.have.string('1 components tagged');
+            expect(tagOutput).to.have.string('1 component(s) tagged');
           });
         });
         describe('when using --ours flag', () => {

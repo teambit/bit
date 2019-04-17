@@ -100,7 +100,7 @@ describe('bit checkout command', function () {
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
               const tagOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(tagOutput).to.have.string('1 components tagged');
+              expect(tagOutput).to.have.string('1 component(s) tagged');
             });
           });
         });
