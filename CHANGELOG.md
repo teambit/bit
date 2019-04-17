@@ -7,11 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- support overriding environments (compiler/tester) per component
+- convert components entered to `overrides` as packages into valid component names
+- improve Bit load time by changing bit-javascript to use lazy loading
 
-## [14.0.6-dev.1] - 2019-04-07
+## [14.0.7-dev.1] - 2019-04-16
 
 - new `bit doctor` command
+- support overriding environments (compiler/tester) per component
 - `overrides` property supports manually adding dependencies (experimental for now)
 - `overrides` property supports ignoring dependencies (experimental for now)
 - fix tagging imported components to not loose package.json properties
@@ -27,6 +29,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
 - improve authentication error message to clearly indicate the various strategies failures
 - reintroduce `-c` alias for `--no-cache` flag in `bit build` command
+
+## [14.0.6] - 2019-04-16
+
+- fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
+- fix dependencies version resolution from package.json to support versions with range
+
 
 ## [14.0.5] - 2019-04-07
 

@@ -2,6 +2,7 @@ import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import { OVERRIDE_COMPONENT_PREFIX } from '../../src/constants';
 
 describe('dependencies versions resolution', function () {
   this.timeout(0);
@@ -10,6 +11,7 @@ describe('dependencies versions resolution', function () {
     helper.destroyEnv();
   });
   describe('component with dependencies and package dependencies', () => {
+    let authorScope;
     let scopeAfterImport;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -19,6 +21,7 @@ describe('dependencies versions resolution', function () {
       helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
+      authorScope = helper.cloneLocalScope();
       helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
@@ -37,7 +40,7 @@ describe('dependencies versions resolution', function () {
         packageJson.bit = {};
         packageJson.bit.overrides = {
           dependencies: {
-            'utils/is-string': '0.0.10'
+            [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10'
           }
         };
         helper.writePackageJson(packageJson, componentPath);
@@ -57,7 +60,7 @@ describe('dependencies versions resolution', function () {
         const bitJson = helper.readBitJson(bitJsonDir);
         bitJson.overrides = {
           dependencies: {
-            'utils/is-string': '0.0.2'
+            [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.2'
           }
         };
         helper.writeBitJson(bitJson, bitJsonDir);
@@ -75,7 +78,7 @@ describe('dependencies versions resolution', function () {
           packageJson.bit = {};
           packageJson.bit.overrides = {
             dependencies: {
-              'utils/is-string': '0.0.10'
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10'
             }
           };
           helper.writePackageJson(packageJson, componentPath);
@@ -88,23 +91,23 @@ describe('dependencies versions resolution', function () {
         });
       });
     });
-    describe('when consumer config overrides the version of this component', () => {
+    describe('when consumer config overrides the version of the imported component', () => {
       before(() => {
         helper.getClonedLocalScope(scopeAfterImport);
         const bitJson = helper.readBitJson();
         bitJson.overrides = {
           'bar/foo': {
             dependencies: {
-              'utils/is-string': '0.0.5'
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.5'
             }
           }
         };
         helper.writeBitJson(bitJson);
       });
-      it('should use the dependency version from the consumer config', () => {
+      it('should not use the dependency version from the consumer config as it is imported', () => {
         const output = helper.showComponentParsed('bar/foo -c');
         expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.remoteScope}/utils/is-string@0.0.5`
+          `${helper.remoteScope}/utils/is-string@0.0.1`
         );
       });
       describe('when the consumer config conflicts the component config', () => {
@@ -114,7 +117,7 @@ describe('dependencies versions resolution', function () {
           packageJson.bit = {};
           packageJson.bit.overrides = {
             dependencies: {
-              'utils/is-string': '0.0.10'
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.10'
             }
           };
           helper.writePackageJson(packageJson, componentPath);
@@ -127,24 +130,22 @@ describe('dependencies versions resolution', function () {
         });
       });
     });
-    describe('when consumer config overrides with glob patterns', () => {
+    describe('when consumer config overrides with glob patterns for author', () => {
       before(() => {
-        helper.getClonedLocalScope(scopeAfterImport);
+        helper.getClonedLocalScope(authorScope);
         const bitJson = helper.readBitJson();
         bitJson.overrides = {
           'bar/*': {
             dependencies: {
-              'utils/is-string': '0.0.5'
+              [`${OVERRIDE_COMPONENT_PREFIX}utils/is-string`]: '0.0.5'
             }
           }
         };
         helper.writeBitJson(bitJson);
       });
       it('should use the dependency version from the consumer config', () => {
-        const output = helper.showComponentParsed('bar/foo -c');
-        expect(output.componentFromFileSystem.dependencies[0].id).to.equal(
-          `${helper.remoteScope}/utils/is-string@0.0.5`
-        );
+        const output = helper.showComponentParsed('bar/foo');
+        expect(output.dependencies[0].id).to.equal('utils/is-string@0.0.5');
       });
     });
   });

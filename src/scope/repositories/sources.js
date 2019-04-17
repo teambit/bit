@@ -245,6 +245,7 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         }
       });
     });
+    clonedComponent.overrides.addOriginallySharedDir(clonedComponent.originallySharedDir);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       versionFromModel,

@@ -275,6 +275,7 @@ export default class Component {
     newInstance.setDevDependencies(this.devDependencies.getClone());
     newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
     newInstance.setTesterDependencies(this.testerDependencies.getClone());
+    newInstance.overrides = this.overrides.clone();
     return newInstance;
   }
 
@@ -518,6 +519,7 @@ export default class Component {
         pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
       );
     });
+    this.overrides.stripOriginallySharedDir(originallySharedDir);
     this._wasOriginallySharedDirStripped = true;
   }
 
@@ -1060,7 +1062,9 @@ export default class Component {
       componentDir: bitDir,
       workspaceDir: consumerPath
     };
-    const overridesFromConsumer = consumerBitConfig.overrides.getOverrideComponentData(id);
+    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
+    // overrides from consumer-config is not relevant and should not affect imported
+    const overridesFromConsumer = isAuthor ? consumerBitConfig.overrides.getOverrideComponentData(id) : null;
     const propsToLoadEnvs = {
       consumerPath,
       envType: COMPILER_ENV_TYPE,
@@ -1100,8 +1104,12 @@ export default class Component {
     };
 
     const overridesFromModel = componentFromModel ? componentFromModel.overrides.componentOverridesData : null;
-    const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
-    const overrides = ComponentOverrides.load(overridesFromConsumer, overridesFromModel, componentBitConfig, isAuthor);
+    const overrides = ComponentOverrides.loadFromConsumer(
+      overridesFromConsumer,
+      overridesFromModel,
+      componentBitConfig,
+      isAuthor
+    );
 
     return new Component({
       name: id.name,

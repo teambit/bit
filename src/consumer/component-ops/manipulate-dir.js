@@ -15,6 +15,7 @@ import ComponentVersion from '../../scope/component-version';
 import type Consumer from '../consumer';
 import BitIds from '../../bit-id/bit-ids';
 import Repository from '../../scope/objects/repository';
+import ComponentOverrides from '../bit-config/component-overrides';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
@@ -26,7 +27,8 @@ function calculateOriginallySharedDir(version: Version): ?PathLinux {
   const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
   const allDependencies = new Dependencies(version.getAllDependencies());
   const dependenciesPaths = allDependencies.getSourcesPaths();
-  const allPaths = [...filePaths, ...dependenciesPaths];
+  const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(version.overrides);
+  const allPaths = [...filePaths, ...dependenciesPaths, ...overridesDependenciesFiles];
   const sharedStart = sharedStartOfArray(allPaths);
   if (!sharedStart || !sharedStart.includes(pathSep)) return null;
   const sharedStartDirectories = sharedStart.split(pathSep);
