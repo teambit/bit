@@ -14,6 +14,7 @@ import { VERSION_DELIMITER, BIT_VERSION, BIT_MAP, BASE_WEB_DOMAIN } from '../src
 import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
+import { removeChalkCharacters } from '../src/utils';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -68,16 +69,11 @@ export default class Helper {
     return output;
   }
 
-  static removeChalkCharacters(str?: ?string): ?string {
-    if (!str) return str;
-    return str.replace(/\u001b\[.*?m/g, '');
-  }
-
   static alignOutput(str?: ?string): ?string {
     if (!str) return str;
     // on Mac the directory '/var' is sometimes shown as '/private/var'
     // $FlowFixMe
-    return Helper.removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
+    return removeChalkCharacters(str).replace(/\/private\/var/g, '/var');
   }
 
   expectToThrow(cmdFunc: Function, error: Error) {
@@ -560,7 +556,7 @@ export default class Helper {
 
   diff(id?: string = '') {
     const output = this.runCmd(`bit diff ${id}`);
-    return Helper.removeChalkCharacters(output);
+    return removeChalkCharacters(output);
   }
 
   move(from: string, to: string) {
