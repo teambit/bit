@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -433,6 +434,44 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       it('should be able to tag the component with no error thrown', () => {
         const output = helper.tagAllComponents();
         expect(output).to.has.string('1 component(s) tagged');
+      });
+    });
+    describe('manually remove dependencies', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeExport);
+        helper.getClonedRemoteScope(remoteScope);
+        const overrides = {
+          '*': {
+            dependencies: {
+              'file://src/**/*': '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+      });
+      it('should save pad-left without is-string dependency', () => {
+        const padLeft = helper.catComponent('string/pad-left@latest');
+        expect(padLeft.dependencies).to.have.lengthOf(0);
+      });
+      it('should save the overrides data in both components', () => {
+        const padLeft = helper.catComponent('string/pad-left@latest');
+        const isString = helper.catComponent('string/is-string@latest');
+        const expectedOverrides = { dependencies: { 'file://src/**/*': '-' } };
+        expect(padLeft.overrides).to.deep.equal(expectedOverrides);
+        expect(isString.overrides).to.deep.equal(expectedOverrides);
+      });
+      describe('import in another workspace', () => {
+        before(() => {
+          helper.exportAllComponents();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('string/pad-left');
+        });
+        it('should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
       });
     });
   });
