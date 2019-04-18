@@ -2,7 +2,7 @@
 
 export type ExamineBareResult = {
   valid: boolean,
-  data?: ?Object
+  data?: Object
 };
 
 export type DiagnosisMetaData = {

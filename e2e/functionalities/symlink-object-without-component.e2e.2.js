@@ -46,4 +46,12 @@ describe('scope with a symlink object reference to a non-exist component', funct
     const output = helper.runWithTryCatch('bit tag -a');
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
+  it('bit doctor should report this as an issue', () => {
+    const doctor = helper.doctorJsonParsed();
+    const orphanSymlinkObjectsResult = doctor.examineResults.find(
+      result => result.diagnosisMetaData.name === 'orphan-symlink-objects'
+    );
+    expect(orphanSymlinkObjectsResult.bareResult.valid).to.be.false;
+    expect(orphanSymlinkObjectsResult.bareResult.data.orphanSymlinks[0].name).to.equal('bar/foo');
+  });
 });
