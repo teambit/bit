@@ -462,8 +462,10 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         expect(isString.overrides).to.deep.equal(expectedOverrides);
       });
       describe('import in another workspace', () => {
+        let authorAfterExport;
         before(() => {
           helper.exportAllComponents();
+          authorAfterExport = helper.cloneLocalScope();
           helper.reInitLocalScope();
           helper.addRemoteScope();
           helper.importComponent('string/pad-left');
@@ -471,6 +473,34 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         it('should not show the component as modified', () => {
           const status = helper.status();
           expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('re-import for author after changing the overrides of the imported', () => {
+          before(() => {
+            const padLeftDir = path.join(helper.localScopePath, 'components/string/pad-left');
+            const packageJson = helper.readPackageJson(padLeftDir);
+            packageJson.bit.overrides.dependencies['@bit/string/*'] = '-';
+            helper.writePackageJson(packageJson, padLeftDir);
+            helper.tagAllComponents('--force'); // must force. the tests fails as the is-string dep is not there
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.getClonedLocalScope(authorAfterExport);
+            helper.addRemoteScope();
+            helper.importComponent('string/pad-left');
+          });
+          it('should write the updated overrides into consumer bit.json', () => {
+            const bitJson = helper.readBitJson();
+            const padLeftComp = `${helper.remoteScope}/string/pad-left`;
+            expect(bitJson.overrides).to.have.property(padLeftComp);
+            expect(bitJson.overrides[padLeftComp]).to.have.property('dependencies');
+            expect(bitJson.overrides[padLeftComp]).to.have.property('env');
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+          });
+          it('should write the compiler and the tester as strings because they dont have special configuration', () => {
+            const bitJson = helper.readBitJson();
+            const padLeftComp = `${helper.remoteScope}/string/pad-left`;
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+            expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
+          });
         });
       });
     });

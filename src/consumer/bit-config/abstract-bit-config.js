@@ -12,7 +12,6 @@ import {
   BIT_JSON,
   NO_PLUGIN_TYPE,
   COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE,
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_EXTENSIONS,
@@ -132,13 +131,12 @@ export default class AbstractBitConfig {
   }
 
   /**
-   * before v13, envs were strings of bit-id.
-   * to be backward compatible, if an env doesn't have any files/config, convert it to a string
+   * if there is only one env (compiler/tester) and it doesn't have any special configuration, only
+   * the name, convert it to a string.
    */
-  getBackwardCompatibleEnv(type: EnvType): ?Compilers | ?Testers | ?string {
-    const envObj = this.getEnvsByType(type);
+  static convertEnvToStringIfPossible(envObj: ?Envs): ?string | ?Envs {
     if (!envObj) return undefined;
-    if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id, it's >= v13
+    if (Object.keys(envObj).length !== 1) return envObj; // it has more than one id
     const envId = Object.keys(envObj)[0];
     if (
       RA.isNilOrEmpty(envObj[envId].rawConfig) &&
@@ -168,8 +166,8 @@ export default class AbstractBitConfig {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
         env: {
-          compiler: this.getBackwardCompatibleEnv(COMPILER_ENV_TYPE),
-          tester: this.getBackwardCompatibleEnv(TESTER_ENV_TYPE)
+          compiler: AbstractBitConfig.convertEnvToStringIfPossible(this.compiler),
+          tester: AbstractBitConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
         extensions: this.extensions
