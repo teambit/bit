@@ -5,6 +5,7 @@ import hasWildcard from '../../utils/string/has-wildcard';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 import { validateUserInputType } from '../../utils/validate-type';
 import type Component from '../component/consumer-component';
+import GeneralError from '../../error/general-error';
 
 export type ConsumerOverridesOfComponent = {
   dependencies?: Object,
@@ -17,6 +18,7 @@ export type ConsumerOverridesOfComponent = {
 export type ConsumerOverridesConfig = { [string]: ConsumerOverridesOfComponent };
 
 export const dependenciesFields = ['dependencies', 'devDependencies', 'peerDependencies'];
+const consumerOverridesPermittedFields = [...dependenciesFields, 'env'];
 
 export default class ConsumerOverrides {
   overrides: ConsumerOverridesConfig;
@@ -38,14 +40,13 @@ export default class ConsumerOverrides {
     const matches = getMatches();
     if (!matches.length) return null;
     const overrideValues = matches.map(match => this.overrides[match]);
-    const fields = ['env', 'dependencies', 'devDependencies', 'peerDependencies'];
     let stopPropagation = false;
     return overrideValues.reduce((acc, current) => {
       if (stopPropagation) return acc;
       if (!current.propagate) {
         stopPropagation = true;
       }
-      fields.forEach((field) => {
+      consumerOverridesPermittedFields.forEach((field) => {
         if (!current[field]) return;
         if (!acc[field]) acc[field] = {};
         if (field === 'env') {
@@ -147,22 +148,31 @@ export default class ConsumerOverrides {
     if (typeof overrides === 'undefined') return;
     const message = 'consumer-config (either bit.json or package.json "bit")';
     validateUserInputType(message, overrides, 'overrides', 'object');
-    Object.keys(overrides).forEach((field) => {
-      if (dependenciesFields.includes(field)) {
-        validateDependencyField(field);
-      } else if (field === 'env') {
-        validateEnv();
-      }
-    });
+    Object.keys(overrides).forEach(id => validateComponentOverride(id, overrides[id]));
 
-    function validateDependencyField(field: string) {
-      validateUserInputType(message, overrides[field], `overrides.${field}`, 'object');
-      Object.keys(overrides[field]).forEach((rule) => {
-        validateUserInputType(message, overrides[field][rule], `overrides.${field}.${rule}`, 'string');
+    function validateComponentOverride(id, override) {
+      validateUserInputType(message, override, `overrides.${id}`, 'object');
+      Object.keys(override).forEach((field) => {
+        if (!consumerOverridesPermittedFields.includes(field)) {
+          throw new GeneralError(`${message} found an unrecognized field "${field}" inside "overrides.${id}" property.
+only the following fields are allowed: ${consumerOverridesPermittedFields.join(', ')}.`);
+        }
+        if (dependenciesFields.includes(field)) {
+          validateDependencyField(field, override, id);
+        } else if (field === 'env') {
+          validateEnv(override, id);
+        }
       });
     }
-    function validateEnv() {
-      validateUserInputType(message, overrides.env, 'overrides.env', 'object');
+
+    function validateDependencyField(field: string, override: Object, id: string) {
+      validateUserInputType(message, override[field], `overrides.${id}.${field}`, 'object');
+      Object.keys(override[field]).forEach((rule) => {
+        validateUserInputType(message, override[field][rule], `overrides.${id}.${field}.${rule}`, 'string');
+      });
+    }
+    function validateEnv(override: Object, id: string) {
+      validateUserInputType(message, override.env, `overrides.${id}.env`, 'object');
     }
   }
 }
