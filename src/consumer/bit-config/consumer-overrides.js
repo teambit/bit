@@ -6,6 +6,7 @@ import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcard
 import { validateUserInputType } from '../../utils/validate-type';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
+import AbstractBitConfig from './abstract-bit-config';
 
 export type ConsumerOverridesOfComponent = {
   dependencies?: Object,
@@ -111,10 +112,10 @@ export default class ConsumerOverrides {
     const key = exactMatch || id.toStringWithoutVersion();
     const env = {};
     if (component.compiler) {
-      env.compiler = component.compiler.toBitJsonObject('.');
+      env.compiler = AbstractBitConfig.convertEnvToStringIfPossible(component.compiler.toBitJsonObject('.'));
     }
     if (component.tester) {
-      env.tester = component.tester.toBitJsonObject('.');
+      env.tester = AbstractBitConfig.convertEnvToStringIfPossible(component.tester.toBitJsonObject('.'));
     }
     if (!R.isEmpty(env)) overrides.env = env;
     this.overrides[key] = overrides;
