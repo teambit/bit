@@ -661,6 +661,11 @@ export default class Helper {
     return this.runCmd(`bit doctor --list ${parsedOpts}`);
   }
 
+  doctorJsonParsed() {
+    const result = this.runCmd('bit doctor --json');
+    return JSON.parse(result);
+  }
+
   createCompiler() {
     if (this.compilerCreated) return this.addRemoteScope(this.envScopePath);
 
