@@ -1,4 +1,5 @@
 /** @flow */
+import R from 'ramda';
 import fs from 'fs-extra';
 import path from 'path';
 import uniqBy from 'lodash.uniqby';
@@ -12,7 +13,6 @@ import removeFile from '../../utils/fs-remove-file';
 import ScopeMeta from '../models/scopeMeta';
 import logger from '../../logger/logger';
 import ComponentsIndex from './components-index';
-import { BitId } from '../../bit-id';
 import { ScopeJson } from '../scope-json';
 import { typesObj } from '../object-registrar';
 import { ModelComponent } from '../models';
@@ -20,7 +20,7 @@ import { ModelComponent } from '../models';
 const OBJECTS_BACKUP_DIR = `${OBJECTS_DIR}.bak`;
 
 export default class Repository {
-  objects: BitObject[] = [];
+  objects: { [string]: BitObject } = {};
   objectsToRemove: Ref[] = [];
   scopeJson: ScopeJson;
   scopePath: string;
@@ -81,7 +81,7 @@ export default class Repository {
     return path.join(this.getPath(), hash.slice(0, 2), hash.slice(2));
   }
 
-  load(ref: Ref): Promise<BitObject> {
+  load(ref: Ref, throws: boolean = false): Promise<BitObject> {
     if (this.getCache(ref)) return Promise.resolve(this.getCache(ref));
     return fs
       .readFile(this.objectPath(ref))
@@ -98,6 +98,7 @@ export default class Repository {
         } else {
           logger.error(`Failed reading a ref file ${this.objectPath(ref)}. Error: ${err.message}`);
         }
+        if (throws) throw err;
         return null;
       });
   }
@@ -219,7 +220,7 @@ export default class Repository {
     if (!object) return this;
     // leave the following commented log message, it is very useful for debugging but too verbose when not needed.
     // logger.debug(`repository: adding object ${object.hash().toString()} which consist of the following id: ${object.id()}`);
-    this.objects.push(object);
+    this.objects[object.hash().toString()] = object;
     this.setCache(object);
     return this;
   }
@@ -239,13 +240,6 @@ export default class Repository {
     refs.forEach(ref => this.removeObject(ref));
   }
 
-  /**
-   * alias to `load`
-   */
-  findOne(ref: Ref): Promise<BitObject> {
-    return this.load(ref);
-  }
-
   findMany(refs: Ref[]): Promise<BitObject[]> {
     return Promise.all(refs.map(ref => this.load(ref)));
   }
@@ -258,7 +252,7 @@ export default class Repository {
   async persist(validate: boolean = true): Promise<void> {
     logger.debug(`Repository.persist, validate = ${validate.toString()}`);
     await this._deleteMany();
-    if (!validate) this.objects.map(object => (object.validateBeforePersist = false));
+    if (!validate) Object.keys(this.objects).map(hash => (this.objects[hash].validateBeforePersist = false));
     await this._writeMany();
   }
 
@@ -272,11 +266,11 @@ export default class Repository {
   }
 
   async _writeMany(): Promise<void> {
-    if (!this.objects.length) return;
-    logger.debug(`Repository._writeMany: writing ${this.objects.length} objects`);
+    if (R.isEmpty(this.objects)) return;
+    logger.debug(`Repository._writeMany: writing ${Object.keys(this.objects).length} objects`);
     // @TODO handle failures
-    await Promise.all(this.objects.map(object => this._writeOne(object)));
-    const added = this.componentsIndex.addMany(this.objects);
+    await Promise.all(Object.keys(this.objects).map(hash => this._writeOne(this.objects[hash])));
+    const added = this.componentsIndex.addMany(R.values(this.objects));
     if (added) await this.componentsIndex.write();
   }
 

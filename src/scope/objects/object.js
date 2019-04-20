@@ -39,28 +39,24 @@ export default class BitObject {
     return `${this.constructor.name} ${this.hash().toString()} ${buffer.toString().length}${NULL_BYTE}`;
   }
 
-  collectRefs(repo: Repository, throws: boolean = true): Ref[] {
+  async collectRefs(repo: Repository): Promise<Ref[]> {
     const refsCollection = [];
 
-    function addRefs(object: BitObject) {
+    async function addRefs(object: BitObject) {
       const refs = object.refs();
-      const objs = refs
-        .map((ref) => {
-          return ref.loadSync(repo, throws);
-        })
-        .filter(x => x);
-
+      const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
       refsCollection.push(...refs);
       // $FlowFixMe
-      objs.forEach(obj => addRefs(obj));
+      await Promise.all(objs.map(obj => addRefs(obj)));
     }
 
-    addRefs(this);
+    await addRefs(this);
     return refsCollection;
   }
 
-  collectRaw(repo: Repository): Promise<Buffer[]> {
-    return Promise.all(this.collectRefs(repo).map(ref => ref.loadRaw(repo)));
+  async collectRaw(repo: Repository): Promise<Buffer[]> {
+    const refs = await this.collectRefs(repo);
+    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
   }
 
   asRaw(repo: Repository): Promise<Buffer> {

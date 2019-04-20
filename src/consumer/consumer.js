@@ -4,6 +4,7 @@ import semver from 'semver';
 import groupArray from 'group-array';
 import fs from 'fs-extra';
 import R from 'ramda';
+import pMapSeries from 'p-map-series';
 import chalk from 'chalk';
 import format from 'string-format';
 import partition from 'lodash.partition';
@@ -369,10 +370,8 @@ export default class Consumer {
       this.scope.objects,
       shouldDependenciesSavedAsComponents
     );
-    const componentWithDependencies = await Promise.all(
-      versionDependenciesArr.map(versionDependencies =>
-        versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
-      )
+    const componentWithDependencies = await pMapSeries(versionDependenciesArr, versionDependencies =>
+      versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
     );
     componentWithDependencies.forEach((componentWithDeps) => {
       const shouldSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>

@@ -96,7 +96,7 @@ export default class ScopeComponentsImporter {
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
 
-    const allVersionsP = versionDependenciesArr.map((versionDependencies) => {
+    const getAllVersions = (versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
@@ -106,8 +106,10 @@ export default class ScopeComponentsImporter {
       // $FlowFixMe
       const bitIdsWithAllVersions = BitIds.fromArray(idsWithAllVersions.filter(x => x));
       return this.importManyWithoutDependencies(bitIdsWithAllVersions);
-    });
-    await Promise.all(allVersionsP);
+    };
+
+    await pMapSeries(versionDependenciesArr, getAllVersions);
+
     return versionDependenciesArr;
   }
 
@@ -169,7 +171,7 @@ export default class ScopeComponentsImporter {
   componentsToComponentsObjects(
     components: Array<VersionDependencies | ComponentVersion>
   ): Promise<ComponentObjects[]> {
-    return Promise.all(components.map(component => component.toObjects(this.scope.objects)));
+    return pMapSeries(components, component => component.toObjects(this.scope.objects));
   }
 
   /**
@@ -222,10 +224,7 @@ export default class ScopeComponentsImporter {
           'no more ids left, all found locally, exiting the method'
         );
 
-        return Promise.all(
-          // $FlowFixMe - there should be a component because there no defs without components left.
-          defs.map(def => this.componentToVersionDependencies(def.component, def.id))
-        );
+        return pMapSeries(defs, def => this.componentToVersionDependencies(def.component, def.id));
       }
 
       logger.debugAndAddBreadCrumb('scope.getExternalMany', `${left.length} left. Fetching them from a remote`);

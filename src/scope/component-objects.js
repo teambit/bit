@@ -54,6 +54,12 @@ export default class ComponentObjects {
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))
     };
   }
+  async toObjectsAsync(repo: Repository): Promise<{ component: ModelComponent, objects: BitObject[] }> {
+    return {
+      component: await BitObject.parseObject(this.component, repo.types),
+      objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj, repo.types)))
+    };
+  }
 }
 
 function _from64Buffer(val): Buffer {

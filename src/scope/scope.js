@@ -359,13 +359,9 @@ export default class Scope {
    * Writes components as objects into the 'objects' directory
    */
   async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
-    const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
-    logger.debugAndAddBreadCrumb(
-      'scope.writeManyComponentsToModel',
-      'writing into the model, ids: {ids}. They might have dependencies which are going to be written too',
-      { ids: manyObjects.map(objects => objects.component.id()).join(', ') }
+    await pMapSeries(componentsObjects, componentObjects =>
+      componentObjects.toObjectsAsync(this.objects).then(objects => this.sources.merge(objects))
     );
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects)));
     return persist ? this.objects.persist() : Promise.resolve();
   }
 
