@@ -88,7 +88,9 @@ describe('bit tag command', function () {
         expect(listOutput).to.deep.include({
           id: 'components/default',
           localVersion: '0.0.1',
-          currentVersion: '0.0.1'
+          deprecated: false,
+          currentVersion: '0.0.1',
+          remoteVersion: 'N/A'
         });
       });
       it('Should increment the patch version when no version type specified', () => {
@@ -128,12 +130,16 @@ describe('bit tag command', function () {
         expect(listOutput).to.deep.include({
           id: 'components/dependency',
           localVersion: '1.0.0',
-          currentVersion: '1.0.0'
+          deprecated: false,
+          currentVersion: '1.0.0',
+          remoteVersion: 'N/A'
         });
         expect(listOutput).to.deep.include({
           id: 'components/dependent',
           localVersion: '0.0.2',
-          currentVersion: '0.0.2'
+          deprecated: false,
+          currentVersion: '0.0.2',
+          remoteVersion: 'N/A'
         });
       });
       it('Should throw error when the version already exists', () => {
@@ -177,8 +183,20 @@ describe('bit tag command', function () {
       it('Should set the version to default version in tag new component', () => {
         helper.tagAllComponents();
         const listOutput = JSON.parse(helper.listLocalScope('-j'));
-        expect(listOutput).to.deep.include({ id: 'components/a', localVersion: '0.0.1', currentVersion: '0.0.1' });
-        expect(listOutput).to.deep.include({ id: 'components/b', localVersion: '0.0.1', currentVersion: '0.0.1' });
+        expect(listOutput).to.deep.include({
+          id: 'components/a',
+          localVersion: '0.0.1',
+          deprecated: false,
+          currentVersion: '0.0.1',
+          remoteVersion: 'N/A'
+        });
+        expect(listOutput).to.deep.include({
+          id: 'components/b',
+          localVersion: '0.0.1',
+          deprecated: false,
+          currentVersion: '0.0.1',
+          remoteVersion: 'N/A'
+        });
       });
       it('Should increment the patch version when no version type specified', () => {
         helper.createFile('components', 'a.js', 'console.log("v0.0.2")');
