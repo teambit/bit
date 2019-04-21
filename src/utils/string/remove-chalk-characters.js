@@ -12,5 +12,6 @@
  */
 export default function removeChalkCharacters(str?: ?string): ?string {
   if (!str) return str;
+  // eslint-disable-next-line no-control-regex
   return str.replace(/\u001b\[.*?m/g, '');
 }
