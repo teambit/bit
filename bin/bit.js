@@ -1,17 +1,19 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
 
-bitVersion();
+const constants = require('../dist/constants');
+
 // set max listeners to a more appripriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;
 require('regenerator-runtime/runtime');
+
+bitVersion();
 
 /* eslint-disable no-var */
 const semver = require('semver');
 const mkdirp = require('mkdirp');
 const chalk = require('chalk');
 const roadRunner = require('roadrunner');
-const constants = require('../dist/constants');
 const bitUpdates = require('./bit-updates');
 
 const nodeVersion = process.versions.node.split('-')[0];
@@ -37,8 +39,7 @@ function verifyCompatibility() {
 function bitVersion() {
   if (process.argv[2]) {
     if (process.argv[2] === '-V' || process.argv[2] === '-v' || process.argv[2] === '--version') {
-      const BIT_VERSION = require('../dist/constants').BIT_VERSION;
-      console.log(BIT_VERSION); // eslint-disable-line no-console
+      console.log(constants.BIT_VERSION); // eslint-disable-line no-console
       process.exit();
     }
   }
