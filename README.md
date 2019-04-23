@@ -1,6 +1,6 @@
 # Bit driver for javascript
 
-For more information on Bit [see Bit's docs](https://docs.bitsrc.io/).
+For more information on Bit [see Bit's docs](https://docs.bit.dev/).
 
 No need to install this package individually anymore. By installing Bit, this driver is already installed.
 
