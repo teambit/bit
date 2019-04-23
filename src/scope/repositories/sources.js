@@ -65,7 +65,7 @@ export default class SourceRepository {
         return null;
       }
       // $FlowFixMe
-      const version = await this.objects().findOne(foundComponent.versions[bitId.version]);
+      const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
         logger.debug(`${msg} object was not found on the filesystem`);
         return null;
@@ -77,7 +77,7 @@ export default class SourceRepository {
 
   async _findComponent(component: ModelComponent): Promise<?ModelComponent> {
     try {
-      const foundComponent = await this.objects().findOne(component.hash());
+      const foundComponent = await this.objects().load(component.hash());
       if (foundComponent instanceof Symlink) {
         return this._findComponentBySymlink(foundComponent);
       }
@@ -92,7 +92,7 @@ export default class SourceRepository {
   async _findComponentBySymlink(symlink: Symlink): Promise<?ModelComponent> {
     const realComponentId: BitId = symlink.getRealComponentId();
     const realModelComponent = ModelComponent.fromBitId(realComponentId);
-    const foundComponent = await this.objects().findOne(realModelComponent.hash());
+    const foundComponent = await this.objects().load(realModelComponent.hash());
     if (!foundComponent) {
       throw new Error(
         `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}".

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve performance of `bit import` by reducing memory consumption and using more cache
+- fix "EMFILE: too many open files" and "JavaScript heap out of memory" errors on `bit import`
+
 ## [14.0.7-dev.2] - 2019-04-21
 
 - avoid reporting errors on components with dynamic import statements (#1554)
