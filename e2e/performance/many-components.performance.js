@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const maxComponents = 3000;
-const maxFlattenedDependencies = 100;
+const maxComponents = 300;
+const maxFlattenedDependencies = 10;
 
 /**
  * as of v14.0.0
@@ -19,9 +19,11 @@ const maxFlattenedDependencies = 100;
  * status 3,000 with maxFlattenedDependencies of 100 => 54.775 total (54 seconds)
  * export 3,000 with maxFlattenedDependencies of 100 => 2:30.54 total
  * import 3,000 with maxFlattenedDependencies of 100 => after 11:48.83 total threw error JavaScript heap out of memory
+ * import 300 with maxFlattenedDependencies of 10 => 24.240 total
  *
  * v14.0.7
  * import 3,000 with maxFlattenedDependencies of 100 => 13:26.57 total
+ * import 300 with maxFlattenedDependencies of 10 => 13.641 total
  */
 describe('many components', function () {
   this.timeout(0);
@@ -75,10 +77,12 @@ describe('many components', function () {
           });
         });
         describe('export command', () => {
+          let authorScopeAfterExport;
           let exportTimeInSeconds;
           before(() => {
             const start = process.hrtime();
             helper.exportAllComponents();
+            authorScopeAfterExport = helper.cloneLocalScope();
             [exportTimeInSeconds] = process.hrtime(start);
           });
           it('should take less then 5 minutes to complete', () => {
@@ -87,6 +91,7 @@ describe('many components', function () {
           describe('import command', () => {
             let importTimeInSeconds;
             before(() => {
+              helper.getClonedLocalScope(authorScopeAfterExport);
               helper.reInitLocalScope();
               helper.addRemoteScope();
               const start = process.hrtime();
