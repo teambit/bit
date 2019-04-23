@@ -433,7 +433,12 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       }
       return;
     }
-    if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
+    if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+      // we can't support it because on the imported side, we don't know to convert the relative path
+      // to the component name, as it won't have the component installed
+      throw new GeneralError(`unable to ignore "${componentId.toString()}" dependency of "${this.componentId.toString()}" by using ignore components syntax because the component is required with relative path.
+either, use the ignore file syntax or change the require statement to have a module path`);
+    }
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId)) {
@@ -544,6 +549,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     }
   }
 
+  /**
+   * process require/import of Bit components where the require statement is not a relative path
+   * but a module path, such as `require('@bit/bit.envs/compiler/babel');`
+   */
   processBits(originFile: PathLinuxRelative, fileType: FileType) {
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;

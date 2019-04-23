@@ -273,31 +273,60 @@ describe('workspace config', function () {
         });
       });
       describe('ignoring a dependency component', () => {
-        let showBar;
-        before(() => {
-          const overrides = {
-            bar: {
-              dependencies: {
-                [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-'
+        describe('when requiring with relative path', () => {
+          before(() => {
+            const overrides = {
+              bar: {
+                dependencies: {
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-'
+                }
               }
-            }
-          };
-          helper.addOverridesToBitJson(overrides);
-          showBar = helper.showComponentParsed('bar');
+            };
+            helper.addOverridesToBitJson(overrides);
+          });
+          it('should throw an error', () => {
+            const showCmd = () => helper.showComponentParsed('bar');
+            expect(showCmd).to.throw();
+          });
         });
-        it('should not add the removed dependency to the component', () => {
-          expect(showBar.dependencies).to.have.lengthOf(1);
-          expect(showBar.dependencies[0].id).to.not.equal('foo1');
-        });
-        it('should show the dependency component as ignored', () => {
-          expect(showBar).to.have.property('manuallyRemovedDependencies');
-          expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
-          expect(showBar.manuallyRemovedDependencies.dependencies).to.include('utils/foo/foo1');
+        describe('when requiring with module path', () => {
+          let showBar;
+          before(() => {
+            helper.getClonedLocalScope(scopeAfterAdding);
+            helper.tagAllComponents();
+            helper.exportAllComponents();
+            helper.createFile(
+              'bar-dir',
+              'bar.js',
+              `require('@bit/${helper.remoteScope}.utils.foo.foo1'); require('@bit/${
+                helper.remoteScope
+              }.utils.foo.foo2'); `
+            );
+            const overrides = {
+              bar: {
+                dependencies: {
+                  [`${OVERRIDE_COMPONENT_PREFIX}utils/foo/foo1`]: '-'
+                }
+              }
+            };
+            helper.addOverridesToBitJson(overrides);
+            showBar = helper.showComponentParsed('bar');
+          });
+          it('should not add the removed dependency to the component', () => {
+            expect(showBar.dependencies).to.have.lengthOf(1);
+            expect(showBar.dependencies[0].id).to.not.equal('foo1');
+          });
+          it('should show the dependency component as ignored', () => {
+            expect(showBar).to.have.property('manuallyRemovedDependencies');
+            expect(showBar.manuallyRemovedDependencies).to.have.property('dependencies');
+            expect(showBar.manuallyRemovedDependencies.dependencies).to.include(`${helper.remoteScope}/utils/foo/foo1`);
+          });
         });
       });
       describe('ignoring a dependencies components by wildcards', () => {
         let showBar;
         before(() => {
+          helper.getClonedLocalScope(scopeAfterAdding);
           const overrides = {
             bar: {
               dependencies: {
@@ -553,16 +582,17 @@ describe('workspace config', function () {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('', 'foo1.js');
         helper.createFile('', 'foo2.js');
-        helper.createFile('', 'bar.js', "require('./foo1'); require('./foo2'); ");
+        helper.createFile('', 'bar.js');
         helper.addComponent('foo1.js');
         helper.addComponent('foo2.js');
         helper.addComponent('bar.js');
-        helper.tagComponent('foo1');
-
-        // as an intermediate step, make sure that tagging 'bar' throws an error because the dependency
-        // foo2 was not tagged.
-        const tagBar = () => helper.tagComponent('bar');
-        expect(tagBar).to.throw();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.createFile(
+          '',
+          'bar.js',
+          `require('@bit/${helper.remoteScope}.foo1'); require('@bit/${helper.remoteScope}.foo2');`
+        );
 
         const overrides = {
           bar: {
@@ -630,14 +660,15 @@ describe('workspace config', function () {
               const status = helper.status();
               expect(status).to.not.have.string(statusWorkspaceIsCleanMsg);
             });
-            it('should show the previously ignored dependency as a missing file', () => {
+            it('should show the previously ignored dependency as a missing component', () => {
               const status = helper.status();
-              expect(status).to.have.string('non-existing dependency files');
+              expect(status).to.have.string(statusFailureMsg);
+              expect(status).to.have.string('missing components');
             });
             it('bit diff should show the overrides differences', () => {
               const diff = helper.diff('bar');
-              expect(diff).to.have.string('--- Overrides Dependencies (0.0.1 original)');
-              expect(diff).to.have.string('+++ Overrides Dependencies (0.0.1 modified)');
+              expect(diff).to.have.string('--- Overrides Dependencies (0.0.2 original)');
+              expect(diff).to.have.string('+++ Overrides Dependencies (0.0.2 modified)');
               expect(diff).to.have.string(`- [ ${OVERRIDE_COMPONENT_PREFIX}foo2@- ]`);
             });
           });
