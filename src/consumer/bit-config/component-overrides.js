@@ -57,7 +57,7 @@ export default class ComponentOverrides {
   }
   static loadFromScope(overridesFromModel: ?ComponentOverridesData = {}) {
     // $FlowFixMe
-    return new ComponentOverrides(overridesFromModel, {});
+    return new ComponentOverrides(R.clone(overridesFromModel), {});
   }
 
   static componentOverridesDataFields() {

@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -433,6 +434,74 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       it('should be able to tag the component with no error thrown', () => {
         const output = helper.tagAllComponents();
         expect(output).to.has.string('1 component(s) tagged');
+      });
+    });
+    describe('manually remove dependencies', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeExport);
+        helper.getClonedRemoteScope(remoteScope);
+        const overrides = {
+          '*': {
+            dependencies: {
+              'file://src/**/*': '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+      });
+      it('should save pad-left without is-string dependency', () => {
+        const padLeft = helper.catComponent('string/pad-left@latest');
+        expect(padLeft.dependencies).to.have.lengthOf(0);
+      });
+      it('should save the overrides data in both components', () => {
+        const padLeft = helper.catComponent('string/pad-left@latest');
+        const isString = helper.catComponent('string/is-string@latest');
+        const expectedOverrides = { dependencies: { 'file://src/**/*': '-' } };
+        expect(padLeft.overrides).to.deep.equal(expectedOverrides);
+        expect(isString.overrides).to.deep.equal(expectedOverrides);
+      });
+      describe('import in another workspace', () => {
+        let authorAfterExport;
+        before(() => {
+          helper.exportAllComponents();
+          authorAfterExport = helper.cloneLocalScope();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('string/pad-left');
+        });
+        it('should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('re-import for author after changing the overrides of the imported', () => {
+          before(() => {
+            const padLeftDir = path.join(helper.localScopePath, 'components/string/pad-left');
+            const packageJson = helper.readPackageJson(padLeftDir);
+            packageJson.bit.overrides.dependencies['@bit/string/*'] = '-';
+            helper.writePackageJson(packageJson, padLeftDir);
+            helper.tagAllComponents('--force'); // must force. the tests fails as the is-string dep is not there
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.getClonedLocalScope(authorAfterExport);
+            helper.addRemoteScope();
+            helper.importComponent('string/pad-left');
+          });
+          it('should write the updated overrides into consumer bit.json', () => {
+            const bitJson = helper.readBitJson();
+            const padLeftComp = `${helper.remoteScope}/string/pad-left`;
+            expect(bitJson.overrides).to.have.property(padLeftComp);
+            expect(bitJson.overrides[padLeftComp]).to.have.property('dependencies');
+            expect(bitJson.overrides[padLeftComp]).to.have.property('env');
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+          });
+          it('should write the compiler and the tester as strings because they dont have special configuration', () => {
+            const bitJson = helper.readBitJson();
+            const padLeftComp = `${helper.remoteScope}/string/pad-left`;
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+            expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
+          });
+        });
       });
     });
   });

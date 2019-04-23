@@ -1238,30 +1238,60 @@ describe('workspace config', function () {
         expect(output).to.have.string('expected overrides to be object, got array');
       });
     });
-    describe('when a dependency field is not an object', () => {
+    describe('when overrides of a component is not an object', () => {
       before(() => {
         const overrides = {
-          dependencies: 1234
+          bar: 1234
         };
         helper.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
-        expect(output).to.have.string('expected overrides.dependencies to be object, got number');
+        expect(output).to.have.string('expected overrides.bar to be object, got number');
       });
     });
-    describe('when a dependency rule is not a string', () => {
+    describe('when an unrecognized field is added into overrides of a component', () => {
       before(() => {
         const overrides = {
-          dependencies: {
-            bar: false
+          bar: {
+            some_field: {}
           }
         };
         helper.addOverridesToBitJson(overrides);
       });
       it('any bit command should throw an error', () => {
         const output = helper.runWithTryCatch('bit list');
-        expect(output).to.have.string('expected overrides.dependencies.bar to be string, got boolean');
+        expect(output).to.have.string('found an unrecognized field "some_field" inside "overrides.bar" property');
+      });
+    });
+    describe('when a dependency field is not an object', () => {
+      before(() => {
+        const overrides = {
+          bar: {
+            dependencies: 1234
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('any bit command should throw an error', () => {
+        const output = helper.runWithTryCatch('bit list');
+        expect(output).to.have.string('expected overrides.bar.dependencies to be object, got number');
+      });
+    });
+    describe('when a dependency rule is not a string', () => {
+      before(() => {
+        const overrides = {
+          foo: {
+            dependencies: {
+              bar: false
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+      });
+      it('any bit command should throw an error', () => {
+        const output = helper.runWithTryCatch('bit list');
+        expect(output).to.have.string('expected overrides.foo.dependencies.bar to be string, got boolean');
       });
     });
   });
