@@ -181,6 +181,7 @@ describe('workspace config', function () {
     });
     describe('ignoring files and components dependencies', () => {
       let scopeAfterAdding;
+      let remoteScopeEmpty;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.createFile('foo-dir', 'foo1.js');
@@ -190,6 +191,7 @@ describe('workspace config', function () {
         helper.addComponent('foo-dir/foo2.js', { i: 'utils/foo/foo2' });
         helper.addComponent('bar-dir/bar.js', { i: 'bar' });
         scopeAfterAdding = helper.cloneLocalScope();
+        remoteScopeEmpty = helper.cloneRemoteScope();
       });
       describe('ignoring the component file altogether', () => {
         let showBar;
@@ -415,6 +417,7 @@ describe('workspace config', function () {
         let showBar;
         before(() => {
           helper.getClonedLocalScope(scopeAfterAdding);
+          helper.getClonedRemoteScope(remoteScopeEmpty);
           helper.tagAllComponents();
           helper.exportAllComponents();
           helper.createFile(
