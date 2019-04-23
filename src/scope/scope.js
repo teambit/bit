@@ -359,6 +359,10 @@ export default class Scope {
    * Writes components as objects into the 'objects' directory
    */
   async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
+    logger.debugAndAddBreadCrumb(
+      'scope.writeManyComponentsToModel',
+      `total componentsObjects ${componentsObjects.length}`
+    );
     await pMapSeries(componentsObjects, componentObjects =>
       componentObjects.toObjectsAsync(this.objects).then(objects => this.sources.merge(objects))
     );

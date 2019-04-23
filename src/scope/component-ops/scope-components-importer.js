@@ -96,7 +96,7 @@ export default class ScopeComponentsImporter {
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
 
-    const getAllVersions = (versionDependencies) => {
+    const importAllVersions = (versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
       const idsWithAllVersions = versions.map((version) => {
         if (version === versionDependencies.component.version) return null; // imported already
@@ -108,7 +108,7 @@ export default class ScopeComponentsImporter {
       return this.importManyWithoutDependencies(bitIdsWithAllVersions);
     };
 
-    await pMapSeries(versionDependenciesArr, getAllVersions);
+    await pMapSeries(versionDependenciesArr, importAllVersions);
 
     return versionDependenciesArr;
   }

@@ -183,6 +183,9 @@ export default class Repository {
     return bitRawObject;
   }
 
+  /**
+   * prefer using `this.load()` for an async version, which also writes to the cache
+   */
   loadSync(ref: Ref, throws: boolean = true): BitObject {
     try {
       const objectFile = fs.readFileSync(this.objectPath(ref));

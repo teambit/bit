@@ -97,10 +97,16 @@ export default class BitObject {
     return Buffer.concat([Buffer.from(this.getHeader(buffer)), buffer]);
   }
 
+  /**
+   * see `this.parseSync` for the sync version
+   */
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {
     return inflate(fileContents).then(buffer => parse(buffer, types));
   }
 
+  /**
+   * prefer using `this.parseObject()`, unless it must be sync.
+   */
   static parseSync(fileContents: Buffer, types: { [string]: Function }): BitObject {
     const buffer = inflateSync(fileContents);
     return parse(buffer, types);
