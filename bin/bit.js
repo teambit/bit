@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
+require('v8-compile-cache');
 
 const constants = require('../dist/constants');
 
@@ -13,14 +14,12 @@ bitVersion();
 const semver = require('semver');
 const mkdirp = require('mkdirp');
 const chalk = require('chalk');
-const roadRunner = require('roadrunner');
 const bitUpdates = require('./bit-updates');
 
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
 
 function ensureDirectories() {
-  mkdirp.sync(constants.MODULES_CACHE_DIR);
   mkdirp.sync(constants.GLOBAL_CONFIG);
   mkdirp.sync(constants.GLOBAL_LOGS);
 }
@@ -57,17 +56,6 @@ function getCompatibilityStatus() {
   return 'unsupported';
 }
 
-function initCache() {
-  roadRunner.load(constants.MODULES_CACHE_FILENAME);
-  var cacheVersion = roadRunner.get('CACHE_BREAKER').version; // eslint-disable-line
-  if (!cacheVersion || cacheVersion !== constants.BIT_VERSION) {
-    roadRunner.reset(constants.MODULES_CACHE_FILENAME);
-  }
-
-  roadRunner.set('CACHE_BREAKER', { version: constants.BIT_VERSION });
-  roadRunner.setup(constants.MODULES_CACHE_FILENAME);
-}
-
 function checkForUpdates(cb) {
   return () => bitUpdates.checkUpdate(cb);
 }
@@ -89,5 +77,4 @@ function promptAnalyticsIfNeeded(cb) {
 }
 verifyCompatibility();
 ensureDirectories();
-initCache();
 promptAnalyticsIfNeeded(checkForUpdates(updateOrLaunch));
