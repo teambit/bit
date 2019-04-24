@@ -12,15 +12,21 @@
 [![styled with prettier](https://img.shields.io/badge/styled_with-prettier-ff69b4.svg)](https://github.com/prettier/prettier)
 [![Tweet](https://img.shields.io/twitter/url/http/shields.io.svg?style=social)](https://twitter.com/intent/tweet?text=Share%20code%20components%20as%20a%20team%20@bit_src&url=https://bitsrc.io&hashtags=opensource,javascript,programming,reactjs,webdev,vuejs,angularjs)
 
-[Share components](https://bit.dev) • [Discover components](https://bit.dev/components) • [Docs](https://docs.bit.dev) • [Blog](https://blog.bitsrc.io/) • [Video](https://www.youtube.com/watch?v=P4Mk_hqR8dU) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bit.dev/)
+[Component platform](https://bit.dev) • [Discover components](https://bit.dev/components) • [Video demo](https://www.youtube.com/watch?v=E5lgoz6-nfs) • [Docs](https://docs.bit.dev) • [Blog](https://blog.bitsrc.io/) • [Gitter](https://gitter.im/bit-src/Bit) • [Discourse](https://discourse.bit.dev/)
 
 ## About  
 
-**Bit helps you share, discover and compose components to build software applications**.
+**Bit makes it easy to share and manage components between projects and apps at any scale**.
 
-Bit integrates to Git, package managers and other tools in the ecosystem to bring a better experience for sharing code between apps and developers.  
+It lets you **isolate components** from existing projects with **0 refactoring**, with **fully-automated dependancy defintion/resolution** and **scalable versioning**.
 
-With Bit, any repository or library becomes a multi-component monorepo. It eliminates the overhead around code sharing by letting you quickly share and reuse components without boilerplating, refactoring or configurations. It provides discoverability and collaboration over components through [Bit’s community hub](https://bit.dev/components).  
+It lets you **reuse individual components across projects**, using your favorite package managers like **npm** and **yarn** through **[Bit's component hub](https://bit.dev)**.
+
+It lets you **extend Git's workflow** to **develop components from any consuming project** , suggest updates and **easily sync changes across your codebase**.
+
+## Why?
+
+Modular software makes for better software. It's faster to build, easier to test, simpler to maintain and more fun to collaborate on. Bit turns modularity into a practical commodity, bringing source-code management and reusable modules together. It helps teams build better software faster together.
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.  
 
@@ -184,7 +190,7 @@ And, it’s only the beginning.
 
 ## Supported Languages
 
-Bit's design is language agnostic. Still, as of today, it requires language-specific drivers for language-sensitive features (binding etc). We released Bit’s driver for Javascript, and will be releasing more drivers in the future. You are also welcome to add your own.
+Bit's design is language agnostic. Still, as of today, it requires language-specific drivers for language-sensitive features (binding etc). We released Bit’s driver for JavaScript, and will be releasing more drivers in the future. You are also welcome to add your own.
 
 - [bit-javascript](https://github.com/teambit/bit-javascript).
 
