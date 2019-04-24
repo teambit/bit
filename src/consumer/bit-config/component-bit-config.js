@@ -7,6 +7,7 @@ import type { PathOsBasedAbsolute } from '../../utils/path';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import type { ComponentOverridesData } from './component-overrides';
+import filterObject from '../../utils/filter-object';
 
 export type BitConfigProps = {
   lang?: string,
@@ -34,9 +35,14 @@ export default class ComponentBitConfig extends AbstractBitConfig {
 
   toPlainObject() {
     const superObject = super.toPlainObject();
-    return R.merge(superObject, {
+    const componentObject = R.merge(superObject, {
       overrides: this.overrides
     });
+    const isPropDefaultOrEmpty = (val, key) => {
+      if (key === 'overrides') return !R.isEmpty(val);
+      return true;
+    };
+    return filterObject(componentObject, isPropDefaultOrEmpty);
   }
 
   toJson(readable: boolean = true) {

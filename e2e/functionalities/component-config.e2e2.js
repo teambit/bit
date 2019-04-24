@@ -27,16 +27,20 @@ describe('component config', function () {
     });
     describe('importing without --conf flag', () => {
       let scopeAfterImport;
+      let packageJson;
       before(() => {
         helper.importComponent('bar/foo');
         scopeAfterImport = helper.cloneLocalScope();
+        packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
       });
       it('should write the configuration data into the component package.json file', () => {
-        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
         expect(packageJson).to.have.property('bit');
         expect(packageJson.bit).to.have.property('env');
       });
-      describe('adding override to the package.json of the component', () => {});
+      it('should not write the "overrides" key into bit as it is empty', () => {
+        expect(packageJson).to.have.property('bit');
+        expect(packageJson.bit).to.not.have.property('overrides');
+      });
       describe('backward compatibility. saving the dependencies into bit.json as it was before v14.0.5', () => {
         before(() => {
           helper.getClonedLocalScope(scopeAfterImport);
