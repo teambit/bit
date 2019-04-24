@@ -98,7 +98,7 @@ export async function getEjectConfDataToPersist(
     bitJsonDirFullPath,
     consumer.toAbsolutePath(ejectedTesterDirectory)
   );
-  const removedFromOverrides = consumer.bitConfig.overrides.removeExactMatch(component.id);
+  const removedFromOverrides = consumer.config.overrides.removeExactMatch(component.id);
   const dataToPersist = new DataToPersist();
   if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
   if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
@@ -106,7 +106,7 @@ export async function getEjectConfDataToPersist(
   const jsonFilesToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
   dataToPersist.addManyFiles(jsonFilesToWrite);
   if (removedFromOverrides) {
-    const consumerConfigFiles = await consumer.bitConfig.prepareToWrite({ bitDir: '.' });
+    const consumerConfigFiles = await consumer.config.prepareToWrite({ bitDir: '.' });
     dataToPersist.addManyFiles(consumerConfigFiles);
   }
 

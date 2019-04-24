@@ -991,7 +991,7 @@ export default class Component {
     componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const workspaceConfig: WorkspaceConfig = consumer.bitConfig;
+    const workspaceConfig: WorkspaceConfig = consumer.config;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();

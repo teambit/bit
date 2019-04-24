@@ -238,7 +238,7 @@ export default class ComponentWriter {
       );
     };
     if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      this.consumer.bitConfig.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
+      this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
@@ -308,10 +308,7 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-        const relativeLinkPath = getNodeModulesPathOfComponent(
-          this.consumer.bitConfig.bindingPrefix,
-          this.component.id
-        );
+        const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id);
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
         );

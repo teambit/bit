@@ -253,13 +253,9 @@ async function updateAttribute(
  * Adds workspace array to package.json - only if user wants to work with yarn workspaces
  */
 async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
-  if (
-    consumer.bitConfig.manageWorkspaces &&
-    consumer.bitConfig.packageManager === 'yarn' &&
-    consumer.bitConfig.useWorkspaces
-  ) {
+  if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
     const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.bitConfig.dependenciesDirectory;
+    const dependenciesDirectory = consumer.config.dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
@@ -292,11 +288,7 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   const rootDir = consumer.getPath();
   const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
-  if (
-    consumer.bitConfig.manageWorkspaces &&
-    consumer.bitConfig.packageManager === 'yarn' &&
-    consumer.bitConfig.useWorkspaces
-  ) {
+  if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
   }

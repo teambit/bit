@@ -30,7 +30,7 @@ const mockConsumer = (distIsInsideTheComponent = true) => {
     toAbsolutePath: str => `/root/${str}`
   };
   if (!distIsInsideTheComponent) {
-    consumer.bitConfig = { distEntry: 'src', distTarget: 'dist' };
+    consumer.config = { distEntry: 'src', distTarget: 'dist' };
     consumer.shouldDistsBeInsideTheComponent = () => false;
   }
 
