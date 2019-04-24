@@ -569,4 +569,27 @@ describe('bit show command', function () {
       console.log(output);
     });
   });
+  describe('component with overrides data', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      const overrides = {
+        'bar/foo': {
+          dependencies: {
+            chai: '4.3.2'
+          }
+        }
+      };
+      helper.addOverridesToBitJson(overrides);
+    });
+    it('should not show the overrides data when --detailed was not used', () => {
+      const barFoo = helper.showComponent('bar/foo');
+      expect(barFoo).to.not.have.string('overrides');
+    });
+    it('should show the overrides data when --detailed was used', () => {
+      const barFoo = helper.showComponent('bar/foo --detailed');
+      expect(barFoo).to.have.string('Overrides Dependencies');
+    });
+  });
 });
