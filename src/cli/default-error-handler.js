@@ -97,7 +97,7 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import InvalidBitConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
+import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 
@@ -318,7 +318,7 @@ consider running ${chalk.bold('bit init --reset')} to recreate the file`
 please fix the file in order to run bit commands`
   ],
   [
-    InvalidBitConfigPropPath,
+    InvalidConfigPropPath,
     err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
       err.fieldName
     )}" in your bit.json or package.json file is invalid.

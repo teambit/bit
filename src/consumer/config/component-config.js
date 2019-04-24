@@ -9,7 +9,7 @@ import GeneralError from '../../error/general-error';
 import type { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 
-export type BitConfigProps = {
+type ConfigProps = {
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
@@ -21,7 +21,7 @@ export type BitConfigProps = {
 export default class ComponentConfig extends AbstractConfig {
   overrides: ?ComponentOverridesData;
   componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
-  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: BitConfigProps) {
+  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
       tester,

@@ -1,7 +1,7 @@
 /** @flow */
 import AbstractError from '../../../error/abstract-error';
 
-export default class InvalidBitConfigPropPath extends AbstractError {
+export default class InvalidConfigPropPath extends AbstractError {
   fieldName: string;
   fieldValue: string;
 

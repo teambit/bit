@@ -35,7 +35,7 @@ export default (async function importAction(
     const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
     if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envComponents[0].component.id.toString();
-    function writeBitConfigIfNeeded() {
+    function writeConfigIfNeeded() {
       if (environmentOptions.compiler) {
         consumer.bitConfig.compiler = id;
         Analytics.setExtraData('build_env', id);
@@ -68,7 +68,7 @@ export default (async function importAction(
 
       return Promise.resolve(true);
     }
-    await writeBitConfigIfNeeded();
+    await writeConfigIfNeeded();
     return { envComponents };
   }
 

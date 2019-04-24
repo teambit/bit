@@ -1,7 +1,7 @@
 /** @flow */
 import fs from 'fs-extra';
 import R from 'ramda';
-import AbstractBitConfig from './abstract-config';
+import AbstractConfig from './abstract-config';
 import type { Extensions, Compilers, Testers } from './abstract-config';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
@@ -15,7 +15,7 @@ import type { ResolveModulesConfig } from '../component/dependencies/dependency-
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
-import InvalidBitConfigPropPath from './exceptions/invalid-config-prop-path';
+import InvalidConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 
 const DEFAULT_USE_WORKSPACES = false;
@@ -43,7 +43,7 @@ type workspaceConfigProps = {
   overrides?: ConsumerOverrides
 };
 
-export default class WorkspaceConfig extends AbstractBitConfig {
+export default class WorkspaceConfig extends AbstractConfig {
   distTarget: ?string; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
@@ -143,7 +143,7 @@ export default class WorkspaceConfig extends AbstractBitConfig {
     } catch (err) {
       if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
         const consumerBitJson = this.create();
-        const packageJsonExists = await AbstractBitConfig.pathHasPackageJson(dirPath);
+        const packageJsonExists = await AbstractConfig.pathHasPackageJson(dirPath);
         if (packageJsonExists && !standAlone) {
           consumerBitJson.writeToPackageJson = true;
         } else {
@@ -157,7 +157,7 @@ export default class WorkspaceConfig extends AbstractBitConfig {
 
   static async reset(dirPath: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
     const deleteBitJsonFile = async () => {
-      const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
+      const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
       logger.info(`deleting the consumer bit.json file at ${bitJsonPath}`);
       await fs.remove(bitJsonPath);
     };
@@ -208,8 +208,8 @@ export default class WorkspaceConfig extends AbstractBitConfig {
   }
 
   static async load(dirPath: string): Promise<WorkspaceConfig> {
-    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
-    const packageJsonPath = AbstractBitConfig.composePackageJsonPath(dirPath);
+    const bitJsonPath = AbstractConfig.composeBitJsonPath(dirPath);
+    const packageJsonPath = AbstractConfig.composePackageJsonPath(dirPath);
 
     const [bitJsonFile, packageJsonFile] = await Promise.all([
       this.loadBitJson(bitJsonPath), // $FlowFixMe
@@ -229,7 +229,7 @@ export default class WorkspaceConfig extends AbstractBitConfig {
   }
   static async loadBitJson(bitJsonPath: string): Promise<?Object> {
     try {
-      const file = await AbstractBitConfig.loadJsonFileIfExist(bitJsonPath);
+      const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
       return file;
     } catch (e) {
       throw new InvalidBitJson(bitJsonPath);
@@ -237,7 +237,7 @@ export default class WorkspaceConfig extends AbstractBitConfig {
   }
   static async loadPackageJson(packageJsonPath: string): Promise<?Object> {
     try {
-      const file = await AbstractBitConfig.loadJsonFileIfExist(packageJsonPath);
+      const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
       return file;
     } catch (e) {
       throw new InvalidPackageJson(packageJsonPath);
@@ -250,7 +250,7 @@ export default class WorkspaceConfig extends AbstractBitConfig {
     Object.keys(pathsToValidate).forEach(field => throwForInvalidPath(field, pathsToValidate[field]));
     function throwForInvalidPath(fieldName, pathToValidate): void {
       if (pathToValidate && !isValidPath(pathToValidate)) {
-        throw new InvalidBitConfigPropPath(fieldName, pathToValidate);
+        throw new InvalidConfigPropPath(fieldName, pathToValidate);
       }
     }
     ConsumerOverrides.validate(object.overrides);

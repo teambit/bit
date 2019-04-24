@@ -31,7 +31,7 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
 import type Consumer from '../consumer/consumer';
 import type { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
-import AbstractBitConfig from '../consumer/config/abstract-config';
+import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 
 // Couldn't find a good way to do this with consts
@@ -370,7 +370,7 @@ export default class EnvExtension extends BaseExtension {
       }
       logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
       // $FlowFixMe
-      const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
+      const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     // $FlowFixMe
