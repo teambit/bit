@@ -78,14 +78,14 @@ export default class Dists {
    * relative to consumer root.
    */
   getDistDirForConsumer(consumer: Consumer, componentRootDir: PathLinux): PathOsBasedRelative {
-    const consumerBitConfig = consumer.bitConfig;
+    const workspaceConfig = consumer.bitConfig;
     if (consumer.shouldDistsBeInsideTheComponent()) {
       // should be relative to component
       this.distsRootDir = path.join(componentRootDir, DEFAULT_DIST_DIRNAME);
     } else {
       // should be relative to consumer root
-      if (consumerBitConfig.distEntry) componentRootDir = componentRootDir.replace(consumerBitConfig.distEntry, '');
-      const distTarget = consumerBitConfig.distTarget || DEFAULT_DIST_DIRNAME;
+      if (workspaceConfig.distEntry) componentRootDir = componentRootDir.replace(workspaceConfig.distEntry, '');
+      const distTarget = workspaceConfig.distTarget || DEFAULT_DIST_DIRNAME;
       this.areDistsInsideComponentDir = false;
       this.distsRootDir = path.join(distTarget, componentRootDir);
     }

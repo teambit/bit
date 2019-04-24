@@ -333,9 +333,9 @@ export default class EnvExtension extends BaseExtension {
     scopePath,
     componentOrigin,
     componentFromModel,
-    componentBitConfig,
+    componentConfig,
     overridesFromConsumer,
-    consumerBitConfig,
+    workspaceConfig,
     envType,
     context
   }: {
@@ -343,18 +343,18 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    componentBitConfig: ?ComponentConfig,
+    componentConfig: ?ComponentConfig,
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
-    consumerBitConfig: WorkspaceConfig,
+    workspaceConfig: WorkspaceConfig,
     envType: EnvType,
     context?: Object
   }): Promise<?EnvExtension> {
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
-    if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
+    if (componentConfig && componentConfig.componentHasWrittenConfig) {
       // load from component config.
       // $FlowFixMe
-      const envConfig = { [envType]: componentBitConfig[envType] };
-      const configPath = path.dirname(componentBitConfig.path);
+      const envConfig = { [envType]: componentConfig[envType] };
+      const configPath = path.dirname(componentConfig.path);
       logger.debug(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
@@ -374,10 +374,10 @@ export default class EnvExtension extends BaseExtension {
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     // $FlowFixMe
-    if (consumerBitConfig[envType]) {
+    if (workspaceConfig[envType]) {
       logger.debug(`env-extension, loading ${envType} from the consumer config`);
       // $FlowFixMe
-      const envConfig = { [envType]: consumerBitConfig[envType] };
+      const envConfig = { [envType]: workspaceConfig[envType] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     return null;

@@ -22,7 +22,7 @@ const DEFAULT_USE_WORKSPACES = false;
 const DEFAULT_MANAGE_WORKSPACES = true;
 const DEFAULT_SAVE_DEPENDENCIES_AS_COMPONENTS = false;
 
-type consumerBitConfigProps = {
+type workspaceConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
   saveDependenciesAsComponents?: boolean,
@@ -79,7 +79,7 @@ export default class WorkspaceConfig extends AbstractBitConfig {
     manageWorkspaces = DEFAULT_MANAGE_WORKSPACES,
     resolveModules,
     overrides = ConsumerOverrides.load()
-  }: consumerBitConfigProps) {
+  }: workspaceConfigProps) {
     super({ compiler, tester, lang, bindingPrefix, extensions });
     this.distTarget = distTarget;
     this.distEntry = distEntry;
@@ -138,8 +138,8 @@ export default class WorkspaceConfig extends AbstractBitConfig {
 
   static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<WorkspaceConfig> {
     try {
-      const consumerBitConfig = await this.load(dirPath);
-      return consumerBitConfig;
+      const workspaceConfig = await this.load(dirPath);
+      return workspaceConfig;
     } catch (err) {
       if (err instanceof BitConfigNotFound || err instanceof InvalidBitJson) {
         const consumerBitJson = this.create();
@@ -221,11 +221,11 @@ export default class WorkspaceConfig extends AbstractBitConfig {
     if (R.isEmpty(bitJsonConfig) && R.isEmpty(packageJsonConfig)) throw new BitConfigNotFound();
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const consumerBitConfig = this.fromPlainObject(config);
-    consumerBitConfig.path = bitJsonPath;
-    consumerBitConfig.writeToBitJson = Boolean(bitJsonFile);
-    consumerBitConfig.writeToPackageJson = packageJsonHasConfig;
-    return consumerBitConfig;
+    const workspaceConfig = this.fromPlainObject(config);
+    workspaceConfig.path = bitJsonPath;
+    workspaceConfig.writeToBitJson = Boolean(bitJsonFile);
+    workspaceConfig.writeToPackageJson = packageJsonHasConfig;
+    return workspaceConfig;
   }
   static async loadBitJson(bitJsonPath: string): Promise<?Object> {
     try {

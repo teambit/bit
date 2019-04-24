@@ -991,7 +991,7 @@ export default class Component {
     componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const consumerBitConfig: WorkspaceConfig = consumer.bitConfig;
+    const workspaceConfig: WorkspaceConfig = consumer.bitConfig;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
@@ -1003,7 +1003,7 @@ export default class Component {
       componentMap.files.forEach((file) => {
         const filePath = path.join(bitDir, file.relativePath);
         try {
-          const sourceFile = SourceFile.load(filePath, consumerBitConfig.distTarget, bitDir, consumerPath, {
+          const sourceFile = SourceFile.load(filePath, workspaceConfig.distTarget, bitDir, consumerPath, {
             test: file.test
           });
           sourceFiles.push(sourceFile);
@@ -1039,19 +1039,19 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentBitConfig: ?ComponentConfig;
+    let componentConfig: ?ComponentConfig;
     if (configDir !== consumerPath) {
       const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
       // $FlowFixMe unclear error
-      componentBitConfig = await ComponentConfig.load(componentPkgJsonDir, configDir, consumerBitConfig);
+      componentConfig = await ComponentConfig.load(componentPkgJsonDir, configDir, workspaceConfig);
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       if (componentFromModel) {
-        componentBitConfig.mergeWithComponentData(componentFromModel);
+        componentConfig.mergeWithComponentData(componentFromModel);
       }
     }
-    // for authored componentBitConfig is normally undefined
-    const bitJson = componentBitConfig || consumerBitConfig;
+    // for authored componentConfig is normally undefined
+    const bitJson = componentConfig || workspaceConfig;
 
     // Remove dists if compiler has been deleted
     if (dists && !bitJson.hasCompiler()) {
@@ -1064,7 +1064,7 @@ export default class Component {
     };
     const isAuthor = componentMap.origin === COMPONENT_ORIGINS.AUTHORED;
     // overrides from consumer-config is not relevant and should not affect imported
-    const overridesFromConsumer = isAuthor ? consumerBitConfig.overrides.getOverrideComponentData(id) : null;
+    const overridesFromConsumer = isAuthor ? workspaceConfig.overrides.getOverrideComponentData(id) : null;
     const propsToLoadEnvs = {
       consumerPath,
       envType: COMPILER_ENV_TYPE,
@@ -1072,8 +1072,8 @@ export default class Component {
       componentOrigin: componentMap.origin,
       componentFromModel,
       overridesFromConsumer,
-      consumerBitConfig,
-      componentBitConfig: componentMap.configDir ? componentBitConfig : null,
+      workspaceConfig,
+      componentConfig: componentMap.configDir ? componentConfig : null,
       context: envsContext
     };
 
@@ -1107,7 +1107,7 @@ export default class Component {
     const overrides = ComponentOverrides.loadFromConsumer(
       overridesFromConsumer,
       overridesFromModel,
-      componentBitConfig,
+      componentConfig,
       isAuthor
     );
 
@@ -1119,7 +1119,7 @@ export default class Component {
       bindingPrefix: bitJson.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
       compiler,
       tester,
-      bitJson: componentBitConfig,
+      bitJson: componentConfig,
       mainFile: componentMap.mainFile,
       files: await getLoadedFiles(),
       loadedFromFileSystem: true,

@@ -93,7 +93,7 @@ export default class ComponentConfig extends AbstractConfig {
   }
 
   /**
-   * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
+   * Use the workspaceConfig as a base. Override values if exist in componentConfig
    */
   static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: ?WorkspaceConfig): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
@@ -145,9 +145,9 @@ export default class ComponentConfig extends AbstractConfig {
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentBitConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
-    componentBitConfig.path = bitJsonPath;
-    componentBitConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
-    return componentBitConfig;
+    const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
+    componentConfig.path = bitJsonPath;
+    componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
+    return componentConfig;
   }
 }

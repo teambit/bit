@@ -196,10 +196,10 @@ const getBitJsonToWrite = (
   ejectedCompilerDirectory: string,
   ejectedTesterDirectory: string
 ): ComponentConfig => {
-  const componentBitConfig = ComponentConfig.fromComponent(component);
-  componentBitConfig.compiler = component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {};
-  componentBitConfig.tester = component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {};
-  return componentBitConfig;
+  const componentConfig = ComponentConfig.fromComponent(component);
+  componentConfig.compiler = component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {};
+  componentConfig.tester = component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {};
+  return componentConfig;
 };
 
 const _getRelativeDir = (bitJsonDir, envDir) => {
