@@ -1164,6 +1164,46 @@ describe('workspace config', function () {
           expect(foo1.compiler.name).to.equal('my-scope/foo1-compiler@0.0.1');
           expect(foo2.compiler.name).to.equal('my-scope/foo2-compiler@0.0.1');
         });
+        describe('adding a compiler with minus sign to overrides', () => {
+          before(() => {
+            const overrides = {
+              foo1: {
+                env: {
+                  compiler: '-'
+                }
+              },
+              foo2: {
+                env: {
+                  compiler: 'my-scope/foo2-compiler@0.0.1'
+                }
+              }
+            };
+            helper.addOverridesToBitJson(overrides);
+          });
+          it('should remove the compiler to that component', () => {
+            const foo1 = helper.showComponentParsed('foo1');
+            expect(foo1.compiler).to.be.null;
+          });
+        });
+        describe('adding "env" to overrides with no values', () => {
+          before(() => {
+            const overrides = {
+              foo1: {
+                env: {}
+              },
+              foo2: {
+                env: {
+                  compiler: 'my-scope/foo2-compiler@0.0.1'
+                }
+              }
+            };
+            helper.addOverridesToBitJson(overrides);
+          });
+          it('should not override the env to that component and should use the workspace default', () => {
+            const foo1 = helper.showComponentParsed('foo1');
+            expect(foo1.compiler.name).to.equal('my-scope/default-compiler@0.0.1');
+          });
+        });
       });
     });
     describe('ignoring files with originallySharedDir', () => {
