@@ -233,7 +233,7 @@ export default class AbstractBitConfig {
   static async removeIfExist(bitPath: string): Promise<boolean> {
     const dirToRemove = this.composeBitJsonPath(bitPath);
     if (fs.exists(dirToRemove)) {
-      logger.info(`abstract-bit-config, deleting ${dirToRemove}`);
+      logger.info(`abstract-config, deleting ${dirToRemove}`);
       return fs.remove(dirToRemove);
     }
     return false;

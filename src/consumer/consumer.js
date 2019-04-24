@@ -12,7 +12,7 @@ import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import ConsumerBitConfig from './bit-config/consumer-bit-config';
+import ConsumerBitConfig from './config/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -69,7 +69,7 @@ import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import { dependenciesFields } from './bit-config/consumer-overrides';
+import { dependenciesFields } from './config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
@@ -94,6 +94,9 @@ type ComponentStatus = {
   nested: boolean // when a component is nested, it doesn't matter whether it was modified
 };
 
+/**
+ * @todo: change the class name to Workspace
+ */
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;

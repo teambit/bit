@@ -45,8 +45,8 @@ import {
   CyclicDependencies,
   HashNotFound
 } from '../scope/exceptions';
-import InvalidBitJson from '../consumer/bit-config/exceptions/invalid-bit-json';
-import InvalidPackageJson from '../consumer/bit-config/exceptions/invalid-package-json';
+import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
+import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -97,7 +97,7 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import InvalidBitConfigPropPath from '../consumer/bit-config/exceptions/invalid-bit-config-prop-path';
+import InvalidBitConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 

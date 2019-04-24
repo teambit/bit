@@ -7,7 +7,7 @@ import VersionInvalid from './exceptions/version-invalid';
 import { isValidPath } from '../utils';
 import type Version from './models/version';
 import { Dependencies } from '../consumer/component/dependencies';
-import ComponentOverrides from '../consumer/bit-config/component-overrides';
+import ComponentOverrides from '../consumer/config/component-overrides';
 
 /**
  * make sure a Version instance is correct. throw an exceptions if it is not.

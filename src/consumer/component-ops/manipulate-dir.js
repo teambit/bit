@@ -15,7 +15,7 @@ import ComponentVersion from '../../scope/component-version';
 import type Consumer from '../consumer';
 import BitIds from '../../bit-id/bit-ids';
 import Repository from '../../scope/objects/repository';
-import ComponentOverrides from '../bit-config/component-overrides';
+import ComponentOverrides from '../config/component-overrides';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 

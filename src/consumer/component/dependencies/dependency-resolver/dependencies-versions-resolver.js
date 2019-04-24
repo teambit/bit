@@ -18,13 +18,13 @@ import Dependencies from '../dependencies';
  * 2 a) search in the component directory for package.json and look for dependencies or devDependencies with the name of the dependency
  * 2 b) if not found there, propagate until you reach the consumer root directory.
  * 2 c) if not found, go directly to the dependency directory and find the version in its package.json
- * 3) if consumer-bit-config overrides this component, find whether it overrides the dependency version and use it.
+ * 3) if workspace-config overrides this component, find whether it overrides the dependency version and use it.
  * 4) if bitmap has a version, use it.
  * 5) use the model if it has a version.
  * 6) use the package.json regardless the model.
  *
  * cases where dependency version may be different than the model:
- * 1) user added the component to `overrides` of the consumer bit-config. (workspace bit.json or package.json)
+ * 1) user added the component to `overrides` of the workspace config. (workspace bit.json or package.json)
  * 2) user changed package.json, either, manually or by npm-install —save.
  * 3) user updated a dependency with npm without —save.
  * 4) user imported the dependency with different version causing the bitmap to change.

@@ -8,7 +8,7 @@ import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
-import InvalidBitConfigPropPath from '../../src/consumer/bit-config/exceptions/invalid-bit-config-prop-path';
+import InvalidBitConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
 
 chai.use(require('chai-fs'));
 

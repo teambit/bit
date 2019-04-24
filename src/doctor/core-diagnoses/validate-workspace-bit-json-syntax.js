@@ -5,8 +5,8 @@ import fs from 'fs-extra';
 import Diagnosis from '../diagnosis';
 import type { ExamineBareResult } from '../diagnosis';
 import { loadConsumer } from '../../consumer';
-import ConsumerBitConfig from '../../consumer/bit-config/consumer-bit-config';
-import AbstractBitConfig from '../../consumer/bit-config/abstract-bit-config';
+import WorkspaceConfig from '../../consumer/config/workspace-config';
+import AbstractConfig from '../../consumer/config/abstract-config';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   name = 'validate-workspace-bit-json-syntax';
@@ -25,7 +25,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
   async _runExamine(): Promise<ExamineBareResult> {
     const consumer = await loadConsumer();
     const consumerPath = consumer.getPath();
-    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(consumerPath);
+    const bitJsonPath = AbstractConfig.composeBitJsonPath(consumerPath);
     const exist = await fs.exists(bitJsonPath);
     if (!exist) {
       return {
@@ -33,7 +33,7 @@ export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
       };
     }
     try {
-      ConsumerBitConfig.loadBitJson(bitJsonPath);
+      WorkspaceConfig.loadBitJson(bitJsonPath);
       return {
         valid: true
       };

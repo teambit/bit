@@ -6,8 +6,8 @@
 import * as pathlib from 'path';
 import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
-import ConsumerBitConfig from './bit-config/consumer-bit-config';
-import { BitConfigNotFound } from './bit-config/exceptions';
+import ConsumerBitConfig from './config/workspace-config';
+import { BitConfigNotFound } from './config/exceptions';
 
 export type ConsumerInfo = { path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean };
 

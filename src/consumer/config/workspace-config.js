@@ -1,8 +1,8 @@
 /** @flow */
 import fs from 'fs-extra';
 import R from 'ramda';
-import AbstractBitConfig from './abstract-bit-config';
-import type { Extensions, Compilers, Testers } from './abstract-bit-config';
+import AbstractBitConfig from './abstract-config';
+import type { Extensions, Compilers, Testers } from './abstract-config';
 import { BitConfigNotFound, InvalidBitJson, InvalidPackageJson } from './exceptions';
 import {
   DEFAULT_COMPONENTS_DIR_PATH,
@@ -15,7 +15,7 @@ import type { ResolveModulesConfig } from '../component/dependencies/dependency-
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import { isValidPath } from '../../utils';
-import InvalidBitConfigPropPath from './exceptions/invalid-bit-config-prop-path';
+import InvalidBitConfigPropPath from './exceptions/invalid-config-prop-path';
 import ConsumerOverrides from './consumer-overrides';
 
 const DEFAULT_USE_WORKSPACES = false;
