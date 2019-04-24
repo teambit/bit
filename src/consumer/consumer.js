@@ -12,7 +12,7 @@ import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import ConsumerBitConfig from './config/workspace-config';
+import WorkspaceConfig from './config/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -76,7 +76,7 @@ import type { EnvType } from '../extensions/env-extension';
 
 type ConsumerProps = {
   projectPath: string,
-  bitConfig: ConsumerBitConfig,
+  bitConfig: WorkspaceConfig,
   scope: Scope,
   created?: boolean,
   isolated?: boolean,
@@ -100,7 +100,7 @@ type ComponentStatus = {
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  bitConfig: ConsumerBitConfig;
+  bitConfig: WorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
@@ -713,7 +713,7 @@ export default class Consumer {
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
-    const bitConfigP = ConsumerBitConfig.ensure(projectPath, standAlone);
+    const bitConfigP = WorkspaceConfig.ensure(projectPath, standAlone);
     const [scope, bitConfig] = await Promise.all([scopeP, bitConfigP]);
     return new Consumer({
       projectPath,
@@ -733,13 +733,13 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const bitConfigP = ConsumerBitConfig.reset(projectPath, resetHard);
+    const bitConfigP = WorkspaceConfig.reset(projectPath, resetHard);
     await Promise.all([scopeP, bitConfigP]);
   }
 
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
-    const bitConfig = await ConsumerBitConfig.ensure(consumerPath);
+    const bitConfig = await WorkspaceConfig.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
@@ -763,7 +763,7 @@ export default class Consumer {
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
       const consumer = await Consumer.create(consumerInfo.path);
       await Promise.all([consumer.bitConfig.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await ConsumerBitConfig.load(consumerInfo.path);
+      consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     const scope = await Scope.load(scopePath);

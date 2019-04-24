@@ -2,7 +2,7 @@
 import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import type { Compilers, Testers } from './abstract-config';
-import type ConsumerBitConfig from './workspace-config';
+import type WorkspaceConfig from './workspace-config';
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
@@ -18,7 +18,7 @@ export type BitConfigProps = {
   overrides?: ComponentOverridesData
 };
 
-export default class ComponentBitConfig extends AbstractConfig {
+export default class ComponentConfig extends AbstractConfig {
   overrides: ?ComponentOverridesData;
   componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: BitConfigProps) {
@@ -62,10 +62,10 @@ export default class ComponentBitConfig extends AbstractConfig {
     }
   }
 
-  static fromPlainObject(object: Object): ComponentBitConfig {
+  static fromPlainObject(object: Object): ComponentConfig {
     const { env, lang, bindingPrefix, extensions, overrides } = object;
 
-    return new ComponentBitConfig({
+    return new ComponentConfig({
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       extensions,
@@ -76,7 +76,7 @@ export default class ComponentBitConfig extends AbstractConfig {
   }
 
   static fromComponent(component: Component) {
-    return new ComponentBitConfig({
+    return new ComponentConfig({
       version: component.version,
       scope: component.scope,
       lang: component.lang,
@@ -95,9 +95,9 @@ export default class ComponentBitConfig extends AbstractConfig {
   /**
    * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
    */
-  static mergeWithConsumerBitConfig(componentConfig: Object, consumerConfig: ?ConsumerBitConfig): ComponentBitConfig {
+  static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: ?WorkspaceConfig): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
-    return ComponentBitConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
+    return ComponentConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
   }
 
   /**
@@ -113,8 +113,8 @@ export default class ComponentBitConfig extends AbstractConfig {
   static async load(
     componentDir: ?PathOsBasedAbsolute,
     configDir: PathOsBasedAbsolute,
-    consumerConfig: ConsumerBitConfig
-  ): Promise<ComponentBitConfig> {
+    consumerConfig: WorkspaceConfig
+  ): Promise<ComponentConfig> {
     if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
     const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);
     const packageJsonPath = componentDir ? AbstractConfig.composePackageJsonPath(componentDir) : null;
@@ -145,7 +145,7 @@ export default class ComponentBitConfig extends AbstractConfig {
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(config, consumerConfig);
+    const componentBitConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
     componentBitConfig.path = bitJsonPath;
     componentBitConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
     return componentBitConfig;

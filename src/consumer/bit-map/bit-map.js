@@ -29,7 +29,7 @@ import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
 import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
-import ConsumerBitConfig from '../config/workspace-config';
+import WorkspaceConfig from '../config/workspace-config';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -268,7 +268,7 @@ export default class BitMap {
    */
   async getConfigDirsAndFilesToIgnore(
     consumerPath: PathLinux,
-    consumerConfig: ConsumerBitConfig
+    consumerConfig: WorkspaceConfig
   ): Promise<IgnoreFilesDirs> {
     const ignoreList = {
       files: [],

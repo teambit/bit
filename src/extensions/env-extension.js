@@ -20,8 +20,8 @@ import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
-import type ConsumerBitConfig from '../consumer/config/workspace-config';
-import type ComponentBitConfig from '../consumer/config';
+import type WorkspaceConfig from '../consumer/config/workspace-config';
+import type ComponentConfig from '../consumer/config';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
@@ -343,9 +343,9 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    componentBitConfig: ?ComponentBitConfig,
+    componentBitConfig: ?ComponentConfig,
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
-    consumerBitConfig: ConsumerBitConfig,
+    consumerBitConfig: WorkspaceConfig,
     envType: EnvType,
     context?: Object
   }): Promise<?EnvExtension> {

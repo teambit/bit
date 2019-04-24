@@ -57,7 +57,7 @@ export type AbstractBitConfigProps = {
 };
 
 /**
- * There are two Bit Config: ConsumerBitConfig and ComponentBitConfig, both inherit this class.
+ * There are two Bit Config: WorkspaceConfig and ComponentConfig, both inherit this class.
  * The config data can be written in package.json inside "bit" property. And, can be written in
  * bit.json file. Also, it might be written in both, in which case, if there is any conflict, the
  * bit.json wins.

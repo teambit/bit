@@ -6,10 +6,10 @@
 import * as pathlib from 'path';
 import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
-import ConsumerBitConfig from './config/workspace-config';
+import WorkspaceConfig from './config/workspace-config';
 import { BitConfigNotFound } from './config/exceptions';
 
-export type ConsumerInfo = { path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean };
+export type ConsumerInfo = { path: string, consumerConfig: ?WorkspaceConfig, hasBitMap: boolean, hasScope: boolean };
 
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
@@ -81,9 +81,9 @@ export async function getConsumerInfo(absPath: string): Promise<?ConsumerInfo> {
     return (await fs.exists(composeBitHiddenDirPath(path))) || fs.exists(composeBitGitHiddenDirPath(path));
   }
 
-  async function getConsumerConfigIfExists(path: string): Promise<?ConsumerBitConfig> {
+  async function getConsumerConfigIfExists(path: string): Promise<?WorkspaceConfig> {
     try {
-      return await ConsumerBitConfig.load(path);
+      return await WorkspaceConfig.load(path);
     } catch (err) {
       if (err instanceof BitConfigNotFound) {
         return null;

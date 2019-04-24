@@ -45,8 +45,8 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       const idFromModel = getIdFromModelDeps(component.componentFromModel, id);
       const idFromPackageJson = getIdFromPackageJson(id);
       const idFromBitMap = getIdFromBitMap(id);
-      const idFromConsumerBitConfig = getIdFromConsumerBitConfig(id);
-      const idFromComponentBitConfig = getIdFromComponentBitConfig(id);
+      const idFromWorkspaceConfig = getIdFromWorkspaceConfig(id);
+      const idFromComponentConfig = getIdFromComponentConfig(id);
 
       // get from packageJson when it was changed from the model or when there is no model.
       const getFromPackageJsonIfChanged = () => {
@@ -55,15 +55,15 @@ export default function updateDependenciesVersions(consumer: Consumer, component
         if (!idFromPackageJson.isEqual(idFromModel)) return idFromPackageJson;
         return null;
       };
-      const getFromConsumerBitConfig = () => idFromConsumerBitConfig || null;
-      const getFromComponentBitConfig = () => idFromComponentBitConfig || null;
+      const getFromWorkspaceConfig = () => idFromWorkspaceConfig || null;
+      const getFromComponentConfig = () => idFromComponentConfig || null;
       const getFromBitMap = () => idFromBitMap || null;
       const getFromModel = () => idFromModel || null;
       const getFromPackageJson = () => idFromPackageJson || null;
       const strategies: Function[] = [
-        getFromComponentBitConfig,
+        getFromComponentConfig,
         getFromPackageJsonIfChanged,
-        getFromConsumerBitConfig,
+        getFromWorkspaceConfig,
         getFromBitMap,
         getFromModel,
         getFromPackageJson
@@ -125,7 +125,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 
-  function getIdFromConsumerBitConfig(componentId: BitId): ?BitId {
+  function getIdFromWorkspaceConfig(componentId: BitId): ?BitId {
     const dependencies = component.overrides.getComponentDependenciesWithVersionFromConsumer();
     if (R.isEmpty(dependencies)) return null;
     const dependency = Object.keys(dependencies).find(
@@ -135,7 +135,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return componentId.changeVersion(dependencies[dependency]);
   }
 
-  function getIdFromComponentBitConfig(componentId: BitId): ?BitId {
+  function getIdFromComponentConfig(componentId: BitId): ?BitId {
     const dependencies = component.overrides.getComponentDependenciesWithVersion();
     if (R.isEmpty(dependencies)) return null;
     const dependency = Object.keys(dependencies).find(

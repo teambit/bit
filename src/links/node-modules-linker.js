@@ -151,7 +151,7 @@ export default class NodeModuleLinker {
     const componentId = component.id;
     if (!componentId.scope) return; // scope is a must to generate the link
     const filesToBind = component.componentMap.getFilesRelativeToConsumer();
-    component.dists.updateDistsPerConsumerBitConfig(component.id, this.consumer, component.componentMap);
+    component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);

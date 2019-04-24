@@ -5,9 +5,9 @@ import R from 'ramda';
 import c from 'chalk';
 import { pathNormalizeToLinux } from '../../utils';
 import createSymlinkOrCopy from '../../utils/fs/create-symlink-or-copy';
-import ComponentBitConfig from '../config';
+import ComponentConfig from '../config';
 import { Dist, License, SourceFile } from '../component/sources';
-import type ConsumerBitConfig from '../config/workspace-config';
+import type WorkspaceConfig from '../config/workspace-config';
 import type Consumer from '../consumer';
 import BitId from '../../bit-id/bit-id';
 import type Scope from '../../scope/scope';
@@ -84,7 +84,7 @@ export type ComponentProps = {
   mainFile: PathOsBased,
   compiler?: CompilerExtension,
   tester: TesterExtension,
-  bitJson: ?ComponentBitConfig,
+  bitJson: ?ComponentConfig,
   dependencies?: Dependency[],
   devDependencies?: Dependency[],
   compilerDependencies?: Dependency[],
@@ -119,7 +119,7 @@ export default class Component {
   mainFile: PathOsBased;
   compiler: ?CompilerExtension;
   tester: ?TesterExtension;
-  bitJson: ?ComponentBitConfig;
+  bitJson: ?ComponentConfig;
   dependencies: Dependencies;
   devDependencies: Dependencies;
   compilerDependencies: Dependencies;
@@ -991,7 +991,7 @@ export default class Component {
     componentFromModel: ?Component
   }): Promise<Component> {
     const consumerPath = consumer.getPath();
-    const consumerBitConfig: ConsumerBitConfig = consumer.bitConfig;
+    const consumerBitConfig: WorkspaceConfig = consumer.bitConfig;
     const bitMap: BitMap = consumer.bitMap;
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
@@ -1039,11 +1039,11 @@ export default class Component {
     // Or created using bit create so we don't want all the path but only the relative one
     // Check that bitDir isn't the same as consumer path to make sure we are not loading global stuff into component
     // (like dependencies)
-    let componentBitConfig: ?ComponentBitConfig;
+    let componentBitConfig: ?ComponentConfig;
     if (configDir !== consumerPath) {
       const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
       // $FlowFixMe unclear error
-      componentBitConfig = await ComponentBitConfig.load(componentPkgJsonDir, configDir, consumerBitConfig);
+      componentBitConfig = await ComponentConfig.load(componentPkgJsonDir, configDir, consumerBitConfig);
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       if (componentFromModel) {

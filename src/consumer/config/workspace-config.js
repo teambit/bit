@@ -43,7 +43,7 @@ type consumerBitConfigProps = {
   overrides?: ConsumerOverrides
 };
 
-export default class ConsumerBitConfig extends AbstractBitConfig {
+export default class WorkspaceConfig extends AbstractBitConfig {
   distTarget: ?string; // path where to store build artifacts
   // path to remove while storing build artifacts. If, for example the code is in 'src' directory, and the component
   // is-string is in src/components/is-string, the dists files will be in dists/component/is-string (without the 'src')
@@ -132,11 +132,11 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     return filterObject(consumerObject, isPropDefault);
   }
 
-  static create(): ConsumerBitConfig {
-    return new ConsumerBitConfig({});
+  static create(): WorkspaceConfig {
+    return new WorkspaceConfig({});
   }
 
-  static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<ConsumerBitConfig> {
+  static async ensure(dirPath: PathOsBasedAbsolute, standAlone: boolean): Promise<WorkspaceConfig> {
     try {
       const consumerBitConfig = await this.load(dirPath);
       return consumerBitConfig;
@@ -165,7 +165,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
   }
 
   static fromPlainObject(object: Object) {
-    ConsumerBitConfig.validate(object);
+    WorkspaceConfig.validate(object);
     const {
       env,
       lang,
@@ -185,7 +185,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
       overrides
     } = object;
 
-    return new ConsumerBitConfig({
+    return new WorkspaceConfig({
       compiler: R.propOr(undefined, 'compiler', env),
       tester: R.propOr(undefined, 'tester', env),
       lang,
@@ -207,7 +207,7 @@ export default class ConsumerBitConfig extends AbstractBitConfig {
     });
   }
 
-  static async load(dirPath: string): Promise<ConsumerBitConfig> {
+  static async load(dirPath: string): Promise<WorkspaceConfig> {
     const bitJsonPath = AbstractBitConfig.composeBitJsonPath(dirPath);
     const packageJsonPath = AbstractBitConfig.composePackageJsonPath(dirPath);
 

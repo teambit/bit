@@ -38,8 +38,8 @@ import DataToPersist from './data-to-persist';
  *
  * 3) using 'bit link'.
  * When linking authored components, we generate an index file from node_modules/component-name to the main dist file.
- * It might happen during the import, when updateDistsPerConsumerBitConfig() was running already, and it might happen
- * during the 'bit link' command. Therefore, before linking, the updateDistsPerConsumerBitConfig() is running while making
+ * It might happen during the import, when updateDistsPerWorkspaceConfig() was running already, and it might happen
+ * during the 'bit link' command. Therefore, before linking, the updateDistsPerWorkspaceConfig() is running while making
  * sure it doesn't run twice.
  * (see node-modules-linker.linkToMainFile() and calculateMainDistFileForAuthored()).
  *
@@ -98,7 +98,7 @@ export default class Dists {
     return this.distsRootDir;
   }
 
-  updateDistsPerConsumerBitConfig(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
+  updateDistsPerWorkspaceConfig(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
     if (this._distsPathsAreUpdated || this.isEmpty()) return;
     const newDistBase = this.getDistDir(consumer, componentMap.getRootDir());
     const distEntry = consumer ? consumer.bitConfig.distEntry : undefined;
@@ -166,7 +166,7 @@ export default class Dists {
     let componentMap;
     if (consumer) {
       componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
-      this.updateDistsPerConsumerBitConfig(component.id, consumer, componentMap);
+      this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
     }
     dataToPersist.addManyFiles(this.dists);
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
