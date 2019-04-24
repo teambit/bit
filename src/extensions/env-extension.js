@@ -17,7 +17,7 @@ import type { EnvExtensionObject } from '../consumer/bit-config/abstract-bit-con
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import { COMPONENT_ORIGINS } from '../constants';
+import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
 import type ConsumerBitConfig from '../consumer/bit-config/consumer-bit-config';
@@ -364,6 +364,10 @@ export default class EnvExtension extends BaseExtension {
       return componentFromModel ? componentFromModel[envType] : undefined;
     }
     if (overridesFromConsumer && overridesFromConsumer.env && overridesFromConsumer.env[envType]) {
+      if (overridesFromConsumer.env[envType] === MANUALLY_REMOVE_ENVIRONMENT) {
+        logger.debug(`env-extension, ${envType} was manually removed from the consumer config overrides`);
+        return null;
+      }
       logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
       // $FlowFixMe
       const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
