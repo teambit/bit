@@ -274,11 +274,6 @@ export const HOOKS_NAMES = [
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * modules cache directory
- */
-export const MODULES_CACHE_DIR: PathOsBased = path.join(CACHE_ROOT, 'modules');
-
-/**
  * app cache directory
  */
 export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
@@ -299,11 +294,6 @@ export const BIT_HIDDEN_DIR = '.bit';
 export const BIT_GIT_DIR = 'bit';
 
 export const DOT_GIT_DIR = '.git';
-
-/**
- * modules cache filename
- */
-export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json');
 
 /**
  * bit registry default URL.
