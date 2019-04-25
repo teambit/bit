@@ -145,31 +145,37 @@ export default class ComponentWriter {
         this.excludeRegistryPrefix
       );
 
-      const componentConfig = ComponentConfig.fromComponent(this.component);
-      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
-      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
-      packageJson.bit = componentConfig.toPlainObject();
+      if (this.component.compiler || this.component.tester) {
+        const componentConfig = ComponentConfig.fromComponent(this.component);
+        componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
+        componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
+        packageJson.bit = componentConfig.toPlainObject();
 
-      await populateEnvFilesToWrite({
-        configDir: this.writeToPath,
-        env: this.component.compiler,
-        consumer: this.consumer,
-        component: this.component,
-        deleteOldFiles: false,
-        verbose: false
-      });
-      await populateEnvFilesToWrite({
-        configDir: this.writeToPath,
-        env: this.component.tester,
-        consumer: this.consumer,
-        component: this.component,
-        deleteOldFiles: false,
-        verbose: false
-      });
+        if (this.component.compiler) {
+          await populateEnvFilesToWrite({
+            configDir: this.writeToPath,
+            env: this.component.compiler,
+            consumer: this.consumer,
+            component: this.component,
+            deleteOldFiles: false,
+            verbose: false
+          });
+        }
+        if (this.component.tester) {
+          await populateEnvFilesToWrite({
+            configDir: this.writeToPath,
+            env: this.component.tester,
+            consumer: this.consumer,
+            component: this.component,
+            deleteOldFiles: false,
+            verbose: false
+          });
+        }
 
-      if (!this.writeConfig && !this.configDir) {
-        this.configDir = this.writeToPath;
-        this.component.componentMap.setConfigDir(this.configDir);
+        if (!this.writeConfig && !this.configDir && this.component.componentMap) {
+          this.configDir = this.writeToPath;
+          this.component.componentMap.setConfigDir(this.configDir);
+        }
       }
 
       addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
