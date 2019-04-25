@@ -7,9 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.7-dev.3] - 2019-04-25
+
 - improve `bit show` to display class properties
 - improve performance of `bit import` by reducing memory consumption and using more cache
 - fix "EMFILE: too many open files" and "JavaScript heap out of memory" errors on `bit import`
+- replace the cache mechanism from roadrunner to v8-compile-cache
 
 ## [14.0.7-dev.2] - 2019-04-21
 
