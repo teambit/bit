@@ -62,6 +62,22 @@ describe('component config', function () {
           helper.exportAllComponents();
         });
       });
+      describe('changing the environments on package.json', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+          packageJson.bit.env = {
+            compiler: 'my-scope/compiler/my-compiler'
+          };
+          helper.writePackageJson(packageJson, componentDir);
+        });
+        it('diff should show the newly added compiler', () => {
+          const diff = helper.diff('bar/foo');
+          expect(diff).to.have.string('--- Compiler');
+          expect(diff).to.have.string('+++ Compiler');
+          expect(diff).to.have.string('+ my-scope/compiler/my-compiler');
+        });
+      });
     });
     describe('importing with --conf flag', () => {
       before(() => {

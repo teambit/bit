@@ -141,7 +141,7 @@ export default class ComponentConfig extends AbstractConfig {
     };
     const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
     const bitJsonConfig = bitJsonFile || {};
-    const packageJsonHasConfig = packageJsonFile && packageJsonFile.bit;
+    const packageJsonHasConfig = Boolean(packageJsonFile && packageJsonFile.bit);
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
