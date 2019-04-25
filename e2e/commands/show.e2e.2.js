@@ -592,4 +592,37 @@ describe('bit show command', function () {
       expect(barFoo).to.have.string('Overrides Dependencies');
     });
   });
+  describe('class with properties', () => {
+    let barFoo;
+    before(() => {
+      helper.reInitLocalScope();
+      const classReactFixture = `import React, { Component } from 'react';
+import PropTypes from 'prop-types';
+
+export default class Circle extends Component {
+    render() {
+        return <div className="lds-circle" style={{ background: this.props.color }}></div>
+    }
+}
+
+Circle.propTypes = {
+    color: PropTypes.string
+}
+
+Circle.defaultProps = {
+    color: '#fff'
+}`;
+      helper.createComponentBarFoo(classReactFixture);
+      helper.addComponentBarFoo();
+      barFoo = helper.showComponent();
+    });
+    it('should show the properties data', () => {
+      expect(barFoo).to.have.string('Properties');
+      expect(barFoo).to.have.string('(color: string)');
+    });
+    it('should not show Args and Returns as they are empty and not relevant for classes', () => {
+      expect(barFoo).to.not.have.string('Args');
+      expect(barFoo).to.not.have.string('Returns');
+    });
+  });
 });
