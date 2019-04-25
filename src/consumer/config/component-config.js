@@ -75,7 +75,7 @@ export default class ComponentConfig extends AbstractConfig {
     });
   }
 
-  static fromComponent(component: Component) {
+  static fromComponent(component: Component): ComponentConfig {
     return new ComponentConfig({
       version: component.version,
       scope: component.scope,

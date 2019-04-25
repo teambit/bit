@@ -81,7 +81,7 @@ describe('component config', function () {
     });
     describe('importing with --conf flag', () => {
       before(() => {
-        helper.importComponent('bar/foo --conf');
+        helper.importComponent('bar/foo --conf -O');
       });
       it('should write the configuration data also to bit.json file', () => {
         expect(path.join(helper.localScopePath, 'components/bar/foo/bit.json')).to.be.a.file();

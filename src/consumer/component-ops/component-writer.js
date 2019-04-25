@@ -16,6 +16,8 @@ import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../compo
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';
+import ComponentConfig from '../config/component-config';
+import { populateEnvFilesToWrite } from './eject-conf';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -142,8 +144,38 @@ export default class ComponentWriter {
         this.writeBitDependencies,
         this.excludeRegistryPrefix
       );
+
+      const componentConfig = ComponentConfig.fromComponent(this.component);
+      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
+      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
+      packageJson.bit = componentConfig.toPlainObject();
+
+      await populateEnvFilesToWrite({
+        configDir: this.writeToPath,
+        env: this.component.compiler,
+        consumer: this.consumer,
+        component: this.component,
+        deleteOldFiles: false,
+        verbose: false
+      });
+      await populateEnvFilesToWrite({
+        configDir: this.writeToPath,
+        env: this.component.tester,
+        consumer: this.consumer,
+        component: this.component,
+        deleteOldFiles: false,
+        verbose: false
+      });
+
+      if (!this.writeConfig && !this.configDir) {
+        this.configDir = this.writeToPath;
+        this.component.componentMap.setConfigDir(this.configDir);
+      }
+
       addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
       if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
+      if (this.component.compiler) this.component.dataToPersist.merge(this.component.compiler.dataToPersist);
+      if (this.component.tester) this.component.dataToPersist.merge(this.component.tester.dataToPersist);
       this.component.packageJsonInstance = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
@@ -213,7 +245,7 @@ export default class ComponentWriter {
         // so it's better to just remove the old record and add a new one
         this.consumer.bitMap.removeComponent(this.component.id);
       }
-      this.addComponentToBitMap(this.componentMap.rootDir);
+      this.component.componentMap = this.addComponentToBitMap(this.componentMap.rootDir);
     }
   }
 

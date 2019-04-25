@@ -221,10 +221,6 @@ function preparePackageJsonToWrite(
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);
-  const componentConfig = ComponentConfig.fromComponent(component);
-  componentConfig.compiler = component.compiler ? component.compiler.name : {};
-  componentConfig.tester = component.tester ? component.tester.name : {};
-  packageJson.bit = componentConfig.toPlainObject();
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
