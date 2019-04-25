@@ -1,15 +1,15 @@
 /** @flow */
 import R from 'ramda';
-import AbstractBitConfig from './abstract-bit-config';
-import type { Compilers, Testers } from './abstract-bit-config';
-import type ConsumerBitConfig from './consumer-bit-config';
+import AbstractConfig from './abstract-config';
+import type { Compilers, Testers } from './abstract-config';
+import type WorkspaceConfig from './workspace-config';
 import type { PathOsBasedAbsolute } from '../../utils/path';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import type { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
 
-export type BitConfigProps = {
+type ConfigProps = {
   lang?: string,
   compiler?: string | Compilers,
   tester?: string | Testers,
@@ -18,10 +18,10 @@ export type BitConfigProps = {
   overrides?: ComponentOverridesData
 };
 
-export default class ComponentBitConfig extends AbstractBitConfig {
+export default class ComponentConfig extends AbstractConfig {
   overrides: ?ComponentOverridesData;
   componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
-  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: BitConfigProps) {
+  constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
       tester,
@@ -30,7 +30,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
       extensions
     });
     this.overrides = overrides;
-    this.writeToBitJson = true; // will be changed later to work similar to consumer-bit-config
+    this.writeToBitJson = true; // will be changed later to work similar to workspace-config
   }
 
   toPlainObject() {
@@ -62,10 +62,10 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     }
   }
 
-  static fromPlainObject(object: Object): ComponentBitConfig {
+  static fromPlainObject(object: Object): ComponentConfig {
     const { env, lang, bindingPrefix, extensions, overrides } = object;
 
-    return new ComponentBitConfig({
+    return new ComponentConfig({
       compiler: R.prop('compiler', env),
       tester: R.prop('tester', env),
       extensions,
@@ -76,7 +76,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   }
 
   static fromComponent(component: Component) {
-    return new ComponentBitConfig({
+    return new ComponentConfig({
       version: component.version,
       scope: component.scope,
       lang: component.lang,
@@ -93,11 +93,11 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   }
 
   /**
-   * Use the consumerBitConfig as a base. Override values if exist in componentBitConfig
+   * Use the workspaceConfig as a base. Override values if exist in componentConfig
    */
-  static mergeWithConsumerBitConfig(componentConfig: Object, consumerConfig: ?ConsumerBitConfig): ComponentBitConfig {
+  static mergeWithWorkspaceConfig(componentConfig: Object, consumerConfig: ?WorkspaceConfig): ComponentConfig {
     const plainConsumerConfig = consumerConfig ? consumerConfig.toPlainObject() : {};
-    return ComponentBitConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
+    return ComponentConfig.fromPlainObject(R.merge(plainConsumerConfig, componentConfig));
   }
 
   /**
@@ -113,14 +113,14 @@ export default class ComponentBitConfig extends AbstractBitConfig {
   static async load(
     componentDir: ?PathOsBasedAbsolute,
     configDir: PathOsBasedAbsolute,
-    consumerConfig: ConsumerBitConfig
-  ): Promise<ComponentBitConfig> {
-    if (!configDir) throw new TypeError('component-bit-config.load configDir arg is empty');
-    const bitJsonPath = AbstractBitConfig.composeBitJsonPath(configDir);
-    const packageJsonPath = componentDir ? AbstractBitConfig.composePackageJsonPath(componentDir) : null;
+    consumerConfig: WorkspaceConfig
+  ): Promise<ComponentConfig> {
+    if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
+    const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);
+    const packageJsonPath = componentDir ? AbstractConfig.composePackageJsonPath(componentDir) : null;
     const loadBitJson = async () => {
       try {
-        const file = await AbstractBitConfig.loadJsonFileIfExist(bitJsonPath);
+        const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
         return file;
       } catch (e) {
         throw new GeneralError(
@@ -131,7 +131,7 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     const loadPackageJson = async () => {
       if (!packageJsonPath) return null;
       try {
-        const file = await AbstractBitConfig.loadJsonFileIfExist(packageJsonPath);
+        const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
         return file;
       } catch (e) {
         throw new GeneralError(
@@ -145,9 +145,9 @@ export default class ComponentBitConfig extends AbstractBitConfig {
     const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentBitConfig = ComponentBitConfig.mergeWithConsumerBitConfig(config, consumerConfig);
-    componentBitConfig.path = bitJsonPath;
-    componentBitConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
-    return componentBitConfig;
+    const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
+    componentConfig.path = bitJsonPath;
+    componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
+    return componentConfig;
   }
 }

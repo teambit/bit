@@ -29,7 +29,7 @@ export default (async function loadExtensions(): Promise<Extension[]> {
 
     let rawExtensions = {};
     if (consumer) {
-      rawExtensions = consumer.bitConfig.extensions || {};
+      rawExtensions = consumer.config.extensions || {};
       consumerPath = consumer.getPath();
       scopePath = consumer.scope.path;
     }

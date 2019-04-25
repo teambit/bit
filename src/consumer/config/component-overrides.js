@@ -1,6 +1,6 @@
 // @flow
 import R from 'ramda';
-import ComponentBitConfig from './component-bit-config';
+import ComponentConfig from './component-config';
 import {
   MANUALLY_REMOVE_DEPENDENCY,
   MANUALLY_ADD_DEPENDENCY,
@@ -43,12 +43,12 @@ export default class ComponentOverrides {
   static loadFromConsumer(
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
     overridesFromModel: ?ComponentOverridesData,
-    componentBitConfig: ?ComponentBitConfig,
+    componentConfig: ?ComponentConfig,
     isAuthor: boolean
   ): ComponentOverrides {
-    if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
+    if (componentConfig && componentConfig.componentHasWrittenConfig) {
       // $FlowFixMe
-      return new ComponentOverrides(componentBitConfig.overrides, overridesFromConsumer);
+      return new ComponentOverrides(componentConfig.overrides, overridesFromConsumer);
     }
     if (!isAuthor) {
       return ComponentOverrides.loadFromScope(overridesFromModel);

@@ -13,15 +13,15 @@ import { Repository } from '../scope/objects';
 import { pathJoinLinux, sortObject, sha1 } from '../utils';
 import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
 import type { PathOsBased } from '../utils/path';
-import type { EnvExtensionObject } from '../consumer/bit-config/abstract-bit-config';
+import type { EnvExtensionObject } from '../consumer/config/abstract-config';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
 import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
-import type ConsumerBitConfig from '../consumer/bit-config/consumer-bit-config';
-import type ComponentBitConfig from '../consumer/bit-config';
+import type WorkspaceConfig from '../consumer/config/workspace-config';
+import type ComponentConfig from '../consumer/config';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
@@ -30,8 +30,8 @@ import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
 import type Consumer from '../consumer/consumer';
-import type { ConsumerOverridesOfComponent } from '../consumer/bit-config/consumer-overrides';
-import AbstractBitConfig from '../consumer/bit-config/abstract-bit-config';
+import type { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
+import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
 
 // Couldn't find a good way to do this with consts
@@ -333,9 +333,9 @@ export default class EnvExtension extends BaseExtension {
     scopePath,
     componentOrigin,
     componentFromModel,
-    componentBitConfig,
+    componentConfig,
     overridesFromConsumer,
-    consumerBitConfig,
+    workspaceConfig,
     envType,
     context
   }: {
@@ -343,18 +343,18 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    componentBitConfig: ?ComponentBitConfig,
+    componentConfig: ?ComponentConfig,
     overridesFromConsumer: ?ConsumerOverridesOfComponent,
-    consumerBitConfig: ConsumerBitConfig,
+    workspaceConfig: WorkspaceConfig,
     envType: EnvType,
     context?: Object
   }): Promise<?EnvExtension> {
     logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
-    if (componentBitConfig && componentBitConfig.componentHasWrittenConfig) {
+    if (componentConfig && componentConfig.componentHasWrittenConfig) {
       // load from component config.
       // $FlowFixMe
-      const envConfig = { [envType]: componentBitConfig[envType] };
-      const configPath = path.dirname(componentBitConfig.path);
+      const envConfig = { [envType]: componentConfig[envType] };
+      const configPath = path.dirname(componentConfig.path);
       logger.debug(`env-extension loading ${envType} from component config`);
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
     }
@@ -370,14 +370,14 @@ export default class EnvExtension extends BaseExtension {
       }
       logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
       // $FlowFixMe
-      const envConfig = { [envType]: AbstractBitConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
+      const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     // $FlowFixMe
-    if (consumerBitConfig[envType]) {
+    if (workspaceConfig[envType]) {
       logger.debug(`env-extension, loading ${envType} from the consumer config`);
       // $FlowFixMe
-      const envConfig = { [envType]: consumerBitConfig[envType] };
+      const envConfig = { [envType]: workspaceConfig[envType] };
       return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
     return null;

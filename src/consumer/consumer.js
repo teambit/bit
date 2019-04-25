@@ -12,7 +12,7 @@ import { getConsumerInfo } from './consumer-locator';
 import { ConsumerNotFound, MissingDependencies } from './exceptions';
 import { Driver } from '../driver';
 import DriverNotFound from '../driver/exceptions/driver-not-found';
-import ConsumerBitConfig from './bit-config/consumer-bit-config';
+import WorkspaceConfig from './config/workspace-config';
 import { BitId, BitIds } from '../bit-id';
 import Component from './component';
 import {
@@ -69,14 +69,14 @@ import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
-import { dependenciesFields } from './bit-config/consumer-overrides';
+import { dependenciesFields } from './config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 
 type ConsumerProps = {
   projectPath: string,
-  bitConfig: ConsumerBitConfig,
+  config: WorkspaceConfig,
   scope: Scope,
   created?: boolean,
   isolated?: boolean,
@@ -94,10 +94,13 @@ type ComponentStatus = {
   nested: boolean // when a component is nested, it doesn't matter whether it was modified
 };
 
+/**
+ * @todo: change the class name to Workspace
+ */
 export default class Consumer {
   projectPath: PathOsBased;
   created: boolean;
-  bitConfig: ConsumerBitConfig;
+  config: WorkspaceConfig;
   scope: Scope;
   bitMap: BitMap;
   isolated: boolean = false; // Mark that the consumer instance is of isolated env and not real
@@ -111,7 +114,7 @@ export default class Consumer {
 
   constructor({
     projectPath,
-    bitConfig,
+    config,
     scope,
     created = false,
     isolated = false,
@@ -120,7 +123,7 @@ export default class Consumer {
     existingGitHooks
   }: ConsumerProps) {
     this.projectPath = projectPath;
-    this.bitConfig = bitConfig;
+    this.config = config;
     this.created = created;
     this.isolated = isolated;
     this.scope = scope;
@@ -142,7 +145,7 @@ export default class Consumer {
 
   get driver(): Driver {
     if (!this._driver) {
-      this._driver = Driver.load(this.bitConfig.lang);
+      this._driver = Driver.load(this.config.lang);
     }
     return this._driver;
   }
@@ -150,9 +153,9 @@ export default class Consumer {
   get dirStructure(): DirStructure {
     if (!this._dirStructure) {
       this._dirStructure = new DirStructure(
-        this.bitConfig.componentsDefaultDirectory,
-        this.bitConfig.dependenciesDirectory,
-        this.bitConfig.ejectedEnvsDirectory
+        this.config.componentsDefaultDirectory,
+        this.config.dependenciesDirectory,
+        this.config.ejectedEnvsDirectory
       );
     }
     return this._dirStructure;
@@ -206,9 +209,7 @@ export default class Consumer {
       if (err instanceof DriverNotFound) {
         console.log(chalk.yellow(msg)); // eslint-disable-line
       }
-      throw new GeneralError(
-        `Failed loading the driver for ${this.bitConfig.lang}. Got an error from the driver: ${err}`
-      );
+      throw new GeneralError(`Failed loading the driver for ${this.config.lang}. Got an error from the driver: ${err}`);
     }
   }
 
@@ -256,7 +257,7 @@ export default class Consumer {
   }
 
   async write(): Promise<Consumer> {
-    await Promise.all([this.bitConfig.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
+    await Promise.all([this.config.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.bitMap.write();
     return this;
@@ -387,7 +388,7 @@ export default class Consumer {
 
   async shouldDependenciesSavedAsComponents(bitIds: BitId[], saveDependenciesAsComponents?: boolean) {
     if (saveDependenciesAsComponents === undefined) {
-      saveDependenciesAsComponents = this.bitConfig.saveDependenciesAsComponents;
+      saveDependenciesAsComponents = this.config.saveDependenciesAsComponents;
     }
     const remotes: Remotes = await getScopeRemotes(this.scope);
     const shouldDependenciesSavedAsComponents = bitIds.map((bitId: BitId) => {
@@ -404,7 +405,7 @@ export default class Consumer {
    * If dist attribute is populated in bit.json, the paths are in consumer-root/dist-target.
    */
   shouldDistsBeInsideTheComponent(): boolean {
-    return !this.bitConfig.distEntry && !this.bitConfig.distTarget;
+    return !this.config.distEntry && !this.config.distTarget;
   }
 
   potentialComponentsForAutoTagging(modifiedComponents: BitIds): BitIds {
@@ -710,13 +711,13 @@ export default class Consumer {
     let existingGitHooks;
     const bitMap = BitMap.load(projectPath);
     const scopeP = Scope.ensure(resolvedScopePath);
-    const bitConfigP = ConsumerBitConfig.ensure(projectPath, standAlone);
-    const [scope, bitConfig] = await Promise.all([scopeP, bitConfigP]);
+    const configP = WorkspaceConfig.ensure(projectPath, standAlone);
+    const [scope, config] = await Promise.all([scopeP, configP]);
     return new Consumer({
       projectPath,
       created: true,
       scope,
-      bitConfig,
+      config,
       bitMap,
       existingGitHooks
     });
@@ -730,19 +731,19 @@ export default class Consumer {
     const resolvedScopePath = Consumer._getScopePath(projectPath, noGit);
     BitMap.reset(projectPath, resetHard);
     const scopeP = Scope.reset(resolvedScopePath, resetHard);
-    const bitConfigP = ConsumerBitConfig.reset(projectPath, resetHard);
-    await Promise.all([scopeP, bitConfigP]);
+    const configP = WorkspaceConfig.reset(projectPath, resetHard);
+    await Promise.all([scopeP, configP]);
   }
 
   static async createIsolatedWithExistingScope(consumerPath: PathOsBased, scope: Scope): Promise<Consumer> {
     // if it's an isolated environment, it's normal to have already the consumer
-    const bitConfig = await ConsumerBitConfig.ensure(consumerPath);
+    const config = await WorkspaceConfig.ensure(consumerPath);
     return new Consumer({
       projectPath: consumerPath,
       created: true,
       scope,
       isolated: true,
-      bitConfig
+      config
     });
   }
 
@@ -759,14 +760,14 @@ export default class Consumer {
     }
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
       const consumer = await Consumer.create(consumerInfo.path);
-      await Promise.all([consumer.bitConfig.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
-      consumerInfo.consumerConfig = await ConsumerBitConfig.load(consumerInfo.path);
+      await Promise.all([consumer.config.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
+      consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);
     const scope = await Scope.load(scopePath);
     return new Consumer({
       projectPath: consumerInfo.path,
-      bitConfig: consumerInfo.consumerConfig,
+      config: consumerInfo.consumerConfig,
       scope
     });
   }
@@ -1021,7 +1022,7 @@ export default class Consumer {
   }
 
   _getEnvProps(envType: EnvType, context: ?Object) {
-    const envs = this.bitConfig.getEnvsByType(envType);
+    const envs = this.config.getEnvsByType(envType);
     if (!envs) return undefined;
     const envName = Object.keys(envs)[0];
     const envObject = envs[envName];
@@ -1031,7 +1032,7 @@ export default class Consumer {
       scopePath: this.scope.getPath(),
       rawConfig: envObject.rawConfig,
       files: envObject.files,
-      bitJsonPath: path.dirname(this.bitConfig.path),
+      bitJsonPath: path.dirname(this.config.path),
       options: envObject.options,
       envType,
       context

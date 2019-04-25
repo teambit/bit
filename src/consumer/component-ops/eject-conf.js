@@ -2,7 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import type ConsumerComponent from '../component/consumer-component';
-import ComponentBitConfig from '../bit-config';
+import ComponentConfig from '../config';
 import { sharedStartOfArray } from '../../utils';
 import GeneralError from '../../error/general-error';
 import type BitMap from '../bit-map';
@@ -16,7 +16,7 @@ import type { PathOsBased } from '../../utils/path';
 import DataToPersist from '../component/sources/data-to-persist';
 import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 import RemovePath from '../component/sources/remove-path';
-import AbstractBitConfig from '../bit-config/abstract-bit-config';
+import AbstractConfig from '../config/abstract-config';
 
 export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
 export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath: string, dataToPersist: DataToPersist };
@@ -98,7 +98,7 @@ export async function getEjectConfDataToPersist(
     bitJsonDirFullPath,
     consumer.toAbsolutePath(ejectedTesterDirectory)
   );
-  const removedFromOverrides = consumer.bitConfig.overrides.removeExactMatch(component.id);
+  const removedFromOverrides = consumer.config.overrides.removeExactMatch(component.id);
   const dataToPersist = new DataToPersist();
   if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
   if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
@@ -106,7 +106,7 @@ export async function getEjectConfDataToPersist(
   const jsonFilesToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
   dataToPersist.addManyFiles(jsonFilesToWrite);
   if (removedFromOverrides) {
-    const consumerConfigFiles = await consumer.bitConfig.prepareToWrite({ bitDir: '.' });
+    const consumerConfigFiles = await consumer.config.prepareToWrite({ bitDir: '.' });
     dataToPersist.addManyFiles(consumerConfigFiles);
   }
 
@@ -115,7 +115,7 @@ export async function getEjectConfDataToPersist(
       const oldBitJsonDir = oldConfigDir.getResolved({ componentDir }).getEnvTypeCleaned();
       const oldBitJsonDirFullPath = path.join(consumerPath, oldBitJsonDir.dirPath);
       if (bitJsonDirFullPath !== oldBitJsonDirFullPath) {
-        const bitJsonToRemove = AbstractBitConfig.composeBitJsonPath(oldBitJsonDir.dirPath);
+        const bitJsonToRemove = AbstractConfig.composeBitJsonPath(oldBitJsonDir.dirPath);
         dataToPersist.removePath(new RemovePath(bitJsonToRemove, true));
       }
     }
@@ -195,11 +195,11 @@ const getBitJsonToWrite = (
   component: ConsumerComponent,
   ejectedCompilerDirectory: string,
   ejectedTesterDirectory: string
-): ComponentBitConfig => {
-  const componentBitConfig = ComponentBitConfig.fromComponent(component);
-  componentBitConfig.compiler = component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {};
-  componentBitConfig.tester = component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {};
-  return componentBitConfig;
+): ComponentConfig => {
+  const componentConfig = ComponentConfig.fromComponent(component);
+  componentConfig.compiler = component.compiler ? component.compiler.toBitJsonObject(ejectedCompilerDirectory) : {};
+  componentConfig.tester = component.tester ? component.tester.toBitJsonObject(ejectedTesterDirectory) : {};
+  return componentConfig;
 };
 
 const _getRelativeDir = (bitJsonDir, envDir) => {

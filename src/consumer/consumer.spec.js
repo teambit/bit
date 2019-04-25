@@ -7,7 +7,7 @@ describe('Consumer', () => {
   let sandbox;
   const getConsumerInstance = () => {
     sandbox.stub(Consumer.prototype, 'warnForMissingDriver').returns();
-    const consumer = new Consumer({ projectPath: '', bitConfig: {} });
+    const consumer = new Consumer({ projectPath: '', config: {} });
     return consumer;
   };
   describe('getComponentIdFromNodeModulesPath', () => {

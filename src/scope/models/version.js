@@ -19,7 +19,7 @@ import Repository from '../objects/repository';
 import VersionInvalid from '../exceptions/version-invalid';
 import logger from '../../logger/logger';
 import validateVersionInstance from '../version-validator';
-import type { ComponentOverridesData } from '../../consumer/bit-config/component-overrides';
+import type { ComponentOverridesData } from '../../consumer/config/component-overrides';
 import EnvExtension from '../../extensions/env-extension';
 
 type CiProps = {

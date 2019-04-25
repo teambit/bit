@@ -21,7 +21,7 @@ import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
-import { dependenciesFields } from '../../../bit-config/consumer-overrides';
+import { dependenciesFields } from '../../../config/consumer-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[],
@@ -126,7 +126,7 @@ export default class DependencyResolver {
         this.consumerPath,
         allFiles,
         this.component.bindingPrefix,
-        this.consumer.bitConfig.resolveModules,
+        this.consumer.config.resolveModules,
         cacheResolvedDependencies
       );
     };
@@ -327,7 +327,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): ?BitId {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.bitConfig.resolveModules;
+    const resolveModules = this.consumer.config.resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
       depFile.startsWith(resolveModules.aliases[alias])

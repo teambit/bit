@@ -44,7 +44,7 @@ export type Envs = { [envName: string]: EnvExtensionObject };
 export type Compilers = { [compilerName: string]: CompilerExtensionObject };
 export type Testers = { [testerName: string]: TesterExtensionObject };
 
-export type AbstractBitConfigProps = {
+export type AbstractConfigProps = {
   compiler?: string | Compilers,
   tester?: string | Testers,
   dependencies?: Object,
@@ -57,12 +57,12 @@ export type AbstractBitConfigProps = {
 };
 
 /**
- * There are two Bit Config: ConsumerBitConfig and ComponentBitConfig, both inherit this class.
+ * There are two Bit Config: WorkspaceConfig and ComponentConfig, both inherit this class.
  * The config data can be written in package.json inside "bit" property. And, can be written in
  * bit.json file. Also, it might be written in both, in which case, if there is any conflict, the
  * bit.json wins.
  */
-export default class AbstractBitConfig {
+export default class AbstractConfig {
   path: string;
   _compiler: Compilers | string;
   _tester: Testers | string;
@@ -76,7 +76,7 @@ export default class AbstractBitConfig {
   writeToPackageJson = false;
   writeToBitJson = false;
 
-  constructor(props: AbstractBitConfigProps) {
+  constructor(props: AbstractConfigProps) {
     this._compiler = props.compiler || {};
     this._tester = props.tester || {};
     this.lang = props.lang || DEFAULT_LANGUAGE;
@@ -85,23 +85,23 @@ export default class AbstractBitConfig {
   }
 
   get compiler(): ?Compilers {
-    const compilerObj = AbstractBitConfig.transformEnvToObject(this._compiler);
+    const compilerObj = AbstractConfig.transformEnvToObject(this._compiler);
     if (R.isEmpty(compilerObj)) return undefined;
     return compilerObj;
   }
 
   set compiler(compiler: string | Compilers) {
-    this._compiler = AbstractBitConfig.transformEnvToObject(compiler);
+    this._compiler = AbstractConfig.transformEnvToObject(compiler);
   }
 
   get tester(): ?Testers {
-    const testerObj = AbstractBitConfig.transformEnvToObject(this._tester);
+    const testerObj = AbstractConfig.transformEnvToObject(this._tester);
     if (R.isEmpty(testerObj)) return undefined;
     return testerObj;
   }
 
   set tester(tester: string | Testers) {
-    this._tester = AbstractBitConfig.transformEnvToObject(tester);
+    this._tester = AbstractConfig.transformEnvToObject(tester);
   }
 
   addDependencies(bitIds: BitId[]): this {
@@ -166,8 +166,8 @@ export default class AbstractBitConfig {
         lang: this.lang,
         bindingPrefix: this.bindingPrefix,
         env: {
-          compiler: AbstractBitConfig.convertEnvToStringIfPossible(this.compiler),
-          tester: AbstractBitConfig.convertEnvToStringIfPossible(this.tester)
+          compiler: AbstractConfig.convertEnvToStringIfPossible(this.compiler),
+          tester: AbstractConfig.convertEnvToStringIfPossible(this.tester)
         },
         dependencies: this.dependencies,
         extensions: this.extensions
@@ -189,13 +189,13 @@ export default class AbstractBitConfig {
       JsonFiles.push(JSONFile.load(params));
     };
     if (this.writeToPackageJson) {
-      const packageJsonPath = AbstractBitConfig.composePackageJsonPath(bitDir);
+      const packageJsonPath = AbstractConfig.composePackageJsonPath(bitDir);
       const packageJsonFile = await fs.readJson(packageJsonPath);
       packageJsonFile.bit = plainObject;
       addJsonFile(packageJsonPath, packageJsonFile);
     }
     if (this.writeToBitJson) {
-      const bitJsonPath = AbstractBitConfig.composeBitJsonPath(bitDir);
+      const bitJsonPath = AbstractConfig.composeBitJsonPath(bitDir);
       addJsonFile(bitJsonPath, plainObject);
     }
     return JsonFiles;
@@ -233,7 +233,7 @@ export default class AbstractBitConfig {
   static async removeIfExist(bitPath: string): Promise<boolean> {
     const dirToRemove = this.composeBitJsonPath(bitPath);
     if (fs.exists(dirToRemove)) {
-      logger.info(`abstract-bit-config, deleting ${dirToRemove}`);
+      logger.info(`abstract-config, deleting ${dirToRemove}`);
       return fs.remove(dirToRemove);
     }
     return false;
