@@ -173,7 +173,7 @@ export default class ComponentWriter {
 
       if (this.component.compiler || this.component.tester) {
         if (!this.writeConfig && !this.configDir && this.component.componentMap) {
-          this.configDir = this.writeToPath;
+          this.configDir = '{COMPONENT_DIR}';
           this.component.componentMap.setConfigDir(this.configDir);
         }
       }
