@@ -1,5 +1,6 @@
 // @flow
 import fs from 'fs-extra';
+import * as RA from 'ramda-adjunct';
 import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
@@ -9,7 +10,7 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
@@ -171,9 +172,12 @@ export default class ComponentWriter {
         });
       }
 
-      if (this.component.compiler || this.component.tester) {
+      if (
+        (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
+        (this.component.tester && !RA.isNilOrEmpty(this.component.compiler.tester))
+      ) {
         if (!this.writeConfig && !this.configDir && this.component.componentMap) {
-          this.configDir = '{COMPONENT_DIR}';
+          this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
           this.component.componentMap.setConfigDir(this.configDir);
         }
       }
