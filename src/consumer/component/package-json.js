@@ -18,7 +18,6 @@ import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import DataToPersist from './sources/data-to-persist';
-import ComponentConfig from '../config';
 
 // the instance comes from bit-javascript PackageJson class
 export type PackageJsonInstance = { write: Function, bit?: Object, componentRootFolder: string };
@@ -221,10 +220,6 @@ function preparePackageJsonToWrite(
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);
-  const componentConfig = ComponentConfig.fromComponent(component);
-  componentConfig.compiler = component.compiler ? component.compiler.name : {};
-  componentConfig.tester = component.tester ? component.tester.name : {};
-  packageJson.bit = componentConfig.toPlainObject();
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;

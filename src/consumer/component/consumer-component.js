@@ -1073,7 +1073,7 @@ export default class Component {
       componentFromModel,
       overridesFromConsumer,
       workspaceConfig,
-      componentConfig: componentMap.configDir ? componentConfig : null,
+      componentConfig,
       context: envsContext
     };
 
