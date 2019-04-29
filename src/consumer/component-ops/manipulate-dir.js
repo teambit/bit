@@ -16,6 +16,7 @@ import type Consumer from '../consumer';
 import BitIds from '../../bit-id/bit-ids';
 import Repository from '../../scope/objects/repository';
 import ComponentOverrides from '../config/component-overrides';
+import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
@@ -79,6 +80,9 @@ export async function getManipulateDirForExistingComponents(
   // the filesystem, in that case, no need for wrapDir or sharedDir
   const componentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
+  if (!version) {
+    throw new CorruptedComponent(id.toString(), componentVersion.version);
+  }
   const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
   const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
