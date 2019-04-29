@@ -61,13 +61,13 @@ export default class SourceRepository {
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
       // $FlowFixMe
       if (!foundComponent.versions[bitId.version]) {
-        logger.debug(`${msg} is not in the component versions array`);
+        logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;
       }
       // $FlowFixMe
       const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
-        logger.debug(`${msg} object was not found on the filesystem`);
+        logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return null;
       }
     }
