@@ -151,41 +151,10 @@ export default class ComponentWriter {
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
       packageJson.bit = componentConfig.toPlainObject();
 
-      if (this.component.compiler) {
-        await populateEnvFilesToWrite({
-          configDir: this.writeToPath,
-          env: this.component.compiler,
-          consumer: this.consumer,
-          component: this.component,
-          deleteOldFiles: false,
-          verbose: false
-        });
-      }
-      if (this.component.tester) {
-        await populateEnvFilesToWrite({
-          configDir: this.writeToPath,
-          env: this.component.tester,
-          consumer: this.consumer,
-          component: this.component,
-          deleteOldFiles: false,
-          verbose: false
-        });
-      }
-
-      if (
-        (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
-        (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files))
-      ) {
-        if (!this.writeConfig && !this.configDir && this.component.componentMap) {
-          this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
-          this.component.componentMap.setConfigDir(this.configDir);
-        }
-      }
+      await this._populateEnvFilesIfNeeded();
 
       addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
       if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
-      if (this.component.compiler) this.component.dataToPersist.merge(this.component.compiler.dataToPersist);
-      if (this.component.tester) this.component.dataToPersist.merge(this.component.tester.dataToPersist);
       this.component.packageJsonInstance = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
@@ -218,6 +187,44 @@ export default class ComponentWriter {
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
+  }
+
+  async _populateEnvFilesIfNeeded() {
+    const areThereEnvFiles =
+      (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
+      (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files));
+    if (!areThereEnvFiles) {
+      return;
+    }
+
+    if (this.component.compiler) {
+      await populateEnvFilesToWrite({
+        configDir: this.writeToPath,
+        env: this.component.compiler,
+        consumer: this.consumer,
+        component: this.component,
+        deleteOldFiles: false,
+        verbose: false
+      });
+      // $FlowFixMe
+      this.component.dataToPersist.merge(this.component.compiler.dataToPersist);
+    }
+    if (this.component.tester) {
+      await populateEnvFilesToWrite({
+        configDir: this.writeToPath,
+        env: this.component.tester,
+        consumer: this.consumer,
+        component: this.component,
+        deleteOldFiles: false,
+        verbose: false
+      });
+      // $FlowFixMe
+      this.component.dataToPersist.merge(this.component.tester.dataToPersist);
+    }
+    if (!this.writeConfig && !this.configDir && this.component.componentMap) {
+      this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
+      this.component.componentMap.setConfigDir(this.configDir);
+    }
   }
 
   _copyFilesIntoDistsWhenDistsOutsideComponentDir() {
