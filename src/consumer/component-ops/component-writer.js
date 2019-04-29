@@ -174,7 +174,7 @@ export default class ComponentWriter {
 
       if (
         (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
-        (this.component.tester && !RA.isNilOrEmpty(this.component.compiler.tester))
+        (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files))
       ) {
         if (!this.writeConfig && !this.configDir && this.component.componentMap) {
           this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
