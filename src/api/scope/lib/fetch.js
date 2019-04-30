@@ -27,8 +27,10 @@ export default (async function fetch(
   const importedComponents = noDependencies
     ? await scopeComponentsImporter.importManyWithoutDependencies(bitIds, false)
     : await scopeComponentsImporter.importMany(bitIds);
+  const clientVersion = headers ? headers.version : null;
+
   // $FlowFixMe
-  const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(importedComponents);
+  const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(importedComponents, clientVersion);
   if (HooksManagerInstance) {
     await HooksManagerInstance.triggerHook(
       POST_SEND_OBJECTS,
