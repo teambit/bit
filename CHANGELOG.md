@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.7-dev.4] - 2019-04-30
+
+- enable changing envs from package-json "bit.env" key for imported components
+- show a descriptive error when a version object is missing
+- throw an error when a client uses an older version that does not support "overrides" and imports components that use "overrides" 
+
 ## [14.0.7-dev.3] - 2019-04-25
 
 - improve `bit show` to display class properties
