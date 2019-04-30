@@ -66,7 +66,7 @@ export default class ComponentVersion {
     // and the client has < 15, the client will get anyway an error to upgrade the version
     if (clientVersion && version.overrides && !R.isEmpty(version.overrides) && semver.lt(clientVersion, '14.1.0')) {
       throw new CustomError(`Your components were created with a newer version and use the "overrides" feature.
-Please upgrade your version to >= v14.1.0`);
+Please upgrade your bit client to version >= v14.1.0`);
     }
     try {
       const [compObject, objects, versionBuffer, scopeMeta] = await Promise.all([
