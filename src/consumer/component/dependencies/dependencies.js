@@ -27,6 +27,20 @@ export default class Dependencies {
     return this.dependencies;
   }
 
+  sort() {
+    this.dependencies.sort((a, b) => {
+      const idA = a.id.toString();
+      const idB = b.id.toString();
+      if (idA < idB) {
+        return -1;
+      }
+      if (idA > idB) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+
   getClone(): Dependency[] {
     return this.dependencies.map(dependency => Dependency.getClone(dependency));
   }

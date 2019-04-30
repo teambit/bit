@@ -458,10 +458,9 @@ export default class Consumer {
       // sometime dependencies from the FS don't have an exact version.
       const copyDependenciesVersionsFromModelToFS = (dependenciesFS: Dependencies, dependenciesModel: Dependencies) => {
         dependenciesFS.get().forEach((dependency) => {
-          const idWithoutVersion = dependency.id.toStringWithoutVersion();
           const dependencyFromModel = dependenciesModel
             .get()
-            .find(modelDependency => modelDependency.id.toStringWithoutVersion() === idWithoutVersion);
+            .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
           if (dependencyFromModel && !dependency.id.hasVersion()) {
             dependency.id = dependencyFromModel.id;
           }
@@ -491,12 +490,20 @@ export default class Consumer {
       // files in bitmap, which affects later on the model.
       version.files = R.sortBy(R.prop('relativePath'), version.files);
       componentFromModel.files = R.sortBy(R.prop('relativePath'), componentFromModel.files);
+      version.dependencies.sort();
+      version.devDependencies.sort();
+      version.compilerDependencies.sort();
+      version.testerDependencies.sort();
       version.packageDependencies = sortObject(version.packageDependencies);
       version.devPackageDependencies = sortObject(version.devPackageDependencies);
       version.compilerPackageDependencies = sortObject(version.compilerPackageDependencies);
       version.testerPackageDependencies = sortObject(version.testerPackageDependencies);
       version.peerPackageDependencies = sortObject(version.peerPackageDependencies);
       sortOverrides(version.overrides);
+      componentFromModel.dependencies.sort();
+      componentFromModel.devDependencies.sort();
+      componentFromModel.compilerDependencies.sort();
+      componentFromModel.testerDependencies.sort();
       componentFromModel.packageDependencies = sortObject(componentFromModel.packageDependencies);
       componentFromModel.devPackageDependencies = sortObject(componentFromModel.devPackageDependencies);
       componentFromModel.compilerPackageDependencies = sortObject(componentFromModel.compilerPackageDependencies);
