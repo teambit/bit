@@ -95,7 +95,6 @@ export default class ScopeComponentsImporter {
     const idsWithoutNils = removeNils(ids);
     if (R.isEmpty(idsWithoutNils)) return Promise.resolve([]);
     const versionDependenciesArr: VersionDependencies[] = await this.importMany(idsWithoutNils, cache);
-
     const importAllVersions = (versionDependencies) => {
       const versions = versionDependencies.component.component.listVersions();
       const idsWithAllVersions = versions.map((version) => {
@@ -169,9 +168,9 @@ export default class ScopeComponentsImporter {
   }
 
   componentsToComponentsObjects(
-    components: Array<VersionDependencies | ComponentVersion>
+    components: Array<VersionDependencies | ComponentVersion>, clientVersion: ?string
   ): Promise<ComponentObjects[]> {
-    return pMapSeries(components, component => component.toObjects(this.scope.objects));
+    return pMapSeries(components, component => component.toObjects(this.scope.objects, clientVersion));
   }
 
   /**
