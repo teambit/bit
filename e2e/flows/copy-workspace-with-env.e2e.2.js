@@ -33,8 +33,8 @@ describe('custom module resolutions', function () {
       expect(parsedDoctor.examineResult).to.have.property('bareResult');
       const results = parsedDoctor.examineResult.bareResult;
       expect(results.valid).to.be.false;
-      expect(Helper.alignOutput(results.data.brokenSymlinks[0].pathToDelete)).to.equal(
-        path.join(copiedPath, '.bit/components/compilers/react/bit.envs/1.0.1')
+      expect(results.data.brokenSymlinks[0].pathToDelete).to.have.string(
+        path.normalize('.bit/components/compilers/react/bit.envs')
       );
     });
   });
