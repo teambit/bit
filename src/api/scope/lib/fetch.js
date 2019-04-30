@@ -30,7 +30,10 @@ export default (async function fetch(
   const clientVersion = headers ? headers.version : null;
 
   // $FlowFixMe
-  const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(importedComponents, clientVersion);
+  const componentObjects = await scopeComponentsImporter.componentsToComponentsObjects(
+    importedComponents,
+    clientVersion
+  );
   if (HooksManagerInstance) {
     await HooksManagerInstance.triggerHook(
       POST_SEND_OBJECTS,
