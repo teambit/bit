@@ -61,10 +61,12 @@ export function componentToPrintableForDiff(component: Component): Object {
   obj.mainFile = mainFile ? normalize(mainFile) : null;
   obj.dependencies = dependencies
     .toStringOfIds()
+    .sort()
     .concat(parsePackages(packageDependencies))
     .filter(x => x);
   obj.devDependencies = devDependencies
     .toStringOfIds()
+    .sort()
     .concat(printableDevPackageDependencies)
     .concat(printableCompilerDependencies)
     .concat(printableTesterDependencies)
