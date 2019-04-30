@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve error when user try to export components with private dependencies to collection under another owner
+
 ## [14.0.7-dev.4] - 2019-04-30
 
 - enable changing envs from package-json "bit.env" key for imported components
@@ -51,7 +53,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
 - fix dependencies version resolution from package.json to support versions with range
-
 
 ## [14.0.5] - 2019-04-07
 

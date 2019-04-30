@@ -30,6 +30,8 @@ import { getSync } from '../../../api/consumer/lib/global-config';
 import GeneralError from '../../../error/general-error';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
 import CustomError from '../../../error/custom-error';
+import RemoteResolverError from '../exceptions/remote-resolver-error';
+import ExportAnotherOwnerPrivate from '../exceptions/export-another-owner-private';
 
 const checkVersionCompatibility = R.once(checkVersionCompatibilityFunction);
 const PASSPHRASE_MESSAGE = 'Encrypted private key detected, but no passphrase given';
@@ -313,6 +315,12 @@ export default class SSH implements Network {
         return new CustomError(parsedError && parsedError.message ? parsedError.message : err);
       case 133:
         return new OldClientVersion(parsedError && parsedError.message ? parsedError.message : err);
+      case 134: {
+        const msg = parsedError && parsedError.message ? parsedError.message : err;
+        const sourceScope = parsedError && parsedError.sourceScope ? parsedError.sourceScope : 'unknown';
+        const destinationScope = parsedError && parsedError.destinationScope ? parsedError.destinationScope : 'unknown';
+        return new ExportAnotherOwnerPrivate(msg, sourceScope, destinationScope);
+      }
     }
   }
 
