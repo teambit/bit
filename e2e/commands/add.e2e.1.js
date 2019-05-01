@@ -1199,4 +1199,18 @@ describe('bit add command', function () {
       helper.expectToThrow(addCmd, error);
     });
   });
+  describe('adding a directory and also its files', () => {
+    let output;
+    before(() => {
+      helper.initLocalScope();
+      helper.createFile('src/one', 'first.js');
+      helper.createFile('src/one', 'second.js');
+      helper.createFile('src/two', 'third.js');
+      helper.createFile('src', 'fourth.js');
+      output = helper.addComponent('"src/**/*"');
+    });
+    it('should add them as individual files and ignore the directories', () => {
+      expect(output).to.have.string('tracking 4 new components');
+    });
+  });
 });

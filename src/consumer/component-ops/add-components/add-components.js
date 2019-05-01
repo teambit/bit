@@ -630,6 +630,7 @@ export default class AddComponents {
 
   async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {
     logger.debugAndAddBreadCrumb('add-components', 'adding multiple components');
+    this._removeDirectoriesWhenTheirFilesAreAdded(componentPathsStats);
     const testToRemove = !R.isEmpty(this.tests)
       ? await this.getFilesAccordingToDsl(Object.keys(componentPathsStats), this.tests)
       : [];
@@ -638,6 +639,22 @@ export default class AddComponents {
     validateNoDuplicateIds(added);
     this._removeNamespaceIfNotNeeded(added);
     await this._addMultipleToBitMap(added);
+  }
+
+  /**
+   * some uses of wildcards might add directories and their files at the same time, in such cases
+   * only the files are needed and the directories can be ignored.
+   * @see https://github.com/teambit/bit/issues/1406 for more details
+   */
+  _removeDirectoriesWhenTheirFilesAreAdded(componentPathsStats: PathsStats) {
+    const allPaths = Object.keys(componentPathsStats);
+    allPaths.forEach((componentPath) => {
+      const foundDir = allPaths.find(p => p === path.dirname(componentPath));
+      if (foundDir && componentPathsStats[foundDir]) {
+        logger.debug(`add-components._removeDirectoriesWhenTheirFilesAreAdded, ignoring ${foundDir}`);
+        delete componentPathsStats[foundDir];
+      }
+    });
   }
 
   async _addMultipleToBitMap(added: AddedComponent[]): Promise<void> {
