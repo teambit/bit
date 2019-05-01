@@ -100,6 +100,8 @@ import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-witho
 import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
 import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
+import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
+import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -242,6 +244,19 @@ to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIs
   [
     UnexpectedNetworkError,
     err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
+  ],
+  [
+    RemoteResolverError,
+    err => `error: ${err.message ? `${err.message}` : 'unexpected remote resolver error has occurred'}`
+  ],
+  [
+    ExportAnotherOwnerPrivate,
+    err => `error: unable to export components to ${
+      err.destinationScope
+    } because they have dependencies on components in ${err.sourceScope}.
+bit does not allow setting dependencies between components in private collections managed by different owners.
+
+see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bitdev-permissions.html`
   ],
   [
     SSHInvalidResponse,

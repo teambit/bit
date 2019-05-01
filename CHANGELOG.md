@@ -8,8 +8,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - fix symlink generation when a binary file is required from another file within the same component using custom resolve module
+
+## [14.0.7-dev.5] - 2019-05-01
+
 - add a new bit-doctor diagnose for broken symlinks paths on environments directories
 - fix `bit status` to not show the component as modified when dependencies have different order
+- improve error when user try to export components with private dependencies to collection under another owner
 
 ## [14.0.7-dev.4] - 2019-04-30
 
@@ -55,7 +59,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
 - fix dependencies version resolution from package.json to support versions with range
-
 
 ## [14.0.5] - 2019-04-07
 
