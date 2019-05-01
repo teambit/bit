@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix symlink generation when a binary file is required from another file within the same component using custom resolve module
+
 ## [14.0.7-dev.5] - 2019-05-01
 
 - add a new bit-doctor diagnose for broken symlinks paths on environments directories
