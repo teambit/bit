@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.0.7-dev.5] - 2019-05-01
+
 - add a new bit-doctor diagnose for broken symlinks paths on environments directories
 - fix `bit status` to not show the component as modified when dependencies have different order
 - improve error when user try to export components with private dependencies to collection under another owner
