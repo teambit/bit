@@ -7,53 +7,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix symlink generation when a binary file is required from another file within the same component using custom resolve module
+## [[14.1.0] - 2019-05-01](https://github.com/teambit/bit/releases/tag/v14.1.0)
 
-## [14.0.7-dev.5] - 2019-05-01
+### New
 
-- add a new bit-doctor diagnose for broken symlinks paths on environments directories
-- fix `bit status` to not show the component as modified when dependencies have different order
-- improve error when user try to export components with private dependencies to collection under another owner
+- [enable manual manipulation for component dependency resolution and environment configuration using `overrides`](http://docs.bit.dev/docs/conf-bit-json.html#overrides).
 
-## [14.0.7-dev.4] - 2019-04-30
+### Changes
 
-- enable changing envs from package-json "bit.env" key for imported components
-- show a descriptive error when a version object is missing
-- throw an error when a client uses an older version that does not support "overrides" and imports components that use "overrides"
-
-## [14.0.7-dev.3] - 2019-04-25
-
-- improve `bit show` to display class properties
+- [moving Bit configuration to `package.json`.](http://docs.bit.dev/docs/initializing-bit.html#bit-config)
 - improve performance of `bit import` by reducing memory consumption and using more cache
-- fix "EMFILE: too many open files" and "JavaScript heap out of memory" errors on `bit import`
+- reintroduce `-c` alias for `--no-cache` flag in `bit build` command
+- improve authentication error message to clearly indicate the various strategies failures
+- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
+- avoid installing "undefined" npm package when importing authored components
+- improve Bit load time by changing bit-javascript to use lazy loading
+- remove `dependencies` property from workspace `bit.json`.
+- improve `bit show` to display class properties
 - replace the cache mechanism from roadrunner to v8-compile-cache
 
-## [14.0.7-dev.2] - 2019-04-21
+### Bug fixes
 
-- avoid reporting errors on components with dynamic import statements (#1554)
-- convert components entered to `overrides` as packages into valid component names
-- improve Bit load time by changing bit-javascript to use lazy loading
+- fix "EMFILE: too many open files" and "JavaScript heap out of memory" errors on `bit import`
 - fix output for `bit list -j` (remove chalk characters and improve format)
+- avoid reporting errors on components with dynamic import statements (#1554)
+- fix tagging imported components to not loose `package.json` properties
+- fix symlink generation when a binary file is required from another file within the same component using custom resolve module
+- fix `bit status` to not show the component as modified when dependencies have different order
+- show a descriptive error when user try to export components with private dependencies to collection under another owner
+- show a descriptive error when a version object is missing
 
-## [14.0.7-dev.1] - 2019-04-16
+### Experimental
 
-- new `bit doctor` command
-- support overriding environments (compiler/tester) per component
-- `overrides` property supports manually adding dependencies (experimental for now)
-- `overrides` property supports ignoring dependencies (experimental for now)
-- fix tagging imported components to not loose package.json properties
-- `overrides` property of workspace configuration supports component ids with wildcards
-- support changing dependencies versions by adding them to the "overrides" property of the component configuration or workspace configuration
-- obsolete the `*dependencies` properties of component bit.json.
-- write component configuration data to package.json inside `bit` property on import. write to `bit.json` if `--conf` flag was used
-
-- write workspace configuration data to package.json inside `bit` property instead of creating `bit.json` file
-- generate package.json with the main property on node_modules for authored exported components instead of creating an entry point file
-- obsolete the "dependencies" property of consumer bit.json
-- avoid installing "undefined" npm package when importing authored components
-- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
-- improve authentication error message to clearly indicate the various strategies failures
-- reintroduce `-c` alias for `--no-cache` flag in `bit build` command
+- `bit doctor` command and APIs to run diagnosis on a workspace
 
 ## [14.0.6] - 2019-04-16
 
