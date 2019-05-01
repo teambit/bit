@@ -128,6 +128,8 @@ export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
 
 export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
 
+export const REPO_NAME = 'teambit/bit';
+
 export const DEFAULT_HUB_LOGIN = `https://${BASE_WEB_DOMAIN}/bit-login`;
 
 export const DEFAULT_BIT_ENV = 'production';
