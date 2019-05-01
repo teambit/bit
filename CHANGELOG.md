@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit add` to ignore directories when their files are added (#1406)
+
 ## [[14.1.0] - 2019-05-01](https://github.com/teambit/bit/releases/tag/v14.1.0)
 
 ### New
