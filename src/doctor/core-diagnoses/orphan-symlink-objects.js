@@ -6,7 +6,7 @@ import { Symlink, ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
 export default class OrphanSymlinkObjects extends Diagnosis {
-  name = 'orphan-symlink-objects';
+  name = 'Check orphan link files';
   description = 'validate that objects do not have symlinks that point to non exist components';
   category = 'bit-core-files';
 

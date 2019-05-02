@@ -11,8 +11,8 @@ import { Scope } from '../../scope';
 type BrokenSymlink = { symlinkPath: string, brokenPath: string, pathToDelete: string };
 
 export default class BrokenSymlinkFiles extends Diagnosis {
-  name = 'broken-symlink-files';
-  description = 'validate Bit generated symlink files within environment directory';
+  name = 'Check invalid link files';
+  description = 'Validate Bit generated symlink files within environment directory';
   category = 'bit-core-files';
 
   _formatSymptoms(bareResult: ExamineBareResult): string {
