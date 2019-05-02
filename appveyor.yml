@@ -128,8 +128,8 @@ artifacts:
   # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
   # - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
   #   name: bit-logs
-  - path: "output.err"
-    name: mocha-output
+  # - path: "output.err"
+  #   name: mocha-output
 #- path: artifacts\*.msi
 #  name: Installer
 #- path: artifacts\bit.${VERSION}.nupkg
