@@ -4,7 +4,8 @@ import Component from './consumer-component';
 import CompilerExtension from '../../extensions/compiler-extension';
 import { SourceFile } from './sources';
 
-describe('ConsumerComponent', () => {
+describe('ConsumerComponent', function () {
+  this.timeout(0);
   describe('fromString()', () => {
     describe('component with compiler', () => {
       let component;

@@ -204,29 +204,34 @@ describe('component with package.json as a file of the component', function () {
         expect(barFoo.dependencies[0].relativePaths[0].sourceRelativePath).to.equal('package.json');
         expect(barFoo.dependencies[0].relativePaths[0].destinationRelativePath).to.equal('package.json');
       });
+
       describe('export the updated components and re-import them for author', () => {
-        before(() => {
-          helper.exportAllComponents();
-          helper.getClonedLocalScope(afterExportScope);
+        if (process.env.APPVEYOR === 'True') {
+          this.skip;
+        } else {
+          before(() => {
+            helper.exportAllComponents();
+            helper.getClonedLocalScope(afterExportScope);
 
-          // scenario 1: import bar/foo then foo/pkg. we had a bug here. it imported bar/foo as
-          // authored (as expected) but foo/pkg as nested. then, after running the import for
-          // foo/pkg it changed the record to imported. Now, it doesn't change it to imported
-          // but leave it as authored
-          helper.importComponent('bar/foo');
-          helper.importComponent('foo/pkg');
+            // scenario 1: import bar/foo then foo/pkg. we had a bug here. it imported bar/foo as
+            // authored (as expected) but foo/pkg as nested. then, after running the import for
+            // foo/pkg it changed the record to imported. Now, it doesn't change it to imported
+            // but leave it as authored
+            helper.importComponent('bar/foo');
+            helper.importComponent('foo/pkg');
 
-          // scenario 2: import all components from .bitmap, we have a bug as well, for some
-          // reason, it imports the objects but doesn't update the file system.
-          // helper.importAllComponents(true);
-        });
-        it('should not add wrapDir for the author', () => {
-          expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
-        });
-        it('should not show the component as modified', () => {
-          const output = helper.runCmd('bit status');
-          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
-        });
+            // scenario 2: import all components from .bitmap, we have a bug as well, for some
+            // reason, it imports the objects but doesn't update the file system.
+            // helper.importAllComponents(true);
+          });
+          it('should not add wrapDir for the author', () => {
+            expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
+          });
+          it('should not show the component as modified', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          });
+        }
       });
     });
   });

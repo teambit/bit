@@ -389,7 +389,7 @@ describe('custom module resolutions', function () {
         expect(expectedDest).to.be.a.file();
 
         const symlinkValue = fs.readlinkSync(expectedDest);
-        expect(symlinkValue).to.have.string('components/bar/foo/assets/png_fixture.png');
+        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/assets/png_fixture.png'));
       });
       (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
         before(async () => {
