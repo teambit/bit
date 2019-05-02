@@ -6,8 +6,10 @@
 import * as pathlib from 'path';
 import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
-import ConsumerBitConfig from './bit-config/consumer-bit-config';
-import { BitConfigNotFound } from './bit-config/exceptions';
+import WorkspaceConfig from './config/workspace-config';
+import { BitConfigNotFound } from './config/exceptions';
+
+export type ConsumerInfo = { path: string, consumerConfig: ?WorkspaceConfig, hasBitMap: boolean, hasScope: boolean };
 
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
@@ -38,9 +40,7 @@ export function pathHasLocalScope(path: string) {
 /**
  * propagate from the given directory up to the root to find the consumer
  */
-export async function getConsumerInfo(
-  absPath: string
-): Promise<?{ path: string, consumerConfig: ?ConsumerBitConfig, hasBitMap: boolean, hasScope: boolean }> {
+export async function getConsumerInfo(absPath: string): Promise<?ConsumerInfo> {
   const searchPaths = buildPropagationPaths();
   searchPaths.unshift(absPath);
   for (let i = 0; i < searchPaths.length; i += 1) {
@@ -81,9 +81,9 @@ export async function getConsumerInfo(
     return (await fs.exists(composeBitHiddenDirPath(path))) || fs.exists(composeBitGitHiddenDirPath(path));
   }
 
-  async function getConsumerConfigIfExists(path: string): Promise<?ConsumerBitConfig> {
+  async function getConsumerConfigIfExists(path: string): Promise<?WorkspaceConfig> {
     try {
-      return await ConsumerBitConfig.load(path);
+      return await WorkspaceConfig.load(path);
     } catch (err) {
       if (err instanceof BitConfigNotFound) {
         return null;

@@ -1,5 +1,6 @@
 // @flow
 import fs from 'fs-extra';
+import * as RA from 'ramda-adjunct';
 import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
@@ -9,13 +10,15 @@ import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import { pathNormalizeToLinux } from '../../utils/path';
-import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
+import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
 import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';
+import ComponentConfig from '../config/component-config';
+import { populateEnvFilesToWrite } from './eject-conf';
 
 export type ComponentWriterProps = {
   component: Component,
@@ -142,6 +145,14 @@ export default class ComponentWriter {
         this.writeBitDependencies,
         this.excludeRegistryPrefix
       );
+
+      const componentConfig = ComponentConfig.fromComponent(this.component);
+      componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
+      componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
+      packageJson.bit = componentConfig.toPlainObject();
+
+      await this._populateEnvFilesIfNeeded();
+
       addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
       if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
       this.component.packageJsonInstance = packageJson;
@@ -176,6 +187,44 @@ export default class ComponentWriter {
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
+  }
+
+  async _populateEnvFilesIfNeeded() {
+    const areThereEnvFiles =
+      (this.component.compiler && !RA.isNilOrEmpty(this.component.compiler.files)) ||
+      (this.component.tester && !RA.isNilOrEmpty(this.component.tester.files));
+    if (!areThereEnvFiles) {
+      return;
+    }
+
+    if (this.component.compiler) {
+      await populateEnvFilesToWrite({
+        configDir: this.writeToPath,
+        env: this.component.compiler,
+        consumer: this.consumer,
+        component: this.component,
+        deleteOldFiles: false,
+        verbose: false
+      });
+      // $FlowFixMe
+      this.component.dataToPersist.merge(this.component.compiler.dataToPersist);
+    }
+    if (this.component.tester) {
+      await populateEnvFilesToWrite({
+        configDir: this.writeToPath,
+        env: this.component.tester,
+        consumer: this.consumer,
+        component: this.component,
+        deleteOldFiles: false,
+        verbose: false
+      });
+      // $FlowFixMe
+      this.component.dataToPersist.merge(this.component.tester.dataToPersist);
+    }
+    if (!this.writeConfig && !this.configDir && this.component.componentMap) {
+      this.configDir = DEFAULT_EJECTED_ENVS_DIR_PATH;
+      this.component.componentMap.setConfigDir(this.configDir);
+    }
   }
 
   _copyFilesIntoDistsWhenDistsOutsideComponentDir() {
@@ -213,7 +262,7 @@ export default class ComponentWriter {
         // so it's better to just remove the old record and add a new one
         this.consumer.bitMap.removeComponent(this.component.id);
       }
-      this.addComponentToBitMap(this.componentMap.rootDir);
+      this.component.componentMap = this.addComponentToBitMap(this.componentMap.rootDir);
     }
   }
 
@@ -238,7 +287,7 @@ export default class ComponentWriter {
       );
     };
     if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
-      this.consumer.bitConfig.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
+      this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
 
@@ -308,10 +357,7 @@ export default class ComponentWriter {
     await Promise.all(
       directDependentComponents.map((dependent) => {
         const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
-        const relativeLinkPath = getNodeModulesPathOfComponent(
-          this.consumer.bitConfig.bindingPrefix,
-          this.component.id
-        );
+        const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id);
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
         );

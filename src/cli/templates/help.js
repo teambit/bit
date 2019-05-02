@@ -156,6 +156,10 @@ const allCommands = [
         description: 'global config management'
       },
       {
+        name: 'doctor',
+        description: 'diagnose a bit workspace'
+      },
+      {
         name: 'cc',
         description: "clears Bit's cache from current working machine"
       }

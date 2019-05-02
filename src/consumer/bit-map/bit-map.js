@@ -27,9 +27,9 @@ import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, 
 import type { BitIdStr } from '../../bit-id/bit-id';
 import GeneralError from '../../error/general-error';
 import InvalidConfigDir from './exceptions/invalid-config-dir';
-import ComponentBitConfig from '../bit-config';
+import ComponentConfig from '../config';
 import ConfigDir from './config-dir';
-import ConsumerBitConfig from '../bit-config/consumer-bit-config';
+import WorkspaceConfig from '../config/workspace-config';
 
 export type BitMapComponents = { [componentId: string]: ComponentMap };
 
@@ -104,11 +104,10 @@ export default class BitMap {
 
   static load(dirPath: PathOsBasedAbsolute): BitMap {
     const { currentLocation, defaultLocation } = BitMap.getBitMapLocation(dirPath);
-    if (!currentLocation) {
-      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
+    const mapFileContent = BitMap.loadRawSync(dirPath);
+    if (!mapFileContent || !currentLocation) {
       return new BitMap(dirPath, defaultLocation, BIT_VERSION);
     }
-    const mapFileContent = fs.readFileSync(currentLocation);
     let componentsJson;
     try {
       componentsJson = json.parse(mapFileContent.toString('utf8'), null, true);
@@ -123,6 +122,16 @@ export default class BitMap {
     const bitMap = new BitMap(dirPath, currentLocation, version);
     bitMap.loadComponents(componentsJson);
     return bitMap;
+  }
+
+  static loadRawSync(dirPath: PathOsBasedAbsolute): ?Buffer {
+    const { currentLocation } = BitMap.getBitMapLocation(dirPath);
+    if (!currentLocation) {
+      logger.info(`bit.map: unable to find an existing ${BIT_MAP} file. Will create a new one if needed`);
+      return undefined;
+    }
+    const mapFileContent = fs.readFileSync(currentLocation);
+    return mapFileContent;
   }
 
   static getBitMapLocation(dirPath: PathOsBasedAbsolute) {
@@ -259,7 +268,7 @@ export default class BitMap {
    */
   async getConfigDirsAndFilesToIgnore(
     consumerPath: PathLinux,
-    consumerConfig: ConsumerBitConfig
+    consumerConfig: WorkspaceConfig
   ): Promise<IgnoreFilesDirs> {
     const ignoreList = {
       files: [],
@@ -272,10 +281,10 @@ export default class BitMap {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
         const componentPkgJsonDir = component.rootDir ? path.join(consumerPath, component.rootDir) : null;
-        const componentBitConfig = await ComponentBitConfig.load(componentPkgJsonDir, fullConfigDir, consumerConfig);
-        const compilerObj = R.values(componentBitConfig.compiler)[0];
+        const componentConfig = await ComponentConfig.load(componentPkgJsonDir, fullConfigDir, consumerConfig);
+        const compilerObj = R.values(componentConfig.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
-        const testerObj = R.values(componentBitConfig.tester)[0];
+        const testerObj = R.values(componentConfig.tester)[0];
         const testerFilesObj = testerObj && testerObj.files ? testerObj.files : undefined;
         const compilerFiles = compilerFilesObj ? R.values(compilerFilesObj) : [];
         const testerFiles = testerFilesObj ? R.values(testerFilesObj) : [];
@@ -921,7 +930,12 @@ export default class BitMap {
   async write(): Promise<any> {
     if (!this.hasChanged) return null;
     logger.debug('writing to bit.map');
-    const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
+    const bitMapContent = this.getContent();
     return outputFile({ filePath: this.mapPath, content: JSON.stringify(bitMapContent, null, 4) });
+  }
+
+  getContent(): Object {
+    const bitMapContent = Object.assign({}, this.toObjects(), { version: this.version });
+    return bitMapContent;
   }
 }

@@ -2,6 +2,7 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
+import pMapSeries from 'p-map-series';
 import { moveExistingComponent } from './move-components';
 import { getAllComponentsLinks } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
@@ -129,8 +130,8 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer.bitConfig.overrides.hasChanged) {
-      const jsonFiles = await this.consumer.bitConfig.prepareToWrite({ bitDir: this.consumer.getPath() });
+    if (this.consumer.config.overrides.hasChanged) {
+      const jsonFiles = await this.consumer.config.prepareToWrite({ bitDir: this.consumer.getPath() });
       dataToPersist.addManyFiles(jsonFiles);
     }
     await dataToPersist.persistAllToFS();
@@ -147,11 +148,11 @@ export default class ManyComponentsWriter {
   }
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
-    const writeComponentsP = writeComponentsParams.map((writeParams) => {
+    const populateComponent = (writeParams) => {
       const componentWriter = ComponentWriter.getInstance(writeParams);
       return componentWriter.populateComponentsFilesToWrite();
-    });
-    this.writtenComponents = await Promise.all(writeComponentsP);
+    };
+    this.writtenComponents = await pMapSeries(writeComponentsParams, populateComponent);
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {
     return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>

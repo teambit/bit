@@ -303,13 +303,22 @@ function getInternalCustomResolvedLinks(
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
     const linkContent = getLinkToFileContent(destRelative);
+
+    const postInstallSymlink = createNpmLinkFiles && !linkContent;
     const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
     const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
+    const getSymlink = () => {
+      if (linkContent) return undefined;
+      if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
+      return sourceAbs;
+    };
     return {
       linkPath: createNpmLinkFiles ? dest : destAbs,
       linkContent,
       postInstallLink: createNpmLinkFiles,
-      customResolveMapping
+      customResolveMapping,
+      symlinkTo: getSymlink(),
+      postInstallSymlink
     };
   });
 }

@@ -9,7 +9,7 @@ chai.use(require('chai-fs'));
 
 describe('custom module resolutions', function () {
   this.timeout(0);
-  const helper = new Helper();
+  let helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
@@ -345,6 +345,75 @@ describe('custom module resolutions', function () {
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+    });
+  });
+  describe('using custom module directory when a component uses an internal binary file of the same component', () => {
+    let npmCiRegistry;
+    before(() => {
+      helper = new Helper();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      helper.setNewLocalAndRemoteScopes();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
+      helper.writeBitJson(bitJson);
+      npmCiRegistry.setCiScopeInBitJson();
+
+      const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
+      const destPngFile = path.join(helper.localScopePath, 'src/assets', 'png_fixture.png');
+      fs.copySync(sourcePngFile, destPngFile);
+      const barFooFixture = "require('assets/png_fixture.png');";
+      helper.createFile('src/bar', 'foo.js', barFooFixture);
+      helper.addComponent('src/bar/foo.js src/assets/png_fixture.png', { i: 'bar/foo', m: 'src/bar/foo.js' });
+    });
+    it('bit status should not warn about missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.string('missing');
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+      });
+      it('should not show the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.string('modified');
+      });
+      it('should create a symlink on node_modules pointing to the binary file', () => {
+        const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/node_modules/assets/png_fixture.png');
+        expect(expectedDest).to.be.a.file();
+
+        const symlinkValue = fs.readlinkSync(expectedDest);
+        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/assets/png_fixture.png'));
+      });
+      (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
+        before(async () => {
+          await npmCiRegistry.init();
+          helper.importNpmPackExtension();
+          helper.removeRemoteScope();
+          npmCiRegistry.publishComponent('bar/foo');
+
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        after(() => {
+          npmCiRegistry.destroy();
+        });
+        it('should be able to install the package successfully and generate the symlink to the file', () => {
+          const expectedDest = path.join(
+            helper.localScopePath,
+            `node_modules/@ci/${helper.remoteScope}.bar.foo/node_modules/assets/png_fixture.png`
+          );
+          expect(expectedDest).to.be.a.file();
+
+          const symlinkValue = fs.readlinkSync(expectedDest);
+          expect(symlinkValue).to.be.a.file();
         });
       });
     });

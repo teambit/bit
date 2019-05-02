@@ -26,7 +26,7 @@ import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
 import versionParser from '../../version/version-parser';
-import ComponentOverrides from '../../consumer/bit-config/component-overrides';
+import ComponentOverrides from '../../consumer/config/component-overrides';
 import { makeEnvFromModel } from '../../extensions/env-factory';
 
 type State = {

@@ -45,8 +45,8 @@ import {
   CyclicDependencies,
   HashNotFound
 } from '../scope/exceptions';
-import InvalidBitJson from '../consumer/bit-config/exceptions/invalid-bit-json';
-import InvalidPackageJson from '../consumer/bit-config/exceptions/invalid-package-json';
+import InvalidBitJson from '../consumer/config/exceptions/invalid-bit-json';
+import InvalidPackageJson from '../consumer/config/exceptions/invalid-package-json';
 import InvalidVersion from '../api/consumer/lib/exceptions/invalid-version';
 import NoIdMatchWildcard from '../api/consumer/lib/exceptions/no-id-match-wildcard';
 import NothingToCompareTo from '../api/consumer/lib/exceptions/nothing-to-compare-to';
@@ -97,7 +97,11 @@ import InjectNonEjected from '../consumer/component/exceptions/inject-non-ejecte
 import ExtensionSchemaError from '../extensions/exceptions/extension-schema-error';
 import GitNotFound from '../utils/git/exceptions/git-not-found';
 import ObjectsWithoutConsumer from '../api/consumer/lib/exceptions/objects-without-consumer';
-import InvalidBitConfigPropPath from '../consumer/bit-config/exceptions/invalid-bit-config-prop-path';
+import InvalidConfigPropPath from '../consumer/config/exceptions/invalid-config-prop-path';
+import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-found';
+import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
+import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
+import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -242,6 +246,19 @@ to get the file rebuild, please delete it at "${err.indexJsonPath}".\n${reportIs
     err => `error: unexpected network error has occurred. ${err.message ? ` original message: ${err.message}` : ''}`
   ],
   [
+    RemoteResolverError,
+    err => `error: ${err.message ? `${err.message}` : 'unexpected remote resolver error has occurred'}`
+  ],
+  [
+    ExportAnotherOwnerPrivate,
+    err => `error: unable to export components to ${
+      err.destinationScope
+    } because they have dependencies on components in ${err.sourceScope}.
+bit does not allow setting dependencies between components in private collections managed by different owners.
+
+see troubleshooting at https://${BASE_DOCS_DOMAIN}/docs/bitdev-permissions.html`
+  ],
+  [
     SSHInvalidResponse,
     () => `error: received an invalid response from the remote SSH server.
 to see the invalid response, have a look at the log, located at ${DEBUG_LOG}`
@@ -260,6 +277,8 @@ Original Error: ${err.message}`
         'bit init'
       )} to recreate the file`
   ],
+  [MissingDiagnosisName, err => 'error: please provide a diagnosis name'],
+  [DiagnosisNotFound, err => `error: diagnosis ${chalk.bold(err.diagnosisName)} not found`],
   [
     ComponentSpecsFailed,
     err =>
@@ -314,7 +333,7 @@ consider running ${chalk.bold('bit init --reset')} to recreate the file`
 please fix the file in order to run bit commands`
   ],
   [
-    InvalidBitConfigPropPath,
+    InvalidConfigPropPath,
     err => `error: the path "${chalk.bold(err.fieldValue)}" of "${chalk.bold(
       err.fieldName
     )}" in your bit.json or package.json file is invalid.

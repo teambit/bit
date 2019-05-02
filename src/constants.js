@@ -128,6 +128,8 @@ export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
 
 export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
 
+export const REPO_NAME = 'teambit/bit';
+
 export const DEFAULT_HUB_LOGIN = `https://${BASE_WEB_DOMAIN}/bit-login`;
 
 export const DEFAULT_BIT_ENV = 'production';
@@ -274,11 +276,6 @@ export const HOOKS_NAMES = [
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * modules cache directory
- */
-export const MODULES_CACHE_DIR: PathOsBased = path.join(CACHE_ROOT, 'modules');
-
-/**
  * app cache directory
  */
 export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
@@ -299,11 +296,6 @@ export const BIT_HIDDEN_DIR = '.bit';
 export const BIT_GIT_DIR = 'bit';
 
 export const DOT_GIT_DIR = '.git';
-
-/**
- * modules cache filename
- */
-export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json');
 
 /**
  * bit registry default URL.
@@ -356,6 +348,8 @@ export const TESTER_ENV_TYPE = 'tester';
 export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
 
 export const MANUALLY_REMOVE_DEPENDENCY = '-';
+
+export const MANUALLY_REMOVE_ENVIRONMENT = '-';
 
 export const MANUALLY_ADD_DEPENDENCY = '+';
 

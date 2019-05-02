@@ -45,6 +45,7 @@ import objectToStringifiedTupleArray from './object-to-stringified-tuple-array';
 import deflate from './zlib-deflate';
 import sha1 from './encryption/sha1';
 import isString from './string/is-string';
+import removeChalkCharacters from './string/remove-chalk-characters';
 import getStringifyArgs from './string/get-stringify-args';
 import isNumeric from './number/is-numeric';
 import diff from './array/diff';
@@ -88,6 +89,7 @@ export {
   filterObject,
   sortObject,
   isString,
+  removeChalkCharacters,
   getStringifyArgs,
   isNumeric,
   inflate,

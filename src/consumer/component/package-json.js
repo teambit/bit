@@ -18,7 +18,6 @@ import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import DataToPersist from './sources/data-to-persist';
-import ComponentBitConfig from '../bit-config';
 
 // the instance comes from bit-javascript PackageJson class
 export type PackageJsonInstance = { write: Function, bit?: Object, componentRootFolder: string };
@@ -221,10 +220,6 @@ function preparePackageJsonToWrite(
     return packageJson;
   };
   const packageJson = getPackageJsonInstance(bitDir);
-  const componentBitConfig = ComponentBitConfig.fromComponent(component);
-  componentBitConfig.compiler = component.compiler ? component.compiler.name : {};
-  componentBitConfig.tester = component.tester ? component.tester.name : {};
-  packageJson.bit = componentBitConfig.toPlainObject();
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
@@ -253,13 +248,9 @@ async function updateAttribute(
  * Adds workspace array to package.json - only if user wants to work with yarn workspaces
  */
 async function addWorkspacesToPackageJson(consumer: Consumer, customImportPath: ?string) {
-  if (
-    consumer.bitConfig.manageWorkspaces &&
-    consumer.bitConfig.packageManager === 'yarn' &&
-    consumer.bitConfig.useWorkspaces
-  ) {
+  if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
     const rootDir = consumer.getPath();
-    const dependenciesDirectory = consumer.bitConfig.dependenciesDirectory;
+    const dependenciesDirectory = consumer.config.dependenciesDirectory;
     const { componentsDefaultDirectory } = consumer.dirStructure;
     const driver = consumer.driver.getDriver(false);
     const PackageJson = driver.PackageJson;
@@ -292,11 +283,7 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   const rootDir = consumer.getPath();
   const driver = consumer.driver.getDriver(false);
   const PackageJson = driver.PackageJson;
-  if (
-    consumer.bitConfig.manageWorkspaces &&
-    consumer.bitConfig.packageManager === 'yarn' &&
-    consumer.bitConfig.useWorkspaces
-  ) {
+  if (consumer.config.manageWorkspaces && consumer.config.packageManager === 'yarn' && consumer.config.useWorkspaces) {
     const dirsToRemove = componentIds.map(id => consumer.bitMap.getComponent(id, { ignoreVersion: true }).rootDir);
     await PackageJson.removeComponentsFromWorkspaces(rootDir, dirsToRemove);
   }

@@ -184,7 +184,7 @@ export async function getAllComponentsLinks({
     : writtenComponents;
   const nodeModuleLinker = new NodeModuleLinker(allComponents, consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  const allComponentsIds = BitIds.fromArray(allComponents.map(c => c.id));
+  const allComponentsIds = BitIds.uniqFromArray(allComponents.map(c => c.id));
   const reLinkDependentsData = await getReLinkDependentsData(consumer, writtenComponents, allComponentsIds);
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(reLinkDependentsData);

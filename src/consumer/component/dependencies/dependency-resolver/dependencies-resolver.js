@@ -21,7 +21,7 @@ import EnvExtension from '../../../../extensions/env-extension';
 import BitMap from '../../../bit-map';
 import { isSupportedExtension } from '../../../../links/link-content';
 import OverridesDependencies from './overrides-dependencies';
-import { dependenciesFields } from '../../../bit-config/consumer-overrides';
+import { dependenciesFields } from '../../../config/consumer-overrides';
 
 export type AllDependencies = {
   dependencies: Dependency[],
@@ -126,7 +126,7 @@ export default class DependencyResolver {
         this.consumerPath,
         allFiles,
         this.component.bindingPrefix,
-        this.consumer.bitConfig.resolveModules,
+        this.consumer.config.resolveModules,
         cacheResolvedDependencies
       );
     };
@@ -327,7 +327,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
    */
   _getComponentIdFromCustomResolveToPackageWithDist(depFile: string): ?BitId {
     if (!depFile.includes('dist')) return null;
-    const resolveModules = this.consumer.bitConfig.resolveModules;
+    const resolveModules = this.consumer.config.resolveModules;
     if (!resolveModules || !resolveModules.aliases) return null;
     const foundAlias = Object.keys(resolveModules.aliases).find(alias =>
       depFile.startsWith(resolveModules.aliases[alias])
@@ -433,7 +433,12 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       }
       return;
     }
-    if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) return;
+    if (this.overridesDependencies.shouldIgnoreComponent(componentId, fileType)) {
+      // we can't support it because on the imported side, we don't know to convert the relative path
+      // to the component name, as it won't have the component installed
+      throw new GeneralError(`unable to ignore "${componentId.toString()}" dependency of "${this.componentId.toString()}" by using ignore components syntax because the component is required with relative path.
+either, use the ignore file syntax or change the require statement to have a module path`);
+    }
     // happens when in the same component one file requires another one. In this case, there is
     // noting to do regarding the dependencies
     if (componentId.isEqual(this.componentId)) {
@@ -544,6 +549,10 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     }
   }
 
+  /**
+   * process require/import of Bit components where the require statement is not a relative path
+   * but a module path, such as `require('@bit/bit.envs/compiler/babel');`
+   */
   processBits(originFile: PathLinuxRelative, fileType: FileType) {
     const bits = this.tree[originFile].bits;
     if (!bits || R.isEmpty(bits)) return;

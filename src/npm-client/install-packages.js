@@ -20,12 +20,12 @@ export async function installPackages(
   installPeerDependencies: boolean = false // also install peer dependencies
 ) {
   const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
-  const packageManager = consumer.bitConfig.packageManager;
+  const packageManager = consumer.config.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.bitConfig.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.bitConfig.packageManagerProcessOptions;
-  const useWorkspaces = consumer.bitConfig.useWorkspaces;
+    : consumer.config.packageManagerArgs;
+  const packageManagerProcessOptions = consumer.config.packageManagerProcessOptions;
+  const useWorkspaces = consumer.config.useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
