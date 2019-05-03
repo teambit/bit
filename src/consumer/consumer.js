@@ -281,7 +281,7 @@ export default class Consumer {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
     const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version);
+    return version ? bitId.changeVersion(version) : bitId;
   }
 
   getParsedIdIfExist(id: BitIdStr): ?BitId {
@@ -537,7 +537,8 @@ export default class Consumer {
       const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
-        componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
+        // componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
+        componentFromFileSystem = await this.loadComponent(id);
       } catch (err) {
         if (
           err instanceof MissingFilesFromComponent ||

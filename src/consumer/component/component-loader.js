@@ -95,12 +95,24 @@ export default class ComponentLoader {
       }
       throw err;
     }
+    let newId;
+    if (componentFromModel && !componentFromModel.scope && !componentMap.id.hasVersion()) {
+      newId = componentMap.id.changeVersion(componentFromModel.version);
+      this.consumer.bitMap.updateComponentId(newId);
+      component.version = componentFromModel.version;
+    }
+    if (componentFromModel && componentFromModel.scope && !componentMap.id.hasVersion()) {
+      newId = componentMap.id.changeVersion(componentFromModel.version).changeScope(componentFromModel.scope);
+      this.consumer.bitMap.updateComponentId(newId);
+      component.version = componentFromModel.version;
+      component.scope = componentFromModel.scope;
+    }
 
     component.loadedFromFileSystem = true;
     component.originallySharedDir = componentMap.originallySharedDir || null;
     component.wrapDir = componentMap.wrapDir || null;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponent(id);
+    component.componentMap = this.consumer.bitMap.getComponent(newId || id);
     component.componentFromModel = componentFromModel;
 
     if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
