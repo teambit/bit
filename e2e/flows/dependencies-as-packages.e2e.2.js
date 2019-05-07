@@ -64,11 +64,13 @@ chai.use(require('chai-fs'));
         });
       });
       describe('importing a component using Bit', () => {
+        let beforeImportScope;
         let afterImportScope;
         before(() => {
           helper.reInitLocalScope();
           npmCiRegistry.setCiScopeInBitJson();
           npmCiRegistry.setResolver();
+          beforeImportScope = helper.cloneLocalScope();
           helper.importComponent('bar/foo');
           afterImportScope = helper.cloneLocalScope();
         });
@@ -157,6 +159,32 @@ chai.use(require('chai-fs'));
           it('should show the dependency version from the package.json even when using caret (^) in the version', () => {
             const barFoo = helper.showComponentParsed('bar/foo');
             expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@1.0.0`);
+          });
+        });
+        describe('import dependency and dependent with the same command', () => {
+          describe('when the dependent comes before the dependency', () => {
+            before(() => {
+              helper.getClonedLocalScope(beforeImportScope);
+              helper.importManyComponents(['bar/foo', 'utils/is-string']);
+            });
+            it('should write the path of the dependency into the dependent package.json instead of the version', () => {
+              const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+              expect(packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`]).to.equal(
+                'file:../../utils/is-string'
+              );
+            });
+          });
+          describe('when the dependency comes before the dependent', () => {
+            before(() => {
+              helper.getClonedLocalScope(beforeImportScope);
+              helper.importManyComponents(['utils/is-string', 'bar/foo']);
+            });
+            it('should write the path of the dependency into the dependent package.json instead of the version', () => {
+              const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+              expect(packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`]).to.equal(
+                'file:../../utils/is-string'
+              );
+            });
           });
         });
       });
