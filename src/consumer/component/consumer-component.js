@@ -143,7 +143,7 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?PathOsBasedRelative; // needed for generate links
-  dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
+  dependenciesSavedAsComponents: ?boolean; // otherwise they're saved as npm packages
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root

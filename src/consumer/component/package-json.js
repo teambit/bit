@@ -132,8 +132,11 @@ async function changeDependenciesToRelativeSyntax(
     const devDeps = getPackages(component.devDependencies);
     const compilerDeps = getPackages(component.compilerDependencies);
     const testerDeps = getPackages(component.testerDependencies);
-    packageJson.addDependencies(getPackages(component.dependencies), npmRegistryName());
-    packageJson.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps }, npmRegistryName());
+    packageJson.addDependencies(getPackages(component.dependencies), component.bindingPrefix || npmRegistryName());
+    packageJson.addDevDependencies(
+      { ...devDeps, ...compilerDeps, ...testerDeps },
+      component.bindingPrefix || npmRegistryName()
+    );
     // return packageJson.write({ override: true });
     return JSONFile.load({
       // $FlowFixMe
