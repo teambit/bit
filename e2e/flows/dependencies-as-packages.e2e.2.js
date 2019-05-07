@@ -12,17 +12,15 @@ chai.use(require('chai-fs'));
   'installing dependencies as packages (not as components)',
   function () {
     this.timeout(0);
-    const helper = new Helper();
-    const npmCiRegistry = new NpmCiRegistry(helper);
+    let helper = new Helper();
+    let npmCiRegistry;
     after(() => {
       helper.destroyEnv();
-      npmCiRegistry.destroy();
-    });
-    before(async () => {
-      await npmCiRegistry.init();
     });
     describe('components with nested dependencies', () => {
-      before(() => {
+      before(async () => {
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
         helper.setNewLocalAndRemoteScopes();
         npmCiRegistry.setCiScopeInBitJson();
         helper.createFile('utils', 'is-type.js', fixtures.isType);
@@ -48,6 +46,9 @@ chai.use(require('chai-fs'));
         npmCiRegistry.publishComponent('utils/is-type', '0.0.2');
         npmCiRegistry.publishComponent('utils/is-string', '0.0.2');
         npmCiRegistry.publishComponent('bar/foo', '0.0.2');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
       });
       describe('installing a component using NPM', () => {
         before(() => {
@@ -156,6 +157,96 @@ chai.use(require('chai-fs'));
           it('should show the dependency version from the package.json even when using caret (^) in the version', () => {
             const barFoo = helper.showComponentParsed('bar/foo');
             expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@1.0.0`);
+          });
+        });
+      });
+    });
+    describe('components with nested dependencies and compiler', () => {
+      before(async () => {
+        helper = new Helper();
+        npmCiRegistry = new NpmCiRegistry(helper);
+        await npmCiRegistry.init();
+        helper.setNewLocalAndRemoteScopes();
+        npmCiRegistry.setCiScopeInBitJson();
+        helper.createFile('utils', 'is-type.js', fixtures.isType);
+        helper.addComponentUtilsIsType();
+        helper.createFile('utils', 'is-string.js', fixtures.isString);
+        helper.addComponentUtilsIsString();
+        helper.createComponentBarFoo(fixtures.barFooFixture);
+        helper.addComponentBarFoo();
+        helper.importCompiler();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.importComponent('utils/is-type');
+        helper.importComponent('utils/is-string');
+
+        helper.importNpmPackExtension();
+        helper.removeRemoteScope();
+        npmCiRegistry.publishComponent('utils/is-type');
+        npmCiRegistry.publishComponent('utils/is-string');
+        npmCiRegistry.publishComponent('bar/foo');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      describe('installing a component using NPM', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+      describe('importing a component using Bit', () => {
+        let beforeImportScope;
+        before(() => {
+          helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          npmCiRegistry.setResolver();
+          beforeImportScope = helper.cloneLocalScope();
+          helper.importComponent('bar/foo');
+        });
+        it('bit status should not show any error', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+        describe('import with dist outside the component directory', () => {
+          before(() => {
+            helper.getClonedLocalScope(beforeImportScope);
+            helper.modifyFieldInBitJson('dist', { target: 'dist' });
+            helper.importComponent('bar/foo');
+          });
+          it('bit status should not show any error', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          });
+          describe('running bit link after deleting the symlink from dist directory', () => {
+            let symlinkPath;
+            before(() => {
+              symlinkPath = 'dist/components/bar/foo/node_modules/@ci';
+              helper.deleteFile(symlinkPath);
+              helper.runCmd('bit link');
+            });
+            it('should recreate the symlink with the correct path', () => {
+              const expectedDest = path.join(helper.localScopePath, symlinkPath);
+              expect(expectedDest).to.be.a.path();
+              const symlinkValue = fs.readlinkSync(expectedDest);
+              expect(symlinkValue).to.have.string(path.join(helper.localScope, 'components/bar/foo/node_modules/@ci'));
+            });
           });
         });
       });
