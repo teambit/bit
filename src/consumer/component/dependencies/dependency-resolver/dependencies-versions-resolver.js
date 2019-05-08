@@ -117,7 +117,13 @@ export default function updateDependenciesVersions(consumer: Consumer, component
 
   function getIdFromDependentPackageJson(componentId: BitId): ?BitId {
     // for author, there is not package.json of a component
-    if (!component.bitJson || !component.bitJson.packageJsonObject || !component.bitJson.packageJsonObject.dependencies) { return null; }
+    if (
+      !component.bitJson ||
+      !component.bitJson.packageJsonObject ||
+      !component.bitJson.packageJsonObject.dependencies
+    ) {
+      return null;
+    }
     const dependencyIdAsPackage = componentIdToPackageName(componentId);
     // $FlowFixMe
     const version = component.bitJson.packageJsonObject.dependencies[dependencyIdAsPackage];
