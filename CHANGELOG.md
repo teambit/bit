@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix dependency resolution to identify link (proxy) files correctly
 - fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
 - fix dependency value in the dependent package.json to include the path when importing them both in the same command
 - fix "EEXIST: file already exists" error when running `bit link` or `bit install` and the dist is outside the component directory
