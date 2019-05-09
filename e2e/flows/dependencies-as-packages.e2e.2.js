@@ -149,16 +149,51 @@ chai.use(require('chai-fs'));
           });
         });
         describe('updating dependency version from the dependent package.json', () => {
-          before(() => {
-            helper.getClonedLocalScope(afterImportScope);
-            const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
-            const packageJson = helper.readPackageJson(barFooDir);
-            packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`] = '^1.0.0';
-            helper.writePackageJson(packageJson, barFooDir);
+          describe('when using caret (^) in the version', () => {
+            before(() => {
+              helper.getClonedLocalScope(afterImportScope);
+              const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
+              const packageJson = helper.readPackageJson(barFooDir);
+              packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`] = '^1.0.0';
+              helper.writePackageJson(packageJson, barFooDir);
+            });
+            it('should show the dependency version from the package.json', () => {
+              const barFoo = helper.showComponentParsed('bar/foo');
+              expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@1.0.0`);
+            });
           });
-          it('should show the dependency version from the package.json even when using caret (^) in the version', () => {
-            const barFoo = helper.showComponentParsed('bar/foo');
-            expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@1.0.0`);
+          describe('when importing also the dependency so the package.json has a different version than the model', () => {
+            before(() => {
+              helper.getClonedLocalScope(beforeImportScope);
+              helper.importComponent('bar/foo');
+              helper.importComponent('utils/is-string');
+              const barFooDir = path.join(helper.localScopePath, 'components/bar/foo');
+              const packageJson = helper.readPackageJson(barFooDir);
+              packageJson.dependencies[`@ci/${helper.remoteScope}.utils.is-string`] = '0.0.1';
+              helper.writePackageJson(packageJson, barFooDir);
+            });
+            it('should show the dependency version from the package.json', () => {
+              const barFoo = helper.showComponentParsed('bar/foo');
+              expect(barFoo.dependencies[0].id).to.equal(`${helper.remoteScope}/utils/is-string@0.0.1`);
+            });
+            it('bit diff should show the dependencies ', () => {
+              const diff = helper.diff('bar/foo');
+              expect(diff).to.have.string(`- [ ${helper.remoteScope}/utils/is-string@0.0.2 ]`);
+              expect(diff).to.have.string(`+ [ ${helper.remoteScope}/utils/is-string@0.0.1 ]`);
+            });
+            describe('tagging the component', () => {
+              before(() => {
+                helper.tagAllComponents();
+              });
+              it('should save the version from package.json into the scope', () => {
+                const barFoo = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);
+                expect(barFoo.dependencies[0].id.version).to.equal('0.0.1');
+              });
+              it('bit status should not show the component as modified', () => {
+                const status = helper.status();
+                expect(status).to.not.have.string('modified');
+              });
+            });
           });
         });
         describe('import dependency and dependent with the same command', () => {

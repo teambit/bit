@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
 - fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
 - fix dependency value in the dependent package.json to include the path when importing them both in the same command
 - fix "EEXIST: file already exists" error when running `bit link` or `bit install` and the dist is outside the component directory
