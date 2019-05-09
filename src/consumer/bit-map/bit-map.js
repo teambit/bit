@@ -812,17 +812,18 @@ export default class BitMap {
     const olderComponentId: BitId = similarIds[0];
     const olderComponentIdStr: string = olderComponentId.toString();
     const olderIdStr = olderComponentId.toString();
-    logger.debug(`BitMap: updating an older component ${olderIdStr} with a newer component ${newIdString}`);
+    const newId = id.hasScope() && !id.hasVersion() ? id.changeVersion(olderComponentId.version) : id;
+    logger.debug(`BitMap: updating an older component ${olderIdStr} with a newer component ${newId.toString()}`);
     const componentMap = this.components[olderIdStr];
     this._removeFromComponentsArray(olderComponentId);
-    this.setComponent(id, componentMap);
+    this.setComponent(newId, componentMap);
 
     // update the dependencies array if needed
     Object.keys(this.components).forEach((componentId) => {
       const component = this.components[componentId];
       if (component.dependencies && component.dependencies.includes(olderComponentIdStr)) {
         component.dependencies = component.dependencies.filter(dependency => dependency !== olderComponentIdStr);
-        component.dependencies.push(newIdString);
+        component.dependencies.push(newId.toString());
       }
     });
     this.markAsChanged();

@@ -34,7 +34,7 @@ export async function exportManyBareScope(scope: Scope, componentsObjects: Compo
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
-  const ids = manyCompVersions.map(compVersion => compVersion.id.toString());
+  const ids = manyCompVersions.map(compVersion => compVersion.id.toStringWithoutVersion());
   logger.debug('exportManyBareScope: completed. exit.');
   return ids;
 }
