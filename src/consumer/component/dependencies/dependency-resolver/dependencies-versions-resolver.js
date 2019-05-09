@@ -124,7 +124,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     ) {
       return null;
     }
-    const dependencyIdAsPackage = componentIdToPackageName(componentId);
+    const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
     // $FlowFixMe
     const version = component.bitJson.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
