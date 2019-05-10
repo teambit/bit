@@ -29,14 +29,14 @@ async function exportComponents(ids?: string[], remote: string): Promise<BitId[]
   if (R.isEmpty(idsToExport)) return [];
 
   const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
-  componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
-  await linkComponents(componentsIds, consumer);
+  const updatedIds = componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
+  await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', componentsIds.length);
   // it is important to have consumer.onDestroy() before running the eject operation, we want the
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return componentsIds;
+  return updatedIds;
 }
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
