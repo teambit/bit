@@ -26,6 +26,13 @@ module.exports = function (src) {
       dependencies[dependency].importSpecifiers = [importSpecifier];
     }
   };
+  const addExportedToImportSpecifier = (name) => {
+    Object.keys(dependencies).forEach((dependency) => {
+      if (!dependencies[dependency].importSpecifiers) return;
+      const specifier = dependencies[dependency].importSpecifiers.find(i => i.name === name);
+      if (specifier) specifier.exported = true;
+    });
+  };
 
   if (typeof src === 'undefined') {
     throw new Error('src not given');
@@ -60,12 +67,20 @@ module.exports = function (src) {
             node.specifiers.forEach((specifier) => {
               const specifierValue = {
                 isDefault: !specifier.local || specifier.local.name === 'default', // e.g. export { default as isArray } from './is-array';
-                name: specifier.exported.name
+                name: specifier.exported.name,
+                exported: true
               };
               addImportSpecifier(dependency, specifierValue);
             });
           }
+        } else if (node.specifiers && node.specifiers.length) {
+          node.specifiers.forEach((exportSpecifier) => {
+            addExportedToImportSpecifier(exportSpecifier.exported.name);
+          });
         }
+        break;
+      case 'ExportDefaultDeclaration':
+        addExportedToImportSpecifier(node.declaration.name);
         break;
       case 'CallExpression':
         if (node.callee.type === 'Import' && node.arguments.length && node.arguments[0].value) {

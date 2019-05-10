@@ -27,7 +27,8 @@
         "importSpecifiers": [
           {
             "isDefault": true,
-            "name": "isString"
+            "name": "isString",
+            "exported": true
           }
         ]
       },
@@ -37,7 +38,8 @@
         "importSpecifiers": [
           {
             "isDefault": true,
-            "name": "isArray"
+            "name": "isArray",
+            "exported": true
           }
         ]
       }
@@ -52,7 +54,8 @@
         "importSpecifiers": [
           {
             "isDefault": true,
-            "name": "isString"
+            "name": "isString",
+            "exported": true
           }
         ]
       }
@@ -71,7 +74,8 @@
         "importSpecifiers": [
           {
             "isDefault": true,
-            "name": "isArray"
+            "name": "isArray",
+            "exported": true
           }
         ]
       }

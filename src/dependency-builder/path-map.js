@@ -78,7 +78,7 @@ function findTheRealDependency(
     visitedFiles.push(currentPathMap.file);
     const currentRealDep: ?PathMapDependency = currentPathMap.dependencies.find((dep) => {
       if (!dep.importSpecifiers) return false;
-      return dep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name);
+      return dep.importSpecifiers.find(depSpecifier => depSpecifier.name === specifier.name && depSpecifier.exported);
     });
     if (!currentRealDep) {
       // the currentRealDep is not the real dependency, return the last real we found

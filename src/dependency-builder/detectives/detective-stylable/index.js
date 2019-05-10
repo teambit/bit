@@ -25,7 +25,8 @@ module.exports = function (src, options = {}) {
     if (!stNamed) return;
     const specifierValue = {
       isDefault: false, // @todo,
-      name: stNamed.value
+      name: stNamed.value,
+      exported: true
     };
     addImportSpecifier(stFromValue, specifierValue);
   });

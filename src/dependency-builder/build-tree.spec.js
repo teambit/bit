@@ -129,5 +129,20 @@ describe('buildTree', () => {
         });
       });
     });
+    describe('fileA imports varX from fileB, fileB imports varX from fileC but not export it', () => {
+      let results;
+      before(async () => {
+        dependencyTreeParams.filePaths = [`${buildTreeFixtures}/not-link-file/file-a.js`];
+        results = await buildTree.getDependencyTree(dependencyTreeParams);
+      });
+      it('should not mark fileB as a link file', () => {
+        const fileA = 'fixtures/build-tree/not-link-file/file-a.js';
+        expect(results.tree[fileA].files)
+          .to.be.an('array')
+          .with.lengthOf(1);
+        const fileBDep = results.tree[fileA].files[0];
+        expect(fileBDep).to.not.have.property('isLink');
+      });
+    });
   });
 });

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.6-dev.1] - 2019-05-10
+
+- fix identification of link files to take into account not only the `import` statements but also `export`
+
 ## [2.0.5] - 2019-05-01
 
 - fix es6 with dynamic import to not show as missing dependencies

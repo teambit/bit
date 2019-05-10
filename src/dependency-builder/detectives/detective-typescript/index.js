@@ -30,6 +30,12 @@ module.exports = function (src, options = {}) {
       dependencies[dependency].importSpecifiers = [importSpecifier];
     }
   };
+  const addExportedToImportSpecifier = (name) => {
+    Object.keys(dependencies).forEach((dependency) => {
+      const specifier = dependencies[dependency].importSpecifiers.find(i => i.name === name);
+      if (specifier) specifier.exported = true;
+    });
+  };
 
   if (typeof src === 'undefined') {
     throw new Error('src not given');
@@ -59,7 +65,14 @@ module.exports = function (src, options = {}) {
       case 'ExportAllDeclaration':
         if (node.source && node.source.value) {
           addDependency(node.source.value);
+        } else if (node.specifiers && node.specifiers.length) {
+          node.specifiers.forEach((exportSpecifier) => {
+            addExportedToImportSpecifier(exportSpecifier.exported.name);
+          });
         }
+        break;
+      case 'ExportDefaultDeclaration':
+        addExportedToImportSpecifier(node.declaration.name);
         break;
       case 'TSExternalModuleReference':
         if (node.expression && node.expression.value) {

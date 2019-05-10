@@ -146,5 +146,21 @@ describe('detective-es6', () => {
       expect(deps).to.have.property('foo');
       expect(deps.foo).to.not.have.property('importSpecifiers');
     });
+    it('should add "exported": true if the same variable has been imported and exported', () => {
+      const deps = detective('import { foo } from "foo"; export default foo;');
+      expect(deps).to.have.property('foo');
+      expect(deps.foo).to.have.property('importSpecifiers');
+      const importSpecifier = deps.foo.importSpecifiers[0];
+      expect(importSpecifier.name).to.equal('foo');
+      expect(importSpecifier.exported).to.be.true;
+    });
+    it('should not add "exported" property if the variable has been imported but not exported', () => {
+      const deps = detective('import { foo } from "foo";');
+      expect(deps).to.have.property('foo');
+      expect(deps.foo).to.have.property('importSpecifiers');
+      const importSpecifier = deps.foo.importSpecifiers[0];
+      expect(importSpecifier.name).to.equal('foo');
+      expect(importSpecifier).to.not.have.property('exported');
+    });
   });
 });

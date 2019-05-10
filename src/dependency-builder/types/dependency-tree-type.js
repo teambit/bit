@@ -7,7 +7,8 @@
  */
 export type Specifier = {
   isDefault: boolean,
-  name: string
+  name: string,
+  exported?: boolean
 };
 
 /**
