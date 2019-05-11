@@ -28,7 +28,11 @@ chai.use(require('chai-fs'));
         helper.createFile('utils', 'is-string.js', fixtures.isString);
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
-        helper.addComponentBarFoo();
+        // creating a dev dependency for bar/foo to make sure the links are not generated. (see bug #1614)
+        helper.createFile('fixtures', 'mock.json');
+        helper.addComponent('fixtures');
+        helper.createFile('bar', 'foo.spec.js', "require('../fixtures/mock.json');");
+        helper.addComponent('bar/foo.js', { t: 'bar/foo.spec.js', i: 'bar/foo' });
         helper.tagAllComponents();
         helper.tagAllComponents('-s 0.0.2');
         helper.exportAllComponents();
@@ -37,15 +41,18 @@ chai.use(require('chai-fs'));
         helper.importComponent('bar/foo');
         helper.importComponent('utils/is-type');
         helper.importComponent('utils/is-string');
+        helper.importComponent('fixtures');
 
         helper.importNpmPackExtension();
         helper.removeRemoteScope();
         npmCiRegistry.publishComponent('utils/is-type');
         npmCiRegistry.publishComponent('utils/is-string');
         npmCiRegistry.publishComponent('bar/foo');
+        npmCiRegistry.publishComponent('fixtures');
         npmCiRegistry.publishComponent('utils/is-type', '0.0.2');
         npmCiRegistry.publishComponent('utils/is-string', '0.0.2');
         npmCiRegistry.publishComponent('bar/foo', '0.0.2');
+        npmCiRegistry.publishComponent('fixtures', '0.0.2');
       });
       after(() => {
         npmCiRegistry.destroy();

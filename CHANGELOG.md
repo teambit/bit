@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid generating links of devDependencies when installing component as packages (#1614)
 - fix dependency resolution to identify link (proxy) files correctly
 - fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
 - fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
