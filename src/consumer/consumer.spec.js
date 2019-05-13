@@ -3,7 +3,8 @@ import sinon from 'sinon';
 import Consumer from '../consumer/consumer';
 import { MissingBitMapComponent } from './bit-map/exceptions';
 
-describe('Consumer', () => {
+describe('Consumer', function () {
+  this.timeout(0);
   let sandbox;
   const getConsumerInstance = () => {
     sandbox.stub(Consumer.prototype, 'warnForMissingDriver').returns();

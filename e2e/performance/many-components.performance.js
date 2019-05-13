@@ -1,8 +1,8 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const maxComponents = 300;
-const maxFlattenedDependencies = 10;
+const maxComponents = 3000;
+const maxFlattenedDependencies = 100;
 
 /**
  * as of v14.0.0
@@ -77,12 +77,10 @@ describe('many components', function () {
           });
         });
         describe('export command', () => {
-          let authorScopeAfterExport;
           let exportTimeInSeconds;
           before(() => {
             const start = process.hrtime();
             helper.exportAllComponents();
-            authorScopeAfterExport = helper.cloneLocalScope();
             [exportTimeInSeconds] = process.hrtime(start);
           });
           it('should take less then 5 minutes to complete', () => {
@@ -91,9 +89,6 @@ describe('many components', function () {
           describe('import command', () => {
             let importTimeInSeconds;
             before(() => {
-              helper.getClonedLocalScope(authorScopeAfterExport);
-              helper.reInitLocalScope();
-              helper.addRemoteScope();
               const start = process.hrtime();
               helper.runCmd('bit import');
               [importTimeInSeconds] = process.hrtime(start);

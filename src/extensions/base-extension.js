@@ -7,7 +7,6 @@ import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
-import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
 import type { EnvExtensionOptions } from './env-extension';
 import type { ExtensionOptions } from './extension';
@@ -432,12 +431,12 @@ export default class BaseExtension {
   }
 }
 
-const _getExtensionPath = (name: string, scopePath: ?string, isCore: boolean = false): ExtensionPath => {
+const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = false): ExtensionPath => {
   if (isCore) {
     return _getCoreExtensionPath(name);
   }
   if (!scopePath) {
-    throw new ScopeNotFound();
+    throw new Error('base-extension._getExtensionPath expects to get scopePath');
   }
   return _getRegularExtensionPath(name, scopePath);
 };

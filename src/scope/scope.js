@@ -709,7 +709,7 @@ export default class Scope {
 
   static async load(absPath: string): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
-    if (!scopePath) throw new ScopeNotFound();
+    if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }

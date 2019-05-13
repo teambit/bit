@@ -269,7 +269,7 @@ to see the invalid response, have a look at the log, located at ${DEBUG_LOG}`
 To rebuild the file, please run ${chalk.bold('bit init --reset')}.
 Original Error: ${err.message}`
   ],
-  [ScopeNotFound, () => 'error: workspace not found. to create a new workspace, please use `bit init`'],
+  [ScopeNotFound, err => `error: scope not found at ${chalk.bold(err.scopePath)}`],
   [
     ScopeJsonNotFound,
     err =>

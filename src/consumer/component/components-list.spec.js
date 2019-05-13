@@ -3,7 +3,8 @@ import ComponentsList from './components-list';
 import { ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
-describe('ComponentList', () => {
+describe('ComponentList', function () {
+  this.timeout(0);
   const getModelComponent = () => ModelComponent.fromBitId({ name: 'myName', scope: 'scope' });
   const getScope = modelComponent => ({
     listLocal: () => {
