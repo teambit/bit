@@ -6,7 +6,6 @@ import { BitId, BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { MergeConflictOnRemote, MergeConflict } from '../exceptions';
 import ComponentObjects from '../component-objects';
-import { LATEST } from '../../constants';
 import type { ComponentTree } from '../repositories/sources';
 import { Ref, BitObject } from '../objects';
 import { ModelComponent, Symlink, Version } from '../models';
@@ -21,12 +20,11 @@ import type Scope from '../scope';
  * dependencies, saves them as well. Finally runs the build process if needed on an isolated
  * environment.
  */
-export async function exportManyBareScope(scope: Scope, componentsObjects: ComponentObjects[]): Promise<BitId[]> {
+export async function exportManyBareScope(scope: Scope, componentsObjects: ComponentObjects[]): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
   const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
-  const mergedIds = await mergeObjects(scope, manyObjects);
+  const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
-
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
   await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
@@ -73,6 +71,13 @@ export async function exportMany(scope: Scope, ids: BitIds, remoteName: string, 
   return BitIds.uniqFromArray(idsWithRemoteScope);
 }
 
+/**
+ * merge components into the scope.
+ *
+ * a component might have multiple versions that some where merged and some were not.
+ * the BitIds returned here includes the versions that were merged. so it could contain multiple
+ * ids of the same component with different versions
+ */
 async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise<BitIds> {
   const mergeResults = await Promise.all(
     manyObjects.map(async (objects) => {
