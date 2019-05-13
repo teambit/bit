@@ -1001,29 +1001,33 @@ export default class Consumer {
     await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
-  async getAuthoredAndImportedDependentsOfComponents(components: Component[]): Promise<Component[]> {
+  async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
     const authoredAndImportedComponents = this.bitMap.getAllBitIds([
       COMPONENT_ORIGINS.IMPORTED,
       COMPONENT_ORIGINS.AUTHORED
     ]);
     const componentsIds = BitIds.fromArray(components.map(c => c.id));
-    return this.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
+    return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }
 
-  /**
-   * find the components in componentsPool which one of their dependencies include in potentialDependencies
-   */
-  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
-    const componentsVersions: ComponentVersion[] = await this.scope.findDirectDependentComponents(
-      componentsPool,
-      potentialDependencies
+  async getAuthoredAndImportedDependentsComponentsOf(components: Component[]): Promise<Component[]> {
+    const dependentsIds = await this.getAuthoredAndImportedDependentsIdsOf(components);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+
+    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds, true, false);
+    const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents(
+      versionDependenciesArr.map(v => v.component.id)
     );
-    return Promise.all(
-      componentsVersions.map(async (componentVersion) => {
-        const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
-        return componentVersion.toConsumer(this.scope.objects, manipulateDirData);
-      })
+    const manipulateDirData = await getManipulateDirWhenImportingComponents(
+      this.bitMap,
+      versionDependenciesArr,
+      this.scope.objects,
+      shouldDependenciesSavedAsComponents
     );
+    const dependentComponentsP = versionDependenciesArr.map(c =>
+      c.component.toConsumer(this.scope.objects, manipulateDirData)
+    );
+    return Promise.all(dependentComponentsP);
   }
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {

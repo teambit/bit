@@ -103,7 +103,7 @@ export async function getReLinkDependentsData(
   linkedComponents: BitIds
 ): Promise<DataToPersist> {
   logger.debug('linker: check whether there are direct dependents for re-linking');
-  const directDependentComponents = await consumer.getAuthoredAndImportedDependentsOfComponents(components);
+  const directDependentComponents = await consumer.getAuthoredAndImportedDependentsComponentsOf(components);
   const dataToPersist = new DataToPersist();
   if (directDependentComponents.length) {
     if (directDependentComponents.every(c => linkedComponents.has(c.id))) {
