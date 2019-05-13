@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid changing local version of a component to the latest when exporting an older version
+- fix post-receive-hook to send all exported versions and not only the latest
 - fix dependency resolution to identify link (proxy) files correctly
 - fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
 - fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
