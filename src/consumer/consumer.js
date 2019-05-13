@@ -39,8 +39,8 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { pathNormalizeToLinux, sortObject } from '../utils';
-import { ModelComponent } from '../scope/models';
-import { Version } from '../scope/models';
+import { ModelComponent, Version } from '../scope/models';
+
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import { RemovedLocalObjects } from '../scope/removed-components';
@@ -332,7 +332,15 @@ export default class Consumer {
     }
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
-    const manipulateDirData = await getManipulateDirForExistingComponents(this, versionDependencies.component);
+    const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents([
+      versionDependencies.component.id
+    ]);
+    const manipulateDirData = await getManipulateDirWhenImportingComponents(
+      this.bitMap,
+      [versionDependencies],
+      this.scope.objects,
+      shouldDependenciesSavedAsComponents
+    );
     return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
   }
 
