@@ -42,7 +42,7 @@ export default class LinkFile extends AbstractVinyl {
     return this.path;
   }
 
-  async _getStatIfExists(): Promise<?Stat> {
+  async _getStatIfExists(): Promise<?fs.Stats> {
     try {
       return await fs.lstat(this.path);
     } catch (err) {
