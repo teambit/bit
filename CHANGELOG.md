@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [14.1.1-dev.1] - 2019-05-14
 
+- prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
 - avoid changing local version of a component to the latest when exporting an older version
 - fix post-receive-hook to send all exported versions and not only the latest
 - fix dependency resolution to identify link (proxy) files correctly
