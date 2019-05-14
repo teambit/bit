@@ -6,7 +6,6 @@ import { BitId, BitIds } from '../../bit-id';
 import logger from '../../logger/logger';
 import { MergeConflictOnRemote, MergeConflict } from '../exceptions';
 import ComponentObjects from '../component-objects';
-import { LATEST } from '../../constants';
 import type { ComponentTree } from '../repositories/sources';
 import { Ref, BitObject } from '../objects';
 import { ModelComponent, Symlink, Version } from '../models';
@@ -21,30 +20,21 @@ import type Scope from '../scope';
  * dependencies, saves them as well. Finally runs the build process if needed on an isolated
  * environment.
  */
-export async function exportManyBareScope(scope: Scope, componentsObjects: ComponentObjects[]): Promise<string[]> {
+export async function exportManyBareScope(scope: Scope, componentsObjects: ComponentObjects[]): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
   const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
-  await mergeObjects(scope, manyObjects);
-  const manyCompVersions = await Promise.all(manyObjects.map(objects => objects.component.toComponentVersion(LATEST)));
+  const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'will try to importMany in case there are missing dependencies');
-
   const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
-  const bitIds = BitIds.fromArray(manyCompVersions.map(compVersion => compVersion.id));
-  await scopeComponentsImporter.importMany(bitIds, true, false); // resolve dependencies
+  await scopeComponentsImporter.importMany(mergedIds, true, false); // resolve dependencies
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
-  const ids = manyCompVersions.map(compVersion => compVersion.id.toString());
   logger.debug('exportManyBareScope: completed. exit.');
-  return ids;
+  return mergedIds;
 }
 
-export async function exportMany(
-  scope: Scope,
-  ids: BitIds,
-  remoteName: string,
-  context: Object = {}
-): Promise<BitId[]> {
+export async function exportMany(scope: Scope, ids: BitIds, remoteName: string, context: Object = {}): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportMany', 'ids: {ids}', { ids: ids.toString() });
   const remotes: Remotes = await getScopeRemotes(scope);
   const remote: Remote = await remotes.resolve(remoteName, scope);
@@ -76,11 +66,19 @@ export async function exportMany(
   ids.map(id => scope.createSymlink(id, remoteName));
   componentsAndObjects.map(componentObject => scope.sources.put(componentObject));
   await scope.objects.persist();
-  const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true));
-  return idsWithRemoteScope;
+  // remove version. exported component might have multiple versions exported
+  const idsWithRemoteScope = exportedIds.map(id => BitId.parse(id, true).changeVersion(null));
+  return BitIds.uniqFromArray(idsWithRemoteScope);
 }
 
-async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]) {
+/**
+ * merge components into the scope.
+ *
+ * a component might have multiple versions that some where merged and some were not.
+ * the BitIds returned here includes the versions that were merged. so it could contain multiple
+ * ids of the same component with different versions
+ */
+async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]): Promise<BitIds> {
   const mergeResults = await Promise.all(
     manyObjects.map(async (objects) => {
       try {
@@ -101,6 +99,10 @@ async function mergeObjects(scope: Scope, manyObjects: ComponentTree[]) {
     const idsAndVersionsSorted = R.sortBy(R.prop('id'), idsAndVersions);
     throw new MergeConflictOnRemote(idsAndVersionsSorted);
   }
+  const mergedComponents = mergeResults.filter(({ mergedVersions }) => mergedVersions.length);
+  const getMergedIds = ({ mergedComponent, mergedVersions }): BitId[] =>
+    mergedVersions.map(version => mergedComponent.toBitId().changeVersion(version));
+  return BitIds.fromArray(R.flatten(mergedComponents.map(getMergedIds)));
 }
 
 /**
