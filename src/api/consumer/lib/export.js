@@ -68,7 +68,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
 
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // we don't have much of a choice here, we have to load all the exported components in order to link them
-  // some of the components might but authored, some might be imported.
+  // some of the components might be authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const components = await Promise.all(ids.map(id => consumer.loadComponentFromModel(id)));
   const nodeModuleLinker = new NodeModuleLinker(components, consumer);
