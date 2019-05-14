@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [14.1.1-dev.1] - 2019-05-14
 
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
 - avoid changing local version of a component to the latest when exporting an older version
 - fix post-receive-hook to send all exported versions and not only the latest
 - fix dependency resolution to identify link (proxy) files correctly

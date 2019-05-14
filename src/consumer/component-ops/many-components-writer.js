@@ -234,20 +234,6 @@ export default class ManyComponentsWriter {
           this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
-        if (
-          depFromBitMap &&
-          (fs.existsSync(depFromBitMap.rootDir) ||
-            this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
-        ) {
-          dep.writtenPath = depFromBitMap.rootDir;
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map and file system',
-            { dependencyId }
-          );
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
         if (this.dependenciesIdsCache[dependencyId]) {
           logger.debugAndAddBreadCrumb(
             'writeToComponentsDir',

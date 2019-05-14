@@ -117,7 +117,9 @@ export default class NodeModuleLinker {
       const distTarget = component.dists.getDistDir(this.consumer, componentMap.getRootDir());
       const packagesSymlinks = this._getSymlinkPackages(srcTarget, distTarget, component);
       this.dataToPersist.addManySymlinks(packagesSymlinks);
-      this.dataToPersist.addSymlink(Symlink.makeInstance(distTarget, linkPath, componentId));
+      const distSymlink = Symlink.makeInstance(distTarget, linkPath, componentId);
+      distSymlink.forDistOutsideComponentsDir = true;
+      this.dataToPersist.addSymlink(distSymlink);
     } else {
       this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
@@ -222,7 +224,9 @@ export default class NodeModuleLinker {
         // dir into the dist dir. (see consumer-component.write())
         const from = component.dists.getDistDirForConsumer(this.consumer, parentRootDir);
         const to = component.dists.getDistDirForConsumer(this.consumer, dependencyRootDir);
-        dependenciesLinks.push(this._getDependencyLink(from, dependency.id, to, component.bindingPrefix));
+        const distSymlink = this._getDependencyLink(from, dependency.id, to, component.bindingPrefix);
+        distSymlink.forDistOutsideComponentsDir = true;
+        dependenciesLinks.push(distSymlink);
       }
       return dependenciesLinks;
     };
