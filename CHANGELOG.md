@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [unreleased]
+## [14.1.1-dev.1] - 2019-05-14
 
 - avoid changing local version of a component to the latest when exporting an older version
 - fix post-receive-hook to send all exported versions and not only the latest
