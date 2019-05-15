@@ -5,7 +5,6 @@ import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
 import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';

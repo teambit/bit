@@ -787,15 +787,6 @@ export default class BitMap {
     const componentMap = this.components[oldIdStr];
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);
-
-    // update the dependencies array if needed
-    Object.keys(this.components).forEach((componentId) => {
-      const component = this.components[componentId];
-      if (component.dependencies && component.dependencies.includes(oldIdStr)) {
-        component.dependencies = component.dependencies.filter(dependency => dependency !== oldIdStr);
-        component.dependencies.push(newId.toString());
-      }
-    });
     this.markAsChanged();
     return newId;
   }

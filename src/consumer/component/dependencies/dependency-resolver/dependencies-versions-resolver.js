@@ -2,7 +2,6 @@
 import path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import ComponentMap from '../../../bit-map/component-map';
 import { BitId } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
