@@ -509,6 +509,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
     describe('changing the dist to be outside the components dir after the import', () => {
       before(() => {
         helper.getClonedLocalScope(scopeBeforeImport);
+        helper.getClonedRemoteScope(remoteScope);
         helper.importComponent('string/pad-left -p src/pad-left');
         helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       });
