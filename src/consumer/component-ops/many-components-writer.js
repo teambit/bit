@@ -231,7 +231,6 @@ export default class ManyComponentsWriter {
             'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map',
             { dependencyId }
           );
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (this.dependenciesIdsCache[dependencyId]) {
@@ -241,7 +240,6 @@ export default class ManyComponentsWriter {
             { dependencyId }
           );
           dep.writtenPath = this.dependenciesIdsCache[dependencyId];
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         const depRootPath = this.consumer.composeRelativeDependencyPath(dep.id);
@@ -256,7 +254,6 @@ export default class ManyComponentsWriter {
           component: dep,
           writeToPath: depRootPath,
           origin: COMPONENT_ORIGINS.NESTED,
-          parent: componentWithDeps.component.id,
           existingComponentMap: componentMap
         });
         return componentWriter.populateComponentsFilesToWrite();
