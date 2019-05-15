@@ -1360,15 +1360,14 @@ describe('bit import', function () {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         });
-        it('main index file should point to the dist and not to the source', () => {
-          const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
-          const indexFileContent = fs.readFileSync(indexFile).toString();
-          expect(indexFileContent).to.have.string("require('./dist/bar/foo')");
-        });
         it('package.json main attribute should point to the main dist file', () => {
           const packageJsonFile = path.join(helper.localScopePath, 'components', 'bar', 'foo');
           const packageJson = helper.readPackageJson(packageJsonFile);
           expect(packageJson.main).to.equal('dist/bar/foo.js');
+        });
+        it('should not create an index file because it uses the package.json main property', () => {
+          const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
+          expect(indexFile).to.not.be.a.path();
         });
         it('should generate all the links in the dists directory and be able to require its direct dependency', () => {
           const result = helper.runCmd('node app.js');
