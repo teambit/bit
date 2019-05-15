@@ -13,6 +13,7 @@ import { getScopeRemotes } from '../scope-remotes';
 import ScopeComponentsImporter from './scope-components-importer';
 import type { Remotes, Remote } from '../../remotes';
 import type Scope from '../scope';
+import { LATEST } from '../../constants';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -20,7 +21,11 @@ import type Scope from '../scope';
  * dependencies, saves them as well. Finally runs the build process if needed on an isolated
  * environment.
  */
-export async function exportManyBareScope(scope: Scope, componentsObjects: ComponentObjects[]): Promise<BitIds> {
+export async function exportManyBareScope(
+  scope: Scope,
+  componentsObjects: ComponentObjects[],
+  clientIsOld: boolean
+): Promise<BitIds> {
   logger.debugAndAddBreadCrumb('scope.exportManyBareScope', `Going to save ${componentsObjects.length} components`);
   const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(scope.objects));
   const mergedIds: BitIds = await mergeObjects(scope, manyObjects);
@@ -30,6 +35,13 @@ export async function exportManyBareScope(scope: Scope, componentsObjects: Compo
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'successfully ran importMany');
   await scope.objects.persist();
   logger.debugAndAddBreadCrumb('exportManyBareScope', 'objects were written successfully to the filesystem');
+  // @todo: this is a temp workaround, remove once v15 is out
+  if (clientIsOld) {
+    const manyCompVersions = manyObjects.map(objects => objects.component.toComponentVersion(LATEST));
+    const bitIds = BitIds.fromArray(manyCompVersions.map(compVersion => compVersion.id));
+    logger.debug('exportManyBareScope: completed. exit.');
+    return bitIds;
+  }
   logger.debug('exportManyBareScope: completed. exit.');
   return mergedIds;
 }
