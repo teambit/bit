@@ -44,9 +44,7 @@ export async function getLinksInDistToWrite(
   }
   const nodeModuleLinker = new NodeModuleLinker([component], consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
   const dataToPersist = new DataToPersist();
-  dataToPersist.addManyFiles(entryPoints);
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
   const packageJsonFile = await packageJson.updateAttribute(consumer, rootDir, 'main', newMainFile, false);
@@ -59,6 +57,10 @@ export async function getLinksInDistToWrite(
         override: true
       })
     );
+  } else {
+    // if package.json doesn't exist, we can't use its 'main' property to point to the entry point
+    const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
+    dataToPersist.addManyFiles(entryPoints);
   }
   return dataToPersist;
 }
