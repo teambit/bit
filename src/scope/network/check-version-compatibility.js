@@ -90,3 +90,7 @@ For additional information: https://${BASE_DOCS_DOMAIN}/docs/latest-version.html
     throw new Error(oldClientVersionMessageUntilV14);
   }
 }
+
+export function isClientHasVersionBefore(version: string, clientVersion: string) {
+  return semver.lt(clientVersion, version);
+}
