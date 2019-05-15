@@ -516,30 +516,30 @@ export default class BitMap {
     throw new MissingMainFile(componentIdStr, mainFileString, files.map(file => path.normalize(file.relativePath)));
   }
 
-  addDependencyToParent(parent: BitId, dependency: string): void {
-    // the parent component might appear in bit.map file with full-id, e.g. when it is a dependency itself.
-    // And it might be with the short id, without the scope and the version, e.g. when its origin is AUTHORED or IMPORTED
-    const parentWithScope = parent.toString();
-    const parentWithoutScope = parent.changeScope(null).toString();
-    let parentId;
-    if (this.components[parentWithScope]) {
-      parentId = parentWithScope;
-    } else if (this.components[parentWithoutScope]) {
-      parentId = parentWithoutScope;
-    } else {
-      throw new GeneralError(
-        `Unable to add indirect dependency ${dependency}, as its parent ${parent.toString()} does not exist`
-      );
-    }
-    if (!this.components[parentId].dependencies) {
-      this.components[parentId].dependencies = [dependency];
-    }
-    if (!this.components[parentId].dependencies.includes(dependency)) {
-      // $FlowFixMe at this stage we know that dependencies is not null
-      this.components[parentId].dependencies.push(dependency);
-    }
-    this.markAsChanged();
-  }
+  // addDependencyToParent(parent: BitId, dependency: string): void {
+  //   // the parent component might appear in bit.map file with full-id, e.g. when it is a dependency itself.
+  //   // And it might be with the short id, without the scope and the version, e.g. when its origin is AUTHORED or IMPORTED
+  //   const parentWithScope = parent.toString();
+  //   const parentWithoutScope = parent.changeScope(null).toString();
+  //   let parentId;
+  //   if (this.components[parentWithScope]) {
+  //     parentId = parentWithScope;
+  //   } else if (this.components[parentWithoutScope]) {
+  //     parentId = parentWithoutScope;
+  //   } else {
+  //     throw new GeneralError(
+  //       `Unable to add indirect dependency ${dependency}, as its parent ${parent.toString()} does not exist`
+  //     );
+  //   }
+  //   if (!this.components[parentId].dependencies) {
+  //     this.components[parentId].dependencies = [dependency];
+  //   }
+  //   if (!this.components[parentId].dependencies.includes(dependency)) {
+  //     // $FlowFixMe at this stage we know that dependencies is not null
+  //     this.components[parentId].dependencies.push(dependency);
+  //   }
+  //   this.markAsChanged();
+  // }
 
   /**
    * find ids that have the same name but different version
@@ -667,15 +667,15 @@ export default class BitMap {
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
-    const isDependency = origin === COMPONENT_ORIGINS.NESTED;
+    // const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
-    if (isDependency) {
-      if (!parent) {
-        throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
-      }
-      this.addDependencyToParent(parent, componentIdStr);
-    }
+    // if (isDependency) {
+    //   if (!parent) {
+    //     throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
+    //   }
+    //   this.addDependencyToParent(parent, componentIdStr);
+    // }
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       const existingRootDir = this.components[componentIdStr].rootDir;

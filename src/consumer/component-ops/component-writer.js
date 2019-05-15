@@ -183,7 +183,7 @@ export default class ComponentWriter {
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       origin: this.origin,
-      parent: this.parent,
+      // parent: this.parent,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });

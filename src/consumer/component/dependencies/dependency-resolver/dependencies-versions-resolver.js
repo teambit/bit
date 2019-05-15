@@ -135,15 +135,15 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   function getIdFromBitMap(componentId: BitId): ?BitId {
     // $FlowFixMe component.componentMap is set
     const componentMap: ComponentMap = component.componentMap;
-    if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
-      const dependencyId = componentMap.dependencies.find(
-        dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
-      );
-      if (dependencyId) {
-        const version = BitId.getVersionOnlyFromString(dependencyId);
-        return componentId.changeVersion(version);
-      }
-    }
+    // if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
+    //   const dependencyId = componentMap.dependencies.find(
+    //     dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
+    //   );
+    //   if (dependencyId) {
+    //     const version = BitId.getVersionOnlyFromString(dependencyId);
+    //     return componentId.changeVersion(version);
+    //   }
+    // }
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 

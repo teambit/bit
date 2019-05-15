@@ -1633,11 +1633,11 @@ console.log(barFoo.default());`;
       );
       expect(localConsumerFiles).to.not.include(expectedLocation);
     });
-    it('should show is-type as a dependency of is-string in bit.map', () => {
-      const bitMap = helper.readBitMap();
-      const isTypeDependency = `${helper.remoteScope}/utils/is-type@0.0.1`;
-      expect(bitMap[`${helper.remoteScope}/utils/is-string@0.0.1`].dependencies).to.include(isTypeDependency);
-    });
+    // it('should show is-type as a dependency of is-string in bit.map', () => {
+    //   const bitMap = helper.readBitMap();
+    //   const isTypeDependency = `${helper.remoteScope}/utils/is-type@0.0.1`;
+    //   expect(bitMap[`${helper.remoteScope}/utils/is-string@0.0.1`].dependencies).to.include(isTypeDependency);
+    // });
     it('should successfully require is-type dependency and print the results from both components', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
