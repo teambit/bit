@@ -374,15 +374,6 @@ describe('auto tagging functionality', function () {
           version: '0.0.2'
         });
       });
-      // it('should update the dependencies correctly in the .bitmap file', () => {
-      //   const bitMap = helper.readBitMapWithoutVersion();
-      //   const barC = bitMap[`${helper.remoteScope}/bar/c@0.0.2`];
-      //   expect(barC.dependencies).to.include(`${helper.remoteScope}/bar/d@0.0.2`);
-      //   expect(barC.dependencies).to.include(`${helper.remoteScope}/bar/e@0.0.2`);
-
-      //   const barD = bitMap[`${helper.remoteScope}/bar/d@0.0.2`];
-      //   expect(barD.dependencies).to.include(`${helper.remoteScope}/bar/e@0.0.2`);
-      // });
       it('bit-status should not show any component as modified', () => {
         const status = helper.statusJson();
         expect(status.modifiedComponent).to.be.empty;

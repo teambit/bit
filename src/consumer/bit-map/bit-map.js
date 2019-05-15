@@ -640,7 +640,6 @@ export default class BitMap {
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
-    // const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (this.components[componentIdStr]) {
