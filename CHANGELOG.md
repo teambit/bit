@@ -5,13 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/).
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [14.1.1-dev.1] - 2019-05-14
+## [unreleased]
+
+## [14.1.1] - 2019-05-16
+
+### Bug fixes
 
 - rewrite dependencies when installed as components even when exist to rebuild their dist directory
 - show a descriptive error when the dist directory configured to be outside the components dir and is missing files
 - fix bit build to not generate `index.js` files when `package.json` file already exists
 - prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
-- avoid changing local version of a component to the latest when exporting an older version
+- avoid changing the local version of a component to the latest when exporting an older version
 - fix post-receive-hook to send all exported versions and not only the latest
 - fix dependency resolution to identify link (proxy) files correctly
 - fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
