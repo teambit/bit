@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import type Component from '../component/consumer-component';
-import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN, PACKAGE_JSON } from '../../constants';
+import { COMPONENT_ORIGINS, SUB_DIRECTORIES_GLOB_PATTERN } from '../../constants';
 import ComponentMap from '../bit-map/component-map';
 import { pathRelativeLinux } from '../../utils';
 import type Consumer from '../consumer';
@@ -17,10 +17,7 @@ import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
-import DataToPersist from './sources/data-to-persist';
-
-// the instance comes from bit-javascript PackageJson class
-export type PackageJsonInstance = { write: Function, bit?: Object, componentRootFolder: string };
+import PackageJsonFile from './package-json-file';
 
 /**
  * Add components as dependencies to root package.json
@@ -42,9 +39,9 @@ async function addComponentsToRoot(consumer: Consumer, components: Component[]):
 }
 
 async function _addDependenciesPackagesIntoPackageJson(dir: string, dependencies: Object) {
-  const packageJson = (await getPackageJsonObject(dir)) || { dependencies: {} };
-  packageJson.dependencies = Object.assign({}, packageJson.dependencies, dependencies);
-  return writePackageJsonFromObject(dir, packageJson);
+  const packageJsonFile = await PackageJsonFile.load(dir);
+  packageJsonFile.addDependencies(dependencies);
+  await packageJsonFile.write();
 }
 
 /**
@@ -105,48 +102,38 @@ async function changeDependenciesToRelativeSyntax(
   dependencies: Component[]
 ): Promise<JSONFile[]> {
   const dependenciesIds = BitIds.fromArray(dependencies.map(dependency => dependency.id));
-  const driver = consumer.driver.getDriver(false);
-  const PackageJson = driver.PackageJson;
   const updateComponentPackageJson = async (component): Promise<?JSONFile> => {
     const componentMap = consumer.bitMap.getComponent(component.id);
-    let packageJson;
-    try {
-      packageJson = await PackageJson.load(componentMap.rootDir);
-    } catch (e) {
-      return Promise.resolve(); // package.json doesn't exist, that's fine, no need to update anything
-    }
+    const componentRootDir = componentMap.rootDir;
+    if (!componentRootDir) return null;
+    const packageJsonFile = await PackageJsonFile.load(componentRootDir);
+    if (!packageJsonFile.fileExist) return null; // if package.json doesn't exist no need to update anything
     const getPackages = (deps: Dependencies) => {
-      const packages = deps.get().map((dependency) => {
+      return deps.get().reduce((acc, dependency) => {
         const dependencyId = dependency.id.toStringWithoutVersion();
         if (dependenciesIds.searchWithoutVersion(dependency.id)) {
           const dependencyComponent = dependencies.find(d => d.id.isEqualWithoutVersion(dependency.id));
-          // $FlowFixMe dependencyComponent must be found (two line earlier there is a check for that)
+          if (!dependencyComponent) { throw new Error('changeDependenciesToRelativeSyntax, dependencyComponent is missing'); }
           const dependencyComponentMap = consumer.bitMap.getComponentIfExist(dependencyComponent.id);
           const dependencyPackageValue = getPackageDependencyValue(dependencyId, componentMap, dependencyComponentMap);
-          return dependencyPackageValue ? [dependencyId, dependencyPackageValue] : [];
+          if (dependencyPackageValue) {
+            const packageName = componentIdToPackageName(
+              dependency.id,
+              dependencyComponent.bindingPrefix || npmRegistryName()
+            );
+            acc[packageName] = dependencyPackageValue;
+          }
         }
-        return [];
-      });
-      return R.fromPairs(packages);
+        return acc;
+      }, {});
     };
     const devDeps = getPackages(component.devDependencies);
     const compilerDeps = getPackages(component.compilerDependencies);
     const testerDeps = getPackages(component.testerDependencies);
-    packageJson.addDependencies(getPackages(component.dependencies), component.bindingPrefix || npmRegistryName());
-    packageJson.addDevDependencies(
-      { ...devDeps, ...compilerDeps, ...testerDeps },
-      component.bindingPrefix || npmRegistryName()
-    );
-    // return packageJson.write({ override: true });
-    return JSONFile.load({
-      // $FlowFixMe
-      base: componentMap.rootDir, // $FlowFixMe
-      path: path.join(componentMap.rootDir, PACKAGE_JSON),
-      content: packageJson,
-      override: true
-    });
+    packageJsonFile.addDependencies(getPackages(component.dependencies));
+    packageJsonFile.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps });
+    return packageJsonFile.toJSONFile();
   };
-  // $FlowFixMe
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
   return packageJsonFiles.filter(file => file);
 }
@@ -155,20 +142,18 @@ async function write(
   consumer: Consumer,
   component: Component,
   bitDir: string,
-  override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
-): Promise<PackageJsonInstance> {
+): Promise<PackageJsonFile> {
   const { packageJson, distPackageJson } = preparePackageJsonToWrite(
     consumer,
     component,
     bitDir,
-    override,
     writeBitDependencies,
     excludeRegistryPrefix
   );
-  await packageJson.write({ override });
-  if (distPackageJson) await distPackageJson.write({ override });
+  await packageJson.write();
+  if (distPackageJson) await distPackageJson.write();
   return packageJson;
 }
 
@@ -179,27 +164,26 @@ function preparePackageJsonToWrite(
   override?: boolean = true,
   writeBitDependencies?: boolean = false,
   excludeRegistryPrefix?: boolean
-): { packageJson: PackageJsonInstance, distPackageJson: ?PackageJsonInstance } {
+): { packageJson: PackageJsonFile, distPackageJson: ?PackageJsonFile } {
   logger.debug(`package-json.preparePackageJsonToWrite. bitDir ${bitDir}. override ${override.toString()}`);
-  const PackageJson = consumer.driver.getDriver(false).PackageJson;
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
-    const dependenciesPackages = dependencies.get().map((dep) => {
+    return dependencies.get().reduce((acc, dep) => {
       const packageDependency = getPackageDependency(consumer, dep.id, component.id);
-      return [dep.id.toStringWithoutVersion(), packageDependency];
-    });
-    return R.fromPairs(dependenciesPackages);
+      const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
+      acc[packageName] = packageDependency;
+      return acc;
+    }, {});
   };
   const bitDependencies = getBitDependencies(component.dependencies);
   const bitDevDependencies = getBitDependencies(component.devDependencies);
   const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
   const bitTesterDependencies = getBitDependencies(component.testerDependencies);
-  const registryPrefix = component.bindingPrefix || npmRegistryName();
   const name = excludeRegistryPrefix
     ? componentIdToPackageName(component.id, component.bindingPrefix, false)
     : componentIdToPackageName(component.id, component.bindingPrefix);
-  const getPackageJsonInstance = (dir) => {
-    const packageJson = new PackageJson(dir, {
+  const createPackageJsonFile = (dir): PackageJsonFile => {
+    const packageJsonFile = PackageJsonFile.create(dir, {
       name,
       version: component.version,
       homepage: component._getHomepage(),
@@ -215,19 +199,16 @@ function preparePackageJsonToWrite(
       componentRootFolder: dir,
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
-    packageJson.addDependencies(bitDependencies, registryPrefix);
-    packageJson.addDevDependencies(
-      { ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies },
-      registryPrefix
-    );
-    return packageJson;
+    packageJsonFile.addDependencies(bitDependencies);
+    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
+    return packageJsonFile;
   };
-  const packageJson = getPackageJsonInstance(bitDir);
+  const packageJson = createPackageJsonFile(bitDir);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
-    distPackageJson = getPackageJsonInstance(distRootDir);
+    distPackageJson = createPackageJsonFile(distRootDir);
   }
 
   return { packageJson, distPackageJson };
@@ -237,14 +218,12 @@ async function updateAttribute(
   consumer: Consumer,
   componentDir: PathLinux,
   attributeName: string,
-  attributeValue: string,
-  writeFile: ?boolean = true
-): Promise<*> {
-  const packageJson = await getPackageJsonObject(componentDir);
-  if (!packageJson) return null; // package.json doesn't exist, that's fine, no need to update anything
-  packageJson[attributeName] = attributeValue;
-  if (writeFile) await writePackageJsonFromObject(componentDir, packageJson);
-  return packageJson;
+  attributeValue: string
+): Promise<void> {
+  const packageJsonFile = await PackageJsonFile.load(componentDir);
+  if (!packageJsonFile.fileExist) return; // package.json doesn't exist, that's fine, no need to update anything
+  packageJsonFile.addOrUpdateProperty(attributeName, attributeValue);
+  await packageJsonFile.write();
 }
 
 /**
@@ -298,51 +277,14 @@ async function removeComponentsFromWorkspacesAndDependencies(consumer: Consumer,
   await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
-/**
- * get the package.json object of the given dir, if not found, return null
- */
-async function getPackageJsonObject(dir: string): Promise<?Object> {
-  try {
-    const packageJsonObject = await fs.readJson(composePath(dir));
-    return packageJsonObject;
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      // file not found
-      return null;
-    }
-    throw err;
-  }
-}
-
-function addPackageJsonDataToPersist(packageJson: PackageJsonInstance, dataToPersist: DataToPersist) {
-  const packageJsonPath = composePath(packageJson.componentRootFolder);
-  const jsonFile = JSONFile.load({
-    base: packageJson.componentRootFolder,
-    path: packageJsonPath,
-    content: packageJson
-  });
-  dataToPersist.addFile(jsonFile);
-}
-
-async function writePackageJsonFromObject(dir: string, data: Object) {
-  return fs.outputJSON(composePath(dir), data, { spaces: 2 });
-}
-
-function composePath(componentRootFolder: string) {
-  return path.join(componentRootFolder, PACKAGE_JSON);
-}
-
 export {
   addComponentsToRoot,
   removeComponentsFromNodeModules,
   changeDependenciesToRelativeSyntax,
   write,
   preparePackageJsonToWrite,
-  addPackageJsonDataToPersist,
   addComponentsWithVersionToRoot,
   updateAttribute,
   addWorkspacesToPackageJson,
-  getPackageJsonObject,
-  writePackageJsonFromObject,
   removeComponentsFromWorkspacesAndDependencies
 };

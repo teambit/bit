@@ -9,7 +9,7 @@ import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first, pathNormalizeToLinux } from '../utils';
 import type Consumer from '../consumer/consumer';
-import { getIndexFileName, getComponentsDependenciesLinks } from './link-generator';
+import { getComponentsDependenciesLinks } from './link-generator';
 import { getLinkToFileContent } from './link-content';
 import type { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
@@ -19,7 +19,7 @@ import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
-import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../consumer/component/package-json';
+import { preparePackageJsonToWrite } from '../consumer/component/package-json';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -294,7 +294,7 @@ export default class NodeModuleLinker {
   _createPackageJsonForAuthor(component: Component) {
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
     const { packageJson } = preparePackageJsonToWrite(this.consumer, component, dest, true);
-    addPackageJsonDataToPersist(packageJson, this.dataToPersist);
+    this.dataToPersist.addFile(packageJson.toJSONFile());
   }
 
   /**

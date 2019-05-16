@@ -128,7 +128,7 @@ async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): 
     pack.entry({ name: '.bitmap' }, bitmap);
   }
   if (consumerInfo && consumerInfo.consumerConfig) {
-    pack.entry({ name: 'config.json' }, consumerInfo.consumerConfig.toJson());
+    pack.entry({ name: 'config.json' }, JSON.stringify(consumerInfo.consumerConfig.toPlainObject(), null, 4));
   }
 
   pack.finalize();

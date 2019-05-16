@@ -17,6 +17,7 @@ import JSONFile from '../consumer/component/sources/json-file';
 import { PACKAGE_JSON } from '../constants';
 import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
+import PackageJsonFile from '../consumer/component/package-json-file';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -47,16 +48,10 @@ export async function getLinksInDistToWrite(
   const dataToPersist = new DataToPersist();
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
-  const packageJsonFile = await packageJson.updateAttribute(consumer, rootDir, 'main', newMainFile, false);
-  if (packageJsonFile) {
-    dataToPersist.addFile(
-      JSONFile.load({
-        base: rootDir,
-        path: path.join(rootDir, PACKAGE_JSON),
-        content: packageJsonFile,
-        override: true
-      })
-    );
+  const packageJsonFile = await PackageJsonFile.load(rootDir);
+  if (packageJsonFile.fileExist) {
+    packageJsonFile.addOrUpdateProperty('main', newMainFile);
+    dataToPersist.addFile(packageJsonFile.toJSONFile());
   } else {
     // if package.json doesn't exist, we can't use its 'main' property to point to the entry point
     const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);

@@ -13,7 +13,7 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
-import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
+import { preparePackageJsonToWrite } from '../component/package-json';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';
@@ -149,13 +149,11 @@ export default class ComponentWriter {
       const componentConfig = ComponentConfig.fromComponent(this.component);
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
-      packageJson.bit = componentConfig.toPlainObject();
-
+      packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       await this._populateEnvFilesIfNeeded();
-
-      addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
-      if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
-      this.component.packageJsonInstance = packageJson;
+      this.component.dataToPersist.addFile(packageJson.toJSONFile());
+      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toJSONFile());
+      this.component.packageJsonFile = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });

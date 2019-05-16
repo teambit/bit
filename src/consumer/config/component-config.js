@@ -46,11 +46,6 @@ export default class ComponentConfig extends AbstractConfig {
     return filterObject(componentObject, isPropDefaultOrEmpty);
   }
 
-  toJson(readable: boolean = true) {
-    if (!readable) return JSON.stringify(this.toPlainObject());
-    return JSON.stringify(this.toPlainObject(), null, 4);
-  }
-
   validate(bitJsonPath: string) {
     if (
       typeof this.compiler !== 'object' ||
