@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.1-dev.3] - 2019-05-16
+
+- add a workaround for old clients (< v14.1.1) when exporting not the latest version or multiple versions to not throw an error (#1635)
 
 ## [14.1.1-dev.2] - 2019-05-15
 
