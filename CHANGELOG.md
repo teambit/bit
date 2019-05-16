@@ -7,18 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.1.1-dev.3] - 2019-05-16
+## [14.1.1] - 2019-05-16
 
-- add a workaround for old clients (< v14.1.1) when exporting not the latest version or multiple versions to not throw an error (#1635)
-
-## [14.1.1-dev.2] - 2019-05-15
+### Bug fixes
 
 - fix bit build to not generate `index.js` files when `package.json` file already exists
 - prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
-
-## [14.1.1-dev.1] - 2019-05-14
-
-- avoid changing local version of a component to the latest when exporting an older version
+- avoid changing the local version of a component to the latest when exporting an older version
 - fix post-receive-hook to send all exported versions and not only the latest
 - fix dependency resolution to identify link (proxy) files correctly
 - fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
