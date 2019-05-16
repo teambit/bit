@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import detectIndent from 'detect-indent';
 import type { PathOsBased } from '../../utils/path';
-import { PACKAGE_JSON, PACKAGE_JSON_INDENT } from '../../constants';
+import { PACKAGE_JSON, PACKAGE_JSON_DEFAULT_INDENT } from '../../constants';
 import JSONFile from './sources/json-file';
 
 export default class PackageJsonFile {
@@ -15,7 +15,7 @@ export default class PackageJsonFile {
     this.filePath = filePath;
     this.packageJsonObject = packageJsonObject;
     this.fileExist = fileExist;
-    this.indent = indent || PACKAGE_JSON_INDENT;
+    this.indent = indent || PACKAGE_JSON_DEFAULT_INDENT;
   }
 
   async write() {

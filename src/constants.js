@@ -341,7 +341,7 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 
 export const PACKAGE_JSON = 'package.json';
 
-export const PACKAGE_JSON_INDENT = 2; // as per NPM default
+export const PACKAGE_JSON_DEFAULT_INDENT = 2; // as per NPM default
 
 export const COMPILER_ENV_TYPE = 'compiler';
 

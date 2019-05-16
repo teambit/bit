@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
+
 ## [14.1.1] - 2019-05-16
 
 ### Bug fixes
 
-- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
 - fix bit build to not generate `index.js` files when `package.json` file already exists
 - prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
 - avoid changing the local version of a component to the latest when exporting an older version
