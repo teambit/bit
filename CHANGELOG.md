@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
 ## [14.1.1] - 2019-05-16
 
 ### Bug fixes
 
-- rewrite dependencies when installed as components even when exist to rebuild their dist directory
-- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
 - fix bit build to not generate `index.js` files when `package.json` file already exists
 - prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
 - avoid changing the local version of a component to the latest when exporting an older version
