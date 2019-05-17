@@ -5,20 +5,16 @@ import getWithoutExt from './fs-no-ext';
 import type { PathOsBased } from '../path';
 
 export default function searchFilesIgnoreExt(
-  files: PathOsBased[] | Vinyl[],
+  files: Vinyl[],
   fileName: PathOsBased,
-  fileNameProp?: string,
   returnProp?: string
 ): PathOsBased | Vinyl {
-  const _byFileNoExt = (file) => {
-    const fileNameToCheck = fileNameProp ? file[fileNameProp] : file;
-    return getWithoutExt(fileNameToCheck) === getWithoutExt(fileName);
-  };
+  const _byFileNoExt = file => getWithoutExt(file.relative) === getWithoutExt(fileName);
+  const _byFileWithExt = file => file.relative === fileName;
 
   if (files && !R.isEmpty(files)) {
-    const foundFile = R.find(_byFileNoExt, files);
-    const foundFileResult = foundFile && returnProp && foundFile[returnProp] ? foundFile[returnProp] : foundFile;
-    return foundFileResult;
+    const foundFile = R.find(_byFileWithExt, files) || R.find(_byFileNoExt, files);
+    return foundFile && returnProp && foundFile[returnProp] ? foundFile[returnProp] : foundFile;
   }
   return null;
 }

@@ -2,7 +2,6 @@
 import path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import ComponentMap from '../../../bit-map/component-map';
 import { BitId } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
@@ -133,17 +132,6 @@ export default function updateDependenciesVersions(consumer: Consumer, component
   }
 
   function getIdFromBitMap(componentId: BitId): ?BitId {
-    // $FlowFixMe component.componentMap is set
-    const componentMap: ComponentMap = component.componentMap;
-    if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
-      const dependencyId = componentMap.dependencies.find(
-        dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
-      );
-      if (dependencyId) {
-        const version = BitId.getVersionOnlyFromString(dependencyId);
-        return componentId.changeVersion(version);
-      }
-    }
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 

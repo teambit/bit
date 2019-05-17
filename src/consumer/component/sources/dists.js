@@ -186,7 +186,7 @@ export default class Dists {
       const mainFile =
         this.dists && this.dists.length === 1
           ? this.dists[0].relative
-          : searchFilesIgnoreExt(this.dists, componentMainFile, 'relative', 'relative');
+          : searchFilesIgnoreExt(this.dists, componentMainFile, 'relative');
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
     return componentMainFile;
@@ -204,7 +204,7 @@ export default class Dists {
       return componentFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
     const fileToSearch = getFileToSearch();
-    const distFile = searchFilesIgnoreExt(this.dists, fileToSearch, 'relative', 'relative');
+    const distFile = searchFilesIgnoreExt(this.dists, fileToSearch, 'relative');
     if (!distFile) return componentFile;
     const distTarget = consumer.config.distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, distFile);

@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import path from 'path';
 import type Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
@@ -8,15 +7,14 @@ import * as linkGenerator from '../links/link-generator';
 import NodeModuleLinker from './node-modules-linker';
 import type Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
-import * as packageJson from '../consumer/component/package-json';
+import * as packageJsonUtils from '../consumer/component/package-json-utils';
 import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import JSONFile from '../consumer/component/sources/json-file';
-import { PACKAGE_JSON } from '../constants';
 import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
+import PackageJsonFile from '../consumer/component/package-json-file';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -44,21 +42,17 @@ export async function getLinksInDistToWrite(
   }
   const nodeModuleLinker = new NodeModuleLinker([component], consumer);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
-  const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
   const dataToPersist = new DataToPersist();
-  dataToPersist.addManyFiles(entryPoints);
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
-  const packageJsonFile = await packageJson.updateAttribute(consumer, rootDir, 'main', newMainFile, false);
-  if (packageJsonFile) {
-    dataToPersist.addFile(
-      JSONFile.load({
-        base: rootDir,
-        path: path.join(rootDir, PACKAGE_JSON),
-        content: packageJsonFile,
-        override: true
-      })
-    );
+  const packageJsonFile = await PackageJsonFile.load(rootDir);
+  if (packageJsonFile.fileExist) {
+    packageJsonFile.addOrUpdateProperty('main', newMainFile);
+    dataToPersist.addFile(packageJsonFile.toJSONFile());
+  } else {
+    // if package.json doesn't exist, we can't use its 'main' property to point to the entry point
+    const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
+    dataToPersist.addManyFiles(entryPoints);
   }
   return dataToPersist;
 }
@@ -111,7 +105,7 @@ export async function getReLinkDependentsData(
       return dataToPersist;
     }
     const data = await getReLinkDirectlyImportedDependenciesLinks(directDependentComponents, consumer);
-    const packageJsonFiles = await packageJson.changeDependenciesToRelativeSyntax(
+    const packageJsonFiles = await packageJsonUtils.changeDependenciesToRelativeSyntax(
       consumer,
       directDependentComponents,
       components

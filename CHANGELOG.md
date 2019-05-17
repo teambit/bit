@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - avoid generating links of devDependencies when installing component as packages (#1614)
+- avoid generating package.json inside node_modules for author when one of the component files is package.json
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
+## [14.1.1] - 2019-05-16
+
+### Bug fixes
+
+- fix bit build to not generate `index.js` files when `package.json` file already exists
+- prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
+- avoid changing the local version of a component to the latest when exporting an older version
+- fix post-receive-hook to send all exported versions and not only the latest
 - fix dependency resolution to identify link (proxy) files correctly
 - fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
 - fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components

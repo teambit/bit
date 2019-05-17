@@ -516,31 +516,6 @@ export default class BitMap {
     throw new MissingMainFile(componentIdStr, mainFileString, files.map(file => path.normalize(file.relativePath)));
   }
 
-  addDependencyToParent(parent: BitId, dependency: string): void {
-    // the parent component might appear in bit.map file with full-id, e.g. when it is a dependency itself.
-    // And it might be with the short id, without the scope and the version, e.g. when its origin is AUTHORED or IMPORTED
-    const parentWithScope = parent.toString();
-    const parentWithoutScope = parent.changeScope(null).toString();
-    let parentId;
-    if (this.components[parentWithScope]) {
-      parentId = parentWithScope;
-    } else if (this.components[parentWithoutScope]) {
-      parentId = parentWithoutScope;
-    } else {
-      throw new GeneralError(
-        `Unable to add indirect dependency ${dependency}, as its parent ${parent.toString()} does not exist`
-      );
-    }
-    if (!this.components[parentId].dependencies) {
-      this.components[parentId].dependencies = [dependency];
-    }
-    if (!this.components[parentId].dependencies.includes(dependency)) {
-      // $FlowFixMe at this stage we know that dependencies is not null
-      this.components[parentId].dependencies.push(dependency);
-    }
-    this.markAsChanged();
-  }
-
   /**
    * find ids that have the same name but different version
    * if compareWithoutScope is false, the scope should be identical in addition to the name
@@ -647,7 +622,6 @@ export default class BitMap {
     files,
     mainFile,
     origin,
-    parent,
     rootDir,
     configDir,
     trackDir,
@@ -659,7 +633,6 @@ export default class BitMap {
     files: ComponentMapFile[],
     mainFile?: PathOsBased,
     origin: ComponentOrigin,
-    parent?: ?BitId,
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ?ConfigDir,
     trackDir?: PathOsBased,
@@ -667,15 +640,8 @@ export default class BitMap {
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
-    const isDependency = origin === COMPONENT_ORIGINS.NESTED;
     const componentIdStr = componentId.toString();
     logger.debug(`adding to bit.map ${componentIdStr}`);
-    if (isDependency) {
-      if (!parent) {
-        throw new GeneralError(`Unable to add indirect dependency ${componentIdStr}, without "parent" parameter`);
-      }
-      this.addDependencyToParent(parent, componentIdStr);
-    }
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
       const existingRootDir = this.components[componentIdStr].rootDir;
@@ -798,34 +764,31 @@ export default class BitMap {
    * in the file-system only one instance with the same component-name. As a result, we can strip the
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
-  updateComponentId(id: BitId): void {
+  updateComponentId(id: BitId): BitId {
     const newIdString = id.toString();
     const similarIds = this.findSimilarIds(id, true);
     if (!similarIds.length) {
       logger.debug(`bit-map: no need to update ${newIdString}`);
-      return;
+      return id;
     }
     if (similarIds.length > 1) {
       throw new GeneralError(`Your ${BIT_MAP} file has more than one version of ${id.toStringWithoutScopeAndVersion()} and they
       are authored or imported. This scenario is not supported`);
     }
-    const olderComponentId: BitId = similarIds[0];
-    const olderComponentIdStr: string = olderComponentId.toString();
-    const olderIdStr = olderComponentId.toString();
-    logger.debug(`BitMap: updating an older component ${olderIdStr} with a newer component ${newIdString}`);
-    const componentMap = this.components[olderIdStr];
-    this._removeFromComponentsArray(olderComponentId);
-    this.setComponent(id, componentMap);
-
-    // update the dependencies array if needed
-    Object.keys(this.components).forEach((componentId) => {
-      const component = this.components[componentId];
-      if (component.dependencies && component.dependencies.includes(olderComponentIdStr)) {
-        component.dependencies = component.dependencies.filter(dependency => dependency !== olderComponentIdStr);
-        component.dependencies.push(newIdString);
-      }
-    });
+    const oldId: BitId = similarIds[0];
+    const oldIdStr = oldId.toString();
+    // when it comes from the export, the version is stripped and only the scope needs to be updated
+    const newId = oldId.hasVersion() && !id.hasVersion() ? id.changeVersion(oldId.version) : id;
+    if (newId.isEqual(oldId)) {
+      logger.debug(`bit-map: no need to update ${oldIdStr}`);
+      return oldId;
+    }
+    logger.debug(`BitMap: updating an older component ${oldIdStr} with a newer component ${newId.toString()}`);
+    const componentMap = this.components[oldIdStr];
+    this._removeFromComponentsArray(oldId);
+    this.setComponent(newId, componentMap);
     this.markAsChanged();
+    return newId;
   }
 
   /**

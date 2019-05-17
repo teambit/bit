@@ -11,11 +11,12 @@
 import R from 'ramda';
 import { BitIds, BitId } from '../../bit-id';
 import { Consumer } from '..';
-import * as packageJson from '../component/package-json';
+import * as packageJsonUtils from '../component/package-json-utils';
 import { installPackages } from '../../npm-client/install-packages';
 import logger from '../../logger/logger';
 import defaultErrorHandler from '../../cli/default-error-handler';
 import { getScopeRemotes } from '../../scope/scope-remotes';
+import PackageJsonFile from '../component/package-json-file';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
@@ -35,7 +36,7 @@ export default class EjectComponents {
   force: boolean;
   componentsToEject: BitIds;
   failedComponents: FailedComponents;
-  originalPackageJson: Object; // for rollback in case of errors
+  originalPackageJson: PackageJsonFile; // for rollback in case of errors
   constructor(consumer: Consumer, componentsIds: BitId[], force?: boolean) {
     this.consumer = consumer;
     this.componentsIds = componentsIds;
@@ -53,7 +54,7 @@ export default class EjectComponents {
     await this.decideWhichComponentsToEject();
     logger.debugAndAddBreadCrumb('eject-components.eject', `${this.componentsToEject.length} to eject`);
     if (this.componentsToEject.length) {
-      this.originalPackageJson = (await packageJson.getPackageJsonObject(this.consumer.getPath())) || {};
+      this.originalPackageJson = await PackageJsonFile.load(this.consumer.getPath());
       await this.removeComponentsFromPackageJsonAndNodeModules();
       await this.addComponentsAsPackagesToPackageJson();
       await this.installPackagesUsingNPMClient();
@@ -102,7 +103,7 @@ export default class EjectComponents {
     const action = 'removing the existing components from package.json and node_modules';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      await packageJson.removeComponentsFromWorkspacesAndDependencies(this.consumer, this.componentsToEject);
+      await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this.consumer, this.componentsToEject);
     } catch (err) {
       logger.warn(`eject: failed ${action}, restoring package.json`);
       await this.rollBack(action);
@@ -114,7 +115,7 @@ export default class EjectComponents {
     const action = 'adding the components as packages into package.json';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      await packageJson.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
+      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
     } catch (err) {
       logger.error(err);
       logger.warn(`eject: failed ${action}, restoring package.json`);
@@ -135,8 +136,12 @@ export default class EjectComponents {
   }
 
   async rollBack(action: string): Promise<void> {
-    logger.warn(`eject: failed ${action}, restoring package.json`);
-    await packageJson.writePackageJsonFromObject(this.consumer.getPath(), this.originalPackageJson);
+    if (this.originalPackageJson.fileExist) {
+      logger.warn(`eject: failed ${action}, restoring package.json`);
+      await this.originalPackageJson.write();
+    } else {
+      logger.warn(`eject: failed ${action}, no package.json to restore`);
+    }
   }
 
   _buildExceptionMessageWithRollbackData(action: string): string {
