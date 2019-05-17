@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
 ## [14.1.1] - 2019-05-16
 
 ### Bug fixes

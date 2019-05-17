@@ -5,7 +5,6 @@ import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
 import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
@@ -28,7 +27,6 @@ export type ComponentWriterProps = {
   writePackageJson?: boolean,
   override?: boolean,
   origin: ComponentOrigin,
-  parent?: BitId,
   consumer: Consumer,
   writeBitDependencies?: boolean,
   deleteBitDirContent?: boolean,
@@ -44,7 +42,6 @@ export default class ComponentWriter {
   writePackageJson: boolean;
   override: boolean;
   origin: ComponentOrigin;
-  parent: ?BitId;
   consumer: Consumer;
   writeBitDependencies: boolean;
   deleteBitDirContent: ?boolean;
@@ -59,7 +56,6 @@ export default class ComponentWriter {
     writePackageJson = true,
     override = true,
     origin,
-    parent,
     consumer,
     writeBitDependencies = false,
     deleteBitDirContent,
@@ -73,7 +69,6 @@ export default class ComponentWriter {
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.origin = origin;
-    this.parent = parent;
     this.consumer = consumer;
     this.writeBitDependencies = writeBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
@@ -183,7 +178,6 @@ export default class ComponentWriter {
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       origin: this.origin,
-      parent: this.parent,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });

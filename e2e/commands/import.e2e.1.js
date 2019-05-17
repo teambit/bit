@@ -1632,11 +1632,6 @@ console.log(barFoo.default());`;
       );
       expect(localConsumerFiles).to.not.include(expectedLocation);
     });
-    it('should show is-type as a dependency of is-string in bit.map', () => {
-      const bitMap = helper.readBitMap();
-      const isTypeDependency = `${helper.remoteScope}/utils/is-type@0.0.1`;
-      expect(bitMap[`${helper.remoteScope}/utils/is-string@0.0.1`].dependencies).to.include(isTypeDependency);
-    });
     it('should successfully require is-type dependency and print the results from both components', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
@@ -1792,9 +1787,20 @@ console.log(barFoo.default());`;
         helper.importComponent('utils/is-string@0.0.1'); // imports is-type@0.0.1 as a dependency
         helper.importComponent('utils/is-type@0.0.2');
       });
-      it('should not show the component as modified', () => {
+      it('should show the component as modified', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.not.have.a.string('modified');
+        expect(output).to.have.a.string('modified');
+      });
+      it('bit diff should show that the modification is about version bump of is-type', () => {
+        const diff = helper.diff();
+        expect(diff).to.have.string(`- [ ${helper.remoteScope}/utils/is-type@0.0.1 ]`);
+        expect(diff).to.have.string(`+ [ ${helper.remoteScope}/utils/is-type@0.0.2 ]`);
+      });
+      it('should use the new version of is-type', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
     });
   });
