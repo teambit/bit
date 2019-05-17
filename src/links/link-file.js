@@ -15,7 +15,7 @@ export default class LinkFile extends AbstractVinyl {
   componentId: ?BitId; // needed for logging purposes
 
   async write(): Promise<string> {
-    const stat = await this._getStatIfExists();
+    const stat = await this._getStatIfFileExists();
     if (stat) {
       if (stat.isSymbolicLink()) {
         throw new ValidationError(`fatal: trying to write a link file into a symlink file at "${this.path}"`);
@@ -40,14 +40,6 @@ export default class LinkFile extends AbstractVinyl {
     }
 
     return this.path;
-  }
-
-  async _getStatIfExists(): Promise<?fs.Stats> {
-    try {
-      return await fs.lstat(this.path);
-    } catch (err) {
-      return null; // probably file does not exist
-    }
   }
 
   static load({

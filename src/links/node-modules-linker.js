@@ -4,7 +4,7 @@ import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
 import type Component from '../consumer/component/consumer-component';
-import { COMPONENT_ORIGINS } from '../constants';
+import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../constants';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first, pathNormalizeToLinux } from '../utils';
@@ -292,6 +292,8 @@ export default class NodeModuleLinker {
    * It makes it easier for Author to use absolute syntax between their own components.
    */
   _createPackageJsonForAuthor(component: Component) {
+    const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
+    if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
     const { packageJson } = preparePackageJsonToWrite(this.consumer, component, dest, true);
     this.dataToPersist.addFile(packageJson.toJSONFile());

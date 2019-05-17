@@ -1,16 +1,24 @@
 // @flow
 import fs from 'fs-extra';
 import AbstractVinyl from './abstract-vinyl';
+import ValidationError from '../../../error/validation-error';
 
 export default class JSONFile extends AbstractVinyl {
   override: boolean = false;
 
   async write(): Promise<string> {
-    if (!this.override && fs.existsSync(this.path)) {
-      return Promise.resolve(this.path);
+    const stat = await this._getStatIfFileExists();
+    if (stat) {
+      if (stat.isSymbolicLink()) {
+        throw new ValidationError(`fatal: trying to write a json file into a symlink file at "${this.path}"`);
+      }
+      if (!this.override) {
+        return this.path;
+      }
     }
+
     await fs.outputFile(this.path, this.contents);
-    return Promise.resolve(this.path);
+    return this.path;
   }
 
   static load({
