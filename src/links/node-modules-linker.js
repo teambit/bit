@@ -4,12 +4,12 @@ import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
 import type Component from '../consumer/component/consumer-component';
-import { COMPONENT_ORIGINS } from '../constants';
+import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../constants';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first, pathNormalizeToLinux } from '../utils';
 import type Consumer from '../consumer/consumer';
-import { getIndexFileName, getComponentsDependenciesLinks } from './link-generator';
+import { getComponentsDependenciesLinks } from './link-generator';
 import { getLinkToFileContent } from './link-content';
 import type { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
@@ -19,7 +19,7 @@ import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
-import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../consumer/component/package-json';
+import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -296,9 +296,11 @@ export default class NodeModuleLinker {
    * It makes it easier for Author to use absolute syntax between their own components.
    */
   _createPackageJsonForAuthor(component: Component) {
+    const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
+    if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
     const { packageJson } = preparePackageJsonToWrite(this.consumer, component, dest, true);
-    addPackageJsonDataToPersist(packageJson, this.dataToPersist);
+    this.dataToPersist.addFile(packageJson.toJSONFile());
   }
 
   /**
