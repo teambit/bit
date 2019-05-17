@@ -19,7 +19,7 @@ import Symlink from './symlink';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
-import { preparePackageJsonToWrite } from '../consumer/component/package-json';
+import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {

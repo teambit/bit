@@ -6,7 +6,7 @@ import pMapSeries from 'p-map-series';
 import { moveExistingComponent } from './move-components';
 import { getAllComponentsLinks } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
-import * as packageJson from '../component/package-json';
+import * as packageJsonUtils from '../component/package-json-utils';
 import type { ComponentWithDependencies } from '../../scope';
 import type Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -110,9 +110,9 @@ export default class ManyComponentsWriter {
   }
   async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
-    await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
+    await packageJsonUtils.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     if (this.addToRootPackageJson) {
-      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents);
+      await packageJsonUtils.addComponentsToRoot(this.consumer, this.writtenComponents);
     }
     await this._installPackagesIfNeeded();
   }

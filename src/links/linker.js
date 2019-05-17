@@ -7,7 +7,7 @@ import * as linkGenerator from '../links/link-generator';
 import NodeModuleLinker from './node-modules-linker';
 import type Consumer from '../consumer/consumer';
 import ComponentWithDependencies from '../scope/component-dependencies';
-import * as packageJson from '../consumer/component/package-json';
+import * as packageJsonUtils from '../consumer/component/package-json-utils';
 import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
@@ -105,7 +105,7 @@ export async function getReLinkDependentsData(
       return dataToPersist;
     }
     const data = await getReLinkDirectlyImportedDependenciesLinks(directDependentComponents, consumer);
-    const packageJsonFiles = await packageJson.changeDependenciesToRelativeSyntax(
+    const packageJsonFiles = await packageJsonUtils.changeDependenciesToRelativeSyntax(
       consumer,
       directDependentComponents,
       components

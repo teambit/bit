@@ -39,12 +39,11 @@ import { MissingBitMapComponent } from './bit-map/exceptions';
 import logger from '../logger/logger';
 import DirStructure from './dir-structure/dir-structure';
 import { pathNormalizeToLinux, sortObject } from '../utils';
-import { ModelComponent } from '../scope/models';
-import { Version } from '../scope/models';
+import { ModelComponent, Version } from '../scope/models';
 import MissingFilesFromComponent from './component/exceptions/missing-files-from-component';
 import ComponentNotFoundInPath from './component/exceptions/component-not-found-in-path';
 import { RemovedLocalObjects } from '../scope/removed-components';
-import * as packageJson from './component/package-json';
+import * as packageJsonUtils from './component/package-json-utils';
 import { Dependencies } from './component/dependencies';
 import CompilerExtension from '../extensions/compiler-extension';
 import TesterExtension from '../extensions/tester-extension';
@@ -640,7 +639,7 @@ export default class Consumer {
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
-        ? packageJson.updateAttribute(this, path.join(this.getPath(), packageJsonDir), 'version', id.version)
+        ? packageJsonUtils.updateAttribute(this, path.join(this.getPath(), packageJsonDir), 'version', id.version)
         : Promise.resolve();
     });
     return Promise.all(updateVersionsP);
@@ -952,7 +951,7 @@ export default class Consumer {
       await this.removeComponentFromFs(removedComponentIds, deleteFiles);
       await this.removeComponentFromFs(removedDependencies, false);
       if (!track) {
-        await packageJson.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
+        await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
         await this.cleanFromBitMap(removedComponentIds, removedDependencies);
       }
     }

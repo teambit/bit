@@ -12,7 +12,7 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
-import { preparePackageJsonToWrite } from '../component/package-json';
+import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';

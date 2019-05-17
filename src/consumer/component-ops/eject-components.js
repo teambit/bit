@@ -11,7 +11,7 @@
 import R from 'ramda';
 import { BitIds, BitId } from '../../bit-id';
 import { Consumer } from '..';
-import * as packageJson from '../component/package-json';
+import * as packageJsonUtils from '../component/package-json-utils';
 import { installPackages } from '../../npm-client/install-packages';
 import logger from '../../logger/logger';
 import defaultErrorHandler from '../../cli/default-error-handler';
@@ -103,7 +103,7 @@ export default class EjectComponents {
     const action = 'removing the existing components from package.json and node_modules';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      await packageJson.removeComponentsFromWorkspacesAndDependencies(this.consumer, this.componentsToEject);
+      await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this.consumer, this.componentsToEject);
     } catch (err) {
       logger.warn(`eject: failed ${action}, restoring package.json`);
       await this.rollBack(action);
@@ -115,7 +115,7 @@ export default class EjectComponents {
     const action = 'adding the components as packages into package.json';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      await packageJson.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
+      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
     } catch (err) {
       logger.error(err);
       logger.warn(`eject: failed ${action}, restoring package.json`);

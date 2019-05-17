@@ -44,7 +44,6 @@ import {
   BASE_WEB_DOMAIN
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
-import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
