@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import path from 'path';
 import fs from 'fs-extra';
 import { BitId, BitIds } from '../../bit-id';
 import type Component from '../component/consumer-component';
