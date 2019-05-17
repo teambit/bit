@@ -20,7 +20,6 @@ import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
 import BitMap from '../consumer/bit-map';
-import JSONFile from '../consumer/component/sources/json-file';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import Symlink from './symlink';

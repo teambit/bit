@@ -1,6 +1,5 @@
 /** @flow */
 import R from 'ramda';
-import path from 'path';
 import type Component from '../consumer/component/consumer-component';
 import logger from '../logger/logger';
 import { pathNormalizeToLinux } from '../utils';
@@ -13,8 +12,6 @@ import type { LinksResult } from './node-modules-linker';
 import GeneralError from '../error/general-error';
 import ComponentMap from '../consumer/bit-map/component-map';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
-import JSONFile from '../consumer/component/sources/json-file';
-import { PACKAGE_JSON } from '../constants';
 import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import PackageJsonFile from '../consumer/component/package-json-file';

@@ -5,6 +5,7 @@ import detectIndent from 'detect-indent';
 import type { PathOsBased } from '../../utils/path';
 import { PACKAGE_JSON, PACKAGE_JSON_DEFAULT_INDENT } from '../../constants';
 import JSONFile from './sources/json-file';
+import logger from '../../logger/logger';
 
 export default class PackageJsonFile {
   packageJsonObject: Object;
@@ -19,6 +20,7 @@ export default class PackageJsonFile {
   }
 
   async write() {
+    logger.debug(`package-json-file.write, path ${this.filePath}`);
     return fs.outputJSON(this.filePath, this.packageJsonObject, { spaces: this.indent });
   }
 
