@@ -866,7 +866,7 @@ describe('dependencyTree', function () {
     });
   });
   describe('files with dynamic import', () => {
-    it('should not', () => {
+    it('should not show missing dependencies', () => {
       mockfs({
         [`${__dirname}/dynamic`]: {
           'foo.js': 'const a = "./b"; import(a); require(a);'
@@ -876,6 +876,40 @@ describe('dependencyTree', function () {
       const filename = path.normalize(`${directory}/foo.js`);
       const visited = {};
 
+      dependencyTree({
+        filename,
+        directory,
+        visited
+      });
+      expect(visited[filename].missing).to.be.undefined;
+    });
+  });
+  describe('files with import from cdn (http, https)', () => {
+    it('should not show missing dependencies when importing from https', () => {
+      mockfs({
+        [`${__dirname}/cdn`]: {
+          'foo.js': 'import { a } from "https://unpkg.com";'
+        }
+      });
+      const directory = path.normalize(`${__dirname}/cdn`);
+      const filename = path.normalize(`${directory}/foo.js`);
+      const visited = {};
+      dependencyTree({
+        filename,
+        directory,
+        visited
+      });
+      expect(visited[filename].missing).to.be.undefined;
+    });
+    it('should not show missing dependencies when importing from http', () => {
+      mockfs({
+        [`${__dirname}/cdn`]: {
+          'bar.js': 'const b = require("http://pkg.com");'
+        }
+      });
+      const directory = path.normalize(`${__dirname}/cdn`);
+      const filename = path.normalize(`${directory}/bar.js`);
+      const visited = {};
       dependencyTree({
         filename,
         directory,

@@ -94,6 +94,10 @@ module.exports._getDependencies = function (config) {
   return resolvedDependencies;
 
   function processDependency(dependency) {
+    if (isHttp(dependency)) {
+      debug(`skipping an http dependency: ${dependency}`);
+      return;
+    }
     const cabinetParams = {
       partial: dependency,
       filename: config.filename,
@@ -227,4 +231,11 @@ function traverse(config) {
       if (!tree[d]) dependenciesStack.push(d);
     });
   }
+}
+
+/**
+ * whether the dependency is from CDN. (http/https)
+ */
+function isHttp(dependency) {
+  return Boolean(dependency.startsWith('http://') || dependency.startsWith('https://'));
 }

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.7] - 2019-05-17
+
+- ignore import/require from CDN (http/https)
+
 ## [2.0.6] - 2019-05-16
 
 - fix identification of link files to take into account not only the `import` statements but also `export`
