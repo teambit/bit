@@ -231,8 +231,8 @@ to quickly fix the issue, please delete the object at "${this.objects().objectPa
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
           relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
-          if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-            // when a dependency is imported directly, we need to also change the
+          if (depFromBitMap && depFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+            // when a dependency is not authored, we need to also change the
             // destinationRelativePath, which is the path written in the link file, however, the
             // dir manipulation should be according to this dependency component, not the
             // consumerComponent passed to this function
