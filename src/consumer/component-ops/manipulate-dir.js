@@ -125,7 +125,7 @@ function calculateOriginallySharedDir(version: Version): ?PathLinux {
 }
 
 function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin !== COMPONENT_ORIGINS.IMPORTED) return null;
+  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
   return calculateOriginallySharedDir(version);
 }
 
