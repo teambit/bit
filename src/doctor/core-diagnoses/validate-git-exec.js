@@ -6,7 +6,7 @@ import Diagnosis from '../diagnosis';
 import getGitExecutablePath from '../../utils/git/git-executable';
 import type { ExamineBareResult } from '../diagnosis';
 
-export default class ValidateGitExe extends Diagnosis {
+export default class ValidateGitExec extends Diagnosis {
   name = 'Validate git exec';
   description = 'validate that git executable found';
   category = '3rd-parties';

@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-const DIAGNOSIS_NAME = 'validate-git-exe';
+const DIAGNOSIS_NAME = 'Validate git exec';
 
 describe('bit doctor - git exe validation', function () {
   this.timeout(0);
