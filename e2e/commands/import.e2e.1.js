@@ -1360,15 +1360,14 @@ describe('bit import', function () {
           const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         });
-        it('main index file should point to the dist and not to the source', () => {
-          const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
-          const indexFileContent = fs.readFileSync(indexFile).toString();
-          expect(indexFileContent).to.have.string("require('./dist/bar/foo')");
-        });
         it('package.json main attribute should point to the main dist file', () => {
           const packageJsonFile = path.join(helper.localScopePath, 'components', 'bar', 'foo');
           const packageJson = helper.readPackageJson(packageJsonFile);
           expect(packageJson.main).to.equal('dist/bar/foo.js');
+        });
+        it('should not create an index file because it uses the package.json main property', () => {
+          const indexFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'index.js');
+          expect(indexFile).to.not.be.a.path();
         });
         it('should generate all the links in the dists directory and be able to require its direct dependency', () => {
           const result = helper.runCmd('node app.js');
@@ -1633,11 +1632,6 @@ console.log(barFoo.default());`;
       );
       expect(localConsumerFiles).to.not.include(expectedLocation);
     });
-    it('should show is-type as a dependency of is-string in bit.map', () => {
-      const bitMap = helper.readBitMap();
-      const isTypeDependency = `${helper.remoteScope}/utils/is-type@0.0.1`;
-      expect(bitMap[`${helper.remoteScope}/utils/is-string@0.0.1`].dependencies).to.include(isTypeDependency);
-    });
     it('should successfully require is-type dependency and print the results from both components', () => {
       const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
@@ -1793,9 +1787,20 @@ console.log(barFoo.default());`;
         helper.importComponent('utils/is-string@0.0.1'); // imports is-type@0.0.1 as a dependency
         helper.importComponent('utils/is-type@0.0.2');
       });
-      it('should not show the component as modified', () => {
+      it('should show the component as modified', () => {
         const output = helper.runCmd('bit status');
-        expect(output).to.not.have.a.string('modified');
+        expect(output).to.have.a.string('modified');
+      });
+      it('bit diff should show that the modification is about version bump of is-type', () => {
+        const diff = helper.diff();
+        expect(diff).to.have.string(`- [ ${helper.remoteScope}/utils/is-type@0.0.1 ]`);
+        expect(diff).to.have.string(`+ [ ${helper.remoteScope}/utils/is-type@0.0.2 ]`);
+      });
+      it('should use the new version of is-type', () => {
+        const appJsFixture = "const isString = require('./components/utils/is-string'); console.log(isString());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type v2 and got is-string');
       });
     });
   });

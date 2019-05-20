@@ -1,5 +1,7 @@
+import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { ScopeNotFound } from '../../src/scope/exceptions';
 
 describe('bit remote command', function () {
   this.timeout(0);
@@ -80,6 +82,13 @@ describe('bit remote command', function () {
         const remotes = helper.runCmd('bit remote');
         expect(remotes).to.not.have.string(helper.remoteScope);
       });
+    });
+  });
+  describe('adding a non exist local remote with relative path', () => {
+    it('should throw ScopeNotFound error', () => {
+      const func = () => helper.runCmd('bit remote add file://non-exist-dir');
+      const error = new ScopeNotFound(path.join(helper.localScopePath, 'non-exist-dir'));
+      helper.expectToThrow(func, error);
     });
   });
 });

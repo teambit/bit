@@ -20,7 +20,6 @@ import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
 import BitMap from '../consumer/bit-map';
-import JSONFile from '../consumer/component/sources/json-file';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import Symlink from './symlink';
@@ -97,7 +96,7 @@ function getComponentLinks({
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
   if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
-    const packageJsonFile = _getPackageJsonFile(component);
+    const packageJsonFile = component.packageJsonFile.toJSONFile();
     dataToPersist.addFile(packageJsonFile);
   }
 
@@ -121,17 +120,6 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   logger.warn(`link-generation: failed finding an exact version of ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
     will use ${dependencyComponent.id.toString()} instead. this might happen when the dependency version is overridden in package.json or bit.json`);
   return dependencyComponent;
-}
-
-function _getPackageJsonFile(component: Component) {
-  // $FlowFixMe
-  const componentDir: string = component.writtenPath;
-  return JSONFile.load({
-    base: componentDir,
-    path: path.join(componentDir, 'package.json'),
-    content: component.packageJsonInstance,
-    override: true
-  });
 }
 
 function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
@@ -339,13 +327,12 @@ function generatePostInstallScript(component: Component, postInstallLinks = [], 
     acc[val.dest] = val.source;
     return acc;
   }, {});
-  if (!component.packageJsonInstance) throw new Error(`packageJsonInstance is missing for ${component.id.toString()}`);
+  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject), JSON.stringify(symlinkPathsObject));
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
-  // $FlowFixMe packageJsonInstance must be set
-  component.packageJsonInstance.scripts = { postinstall: postInstallScript };
+  component.packageJsonFile.addOrUpdateProperty('scripts', { postinstall: postInstallScript });
   const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
   return postInstallFile;
 }
@@ -357,9 +344,9 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
   }, {});
   if (R.isEmpty(resolveAliases)) return false;
   // @TODO: load the package.json here if not found. it happens during the build process
-  if (!component.packageJsonInstance) return false;
-  if (component.packageJsonInstance.bit) component.packageJsonInstance.bit.resolveAliases = resolveAliases;
-  else component.packageJsonInstance.bit = { resolveAliases };
+  if (!component.packageJsonFile) return false;
+  const bitProperty = component.packageJsonFile.getProperty('bit') || {};
+  bitProperty.resolveAliases = resolveAliases;
   return true;
 }
 

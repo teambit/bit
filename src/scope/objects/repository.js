@@ -144,17 +144,26 @@ export default class Repository {
   }
 
   async _getBitObjectsByHashes(hashes: string[]): Promise<BitObject[]> {
-    return Promise.all(
+    const bitObjects = await Promise.all(
       hashes.map(async (hash) => {
         const bitObject = await this.load(new Ref(hash));
         if (!bitObject) {
           const componentId = this.componentsIndex.getIdByHash(hash);
+          const indexJsonPath = this.componentsIndex.getPath();
+          if (this.componentsIndex.isFileOnBitHub()) {
+            logger.error(
+              `repository._getBitObjectsByHashes, indexJson at "${indexJsonPath}" is outdated and needs to be deleted`
+            );
+            return null;
+          }
           // $FlowFixMe componentId must be set as it was retrieved from indexPath before
-          throw new OutdatedIndexJson(componentId, this.componentsIndex.getPath());
+          throw new OutdatedIndexJson(componentId, indexJsonPath);
         }
         return bitObject;
       })
     );
+    // $FlowFixMe
+    return bitObjects.filter(b => b); // remove nulls;
   }
 
   async loadOptionallyCreateComponentsIndex(): Promise<ComponentsIndex> {

@@ -6,13 +6,17 @@ import ValidateWorkspaceBitJsonSyntax from './core-diagnoses/validate-workspace-
 import ValidateGitExec from './core-diagnoses/validate-git-exec';
 import OrphanSymlinkObjects from './core-diagnoses/orphan-symlink-objects';
 import BrokenSymlinkFiles from './core-diagnoses/broken-symlink-files';
+import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
+import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
 
 export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: Diagnosis[] = []) {
   const diagnoses = [
     new ValidateWorkspaceBitJsonSyntax(),
     new ValidateGitExec(),
     new OrphanSymlinkObjects(),
-    new BrokenSymlinkFiles()
+    new BrokenSymlinkFiles(),
+    new ValidateNpmExec(),
+    new ValidateYarnExec()
   ].concat(extensionDiagnoses);
   DoctorRegistrar.init(diagnoses);
 }

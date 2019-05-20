@@ -21,6 +21,7 @@ type ConfigProps = {
 export default class ComponentConfig extends AbstractConfig {
   overrides: ?ComponentOverridesData;
   componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
+  packageJsonObject: ?Object;
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
@@ -43,11 +44,6 @@ export default class ComponentConfig extends AbstractConfig {
       return true;
     };
     return filterObject(componentObject, isPropDefaultOrEmpty);
-  }
-
-  toJson(readable: boolean = true) {
-    if (!readable) return JSON.stringify(this.toPlainObject());
-    return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
   validate(bitJsonPath: string) {
@@ -148,6 +144,7 @@ export default class ComponentConfig extends AbstractConfig {
     const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
     componentConfig.path = bitJsonPath;
     componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
+    componentConfig.packageJsonObject = packageJsonFile;
     return componentConfig;
   }
 }

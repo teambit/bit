@@ -2,7 +2,6 @@
 import path from 'path';
 import R from 'ramda';
 import semver from 'semver';
-import ComponentMap from '../../../bit-map/component-map';
 import { BitId } from '../../../../bit-id';
 import type Component from '../../../component/consumer-component';
 import logger from '../../../../logger/logger';
@@ -10,6 +9,7 @@ import type Consumer from '../../../../consumer/consumer';
 import type { PathLinux } from '../../../../utils/path';
 import getNodeModulesPathOfComponent from '../../../../utils/bit/component-node-modules-path';
 import Dependencies from '../dependencies';
+import componentIdToPackageName from '../../../../utils/bit/component-id-to-package-name';
 
 /**
  * The dependency version is determined by the following strategies by this order.
@@ -47,6 +47,7 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       const idFromBitMap = getIdFromBitMap(id);
       const idFromWorkspaceConfig = getIdFromWorkspaceConfig(id);
       const idFromComponentConfig = getIdFromComponentConfig(id);
+      const idFromDependentPackageJson = getIdFromDependentPackageJson(id);
 
       // get from packageJson when it was changed from the model or when there is no model.
       const getFromPackageJsonIfChanged = () => {
@@ -60,8 +61,10 @@ export default function updateDependenciesVersions(consumer: Consumer, component
       const getFromBitMap = () => idFromBitMap || null;
       const getFromModel = () => idFromModel || null;
       const getFromPackageJson = () => idFromPackageJson || null;
+      const getFromDependentPackageJson = () => idFromDependentPackageJson || null;
       const strategies: Function[] = [
         getFromComponentConfig,
+        getFromDependentPackageJson,
         getFromPackageJsonIfChanged,
         getFromWorkspaceConfig,
         getFromBitMap,
@@ -93,7 +96,8 @@ export default function updateDependenciesVersions(consumer: Consumer, component
    * found it goes to the dependency package.json.
    */
   function getIdFromPackageJson(componentId: BitId): ?BitId {
-    if (!componentId.scope) return null; // $FlowFixMe component.componentMap is set
+    if (!componentId.scope) return null;
+    // $FlowFixMe component.componentMap is set
     const rootDir: ?PathLinux = component.componentMap.rootDir;
     const consumerPath = consumer.getPath();
     const basePath = rootDir ? path.join(consumerPath, rootDir) : consumerPath;
@@ -110,18 +114,24 @@ export default function updateDependenciesVersions(consumer: Consumer, component
     return componentId.changeVersion(validVersion);
   }
 
-  function getIdFromBitMap(componentId: BitId): ?BitId {
-    // $FlowFixMe component.componentMap is set
-    const componentMap: ComponentMap = component.componentMap;
-    if (componentMap.dependencies && !R.isEmpty(componentMap.dependencies)) {
-      const dependencyId = componentMap.dependencies.find(
-        dependency => BitId.getStringWithoutVersion(dependency) === componentId.toStringWithoutVersion()
-      );
-      if (dependencyId) {
-        const version = BitId.getVersionOnlyFromString(dependencyId);
-        return componentId.changeVersion(version);
-      }
+  function getIdFromDependentPackageJson(componentId: BitId): ?BitId {
+    // for author, there is not package.json of a component
+    if (
+      !component.bitJson ||
+      !component.bitJson.packageJsonObject ||
+      !component.bitJson.packageJsonObject.dependencies
+    ) {
+      return null;
     }
+    const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
+    // $FlowFixMe
+    const version = component.bitJson.packageJsonObject.dependencies[dependencyIdAsPackage];
+    if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
+    const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
+    return componentId.changeVersion(validVersion);
+  }
+
+  function getIdFromBitMap(componentId: BitId): ?BitId {
     return consumer.bitMap.getBitIdIfExist(componentId, { ignoreVersion: true });
   }
 

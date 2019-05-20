@@ -97,6 +97,7 @@ export default class DependencyResolver {
 
   setTree(tree: Tree) {
     this.tree = tree;
+    // console.log(JSON.stringify(tree, null, 4)); // uncomment to easily watch the tree received from bit-javascript
   }
 
   /**
@@ -473,6 +474,10 @@ either, use the ignore file syntax or change the require statement to have a mod
       destinationRelativePath
     };
     if (importSpecifiers) {
+      importSpecifiers.map((importSpecifier) => {
+        if (importSpecifier.linkFile) delete importSpecifier.linkFile.exported;
+        if (importSpecifier.mainFile) delete importSpecifier.mainFile.exported;
+      });
       depsPaths.importSpecifiers = importSpecifiers;
     }
     if (depFileObject.isCustomResolveUsed) {

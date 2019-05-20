@@ -1,6 +1,7 @@
 import fs from 'fs-extra';
 import chai, { expect } from 'chai';
 import path from 'path';
+import detectIndent from 'detect-indent';
 import Helper from '../e2e-helper';
 import { BIT_GIT_DIR, BIT_HIDDEN_DIR, BIT_MAP, BIT_JSON } from '../../src/constants';
 // import bitImportGitHook from '../../src/git-hooks/fixtures/bit-import-git-hook';
@@ -319,6 +320,10 @@ describe('run bit init', function () {
       it('should not create bit.json file', () => {
         expect(path.join(helper.localScopePath, 'bit.json')).to.not.be.a.path();
       });
+      it('should preserve the default npm indentation of 2', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(detectIndent(packageJson).amount).to.equal(2);
+      });
     });
     describe('with --standalone flag', () => {
       before(() => {
@@ -345,6 +350,20 @@ describe('run bit init', function () {
         const initCmd = () => helper.runCmd('bit init');
         const error = new InvalidPackageJson(path.join(helper.localScopePath, 'package.json'));
         helper.expectToThrow(initCmd, error);
+      });
+    });
+    describe('with an indentation of 4', () => {
+      before(() => {
+        helper.cleanLocalScope();
+        helper.initNpm();
+        const packageJson = helper.readPackageJson();
+        const packageJsonPath = path.join(helper.localScopePath, 'package.json');
+        fs.writeJSONSync(packageJsonPath, packageJson, { spaces: 4 });
+        helper.runCmd('bit init');
+      });
+      it('should preserve the original indentation and keep it as 4', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(detectIndent(packageJson).amount).to.equal(4);
       });
     });
   });

@@ -33,6 +33,7 @@ export default class Helper {
   e2eDir: string;
   bitBin: string;
   compilerCreated: boolean;
+  dummyCompilerCreated: boolean;
   cache: Object;
   clonedScopes: string[] = [];
   keepEnvs: boolean;
@@ -472,6 +473,12 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
+  importDummyCompiler() {
+    const id = `${this.envScope}/compilers/dummy`;
+    this.createDummyCompiler();
+    return this.runCmd(`bit import ${id} --compiler`);
+  }
+
   importTester(id) {
     // Temporary - for checking new serialization against the stage env
     // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
@@ -660,6 +667,31 @@ export default class Helper {
   doctorJsonParsed() {
     const result = this.runCmd('bit doctor --json');
     return JSON.parse(result);
+  }
+
+  createDummyCompiler() {
+    if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'dummy');
+    const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
+
+    this.runCmd('bit add compiler.js -i compilers/dummy', tempScopePath);
+    this.runCmd('bit tag compilers/dummy -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} compilers/dummy`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.dummyCompilerCreated = true;
+    return true;
   }
 
   createCompiler() {

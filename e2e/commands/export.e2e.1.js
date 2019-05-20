@@ -417,4 +417,31 @@ describe('bit export command', function () {
       });
     });
   });
+
+  describe('export a component when the checked out version is not the latest', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo('// v2');
+      helper.addComponentBarFoo();
+      helper.tagScope('2.0.0');
+      helper.exportAllComponents();
+      helper.createComponentBarFoo('// v1');
+      helper.tagScope('1.0.0');
+      helper.exportAllComponents();
+    });
+    it('.bitmap should keep the current version and do not update to the latest version', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@1.0.0`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@2.0.0`);
+    });
+    it('bit show should display the component with the current version, not the latest', () => {
+      const show = helper.showComponent('bar/foo');
+      expect(show).to.have.string('1.0.0');
+      expect(show).to.not.have.string('2.0.0');
+    });
+    it('the file content should not be changed', () => {
+      const barFooFile = helper.readFile('bar/foo.js');
+      expect(barFooFile).to.equal('// v1');
+    });
+  });
 });

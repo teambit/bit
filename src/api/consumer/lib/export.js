@@ -29,14 +29,14 @@ async function exportComponents(ids?: string[], remote: string): Promise<BitId[]
   if (R.isEmpty(idsToExport)) return [];
 
   const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
-  componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
-  await linkComponents(componentsIds, consumer);
+  const updatedIds = componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
+  await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', componentsIds.length);
   // it is important to have consumer.onDestroy() before running the eject operation, we want the
   // export and eject operations to function independently. we don't want to lose the changes to
   // .bitmap file done by the export action in case the eject action has failed.
   await consumer.onDestroy();
-  return componentsIds;
+  return updatedIds;
 }
 
 async function getComponentsToExport(ids?: string[], consumer: Consumer, remote: string): Promise<BitIds> {
@@ -68,7 +68,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
 
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // we don't have much of a choice here, we have to load all the exported components in order to link them
-  // some of the components might but authored, some might be imported.
+  // some of the components might be authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const components = await Promise.all(ids.map(id => consumer.loadComponentFromModel(id)));
   const nodeModuleLinker = new NodeModuleLinker(components, consumer);

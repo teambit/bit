@@ -267,8 +267,7 @@ export default class DependencyFileLinkGenerator {
   _getRelativeDistPathInDependency() {
     const relativeDistPathInDependency = searchFilesIgnoreExt(
       this.dependencyComponent.dists.get(),
-      this.relativePathInDependency,
-      'relative'
+      this.relativePathInDependency
     );
     return relativeDistPathInDependency // $FlowFixMe relative is defined
       ? relativeDistPathInDependency.relative
