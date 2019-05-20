@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
 - rewrite dependencies when installed as components even when exist to rebuild their dist directory
 - show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+- update `bit add` help message with instructions for using glob patterns with `--tests`
 
 ## [14.1.1] - 2019-05-16
 
