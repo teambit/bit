@@ -63,7 +63,7 @@ function _listReport(res: Diagnosis[], json: boolean): string {
 }
 
 function _runOneReport(res: DoctorRunOneResult, json: boolean): string {
-  const { examineResult, savedFilePath } = res;
+  const { examineResult, savedFilePath, metaData } = res;
   if (json) {
     const fullJson = {
       savedFilePath,
@@ -71,12 +71,12 @@ function _runOneReport(res: DoctorRunOneResult, json: boolean): string {
     };
     return JSON.stringify(fullJson, null, 2);
   }
-  const formatted = formatDiagnosesResult({ examineResults: [examineResult], savedFilePath });
+  const formatted = formatDiagnosesResult({ examineResults: [examineResult], savedFilePath, metaData });
   return formatted;
 }
 
 function _runAllReport(res: DoctorRunAllResults, json: boolean): string {
-  const { examineResults, savedFilePath } = res;
+  const { examineResults, savedFilePath, metaData } = res;
   if (json) {
     const fullJson = {
       savedFilePath,
@@ -84,6 +84,6 @@ function _runAllReport(res: DoctorRunAllResults, json: boolean): string {
     };
     return JSON.stringify(fullJson, null, 2);
   }
-  const formatted = formatDiagnosesResult({ examineResults, savedFilePath });
+  const formatted = formatDiagnosesResult({ examineResults, savedFilePath, metaData });
   return formatted;
 }
