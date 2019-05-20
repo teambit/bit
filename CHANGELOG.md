@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- avoid generating links of devDependencies when installing component as packages (#1614)
+
 ## [14.1.2-dev.2] - 2019-05-20
 
 - add metadata to `bit doctor` output

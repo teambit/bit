@@ -21,53 +21,6 @@ import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
 /**
- * find a shared directory among the files of the main component and its dependencies
- */
-function calculateOriginallySharedDir(version: Version): ?PathLinux {
-  const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
-  const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
-  const allDependencies = new Dependencies(version.getAllDependencies());
-  const dependenciesPaths = allDependencies.getSourcesPaths();
-  const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(version.overrides);
-  const allPaths = [...filePaths, ...dependenciesPaths, ...overridesDependenciesFiles];
-  const sharedStart = sharedStartOfArray(allPaths);
-  if (!sharedStart || !sharedStart.includes(pathSep)) return null;
-  const sharedStartDirectories = sharedStart.split(pathSep);
-  sharedStartDirectories.pop(); // the sharedStart ended with a slash, remove it.
-  if (allPaths.some(p => p.replace(sharedStart, '') === PACKAGE_JSON)) {
-    // if package.json is located in an inside dir, don't consider that dir as a sharedDir, we
-    // must keep this directory in order to not collide with the generated package.json.
-    sharedStartDirectories.pop();
-  }
-  return sharedStartDirectories.join(pathSep);
-}
-
-function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
-  return calculateOriginallySharedDir(version);
-}
-
-/**
- * if one of the files is 'package.json' and it's on the root, we need a wrapper dir to avoid
- * collision with Bit generated package.json file.
- * also, if one of the files requires the root package.json, because we need to generate the
- * "package.json" file as a link once imported, we have to wrap it as well.
- */
-function isWrapperDirNeeded(version: Version) {
-  const allDependencies = new Dependencies(version.getAllDependencies());
-  const dependenciesSourcePaths = allDependencies.getSourcesPaths();
-  return (
-    version.files.some(file => file.relativePath === PACKAGE_JSON) ||
-    dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
-  );
-}
-
-function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
-  return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
-}
-
-/**
  * use this method when loading an existing component. don't use it during the import process
  */
 export async function getManipulateDirForExistingComponents(
@@ -97,54 +50,6 @@ export async function getManipulateDirForExistingComponents(
     manipulateDirData.push(manipulateDirDep);
   });
   return manipulateDirData;
-}
-
-/**
- * a dependency might be imported with a different version.
- * e.g. is-string@0.0.1 has a dependency is-type@0.0.1, however is-type@0.0.2 has been imported directly
- * in this case, we should ignore the version when looking for it in .bitmap
- * on the other hand, a dependency might be nested, and as a nested it's ok to have multiple
- * components with different versions, in this case, we look for the exact version.
- * so we do prefer an exact version, but if it doesn't find one try without a version.
- */
-function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
-  return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
-}
-
-/**
- * an authored component that is now imported, is still authored.
- * however, nested component that is now imported directly, is actually imported.
- * if there is no entry for this component in bitmap, it is imported.
- */
-function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolean): ComponentOrigin {
-  if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
-  if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
-    return COMPONENT_ORIGINS.IMPORTED;
-  }
-  return bitmapOrigin;
-}
-
-async function getManipulateDirItemFromComponentVersion(
-  componentVersion: ComponentVersion,
-  bitMap: BitMap,
-  repository,
-  isDependency: boolean
-): Promise<ManipulateDirItem> {
-  const id: BitId = componentVersion.id;
-  // when a component is now imported, ignore the version because if it was nested before, we just
-  // replace it with the imported one.
-  // however, the opposite is not true, if it is now nested and was imported before, we can have them both.
-  // (see 'when imported component has lower dependencies versions than local' in import.e2e for such a case).
-  // we might change this behavior as it is confusing.
-  const componentMap: ?ComponentMap = isDependency
-    ? bitMap.getComponentIfExist(id)
-    : bitMap.getComponentPreferNonNested(id);
-  const bitmapOrigin = componentMap ? componentMap.origin : null;
-  const origin = getComponentOrigin(bitmapOrigin, isDependency);
-  const version: Version = await componentVersion.getVersion(repository);
-  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
-  const wrapDir = getWrapDirIfNeeded(origin, version);
-  return { id, originallySharedDir, wrapDir };
 }
 
 /**
@@ -195,6 +100,101 @@ export function revertDirManipulationForPath(
 ): PathLinux {
   const withSharedDir: PathLinux = addSharedDirForPath(pathStr, originallySharedDir);
   return removeWrapperDirFromPath(withSharedDir, wrapDir);
+}
+
+/**
+ * find a shared directory among the files of the main component and its dependencies
+ */
+function calculateOriginallySharedDir(version: Version): ?PathLinux {
+  const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
+  const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
+  const allDependencies = new Dependencies(version.getAllDependencies());
+  const dependenciesPaths = allDependencies.getSourcesPaths();
+  const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(version.overrides);
+  const allPaths = [...filePaths, ...dependenciesPaths, ...overridesDependenciesFiles];
+  const sharedStart = sharedStartOfArray(allPaths);
+  if (!sharedStart || !sharedStart.includes(pathSep)) return null;
+  const sharedStartDirectories = sharedStart.split(pathSep);
+  sharedStartDirectories.pop(); // the sharedStart ended with a slash, remove it.
+  if (allPaths.some(p => p.replace(sharedStart, '') === PACKAGE_JSON)) {
+    // if package.json is located in an inside dir, don't consider that dir as a sharedDir, we
+    // must keep this directory in order to not collide with the generated package.json.
+    sharedStartDirectories.pop();
+  }
+  return sharedStartDirectories.join(pathSep);
+}
+
+function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
+  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+  return calculateOriginallySharedDir(version);
+}
+
+/**
+ * if one of the files is 'package.json' and it's on the root, we need a wrapper dir to avoid
+ * collision with Bit generated package.json file.
+ * also, if one of the files requires the root package.json, because we need to generate the
+ * "package.json" file as a link once imported, we have to wrap it as well.
+ */
+function isWrapperDirNeeded(version: Version) {
+  const allDependencies = new Dependencies(version.getAllDependencies());
+  const dependenciesSourcePaths = allDependencies.getSourcesPaths();
+  return (
+    version.files.some(file => file.relativePath === PACKAGE_JSON) ||
+    dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
+  );
+}
+
+function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
+  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+  return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
+}
+
+/**
+ * a dependency might be imported with a different version.
+ * e.g. is-string@0.0.1 has a dependency is-type@0.0.1, however is-type@0.0.2 has been imported directly
+ * in this case, we should ignore the version when looking for it in .bitmap
+ * on the other hand, a dependency might be nested, and as a nested it's ok to have multiple
+ * components with different versions, in this case, we look for the exact version.
+ * so we do prefer an exact version, but if it doesn't find one try without a version.
+ */
+function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
+  return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
+}
+
+/**
+ * an authored component that is now imported, is still authored.
+ * however, nested component that is now imported directly, is actually imported.
+ * if there is no entry for this component in bitmap, it is imported.
+ */
+function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolean): ComponentOrigin {
+  if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
+  if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
+    return COMPONENT_ORIGINS.IMPORTED;
+  }
+  return bitmapOrigin;
+}
+
+async function getManipulateDirItemFromComponentVersion(
+  componentVersion: ComponentVersion,
+  bitMap: BitMap,
+  repository,
+  isDependency: boolean
+): Promise<ManipulateDirItem> {
+  const id: BitId = componentVersion.id;
+  // when a component is now imported, ignore the version because if it was nested before, we just
+  // replace it with the imported one.
+  // however, the opposite is not true, if it is now nested and was imported before, we can have them both.
+  // (see 'when imported component has lower dependencies versions than local' in import.e2e for such a case).
+  // we might change this behavior as it is confusing.
+  const componentMap: ?ComponentMap = isDependency
+    ? bitMap.getComponentIfExist(id)
+    : bitMap.getComponentPreferNonNested(id);
+  const bitmapOrigin = componentMap ? componentMap.origin : null;
+  const origin = getComponentOrigin(bitmapOrigin, isDependency);
+  const version: Version = await componentVersion.getVersion(repository);
+  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
+  const wrapDir = getWrapDirIfNeeded(origin, version);
+  return { id, originallySharedDir, wrapDir };
 }
 
 function addSharedDirForPath(pathStr: string, originallySharedDir: ?PathLinux): PathLinux {
