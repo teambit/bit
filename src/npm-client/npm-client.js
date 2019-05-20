@@ -325,7 +325,7 @@ async function getNpmVersion(): Promise<?string> {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
   } catch (err) {
-    logger.debugAndAddBreadCrumb(`got an error when executing "npm --version". ${err.message}`);
+    logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
   }
   return null;
 }
@@ -335,7 +335,7 @@ async function getYarnVersion(): Promise<?string> {
     const { stdout } = await execa('yarn', ['-v']);
     return stdout;
   } catch (e) {
-    logger.debugAndAddBreadCrumb("can't find yarn version by running yarn -v", e.message);
+    logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
   }
   return null;
 }
