@@ -6,7 +6,8 @@ import ValidateWorkspaceBitJsonSyntax from './core-diagnoses/validate-workspace-
 import ValidateGitExe from './core-diagnoses/validate-git-exe';
 import OrphanSymlinkObjects from './core-diagnoses/orphan-symlink-objects';
 import BrokenSymlinkFiles from './core-diagnoses/broken-symlink-files';
-import ValidateNpmExec from './core-diagnoses/validate-npm-exec';
+import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
+import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
 
 export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: Diagnosis[] = []) {
   const diagnoses = [
@@ -14,7 +15,8 @@ export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: D
     new ValidateGitExe(),
     new OrphanSymlinkObjects(),
     new BrokenSymlinkFiles(),
-    new ValidateNpmExec()
+    new ValidateNpmExec(),
+    new ValidateYarnExec()
   ].concat(extensionDiagnoses);
   DoctorRegistrar.init(diagnoses);
 }
