@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.2-dev.2] - 2019-05-20
+
 - add metadata to `bit doctor` output
 - add validation for npm executable on `bit doctor`
 - add validation for yarn executable on `bit doctor`
