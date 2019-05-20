@@ -325,7 +325,17 @@ async function getNpmVersion(): Promise<?string> {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
   } catch (err) {
-    logger.debug(`got an error when executing "npm --version". ${err.message}`);
+    logger.debugAndAddBreadCrumb(`got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
+}
+
+async function getYarnVersion(): Promise<?string> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb("can't find yarn version by running yarn -v", e.message);
   }
   return null;
 }
@@ -350,5 +360,7 @@ async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): 
 export default {
   install: installAction,
   printResults,
-  isSupportedInstallationOfSubDirFromRoot
+  isSupportedInstallationOfSubDirFromRoot,
+  getNpmVersion,
+  getYarnVersion
 };
