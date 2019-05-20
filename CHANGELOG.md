@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add metadata to `bit doctor` output
 - add validation for npm executable on `bit doctor`
+
+## [14.1.2-dev.1] - 2019-05-20
+
 - ignore `import`/`require` statements from CDN (http/https)
 - avoid generating package.json inside node_modules for author when one of the component files is package.json
 - preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
