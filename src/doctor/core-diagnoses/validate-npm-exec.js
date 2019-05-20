@@ -1,8 +1,8 @@
 /** @flow */
 
-import execa from 'execa';
 import Diagnosis from '../diagnosis';
 import type { ExamineBareResult } from '../diagnosis';
+import npmClient from '../../npm-client';
 
 export default class ValidateNpmExec extends Diagnosis {
   name = 'validate-npm-exec';
@@ -18,16 +18,15 @@ export default class ValidateNpmExec extends Diagnosis {
   }
 
   async _runExamine(): Promise<ExamineBareResult> {
-    try {
-      await execa('npm', ['--version']);
+    const npmVersion = await npmClient.getNpmVersion();
+    if (npmVersion) {
       return {
         valid: true
       };
-    } catch (err) {
-      return {
-        valid: false,
-        data: {}
-      };
     }
+    return {
+      valid: false,
+      data: {}
+    };
   }
 }
