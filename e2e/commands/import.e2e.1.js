@@ -703,8 +703,6 @@ describe('bit import', function () {
       it('should mark indirect dependencies as "NESTED" in bit.map file', () => {
         expect(bitMap[`${helper.remoteScope}/global/simple${VERSION_DELIMITER}0.0.1`].origin).to.equal('NESTED');
       });
-      it.skip('should not add existing components to bit.map file', () => {});
-      it.skip('should create bit.json file with all the dependencies in the folder', () => {});
       it('should print a successful message about installed npm packages', () => {
         expect(output).to.have.string('successfully ran npm install');
       });
@@ -717,7 +715,6 @@ describe('bit import', function () {
           'simple',
           helper.remoteScope,
           '0.0.1',
-          'global',
           'simple.js'
         );
         expect(fs.existsSync(depDir)).to.be.true;
@@ -738,7 +735,6 @@ describe('bit import', function () {
           helper.localScopePath,
           'components',
           '.dependencies',
-          'global',
           'simple',
           helper.remoteScope,
           '0.0.1',
@@ -958,7 +954,7 @@ describe('bit import', function () {
         const expectedLocation = path.join(
           'dist/components/.dependencies/utils/is-string',
           helper.remoteScope,
-          '0.0.1/utils/is-string.js'
+          '0.0.1/is-string.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
       });
