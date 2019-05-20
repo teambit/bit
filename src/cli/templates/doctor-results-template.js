@@ -89,7 +89,7 @@ function _createMetaSection(metaData) {
   npm version   : ${metaData.npmVersion || 'NA'}
   yarn version  : ${metaData.yarnVersion || 'NA'}
   platform      : ${metaData.platform}
-  userDetails   : ${metaData.userDetails}
+  user details  : ${metaData.userDetails}
 `;
 }
 
