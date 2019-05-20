@@ -6,7 +6,7 @@ import ValidateWorkspaceBitJsonSyntax from './core-diagnoses/validate-workspace-
 import ValidateGitExe from './core-diagnoses/validate-git-exe';
 import OrphanSymlinkObjects from './core-diagnoses/orphan-symlink-objects';
 import BrokenSymlinkFiles from './core-diagnoses/broken-symlink-files';
-import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
+import ValidateNpmExec from './core-diagnoses/validate-npm-exec';
 import ValidateYarnExec from './core-diagnoses/validate-yarn-exec';
 
 export default function registerCoreAndExtensionsDiagnoses(extensionDiagnoses: Diagnosis[] = []) {
