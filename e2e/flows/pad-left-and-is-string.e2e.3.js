@@ -527,12 +527,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           const distDir = path.join(helper.localScopePath, 'dist');
           expect(distDir).to.be.a.path();
           expect(
-            path.join(
-              distDir,
-              'components/.dependencies/string/is-string',
-              helper.remoteScope,
-              '0.0.1/src/is-string/is-string.js'
-            )
+            path.join(distDir, 'components/.dependencies/string/is-string', helper.remoteScope, '0.0.1/is-string.js')
           ).to.be.a.file();
           expect(path.join(distDir, 'pad-left/pad-left/pad-left.js')).to.be.a.file();
         });
