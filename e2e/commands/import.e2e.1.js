@@ -735,6 +735,7 @@ describe('bit import', function () {
           helper.localScopePath,
           'components',
           '.dependencies',
+          'global',
           'simple',
           helper.remoteScope,
           '0.0.1',
@@ -745,7 +746,7 @@ describe('bit import', function () {
         expect(packageJsonContent).to.deep.include({
           name: `@bit/${helper.remoteScope}.global.simple`,
           version: '0.0.1',
-          main: 'global/simple.js'
+          main: 'simple.js'
         });
         expect(packageJsonContent.dependencies['lodash.isboolean']).to.have.string('3.0.0');
       });
