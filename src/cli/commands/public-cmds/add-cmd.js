@@ -15,7 +15,7 @@ import { BASE_DOCS_DOMAIN } from '../../../constants';
 import GeneralError from '../../../error/general-error';
 
 export default class Add extends Command {
-  name = 'add [path...]';
+  name = 'add <path...>';
   description = `add any subset of files to be tracked as a component(s)
   all flags support glob patterns and {PARENT} {FILE_NAME} annotations
   https://${BASE_DOCS_DOMAIN}/docs/cli-add.html
@@ -25,9 +25,17 @@ export default class Add extends Command {
   opts = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],
-    ['t', 'tests <file>/"<file>,<file>"', 'specify test files to track. use quotation marks to list files or use a glob pattern'],
+    [
+      't',
+      'tests <file>/"<file>,<file>"',
+      'specify test files to track. use quotation marks to list files or use a glob pattern'
+    ],
     ['n', 'namespace <namespace>', 'orginize component in a namespace'],
-    ['e', 'exclude <file>/"<file>,<file>"', 'exclude file from being tracked. use quotation marks to list files or use a glob pattern'],
+    [
+      'e',
+      'exclude <file>/"<file>,<file>"',
+      'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
+    ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;
