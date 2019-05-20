@@ -29,15 +29,14 @@ export async function getManipulateDirForExistingComponents(
 ): Promise<ManipulateDirItem[]> {
   const id: BitId = componentVersion.id;
   const manipulateDirData = [];
-  // in case this is a dependency that was installed via NPM, the file is in the scope but not on
-  // the filesystem, in that case, no need for wrapDir or sharedDir
   const componentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
   const version: Version = await componentVersion.getVersion(consumer.scope.objects);
   if (!version) {
     throw new CorruptedComponent(id.toString(), componentVersion.version);
   }
-  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
-  const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
+  const isAuthor = Boolean(componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED);
+  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(isAuthor, version) : null;
+  const wrapDir = componentMap ? getWrapDirIfNeeded(isAuthor, version) : null;
   manipulateDirData.push({ id, originallySharedDir, wrapDir });
   const dependencies = version.getAllDependencies();
   dependencies.forEach((dependency) => {
@@ -60,8 +59,7 @@ export async function getManipulateDirForExistingComponents(
 export async function getManipulateDirWhenImportingComponents(
   bitMap: BitMap,
   versionsDependencies: VersionDependencies[],
-  repository: Repository,
-  shouldDependenciesSavedAsComponents: Object[]
+  repository: Repository
 ): Promise<ManipulateDirItem[]> {
   const nonDependencies = BitIds.fromArray(
     versionsDependencies.map(versionDependency => versionDependency.component.id)
@@ -70,18 +68,10 @@ export async function getManipulateDirWhenImportingComponents(
     const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(
       versionDependency.component,
       bitMap,
-      repository,
-      false
+      repository
     );
-    const dependenciesSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
-      c.id.isEqual(versionDependency.component.id)
-    );
-    // when dependencies are not save as components but as packages, they have the same behavior as
-    // imported components because each one of these dependencies is going to be isolated before
-    // npm installing it
-    const isDependency = !dependenciesSavedAsComponents || dependenciesSavedAsComponents.saveDependenciesAsComponents;
     const manipulateDirDependenciesP = versionDependency.allDependencies.map((dependency: ComponentVersion) => {
-      return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, isDependency);
+      return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository);
     });
     const manipulateDirDependencies = await Promise.all(manipulateDirDependenciesP);
     // a component might be a dependency and directly imported at the same time, in which case,
@@ -124,8 +114,8 @@ function calculateOriginallySharedDir(version: Version): ?PathLinux {
   return sharedStartDirectories.join(pathSep);
 }
 
-function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+function getOriginallySharedDirIfNeeded(isAuthor: boolean, version: Version): ?PathLinux {
+  if (isAuthor) return null;
   return calculateOriginallySharedDir(version);
 }
 
@@ -144,8 +134,8 @@ function isWrapperDirNeeded(version: Version) {
   );
 }
 
-function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
-  if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
+function getWrapDirIfNeeded(isAuthor: boolean, version: Version): ?PathLinux {
+  if (isAuthor) return null;
   return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
 }
 
@@ -161,39 +151,17 @@ function getDependencyComponentMap(bitMap, dependencyId): ?ComponentMap {
   return bitMap.getComponentIfExist(dependencyId) || bitMap.getComponentIfExist(dependencyId, { ignoreVersion: true });
 }
 
-/**
- * an authored component that is now imported, is still authored.
- * however, nested component that is now imported directly, is actually imported.
- * if there is no entry for this component in bitmap, it is imported.
- */
-function getComponentOrigin(bitmapOrigin: ?ComponentOrigin, isDependency: boolean): ComponentOrigin {
-  if (!bitmapOrigin) return isDependency ? COMPONENT_ORIGINS.NESTED : COMPONENT_ORIGINS.IMPORTED;
-  if (bitmapOrigin === COMPONENT_ORIGINS.NESTED && !isDependency) {
-    return COMPONENT_ORIGINS.IMPORTED;
-  }
-  return bitmapOrigin;
-}
-
 async function getManipulateDirItemFromComponentVersion(
   componentVersion: ComponentVersion,
   bitMap: BitMap,
-  repository,
-  isDependency: boolean
+  repository
 ): Promise<ManipulateDirItem> {
   const id: BitId = componentVersion.id;
-  // when a component is now imported, ignore the version because if it was nested before, we just
-  // replace it with the imported one.
-  // however, the opposite is not true, if it is now nested and was imported before, we can have them both.
-  // (see 'when imported component has lower dependencies versions than local' in import.e2e for such a case).
-  // we might change this behavior as it is confusing.
-  const componentMap: ?ComponentMap = isDependency
-    ? bitMap.getComponentIfExist(id)
-    : bitMap.getComponentPreferNonNested(id);
-  const bitmapOrigin = componentMap ? componentMap.origin : null;
-  const origin = getComponentOrigin(bitmapOrigin, isDependency);
+  const componentMap: ?ComponentMap = bitMap.getComponentIfExist(id, { ignoreScopeAndVersion: true });
+  const isAuthor = Boolean(componentMap && componentMap.origin === COMPONENT_ORIGINS.AUTHORED);
   const version: Version = await componentVersion.getVersion(repository);
-  const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
-  const wrapDir = getWrapDirIfNeeded(origin, version);
+  const originallySharedDir = getOriginallySharedDirIfNeeded(isAuthor, version);
+  const wrapDir = getWrapDirIfNeeded(isAuthor, version);
   return { id, originallySharedDir, wrapDir };
 }
 
