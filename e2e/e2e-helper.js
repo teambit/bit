@@ -649,7 +649,7 @@ export default class Helper {
 
   doctorOne(diagnosisName: string, options: Object) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit doctor ${diagnosisName} ${parsedOpts}`);
+    return this.runCmd(`bit doctor "${diagnosisName}" ${parsedOpts}`);
   }
 
   doctorList(options: Object) {

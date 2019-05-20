@@ -6,8 +6,9 @@ import Diagnosis from '../diagnosis';
 import getGitExecutablePath from '../../utils/git/git-executable';
 import type { ExamineBareResult } from '../diagnosis';
 
+export const DIAGNOSIS_NAME = 'Validate git exec';
 export default class ValidateGitExec extends Diagnosis {
-  name = 'Validate git exec';
+  name = DIAGNOSIS_NAME;
   description = 'validate that git executable found';
   category = '3rd-parties';
 
