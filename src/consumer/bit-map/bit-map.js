@@ -595,28 +595,6 @@ export default class BitMap {
     return R.unionWith(R.eqBy(R.prop('relativePath')), filesA, filesB);
   }
 
-  /**
-   * if an existing file is for example uppercase and the new file is lowercase it has different
-   * behavior according to the OS. some OS are case sensitive, some are not.
-   * it's safer to avoid saving both files and instead, replacing the old file with the new one.
-   * in case a file has replaced and it is also a mainFile, replace the mainFile as well
-   */
-  _updateFilesWithCurrentLetterCases(componentId: string, newFiles: ComponentMapFile[]) {
-    const currentComponentMap = this.components[componentId];
-    const currentFiles = currentComponentMap.files;
-    currentFiles.forEach((currentFile) => {
-      const sameFile = newFiles.find(
-        newFile => newFile.relativePath.toLowerCase() === currentFile.relativePath.toLowerCase()
-      );
-      if (sameFile && currentFile.relativePath !== sameFile.relativePath) {
-        if (currentComponentMap.mainFile === currentFile.relativePath) {
-          currentComponentMap.mainFile = sameFile.relativePath;
-        }
-        currentFile.relativePath = sameFile.relativePath;
-      }
-    });
-  }
-
   addComponent({
     componentId,
     files,
@@ -625,7 +603,6 @@ export default class BitMap {
     rootDir,
     configDir,
     trackDir,
-    override,
     originallySharedDir,
     wrapDir
   }: {
@@ -636,7 +613,6 @@ export default class BitMap {
     rootDir?: PathOsBasedAbsolute | PathOsBasedRelative,
     configDir?: ?ConfigDir,
     trackDir?: PathOsBased,
-    override?: boolean,
     originallySharedDir?: ?PathLinux,
     wrapDir?: ?PathLinux
   }): ComponentMap {
@@ -644,19 +620,7 @@ export default class BitMap {
     logger.debug(`adding to bit.map ${componentIdStr}`);
     if (this.components[componentIdStr]) {
       logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-      const existingRootDir = this.components[componentIdStr].rootDir;
-      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
-      if (override) {
-        this.components[componentIdStr].files = files;
-      } else {
-        this._updateFilesWithCurrentLetterCases(componentIdStr, files);
-        // override the current componentMap.files with the given files argument
-        this.components[componentIdStr].files = R.unionWith(
-          R.eqBy(R.prop('relativePath')),
-          files,
-          this.components[componentIdStr].files
-        );
-      }
+      this.components[componentIdStr].files = files;
       if (mainFile) {
         this.components[componentIdStr].mainFile = this._getMainFile(pathNormalizeToLinux(mainFile), componentIdStr);
       }
@@ -687,29 +651,6 @@ export default class BitMap {
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
-    this.components[componentIdStr].sort();
-    this.components[componentIdStr].validate();
-    this.markAsChanged();
-    return this.components[componentIdStr];
-  }
-
-  addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
-    const componentIdStr = componentId.toString();
-    if (!this.components[componentIdStr]) {
-      throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`);
-    }
-    const existingRootDir = this.components[componentIdStr].rootDir;
-    if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, files);
-    if (this._areFilesArraysEqual(this.components[componentIdStr].files, files)) {
-      return this.components[componentIdStr];
-    }
-    // do not override existing files, only add new files
-    logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
-    this.components[componentIdStr].files = R.unionWith(
-      R.eqBy(R.prop('relativePath')),
-      this.components[componentIdStr].files,
-      files
-    );
     this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
     this.markAsChanged();

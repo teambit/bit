@@ -36,7 +36,8 @@ import {
   ExcludedMainFile,
   MainFileIsDir
 } from './exceptions';
-import type ComponentMap, { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
+import type { ComponentMapFile, ComponentOrigin } from '../../bit-map/component-map';
+import ComponentMap from '../../bit-map/component-map';
 import type { PathLinux, PathOsBased } from '../../../utils/path';
 import GeneralError from '../../../error/general-error';
 import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
@@ -163,24 +164,6 @@ export default class AddComponents {
     });
   }
 
-  addToBitMap({ componentId, files, mainFile, trackDir }: AddedComponent): AddResult {
-    const getComponentMap = (): ComponentMap => {
-      if (this.trackDirFeature) {
-        return this.bitMap.addFilesToComponent({ componentId, files });
-      }
-      return this.bitMap.addComponent({
-        componentId,
-        files,
-        mainFile,
-        trackDir,
-        origin: COMPONENT_ORIGINS.AUTHORED,
-        override: this.override
-      });
-    };
-    const componentMap = getComponentMap();
-    return { id: componentId.toString(), files: componentMap.files };
-  }
-
   /**
    * unsupported files, such as, binary files, don't have link-file. instead, they have a symlink
    * inside the component dir, pointing to the dependency.
@@ -292,11 +275,63 @@ export default class AddComponents {
       }
       return file;
     });
-    const componentFiles = (await Promise.all(componentFilesP)).filter(file => file);
-    if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
     // $FlowFixMe it can't be null due to the filter function
-    component.files = componentFiles;
-    return this.addToBitMap(component);
+    const componentFiles: ComponentMapFile[] = (await Promise.all(componentFilesP)).filter(file => file);
+    if (!componentFiles.length) return { id: component.componentId.toString(), files: [] };
+    if (foundComponentFromBitMap) {
+      const existingRootDir = foundComponentFromBitMap.rootDir;
+      if (existingRootDir) ComponentMap.changeFilesPathAccordingToItsRootDir(existingRootDir, componentFiles);
+    }
+    if (this.trackDirFeature) {
+      if (this.bitMap._areFilesArraysEqual(foundComponentFromBitMap.files, componentFiles)) {
+        return foundComponentFromBitMap;
+      }
+    }
+    if (!this.override && foundComponentFromBitMap) {
+      this._updateFilesWithCurrentLetterCases(foundComponentFromBitMap, componentFiles);
+      // override the current componentMap.files with the given files argument
+      component.files = R.unionWith(R.eqBy(R.prop('relativePath')), componentFiles, foundComponentFromBitMap.files);
+    } else {
+      component.files = componentFiles;
+    }
+
+    const { componentId, mainFile, trackDir } = component;
+    const getComponentMap = (): ComponentMap => {
+      if (this.trackDirFeature) {
+        return foundComponentFromBitMap;
+      }
+      return this.bitMap.addComponent({
+        componentId,
+        files: component.files,
+        mainFile,
+        trackDir,
+        origin: COMPONENT_ORIGINS.AUTHORED,
+        override: this.override
+      });
+    };
+    const componentMap = getComponentMap();
+    return { id: componentId.toString(), files: componentMap.files };
+  }
+
+  /**
+   * if an existing file is for example uppercase and the new file is lowercase it has different
+   * behavior according to the OS. some OS are case sensitive, some are not.
+   * it's safer to avoid saving both files and instead, replacing the old file with the new one.
+   * in case a file has replaced and it is also a mainFile, replace the mainFile as well
+   */
+  _updateFilesWithCurrentLetterCases(currentComponentMap: ComponentMap, newFiles: ComponentMapFile[]) {
+    const currentFiles = currentComponentMap.files;
+    currentFiles.forEach((currentFile) => {
+      const sameFile = newFiles.find(
+        newFile => newFile.relativePath.toLowerCase() === currentFile.relativePath.toLowerCase()
+      );
+      if (sameFile && currentFile.relativePath !== sameFile.relativePath) {
+        if (currentComponentMap.mainFile === currentFile.relativePath) {
+          currentComponentMap.mainFile = sameFile.relativePath;
+        }
+        currentFile.relativePath = sameFile.relativePath;
+      }
+    });
   }
 
   // remove excluded files from file list
@@ -577,13 +612,13 @@ export default class AddComponents {
     if (!R.isEmpty(missingFiles)) {
       throw new PathsNotExist(missingFiles);
     }
-    let componentPathsStats = {};
+    let componentPathsStats: PathsStats = {};
 
     const resolvedComponentPathsWithoutGitIgnore = R.flatten(
       await Promise.all(this.componentPaths.map(componentPath => glob(componentPath)))
     );
 
-    /** add excluded list to gitignore to remove excluded files from list */
+    // add excluded list to gitignore to remove excluded files from list
     const resolvedExcludedFiles = await this.getFilesAccordingToDsl(
       resolvedComponentPathsWithoutGitIgnore,
       this.exclude
