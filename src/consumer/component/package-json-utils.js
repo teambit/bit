@@ -156,7 +156,6 @@ export function preparePackageJsonToWrite(
         ...component.testerPackageDependencies
       },
       peerDependencies: component.peerPackageDependencies,
-      componentRootFolder: dir,
       license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
     });
     packageJsonFile.addDependencies(bitDependencies);
