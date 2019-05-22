@@ -17,6 +17,8 @@ import logger from '../../logger/logger';
 import defaultErrorHandler from '../../cli/default-error-handler';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import PackageJsonFile from '../component/package-json-file';
+import ComponentVersion from '../../scope/component-version';
+import deleteComponentsFiles from './delete-component-files';
 
 export type EjectResults = {
   ejectedComponents: BitIds,
@@ -115,7 +117,14 @@ export default class EjectComponents {
     const action = 'adding the components as packages into package.json';
     try {
       logger.debugAndAddBreadCrumb('eject', action);
-      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, this.componentsToEject);
+      const componentsVersions = await Promise.all(
+        this.componentsToEject.map(async (bitId) => {
+          const modelComponent = await this.consumer.scope.getModelComponent(bitId);
+          // $FlowFixMe componentsToEject has scope and version
+          return new ComponentVersion(modelComponent, bitId.version);
+        })
+      );
+      await packageJsonUtils.addComponentsWithVersionToRoot(this.consumer, componentsVersions);
     } catch (err) {
       logger.error(err);
       logger.warn(`eject: failed ${action}, restoring package.json`);
@@ -174,7 +183,7 @@ please use bit remove command to remove them.`,
     // not used anywhere else. Because this is part of the eject operation, the user probably
     // gets the dependencies as npm packages so we don't need to worry much about have extra
     // dependencies on the filesystem
-    await this.consumer.removeComponentFromFs(this.componentsToEject, true);
+    await deleteComponentsFiles(this.consumer, this.componentsToEject, true);
     await this.consumer.cleanFromBitMap(this.componentsToEject, new BitIds());
   }
 

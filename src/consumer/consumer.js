@@ -72,6 +72,7 @@ import { dependenciesFields } from './config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
+import deleteComponentsFiles from './component-ops/delete-component-files';
 
 type ConsumerProps = {
   projectPath: string,
@@ -864,40 +865,6 @@ export default class Consumer {
 
     return Promise.all(removeP);
   }
-  /**
-   * delete files from fs according to imported/created
-   * @param {BitIds} bitIds - list of remote component ids to delete
-   * @param {boolean} deleteFiles - delete component files for authored
-   */
-  async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
-    logger.debug(`consumer.removeComponentFromFs, ids: ${bitIds.toString()}`);
-    const deletePath = async (pathToDelete) => {
-      if (!path.isAbsolute(pathToDelete)) {
-        throw new Error(`consumer.removeComponentFromFs, expect pathToDelete to be absolute. Got "${pathToDelete}"`);
-      }
-      logger.debug(`consumer.removeComponentFromFs deleting the following path: ${pathToDelete}`);
-      return fs.remove(pathToDelete);
-    };
-    return Promise.all(
-      bitIds.map(async (id) => {
-        const ignoreVersion = id.isLocal() || !id.hasVersion();
-        const componentMap = this.bitMap.getComponentIfExist(id, { ignoreVersion });
-        if (!componentMap) {
-          logger.warn(
-            `removeComponentFromFs wasn't able to delete ${id.toString()} because the id is missing from bitmap`
-          );
-          return null;
-        }
-        if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-          // $FlowFixMe rootDir is set for non authored
-          return deletePath(this.toAbsolutePath(componentMap.rootDir));
-        } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(componentMap.files.map(file => deletePath(this.toAbsolutePath(file.relativePath))));
-        }
-        return null;
-      })
-    );
-  }
 
   /**
    * clean up removed components from bitmap
@@ -951,8 +918,8 @@ export default class Consumer {
     );
 
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(removedComponentIds, deleteFiles);
-      await this.removeComponentFromFs(removedDependencies, false);
+      await deleteComponentsFiles(this, removedComponentIds, deleteFiles);
+      await deleteComponentsFiles(this, removedDependencies, false);
       if (!track) {
         await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
         await this.cleanFromBitMap(removedComponentIds, removedDependencies);

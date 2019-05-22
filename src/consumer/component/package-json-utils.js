@@ -18,6 +18,7 @@ import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
 import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
+import ComponentVersion from '../../scope/component-version';
 
 /**
  * Add components as dependencies to root package.json
@@ -41,16 +42,14 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
 /**
  * Add given components with their versions to root package.json
  */
-export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitIds) {
-  const driver = consumer.driver.getDriver(false);
-  const PackageJson = driver.PackageJson;
-
+export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
   const componentsToAdd = R.fromPairs(
-    componentsIds.map((id) => {
-      return [id.toStringWithoutVersion(), id.version];
+    componentsVersions.map(({ component, version }) => {
+      const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
+      return [packageName, version];
     })
   );
-  await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, npmRegistryName());
+  await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
 }
 
 export async function changeDependenciesToRelativeSyntax(

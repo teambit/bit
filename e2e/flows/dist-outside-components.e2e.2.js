@@ -142,6 +142,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
       });
     });
     describe('as imported', () => {
+      let scopeAfterImport;
       before(() => {
         helper.getClonedLocalScope(clonedScope);
         helper.tagAllComponents();
@@ -152,6 +153,7 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
         helper.addRemoteScope();
         helper.modifyFieldInBitJson('dist', { target: 'dist' });
         helper.importComponent('bar/foo');
+        scopeAfterImport = helper.cloneLocalScope();
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
@@ -198,6 +200,15 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
             const result = helper.runCmd('node app.js');
             expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
           });
+        });
+      });
+      describe('removing the component', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          helper.removeComponent('bar/foo', '-s');
+        });
+        it('should remove the dist directory as well', () => {
+          expect(path.join(helper.localScopePath, 'dist/components/bar')).to.not.be.a.path();
         });
       });
     });

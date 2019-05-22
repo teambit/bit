@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
 - fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
 - avoid generating links of devDependencies when installing component as packages (#1614)
 
