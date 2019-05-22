@@ -290,7 +290,7 @@ export default class AddComponents {
     if (!this.override && foundComponentFromBitMap) {
       this._updateFilesWithCurrentLetterCases(foundComponentFromBitMap, componentFiles);
       // override the current componentMap.files with the given files argument
-      component.files = R.unionWith(R.eqBy(R.prop('relativePath')), componentFiles, foundComponentFromBitMap.files);
+      component.files = R.unionWith(R.eqBy(R.prop('relativePath')), foundComponentFromBitMap.files, componentFiles);
     } else {
       component.files = componentFiles;
     }
@@ -298,7 +298,7 @@ export default class AddComponents {
     const { componentId, mainFile, trackDir } = component;
     const getComponentMap = (): ComponentMap => {
       if (this.trackDirFeature) {
-        return foundComponentFromBitMap;
+        return this.bitMap.addFilesToComponent({ componentId, files: component.files });
       }
       return this.bitMap.addComponent({
         componentId,

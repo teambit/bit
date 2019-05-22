@@ -651,10 +651,25 @@ export default class BitMap {
     if (originallySharedDir) {
       this.components[componentIdStr].originallySharedDir = originallySharedDir;
     }
+    this.sortValidateAndMarkAsChanged(componentIdStr);
+    return this.components[componentIdStr];
+  }
+
+  addFilesToComponent({ componentId, files }: { componentId: BitId, files: ComponentMapFile[] }): ComponentMap {
+    const componentIdStr = componentId.toString();
+    if (!this.components[componentIdStr]) {
+      throw new GeneralError(`unable to add files to a non-exist component ${componentIdStr}`);
+    }
+    logger.info(`bit.map: updating an exiting component ${componentIdStr}`);
+    this.components[componentIdStr].files = files;
+    this.sortValidateAndMarkAsChanged(componentIdStr);
+    return this.components[componentIdStr];
+  }
+
+  sortValidateAndMarkAsChanged(componentIdStr) {
     this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
     this.markAsChanged();
-    return this.components[componentIdStr];
   }
 
   _invalidateCache = () => {
