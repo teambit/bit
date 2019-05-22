@@ -296,6 +296,9 @@ export default class Helper {
   }
 
   getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+    if (!fs.existsSync(clonedScopePath)) {
+      throw new Error(`getClonedLocalScope was unable to find the clonedScopePath at ${clonedScopePath}`);
+    }
     if (deleteCurrentScope) {
       fs.removeSync(this.localScopePath);
     } else {
