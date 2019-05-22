@@ -110,6 +110,7 @@ export default class Helper {
     if (this.cache) {
       fs.removeSync(this.cache.localScopePath);
       fs.removeSync(this.cache.remoteScopePath);
+      delete this.cache;
     }
     if (this.clonedScopes && this.clonedScopes.length) {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));

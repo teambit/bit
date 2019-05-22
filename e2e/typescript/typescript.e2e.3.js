@@ -363,7 +363,6 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
             });
         });
         after(() => {
-          helper.destroyEnv();
           return bitsrcTester.deleteScope(scopeName);
         });
         describe('exporting to bitsrc and importing locally', () => {

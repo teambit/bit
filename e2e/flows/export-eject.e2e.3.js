@@ -22,7 +22,6 @@ chai.use(require('chai-fs'));
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('as author', () => {
