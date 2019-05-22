@@ -331,14 +331,10 @@ export default class Consumer {
     }
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
-    const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents([
-      versionDependencies.component.id
-    ]);
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       [versionDependencies],
-      this.scope.objects,
-      shouldDependenciesSavedAsComponents
+      this.scope.objects
     );
     return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
   }
@@ -375,8 +371,7 @@ export default class Consumer {
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
-      this.scope.objects,
-      shouldDependenciesSavedAsComponents
+      this.scope.objects
     );
     const componentWithDependencies = await pMapSeries(versionDependenciesArr, versionDependencies =>
       versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
@@ -1014,14 +1009,10 @@ export default class Consumer {
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
 
     const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds, true, false);
-    const shouldDependenciesSavedAsComponents = await this.shouldDependenciesSavedAsComponents(
-      versionDependenciesArr.map(v => v.component.id)
-    );
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
-      this.scope.objects,
-      shouldDependenciesSavedAsComponents
+      this.scope.objects
     );
     const dependentComponentsP = versionDependenciesArr.map(c =>
       c.component.toConsumer(this.scope.objects, manipulateDirData)
