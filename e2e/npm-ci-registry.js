@@ -120,6 +120,10 @@ EOD`;
     const npmComponentName = componentName.replace(/\//g, '.');
     const tarballFileName = `ci-${this.helper.remoteScope}.${npmComponentName}-${componentVersion}.tgz`;
     const tarballFilePath = path.join(packDir, tarballFileName);
+    if (!fs.existsSync(tarballFilePath)) {
+      throw new Error(`publishComponent unable to find the following file, probably you forgot to run setCiScopeInBitJson() method before creating the components
+${tarballFileName}`);
+    }
     tar.x({ file: tarballFilePath, C: packDir, sync: true });
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
