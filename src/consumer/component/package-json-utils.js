@@ -17,6 +17,7 @@ import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
+import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
 
 /**
  * Add components as dependencies to root package.json
@@ -168,6 +169,8 @@ export function preparePackageJsonToWrite(
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
     distPackageJson = createPackageJsonFile(distRootDir);
+    const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
+    distPackageJson.addOrUpdateProperty('main', distMainFile);
   }
 
   return { packageJson, distPackageJson };

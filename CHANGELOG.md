@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
 - avoid generating links of devDependencies when installing component as packages (#1614)
 
 ## [14.1.2-dev.2] - 2019-05-20

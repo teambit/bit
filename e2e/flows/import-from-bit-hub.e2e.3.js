@@ -58,7 +58,6 @@ chai.use(require('chai-fs'));
       });
   });
   after(() => {
-    helper.destroyEnv();
     return bitsrcTester.deleteScope(scopeName);
   });
   describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
