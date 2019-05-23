@@ -85,4 +85,43 @@ describe('components that are not synced between the scope and the consumer', fu
       });
     });
   });
+  describe('consumer with a tagged component and scope with no components', () => {
+    let scopeOutOfSync;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagComponentBarFoo();
+      helper.deleteFile('.bit');
+      scopeOutOfSync = helper.cloneLocalScope();
+    });
+    describe('bit tag', () => {
+      it('should tag the component successfully as if the component is new', () => {
+        const output = helper.runCmd('bit tag bar/foo');
+        expect(output).to.have.string('0.0.1');
+      });
+    });
+    describe('bit status', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.status();
+      });
+      it('should show the component as new', () => {
+        expect(output).to.have.string('new components');
+        const bitMap = helper.readBitMap();
+        const newId = 'bar/foo';
+        expect(bitMap).to.have.property(newId);
+        const oldId = 'bar/foo@0.0.1';
+        expect(bitMap).to.not.have.property(oldId);
+      });
+    });
+    describe('bit show', () => {
+      it('should not show the component with the version', () => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        const show = helper.showComponent('bar/foo');
+        expect(show).to.not.have.string('0.0.1');
+      });
+    });
+  });
 });

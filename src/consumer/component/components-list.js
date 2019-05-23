@@ -7,7 +7,7 @@ import ModelComponent from '../../scope/models/model-component';
 import Scope from '../../scope/scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
-import type BitMap from '../bit-map/bit-map';
+import BitMap from '../bit-map/bit-map';
 import type Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -29,7 +29,6 @@ export default class ComponentsList {
   scope: Scope;
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
-  _fromBitMap: { [cacheKey: string]: BitId[] } = {};
   _fromObjectsIds: BitId[];
   _modelComponents: ModelComponent[];
   _invalidComponents: string[];
@@ -258,13 +257,9 @@ export default class ComponentsList {
     return this._invalidComponents;
   }
 
-  getFromBitMap(origin?: string): BitId[] {
-    const cacheKeyName = origin || 'all';
-    if (!this._fromBitMap[cacheKeyName]) {
-      const originParam = origin ? [origin] : undefined;
-      this._fromBitMap[cacheKeyName] = this.bitMap.getAllBitIds(originParam);
-    }
-    return this._fromBitMap[cacheKeyName];
+  getFromBitMap(origin?: string): BitIds {
+    const originParam = origin ? [origin] : undefined;
+    return this.bitMap.getAllBitIds(originParam);
   }
 
   getPathsForAllFilesOfAllComponents(origin?: string, absolute: boolean = false): string[] {

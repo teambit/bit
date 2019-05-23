@@ -104,8 +104,13 @@ export default class ComponentLoader {
     if (componentFromModel && componentFromModel.scope && !componentMap.id.hasVersion()) {
       newId = componentMap.id.changeVersion(componentFromModel.version).changeScope(componentFromModel.scope);
       this.consumer.bitMap.updateComponentId(newId);
-      component.version = componentFromModel.version;
-      component.scope = componentFromModel.scope;
+      component.version = newId.version;
+      component.scope = newId.scope;
+    }
+    if (!componentFromModel && componentMap.id.hasVersion() && !componentMap.id.hasScope()) {
+      newId = componentMap.id.changeVersion(null);
+      this.consumer.bitMap.updateComponentId(newId);
+      component.version = newId.version;
     }
 
     component.loadedFromFileSystem = true;

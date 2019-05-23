@@ -29,7 +29,7 @@ async function exportComponents(ids?: string[], remote: string): Promise<BitId[]
   if (R.isEmpty(idsToExport)) return [];
 
   const componentsIds = await exportMany(consumer.scope, idsToExport, remote, undefined);
-  const updatedIds = componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId));
+  const updatedIds = componentsIds.map(componentsId => consumer.bitMap.updateComponentId(componentsId, true));
   await linkComponents(updatedIds, consumer);
   Analytics.setExtraData('num_components', componentsIds.length);
   // it is important to have consumer.onDestroy() before running the eject operation, we want the
