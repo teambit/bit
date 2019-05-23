@@ -281,7 +281,7 @@ export default class Consumer {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
     const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = BitId.getVersionOnlyFromString(id);
-    return version ? bitId.changeVersion(version) : bitId;
+    return version ? bitId.changeVersion(version) : bitId.changeVersion(null);
   }
 
   getParsedIdIfExist(id: BitIdStr): ?BitId {
