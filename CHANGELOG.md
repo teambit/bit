@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
+- avoid generating links of devDependencies when installing component as packages (#1614)
+
+## [14.1.2-dev.2] - 2019-05-20
+
+- add metadata to `bit doctor` output
+- add validation for npm executable on `bit doctor`
+- add validation for yarn executable on `bit doctor`
+- update `bit add` help message with instructions for using glob patterns with `--tests`
+
+## [14.1.2-dev.1] - 2019-05-20
+
+- ignore `import`/`require` statements from CDN (http/https)
+- avoid generating package.json inside node_modules for author when one of the component files is package.json
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
+## [14.1.1] - 2019-05-16
+
+### Bug fixes
+
+- fix bit build to not generate `index.js` files when `package.json` file already exists
+- prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
+- avoid changing the local version of a component to the latest when exporting an older version
+- fix post-receive-hook to send all exported versions and not only the latest
+- fix dependency resolution to identify link (proxy) files correctly
+- fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
+- fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
+- fix dependency value in the dependent package.json to include the path when importing them both in the same command
+- fix "EEXIST: file already exists" error when running `bit link` or `bit install` and the dist is outside the component directory
 - fix `bit add` to ignore directories when their files are added (#1406)
 
 ## [[14.1.0] - 2019-05-01](https://github.com/teambit/bit/releases/tag/v14.1.0)

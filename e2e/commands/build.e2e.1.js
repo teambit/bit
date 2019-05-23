@@ -146,6 +146,10 @@ describe('bit build', function () {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
       });
+      it('should not create an index.js file because package.json file already exists', () => {
+        const indexJs = path.join(helper.localScopePath, 'components/bar/foo/index.js');
+        expect(indexJs).to.not.be.a.path();
+      });
       describe('changing dist target', () => {
         let rebuildOutput;
         before(() => {

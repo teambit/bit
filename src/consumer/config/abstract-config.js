@@ -19,6 +19,7 @@ import {
 } from '../../constants';
 import logger from '../../logger/logger';
 import JSONFile from '../component/sources/json-file';
+import PackageJsonFile from '../component/package-json-file';
 
 export type RegularExtensionObject = {
   rawConfig: Object,
@@ -189,21 +190,15 @@ export default class AbstractConfig {
       JsonFiles.push(JSONFile.load(params));
     };
     if (this.writeToPackageJson) {
-      const packageJsonPath = AbstractConfig.composePackageJsonPath(bitDir);
-      const packageJsonFile = await fs.readJson(packageJsonPath);
-      packageJsonFile.bit = plainObject;
-      addJsonFile(packageJsonPath, packageJsonFile);
+      const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(bitDir);
+      packageJsonFile.addOrUpdateProperty('bit', plainObject);
+      JsonFiles.push(packageJsonFile.toJSONFile());
     }
     if (this.writeToBitJson) {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(bitDir);
       addJsonFile(bitJsonPath, plainObject);
     }
     return JsonFiles;
-  }
-
-  toJson(readable: boolean = true) {
-    if (!readable) return JSON.stringify(this.toPlainObject());
-    return JSON.stringify(this.toPlainObject(), null, 4);
   }
 
   static composeBitJsonPath(bitPath: PathOsBased): PathOsBased {

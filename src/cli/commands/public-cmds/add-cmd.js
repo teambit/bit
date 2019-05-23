@@ -25,9 +25,17 @@ export default class Add extends Command {
   opts = [
     ['i', 'id <name>', 'manually set component id'],
     ['m', 'main <file>', 'define entry point for the components'],
-    ['t', 'tests <file>/"<file>,<file>"', 'specify test files to track'],
+    [
+      't',
+      'tests <file>/"<file>,<file>"',
+      'specify test files to track. use quotation marks to list files or use a glob pattern'
+    ],
     ['n', 'namespace <namespace>', 'orginize component in a namespace'],
-    ['e', 'exclude <file>/"<file>,<file>"', 'exclude file from being tracked'],
+    [
+      'e',
+      'exclude <file>/"<file>,<file>"',
+      'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
+    ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;

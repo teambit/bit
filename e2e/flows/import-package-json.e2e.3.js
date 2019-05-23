@@ -5,7 +5,7 @@ import { WRAPPER_DIR } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixturePackageJson = { name: 'nice-package' };
-const fixturePackageJsonV2 = { name: 'nice-package V2' };
+const fixturePackageJsonV2 = { name: 'nice-package-v2' }; // name must be valid, otherwise, npm skips it and install from nested dirs
 
 chai.use(require('chai-fs'));
 
@@ -206,32 +206,45 @@ describe('component with package.json as a file of the component', function () {
       });
 
       describe('export the updated components and re-import them for author', () => {
-        if (process.env.APPVEYOR === 'True') {
-          this.skip;
-        } else {
+        before(() => {
+          helper.exportAllComponents();
+          helper.getClonedLocalScope(afterExportScope);
+
+          // scenario 1: import bar/foo then foo/pkg. we had a bug here. it imported bar/foo as
+          // authored (as expected) but foo/pkg as nested. then, after running the import for
+          // foo/pkg it changed the record to imported. Now, it doesn't change it to imported
+          // but leave it as authored
+          helper.importComponent('bar/foo');
+          helper.importComponent('foo/pkg');
+
+          // scenario 2: import all components from .bitmap, we have a bug as well, for some
+          // reason, it imports the objects but doesn't update the file system.
+          // helper.importAllComponents(true);
+        });
+        it('should not add wrapDir for the author', () => {
+          expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
+        });
+        it('should not override the author package.json', () => {
+          const packageJson = helper.readPackageJson();
+          expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
+        });
+        it('should not show the component as modified', () => {
+          const output = helper.runCmd('bit status');
+          expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('running bit link', () => {
           before(() => {
-            helper.exportAllComponents();
-            helper.getClonedLocalScope(afterExportScope);
-
-            // scenario 1: import bar/foo then foo/pkg. we had a bug here. it imported bar/foo as
-            // authored (as expected) but foo/pkg as nested. then, after running the import for
-            // foo/pkg it changed the record to imported. Now, it doesn't change it to imported
-            // but leave it as authored
-            helper.importComponent('bar/foo');
-            helper.importComponent('foo/pkg');
-
-            // scenario 2: import all components from .bitmap, we have a bug as well, for some
-            // reason, it imports the objects but doesn't update the file system.
-            // helper.importAllComponents(true);
+            helper.runCmd('bit link');
           });
-          it('should not add wrapDir for the author', () => {
-            expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
+          it('should not override the author package.json', () => {
+            const packageJson = helper.readPackageJson();
+            expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
           });
           it('should not show the component as modified', () => {
             const output = helper.runCmd('bit status');
             expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
           });
-        }
+        });
       });
     });
   });

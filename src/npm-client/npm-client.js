@@ -1,5 +1,6 @@
 // @flow
 import execa from 'execa';
+import pMapSeries from 'p-map-series';
 import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
@@ -297,7 +298,7 @@ const installAction = async ({
     }
   }
 
-  const promises = dirs.map(dir =>
+  const installInDir = dir =>
     _installInOneDirectoryWithPeerOption({
       modules,
       packageManager,
@@ -306,10 +307,11 @@ const installAction = async ({
       dir,
       installPeerDependencies,
       verbose
-    })
-  );
+    });
 
-  const promisesResults = await Promise.all(promises);
+  // run npm install for each one of the directories serially, not in parallel. Don’t use Promise.all() here.
+  // running them in parallel result in race condition and random NPM errors. (see https://github.com/teambit/bit/issues/1617)
+  const promisesResults = await pMapSeries(dirs, installInDir);
   return results.concat(R.flatten(promisesResults));
 };
 
@@ -323,7 +325,17 @@ async function getNpmVersion(): Promise<?string> {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
   } catch (err) {
-    logger.debug(`got an error when executing "npm --version". ${err.message}`);
+    logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
+}
+
+async function getYarnVersion(): Promise<?string> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
   }
   return null;
 }
@@ -348,5 +360,7 @@ async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): 
 export default {
   install: installAction,
   printResults,
-  isSupportedInstallationOfSubDirFromRoot
+  isSupportedInstallationOfSubDirFromRoot,
+  getNpmVersion,
+  getYarnVersion
 };

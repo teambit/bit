@@ -58,7 +58,6 @@ chai.use(require('chai-fs'));
       });
   });
   after(() => {
-    helper.destroyEnv();
     return bitsrcTester.deleteScope(scopeName);
   });
   describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
@@ -119,11 +118,9 @@ chai.use(require('chai-fs'));
       expect(bitMap).to.have.property(`${scopeId}/utils/is-string@0.0.1`);
       expect(bitMap).to.have.property(`${scopeId}/utils/is-type@0.0.1`);
     });
-    it('should not install the dependencies as npm packages', () => {
-      expect(
-        path.join(barFooDir, 'node_modules', '@bit', `${scopeId}.utils.is-string`, 'is-string.js')
-      ).to.not.be.a.path();
-      expect(path.join(barFooDir, 'node_modules', '@bit', `${scopeId}.utils.is-type`, 'is-type.js')).to.not.be.a.path();
+    it('package.json should not contain the dependency', () => {
+      const packageJson = helper.readPackageJson(barFooDir);
+      expect(packageJson.dependencies).to.deep.equal({});
     });
     it('should generate all the links correctly and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";

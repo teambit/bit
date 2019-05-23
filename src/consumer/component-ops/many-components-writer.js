@@ -6,7 +6,7 @@ import pMapSeries from 'p-map-series';
 import { moveExistingComponent } from './move-components';
 import { getAllComponentsLinks } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
-import * as packageJson from '../component/package-json';
+import * as packageJsonUtils from '../component/package-json-utils';
 import type { ComponentWithDependencies } from '../../scope';
 import type Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -110,9 +110,9 @@ export default class ManyComponentsWriter {
   }
   async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
-    await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
+    await packageJsonUtils.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
     if (this.addToRootPackageJson) {
-      await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents);
+      await packageJsonUtils.addComponentsToRoot(this.consumer, this.writtenComponents);
     }
     await this._installPackagesIfNeeded();
   }
@@ -148,11 +148,16 @@ export default class ManyComponentsWriter {
   }
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
-    const populateComponent = (writeParams) => {
-      const componentWriter = ComponentWriter.getInstance(writeParams);
-      return componentWriter.populateComponentsFilesToWrite();
-    };
-    this.writtenComponents = await pMapSeries(writeComponentsParams, populateComponent);
+    const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
+    // add componentMap entries into .bitmap before starting the process because steps like writing package-json
+    // rely on .bitmap to determine whether a dependency exists and what's its origin
+    componentWriterInstances.forEach((componentWriter) => {
+      componentWriter.existingComponentMap =
+        componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
+    });
+    this.writtenComponents = await pMapSeries(componentWriterInstances, componentWriter =>
+      componentWriter.populateComponentsFilesToWrite()
+    );
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {
     return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>
@@ -226,21 +231,6 @@ export default class ManyComponentsWriter {
             'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map',
             { dependencyId }
           );
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        if (
-          depFromBitMap &&
-          (fs.existsSync(depFromBitMap.rootDir) ||
-            this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
-        ) {
-          dep.writtenPath = depFromBitMap.rootDir;
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map and file system',
-            { dependencyId }
-          );
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (this.dependenciesIdsCache[dependencyId]) {
@@ -250,7 +240,6 @@ export default class ManyComponentsWriter {
             { dependencyId }
           );
           dep.writtenPath = this.dependenciesIdsCache[dependencyId];
-          this.consumer.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         const depRootPath = this.consumer.composeRelativeDependencyPath(dep.id);
@@ -265,7 +254,6 @@ export default class ManyComponentsWriter {
           component: dep,
           writeToPath: depRootPath,
           origin: COMPONENT_ORIGINS.NESTED,
-          parent: componentWithDeps.component.id,
           existingComponentMap: componentMap
         });
         return componentWriter.populateComponentsFilesToWrite();

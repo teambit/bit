@@ -15,6 +15,7 @@ import Source from '../../../scope/models/source';
 import type CompilerExtension from '../../../extensions/compiler-extension';
 import type { DistFileModel } from '../../../scope/models/version';
 import DataToPersist from './data-to-persist';
+import WorkspaceConfig from '../../config/workspace-config';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -78,18 +79,22 @@ export default class Dists {
    * relative to consumer root.
    */
   getDistDirForConsumer(consumer: Consumer, componentRootDir: PathLinux): PathOsBasedRelative {
-    const workspaceConfig = consumer.config;
     if (consumer.shouldDistsBeInsideTheComponent()) {
-      // should be relative to component
       this.distsRootDir = path.join(componentRootDir, DEFAULT_DIST_DIRNAME);
     } else {
-      // should be relative to consumer root
-      if (workspaceConfig.distEntry) componentRootDir = componentRootDir.replace(workspaceConfig.distEntry, '');
-      const distTarget = workspaceConfig.distTarget || DEFAULT_DIST_DIRNAME;
       this.areDistsInsideComponentDir = false;
-      this.distsRootDir = path.join(distTarget, componentRootDir);
+      this.distsRootDir = Dists.getDistDirWhenDistIsOutsideCompDir(consumer.config, componentRootDir);
     }
     return this.distsRootDir;
+  }
+
+  static getDistDirWhenDistIsOutsideCompDir(
+    workspaceConfig: WorkspaceConfig,
+    componentRootDir: PathLinux
+  ): PathOsBasedRelative {
+    if (workspaceConfig.distEntry) componentRootDir = componentRootDir.replace(workspaceConfig.distEntry, '');
+    const distTarget = workspaceConfig.distTarget || DEFAULT_DIST_DIRNAME;
+    return path.join(distTarget, componentRootDir);
   }
 
   getDistDir(consumer: ?Consumer, componentRootDir: PathLinux): PathOsBasedRelative {
@@ -186,7 +191,7 @@ export default class Dists {
       const mainFile =
         this.dists && this.dists.length === 1
           ? this.dists[0].relative
-          : searchFilesIgnoreExt(this.dists, componentMainFile, 'relative', 'relative');
+          : searchFilesIgnoreExt(this.dists, componentMainFile, 'relative');
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
     return componentMainFile;
@@ -204,7 +209,7 @@ export default class Dists {
       return componentFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
     const fileToSearch = getFileToSearch();
-    const distFile = searchFilesIgnoreExt(this.dists, fileToSearch, 'relative', 'relative');
+    const distFile = searchFilesIgnoreExt(this.dists, fileToSearch, 'relative');
     if (!distFile) return componentFile;
     const distTarget = consumer.config.distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, distFile);

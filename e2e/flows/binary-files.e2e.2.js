@@ -5,6 +5,7 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -124,9 +125,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -163,9 +163,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -230,9 +229,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -318,9 +316,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -418,9 +415,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -487,6 +483,24 @@ describe('binary files', function () {
           );
         });
       });
+    });
+  });
+  describe('export an md file with the same name as another js file with compiler (bug #1628)', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createFile('bar', 'my-comp.md', 'some md5 content');
+      helper.createFile('bar', 'my-comp.js');
+      helper.runCmd('bit add bar -m my-comp.js -i bar/foo');
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.importDummyCompiler();
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+    });
+    it('should not overwrite the md file with an auto-generated content', () => {
+      const mdContent = helper.readFile('bar/my-comp.md');
+      expect(mdContent).to.not.have.string(AUTO_GENERATED_STAMP);
+      expect(mdContent).to.have.string('some md5 content');
     });
   });
 });

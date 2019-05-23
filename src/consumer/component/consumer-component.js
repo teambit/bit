@@ -44,7 +44,6 @@ import {
   BASE_WEB_DOMAIN
 } from '../../constants';
 import ComponentWithDependencies from '../../scope/component-dependencies';
-import * as packageJson from './package-json';
 import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
@@ -53,7 +52,6 @@ import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
-import type { PackageJsonInstance } from './package-json';
 import { componentIssuesLabels } from '../../cli/templates/component-issues-template';
 import MainFileRemoved from './exceptions/main-file-removed';
 import EnvExtension from '../../extensions/env-extension';
@@ -70,6 +68,7 @@ import ComponentOutOfSync from '../exceptions/component-out-of-sync';
 import type { OverriddenDependencies } from './dependencies/dependency-resolver/dependencies-resolver';
 import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
+import PackageJsonFile from './package-json-file';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -143,7 +142,7 @@ export default class Component {
   license: ?License;
   log: ?Log;
   writtenPath: ?PathOsBasedRelative; // needed for generate links
-  dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages
+  dependenciesSavedAsComponents: ?boolean = true; // otherwise they're saved as npm packages.
   originallySharedDir: ?PathLinux; // needed to reduce a potentially long path that was used by the author
   _wasOriginallySharedDirStripped: ?boolean; // whether stripOriginallySharedDir() method had been called, we don't want to strip it twice
   wrapDir: ?PathLinux; // needed when a user adds a package.json file to the component root
@@ -157,7 +156,7 @@ export default class Component {
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   _driver: Driver;
   _isModified: boolean;
-  packageJsonInstance: PackageJsonInstance;
+  packageJsonFile: PackageJsonFile;
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
@@ -395,30 +394,6 @@ export default class Component {
       this.componentMap.setConfigDir();
     }
     return res;
-  }
-
-  getPackageNameAndPath(): Promise<any> {
-    const packagePath = `${this.bindingPrefix}/${this.id.name}`;
-    const packageName = this.id.toStringWithoutVersion();
-    return { packageName, packagePath };
-  }
-
-  async writePackageJson(
-    consumer: Consumer,
-    bitDir: string,
-    override?: boolean = true,
-    writeBitDependencies?: boolean = false,
-    excludeRegistryPrefix?: boolean = false
-  ): Promise<boolean> {
-    const packageJsonInstance = await packageJson.write(
-      consumer,
-      this,
-      bitDir,
-      override,
-      writeBitDependencies,
-      excludeRegistryPrefix
-    );
-    this.packageJsonInstance = packageJsonInstance;
   }
 
   flattenedDependencies(): BitIds {

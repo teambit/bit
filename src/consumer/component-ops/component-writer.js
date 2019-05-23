@@ -5,7 +5,6 @@ import path from 'path';
 import type Component from '../component/consumer-component';
 import ComponentMap from '../bit-map/component-map';
 import type { ComponentOrigin } from '../bit-map/component-map';
-import { BitId } from '../../bit-id';
 import type Consumer from '../consumer';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
@@ -13,7 +12,7 @@ import { pathNormalizeToLinux } from '../../utils/path';
 import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE, DEFAULT_EJECTED_ENVS_DIR_PATH } from '../../constants';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
 import type { PathOsBasedRelative } from '../../utils/path';
-import { preparePackageJsonToWrite, addPackageJsonDataToPersist } from '../component/package-json';
+import { preparePackageJsonToWrite } from '../component/package-json-utils';
 import DataToPersist from '../component/sources/data-to-persist';
 import RemovePath from '../component/sources/remove-path';
 import EnvExtension from '../../extensions/env-extension';
@@ -28,7 +27,6 @@ export type ComponentWriterProps = {
   writePackageJson?: boolean,
   override?: boolean,
   origin: ComponentOrigin,
-  parent?: BitId,
   consumer: Consumer,
   writeBitDependencies?: boolean,
   deleteBitDirContent?: boolean,
@@ -44,7 +42,6 @@ export default class ComponentWriter {
   writePackageJson: boolean;
   override: boolean;
   origin: ComponentOrigin;
-  parent: ?BitId;
   consumer: Consumer;
   writeBitDependencies: boolean;
   deleteBitDirContent: ?boolean;
@@ -59,7 +56,6 @@ export default class ComponentWriter {
     writePackageJson = true,
     override = true,
     origin,
-    parent,
     consumer,
     writeBitDependencies = false,
     deleteBitDirContent,
@@ -73,7 +69,6 @@ export default class ComponentWriter {
     this.writePackageJson = writePackageJson;
     this.override = override;
     this.origin = origin;
-    this.parent = parent;
     this.consumer = consumer;
     this.writeBitDependencies = writeBitDependencies;
     this.deleteBitDirContent = deleteBitDirContent;
@@ -149,13 +144,11 @@ export default class ComponentWriter {
       const componentConfig = ComponentConfig.fromComponent(this.component);
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
-      packageJson.bit = componentConfig.toPlainObject();
-
+      packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       await this._populateEnvFilesIfNeeded();
-
-      addPackageJsonDataToPersist(packageJson, this.component.dataToPersist);
-      if (distPackageJson) addPackageJsonDataToPersist(distPackageJson, this.component.dataToPersist);
-      this.component.packageJsonInstance = packageJson;
+      this.component.dataToPersist.addFile(packageJson.toJSONFile());
+      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toJSONFile());
+      this.component.packageJsonFile = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
       this.component.license.updatePaths({ newBase: this.writeToPath });
@@ -183,7 +176,6 @@ export default class ComponentWriter {
       rootDir, // $FlowFixMe
       configDir: getConfigDir(),
       origin: this.origin,
-      parent: this.parent,
       originallySharedDir: this.component.originallySharedDir,
       wrapDir: this.component.wrapDir
     });
@@ -351,12 +343,10 @@ export default class ComponentWriter {
   }
 
   async _removeNodeModulesLinksFromDependents() {
-    const directDependentComponents = await this.consumer.getAuthoredAndImportedDependentsOfComponents([
-      this.component
-    ]);
+    const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
     await Promise.all(
-      directDependentComponents.map((dependent) => {
-        const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
+      directDependentIds.map((dependentId) => {
+        const dependentComponentMap = this.consumer.bitMap.getComponent(dependentId);
         const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id);
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.getRootDir(), relativeLinkPath)

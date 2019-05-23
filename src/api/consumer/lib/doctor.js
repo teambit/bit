@@ -1,6 +1,5 @@
 /** @flow */
 import os from 'os';
-import execa from 'execa';
 import tar from 'tar-stream';
 import fs from 'fs-extra';
 import Stream from 'stream';
@@ -17,11 +16,20 @@ import BitMap from '../../../consumer/bit-map';
 import MissingDiagnosisName from './exceptions/missing-diagnosis-name';
 import DiagnosisNotFound from './exceptions/diagnosis-not-found';
 import type { ConsumerInfo } from '../../../consumer/consumer-locator';
+import npmClient from '../../../npm-client';
 
 // run specific check
-
-export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: ?string };
-export type DoctorRunOneResult = { examineResult: ExamineResult, savedFilePath: ?string };
+export type DoctorMetaData = {
+  nodeVersion: string,
+  runningTimestamp: number,
+  platform: string,
+  bitVersion: string,
+  npmVersion: string,
+  yarnVersion: string,
+  userDetails: string
+};
+export type DoctorRunAllResults = { examineResults: ExamineResult[], savedFilePath: ?string, metaData: DoctorMetaData };
+export type DoctorRunOneResult = { examineResult: ExamineResult, savedFilePath: ?string, metaData: DoctorMetaData };
 
 let runningTimeStamp;
 
@@ -31,8 +39,9 @@ export default (async function runAll({ filePath }: { filePath?: string }): Prom
   const doctorRegistrar = DoctorRegistrar.getInstance();
   const examineP = doctorRegistrar.diagnoses.map(diagnosis => diagnosis.examine());
   const examineResults = await Promise.all(examineP);
-  const savedFilePath = await _saveExamineResultsToFile(examineResults, filePath);
-  return { examineResults, savedFilePath };
+  const envMeta = await _getEnvMeta();
+  const savedFilePath = await _saveExamineResultsToFile(examineResults, envMeta, filePath);
+  return { examineResults, savedFilePath, metaData: envMeta };
 });
 
 export async function runOne({
@@ -53,8 +62,9 @@ export async function runOne({
     throw new DiagnosisNotFound(diagnosisName);
   }
   const examineResult = await diagnosis.examine();
-  const savedFilePath = await _saveExamineResultsToFile([examineResult], filePath);
-  return { examineResult, savedFilePath };
+  const envMeta = await _getEnvMeta();
+  const savedFilePath = await _saveExamineResultsToFile([examineResult], envMeta, filePath);
+  return { examineResult, savedFilePath, metaData: envMeta };
 }
 
 export async function listDiagnoses(): Promise<Diagnosis[]> {
@@ -63,12 +73,16 @@ export async function listDiagnoses(): Promise<Diagnosis[]> {
   return Promise.resolve(doctorRegistrar.diagnoses);
 }
 
-async function _saveExamineResultsToFile(examineResults: ExamineResult[], filePath: ?string): Promise<?string> {
+async function _saveExamineResultsToFile(
+  examineResults: ExamineResult[],
+  envMeta: DoctorMetaData,
+  filePath: ?string
+): Promise<?string> {
   if (!filePath) {
     return Promise.resolve(undefined);
   }
   const finalFilePath = _calculateFinalFileName(filePath);
-  const packStream = await _generateExamineResultsTarFile(examineResults);
+  const packStream = await _generateExamineResultsTarFile(examineResults, envMeta);
 
   const yourTarball = fs.createWriteStream(finalFilePath);
 
@@ -110,7 +124,10 @@ function _getTimeStamp() {
   return timestamp;
 }
 
-async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): Promise<Stream.Readable> {
+async function _generateExamineResultsTarFile(
+  examineResults: ExamineResult[],
+  envMeta: DoctorMetaData
+): Promise<Stream.Readable> {
   const pack = tar.pack(); // pack is a streams2 stream
   const debugLog = await _getDebugLogAsStream();
   const consumerInfo = await _getConsumerInfo();
@@ -118,8 +135,7 @@ async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): 
   if (consumerInfo && consumerInfo.path) {
     bitmap = _getBitMap(consumerInfo.path);
   }
-  const env = await _getEnvMeta();
-  pack.entry({ name: 'env-meta.json' }, JSON.stringify(env, null, 2));
+  pack.entry({ name: 'env-meta.json' }, JSON.stringify(envMeta, null, 2));
   pack.entry({ name: 'doc-results.json' }, JSON.stringify(examineResults, null, 2));
   if (debugLog) {
     pack.entry({ name: 'debug.log' }, debugLog);
@@ -128,7 +144,7 @@ async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): 
     pack.entry({ name: '.bitmap' }, bitmap);
   }
   if (consumerInfo && consumerInfo.consumerConfig) {
-    pack.entry({ name: 'config.json' }, consumerInfo.consumerConfig.toJson());
+    pack.entry({ name: 'config.json' }, JSON.stringify(consumerInfo.consumerConfig.toPlainObject(), null, 4));
   }
 
   pack.finalize();
@@ -136,38 +152,18 @@ async function _generateExamineResultsTarFile(examineResults: ExamineResult[]): 
   return pack;
 }
 
-async function _getEnvMeta(): Object {
+async function _getEnvMeta(): Promise<DoctorMetaData> {
   const env = {
-    'node-version': process.version,
-    'running-timestamp': runningTimeStamp || _getTimeStamp(),
+    nodeVersion: process.version,
+    runningTimestamp: runningTimeStamp || _getTimeStamp(),
     platform: os.platform(),
-    'bit-version': BIT_VERSION,
-    'npm-version': await _getNpmVersion(),
-    'yarn-version': await _getYarnVersion(),
-    'user-details': _getUserDetails()
+    bitVersion: BIT_VERSION,
+    npmVersion: await npmClient.getNpmVersion(),
+    yarnVersion: await npmClient.getYarnVersion(),
+    userDetails: _getUserDetails()
   };
 
   return env;
-}
-
-async function _getNpmVersion(): Promise<string> {
-  try {
-    const { stdout } = await execa('npm', ['-v']);
-    return stdout;
-  } catch (e) {
-    logger.debugAndAddBreadCrumb("can't find npm version by running npm -v", e.message);
-  }
-  return 'unknown';
-}
-
-async function _getYarnVersion(): Promise<string> {
-  try {
-    const { stdout } = await execa('yarn', ['-v']);
-    return stdout;
-  } catch (e) {
-    logger.debugAndAddBreadCrumb("can't find yarn version by running yarn -v", e.message);
-  }
-  return 'unknown';
 }
 
 function _getUserDetails(): string {

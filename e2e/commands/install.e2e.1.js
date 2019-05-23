@@ -33,7 +33,7 @@ describe('run bit install', function () {
         helper.exportAllComponents();
 
         const requirePath = helper.getRequireBitPath('utils', 'is-string');
-        const fooBarFixture = `const isString = require('${requirePath}/utils/is-string');
+        const fooBarFixture = `const isString = require('${requirePath}');
   module.exports = function foo() { return isString() + ' and got foo'; };`;
         helper.createComponentBarFoo(fooBarFixture);
         helper.createFile('bar', 'foo.js', fooBarFixture);

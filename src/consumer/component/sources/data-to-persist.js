@@ -134,7 +134,9 @@ export default class DataToPersist {
       logger.debug(`DateToPersist, paths-to-write:\n${filesToWriteStr}`);
     }
     if (this.symlinks.length) {
-      const symlinksStr = this.symlinks.map(symlink => `src: ${symlink.src}, dest: ${symlink.dest}`).join('\n');
+      const symlinksStr = this.symlinks
+        .map(symlink => `src (existing): ${symlink.src}\ndest (new): ${symlink.dest}`)
+        .join('\n');
       logger.debug(`DateToPersist, symlinks:\n${symlinksStr}`);
     }
   }
