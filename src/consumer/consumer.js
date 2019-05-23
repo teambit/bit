@@ -25,7 +25,8 @@ import {
   DOT_GIT_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE
+  TESTER_ENV_TYPE,
+  LATEST
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -281,7 +282,7 @@ export default class Consumer {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
     const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = BitId.getVersionOnlyFromString(id);
-    return version ? bitId.changeVersion(version) : bitId.changeVersion(null);
+    return bitId.changeVersion(version || LATEST);
   }
 
   getParsedIdIfExist(id: BitIdStr): ?BitId {

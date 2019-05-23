@@ -13,7 +13,7 @@ describe('components that are not synced between the scope and the consumer', fu
   describe('consumer with a new component and scope with the same component as staged', () => {
     let scopeOutOfSync;
     before(() => {
-      helper.reInitLocalScope();
+      helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.tagComponentBarFoo();
@@ -39,6 +39,16 @@ describe('components that are not synced between the scope and the consumer', fu
         const newId = 'bar/foo@0.0.1';
         expect(bitMap).to.have.property(newId);
         expect(bitMap[newId].exported).to.be.false;
+      });
+    });
+    describe('bit export', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.exportComponent('bar/foo');
+      });
+      it('should export the component successfully', () => {
+        expect(output).to.have.string('exported 1 components');
       });
     });
   });
