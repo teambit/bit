@@ -18,7 +18,7 @@
 
 **Bit makes it easy to share and manage components between projects and apps at any scale**.
 
-It lets you **isolate components** from existing projects with **0 refactoring**, with **fully-automated dependancy defintion/resolution** and **scalable versioning**.
+It lets you **isolate components** from existing projects with **0 refactoring**, with **fully-automated dependancy definition/resolution** and **scalable versioning**.
 
 It lets you **reuse individual components across projects**, using your favorite package managers like **npm** and **yarn** through **[Bit's component hub](https://bit.dev)**.
 
