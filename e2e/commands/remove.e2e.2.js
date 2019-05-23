@@ -416,8 +416,8 @@ describe('bit remove command', function () {
       const output = helper.removeComponent('utils/is-string2 -s');
       expect(output).to.contain.string('successfully removed components');
       expect(output).to.contain.string(`${helper.remoteScope}/utils/is-string2`);
-      assert.isEmptyDirectory(importedComponentDir, 'directory not empty');
-      assert.isEmptyDirectory(importedDependeceDir, 'directory not empty');
+      expect(importedComponentDir).to.not.be.a.path();
+      expect(importedDependeceDir).to.not.be.a.path();
     });
     it('bitmap should not contain component and dependences', () => {
       const bitMap = helper.readBitMap();
