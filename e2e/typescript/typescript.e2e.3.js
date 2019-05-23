@@ -2,11 +2,13 @@
 
 import path from 'path';
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import normalize from 'normalize-path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
+chai.use(require('chai-fs'));
 
 const helper = new Helper();
 
@@ -501,6 +503,14 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
         });
         it('should be able to require its direct dependency and print results from all dependencies', () => {
           runAppJs();
+        });
+        describe('ejecting the component', () => {
+          before(() => {
+            helper.ejectComponents('bar/foo');
+          });
+          it('should delete also the dist directory', () => {
+            expect(path.join(helper.localScopePath, 'dist/components/bar')).to.not.be.a.path();
+          });
         });
       });
     });
