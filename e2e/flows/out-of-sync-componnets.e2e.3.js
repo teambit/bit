@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -121,6 +122,68 @@ describe('components that are not synced between the scope and the consumer', fu
         helper.getClonedLocalScope(scopeOutOfSync);
         const show = helper.showComponent('bar/foo');
         expect(show).to.not.have.string('0.0.1');
+      });
+    });
+  });
+  describe('consumer with no components and scope with staged components', () => {
+    let scopeOutOfSync;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagComponentBarFoo();
+      helper.deleteBitMap();
+      scopeOutOfSync = helper.cloneLocalScope();
+    });
+    describe('bit status', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.status();
+      });
+      it('should show the component as staged', () => {
+        expect(output).to.have.string('staged components');
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('0.0.1');
+      });
+    });
+    describe('bit show', () => {
+      it('should not show the component because it is not available locally', () => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        const showFunc = () => helper.showComponent('bar/foo');
+        const error = new MissingBitMapComponent('bar/foo');
+        helper.expectToThrow(showFunc, error);
+      });
+    });
+    describe('bit export all', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.exportAllComponents();
+      });
+      it('should export the component successfully', () => {
+        const lsRemote = helper.listRemoteScopeParsed();
+        expect(lsRemote).to.have.lengthOf(1);
+        expect(lsRemote[0].id).to.have.string('bar/foo');
+      });
+      it('should tell the user that no local changes have been made because the components are not tracked', () => {
+        expect(output).to.have.string('no local changes have been made');
+      });
+    });
+    describe('bit export id', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        helper.reInitRemoteScope();
+        output = helper.exportComponent('bar/foo');
+      });
+      it('should export the component successfully', () => {
+        const lsRemote = helper.listRemoteScopeParsed();
+        expect(lsRemote).to.have.lengthOf(1);
+        expect(lsRemote[0].id).to.have.string('bar/foo');
+      });
+      it('should tell the user that no local changes have been made because the components are not tracked', () => {
+        expect(output).to.have.string('no local changes have been made');
       });
     });
   });
