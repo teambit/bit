@@ -108,7 +108,14 @@ export default class ComponentLoader {
       component.scope = newId.scope;
     }
     if (!componentFromModel && componentMap.id.hasVersion() && !componentMap.id.hasScope()) {
-      newId = componentMap.id.changeVersion(null);
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(componentMap.id.changeVersion(null));
+      if (modelComponent) {
+        // consumer has tagged component with one version and the model component doesn't have that version. assume it's latest
+        newId = componentMap.id.changeVersion(modelComponent.latest());
+      } else {
+        // consumer has tagged component but the component is missing from the scope. assume it's new.
+        newId = componentMap.id.changeVersion(null);
+      }
       this.consumer.bitMap.updateComponentId(newId);
       component.version = newId.version;
     }

@@ -215,4 +215,37 @@ describe('components that are not synced between the scope and the consumer', fu
       });
     });
   });
+  describe('consumer has tagged component with a version that not exist in the scope', () => {
+    let scopeOutOfSync;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagComponentBarFoo();
+      helper.tagScope('2.0.0');
+      const bitMap = helper.readBitMap();
+      helper.untag('bar/foo@2.0.0');
+      helper.writeBitMap(bitMap);
+      scopeOutOfSync = helper.cloneLocalScope();
+    });
+    describe('bit tag', () => {
+      it('should tag the component to the next version of what the scope has', () => {
+        const output = helper.runCmd('bit tag bar/foo --force --patch');
+        expect(output).to.have.string('0.0.2');
+      });
+    });
+    describe('bit status', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.status();
+      });
+      it('should sync .bitmap according to the scope', () => {
+        expect(output).to.have.string('staged components');
+        const bitMap = helper.readBitMap();
+        const newId = 'bar/foo@0.0.1';
+        expect(bitMap).to.have.property(newId);
+      });
+    });
+  });
 });
