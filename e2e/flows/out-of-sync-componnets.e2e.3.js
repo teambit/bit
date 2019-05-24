@@ -1,6 +1,6 @@
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { statusWorkspaceIsCleanMsg, importPendingMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
@@ -184,6 +184,34 @@ describe('components that are not synced between the scope and the consumer', fu
       });
       it('should tell the user that no local changes have been made because the components are not tracked', () => {
         expect(output).to.have.string('no local changes have been made');
+      });
+    });
+  });
+  describe('consumer has exported components and scope is empty', () => {
+    let scopeOutOfSync;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagComponentBarFoo();
+      helper.exportAllComponents();
+      helper.deleteFile('.bit');
+      scopeOutOfSync = helper.cloneLocalScope();
+    });
+    describe('bit tag', () => {
+      it('should stop the tagging process and throw an error suggesting to import the components', () => {
+        const output = helper.runWithTryCatch('bit tag -a');
+        expect(output).to.have.string(importPendingMsg);
+      });
+    });
+    describe('bit status', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeOutOfSync);
+        output = helper.status();
+      });
+      it('should show a massage suggesting to import the components', () => {
+        expect(output).to.have.string(importPendingMsg);
       });
     });
   });

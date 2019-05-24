@@ -23,6 +23,8 @@ export const statusFailureMsg = 'issues found';
 export const statusInvalidComponentsMsg = 'invalid components';
 export const statusWorkspaceIsCleanMsg =
   'nothing to tag or export (use "bit add <file...>" to track files or directories as components)';
+export const importPendingMsg =
+  'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope';
 
 export default class Status extends Command {
   name = 'status';
@@ -109,11 +111,7 @@ export default class Status extends Command {
       return `${bitFormatted} ${chalk.red(statusFailureMsg)}${formatMissing(missing)}`;
     }
 
-    const importPendingWarning = importPendingComponents.length
-      ? chalk.yellow(
-        'your workspace has outdated objects. please use "bit import" to pull the latest objects from the remote scope.\n'
-      )
-      : '';
+    const importPendingWarning = importPendingComponents.length ? chalk.yellow(`${importPendingMsg}.\n`) : '';
 
     const splitByMissing = R.groupBy((component) => {
       return component.includes(statusFailureMsg) ? 'missing' : 'nonMissing';

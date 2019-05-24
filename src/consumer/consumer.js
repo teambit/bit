@@ -74,6 +74,7 @@ import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import deleteComponentsFiles from './component-ops/delete-component-files';
+import { importPendingMsg } from '../cli/commands/public-cmds/status-cmd';
 
 type ConsumerProps = {
   projectPath: string,
@@ -611,6 +612,10 @@ export default class Consumer {
         return Boolean(component.issues);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
+    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new GeneralError(importPendingMsg);
     }
 
     const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
