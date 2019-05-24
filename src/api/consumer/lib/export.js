@@ -68,9 +68,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
     return componentsToExport;
   }
   const idsToExportP = ids.map(async (id) => {
-    // reason why not calling `consumer.getParsedId()` is because a component might not be on
-    // .bitmap and only in the scope. we support this case and enable to export
-    const parsedId = await consumer.scope.getParsedId(id);
+    const parsedId = await getParsedId(consumer, id);
     const status = await consumer.getComponentStatusById(parsedId);
     // don't allow to re-export an exported component unless it's being exported to another scope
     if (!status.staged && parsedId.scope === remote) {
@@ -81,6 +79,16 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   loader.start(BEFORE_EXPORT); // show single export
   const idsToExport = await Promise.all(idsToExportP);
   return BitIds.fromArray(idsToExport);
+}
+
+async function getParsedId(consumer: Consumer, id: string) {
+  // reason why not calling `consumer.getParsedId()` first is because a component might not be on
+  // .bitmap and only in the scope. we support this case and enable to export
+  const parsedId: BitId = await consumer.scope.getParsedId(id);
+  if (parsedId.hasScope()) return parsedId;
+  // parsing id from the scope, doesn't provide the scope-name in case it's missing, in this case
+  // get the id including the scope from the consumer. if it's not there, it'll throw an error
+  return consumer.getParsedId(id);
 }
 
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
