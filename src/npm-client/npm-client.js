@@ -357,10 +357,24 @@ async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): 
   return false;
 }
 
+async function getPackageLatestVersion(packageName: string): Promise<?string> {
+  try {
+    const { stdout } = await execa('npm', ['show', packageName, 'version']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb(
+      'npm-client',
+      `can't find ${packageName} version by running npm show ${packageName} version. ${e.message}`
+    );
+  }
+  return null;
+}
+
 export default {
   install: installAction,
   printResults,
   isSupportedInstallationOfSubDirFromRoot,
   getNpmVersion,
-  getYarnVersion
+  getYarnVersion,
+  getPackageLatestVersion
 };
