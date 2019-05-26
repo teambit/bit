@@ -87,8 +87,13 @@ async function getParsedId(consumer: Consumer, id: string) {
   const parsedId: BitId = await consumer.scope.getParsedId(id);
   if (parsedId.hasScope()) return parsedId;
   // parsing id from the scope, doesn't provide the scope-name in case it's missing, in this case
-  // get the id including the scope from the consumer. if it's not there, it'll throw an error
-  return consumer.getParsedId(id);
+  // get the id including the scope from the consumer.
+  try {
+    return consumer.getParsedId(id);
+  } catch (err) {
+    // not in the consumer, just return the one parsed without the scope name
+    return parsedId;
+  }
 }
 
 async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
