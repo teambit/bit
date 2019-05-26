@@ -1,6 +1,7 @@
 import R from 'ramda';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/orphan-symlink-objects';
 
 chai.use(require('chai-fs'));
 
@@ -47,11 +48,9 @@ describe('scope with a symlink object reference to a non-exist component', funct
     expect(output).to.have.string('error: found a symlink object "bar/foo" that references to a non-exist component');
   });
   it('bit doctor should report this as an issue', () => {
-    const doctor = helper.doctorJsonParsed();
-    const orphanSymlinkObjectsResult = doctor.examineResults.find(
-      result => result.diagnosisMetaData.name === 'orphan-symlink-objects'
-    );
-    expect(orphanSymlinkObjectsResult.bareResult.valid).to.be.false;
-    expect(orphanSymlinkObjectsResult.bareResult.data.orphanSymlinks[0].name).to.equal('bar/foo');
+    const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' });
+    const orphanSymlinkObjectsResult = JSON.parse(output);
+    expect(orphanSymlinkObjectsResult.examineResult.bareResult.valid).to.be.false;
+    expect(orphanSymlinkObjectsResult.examineResult.bareResult.data.orphanSymlinks[0].name).to.equal('bar/foo');
   });
 });

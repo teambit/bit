@@ -9,7 +9,7 @@ import WorkspaceConfig from '../../consumer/config/workspace-config';
 import AbstractConfig from '../../consumer/config/abstract-config';
 
 export default class ValidateWorkspaceBitJsonSyntax extends Diagnosis {
-  name = 'validate-workspace-bit-json-syntax';
+  name = 'Validate workspace bit config';
   description = 'validate workspace bit.json';
   category = 'bit-core-files';
 
