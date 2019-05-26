@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- add bit version validation to `bit doctor` command
 - fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
 - fix `bit eject` to support component custom npm registry scope
 - add suggestion to run `bit doctor` on various errors
