@@ -5,8 +5,9 @@ import { loadConsumer } from '../../consumer';
 import { Symlink, ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
+export const DIAGNOSIS_NAME = 'Check orphan link files';
 export default class OrphanSymlinkObjects extends Diagnosis {
-  name = 'Check orphan link files';
+  name = DIAGNOSIS_NAME;
   description = 'validate that objects do not have symlinks that point to non exist components';
   category = 'bit-core-files';
 

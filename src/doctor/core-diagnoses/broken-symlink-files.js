@@ -9,9 +9,10 @@ import { loadConsumer } from '../../consumer';
 import { Scope } from '../../scope';
 
 type BrokenSymlink = { symlinkPath: string, brokenPath: string, pathToDelete: string };
+export const DIAGNOSIS_NAME = 'Check invalid link files';
 
 export default class BrokenSymlinkFiles extends Diagnosis {
-  name = 'Check invalid link files';
+  name = DIAGNOSIS_NAME;
   description = 'Validate Bit generated symlink files within environment directory';
   category = 'bit-core-files';
 

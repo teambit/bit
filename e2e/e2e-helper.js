@@ -658,9 +658,9 @@ export default class Helper {
     return this.runCmd(`bit doctor ${parsedOpts}`);
   }
 
-  doctorOne(diagnosisName: string, options: Object) {
+  doctorOne(diagnosisName: string, options: Object, cwd: ?string) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit doctor "${diagnosisName}" ${parsedOpts}`);
+    return this.runCmd(`bit doctor "${diagnosisName}" ${parsedOpts}`, cwd);
   }
 
   doctorList(options: Object) {
