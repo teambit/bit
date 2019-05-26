@@ -7,9 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
+- avoid generating links of devDependencies when installing component as packages (#1614)
+
+## [14.1.2-dev.2] - 2019-05-20
+
 - add metadata to `bit doctor` output
 - add validation for npm executable on `bit doctor`
 - add validation for yarn executable on `bit doctor`
+- update `bit add` help message with instructions for using glob patterns with `--tests`
 
 ## [14.1.2-dev.1] - 2019-05-20
 

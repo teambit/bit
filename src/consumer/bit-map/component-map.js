@@ -376,9 +376,9 @@ export default class ComponentMap {
     if (this.trackDir && this.origin !== COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(`${errorMessage} trackDir attribute should be set for AUTHORED component only`);
     }
-    if (this.originallySharedDir && this.origin !== COMPONENT_ORIGINS.IMPORTED) {
+    if (this.originallySharedDir && this.origin === COMPONENT_ORIGINS.AUTHORED) {
       throw new ValidationError(
-        `${errorMessage} originallySharedDir attribute should be set for IMPORTED components only`
+        `${errorMessage} originallySharedDir attribute should be set for non AUTHORED components only`
       );
     }
 

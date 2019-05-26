@@ -2,16 +2,24 @@
 
 import path from 'path';
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import normalize from 'normalize-path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
+chai.use(require('chai-fs'));
 
 const helper = new Helper();
 
-// todo: once the bind is implemented, make it work
 describe('typescript', function () {
   this.timeout(0);
+  let scopeWithTypescriptCompiler;
+  before(() => {
+    helper.reInitLocalScope();
+    helper.importCompiler('bit.envs/compilers/react-typescript');
+    scopeWithTypescriptCompiler = helper.cloneLocalScope();
+  });
   after(() => {
     helper.destroyEnv();
   });
@@ -52,7 +60,8 @@ describe('typescript', function () {
       let localConsumerFiles;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.importCompiler('bit.envs/compilers/react-typescript');
+        helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.addRemoteScope();
         const isTypeFixture = "export default function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.ts', isTypeFixture);
         helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
@@ -100,7 +109,7 @@ describe('typescript', function () {
         const indexPath = path.join(helper.localScopePath, expectedLocation);
         const indexFileContent = fs.readFileSync(indexPath).toString();
         expect(indexFileContent).to.have.string(
-          "module.exports = require('./dist/utils/is-string');",
+          "module.exports = require('./dist/is-string');",
           'dependency index file point to the wrong place'
         );
       });
@@ -110,7 +119,7 @@ describe('typescript', function () {
         expect(packageJsonContent).to.deep.include({
           name: `@bit/${helper.remoteScope}.utils.is-string`,
           version: '0.0.1',
-          main: 'dist/utils/is-string.js'
+          main: 'dist/is-string.js'
         });
       });
       it('should create an index.js file on the is-type dependency root dir pointing to the main file', () => {
@@ -119,7 +128,7 @@ describe('typescript', function () {
         const indexPath = path.join(helper.localScopePath, expectedLocation);
         const indexFileContent = fs.readFileSync(indexPath).toString();
         expect(indexFileContent).to.have.string(
-          "module.exports = require('./dist/utils/is-type');",
+          "module.exports = require('./dist/is-type');",
           'dependency index file point to the wrong place'
         );
       });
@@ -129,20 +138,20 @@ describe('typescript', function () {
         expect(packageJsonContent).to.deep.include({
           name: `@bit/${helper.remoteScope}.utils.is-type`,
           version: '0.0.1',
-          main: 'dist/utils/is-type.js'
+          main: 'dist/is-type.js'
         });
       });
       it('should save the direct dependency nested to the main component', () => {
-        const expectedLocation = path.join(isStringPath, 'utils', 'is-string.ts');
+        const expectedLocation = path.join(isStringPath, 'is-string.ts');
         expect(localConsumerFiles).to.include(expectedLocation);
       });
       it('should save the indirect dependency nested to the main component (as opposed to nested of nested)', () => {
-        const expectedLocation = path.join(isTypePath, 'utils', 'is-type.ts');
+        const expectedLocation = path.join(isTypePath, 'is-type.ts');
         expect(localConsumerFiles).to.include(expectedLocation);
       });
       it('should add dependencies dists files to file system', () => {
-        const expectedIsTypeDistLocation = path.join(isTypePath, 'dist', 'utils', 'is-type.js');
-        const expectedIsStringDistLocation = path.join(isStringPath, 'dist', 'utils', 'is-string.js');
+        const expectedIsTypeDistLocation = path.join(isTypePath, 'dist', 'is-type.js');
+        const expectedIsStringDistLocation = path.join(isStringPath, 'dist', 'is-string.js');
         expect(localConsumerFiles).to.include(expectedIsTypeDistLocation);
         expect(localConsumerFiles).to.include(expectedIsStringDistLocation);
       });
@@ -151,7 +160,7 @@ describe('typescript', function () {
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'utils', 'is-string')
+          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'is-string')
         );
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
@@ -173,24 +182,24 @@ describe('typescript', function () {
         );
       });
       it('should link the indirect dependency from dependent component source folder to its source file in the dependency directory', () => {
-        const expectedLocation = path.join(isStringPath, 'utils', 'is-type.ts');
+        const expectedLocation = path.join(isStringPath, 'is-type.ts');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'utils', 'is-type'));
+        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'is-type'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
-          `../../../../${expectedPathSuffix}`,
+          `../../../${expectedPathSuffix}`,
           'in direct dependency link file point to the wrong place'
         );
       });
       it('should link the indirect dependency from dependent component dist folder to its index file in the dependency directory', () => {
-        const expectedLocation = path.join(isStringPath, 'dist', 'utils', 'is-type.js');
+        const expectedLocation = path.join(isStringPath, 'dist', 'is-type.js');
         const linkPath = path.join(helper.localScopePath, expectedLocation);
         const linkPathContent = fs.readFileSync(linkPath).toString();
         const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1'));
         expect(localConsumerFiles).to.include(expectedLocation);
         expect(linkPathContent).to.have.string(
-          `../../../../../${expectedPathSuffix}`,
+          `../../../../${expectedPathSuffix}`,
           'in direct dependency link file point to the wrong place'
         );
       });
@@ -241,7 +250,8 @@ export class List extends React.Component {
   describe('with default and non default export', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler('bit.envs/compilers/react-typescript');
+      helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+      helper.addRemoteScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.ts', isArrayFixture);
       helper.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
@@ -293,7 +303,8 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       let localScope;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.importCompiler('bit.envs/compilers/react-typescript');
+        helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.addRemoteScope();
         const bitJson = helper.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
         helper.writeBitJson(bitJson);
@@ -354,7 +365,6 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
             });
         });
         after(() => {
-          helper.destroyEnv();
           return bitsrcTester.deleteScope(scopeName);
         });
         describe('exporting to bitsrc and importing locally', () => {
@@ -409,6 +419,99 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
         expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.ts');
         expect(dependency.relativePaths[0].importSource).to.equal('@/utils/is-string');
         expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+      });
+    });
+  });
+  describe('when dist is outside the components dir', () => {
+    let npmCiRegistry;
+    before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
+      helper.setNewLocalAndRemoteScopes();
+      helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+      npmCiRegistry.setCiScopeInBitJson();
+      helper.addRemoteScope();
+      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
+      helper.createFile('utils', 'is-type.ts', isTypeFixture);
+      helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
+      const isStringFixture =
+        "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('utils', 'is-string.ts', isStringFixture);
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
+      const fooBarFixture =
+        "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('bar', 'foo.ts', fooBarFixture);
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      helper.importComponent('bar/foo');
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      const appJsFixture = `const barFoo = require('@bit/${
+        helper.remoteScope
+      }.bar.foo'); console.log(barFoo.default());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
+      before(async () => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        await npmCiRegistry.init();
+        helper.importNpmPackExtension();
+        helper.removeRemoteScope();
+        npmCiRegistry.publishComponent('utils/is-type');
+        npmCiRegistry.publishComponent('utils/is-string');
+        npmCiRegistry.publishComponent('bar/foo');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      function runAppJs() {
+        const appJsFixture = `const barFoo = require('@ci/${
+          helper.remoteScope
+        }.bar.foo'); console.log(barFoo.default());`;
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      }
+      describe('installing a component using NPM', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          runAppJs();
+        });
+      });
+      describe('importing a component using Bit', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          npmCiRegistry.setResolver();
+          helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+          helper.importComponent('bar/foo');
+        });
+        it('package.json of the dist should point to the dist file with .js extension (not .ts)', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'dist/components/bar/foo'));
+          expect(packageJson.main).to.equal('bar/foo.js');
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          runAppJs();
+        });
+        describe('ejecting the component', () => {
+          before(() => {
+            helper.ejectComponents('bar/foo');
+          });
+          it('should delete also the dist directory', () => {
+            expect(path.join(helper.localScopePath, 'dist/components/bar')).to.not.be.a.path();
+          });
+        });
       });
     });
   });

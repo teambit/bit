@@ -64,7 +64,6 @@ describe('bit eject command', function () {
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('as author', () => {
@@ -228,7 +227,6 @@ describe('bit eject command', function () {
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('export components with dependencies', () => {

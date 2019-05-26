@@ -125,9 +125,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -164,9 +163,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -231,9 +229,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -319,9 +316,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
@@ -419,9 +415,8 @@ describe('binary files', function () {
       expect(expectedDest).to.be.a.file();
 
       const symlinkValue = fs.readlinkSync(expectedDest);
-      expect(symlinkValue).to.have.string(
-        path.join('components/.dependencies/bar/png', helper.remoteScope, '/0.0.1/src/bar/png_fixture.png')
-      );
+      expect(symlinkValue).to.have.string(path.normalize('components/.dependencies/bar/png'));
+      expect(symlinkValue).to.be.a.path();
     });
     it('bit-status should not show the component as modified', () => {
       const status = helper.status();
