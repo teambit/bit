@@ -560,7 +560,12 @@ function getErrorFunc(errorDefinition) {
 
 function getErrorMessage(error: ?Error, func: ?Function): string {
   if (!error || !func) return '';
-  const errorMessage = func(error);
+  let errorMessage = func(error);
+  if (error.showDoctorMessage) {
+    errorMessage = `${errorMessage}
+
+run 'bit doctor' to get detailed workspace diagnosis and issue resolution.`;
+  }
   return errorMessage;
 }
 
