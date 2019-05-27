@@ -106,7 +106,15 @@ export default class Add extends Command {
           )}\n`
         );
       };
-      return alreadyUsedOutput() + emptyDirectoryOutput();
+      const existInScopeOutput = () => {
+        if (!warnings.existInScope.length) return '';
+        return chalk.yellow(
+          `warning: the following components were found in the local store, as a result, their ids were changed accordingly\n${chalk.bold(
+            warnings.existInScope.map(c => c.toString()).join('\n')
+          )}\n`
+        );
+      };
+      return alreadyUsedOutput() + emptyDirectoryOutput() + existInScopeOutput();
     };
 
     if (addedComponents.length > 1) {
