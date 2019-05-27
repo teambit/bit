@@ -542,9 +542,11 @@ export default class Consumer {
       const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
-        // componentFromFileSystem = await this.loadComponent(id.changeVersion(null)); // this causes loadOne to not find model component as it assumes there is no version
+        // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
+        // loadOne to not find model component as it assumes there is no version
+        // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
+        // imported version is bigger than .bitmap, it won't find it and will consider as deleted
         componentFromFileSystem = await this.loadComponent(id.changeVersion(LATEST));
-        // componentFromFileSystem = await this.loadComponent(id); // this causes issues with import --merge, when imported version is bigger than .bitmap, it doesn't find it and consider as deleted
       } catch (err) {
         if (
           err instanceof MissingFilesFromComponent ||
