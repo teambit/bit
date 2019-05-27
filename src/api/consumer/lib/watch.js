@@ -16,13 +16,14 @@ import loader from '../../../cli/loader';
  * @returns
  */
 export default (async function watchAll(verbose: boolean) {
-  // TODO: run build in the begining of process (it's work like this in other envs)
+  // TODO: run build in the beginning of process (it's work like this in other envs)
   const consumer = await loadConsumer();
   const componentsList = new ComponentsList(consumer);
   const bitMapComponentsPaths = componentsList.getPathsForAllFilesOfAllComponents(undefined, true);
   const watcher = chokidar.watch(bitMapComponentsPaths, {
     ignoreInitial: true,
-    ignored: '**/dist/**'
+    ignored: '**/dist/**',
+    persistent: true
   });
 
   console.log(chalk.yellow('Starting watch for changes')); // eslint-disable-line no-console
@@ -32,8 +33,15 @@ export default (async function watchAll(verbose: boolean) {
     bitMapComponentsPaths.forEach(path => console.log(`Watching ${path}`)); // eslint-disable-line no-console
   }
 
+  const log = console.log.bind(console); // eslint-disable-line no-console
+  // prefix your command with "BIT_LOG=*" to see all watch events
+  if (process.env.BIT_LOG) {
+    watcher.on('all', (event, path) => {
+      log(event, path);
+    });
+  }
+
   watcher.on('change', (p) => {
-    const log = console.log.bind(console); // eslint-disable-line no-console
     log(`File ${p} has been changed, calling build`);
     // TODO: Make sure the log for build is printed to console
     buildAll(false, false)
@@ -46,6 +54,8 @@ export default (async function watchAll(verbose: boolean) {
         log(err); // eslint-disable-line
       });
   });
+
+  watcher.on('ready', () => log(chalk.yellow('Initial scan complete. Ready for changes')));
 
   return new Promise(() => {});
 });
