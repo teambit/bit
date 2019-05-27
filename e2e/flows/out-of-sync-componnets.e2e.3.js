@@ -2,6 +2,7 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import { statusWorkspaceIsCleanMsg, importPendingMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
+import ComponentsPendingImport from '../../src/consumer/component-ops/exceptions/components-pending-import';
 
 chai.use(require('chai-fs'));
 
@@ -200,8 +201,8 @@ describe('components that are not synced between the scope and the consumer', fu
     });
     describe('bit tag', () => {
       it('should stop the tagging process and throw an error suggesting to import the components', () => {
-        const output = helper.runWithTryCatch('bit tag -a');
-        expect(output).to.have.string(importPendingMsg);
+        const err = new ComponentsPendingImport();
+        helper.expectToThrow(() => helper.tagAllComponents(), err);
       });
     });
     describe('bit status', () => {
@@ -245,6 +246,82 @@ describe('components that are not synced between the scope and the consumer', fu
         const bitMap = helper.readBitMap();
         const newId = 'bar/foo@0.0.1';
         expect(bitMap).to.have.property(newId);
+      });
+    });
+  });
+  describe('consumer has exported component with a version that not exist in the scope', () => {
+    describe('when the remote component has this missing version', () => {
+      let scopeAfterV1;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.tagComponentBarFoo();
+        helper.exportAllComponents();
+        scopeAfterV1 = helper.cloneLocalScope();
+        helper.tagScope('2.0.0');
+        helper.exportAllComponents();
+        const bitMap = helper.readBitMap();
+        helper.getClonedLocalScope(scopeAfterV1);
+        helper.writeBitMap(bitMap);
+      });
+      describe('bit status', () => {
+        it('should throw an error suggesting to import the components', () => {
+          const err = new ComponentsPendingImport();
+          helper.expectToThrow(() => helper.status(), err);
+        });
+      });
+      describe('bit show', () => {
+        it('should throw an error suggesting to import the components', () => {
+          const err = new ComponentsPendingImport();
+          helper.expectToThrow(() => helper.showComponent('bar/foo'), err);
+        });
+      });
+      describe('bit tag', () => {
+        it('should throw an error suggesting to import the components', () => {
+          const err = new ComponentsPendingImport();
+          helper.expectToThrow(() => helper.tagAllComponents(), err);
+        });
+      });
+    });
+    describe('when the remote component does not exist or does not have this missing version', () => {
+      let scopeAfterV1;
+      let scopeOutOfSync;
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.tagComponentBarFoo();
+        helper.exportAllComponents();
+        scopeAfterV1 = helper.cloneLocalScope();
+        helper.tagScope('2.0.0');
+        helper.exportAllComponents();
+        const bitMap = helper.readBitMap();
+        helper.getClonedLocalScope(scopeAfterV1);
+        helper.writeBitMap(bitMap);
+        helper.removeComponent(`${helper.remoteScope}/bar/foo`, '-r -s');
+        scopeOutOfSync = helper.cloneLocalScope();
+      });
+      describe('bit status', () => {
+        let output;
+        before(() => {
+          output = helper.status();
+        });
+        it('should sync .bitmap according to the latest version of the scope', () => {
+          expect(output).to.have.string(statusWorkspaceIsCleanMsg);
+          const bitMap = helper.readBitMap();
+          const newId = `${helper.remoteScope}/bar/foo@0.0.1`;
+          expect(bitMap).to.have.property(newId);
+        });
+      });
+      describe('bit tag', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeOutOfSync);
+        });
+        it('should tag the component to the next version of what the scope has', () => {
+          const output = helper.runCmd('bit tag bar/foo --force --patch');
+          expect(output).to.have.string('0.0.2');
+        });
       });
     });
   });

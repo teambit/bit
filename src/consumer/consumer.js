@@ -74,7 +74,7 @@ import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import deleteComponentsFiles from './component-ops/delete-component-files';
-import { importPendingMsg } from '../cli/commands/public-cmds/status-cmd';
+import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
 
 type ConsumerProps = {
   projectPath: string,
@@ -615,7 +615,7 @@ export default class Consumer {
     }
     const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
     if (areComponentsMissingFromScope) {
-      throw new GeneralError(importPendingMsg);
+      throw new ComponentsPendingImport();
     }
 
     const { taggedComponents, autoTaggedComponents } = await tagModelComponent({

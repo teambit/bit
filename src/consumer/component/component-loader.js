@@ -9,6 +9,9 @@ import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import { ModelComponent } from '../../scope/models';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
@@ -73,7 +76,7 @@ export default class ComponentLoader {
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(id);
+    let componentFromModel = await this.consumer.loadComponentFromModelIfExist(id);
     let component;
     try {
       component = await Component.loadFromFileSystem({
@@ -112,12 +115,31 @@ export default class ComponentLoader {
       if (modelComponent) {
         // consumer has tagged component with one version and the model component doesn't have that version. assume it's latest
         newId = componentMap.id.changeVersion(modelComponent.latest());
+        componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
       } else {
         // consumer has tagged component but the component is missing from the scope. assume it's new.
         newId = componentMap.id.changeVersion(null);
       }
       this.consumer.bitMap.updateComponentId(newId);
       component.version = newId.version;
+    }
+    if (!componentFromModel && componentMap.id.hasVersion() && componentMap.id.hasScope()) {
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(componentMap.id.changeVersion(null));
+      if (modelComponent) {
+        const remoteComponent: ?ModelComponent = await this.getRemoteComponent(id);
+        // $FlowFixMe version is set here
+        if (remoteComponent && remoteComponent.hasVersion(componentMap.id.version)) {
+          throw new ComponentsPendingImport();
+        }
+        newId = componentMap.id.changeVersion(modelComponent.latest());
+        this.consumer.bitMap.updateComponentId(newId);
+        component.version = newId.version;
+        componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
+      } else {
+        // another case, the component is not in the scope and also not in the remote.
+        // TBD what should be done. for now, bit status shows the import-pending message,
+        // which is good enough.
+      }
     }
 
     component.loadedFromFileSystem = true;
@@ -138,6 +160,18 @@ export default class ComponentLoader {
     };
     await loadDependencies();
     return component;
+  }
+
+  async getRemoteComponent(id: BitId): Promise<?ModelComponent> {
+    const remotes = await getScopeRemotes(this.consumer.scope);
+    let componentsObjects;
+    try {
+      componentsObjects = await remotes.fetch([id], this.consumer.scope, false);
+    } catch (err) {
+      return null; // probably doesn't exist
+    }
+    const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
+    return remoteComponent.component;
   }
 
   static getInstance(consumer: Consumer): ComponentLoader {
