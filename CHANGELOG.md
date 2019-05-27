@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.8] - 2019-05-27
+
+- add support with `optionalChaining` and `nullishCoalescingOperator` plugins (by updating node-source-walk)
+
 ## [2.0.7] - 2019-05-17
 
 - ignore import/require from CDN (http/https)

@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "2.0.7",
+  "version": "2.0.8",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",
@@ -54,7 +54,7 @@
     "lodash.set": "^4.3.2",
     "module-definition": "^2.2.4",
     "module-lookup-amd": "^5.0.1",
-    "node-source-walk": "^4.0.0",
+    "node-source-walk": "^4.2.0",
     "object-assign": "^4.1.1",
     "ora": "^1.2.0",
     "parents": "^1.0.1",
