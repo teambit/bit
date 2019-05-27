@@ -3,8 +3,8 @@
 export default class ValidationError extends Error {
   showDoctorMessage: boolean;
 
-  constructor() {
-    super();
+  constructor(msg: string) {
+    super(msg);
     this.showDoctorMessage = true;
   }
 }
