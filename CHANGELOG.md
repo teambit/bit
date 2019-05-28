@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
+
 ## [14.1.2-dev.4] - 2019-05-28
 
 - restore node 6 support
