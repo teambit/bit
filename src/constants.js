@@ -207,6 +207,8 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
+export const CFG_LOG_JSON_FORMAT = 'log_json_format';
+
 /**
  * git hooks
  */
