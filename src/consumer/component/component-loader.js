@@ -9,6 +9,9 @@ import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import { ModelComponent } from '../../scope/models';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
@@ -95,13 +98,13 @@ export default class ComponentLoader {
       }
       throw err;
     }
-
     component.loadedFromFileSystem = true;
     component.originallySharedDir = componentMap.originallySharedDir || null;
     component.wrapDir = componentMap.wrapDir || null;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
     component.componentMap = this.consumer.bitMap.getComponent(id);
     component.componentFromModel = componentFromModel;
+    await this._handleOutOfSyncScenarios(component);
 
     if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // no need to resolve dependencies
@@ -114,6 +117,62 @@ export default class ComponentLoader {
     };
     await loadDependencies();
     return component;
+  }
+
+  async _handleOutOfSyncScenarios(component: Component) {
+    const { componentFromModel, componentMap } = component;
+    // $FlowFixMe componentMap is set here
+    const currentId: BitId = componentMap.id;
+    let newId: ?BitId;
+    if (componentFromModel && !currentId.hasVersion()) {
+      // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
+      newId = currentId.changeVersion(componentFromModel.version);
+      if (componentFromModel.scope) newId = newId.changeScope(componentFromModel.scope);
+    }
+
+    if (!componentFromModel && currentId.hasVersion()) {
+      // the version used in .bitmap doesn't exist in the scope
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(null));
+      if (modelComponent) {
+        // the scope has this component but not the version used in .bitmap, sync .bitmap with
+        // latest version from the scope
+        await this._throwPendingImportIfNeeded(currentId);
+        newId = currentId.changeVersion(modelComponent.latest());
+        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
+      } else if (!currentId.hasScope()) {
+        // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
+        newId = currentId.changeVersion(null);
+      }
+    }
+
+    if (newId) {
+      component.version = newId.version;
+      component.scope = newId.scope;
+      this.consumer.bitMap.updateComponentId(newId);
+      component.componentMap = this.consumer.bitMap.getComponent(newId);
+    }
+  }
+
+  async _throwPendingImportIfNeeded(currentId: BitId) {
+    if (currentId.hasScope()) {
+      const remoteComponent: ?ModelComponent = await this._getRemoteComponent(currentId);
+      // $FlowFixMe version is set here
+      if (remoteComponent && remoteComponent.hasVersion(currentId.version)) {
+        throw new ComponentsPendingImport();
+      }
+    }
+  }
+
+  async _getRemoteComponent(id: BitId): Promise<?ModelComponent> {
+    const remotes = await getScopeRemotes(this.consumer.scope);
+    let componentsObjects;
+    try {
+      componentsObjects = await remotes.fetch([id], this.consumer.scope, false);
+    } catch (err) {
+      return null; // probably doesn't exist
+    }
+    const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
+    return remoteComponent.component;
   }
 
   static getInstance(consumer: Consumer): ComponentLoader {

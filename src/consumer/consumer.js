@@ -25,7 +25,8 @@ import {
   DOT_GIT_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE
+  TESTER_ENV_TYPE,
+  LATEST
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -73,6 +74,7 @@ import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import deleteComponentsFiles from './component-ops/delete-component-files';
+import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
 
 type ConsumerProps = {
   projectPath: string,
@@ -281,7 +283,7 @@ export default class Consumer {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
     const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version);
+    return bitId.changeVersion(version || LATEST);
   }
 
   getParsedIdIfExist(id: BitIdStr): ?BitId {
@@ -540,7 +542,11 @@ export default class Consumer {
       const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
-        componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
+        // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
+        // loadOne to not find model component as it assumes there is no version
+        // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
+        // imported version is bigger than .bitmap, it won't find it and will consider as deleted
+        componentFromFileSystem = await this.loadComponent(id.changeVersion(LATEST));
       } catch (err) {
         if (
           err instanceof MissingFilesFromComponent ||
@@ -608,6 +614,10 @@ export default class Consumer {
         return Boolean(component.issues);
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
+    }
+    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new ComponentsPendingImport();
     }
 
     const { taggedComponents, autoTaggedComponents } = await tagModelComponent({

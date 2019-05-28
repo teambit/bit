@@ -45,7 +45,7 @@ export default class BitMap {
   paths: { [path: string]: BitId }; // path => componentId
   pathsLowerCase: { [path: string]: BitId }; // path => componentId
   markAsChangedBinded: Function;
-  allIds: ?BitIds;
+  _cacheIds: { [origin: string]: ?BitIds };
   allTrackDirs: ?{ [trackDir: PathLinux]: BitId };
 
   constructor(projectRoot: string, mapPath: string, version: string) {
@@ -56,6 +56,7 @@ export default class BitMap {
     this.version = version;
     this.paths = {};
     this.pathsLowerCase = {};
+    this._cacheIds = {};
     this.markAsChangedBinded = this.markAsChanged.bind(this);
   }
 
@@ -307,16 +308,19 @@ export default class BitMap {
   }
 
   getAllBitIds(origin?: ComponentOrigin[]): BitIds {
-    if (!origin && this.allIds) return this.allIds;
-    const allComponents = R.values(this.components);
     const ids = (componentMaps: ComponentMap[]) => BitIds.fromArray(componentMaps.map(c => c.id));
-    if (!origin) {
-      this.allIds = ids(allComponents);
-      return this.allIds;
-    }
-    // $FlowFixMe we know origin is an array in that case
-    const components = allComponents.filter(c => origin.includes(c.origin));
-    return ids(components);
+    const getIdsOfOrigin = (oneOrigin?: ComponentOrigin): BitIds => {
+      const cacheKey = oneOrigin || 'all';
+      if (this._cacheIds[cacheKey]) return this._cacheIds[cacheKey];
+      const allComponents = R.values(this.components);
+      const components = oneOrigin ? allComponents.filter(c => c.origin === oneOrigin) : allComponents;
+      const componentIds = ids(components);
+      this._cacheIds[cacheKey] = componentIds;
+      return componentIds;
+    };
+
+    if (!origin) return getIdsOfOrigin();
+    return BitIds.fromArray(R.flatten(origin.map(oneOrigin => getIdsOfOrigin(oneOrigin))));
   }
 
   /**
@@ -719,7 +723,7 @@ export default class BitMap {
   _invalidateCache = () => {
     this.paths = {};
     this.pathsLowerCase = {};
-    this.allIds = undefined;
+    this._cacheIds = {};
     this.allTrackDirs = undefined;
   };
 
@@ -764,7 +768,7 @@ export default class BitMap {
    * in the file-system only one instance with the same component-name. As a result, we can strip the
    * scope-name and the version, find the older version in bit.map and update the id with the new one.
    */
-  updateComponentId(id: BitId): BitId {
+  updateComponentId(id: BitId, updateScopeOnly: boolean = false): BitId {
     const newIdString = id.toString();
     const similarIds = this.findSimilarIds(id, true);
     if (!similarIds.length) {
@@ -777,14 +781,16 @@ export default class BitMap {
     }
     const oldId: BitId = similarIds[0];
     const oldIdStr = oldId.toString();
-    // when it comes from the export, the version is stripped and only the scope needs to be updated
-    const newId = oldId.hasVersion() && !id.hasVersion() ? id.changeVersion(oldId.version) : id;
+    const newId = updateScopeOnly ? oldId.changeScope(id.scope) : id;
     if (newId.isEqual(oldId)) {
       logger.debug(`bit-map: no need to update ${oldIdStr}`);
       return oldId;
     }
     logger.debug(`BitMap: updating an older component ${oldIdStr} with a newer component ${newId.toString()}`);
     const componentMap = this.components[oldIdStr];
+    if (componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+      throw new Error('updateComponentId should not manipulate Nested components');
+    }
     this._removeFromComponentsArray(oldId);
     this.setComponent(newId, componentMap);
     this.markAsChanged();
