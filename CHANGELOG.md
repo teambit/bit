@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.2-dev.3] - 2019-05-28
+
 - improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
 - add bit version validation to `bit doctor` command
 - fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
