@@ -510,7 +510,7 @@ workflows:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
-	          - pack
+            - pack
             - bundle-test-worker
   performence_tests:
     triggers:
