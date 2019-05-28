@@ -75,6 +75,7 @@ import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import deleteComponentsFiles from './component-ops/delete-component-files';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
+import { deprecateRemote, deprecateMany } from '../scope/component-ops/components-deprecation';
 
 type ConsumerProps = {
   projectPath: string,
@@ -792,25 +793,8 @@ export default class Consumer {
     });
   }
 
-  async deprecateRemote(bitIds: Array<BitId>) {
-    const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await getScopeRemotes(this.scope);
-    const context = {};
-    enrichContextFromGlobal(context);
-    const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
-      const resolvedRemote = await remotes.resolve(scopeName, this.scope);
-      const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
-      const deprecateResult = await resolvedRemote.deprecateMany(idsStr, context);
-      return deprecateResult;
-    });
-    const deprecatedComponentsResult = await Promise.all(deprecateP);
-    return deprecatedComponentsResult;
-  }
-  async deprecateLocal(bitIds: Array<BitId>) {
-    return this.scope.deprecateMany(bitIds);
-  }
   async deprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
+    return remote ? deprecateRemote(this.scope, bitIds) : deprecateMany(this.scope, bitIds);
   }
 
   /**
