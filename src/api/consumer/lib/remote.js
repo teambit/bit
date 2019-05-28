@@ -2,6 +2,8 @@
 import { loadScope } from '../../../scope';
 import { Remote } from '../../../remotes';
 import { GlobalRemotes } from '../../../global-config';
+import { getScopeRemotes } from '../../../scope/scope-remotes';
+import GeneralError from '../../../error/general-error';
 
 function buildRemote(url: string): Remote {
   return new Remote(url);
@@ -30,22 +32,28 @@ export function add(url: string, global: boolean) {
   });
 }
 
-export function remove(name: string, global: boolean) {
+export async function remove(name: string, global: boolean) {
   if (global) {
-    return GlobalRemotes.load().then((globalRemotes) => {
-      return globalRemotes
-        .rmRemote(name)
-        .write()
-        .then(() => name);
-    });
+    const globalRemotes = await GlobalRemotes.load();
+    const hasRemoved = globalRemotes.rmRemote(name);
+    if (!hasRemoved) {
+      throw new GeneralError(
+        `remote "${name}" was not found globally, to remove a local remote, please omit the "--global" flag`
+      );
+    }
+    await globalRemotes.write();
+    return name;
   }
 
-  return loadScope().then((scope) => {
-    return scope.scopeJson
-      .rmRemote(name)
-      .write(scope.getPath())
-      .then(() => name);
-  });
+  const scope = await loadScope();
+  const hasRemoved = scope.scopeJson.rmRemote(name);
+  if (!hasRemoved) {
+    throw new GeneralError(
+      `remote "${name}" was not found locally, to remove a global remote, please use "--global" flag`
+    );
+  }
+  await scope.scopeJson.write(scope.getPath());
+  return name;
 }
 
 export function list(global: boolean) {
@@ -54,7 +62,7 @@ export function list(global: boolean) {
   }
 
   return loadScope().then((scope) => {
-    return scope.remotes().then(remotes => remotes.toPlainObject());
+    return getScopeRemotes(scope).then(remotes => remotes.toPlainObject());
   });
 }
 

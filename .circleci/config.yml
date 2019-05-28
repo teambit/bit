@@ -49,18 +49,18 @@ jobs:
     steps:
       # prod registry
       # -
-      #   run: 'npm config set @bit:registry https://node.bitsrc.io'
+        # run: npm config set @bit:registry https://node.bit.dev
       # -
-      #   run: 'echo "//node-stg.bitsrc.io/:_authToken=$registryProdToken" >> ~/.npmrc'
+        # run: echo "//node.bit.dev/:_authToken=$registryProdToken" >> ~/.npmrc
       # stage registry
       -
-        run: 'npm config set @bit:registry https://node-stg.bitsrc.io'
+        run: 'npm config set @bit:registry https://node-stg.bit.dev'
       -
-        run: 'echo "//node-stg.bitsrc.io/:_authToken=$registryStgToken" >> ~/.npmrc'
+        run: 'echo "//node-stg.bit.dev/:_authToken=$registryStgToken" >> ~/.npmrc'
       -
         save_cache:
           # key: bitsrc-registry2
-          key: bitsrc-registry-stg4
+          key: bitsrc-registry-stg-v2
           paths:
             - ~/.npmrc
   install_npm_deps:
@@ -85,20 +85,20 @@ jobs:
             # A real solution will be to clear all the cache once circle will support it (for v2)	
             # or move the packakge.json resotre to be from workspace instead of cache, then we can run	
             # this step without cache
-            - 'npm-deps11-{{ checksum "./bit/package.json" }}'
-            - npm-deps11
+            - 'npm-deps12-{{ checksum "./bit/package.json" }}'
+            - npm-deps12
       -
         run:
           name: 'Insatll npm dependencies'
           command: 'cd bit && npm install'
       -
         save_cache:
-          key: 'npm-deps11-{{ checksum "./bit/package.json" }}'
+          key: 'npm-deps12-{{ checksum "./bit/package.json" }}'
           paths:
             - ./bit/node_modules
       -
         save_cache:
-          key: npm-deps11
+          key: npm-deps12
           paths:
             - ./bit/node_modules
       -
@@ -344,6 +344,10 @@ jobs:
           command: 'echo $CIRCLE_SHA1 > .circle-sha'
       -
         run:
+          name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
+          command: 'sudo apt-get install expect'
+      -
+        run:
           name: 'create global npm directory (to avoid using sudo for npm link)'
           command: 'mkdir ~/.npm-global'
       -
@@ -352,13 +356,13 @@ jobs:
       -
         restore_cache:
           # key: bitsrc-registry2
-          key: bitsrc-registry-stg4
+          key: bitsrc-registry-stg-v2
       -
         restore_cache:
           keys:
             - 'builded-{{ checksum ".circle-sha" }}'
-      # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
       -
+        # add the id_rsa to ssh_agent to make sure we authenticate with the correct user
         run: 'chmod 400 ~/.ssh/id_rsa'
       -
         run: 'ssh-add ~/.ssh/id_rsa'
@@ -385,16 +389,70 @@ jobs:
       -
         run: 'bit config set user.name tester'
       -
-        run: 'bit config set user.email ci@bitsrc.io'
-      # uncomment to configure circle to run against stg enviorment
+        run: 'bit config set user.email ci@bit.dev'
       -
-        run: 'bit config set hub_domain hub-stg.bitsrc.io'
+        # uncomment to configure circle to run against stg enviorment
+        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
           # command: cd bit && npm run e2e-test-circle --debug	
+          environment:
+            MOCHA_FILE: junit/e2e-test-results.xml
+          when: always
+      -
+        store_test_results:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: bit/junit
+      -
+        store_artifacts:
+          path: ~/Library/Caches/Bit/logs/debug.log
+  performence_test:
+    docker:
+      -
+        image: 'circleci/node:6.14.3'
+    working_directory: ~/bit
+    environment:
+      # change the npm config to avoid using sudo
+      NPM_CONFIG_PREFIX: ~/.npm-global
+      BITSRC_ENV: stg
+      NPM_CONFIG_DEBUG: true
+    parallelism: 1
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
+      -
+        run: 'cd bit && mkdir junit'
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && npm link ../bit-javascript'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: 'cd bit && npm link'
+      -
+        run: 'bit config set analytics_reporting false'
+      -
+        run: 'bit config set error_reporting false'
+      -
+        run: 'bit config set user.name tester'
+      -
+        run: 'bit config set user.email ci@bit.dev'
+      -
+        # uncomment to configure circle to run against stg enviorment
+        run: 'bit config set hub_domain hub-stg.bit.dev'
+      -
+        run:
+          name: 'Run performance tests'
+          command: 'cd bit && npm run performance-test-circle'
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -452,5 +510,37 @@ workflows:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
-            - pack
+	          - pack
             - bundle-test-worker
+  performence_tests:
+    triggers:
+      - schedule:
+          cron: "0 9 * * *"
+          filters:
+            branches:
+              only:
+                - master
+                - performance-tests
+    jobs:
+      - checkout_code
+      -
+        install_npm_deps:
+          requires:
+            - checkout_code
+      -
+        install_bit_javascript_npm_deps:
+          requires:
+            - checkout_code
+      -
+        build:
+          requires:
+            - install_npm_deps
+      -
+        build_bit_javascript:
+          requires:
+            - install_bit_javascript_npm_deps
+      -
+        performence_test:
+          requires:
+            - build
+            - build_bit_javascript

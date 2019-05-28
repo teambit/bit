@@ -18,7 +18,11 @@ export default class Remove extends Command {
     ['f', 'force [boolean]', 'force remove (default = false)'],
     ['r', 'remote', 'remove a component from a remote scope'],
     ['t', 'track [boolean]', 'keep tracking component (default = false)'],
-    ['d', 'delete-files [boolean]', 'delete local component files'],
+    [
+      'd',
+      'delete-files [boolean]',
+      'delete local component files (authored components only. for imported components the files are always deleted)'
+    ],
     ['s', 'silent [boolean]', 'skip confirmation']
   ];
   loader = true;

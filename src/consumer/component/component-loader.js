@@ -1,14 +1,17 @@
 // @flow
 import path from 'path';
-import { Consumer } from '..';
+import pMapSeries from 'p-map-series';
+import type Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
-import { Analytics } from '../../analytics/analytics';
 import Component from './consumer-component';
 import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
+import { getScopeRemotes } from '../../scope/scope-remotes';
+import { ModelComponent } from '../../scope/models';
+import ComponentsPendingImport from '../component-ops/exceptions/components-pending-import';
 
 export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
@@ -23,11 +26,9 @@ export default class ComponentLoader {
     ids: BitIds,
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
-    logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb(
-      'load components',
-      `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
-    );
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
+      ids: ids.toString()
+    });
     const alreadyLoadedComponents = [];
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
@@ -35,97 +36,143 @@ export default class ComponentLoader {
       if (!(id instanceof BitId)) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithoutVersion = id.toStringWithoutVersion();
-      if (this._componentsCache[idWithoutVersion]) {
-        logger.debug(`the component ${idWithoutVersion} has been already loaded, use the cached component`);
-        Analytics.addBreadCrumb(
-          'load components',
-          `the component ${Analytics.hashData(idWithoutVersion)} has been already loaded, use the cached component`
+      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+      const idStr = idWithVersion.toString();
+      if (this._componentsCache[idStr]) {
+        logger.debugAndAddBreadCrumb(
+          'ComponentLoader',
+          'the component {idStr} has been already loaded, use the cached component',
+          { idStr }
         );
-        alreadyLoadedComponents.push(this._componentsCache[idWithoutVersion]);
+        alreadyLoadedComponents.push(this._componentsCache[idStr]);
       } else {
-        idsToProcess.push(id);
+        idsToProcess.push(idWithVersion);
       }
     });
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
 
     const driverExists = this.consumer.warnForMissingDriver(
-      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run commit again.'
+      'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run tag again.'
     );
 
-    const components = idsToProcess.map(async (id: BitId) => {
-      return this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
-    });
-
     const allComponents = [];
-    for (const componentP of components) {
-      // load the components one after another (not in parallel).
-      const component = await componentP; // eslint-disable-line no-await-in-loop
+    await pMapSeries(idsToProcess, async (id: BitId) => {
+      const component = await this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
       if (component) {
-        this._componentsCache[component.id.toStringWithoutVersion()] = component;
-        logger.debug(`Finished loading the component, ${component.id.toString()}`);
-        Analytics.addBreadCrumb(
-          'load components',
-          `Finished loading the component, ${Analytics.hashData(component.id.toString())}`
-        );
+        this._componentsCache[component.id.toString()] = component;
+        logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
+          id: component.id.toString()
+        });
         allComponents.push(component);
       }
-    }
+    });
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
   async loadOne(id: BitId, throwOnFailure: boolean, driverExists: boolean, invalidComponents: InvalidComponent[]) {
-    const idWithConcreteVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
-
-    const componentMap = this.consumer.bitMap.getComponent(idWithConcreteVersion);
+    const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(idWithConcreteVersion);
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(id);
     let component;
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
         componentMap,
-        id: idWithConcreteVersion,
+        id,
         consumer: this.consumer,
         componentFromModel
       });
     } catch (err) {
       if (throwOnFailure) throw err;
 
-      logger.error(`failed loading ${id.toString()} from the file-system`);
-      Analytics.addBreadCrumb(
-        'load components',
-        `failed loading ${Analytics.hashData(id.toString())} from the file-system`
-      );
+      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
+        id: id.toString()
+      });
       if (Component.isComponentInvalidByErrorType(err)) {
         invalidComponents.push({ id, error: err });
         return null;
       }
       throw err;
     }
-
     component.loadedFromFileSystem = true;
     component.originallySharedDir = componentMap.originallySharedDir || null;
     component.wrapDir = componentMap.wrapDir || null;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponent(idWithConcreteVersion);
+    component.componentMap = this.consumer.bitMap.getComponent(id);
     component.componentFromModel = componentFromModel;
+    await this._handleOutOfSyncScenarios(component);
 
     if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
       // no need to resolve dependencies
       return component;
     }
     const loadDependencies = async () => {
-      const dependencyResolver = new DependencyResolver(component, this.consumer, idWithConcreteVersion);
+      const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(bitDir, this.cacheResolvedDependencies);
-      await updateDependenciesVersions(this.consumer, component);
+      updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
     return component;
+  }
+
+  async _handleOutOfSyncScenarios(component: Component) {
+    const { componentFromModel, componentMap } = component;
+    // $FlowFixMe componentMap is set here
+    const currentId: BitId = componentMap.id;
+    let newId: ?BitId;
+    if (componentFromModel && !currentId.hasVersion()) {
+      // component is in the scope but .bitmap doesn't have version, sync .bitmap with the scope data
+      newId = currentId.changeVersion(componentFromModel.version);
+      if (componentFromModel.scope) newId = newId.changeScope(componentFromModel.scope);
+    }
+
+    if (!componentFromModel && currentId.hasVersion()) {
+      // the version used in .bitmap doesn't exist in the scope
+      const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(null));
+      if (modelComponent) {
+        // the scope has this component but not the version used in .bitmap, sync .bitmap with
+        // latest version from the scope
+        await this._throwPendingImportIfNeeded(currentId);
+        newId = currentId.changeVersion(modelComponent.latest());
+        component.componentFromModel = await this.consumer.loadComponentFromModelIfExist(newId);
+      } else if (!currentId.hasScope()) {
+        // the scope doesn't have this component and .bitmap doesn't have scope, assume it's new
+        newId = currentId.changeVersion(null);
+      }
+    }
+
+    if (newId) {
+      component.version = newId.version;
+      component.scope = newId.scope;
+      this.consumer.bitMap.updateComponentId(newId);
+      component.componentMap = this.consumer.bitMap.getComponent(newId);
+    }
+  }
+
+  async _throwPendingImportIfNeeded(currentId: BitId) {
+    if (currentId.hasScope()) {
+      const remoteComponent: ?ModelComponent = await this._getRemoteComponent(currentId);
+      // $FlowFixMe version is set here
+      if (remoteComponent && remoteComponent.hasVersion(currentId.version)) {
+        throw new ComponentsPendingImport();
+      }
+    }
+  }
+
+  async _getRemoteComponent(id: BitId): Promise<?ModelComponent> {
+    const remotes = await getScopeRemotes(this.consumer.scope);
+    let componentsObjects;
+    try {
+      componentsObjects = await remotes.fetch([id], this.consumer.scope, false);
+    } catch (err) {
+      return null; // probably doesn't exist
+    }
+    const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
+    return remoteComponent.component;
   }
 
   static getInstance(consumer: Consumer): ComponentLoader {

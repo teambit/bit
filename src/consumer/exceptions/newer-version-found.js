@@ -14,9 +14,4 @@ export default class NewerVersionFound extends AbstractError {
     this.name = 'NewerVersionFound';
     this.newerVersions = newerVersions;
   }
-  makeAnonymous() {
-    const clone = super.makeAnonymous();
-    clone.name = 'NewerVersionFound';
-    return clone;
-  }
 }

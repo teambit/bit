@@ -21,10 +21,10 @@ describe('big text file', function () {
       fs.outputFileSync(path.join(helper.localScopePath, 'bar', 'big-text-file.txt'), windowsFormatContent);
       helper.createComponentBarFoo();
       helper.addComponent('bar', { i: 'bar/text', m: 'bar/foo.js' });
-      tagOutput = helper.commitComponent('bar/text');
+      tagOutput = helper.tagComponent('bar/text');
     });
     it('tagging the component should not throw any error', () => {
-      expect(tagOutput).to.have.string('1 components tagged');
+      expect(tagOutput).to.have.string('1 component(s) tagged');
     });
     describe('exporting and importing the component', () => {
       let importOutput;

@@ -12,12 +12,12 @@ import {
   CFG_HUB_LOGIN_KEY,
   DEFAULT_LANGUAGE,
   DEFAULT_REGISTRY_URL,
-  CFG_REGISTRY_URL_KEY
+  CFG_REGISTRY_URL_KEY,
+  PREVIOUSLY_DEFAULT_REGISTRY_URL
 } from '../../constants';
 import { LoginFailed } from '../exceptions';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import { Analytics } from '../../analytics/analytics';
 import { Driver } from '../../driver';
 
 const ERROR_RESPONSE = 500;
@@ -50,7 +50,7 @@ export default function loginToBitSrc(
         server.close();
       };
       if (request.method !== 'GET') {
-        logger.error('received non get request, closing connection');
+        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'received non get request, closing connection');
         closeConnection();
         reject(new LoginFailed());
       }
@@ -58,14 +58,25 @@ export default function loginToBitSrc(
         const { clientId, redirectUri, username, token } = url.parse(request.url, true).query || {};
         let writeToNpmrcError = false;
         if (clientGeneratedId !== clientId) {
-          logger.error(`clientId mismatch, expecting: ${clientGeneratedId} got ${clientId}`);
+          logger.errorAndAddBreadCrumb(
+            'login.loginToBitSrc',
+            'clientId mismatch, expecting: {clientGeneratedId} got {clientId}',
+            { clientGeneratedId, clientId }
+          );
           closeConnection(ERROR_RESPONSE);
           reject(new LoginFailed());
         }
         setSync(CFG_USER_TOKEN_KEY, token);
+        const configuredRegistry = getSync(CFG_REGISTRY_URL_KEY);
         if (!skipRegistryConfig) {
           try {
-            actualNpmrcPath = driver.npmLogin(token, npmrcPath, getSync(CFG_REGISTRY_URL_KEY) || DEFAULT_REGISTRY_URL);
+            if (!configuredRegistry) {
+              // some packages might have links in package-lock.json to the previous registry
+              // this makes sure to have also the auth-token of the previous registry.
+              // (the @bit:registry part points only to the current registry).
+              actualNpmrcPath = driver.npmLogin(token, npmrcPath, PREVIOUSLY_DEFAULT_REGISTRY_URL);
+            }
+            actualNpmrcPath = driver.npmLogin(token, npmrcPath, configuredRegistry || DEFAULT_REGISTRY_URL);
           } catch (e) {
             actualNpmrcPath = e.path;
             writeToNpmrcError = true;
@@ -88,10 +99,10 @@ export default function loginToBitSrc(
       }
     });
 
-    Analytics.addBreadCrumb('login', `initializing login server  on port: ${port || DEFAULT_PORT}`);
+    logger.debugAndAddBreadCrumb('login.loginToBitSrc', `initializing login server on port: ${port || DEFAULT_PORT}`);
     server.listen(port || DEFAULT_PORT, (err) => {
       if (err) {
-        logger.error('something bad happened', err);
+        logger.errorAndAddBreadCrumb('login.loginToBitSrc', 'something bad happened', {}, err);
         reject(new LoginFailed());
       }
 
@@ -111,7 +122,7 @@ export default function loginToBitSrc(
 
     server.on('error', (e) => {
       if (e.code === 'EADDRINUSE') {
-        reject(new GeneralError(`port: ${e.port} alredy in use, please run bit login --port <port>`));
+        reject(new GeneralError(`port: ${e.port} already in use, please run bit login --port <port>`));
       }
       reject(e);
     });

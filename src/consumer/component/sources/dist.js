@@ -12,4 +12,8 @@ export default class Dist extends AbstractVinyl {
     if (!arr) return;
     return arr.map(this.loadFromParsedString);
   }
+
+  clone() {
+    return new Dist(this);
+  }
 }

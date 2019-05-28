@@ -2,8 +2,8 @@ import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import Dists from '../component/sources/dists';
-import ConsumerComponent from '../component/consumer-component';
-import { Scope } from '../../scope';
+import type ConsumerComponent from '../component/consumer-component';
+import type { Scope } from '../../scope';
 import InvalidCompilerInterface from '../component/exceptions/invalid-compiler-interface';
 import IsolatedEnvironment from '../../environment';
 import ComponentMap from '../bit-map/component-map';
@@ -11,7 +11,7 @@ import { BitId } from '../../bit-id';
 import logger from '../../logger/logger';
 import { DEFAULT_DIST_DIRNAME } from '../../constants';
 import ExternalBuildErrors from '../component/exceptions/external-build-errors';
-import Consumer from '../consumer';
+import type Consumer from '../consumer';
 import type { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
@@ -44,7 +44,8 @@ export default (async function buildComponent({
       logger.debug('compiler was not found, nothing to build');
       return null;
     }
-    logger.debug(
+    logger.debugAndAddBreadCrumb(
+      'build-component.buildComponent',
       'compiler was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
     );
     component.copyFilesIntoDists();
@@ -60,7 +61,10 @@ export default (async function buildComponent({
   }
   const needToRebuild = await _isNeededToReBuild(consumer, component.id, noCache);
   if (!needToRebuild && !component.dists.isEmpty()) {
-    logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
+    logger.debugAndAddBreadCrumb(
+      'build-component.buildComponent',
+      'skip the build process as the component was not modified, use the dists saved in the model'
+    );
     return component.dists;
   }
   logger.debug('compiler found, start building');
@@ -188,9 +192,9 @@ const _runBuild = async ({
 
   let componentDir = '';
   if (componentMap) {
-    // $FlowFixMe
-    rootDistDir = component.dists.getDistDirForConsumer(consumer, componentMap.rootDir);
-    if (consumerPath && componentMap && componentMap.getComponentDir()) {
+    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.getRootDir());
+    if (consumer) rootDistDir = consumer.toAbsolutePath(rootDistDirRelative);
+    if (consumerPath && componentMap.getComponentDir()) {
       componentDir = componentMap.getComponentDir() || '';
     }
   }
@@ -209,7 +213,8 @@ const _runBuild = async ({
       // Change the cwd to make sure we found the needed files
       process.chdir(componentRoot);
       if (compiler.action) {
-        const shouldWriteConfig = compiler.writeConfigFilesOnAction && component.getDetachedCompiler();
+        const isCompilerDetached = await component.getDetachedCompiler(consumer);
+        const shouldWriteConfig = compiler.writeConfigFilesOnAction && isCompilerDetached;
         // Write config files to tmp folder
         if (shouldWriteConfig) {
           tmpFolderFullPath = component.getTmpFolder(consumerPath);
@@ -217,7 +222,7 @@ const _runBuild = async ({
             console.log(`\nwriting config files to ${tmpFolderFullPath}`); // eslint-disable-line no-console
           }
           await writeEnvFiles({
-            fullConfigDir: tmpFolderFullPath,
+            configDir: component.getTmpFolder(),
             env: compiler,
             consumer,
             component,
@@ -234,7 +239,8 @@ const _runBuild = async ({
           api: compiler.api,
           context
         };
-        const result = await compiler.action(actionParams);
+        // $FlowFixMe we verified above that action is set
+        const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {
             console.log(`\ndeleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
@@ -251,7 +257,7 @@ const _runBuild = async ({
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
       }
-      return compiler.oldAction(files, rootDistDir, context);
+      return Promise.resolve(compiler.oldAction(files, rootDistDir, context));
     })
     .catch((e) => {
       if (tmpFolderFullPath) {

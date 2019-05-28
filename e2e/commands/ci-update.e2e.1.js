@@ -35,7 +35,7 @@ describe('bit ci-update', function () {
       helper.createFile('', 'file.spec.js', fileSpecFixture(true));
       helper.installNpmPackage('chai', '4.1.2');
       helper.addComponent('file.js', { i: 'comp/comp', t: 'file.spec.js' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {
@@ -46,7 +46,7 @@ describe('bit ci-update', function () {
   describe('component with compiler, tester and nested dependencies', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler('bit.envs/compilers/babel');
+      helper.importCompiler('bit.envs/compilers/babel@0.0.20');
       helper.importTester('bit.envs/testers/mocha@0.0.12');
       helper.createFile('utils', 'is-type.js', fixtures.isTypeES6);
       helper.addComponentUtilsIsType();
@@ -59,7 +59,7 @@ describe('bit ci-update', function () {
       helper.installNpmPackage('chai', '4.1.2');
       helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
       helper.build(); // needed for building the dependencies
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
     });
     it('should be able to run the tests on an isolated environment using bit ci-update command', () => {

@@ -14,16 +14,21 @@ export default class Init extends Command {
   opts = [
     ['b', 'bare [name]', 'initialize an empty bit bare scope'],
     ['s', 'shared <groupname>', 'add group write permissions to a scope properly'],
-    ['t', 'standalone [boolean]', 'do not nest component store within .git directory '],
+    [
+      't',
+      'standalone [boolean]',
+      'do not nest component store within .git directory and do not write config data inside package.json'
+    ],
     ['r', 'reset', 'write missing or damaged Bit files'],
     [
       '',
       'reset-hard',
       'delete all Bit files and directories, including Bit configuration, tracking and model data. Useful for re-start using Bit from scratch'
-    ]
+    ],
+    ['f', 'force', 'force workspace initialization without clearing local objects']
   ];
 
-  action([path]: [string], { bare, shared, standalone, reset, resetHard }: any): Promise<{ [string]: any }> {
+  action([path]: [string], { bare, shared, standalone, reset, resetHard, force }: any): Promise<{ [string]: any }> {
     if (path) path = pathlib.resolve(path);
     if (bare) {
       if (reset || resetHard) throw new GeneralError('--reset and --reset-hard flags are not available for bare scope');
@@ -36,7 +41,7 @@ export default class Init extends Command {
       });
     }
     if (reset && resetHard) throw new GeneralError('please use --reset or --reset-hard. not both');
-    return init(path, standalone, reset, resetHard).then(({ created, addedGitHooks, existingGitHooks }) => {
+    return init(path, standalone, reset, resetHard, force).then(({ created, addedGitHooks, existingGitHooks }) => {
       return {
         created,
         addedGitHooks,

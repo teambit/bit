@@ -1,4 +1,19 @@
-import linkComponentsToNodeModules from './node-modules-linker';
-import { linkComponents, linkAllToNodeModules, writeLinksInDist, reLinkDependents } from './linker';
+import NodeModuleLinker from './node-modules-linker';
+import {
+  linkComponents,
+  linkAllToNodeModules,
+  getLinksInDistToWrite,
+  getAllComponentsLinks,
+  reLinkDependents
+} from './linker';
+import LinkFile from './link-file';
 
-export { linkComponents, linkComponentsToNodeModules, linkAllToNodeModules, writeLinksInDist, reLinkDependents };
+export {
+  linkComponents,
+  NodeModuleLinker,
+  linkAllToNodeModules,
+  getLinksInDistToWrite,
+  getAllComponentsLinks,
+  reLinkDependents,
+  LinkFile
+};

@@ -2,7 +2,7 @@
 import c from 'chalk';
 import Table from 'tty-table';
 import SpecsResults from '../consumer/specs-results/specs-results';
-import Component from '../consumer/component/consumer-component';
+import type Component from '../consumer/component/consumer-component';
 import type { ImportDetails, ImportStatus } from '../consumer/component-ops/import-components';
 import { FileStatus } from '../consumer/versions-ops/merge-version/merge-version';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
@@ -100,10 +100,15 @@ const paintTest = (test) => {
 };
 
 // Failures which are not on tests, for example on before blocks
-const paintGeneralFailure = (failure) => {
+const paintGeneralFailure = (failure, verbose) => {
   const duration = failure.duration ? ` - ${c.cyan(`${failure.duration}ms`)}` : '';
+  let errStack = '';
+  if (verbose && failure.err) {
+    errStack = failure.err.stack;
+  }
   return `❌   ${c.white(failure.title)} ${duration}
-    ${c.red(failure.err.message)}`;
+    ${c.red(failure.err.message)}
+    ${c.red(errStack)}`;
 };
 
 const paintStats = (results) => {
@@ -116,25 +121,27 @@ const paintStats = (results) => {
   return `${statsHeader}${fileName}\n${totalDuration}\n`;
 };
 
-export const paintSpecsResults = (results?: SpecsResults[]): string[] => {
+export const paintSpecsResults = (results?: SpecsResults[], verbose: boolean = false): string[] => {
   if (!results) return [];
   return results.map((specResult) => {
     const stats = paintStats(specResult);
     const tests = specResult.tests ? `${specResult.tests.map(paintTest).join('\n')}\n` : '';
-    const failures = specResult.failures ? `${specResult.failures.map(paintGeneralFailure).join('\n')}\n` : '';
+    const failures = specResult.failures
+      ? `${specResult.failures.map(failure => paintGeneralFailure(failure, verbose)).join('\n')}\n`
+      : '';
     const final = tests || failures ? stats + tests + failures : '';
     return final;
   });
 };
 
-export const paintAllSpecsResults = (results: SpecsResultsWithComponentId): string => {
+export const paintAllSpecsResults = (results: SpecsResultsWithComponentId, verbose: boolean = false): string => {
   if (results.length === 0) return c.yellow('nothing to test');
   return results
     .map((result) => {
       const idStr = result.componentId.toString();
       if (result.missingTester) return paintMissingTester(idStr);
       const componentId = c.bold(idStr);
-      if (result.specs) return componentId + paintSpecsResults(result.specs);
+      if (result.specs) return componentId + paintSpecsResults(result.specs, verbose);
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
     .join('\n');

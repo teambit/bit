@@ -1,9 +1,9 @@
 /** @flow */
 import BitObject from './objects/object';
-import Repository from './objects/repository';
+import type Repository from './objects/repository';
 import { toBase64ArrayBuffer } from '../utils';
 import { typesObj } from './object-registrar';
-import ModelComponent from './models/model-component';
+import type ModelComponent from './models/model-component';
 // import logger from '../logger/logger';
 
 export default class ComponentObjects {
@@ -48,10 +48,22 @@ export default class ComponentObjects {
     return new ComponentObjects(_from64Buffer(component), objects.map(_from64Buffer));
   }
 
+  /**
+   * prefer using `this.toObjectsAsync()` if not must to be sync.
+   */
   toObjects(repo: Repository): { component: ModelComponent, objects: BitObject[] } {
     return {
       component: BitObject.parseSync(this.component, repo.types),
       objects: this.objects.map(obj => BitObject.parseSync(obj, repo.types))
+    };
+  }
+  /**
+   * see `this.toObject()` for the sync version
+   */
+  async toObjectsAsync(repo: Repository): Promise<{ component: ModelComponent, objects: BitObject[] }> {
+    return {
+      component: await BitObject.parseObject(this.component, repo.types),
+      objects: await Promise.all(this.objects.map(obj => BitObject.parseObject(obj, repo.types)))
     };
   }
 }

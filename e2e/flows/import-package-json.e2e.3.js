@@ -5,7 +5,7 @@ import { WRAPPER_DIR } from '../../src/constants';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const fixturePackageJson = { name: 'nice-package' };
-const fixturePackageJsonV2 = { name: 'nice-package V2' };
+const fixturePackageJsonV2 = { name: 'nice-package-v2' }; // name must be valid, otherwise, npm skips it and install from nested dirs
 
 chai.use(require('chai-fs'));
 
@@ -24,7 +24,7 @@ describe('component with package.json as a file of the component', function () {
       helper.createJsonFile('package.json', fixturePackageJson);
       const addOutput = helper.addComponent('package.json', { i: 'foo/pkg' });
       expect(addOutput).to.have.string('added package.json');
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -88,7 +88,7 @@ describe('component with package.json as a file of the component', function () {
       helper.createFile('bar', 'foo.js');
       const addOutput = helper.addComponent('bar', { i: 'bar/foo', m: 'foo.js' });
       expect(addOutput).to.have.string('package.json');
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -132,7 +132,7 @@ describe('component with package.json as a file of the component', function () {
       helper.addComponent('package.json', { i: 'foo/pkg' });
       helper.createFile('', 'foo.js', fooFixture);
       helper.addComponent('foo.js', { i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       afterExportScope = helper.cloneLocalScope();
       helper.reInitLocalScope();
@@ -187,7 +187,7 @@ describe('component with package.json as a file of the component', function () {
         expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
 
         helper.createJsonFile(`components/foo/pkg/${WRAPPER_DIR}/package.json`, fixturePackageJsonV2);
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
       });
       it('should strip the wrap dir when saving the component into the scope', () => {
         const fooPkg = helper.catComponent(`${helper.remoteScope}/foo/pkg@latest`);
@@ -204,6 +204,7 @@ describe('component with package.json as a file of the component', function () {
         expect(barFoo.dependencies[0].relativePaths[0].sourceRelativePath).to.equal('package.json');
         expect(barFoo.dependencies[0].relativePaths[0].destinationRelativePath).to.equal('package.json');
       });
+
       describe('export the updated components and re-import them for author', () => {
         before(() => {
           helper.exportAllComponents();
@@ -223,9 +224,26 @@ describe('component with package.json as a file of the component', function () {
         it('should not add wrapDir for the author', () => {
           expect(path.join(helper.localScopePath, WRAPPER_DIR)).to.not.have.a.path();
         });
+        it('should not override the author package.json', () => {
+          const packageJson = helper.readPackageJson();
+          expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
+        });
         it('should not show the component as modified', () => {
           const output = helper.runCmd('bit status');
           expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('running bit link', () => {
+          before(() => {
+            helper.runCmd('bit link');
+          });
+          it('should not override the author package.json', () => {
+            const packageJson = helper.readPackageJson();
+            expect(packageJson.name).to.equal(fixturePackageJsonV2.name);
+          });
+          it('should not show the component as modified', () => {
+            const output = helper.runCmd('bit status');
+            expect(output).to.have.a.string(statusWorkspaceIsCleanMsg);
+          });
         });
       });
     });

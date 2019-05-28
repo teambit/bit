@@ -6,7 +6,6 @@ import uniqid from 'uniqid';
 import yn from 'yn';
 import R from 'ramda';
 import os from 'os';
-import omitBy from 'lodash.omitby';
 import { fork } from 'child_process';
 import { setSync, getSync } from '../api/consumer/lib/global-config';
 import { analyticsPrompt, errorReportingPrompt } from '../prompts';
@@ -92,28 +91,46 @@ class Analytics {
     }
     return Promise.resolve();
   }
+  static _maskString(str: string): string {
+    return str.replace(/[A-Za-z]/g, 'x');
+  }
+  static _hashLightly(value: any) {
+    switch (typeof value) {
+      case 'undefined':
+      case 'number':
+      case 'boolean':
+        return value;
+      case 'string':
+        return this._maskString(value);
+      case 'object':
+        if (Array.isArray(value)) return value.map(item => this._hashLightly(item));
+        if (value === null) return value;
+        return hashObj(value);
+      default:
+        return hashObj(value);
+    }
+  }
   static _hashFlags(flags: Object) {
     const hashedFlags = {};
-    const nilOrFalse = val => R.isNil(val) || val === false;
-    const filteredFlags = omitBy(flags, nilOrFalse);
-    if (this.anonymous && !R.isEmpty(filteredFlags)) {
-      Object.keys(filteredFlags).forEach((key) => {
-        if (typeof flags[key] === 'boolean') {
-          hashedFlags[key] = flags[key];
-        } else {
-          hashedFlags[key] = hashObj(flags[key]);
-        }
+    const definedFlags = R.filter(flag => typeof flag !== 'undefined', flags);
+    if (this.anonymous && !R.isEmpty(definedFlags)) {
+      Object.keys(definedFlags).forEach((key) => {
+        hashedFlags[key] = this._hashLightly(flags[key]);
       });
       return hashedFlags;
     }
-    return filteredFlags;
+    return definedFlags;
+  }
+  static _hashArgs(args: string[]): string[] {
+    if (!this.anonymous) return args;
+    return args.map(arg => this._hashLightly(arg));
   }
   static init(command: string, flags: Object, args: string[], version) {
     this.anonymous = yn(getSync(CFG_ANALYTICS_ANONYMOUS_KEY), { default: true });
     this.command = command;
     this.flags = this._hashFlags(flags);
     this.release = version;
-    this.args = this.anonymous ? hashObj(args) : args;
+    this.args = this._hashArgs(args);
     this.nodeVersion = process.version;
     this.os = process.platform;
     this.level = LEVEL.INFO;
@@ -125,13 +142,25 @@ class Analytics {
     this.environment = getSync(CFG_ANALYTICS_ENVIRONMENT_KEY) || DEFAULT_BIT_ENV;
   }
 
-  static async sendData() {
-    if (this.analytics_usage || (this.error_usage && !this.success)) {
-      const forked = fork(path.join(__dirname, 'analytics-sender.js'), { silent: true });
-      forked.send(this.toObject());
-    }
-
-    return Promise.resolve();
+  static sendData() {
+    return new Promise((resolve, reject) => {
+      if (this.analytics_usage || (this.error_usage && !this.success)) {
+        const file = path.join(__dirname, 'analytics-sender.js');
+        const forked = fork(file, { silent: true }); // switch to `false` to debug the child
+        // console.log('sending', this.toObject()); // un-comment to see the data sent to Analytics
+        forked.send(this.toObject());
+        forked.on('message', () => {
+          // makes sure the data has been sent to the child.
+          // without it, when the message is large, it exits before the child got the complete message
+          resolve();
+        });
+        forked.on('error', (err) => {
+          reject(err);
+        });
+      } else {
+        resolve();
+      }
+    });
   }
 
   static setError(level: string = LEVEL.ERROR, err: Error): void {
@@ -140,6 +169,9 @@ class Analytics {
     this.success = false;
   }
 
+  /**
+   * eventually goes to the "ADDITIONAL DATA" section in Sentry
+   */
   static setExtraData(key, value) {
     this.extra[key] = value;
   }

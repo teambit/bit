@@ -1,6 +1,6 @@
 import R from 'ramda';
 import { expect } from 'chai';
-import Version from '../../../src/scope/models/version';
+import Version from '../../scope/models/version';
 import versionFixture from '../../../fixtures/version-model-object.json';
 import versionWithDepsFixture from '../../../fixtures/version-model-extended.json';
 

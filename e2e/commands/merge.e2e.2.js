@@ -5,7 +5,8 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
-import { ComponentNotFound } from '../../src/scope/exceptions';
+import { removeChalkCharacters } from '../../src/utils';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -16,7 +17,7 @@ const barFooV4 = "module.exports = function foo() { return 'got foo v4'; };";
 const successOutput = 'successfully merged components';
 // eslint-disable-next-line import/prefer-default-export
 export const FileStatusWithoutChalk = R.fromPairs(
-  Object.keys(FileStatus).map(status => [status, Helper.removeChalkCharacters(FileStatus[status])])
+  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
 );
 
 describe('bit merge command', function () {
@@ -31,7 +32,7 @@ describe('bit merge command', function () {
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
       const mergeFunc = () => helper.runCmd('bit merge 1.0.0 utils/non-exist');
-      const error = new ComponentNotFound('utils/non-exist');
+      const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(mergeFunc, error);
     });
   });
@@ -47,7 +48,7 @@ describe('bit merge command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllWithoutMessage('', '0.0.5');
+        helper.tagAllComponents('', '0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
@@ -76,12 +77,12 @@ describe('bit merge command', function () {
       helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
       helper.createComponentBarFoo(fixtures.barFooFixtureV2);
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       localScope = helper.cloneLocalScope();
     });
     it('as an intermediate step, make sure the dependencies are correct', () => {
@@ -239,8 +240,8 @@ describe('bit merge command', function () {
             expect(tagOutput).to.have.string('error found while parsing the file');
           });
           it('bit tag should tag the component when --ignore-unresolved-dependencies flag is used', () => {
-            const tagOutput = helper.tagAllWithoutMessage('--ignore-unresolved-dependencies');
-            expect(tagOutput).to.have.string('1 components tagged');
+            const tagOutput = helper.tagAllComponents('--ignore-unresolved-dependencies');
+            expect(tagOutput).to.have.string('1 component(s) tagged');
           });
         });
         describe('when using --ours flag', () => {
@@ -300,9 +301,9 @@ describe('bit merge command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       localScope = helper.cloneLocalScope();
     });
     describe('using manual strategy', () => {
@@ -479,10 +480,10 @@ describe('bit merge command', function () {
         helper.getClonedLocalScope(localScope);
         helper.createFile('bar', 'foo2.js');
         helper.addComponent('bar/foo2.js', { i: 'bar/foo' });
-        helper.commitAllComponents(); // 0.0.3
+        helper.tagAllComponents(); // 0.0.3
         fs.removeSync(path.join(helper.localScopePath, 'bar/foo2.js'));
         helper.createComponentBarFoo(barFooV4); // change also foo.js so it'll have conflict
-        helper.commitAllComponents(); // 0.0.4 without bar/foo2.js
+        helper.tagAllComponents(); // 0.0.4 without bar/foo2.js
         scopeWithRemovedFile = helper.cloneLocalScope();
       });
       describe('using manual strategy', () => {
@@ -561,9 +562,9 @@ describe('bit merge command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV3);
       localScope = helper.cloneLocalScope();
     });
@@ -662,9 +663,9 @@ describe('bit merge command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV2);
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV1);
         output = helper.mergeVersion('0.0.1', 'bar/foo');
       });

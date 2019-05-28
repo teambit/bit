@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { FileStatusWithoutChalk } from '../commands/merge.e2e.2';
 import { failureEjectMessage } from '../../src/cli/templates/eject-template';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -18,6 +19,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
   describe('when originallySharedDir is the same as dist.entry (src)', () => {
     let originalScope;
     let scopeBeforeExport;
+    let scopeBeforeImport;
     let scopeAfterImport;
     let remoteScope;
     before(() => {
@@ -35,7 +37,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
       helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.runCmd('npm init -y');
       helper.runCmd('npm install chai -D');
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       scopeBeforeExport = helper.cloneLocalScope();
       helper.exportAllComponents();
 
@@ -44,6 +46,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
 
       helper.reInitLocalScope();
       helper.addRemoteScope();
+      scopeBeforeImport = helper.cloneLocalScope();
       helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
       helper.importComponent('string/pad-left -p src/pad-left');
       scopeAfterImport = helper.cloneLocalScope();
@@ -71,7 +74,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const diffOutput = helper.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
       });
       it('should not add both originallySharedDir and dist.entry because they are the same', () => {
@@ -83,7 +86,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.addRemoteScope();
         helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'any' });
         helper.importComponent('string/pad-left -p src/pad-left');
-        helper.commitComponent('string/pad-left', 'msg', '-f');
+        helper.tagComponent('string/pad-left', 'msg', '-f');
         const padLeftModel = helper.catComponent(`${helper.remoteScope}/string/pad-left@latest`);
         padLeftModel.dists.forEach(dist => expect(dist.relativePath.startsWith('src/pad-left')).to.be.true);
       });
@@ -177,7 +180,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         const diffOutput = helper.diff();
         expect(diffOutput).to.have.string("-import isString from '../is-string/is-string';");
 
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         originalScopeWithCustomResolveBeforeExport = helper.cloneLocalScope();
         helper.exportAllComponents();
         originalScopeWithCustomResolve = helper.cloneLocalScope();
@@ -220,7 +223,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           });
           describe('tag and export, then import back to the original repo', () => {
             before(() => {
-              helper.tagAllWithoutMessage();
+              helper.tagAllComponents();
               helper.exportAllComponents();
               helper.getClonedLocalScope(originalScopeWithCustomResolve);
               helper.importComponent('string/pad-left');
@@ -294,13 +297,13 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.getClonedRemoteScope(remoteScope);
         const padLeftPath = path.join(helper.localScopePath, 'src/pad-left/pad-left.js');
         fs.appendFileSync(padLeftPath, '\n console.log("modified");');
-        helper.tagAllWithoutMessage('--force'); // 0.0.2
+        helper.tagAllComponents('--force'); // 0.0.2
         helper.exportAllComponents();
 
         helper.getClonedLocalScope(scopeAfterImport);
         const padLeftPathImported = path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js');
         fs.appendFileSync(padLeftPathImported, '\n console.log("imported-modified");');
-        helper.tagAllWithoutMessage('--force');
+        helper.tagAllComponents('--force');
         try {
           helper.exportAllComponents();
         } catch (err) {
@@ -337,7 +340,7 @@ describe('a flow with two components: is-string and pad-left, where is-string is
           path.join(helper.localScopePath, 'src/pad-left/pad-left/pad-left.js'),
           '\n console.log("modified");'
         );
-        helper.tagAllWithoutMessage('--force');
+        helper.tagAllComponents('--force');
         mergeCommandScope = helper.cloneLocalScope();
       });
       describe('using --manual strategy', () => {
@@ -405,13 +408,133 @@ describe('a flow with two components: is-string and pad-left, where is-string is
         helper.getClonedLocalScope(scopeAfterImport);
         helper.getClonedRemoteScope(remoteScope);
         helper.createFile('src/pad-left', 'pad-left.js', 'modified-pad-left-original');
-        helper.tagAllWithoutMessage('--force'); // 0.0.2
+        helper.tagAllComponents('--force'); // 0.0.2
         helper.checkoutVersion('0.0.1', 'string/pad-left', undefined, path.join(helper.localScopePath, 'src'));
       });
       it('should not change the rootDir in bitMap file', () => {
         const bitMap = helper.readBitMap();
         const padLeft = bitMap[`${helper.remoteScope}/string/pad-left@0.0.1`];
         expect(padLeft.rootDir).to.equal('src/pad-left');
+      });
+    });
+    describe('change the dependency version manually from package.json of the dependent', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterImport);
+        helper.getClonedRemoteScope(remoteScope);
+        helper.importComponent('string/is-string -p src/is-string');
+        helper.tagAllComponents('-s 0.0.2');
+        const padLeftDir = path.join(helper.localScopePath, 'src/pad-left');
+        const packageJson = helper.readPackageJson(padLeftDir);
+        packageJson.dependencies[`@bit/${helper.remoteScope}.string.is-string`] = '0.0.1';
+        helper.writePackageJson(packageJson, padLeftDir);
+      });
+      it('bit diff should show the dependencies difference', () => {
+        const diff = helper.diff();
+        expect(diff).to.have.string(`- [ ${helper.remoteScope}/string/is-string@0.0.2 ]`);
+        expect(diff).to.have.string(`+ [ ${helper.remoteScope}/string/is-string@0.0.1 ]`);
+      });
+      it('should be able to tag the component with no error thrown', () => {
+        const output = helper.tagAllComponents();
+        expect(output).to.has.string('1 component(s) tagged');
+      });
+    });
+    describe('manually remove dependencies', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeExport);
+        helper.getClonedRemoteScope(remoteScope);
+        const overrides = {
+          '*': {
+            dependencies: {
+              'file://src/**/*': '-'
+            }
+          }
+        };
+        helper.addOverridesToBitJson(overrides);
+        helper.tagAllComponents();
+      });
+      it('should save pad-left without is-string dependency', () => {
+        const padLeft = helper.catComponent('string/pad-left@latest');
+        expect(padLeft.dependencies).to.have.lengthOf(0);
+      });
+      it('should save the overrides data in both components', () => {
+        const padLeft = helper.catComponent('string/pad-left@latest');
+        const isString = helper.catComponent('string/is-string@latest');
+        const expectedOverrides = { dependencies: { 'file://src/**/*': '-' } };
+        expect(padLeft.overrides).to.deep.equal(expectedOverrides);
+        expect(isString.overrides).to.deep.equal(expectedOverrides);
+      });
+      describe('import in another workspace', () => {
+        let authorAfterExport;
+        before(() => {
+          helper.exportAllComponents();
+          authorAfterExport = helper.cloneLocalScope();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('string/pad-left');
+        });
+        it('should not show the component as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
+        describe('re-import for author after changing the overrides of the imported', () => {
+          before(() => {
+            const padLeftDir = path.join(helper.localScopePath, 'components/string/pad-left');
+            const packageJson = helper.readPackageJson(padLeftDir);
+            packageJson.bit.overrides.dependencies['@bit/string/*'] = '-';
+            helper.writePackageJson(packageJson, padLeftDir);
+            helper.tagAllComponents('--force'); // must force. the tests fails as the is-string dep is not there
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.getClonedLocalScope(authorAfterExport);
+            helper.addRemoteScope();
+            helper.importComponent('string/pad-left');
+          });
+          it('should write the updated overrides into consumer bit.json', () => {
+            const bitJson = helper.readBitJson();
+            const padLeftComp = `${helper.remoteScope}/string/pad-left`;
+            expect(bitJson.overrides).to.have.property(padLeftComp);
+            expect(bitJson.overrides[padLeftComp]).to.have.property('dependencies');
+            expect(bitJson.overrides[padLeftComp]).to.have.property('env');
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+          });
+          it('should write the compiler and the tester as strings because they dont have special configuration', () => {
+            const bitJson = helper.readBitJson();
+            const padLeftComp = `${helper.remoteScope}/string/pad-left`;
+            expect(bitJson.overrides[padLeftComp].env.compiler).to.deep.equal('bit.envs/compilers/flow@0.0.6');
+            expect(bitJson.overrides[padLeftComp].env.tester).to.deep.equal('bit.envs/testers/mocha@0.0.12');
+          });
+        });
+      });
+    });
+    describe('changing the dist to be outside the components dir after the import', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeImport);
+        helper.getClonedRemoteScope(remoteScope);
+        helper.importComponent('string/pad-left -p src/pad-left');
+        helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      });
+      it('should show a descriptive error when tagging the component', () => {
+        const error = helper.runWithTryCatch('bit tag -a -s 2.0.0');
+        expect(error).to.have.string(
+          'to rebuild the "dist" directory for all components, please run "bit import --merge"'
+        );
+      });
+      describe('running bit import --merge', () => {
+        before(() => {
+          helper.runCmd('bit import --merge');
+        });
+        it('should rebuild the dist directory for all components and dependencies', () => {
+          const distDir = path.join(helper.localScopePath, 'dist');
+          expect(distDir).to.be.a.path();
+          expect(
+            path.join(distDir, 'components/.dependencies/string/is-string', helper.remoteScope, '0.0.1/is-string.js')
+          ).to.be.a.file();
+          expect(path.join(distDir, 'pad-left/pad-left/pad-left.js')).to.be.a.file();
+        });
+        it('should be able to tag the components', () => {
+          const tagCmd = () => helper.tagScope('2.0.0');
+          expect(tagCmd).to.not.throw();
+        });
       });
     });
   });

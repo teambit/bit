@@ -6,8 +6,8 @@ import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import * as fixtures from '../fixtures/fixtures';
-import { ComponentNotFound } from '../../src/scope/exceptions';
 import { failureEjectMessage, successEjectMessage } from '../../src/cli/templates/eject-template';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -22,7 +22,7 @@ describe('bit eject command', function () {
     describe('non existing component', () => {
       it('show an error saying the component was not found', () => {
         const useFunc = () => helper.ejectComponents('utils/non-exist');
-        const error = new ComponentNotFound('utils/non-exist');
+        const error = new MissingBitMapComponent('utils/non-exist');
         helper.expectToThrow(useFunc, error);
       });
     });
@@ -31,7 +31,7 @@ describe('bit eject command', function () {
       before(() => {
         helper.createComponentBarFoo();
         helper.addComponentBarFoo();
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         output = helper.ejectComponents('bar/foo');
       });
       it('should indicate that local components cannot be ejected as it was not exported', () => {
@@ -64,7 +64,6 @@ describe('bit eject command', function () {
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('as author', () => {
@@ -75,7 +74,7 @@ describe('bit eject command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo();
         helper.addComponentBarFoo();
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         remoteScopeName = `${username}.${scopeName}`;
         helper.exportAllComponents(remoteScopeName);
         scopeBeforeEject = helper.cloneLocalScope();
@@ -161,7 +160,7 @@ describe('bit eject command', function () {
           helper.getClonedLocalScope(scopeBeforeEject);
           helper.createFile('bar', 'foo2.js');
           helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           ejectOutput = helper.ejectComponentsParsed('bar/foo bar/foo2');
         });
         it('should indicate that the only exported one has been ejected', () => {
@@ -175,7 +174,7 @@ describe('bit eject command', function () {
           helper.getClonedLocalScope(scopeBeforeEject);
           helper.createFile('bar', 'foo2.js');
           helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           helper.exportAllComponents(`${username}.${scopeName}`);
           helper.createFile('bar', 'foo2.js', 'console.log("v2");'); // modify bar/foo2
           scopeAfterModification = helper.cloneLocalScope();
@@ -202,7 +201,7 @@ describe('bit eject command', function () {
         describe('two components, one exported, one staged', () => {
           before(() => {
             helper.getClonedLocalScope(scopeAfterModification);
-            helper.tagAllWithoutMessage();
+            helper.tagAllComponents();
           });
           describe('eject without --force flag', () => {
             before(() => {
@@ -228,7 +227,6 @@ describe('bit eject command', function () {
         });
     });
     after(() => {
-      helper.destroyEnv();
       return bitsrcTester.deleteScope(scopeName);
     });
     describe('export components with dependencies', () => {
@@ -241,7 +239,7 @@ describe('bit eject command', function () {
         helper.addComponentUtilsIsString();
         helper.createComponentBarFoo(fixtures.barFooFixture);
         helper.addComponentBarFoo();
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         remoteScopeName = `${username}.${scopeName}`;
         helper.exportAllComponents(remoteScopeName);
         helper.createFileOnRootLevel(
@@ -311,7 +309,7 @@ describe('bit eject command', function () {
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             helper.createFile('components/bar/foo/bar/', 'foo.js', fixtures.barFooFixtureV2);
-            helper.tagAllWithoutMessage();
+            helper.tagAllComponents();
             helper.exportAllComponents(remoteScopeName);
             helper.ejectComponents('bar/foo');
             helper.createFileOnRootLevel(
@@ -358,7 +356,7 @@ describe('bit eject command', function () {
             const statusOutput = helper.status();
             expect(statusOutput).to.have.string(statusWorkspaceIsCleanMsg);
             helper.createFile('components/utils/is-string/', 'is-string.js', fixtures.isStringV2);
-            helper.tagAllWithoutMessage();
+            helper.tagAllComponents();
             helper.exportAllComponents(remoteScopeName);
             helper.createFileOnRootLevel(
               'app.js',

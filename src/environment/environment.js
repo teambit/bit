@@ -2,16 +2,14 @@
 import v4 from 'uuid';
 import fs from 'fs-extra';
 import path from 'path';
-import R from 'ramda';
-import { Scope, ComponentWithDependencies } from '../scope';
-import { BitId } from '../bit-id';
+import type { Scope, ComponentWithDependencies } from '../scope';
+import { BitId, BitIds } from '../bit-id';
 import { ISOLATED_ENV_ROOT } from '../constants';
 import { mkdirp, outputFile } from '../utils';
 import logger from '../logger/logger';
 import { Consumer } from '../consumer';
 import type { PathOsBased } from '../utils/path';
-import writeComponents from '../consumer/component-ops/write-components';
-import VersionDependencies from '../scope/version-dependencies';
+import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 
 export type IsolateOptions = {
   writeToPath: ?string, // Path to write the component to (default to the isolatedEnv path)
@@ -44,7 +42,7 @@ export default class Environment {
 
   async create(): Promise<void> {
     await mkdirp(this.path);
-    this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
+    this.consumer = await Consumer.createIsolatedWithExistingScope(this.path, this.scope);
   }
 
   /**
@@ -58,9 +56,15 @@ export default class Environment {
   async isolateComponent(bitId: BitId | string, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     // add this if statement due to extentions calling this api directly with bitId as string with version
     if (typeof bitId === 'string') {
-      bitId = await BitId.parse(bitId, true);
+      bitId = BitId.parse(bitId, true);
     }
-    const componentsWithDependencies = await this.consumer.importComponents([bitId]);
+    const saveDependenciesAsComponents =
+      opts.saveDependenciesAsComponents === undefined ? true : opts.saveDependenciesAsComponents;
+    const componentsWithDependencies = await this.consumer.importComponents(
+      BitIds.fromArray([bitId]),
+      false,
+      saveDependenciesAsComponents
+    );
     const componentWithDependencies = componentsWithDependencies[0];
     const writeToPath = opts.writeToPath || this.path;
     const concreteOpts = {
@@ -72,7 +76,6 @@ export default class Environment {
       writeConfig: opts.conf,
       writeBitDependencies: opts.writeBitDependencies,
       createNpmLinkFiles: opts.createNpmLinkFiles,
-      saveDependenciesAsComponents: opts.saveDependenciesAsComponents !== false,
       writeDists: opts.dist,
       installNpmPackages: !!opts.installPackages, // convert to boolean
       installPeerDependencies: !!opts.installPackages, // convert to boolean
@@ -81,7 +84,8 @@ export default class Environment {
       excludeRegistryPrefix: !!opts.excludeRegistryPrefix,
       silentPackageManagerResult: opts.silentPackageManagerResult
     };
-    await writeComponents(concreteOpts);
+    const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
+    await manyComponentsWriter.writeAll();
     await Environment.markEnvironmentAsInstalled(writeToPath);
     return componentWithDependencies;
   }

@@ -1,10 +1,15 @@
 // @flow
 import R from 'ramda';
+import fs from 'fs-extra';
+import path from 'path';
 import npmClient from '.';
 import loader from '../cli/loader';
 import { BEFORE_INSTALL_NPM_DEPENDENCIES } from '../cli/loader/loader-messages';
-import { ComponentWithDependencies } from '../scope';
-import { Consumer } from '../consumer';
+import type { ComponentWithDependencies } from '../scope';
+import type Consumer from '../consumer/consumer';
+import type { PathAbsolute } from '../utils/path';
+import filterAsync from '../utils/array/filter-async';
+import { PACKAGE_JSON } from '../constants';
 
 export async function installPackages(
   consumer: Consumer,
@@ -14,12 +19,13 @@ export async function installPackages(
   silentPackageManagerResult: boolean = false, // don't shows packageManager results at all
   installPeerDependencies: boolean = false // also install peer dependencies
 ) {
-  const packageManager = consumer.bitJson.packageManager;
+  const dirsWithPkgJson = await filterDirsWithoutPackageJson(dirs);
+  const packageManager = consumer.config.packageManager;
   const packageManagerArgs = consumer.packageManagerArgs.length
     ? consumer.packageManagerArgs
-    : consumer.bitJson.packageManagerArgs;
-  const packageManagerProcessOptions = consumer.bitJson.packageManagerProcessOptions;
-  const useWorkspaces = consumer.bitJson.useWorkspaces;
+    : consumer.config.packageManagerArgs;
+  const packageManagerProcessOptions = consumer.config.packageManagerProcessOptions;
+  const useWorkspaces = consumer.config.useWorkspaces;
 
   loader.start(BEFORE_INSTALL_NPM_DEPENDENCIES);
 
@@ -33,7 +39,7 @@ export async function installPackages(
     packageManagerArgs,
     packageManagerProcessOptions,
     useWorkspaces,
-    dirs,
+    dirs: dirsWithPkgJson,
     rootDir: consumer.getPath(),
     installRootPackageJson,
     installPeerDependencies,
@@ -52,13 +58,21 @@ export async function installPackages(
   }
 }
 
-export async function installNpmPackagesForComponents(
+export async function installNpmPackagesForComponents({
+  consumer,
+  basePath,
+  componentsWithDependencies,
+  verbose = false,
+  silentPackageManagerResult = false,
+  installPeerDependencies = false
+}: {
   consumer: Consumer,
+  basePath: ?string,
   componentsWithDependencies: ComponentWithDependencies[],
-  verbose: boolean = false,
-  silentPackageManagerResult: boolean = false,
-  installPeerDependencies: boolean = false
-): Promise<*> {
+  verbose: boolean,
+  silentPackageManagerResult?: boolean,
+  installPeerDependencies: boolean
+}): Promise<*> {
   // if dependencies are installed as bit-components, go to each one of the dependencies and install npm packages
   // otherwise, if the dependencies are installed as npm packages, npm already takes care of that
   const componentsWithDependenciesFlatten = R.flatten(
@@ -69,6 +83,12 @@ export async function installNpmPackagesForComponents(
     })
   );
 
-  const componentDirs = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+  const componentDirsRelative = componentsWithDependenciesFlatten.map(component => component.writtenPath);
+  const componentDirsRelativeUniq = R.uniq(componentDirsRelative);
+  const componentDirs = componentDirsRelativeUniq.map(dir => (basePath ? path.join(basePath, dir) : dir));
   return installPackages(consumer, componentDirs, verbose, false, silentPackageManagerResult, installPeerDependencies);
+}
+
+async function filterDirsWithoutPackageJson(dirs: PathAbsolute[]): Promise<PathAbsolute[]> {
+  return filterAsync(dirs, dir => fs.exists(path.join(dir, PACKAGE_JSON)));
 }

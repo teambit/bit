@@ -13,7 +13,7 @@ describe('bit search', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('should find the component in the local scope', () => {
       const output = helper.searchComponent('foo');
@@ -25,7 +25,7 @@ describe('bit search', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.reInitRemoteScope();
       helper.addRemoteScope();
       helper.exportAllComponents();
@@ -47,7 +47,7 @@ describe('bit search', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
     });
     it('Should not search component if bit.json is corrupted', () => {
       helper.corruptBitJson();

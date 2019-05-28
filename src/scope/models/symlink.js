@@ -1,5 +1,5 @@
 /** @flow */
-import { BitObject } from '../objects';
+import BitObject from '../objects/object';
 import { getStringifyArgs } from '../../utils';
 import { BitId } from '../../bit-id';
 

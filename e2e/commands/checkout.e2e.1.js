@@ -4,8 +4,8 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
-import { ComponentNotFound } from '../../src/scope/exceptions';
 import { FileStatusWithoutChalk } from './merge.e2e.2';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -26,7 +26,7 @@ describe('bit checkout command', function () {
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
       const useFunc = () => helper.runCmd('bit checkout 1.0.0 utils/non-exist');
-      const error = new ComponentNotFound('utils/non-exist');
+      const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(useFunc, error);
     });
   });
@@ -41,7 +41,7 @@ describe('bit checkout command', function () {
     });
     describe('after the component was tagged', () => {
       before(() => {
-        helper.tagAllWithoutMessage('', '0.0.5');
+        helper.tagAllComponents('', '0.0.5');
       });
       describe('using a non-exist version', () => {
         it('should show an error saying the version does not exist', () => {
@@ -60,7 +60,7 @@ describe('bit checkout command', function () {
         describe('and tagged again', () => {
           let output;
           before(() => {
-            helper.tagAllWithoutMessage('', '0.0.10');
+            helper.tagAllComponents('', '0.0.10');
             output = helper.runWithTryCatch('bit checkout 0.0.5 bar/foo');
           });
           it('should display a successful message', () => {
@@ -92,15 +92,15 @@ describe('bit checkout command', function () {
               helper.createComponentBarFoo('console.log("modified components");');
             });
             it('should throw an error NewerVersionFound', () => {
-              const commitFunc = () => helper.commitComponent('bar/foo');
+              const tagFunc = () => helper.tagComponent('bar/foo');
               const error = new NewerVersionFound([
                 { componentId: 'bar/foo', currentVersion: '0.0.5', latestVersion: '0.0.10' }
               ]);
-              helper.expectToThrow(commitFunc, error);
+              helper.expectToThrow(tagFunc, error);
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
-              const commitOutput = helper.commitComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(commitOutput).to.have.string('1 components tagged');
+              const tagOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
+              expect(tagOutput).to.have.string('1 component(s) tagged');
             });
           });
         });
@@ -117,12 +117,12 @@ describe('bit checkout command', function () {
       helper.addComponentUtilsIsString();
       helper.createComponentBarFoo(fixtures.barFooFixture);
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
 
       helper.createFile('utils', 'is-type.js', fixtures.isTypeV2);
       helper.createFile('utils', 'is-string.js', fixtures.isStringV2);
       helper.createComponentBarFoo(fixtures.barFooFixtureV2);
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       localScope = helper.cloneLocalScope();
     });
     describe('as authored', () => {
@@ -346,10 +346,10 @@ describe('bit checkout command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar', { i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
 
       helper.checkoutVersion('0.0.1', 'bar/foo');
     });
@@ -371,9 +371,9 @@ describe('bit checkout command', function () {
       helper.reInitLocalScope();
       helper.createComponentBarFoo(barFooV1);
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV2);
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.createComponentBarFoo(barFooV3);
       localScope = helper.cloneLocalScope();
     });
@@ -551,9 +551,9 @@ describe('bit checkout command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV2);
-        helper.commitComponentBarFoo();
+        helper.tagComponentBarFoo();
         helper.createComponentBarFoo(barFooV1);
         output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
@@ -579,8 +579,8 @@ describe('bit checkout command', function () {
         helper.reInitLocalScope();
         helper.createComponentBarFoo(barFooV1);
         helper.addComponentBarFoo();
-        helper.commitComponentBarFoo();
-        helper.commitComponent('bar/foo --force');
+        helper.tagComponentBarFoo();
+        helper.tagComponent('bar/foo --force');
         helper.createComponentBarFoo(barFooV2);
         output = helper.checkoutVersion('0.0.1', 'bar/foo');
       });
@@ -611,7 +611,7 @@ describe('bit checkout command', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.tagScope('0.0.5');
       helper.exportAllComponents();
 
@@ -640,9 +640,9 @@ describe('bit checkout command', function () {
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
 
-      helper.commitAllComponents('v1', '-s 0.0.1');
-      helper.commitAllComponents('v2', '-s 0.0.2');
-      helper.commitComponent('bar/foo2', 'v3', '0.0.3 -f');
+      helper.tagAllComponents('-m v1 -s 0.0.1');
+      helper.tagAllComponents('-m v2 -s 0.0.2');
+      helper.tagComponent('bar/foo2', 'v3', '0.0.3 -f');
       localScope = helper.cloneLocalScope();
     });
     describe('checkout all to a specific version', () => {
@@ -759,6 +759,43 @@ describe('bit checkout command', function () {
         const diffOutput = helper.runCmd('bit diff bar/foo');
         expect(diffOutput).to.have.string('no diff');
       });
+    });
+  });
+  describe('checkout with latest --all when multiple components have conflicts', () => {
+    let output;
+    let scopeBeforeModified;
+    // for some wierd reason, the bug related to this test was happening when it's 5 components.
+    // tried with 10 and 20 and it didn't happen. probably related to the implementation of
+    // `Promise.all` somehow. also, with 5 components, it was happening in about 30% of the times.
+    const numOfComponents = 5;
+    before(() => {
+      helper.reInitLocalScope();
+      for (let index = 0; index < numOfComponents; index += 1) {
+        helper.createFile('bar', `foo${index}.js`, barFooV1);
+      }
+      helper.addComponent('bar/*');
+      helper.tagAllComponents();
+      for (let index = 0; index < numOfComponents; index += 1) {
+        helper.createFile('bar', `foo${index}.js`, barFooV2);
+      }
+      helper.tagAllComponents();
+      helper.checkout('0.0.1 --all');
+      for (let index = 0; index < numOfComponents; index += 1) {
+        helper.createFile('bar', `foo${index}.js`, barFooV3);
+      }
+      // intermediate step, make sure it shows as modified
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput).to.have.string('modified');
+      scopeBeforeModified = helper.cloneLocalScope();
+    });
+    it('checkout with latest --all should display a successful message', () => {
+      output = helper.checkout('latest --all --theirs');
+      expect(output).to.have.string(successOutput);
+    });
+    it('merge all of them should display a successful message', () => {
+      helper.getClonedLocalScope(scopeBeforeModified);
+      const mergeOutput = helper.mergeVersion('0.0.2', 'foo0 foo1 foo2 foo3 foo4', '--theirs');
+      expect(mergeOutput).to.have.string('successfully merged');
     });
   });
   describe('using a combination of values and flags that are not making sense', () => {

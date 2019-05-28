@@ -45,13 +45,7 @@ export async function removeLocalVersion(
     });
   }
 
-  await Promise.all(versionsToRemove.map(ver => scope.sources.removeVersion(component, ver, false)));
-  await scope.objects.persist();
-
-  if (!component.versionArray.length) {
-    // if all versions were deleted, delete also the component itself from the model
-    await component.remove(scope.objects);
-  }
+  scope.sources.removeComponentVersions(component, versionsToRemove);
 
   return { id, versions: versionsToRemove, component };
 }
@@ -61,7 +55,6 @@ export async function removeLocalVersionsForAllComponents(
   version?: string,
   force?: boolean = false
 ): Promise<untagResult[]> {
-  // $FlowFixMe
   const componentsToUntag = await getComponentsWithOptionToUntag(scope, version);
   return removeLocalVersionsForMultipleComponents(componentsToUntag, version, force, scope);
 }
@@ -72,7 +65,6 @@ export async function removeLocalVersionsForComponentsMatchedByWildcard(
   force?: boolean = false,
   idWithWildcard?: string
 ): Promise<untagResult[]> {
-  // $FlowFixMe
   const candidateComponents = await getComponentsWithOptionToUntag(scope, version);
   const componentsToUntag = idWithWildcard
     ? ComponentsList.filterComponentsByWildcard(candidateComponents, idWithWildcard)

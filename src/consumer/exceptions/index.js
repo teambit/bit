@@ -6,6 +6,7 @@ import DriverNotFound from './driver-not-found';
 import MissingDependencies from './missing-dependencies';
 import NewerVersionFound from './newer-version-found';
 import LoginFailed from './login-failed';
+import ComponentOutOfSync from './component-out-of-sync';
 
 export {
   ConsumerNotFound,
@@ -15,5 +16,6 @@ export {
   DriverNotFound,
   MissingDependencies,
   NewerVersionFound,
-  LoginFailed
+  LoginFailed,
+  ComponentOutOfSync
 };

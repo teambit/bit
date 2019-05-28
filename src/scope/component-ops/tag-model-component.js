@@ -3,11 +3,11 @@ import R from 'ramda';
 import * as RA from 'ramda-adjunct';
 import graphlib, { Graph } from 'graphlib';
 import pMapSeries from 'p-map-series';
-import { Scope } from '..';
-import { Consumer } from '../../consumer';
+import type { Scope } from '..';
+import type Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
-import Component from '../../consumer/component';
-import ModelComponent from '../models/model-component';
+import type Component from '../../consumer/component/consumer-component';
+import type ModelComponent from '../models/model-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -23,6 +23,7 @@ import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
+import ScopeComponentsImporter from './scope-components-importer';
 
 function buildComponentsGraph(components: Component[]) {
   const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
@@ -54,6 +55,7 @@ async function getFlattenedDependencies(
   component: Component,
   graph: Object,
   cache: Object,
+  notFoundDependencies: BitIds,
   prodGraph?: Object
 ): Promise<BitIds> {
   const id = component.id.toString();
@@ -61,15 +63,19 @@ async function getFlattenedDependencies(
   if (!edges) return new BitIds();
   const dependencies = getEdgesWithProdGraph(prodGraph, edges);
   if (!dependencies.length) return new BitIds();
-  const flattenedP = dependencies.map(async (dependency) => {
+  const flattenDependency = async (dependency) => {
     if (cache[dependency]) return cache[dependency];
     // $FlowFixMe if graph doesn't have the node, prodGraph must have it
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
     let versionDependencies;
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(scope);
+    if (notFoundDependencies.has(dependencyBitId)) return [dependencyBitId];
     try {
-      versionDependencies = await scope.importDependencies([dependencyBitId]);
+      versionDependencies = await scopeComponentsImporter.importDependencies(BitIds.fromArray([dependencyBitId]));
     } catch (err) {
       if (err instanceof DependencyNotFound) {
+        notFoundDependencies.push(dependencyBitId);
+        throwWhenDepNotIncluded(component.id, dependencyBitId);
         return [dependencyBitId];
       }
       throw err;
@@ -78,11 +84,18 @@ async function getFlattenedDependencies(
     // Store the flatten dependencies in cache
     cache[dependency] = flattenedDependencies;
     return flattenedDependencies;
-  });
-  const flattened = await Promise.all(flattenedP);
-  const flattenedUnique = BitIds.fromArray(R.flatten(flattened)).getUniq();
+  };
+  const flattened = await pMapSeries(dependencies, flattenDependency);
+  const flattenedUnique = BitIds.uniqFromArray(R.flatten(flattened));
   // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
   return flattenedUnique.removeIfExistWithoutVersion(component.id);
+}
+
+function throwWhenDepNotIncluded(componentId: BitId, dependencyId: BitId) {
+  if (!dependencyId.hasScope() && !dependencyId.hasVersion()) {
+    throw new GeneralError(`fatal: "${componentId.toString()}" has a dependency "${dependencyId.toString()}".
+this dependency was not included in the tag command.`);
+  }
 }
 
 function getEdges(graph: Object, id: BitIdStr): ?(BitIdStr[]) {
@@ -126,6 +139,7 @@ async function setFutureVersions(
     componentsToTag.map(async (componentToTag) => {
       const modelComponent = await scope.sources.findOrAddComponent(componentToTag);
       const version = modelComponent.getVersionToAdd(releaseType, exactVersion);
+      // $FlowFixMe usedVersion is needed only for this, that's why it's not declared on the instance
       componentToTag.usedVersion = componentToTag.version;
       componentToTag.version = version;
     })
@@ -163,6 +177,7 @@ function validateDirManipulation(components: Component[]): void {
     const sharedDir = component.componentFromModel.originallySharedDir;
     const wrapDir = component.componentFromModel.wrapDir;
     const pathWithSharedDir = (pathStr: PathLinux): PathLinux => {
+      // $FlowFixMe componentMap is set here
       if (sharedDir && component.componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
         return pathJoinLinux(sharedDir, pathStr);
       }
@@ -180,6 +195,7 @@ function validateDirManipulation(components: Component[]): void {
     };
     const expectedMainFile = pathAfterDirManipulation(component.componentMap.mainFile);
     throwOnError(expectedMainFile, component.pendingVersion.mainFile);
+    // $FlowFixMe componentMap is set here
     const componentMapFiles = component.componentMap.getAllFilesPaths();
     const componentFiles = component.pendingVersion.files.map(file => file.relativePath);
     componentMapFiles.forEach((file) => {
@@ -229,7 +245,8 @@ export default (async function tagModelComponent({
   const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
-  const autoTagCandidates = await consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
+  const autoTagCandidates = consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
+  // $FlowFixMe unclear error
   const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap
   const autoTagComponentsLoaded = await consumer.loadComponents(autoTagComponents.map(c => c.toBitId()));
@@ -296,6 +313,7 @@ export default (async function tagModelComponent({
   const { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps } = buildComponentsGraph(componentsToTag);
 
   const dependenciesCache = {};
+  const notFoundDependencies = new BitIds();
   const persistComponent = async (consumerComponent: Component) => {
     let testResult;
     if (!skipTests) {
@@ -307,13 +325,15 @@ export default (async function tagModelComponent({
       scope,
       consumerComponent,
       graphDeps,
-      dependenciesCache
+      dependenciesCache,
+      notFoundDependencies
     );
     const flattenedDevDependencies = await getFlattenedDependencies(
       scope,
       consumerComponent,
       graphDevDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const flattenedCompilerDependencies = await getFlattenedDependencies(
@@ -321,6 +341,7 @@ export default (async function tagModelComponent({
       consumerComponent,
       graphCompilerDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     const flattenedTesterDependencies = await getFlattenedDependencies(
@@ -328,6 +349,7 @@ export default (async function tagModelComponent({
       consumerComponent,
       graphTesterDeps,
       dependenciesCache,
+      notFoundDependencies,
       graphDeps
     );
     await scope.sources.addSource({

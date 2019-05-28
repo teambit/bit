@@ -1,5 +1,7 @@
 // @flow
 import execa from 'execa';
+import pMapSeries from 'p-map-series';
+import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -8,6 +10,7 @@ import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
+import { Analytics } from '../analytics/analytics';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -172,18 +175,43 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
     return result;
   };
 
-  return execa(packageManager, ['list', '-j'], { cwd: dir })
-    .then((res) => {
-      const resObject = JSON.parse(res.stdout);
-      const peers = parsePeers(resObject.dependencies);
-      return peers;
-    })
-    .catch((err) => {
-      const resObject = JSON.parse(err.stdout);
-      const peers = parsePeers(resObject.dependencies);
-      return peers;
-    });
+  let npmList;
+  try {
+    npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
+  } catch (err) {
+    if (err.stdout && err.stdout.startsWith('{')) {
+      // it's probably a valid json with errors, that's fine, parse it.
+      npmList = err;
+    } else {
+      logger.error(err);
+      throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
+    }
+  }
+  const npmListObject = await parseNpmListJsonGracefully(npmList.stdout, packageManager);
+  const peers = parsePeers(npmListObject.dependencies);
+  return peers;
 };
+
+async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
+  try {
+    const json = JSON.parse(str);
+    return json;
+  } catch (err) {
+    logger.error(err);
+    if (packageManager === 'npm') {
+      const version = await getNpmVersion();
+      Analytics.setExtraData('npmVersion', version);
+      if (version && semver.gte(version, '5.0.0') && semver.lt(version, '5.1.0')) {
+        // see here for more info about this issue with npm 5.0.0
+        // https://github.com/npm/npm/issues/17331
+        throw new Error(
+          `error: your npm version "${version}" has issues returning json, please upgrade to 5.1.0 or above (npm install -g npm@5.1.0)`
+        );
+      }
+    }
+    throw new Error(`failed parsing the output of npm list due to an error: ${err.message}`);
+  }
+}
 
 /**
  * A wrapper function to call the install
@@ -270,7 +298,7 @@ const installAction = async ({
     }
   }
 
-  const promises = dirs.map(dir =>
+  const installInDir = dir =>
     _installInOneDirectoryWithPeerOption({
       modules,
       packageManager,
@@ -279,10 +307,11 @@ const installAction = async ({
       dir,
       installPeerDependencies,
       verbose
-    })
-  );
+    });
 
-  const promisesResults = await Promise.all(promises);
+  // run npm install for each one of the directories serially, not in parallel. Don’t use Promise.all() here.
+  // running them in parallel result in race condition and random NPM errors. (see https://github.com/teambit/bit/issues/1617)
+  const promisesResults = await pMapSeries(dirs, installInDir);
   return results.concat(R.flatten(promisesResults));
 };
 
@@ -291,7 +320,61 @@ const printResults = ({ stdout, stderr }: { stdout: string, stderr: string }) =>
   console.log(chalk.yellow(stderr)); // eslint-disable-line
 };
 
+async function getNpmVersion(): Promise<?string> {
+  try {
+    const { stdout, stderr } = await execa('npm', ['--version']);
+    if (stdout && !stderr) return stdout;
+  } catch (err) {
+    logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
+}
+
+async function getYarnVersion(): Promise<?string> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
+  }
+  return null;
+}
+
+/**
+ * a situation where rootDir and subDir have package.json, some of the packages may be shared
+ * and some may be conflicted. And the "npm/yarn install" is done from the root dir.
+ * package managers install the shared packages only once in the rootDir.
+ * however, as to the conflicted packages, only npm@5 and above install it in the subDir.
+ * others, install it in the root, which, result in an incorrect package resolution for the subDir.
+ */
+async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): Promise<boolean> {
+  if (packageManager === 'npm') {
+    const version = await getNpmVersion();
+    if (version && semver.gte(version, '5.0.0')) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function getPackageLatestVersion(packageName: string): Promise<?string> {
+  try {
+    const { stdout } = await execa('npm', ['show', packageName, 'version']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb(
+      'npm-client',
+      `can't find ${packageName} version by running npm show ${packageName} version. ${e.message}`
+    );
+  }
+  return null;
+}
+
 export default {
   install: installAction,
-  printResults
+  printResults,
+  isSupportedInstallationOfSubDirFromRoot,
+  getNpmVersion,
+  getYarnVersion,
+  getPackageLatestVersion
 };

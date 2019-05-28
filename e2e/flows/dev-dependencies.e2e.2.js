@@ -17,7 +17,7 @@ describe('dev-dependencies functionality', function () {
     let clonedScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler('bit.envs/compilers/babel');
+      helper.importCompiler('bit.envs/compilers/babel@0.0.20');
       helper.importTester('bit.envs/testers/mocha@0.0.12');
       clonedScope = helper.cloneLocalScope();
     });
@@ -35,7 +35,7 @@ describe('dev-dependencies functionality', function () {
         helper.installNpmPackage('chai', '4.1.2');
         helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         barFoo = helper.catComponent('bar/foo@0.0.1');
       });
       it('should not save the dev-dependencies because they are the same as dependencies', () => {
@@ -92,7 +92,7 @@ describe('foo', () => {
         helper.installNpmPackage('chai', '4.1.2');
         helper.addComponent('bar/foo.js', { i: 'bar/foo', t: 'bar/foo.spec.js' });
         helper.build(); // needed for building the dependencies
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         localScope = helper.cloneLocalScope();
         barFoo = helper.catComponent('bar/foo@0.0.1');
       });
@@ -181,7 +181,7 @@ describe('foo', () => {
         i: 'utils/is-string',
         t: 'utils/is-string-spec.js'
       });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -207,7 +207,7 @@ describe('foo', () => {
       helper.addComponent('bar', { i: 'bar/foo', m: 'bar/foo.js', t: 'bar/foo.spec.js' });
       helper.addComponentUtilsIsString();
       helper.addComponentUtilsIsType();
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       barFoo = helper.catComponent('bar/foo@latest');
 
       // as an intermediate step, make sure barFoo has is-string as a dev dependency only

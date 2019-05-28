@@ -1,15 +1,16 @@
 /** @flow */
 import R from 'ramda';
-import { Dependency } from './';
+import Dependency from './dependency';
 import type { RelativePath } from './dependency';
 import { BitId, BitIds } from '../../../bit-id';
-import Scope from '../../../scope/scope';
+import type Scope from '../../../scope/scope';
 import { isValidPath } from '../../../utils';
 import ValidationError from '../../../error/validation-error';
 import validateType from '../../../utils/validate-type';
 import type { BitIdStr } from '../../../bit-id/bit-id';
 import type { ManipulateDirItem } from '../../component-ops/manipulate-dir';
 import type { PathLinux } from '../../../utils/path';
+import { fetchRemoteVersions } from '../../../scope/scope-remotes';
 
 export default class Dependencies {
   dependencies: Dependency[];
@@ -24,6 +25,20 @@ export default class Dependencies {
 
   get(): Dependency[] {
     return this.dependencies;
+  }
+
+  sort() {
+    this.dependencies.sort((a, b) => {
+      const idA = a.id.toString();
+      const idB = b.id.toString();
+      if (idA < idB) {
+        return -1;
+      }
+      if (idA > idB) {
+        return 1;
+      }
+      return 0;
+    });
   }
 
   getClone(): Dependency[] {
@@ -90,15 +105,15 @@ export default class Dependencies {
     );
   }
 
-  getById(id: BitId): Dependency {
+  getById(id: BitId): ?Dependency {
     return this.dependencies.find(dep => dep.id.isEqual(id));
   }
 
-  getByIdStr(id: BitIdStr): Dependency {
+  getByIdStr(id: BitIdStr): ?Dependency {
     return this.dependencies.find(dep => dep.id.toString() === id);
   }
 
-  getBySourcePath(sourcePath: string): Dependency {
+  getBySourcePath(sourcePath: string): ?Dependency {
     return this.dependencies.find(dependency =>
       dependency.relativePaths.some((relativePath) => {
         return relativePath.sourceRelativePath === sourcePath;
@@ -113,7 +128,7 @@ export default class Dependencies {
   async addRemoteAndLocalVersions(scope: Scope, modelDependencies: Dependencies) {
     const dependenciesIds = this.dependencies.map(dependency => dependency.id);
     const localDependencies = await scope.latestVersions(dependenciesIds);
-    const remoteVersionsDependencies = await scope.fetchRemoteVersions(dependenciesIds);
+    const remoteVersionsDependencies = await fetchRemoteVersions(scope, dependenciesIds);
 
     this.dependencies.forEach((dependency) => {
       const remoteVersionId = remoteVersionsDependencies.find(remoteId =>
@@ -123,8 +138,11 @@ export default class Dependencies {
       const modelVersionId = modelDependencies
         .get()
         .find(modelDependency => modelDependency.id.isEqualWithoutVersion(dependency.id));
+      // $FlowFixMe
       dependency.remoteVersion = remoteVersionId ? remoteVersionId.version : null;
+      // $FlowFixMe
       dependency.localVersion = localVersionId ? localVersionId.version : null;
+      // $FlowFixMe
       dependency.currentVersion = modelVersionId ? modelVersionId.id.version : dependency.id.version;
     });
   }
@@ -155,11 +173,16 @@ export default class Dependencies {
   validate(): void {
     let message = 'failed validating the dependencies.';
     validateType(message, this.dependencies, 'dependencies', 'array');
+    const allIds = this.getAllIds();
     this.dependencies.forEach((dependency) => {
       validateType(message, dependency, 'dependency', 'object');
       if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
       if (!dependency.relativePaths) {
         throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePaths`);
+      }
+      const sameIds = allIds.filterExact(dependency.id);
+      if (sameIds.length > 1) {
+        throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
       }
       const permittedProperties = ['id', 'relativePaths'];
       const currentProperties = Object.keys(dependency);
@@ -201,6 +224,7 @@ export default class Dependencies {
         }
         if (relativePath.importSpecifiers) {
           validateType(message, relativePath.importSpecifiers, 'relativePath.importSpecifiers', 'array');
+          // $FlowFixMe it's already confirmed that relativePath.importSpecifiers is set
           relativePath.importSpecifiers.forEach((importSpecifier) => {
             validateType(message, importSpecifier, 'importSpecifier', 'object');
             if (!importSpecifier.mainFile) {
@@ -221,7 +245,7 @@ export default class Dependencies {
                 .toString();
               if (linkFileProps !== specifierProps) {
                 throw new ValidationError(
-                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${mainFileProps}"`
+                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${linkFileProps}"`
                 );
               }
             }

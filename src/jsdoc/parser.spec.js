@@ -1,13 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import { expect } from 'chai';
-import { parser } from '../../src/jsdoc';
+import { parser } from '../jsdoc';
 
 const fixtures = path.join(__dirname, '../..', 'fixtures', 'jsdoc');
 
 describe('JSDoc Parser', () => {
   describe('parse()', () => {
-    describe('Function Declaration', () => {
+    describe('Function Declaration', function () {
       let doclet;
       before(() => {
         const functionDeclarationFile = path.join(fixtures, 'functionDeclaration.js');
@@ -144,7 +144,8 @@ describe('JSDoc Parser', () => {
           .to.have.property('description')
           .that.equals('Get the y value.');
       });
-      it('should recognize the fromString method as the last doclet', () => {
+      it('should recognize the fromString method as the last doclet', function () {
+        this.timeout(0);
         const doclet = doclets[doclets.length - 1];
         expect(doclet)
           .to.have.property('name')
@@ -352,6 +353,44 @@ describe('JSDoc Parser', () => {
         expect(doclet)
           .to.have.property('description')
           .that.is.equal('Basic accordion component');
+      });
+    });
+
+    describe('React Docs', () => {
+      let doclet;
+      before(() => {
+        const file = path.join(fixtures, 'react-docs.js');
+        doclet = parser(fs.readFileSync(file).toString());
+        expect(doclet).to.be.an('object');
+      });
+      it('should have properties parsed', () => {
+        expect(doclet).to.have.property('properties');
+        expect(doclet.properties)
+          .to.be.an('array')
+          .with.lengthOf(3);
+      });
+      it('should have methods parsed', () => {
+        expect(doclet).to.have.property('methods');
+        expect(doclet.methods)
+          .to.be.an('array')
+          .with.lengthOf(2);
+      });
+      it('should parse the description correctly', () => {
+        expect(doclet)
+          .to.have.property('description')
+          .that.is.equal('Styled button component for the rich and famous!');
+      });
+      it('should parse the examples correctly', () => {
+        expect(doclet)
+          .to.have.property('examples')
+          .that.is.an('array')
+          .with.lengthOf(1);
+      });
+      it('should parse the properties description correctly', () => {
+        expect(doclet)
+          .to.have.property('properties')
+          .that.is.an('array');
+        expect(doclet.properties[0].description).to.equal('Button text.');
       });
     });
   });

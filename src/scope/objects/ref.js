@@ -1,5 +1,5 @@
 /** @flow */
-import Repository from './repository';
+import type Repository from './repository';
 import BitObject from './object';
 
 export default class Ref {
@@ -14,8 +14,8 @@ export default class Ref {
     return this.hash;
   }
 
-  load(repository: Repository): Promise<BitObject> {
-    return repository.findOne(this);
+  load(repository: Repository, throws: boolean = false): Promise<BitObject> {
+    return repository.load(this, throws);
   }
 
   loadSync(repo: Repository, throws: boolean = true): BitObject {

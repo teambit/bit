@@ -3,12 +3,13 @@ import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 
 chai.use(require('chai-fs'));
 
 describe('custom module resolutions', function () {
   this.timeout(0);
-  const helper = new Helper();
+  let helper = new Helper();
   after(() => {
     helper.destroyEnv();
   });
@@ -46,7 +47,7 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();
@@ -62,6 +63,15 @@ describe('custom module resolutions', function () {
         const output = helper.runCmd('bit status');
         expect(output).to.not.have.string('modified');
       });
+      it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        expect(packageJson).to.have.property('bit');
+        expect(packageJson.bit).to.have.property('resolveAliases');
+        expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
+        expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
+          `@bit/${helper.remoteScope}.utils.is-string`
+        );
+      });
       describe('importing the component using isolated environment', () => {
         let isolatePath;
         before(() => {
@@ -73,6 +83,35 @@ describe('custom module resolutions', function () {
           fs.outputFileSync(path.join(isolatePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js', isolatePath);
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+      describe('npm packing the component using an extension npm-pack', () => {
+        let packDir;
+        before(() => {
+          helper.importNpmPackExtension();
+          packDir = path.join(helper.localScopePath, 'pack');
+          helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+        });
+        it('should create the specified directory', () => {
+          expect(packDir).to.be.a.path();
+        });
+        it('should generate .bit.postinstall.js file', () => {
+          expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+        });
+        it('should add the postinstall script to the package.json file', () => {
+          const packageJson = helper.readPackageJson(packDir);
+          expect(packageJson).to.have.property('scripts');
+          expect(packageJson.scripts).to.have.property('postinstall');
+          expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
+        });
+        it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
+          const packageJson = helper.readPackageJson(packDir);
+          expect(packageJson).to.have.property('bit');
+          expect(packageJson.bit).to.have.property('resolveAliases');
+          expect(packageJson.bit.resolveAliases).to.have.property('utils/is-string');
+          expect(packageJson.bit.resolveAliases['utils/is-string']).to.equal(
+            `@bit/${helper.remoteScope}.utils.is-string`
+          );
         });
       });
     });
@@ -111,7 +150,7 @@ describe('custom module resolutions', function () {
       });
       describe('importing the component', () => {
         before(() => {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           // an intermediate step, make sure it saves the customResolvedPaths in the model
           const catComponent = helper.catComponent('bar/foo@latest');
           expect(catComponent).to.have.property('customResolvedPaths');
@@ -149,7 +188,7 @@ describe('custom module resolutions', function () {
         helper.createFile('src/utils', 'is-string.js', isStringFixture);
         helper.createFile('src/bar', 'foo.js', barFooFixture);
         helper.addComponent('src', { i: 'bar/foo', m: 'src/bar/foo.js' });
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.runCmd('bit status');
@@ -184,6 +223,197 @@ describe('custom module resolutions', function () {
         it('should not show the component as modified', () => {
           const output = helper.runCmd('bit status');
           expect(output).to.not.have.string('modified');
+        });
+        describe('npm packing the component using an extension npm-pack', () => {
+          let packDir;
+          before(() => {
+            helper.importNpmPackExtension();
+            packDir = path.join(helper.localScopePath, 'pack');
+            helper.runCmd(`bit npm-pack ${helper.remoteScope}/bar/foo -o -k -d ${packDir}`);
+          });
+          it('should create the specified directory', () => {
+            expect(packDir).to.be.a.path();
+          });
+          it('should generate .bit.postinstall.js file', () => {
+            expect(path.join(packDir, '.bit.postinstall.js')).to.be.a.file();
+          });
+          it('should add the postinstall script to the package.json file', () => {
+            const packageJson = helper.readPackageJson(packDir);
+            expect(packageJson).to.have.property('scripts');
+            expect(packageJson.scripts).to.have.property('postinstall');
+            expect(packageJson.scripts.postinstall).to.equal('node .bit.postinstall.js');
+          });
+          it('npm install should create the custom-resolved dir inside node_modules', () => {
+            helper.runCmd('npm i', packDir);
+            expect(path.join(packDir, 'node_modules/utils/is-string')).to.be.a.file();
+            expect(path.join(packDir, 'node_modules/utils/is-type')).to.be.a.file();
+            expect(() => helper.runCmd(`node ${packDir}/bar/foo.js`)).to.not.throw();
+          });
+          it('should add the resolve aliases mapping into package.json for the pnp feature', () => {
+            const packageJson = helper.readPackageJson(packDir);
+            const packageName = helper.getRequireBitPath('bar', 'foo');
+            expect(packageJson.bit.resolveAliases)
+              .to.have.property('utils/is-string')
+              .that.equal(`${packageName}/utils/is-string.js`);
+            expect(packageJson.bit.resolveAliases)
+              .to.have.property('utils/is-type')
+              .that.equal(`${packageName}/utils/is-type.js`);
+          });
+        });
+      });
+    });
+  });
+  describe('using custom module directory when a component uses an internal file of another component', () => {
+    const npmCiRegistry = new NpmCiRegistry(helper);
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
+      helper.writeBitJson(bitJson);
+      npmCiRegistry.setCiScopeInBitJson();
+      helper.createFile('src/utils', 'is-type.js', '');
+      helper.createFile('src/utils', 'is-type-internal.js', fixtures.isType);
+      helper.addComponent('src/utils/is-type.js src/utils/is-type-internal.js', {
+        i: 'utils/is-type',
+        m: 'src/utils/is-type.js'
+      });
+
+      const isStringFixture =
+        "const isType = require('utils/is-type-internal');\n module.exports = function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('src/utils', 'is-string.js', '');
+      helper.createFile('src/utils', 'is-string-internal.js', isStringFixture);
+      helper.addComponent('src/utils/is-string.js src/utils/is-string-internal.js', {
+        i: 'utils/is-string',
+        m: 'src/utils/is-string.js'
+      });
+
+      const barFooFixture =
+        "const isString = require('utils/is-string-internal');\n module.exports = function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('src/bar', 'foo.js', barFooFixture);
+      helper.addComponent('src/bar/foo.js', { i: 'bar/foo', m: 'src/bar/foo.js' });
+    });
+    it('bit status should not warn about missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.string('missing');
+    });
+    it('bit show should show the dependencies correctly', () => {
+      const output = helper.showComponentParsed('bar/foo');
+      expect(output.dependencies).to.have.lengthOf(1);
+      const dependency = output.dependencies[0];
+      expect(dependency.id).to.equal('utils/is-string');
+      expect(dependency.relativePaths[0].sourceRelativePath).to.equal('src/utils/is-string-internal.js');
+      expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string-internal.js');
+      expect(dependency.relativePaths[0].importSource).to.equal('utils/is-string-internal');
+      expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFoo);
+      });
+      it('should generate the non-relative links correctly', () => {
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+      it('should not show the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.string('modified');
+      });
+      (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
+        before(async () => {
+          await npmCiRegistry.init();
+          helper.importNpmPackExtension();
+          helper.removeRemoteScope();
+          npmCiRegistry.publishComponent('utils/is-type');
+          npmCiRegistry.publishComponent('utils/is-string');
+          npmCiRegistry.publishComponent('bar/foo');
+
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        after(() => {
+          npmCiRegistry.destroy();
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo());`;
+          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+          const result = helper.runCmd('node app.js');
+          expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+    });
+  });
+  describe('using custom module directory when a component uses an internal binary file of the same component', () => {
+    let npmCiRegistry;
+    before(() => {
+      helper = new Helper();
+      npmCiRegistry = new NpmCiRegistry(helper);
+      helper.setNewLocalAndRemoteScopes();
+      const bitJson = helper.readBitJson();
+      bitJson.resolveModules = { modulesDirectories: ['src'] };
+      helper.writeBitJson(bitJson);
+      npmCiRegistry.setCiScopeInBitJson();
+
+      const sourcePngFile = path.join(__dirname, '..', 'fixtures', 'png_fixture.png');
+      const destPngFile = path.join(helper.localScopePath, 'src/assets', 'png_fixture.png');
+      fs.copySync(sourcePngFile, destPngFile);
+      const barFooFixture = "require('assets/png_fixture.png');";
+      helper.createFile('src/bar', 'foo.js', barFooFixture);
+      helper.addComponent('src/bar/foo.js src/assets/png_fixture.png', { i: 'bar/foo', m: 'src/bar/foo.js' });
+    });
+    it('bit status should not warn about missing packages', () => {
+      const output = helper.runCmd('bit status');
+      expect(output).to.not.have.string('missing');
+    });
+    describe('importing the component', () => {
+      before(() => {
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+      });
+      it('should not show the component as modified', () => {
+        const output = helper.runCmd('bit status');
+        expect(output).to.not.have.string('modified');
+      });
+      it('should create a symlink on node_modules pointing to the binary file', () => {
+        const expectedDest = path.join(helper.localScopePath, 'components/bar/foo/node_modules/assets/png_fixture.png');
+        expect(expectedDest).to.be.a.file();
+
+        const symlinkValue = fs.readlinkSync(expectedDest);
+        expect(symlinkValue).to.have.string(path.normalize('components/bar/foo/assets/png_fixture.png'));
+      });
+      (supportNpmCiRegistryTesting ? describe : describe.skip)('when installed via npm', () => {
+        before(async () => {
+          await npmCiRegistry.init();
+          helper.importNpmPackExtension();
+          helper.removeRemoteScope();
+          npmCiRegistry.publishComponent('bar/foo');
+
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        after(() => {
+          npmCiRegistry.destroy();
+        });
+        it('should be able to install the package successfully and generate the symlink to the file', () => {
+          const expectedDest = path.join(
+            helper.localScopePath,
+            `node_modules/@ci/${helper.remoteScope}.bar.foo/node_modules/assets/png_fixture.png`
+          );
+          expect(expectedDest).to.be.a.file();
+
+          const symlinkValue = fs.readlinkSync(expectedDest);
+          expect(symlinkValue).to.be.a.file();
         });
       });
     });
@@ -222,7 +452,7 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
-        helper.tagAllWithoutMessage();
+        helper.tagAllComponents();
         helper.exportAllComponents();
 
         helper.reInitLocalScope();

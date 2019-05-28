@@ -1,33 +1,33 @@
 /** @flow */
 import semver from 'semver';
-import uniqBy from 'lodash.uniqby';
 import { equals, zip, fromPairs, keys, map, prop, forEachObjIndexed, isEmpty, clone } from 'ramda';
 import { Ref, BitObject } from '../objects';
-import { ScopeMeta, Source } from '.';
+import ScopeMeta from './scopeMeta';
+import Source from './source';
 import { VersionNotFound, VersionAlreadyExists } from '../exceptions';
-import { forEach, empty, mapObject, values, diff, filterObject, getStringifyArgs } from '../../utils';
-import Version from './version';
+import { forEach, empty, mapObject, values, filterObject, getStringifyArgs } from '../../utils';
+import type Version from './version';
 import {
   DEFAULT_LANGUAGE,
   DEFAULT_BINDINGS_PREFIX,
   DEFAULT_BIT_RELEASE_TYPE,
-  DEFAULT_BIT_VERSION
+  DEFAULT_BIT_VERSION,
+  COMPILER_ENV_TYPE,
+  TESTER_ENV_TYPE
 } from '../../constants';
 import BitId from '../../bit-id/bit-id';
-import VersionParser from '../../version';
 import ConsumerComponent from '../../consumer/component';
-import Scope from '../scope';
-import Repository from '../objects/repository';
+import type Repository from '../objects/repository';
 import ComponentVersion from '../component-version';
 import { SourceFile, Dist, License } from '../../consumer/component/sources';
 import ComponentObjects from '../component-objects';
 import SpecsResults from '../../consumer/specs-results';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
-import CompilerExtension from '../../extensions/compiler-extension';
-import TesterExtension from '../../extensions/tester-extension';
 import type { ManipulateDirItem } from '../../consumer/component-ops/manipulate-dir';
-import VersionDependencies from '../version-dependencies';
+import versionParser from '../../version/version-parser';
+import ComponentOverrides from '../../consumer/config/component-overrides';
+import { makeEnvFromModel } from '../../extensions/env-factory';
 
 type State = {
   versions?: {
@@ -40,12 +40,12 @@ type State = {
 type Versions = { [string]: Ref };
 
 export type ComponentProps = {
-  scope?: string,
+  scope: ?string,
   name: string,
   versions?: Versions,
-  lang?: string,
-  deprecated?: boolean,
-  bindingPrefix?: string,
+  lang: string,
+  deprecated: boolean,
+  bindingPrefix: string,
   /**
    * @deprecated since 0.12.6. It's currently stored in 'state' attribute
    */
@@ -84,7 +84,7 @@ export default class Component extends BitObject {
     return values(this.versions);
   }
 
-  listVersions(sort: 'ASC' | 'DESC'): string[] {
+  listVersions(sort?: 'ASC' | 'DESC'): string[] {
     const versions = Object.keys(this.versions);
     if (!sort) return versions;
     if (sort === 'ASC') {
@@ -95,7 +95,7 @@ export default class Component extends BitObject {
   }
 
   hasVersion(version: string): boolean {
-    return !!this.versions[version];
+    return Boolean(this.versions[version]);
   }
 
   /**
@@ -253,35 +253,17 @@ export default class Component extends BitObject {
   }
 
   /**
-   * delete all versions objects of the component from the filesystem.
-   * if deepRemove is true, it deletes also the refs associated with the deleted versions.
-   * finally, it deletes the component object itself
-   *
-   * @param {Repository} repo
-   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
-   * @returns {Promise}
-   * @memberof Component
-   */
-  remove(repo: Repository, deepRemove: boolean = false): Promise<boolean[]> {
-    logger.debug(`models.component.remove: removing a component ${this.id()} from a local scope`);
-    const objectRefs = deepRemove ? this.collectExistingRefs(repo, false).filter(x => x) : this.versionArray;
-    const uniqRefs = uniqBy(objectRefs, 'hash');
-    return repo.removeMany(uniqRefs.concat([this.hash()]));
-  }
-
-  /**
    * to delete a version from a component, don't call this method directly. Instead, use sources.removeVersion()
    */
-  async removeVersion(repo: Repository, version: string): Promise<Component> {
-    const objectRefs = this.versions[version];
+  removeVersion(version: string): Ref {
+    const objectRef = this.versions[version];
     delete this.versions[version];
     if (this.state.versions && this.state.versions[version]) delete this.state.versions[version];
-    await repo.removeMany([objectRefs.hash]);
-    return this;
+    return objectRef;
   }
 
   toComponentVersion(versionStr: string): ComponentVersion {
-    const versionNum = VersionParser.parse(versionStr).resolve(this.listVersions());
+    const versionNum = versionParser(versionStr).resolve(this.listVersions());
 
     if (!this.versions[versionNum]) {
       throw new GeneralError(
@@ -318,8 +300,8 @@ export default class Component extends BitObject {
     const distsP = version.dists ? Promise.all(version.dists.map(loadFileInstance(Dist))) : null;
     const scopeMetaP = scopeName ? ScopeMeta.fromScopeName(scopeName).load(repository) : Promise.resolve();
     const log = version.log || null;
-    const compilerP = CompilerExtension.loadFromModelObject(version.compiler, repository);
-    const testerP = TesterExtension.loadFromModelObject(version.tester, repository);
+    const compilerP = makeEnvFromModel(COMPILER_ENV_TYPE, version.compiler, repository);
+    const testerP = makeEnvFromModel(TESTER_ENV_TYPE, version.tester, repository);
     const [files, dists, scopeMeta, compiler, tester] = await Promise.all([
       filesP,
       distsP,
@@ -327,6 +309,8 @@ export default class Component extends BitObject {
       compilerP,
       testerP
     ]);
+
+    const bindingPrefix = this.bindingPrefix === 'bit' ? '@bit' : this.bindingPrefix;
     // when generating a new ConsumerComponent out of Version, it is critical to make sure that
     // all objects are cloned and not copied by reference. Otherwise, every time the
     // ConsumerComponent instance is changed, the Version will be changed as well, and since
@@ -337,12 +321,10 @@ export default class Component extends BitObject {
       version: componentVersion.version,
       scope: this.scope,
       lang: this.lang,
-      bindingPrefix: this.bindingPrefix,
+      bindingPrefix,
       mainFile: version.mainFile || null,
       compiler,
       tester,
-      detachedCompiler: version.detachedCompiler,
-      detachedTester: version.detachedTester,
       dependencies: version.dependencies.getClone(),
       devDependencies: version.devDependencies.getClone(),
       compilerDependencies: version.compilerDependencies.getClone(),
@@ -363,6 +345,7 @@ export default class Component extends BitObject {
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
+      overrides: ComponentOverrides.loadFromScope(version.overrides),
       deprecated: this.deprecated
     });
     if (manipulateDirData) {
@@ -398,11 +381,6 @@ export default class Component extends BitObject {
     const str = JSON.stringify(obj, ...args);
     if (this.validateBeforePersist) this.validateBeforePersisting(str);
     return Buffer.from(str);
-  }
-
-  toVersionDependencies(version: string, scope: Scope, source: string): Promise<VersionDependencies> {
-    const versionComp = this.toComponentVersion(version);
-    return versionComp.toVersionDependencies(scope, source);
   }
 
   /**

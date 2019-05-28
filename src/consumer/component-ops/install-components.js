@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import { linkAllToNodeModules, linkComponentsToNodeModules } from '../../links';
+import { linkAllToNodeModules, NodeModuleLinker } from '../../links';
 import { installPackages } from '../../npm-client/install-packages';
 import { COMPONENT_ORIGINS } from '../../constants';
 import { Consumer } from '..';
@@ -35,5 +35,6 @@ export async function installIds(consumer: Consumer, ids: BitId[], verbose: bool
   const dirs: string[] = components.map(component => component.componentMap.rootDir).filter(dir => dir);
   if (dirs.length) await installPackages(consumer, dirs, verbose);
   Analytics.setExtraData('num_components', components.length);
-  return linkComponentsToNodeModules(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  return nodeModuleLinker.link();
 }

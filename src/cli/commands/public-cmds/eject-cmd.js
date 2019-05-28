@@ -6,7 +6,7 @@ import ejectTemplate from '../../templates/eject-template';
 
 export default class Eject extends Command {
   name = 'eject <id...>';
-  description = 'remove components from the local scope and install them by the NPM client';
+  description = 'replaces the components from the local scope with the corresponding packages';
   alias = 'E';
   opts = [
     ['f', 'force', 'ignore local version. remove the components even when they are staged or modified'],

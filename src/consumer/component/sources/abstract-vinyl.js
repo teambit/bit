@@ -17,6 +17,8 @@ export default class AbstractVinyl extends Vinyl {
   base: PathOsBased;
   path: PathOsBased;
   relative: PathOsBased;
+  override: boolean = true;
+  verbose: boolean = false;
 
   // Update the base path and keep the relative value to be the same
   updatePaths({ newBase, newRelative, newCwd }: { newBase: string, newRelative?: string, newCwd?: string }) {
@@ -26,14 +28,18 @@ export default class AbstractVinyl extends Vinyl {
     this.path = path.join(this.base, relative);
   }
 
-  async write(writePath?: string, force?: boolean = true, verbose: boolean = false): Promise<?string> {
+  async write(
+    writePath?: string,
+    override?: boolean = this.override,
+    verbose?: boolean = this.verbose
+  ): Promise<?string> {
     const filePath = writePath || this.path;
-    const msg = _verboseMsg(filePath, force);
+    const msg = _verboseMsg(filePath, override);
     if (verbose) {
       console.log(msg); // eslint-disable-line no-console
     }
     logger.debug(msg);
-    if (!force && fs.existsSync(filePath)) return null;
+    if (!override && fs.existsSync(filePath)) return null;
     await fs.outputFile(filePath, eol.auto(this.contents, this.relative));
     return filePath;
   }
@@ -69,6 +75,14 @@ export default class AbstractVinyl extends Vinyl {
   toSourceAsLinuxEOL(): Source {
     // $FlowFixMe
     return Source.from(eol.lf(this.contents, this.relative));
+  }
+
+  async _getStatIfFileExists(): Promise<?fs.Stats> {
+    try {
+      return await fs.lstat(this.path);
+    } catch (err) {
+      return null; // probably file does not exist
+    }
   }
 }
 

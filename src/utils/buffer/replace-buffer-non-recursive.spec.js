@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import replaceBuffer from '../../../src/utils/buffer/replace-buffer-non-recursive';
+import replaceBuffer from '../../utils/buffer/replace-buffer-non-recursive';
 
 describe('ReplaceBuffer', () => {
   it('should replace an old string with a new string', () => {

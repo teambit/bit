@@ -32,8 +32,8 @@ describe('bit build', function () {
       });
       it('should successfully import and build using the babel compiler', () => {
         const buildOutput = helper.build();
-        expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js.map'));
-        expect(buildOutput).to.have.string(path.normalize('local/dist/bar/foo.js'));
+        expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js.map'));
+        expect(buildOutput).to.have.string(path.normalize('dist/bar/foo.js'));
       });
       describe('when an exception is thrown during the build', () => {
         before(() => {
@@ -55,7 +55,7 @@ describe('bit build', function () {
         const compilerFolderFullPath = path.join(helper.localScopePath, '.bit', 'components', 'compilers');
         const distFileFullPath = path.join(distFolderFullPath, 'bar', 'foo.js');
         before(() => {
-          helper.tagAllWithoutMessage();
+          helper.tagAllComponents();
           const output = helper.status();
           // Make sure there is no modified components
           expect(output).to.not.contain.string('modified');
@@ -82,6 +82,15 @@ describe('bit build', function () {
             expect(distFileFullPath).to.be.a.file();
             expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
           });
+          it('should not take dist files from cache with -c', () => {
+            helper.deleteFile(compilerFolder);
+            const output = helper.buildComponentWithOptions('bar/foo', { c: '' });
+            expect(output).to.have.string(
+              `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
+            );
+            expect(distFileFullPath).to.be.a.file();
+            expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
+          });
         });
         describe('build all components', () => {
           it('should take dist files from cache (models)', () => {
@@ -97,6 +106,14 @@ describe('bit build', function () {
             expect(distFileFullPath).to.be.a.file();
             expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
           });
+          it('should not take dist files from cache with -c', () => {
+            const output = helper.buildComponentWithOptions('', { c: '' });
+            expect(output).to.have.string(
+              `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
+            );
+            expect(distFileFullPath).to.be.a.file();
+            expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
+          });
         });
       });
     });
@@ -104,7 +121,11 @@ describe('bit build', function () {
   describe('as imported', () => {
     let localScope;
     before(() => {
-      helper.tagAllWithoutMessage();
+      helper.setNewLocalAndRemoteScopes();
+      helper.importCompiler();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -124,6 +145,10 @@ describe('bit build', function () {
       it('should indicate that compiler was installed', () => {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
+      });
+      it('should not create an index.js file because package.json file already exists', () => {
+        const indexJs = path.join(helper.localScopePath, 'components/bar/foo/index.js');
+        expect(indexJs).to.not.be.a.path();
       });
       describe('changing dist target', () => {
         let rebuildOutput;

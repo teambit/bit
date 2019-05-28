@@ -1,7 +1,8 @@
 /** @flow */
 import R from 'ramda';
-import { BitId } from '../bit-id';
-import { forEach, getLatestVersionNumber } from '../utils';
+import BitId from '../bit-id/bit-id';
+import forEach from '../utils/object/foreach';
+import getLatestVersionNumber from '../utils/resolveLatestVersion';
 
 export default class BitIds extends Array<BitId> {
   serialize(): string[] {
@@ -45,8 +46,28 @@ export default class BitIds extends Array<BitId> {
     return this.find(id => id.hasSameName(bitId));
   }
 
-  getUniq(): BitIds {
-    return BitIds.fromArray(R.uniqBy(JSON.stringify, this));
+  searchWithoutScope(bitId: BitId): ?BitId {
+    return this.find(id => id.hasSameName(bitId) && id.hasSameVersion(bitId));
+  }
+
+  searchStrWithoutVersion(idStr: string): ?BitId {
+    return this.find(id => id.toStringWithoutVersion() === idStr);
+  }
+
+  searchStrWithoutScopeAndVersion(idStr: string): ?BitId {
+    return this.find(id => id.toStringWithoutScopeAndVersion() === idStr);
+  }
+
+  filterExact(bitId: BitId): BitId[] {
+    return this.filter(id => id.hasSameName(bitId) && id.hasSameScope(bitId) && id.hasSameVersion(bitId));
+  }
+
+  filterWithoutVersion(bitId: BitId): BitId[] {
+    return this.filter(id => id.hasSameName(bitId) && id.hasSameScope(bitId));
+  }
+
+  filterWithoutScopeAndVersion(bitId: BitId): BitId[] {
+    return this.filter(id => id.hasSameName(bitId));
   }
 
   removeIfExistWithoutVersion(bitId: BitId): BitIds {
@@ -77,6 +98,11 @@ export default class BitIds extends Array<BitId> {
 
   static fromArray(bitIds: BitId[]): BitIds {
     return new BitIds(...bitIds);
+  }
+
+  static uniqFromArray(bitIds: BitId[]): BitIds {
+    const uniq = R.uniqBy(JSON.stringify, bitIds);
+    return BitIds.fromArray(uniq);
   }
 
   clone(): BitIds {

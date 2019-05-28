@@ -2,16 +2,18 @@
 import path from 'path';
 import semver from 'semver';
 import R from 'ramda';
-import { Version, ModelComponent } from '../../scope/models';
-import { Scope } from '../../scope';
+import type Version from '../../scope/models/version';
+import ModelComponent from '../../scope/models/model-component';
+import Scope from '../../scope/scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
-import logger from '../../logger/logger';
 import BitMap from '../bit-map/bit-map';
-import Consumer from '../consumer';
+import type Consumer from '../consumer';
 import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
+import { fetchRemoteVersions } from '../../scope/scope-remotes';
+import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -27,7 +29,6 @@ export default class ComponentsList {
   scope: Scope;
   bitMap: BitMap;
   _fromFileSystem: { [cacheKey: string]: Component[] } = {};
-  _fromBitMap: { [cacheKey: string]: BitId[] } = {};
   _fromObjectsIds: BitId[];
   _modelComponents: ModelComponent[];
   _invalidComponents: string[];
@@ -73,7 +74,7 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are in the model (either, committed from a local scope or imported), and were
+   * Components that are in the model (either, tagged from a local scope or imported), and were
    * changed in the file system
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
@@ -129,7 +130,7 @@ export default class ComponentsList {
   }
 
   /**
-   * Components that are registered in bit.map but have never been committed
+   * Components that are registered in bit.map but have never been tagged
    *
    * @param {boolean} [load=false] - Whether to load the component (false will return only the id)
    * @return {Promise.<string[] | Component[]>}
@@ -172,25 +173,25 @@ export default class ComponentsList {
   async listCommitPendingOfAllScope(
     version: string,
     includeImported: boolean = false
-  ): Promise<{ commitPendingComponents: BitId[], warnings: string[] }> {
-    let commitPendingComponents;
-    commitPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
+  ): Promise<{ tagPendingComponents: BitId[], warnings: string[] }> {
+    let tagPendingComponents;
+    tagPendingComponents = this.idsFromBitMap(COMPONENT_ORIGINS.AUTHORED);
     if (includeImported) {
       const importedComponents = this.idsFromBitMap(COMPONENT_ORIGINS.IMPORTED);
-      commitPendingComponents = commitPendingComponents.concat(importedComponents);
+      tagPendingComponents = tagPendingComponents.concat(importedComponents);
     }
-    const commitPendingComponentsLatest = await this.scope.latestVersions(commitPendingComponents, false);
+    const tagPendingComponentsLatest = await this.scope.latestVersions(tagPendingComponents, false);
     const warnings = [];
-    commitPendingComponentsLatest.forEach((componentId) => {
+    tagPendingComponentsLatest.forEach((componentId) => {
       if (semver.gt(componentId.version, version)) {
         warnings.push(`warning: ${componentId.toString()} has a version greater than ${version}`);
       }
     });
-    return { commitPendingComponents, warnings };
+    return { tagPendingComponents, warnings };
   }
 
   /**
-   * New and modified components are commit pending
+   * New and modified components are tag pending
    *
    * @return {Promise<string[]>}
    */
@@ -212,7 +213,7 @@ export default class ComponentsList {
   async listExportPendingComponents(): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
     // $FlowFixMe
-    return Promise.all(exportPendingComponentsIds.map(id => this.scope.sources.get(id)));
+    return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
@@ -256,13 +257,9 @@ export default class ComponentsList {
     return this._invalidComponents;
   }
 
-  getFromBitMap(origin?: string): BitId[] {
-    const cacheKeyName = origin || 'all';
-    if (!this._fromBitMap[cacheKeyName]) {
-      const originParam = origin ? [origin] : undefined;
-      this._fromBitMap[cacheKeyName] = this.bitMap.getAllBitIds(originParam);
-    }
-    return this._fromBitMap[cacheKeyName];
+  getFromBitMap(origin?: string): BitIds {
+    const originParam = origin ? [origin] : undefined;
+    return this.bitMap.getAllBitIds(originParam);
   }
 
   getPathsForAllFilesOfAllComponents(origin?: string, absolute: boolean = false): string[] {
@@ -295,7 +292,7 @@ export default class ComponentsList {
     }));
     const componentsIds = listScopeResults.map(result => result.id);
     if (showRemoteVersion) {
-      const latestVersionsInfo: BitId[] = await this.scope.fetchRemoteVersions(componentsIds);
+      const latestVersionsInfo: BitId[] = await fetchRemoteVersions(this.scope, componentsIds);
       latestVersionsInfo.forEach((componentId) => {
         const listResult = listScopeResults.find(c => c.id.isEqualWithoutVersion(componentId));
         if (!listResult) throw new Error(`failed finding ${componentId.toString()} in componentsIds`);
@@ -355,34 +352,21 @@ export default class ComponentsList {
   }
 
   static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
-    if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
     const getBitId = (component): BitId => {
       if (R.is(ModelComponent, component)) return component.toBitId();
       if (R.is(Component, component)) return component.id;
       if (R.is(BitId, component)) return component;
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
-    const getRegex = (idWithWildcard) => {
-      if (!R.is(String, idWithWildcard)) {
-        throw new TypeError(
-          `filterComponentsByWildcard expects idWithWildcard to be string, got ${typeof idWithWildcard}`
-        );
-      }
-      const rule = idWithWildcard.replace(/\*/g, '.*');
-      return new RegExp(`^${rule}$`);
-    };
-    const regexPatterns = idsWithWildcard.map(id => getRegex(id));
-    const isNameMatchByWildcard = (name): boolean => {
-      return regexPatterns.some(regex => regex.test(name));
-    };
     // $FlowFixMe
     return components.filter((component) => {
       const bitId: BitId = getBitId(component);
-      return (
-        isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||
-        isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
-      );
+      return isBitIdMatchByWildcards(bitId, idsWithWildcard);
     });
+  }
+
+  static getUniqueComponents(components: Component[]): Component[] {
+    return R.uniqBy(component => JSON.stringify(component.id), components);
   }
 
   listComponentsByIdsWithWildcard(idsWithWildcard: string[]): BitId[] {

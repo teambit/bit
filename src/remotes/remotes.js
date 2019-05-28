@@ -6,8 +6,8 @@ import { forEach, prependBang, flatten } from '../utils';
 import { PrimaryOverloaded } from './exceptions';
 import ComponentObjects from '../scope/component-objects';
 import remoteResolver from './remote-resolver/remote-resolver';
-import { GlobalRemotes } from '../global-config';
-import Scope from '../scope/scope';
+import GlobalRemotes from '../global-config/global-remotes';
+import type Scope from '../scope/scope';
 import logger from '../logger/logger';
 
 export default class Remotes extends Map<string, Remote> {
@@ -52,7 +52,7 @@ export default class Remotes extends Map<string, Remote> {
       );
     });
 
-    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps}) on a remote`);
+    logger.debug(`[-] Running fetch (withoutDeps: ${withoutDeps.toString()}) on a remote`);
     const bits = await Promise.all(promises);
     logger.debug('[-] Returning from a remote');
     return flatten(bits);

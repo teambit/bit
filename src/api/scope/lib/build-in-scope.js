@@ -1,5 +1,6 @@
 /** @flow */
-import { loadConsumer, Consumer } from '../../../consumer';
+import { loadConsumer } from '../../../consumer';
+import type Consumer from '../../../consumer/consumer';
 import { loadScope, Scope } from '../../../scope';
 import { ConsumerNotFound } from '../../../consumer/exceptions';
 import logger from '../../../logger/logger';
@@ -19,7 +20,7 @@ export default function buildInScope({
   directory: ?string,
   keep: boolean
 }) {
-  logger.debug(`buildInScope, id: ${id}, scopePath: ${scopePath}`);
+  logger.debugAndAddBreadCrumb('buildInScope', 'id: {id}, scopePath: {scopePath}', { id, scopePath });
   async function loadFromScope(initialError: ?Error) {
     const getScope = async () => {
       try {

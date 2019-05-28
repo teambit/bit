@@ -1,7 +1,8 @@
 /** @flow */
-import { identityFile } from '../../utils';
+import identityFile from '../../utils/ssh/identity-file';
 
 /**
+ * // TODO: FIX if this function is used. identityFile() is now async.
  * schema for passphrase prompt on SSH.
  */
 export default {

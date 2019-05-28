@@ -1,6 +1,6 @@
 // @flow
 import chalk from 'chalk';
-import ConsumerComponent from '../../consumer/component/consumer-component';
+import type ConsumerComponent from '../../consumer/component/consumer-component';
 
 export const componentIssuesLabels = {
   missingPackagesDependenciesOnFs:
@@ -22,7 +22,7 @@ export function getInvalidComponentLabel(error: Error) {
       return 'main-file was removed (use "bit add" with "--main" and "--id" flags to add a main file)';
     case 'MissingFilesFromComponent':
     case 'ComponentNotFoundInPath':
-      return 'component files were deleted (use "bit remove [component_id]" to remove the component from your workspace)';
+      return 'component files were deleted (use "bit remove [component_id]" or "bit untrack [component_id]" to remove the component from your workspace)';
     case 'ExtensionFileNotFound': // $FlowFixMe error.path is set for ExtensionFileNotFound
       return `extension file is missing at ${chalk.bold(error.path)}`;
     default:

@@ -7,152 +7,217 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- fix running `bit link` from an inner directory for author
+## [14.1.2-dev.4] - 2019-05-28
 
-## [13.0.6-dev.31] - 2018-12-16
+- restore node 6 support
 
-- fix `bit add` to add the correct letter case even when `--main` or `--test` flags entered with incorrect case
-- fix errors when component files require each other using module path
-- add new bit watch command
-- update tty-table, flow-coverage-report and mocha-appveyor-reporter for security reasons
+## [14.1.2-dev.3] - 2019-05-28
 
-## [13.0.5-dev.30 - 2018-11-11]
+- improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
+- add bit version validation to `bit doctor` command
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
+- add suggestion to run `bit doctor` on various errors
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
+- avoid generating links of devDependencies when installing component as packages (#1614)
 
-- support ids with wildcards (e.g. `bit tag "utils/*"`) for the following commands: `tag`, `untag`, `remove`, `untrack`, `checkout`, `merge`, `diff` and `export`.
-- update bit-javascript to support mix syntax of typescript and javascript inside .ts file
+## [14.1.2-dev.2] - 2019-05-20
 
-## [13.0.5-dev.29 - 2018-11-07]
+- add metadata to `bit doctor` output
+- add validation for npm executable on `bit doctor`
+- add validation for yarn executable on `bit doctor`
+- update `bit add` help message with instructions for using glob patterns with `--tests`
 
-- shorten the generated component ID to the minimum possible
+## [14.1.2-dev.1] - 2019-05-20
 
-## [13.0.5-dev.28 - 2018-11-06]
+- ignore `import`/`require` statements from CDN (http/https)
+- avoid generating package.json inside node_modules for author when one of the component files is package.json
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
+- rewrite dependencies when installed as components even when exist to rebuild their dist directory
+- show a descriptive error when the dist directory configured to be outside the components dir and is missing files
 
-- fix dev-dependency that requires prod-dependency to include the dependency in the flattenedDevDependencies array
-- do not delete isolated environment when running ci-update with keep flag and it throws exception
-- throw an exception from the server if a client has an older major version
+## [14.1.1] - 2019-05-16
 
-## [13.0.5-dev.27 - 2018-10-31]
+### Bug fixes
 
-- fix import of components with circular dependencies
-- fix bug with bit show when the remote component has config file
+- fix bit build to not generate `index.js` files when `package.json` file already exists
+- prevent overwriting author files by not writing auto-generated content on symlink files (#1628)
+- avoid changing the local version of a component to the latest when exporting an older version
+- fix post-receive-hook to send all exported versions and not only the latest
+- fix dependency resolution to identify link (proxy) files correctly
+- fix bit status to not show a component as modified after tag when the version is modified in the dependent package.json
+- fix "npm ERR! enoent ENOENT" errors when importing/installing multiple components
+- fix dependency value in the dependent package.json to include the path when importing them both in the same command
+- fix "EEXIST: file already exists" error when running `bit link` or `bit install` and the dist is outside the component directory
+- fix `bit add` to ignore directories when their files are added (#1406)
 
-## [13.0.5-dev.26 - 2018-10-29]
+## [[14.1.0] - 2019-05-01](https://github.com/teambit/bit/releases/tag/v14.1.0)
 
-- fix link content generation for authored components on bit install
-- React docs support
+### New
 
-## [13.0.5-dev.25 - 2018-10-23]
+- [enable manual manipulation for component dependency resolution and environment configuration using `overrides`](http://docs.bit.dev/docs/conf-bit-json.html#overrides).
 
-- fix context for testers during ci-update
+### Changes
 
-## [13.0.5-dev.24 - 2018-10-23]
+- [moving Bit configuration to `package.json`.](http://docs.bit.dev/docs/initializing-bit.html#bit-config)
+- improve performance of `bit import` by reducing memory consumption and using more cache
+- reintroduce `-c` alias for `--no-cache` flag in `bit build` command
+- improve authentication error message to clearly indicate the various strategies failures
+- add authentication fallback to ssh-key in case the ssh-agent is enabled but failed to authenticate
+- avoid installing "undefined" npm package when importing authored components
+- improve Bit load time by changing bit-javascript to use lazy loading
+- remove `dependencies` property from workspace `bit.json`.
+- improve `bit show` to display class properties
+- replace the cache mechanism from roadrunner to v8-compile-cache
 
-- fix loading extension programmatically
+### Bug fixes
 
-## [13.0.5-dev.23 - 2018-10-22]
+- fix "EMFILE: too many open files" and "JavaScript heap out of memory" errors on `bit import`
+- fix output for `bit list -j` (remove chalk characters and improve format)
+- avoid reporting errors on components with dynamic import statements (#1554)
+- fix tagging imported components to not loose `package.json` properties
+- fix symlink generation when a binary file is required from another file within the same component using custom resolve module
+- fix `bit status` to not show the component as modified when dependencies have different order
+- show a descriptive error when user try to export components with private dependencies to collection under another owner
+- show a descriptive error when a version object is missing
 
-- fix missing context in getDynamicPackageDependencies
-- fix bug with bit show when scope path provided
+### Experimental
 
-## [13.0.5-dev.22 - 2018-10-22]
+- `bit doctor` command and APIs to run diagnosis on a workspace
 
-- return status code 1 when bit test has failing tests
+## [14.0.6] - 2019-04-16
 
-## [13.0.5-dev.21 - 2018-10-21]
+- fix symlink to binary (or unsupported) files dependencies when installed via npm and have dists
+- fix dependencies version resolution from package.json to support versions with range
 
-- update bit-javascript to support Vue files with typescript
-- improve `bit list` performance by retrieving only the information needed
-- suppress an exception of directory-is-empty when adding multiple components and some of them are empty, show a warning instead
-- improve "missing a main file" error when adding multiple components to print the problematic components
+## [14.0.5] - 2019-04-07
 
-## [13.0.5-dev.16 - 2018-10-14]
+- fix `remove` command to not delete dependencies files from the scope as they might belong to other components
+- fix symlink to binary (or unsupported) files dependencies when installed via npm
 
-- improve `bit export` performance by avoid loading components from the filesystem to generate links
 
-## [13.0.5-dev.15 - 2018-10-11]
+## [14.0.4] - 2019-03-18
 
-- fix errors "JavaScript heap out of memory" and "Error: EMFILE: too many open files" when exporting a huge number of components
+- replace default bitsrc.io domain to bit.dev
 
-## [13.0.5-dev.14 - 2018-10-11]
+## [14.0.3] - 2019-03-12
 
-- improve `bit export` performance by avoid calling some readSync methods when not needed
-- improve performance when converting to objects and validating components
+- fix importing components when one file is a prefix of the other in the same directory
 
-## [13.0.5-dev.13 - 2018-10-10]
+## [14.0.2] - 2019-03-10
 
-- improve `bit export` performance by removing obsolete steps
-- improve overall performance by caching resolved dependencies
+- prevent `bit init` from initialize a non-empty scope when `.bitmap` was deleted unless `--force` is used
+- improve `bit tag` performance by decreasing hook logging
+- validate paths properties of the workspace bit.json
+- enable print log messages that start with a specific string to the console by prefixing the command with BIT_LOG=str
+- improve error message when adding files outside the workspace
+- show a descriptive error when npm 5.0.0 fails with `--json` flag
+- fix errors "EISDIR" and "EEXIST" when generating links and files steps on each other
+- fix links of exported components to node_modules for author when a file is not linkable to generate a symlink instead
+- recognize scoped packages that were newly introduced to imported components
+- fix error "consumer.loadComponentFromModel, version is missing from the id"
+- enable removing a component that its workspace and scope representations are not in sync
+- fix "error: Could not stat (filename) No such file or directory" when bit-checkout updates multiple files
+- fix "JavaScript heap out of memory" when loading a large amount of components
 
-## [13.0.5-dev.12 - 2018-10-09]
+## [[14.0.1] - 2019-02-24](https://github.com/teambit/bit/releases/tag/v14.0.1)
 
-- fix loading extension programmatically
+- show an error when deleting a global remote without `--global` flag
+- show an error when deleting a non-exist remote
+- enable custom resolve of aliases to symlink packages (bit-javascript)
+- fix error "toAbsolutePath expects relative path"
+- improve errors stack-trace readability
+- index scope components to improve memory consumption and performance
+- extract docs from non-tests files only
+- fix `bit show --remote --json` to not crash when a component has a compiler
+- fix `bit checkout` to update bit.json with the checked out version
+- fix "Maximum call stack" error when resolving js files after css files (bit-javascript)
+- fix `bit checkout --all` to write the correct data when some components are also dependencies of others
+- fix `bit checkout` to install dependencies as packages when applicable
+- fix `bit remove --remote` to show the dependents correctly
+- hide component internal structure diff upon `bit diff` unless `--verbose` flag is used
+- implement postinstall symlink generation for cases when custom-resolve modules is used with unsupported file (such as binary files)
+- fix parsing `.tsx` files (bit-javascript)
 
-## [13.0.5-dev.11 - 2018-10-07]
+## [[14.0.0] - 2019-02-04](https://github.com/teambit/bit/releases/tag/v14.0.0)
 
-- improve performance by caching objects after loading them
-- fix error "link-generation: failed finding .. in the dependencies array" when a dependency has a devDependency installed as a component
-- improve the stability of `bit export --eject` and provide some kind of rollback in case of failure
-- introduce a new command `bit eject` for removing local components and installing them as packages by an NPM client
+### Summary
 
-## [13.0.5-dev.10 - 2018-10-04]
+*Bit’s v14 is released side-by-side with the release of the v2 for [bit.dev](https://bit.dev), Bit’s component community hub. New features for bit.dev v2 are announced in [Bit’s Blog](https://blog.bitsrc.io/).*
 
-- support configuring Git executable path
-- update bit-javascript to support the new jsx syntax changes by Babel
-- pass config files and context in getDynamicConfig extension's life cycle
+With over 65 new features, changes and bug fixes, v14 is Bit’s largest and richest release to date. V14 is focused on increased **stability**, **agility** and **performance**. It is is fully backwards compatible, and provides a faster and smoother workflow with improved compatibility throughout the ecosystem.
 
-## [13.0.5-dev.9 - 2018-10-03]
+Here are some of v14's highlights:
 
-- support print multiple external (build / test) errors
+- Improved performance for tracking, versioning and exporting components by up to **700%**.
+- Dozens of bug fixes (~70% of open issues).
+- New commands `watch` and `eject`.
+- Dynamic namespaces support.
+- Improved VueJS support.
+- Improved CSS support.
+- Auto generated documentation for React.
 
-## [13.0.5-dev.8 - 2018-09-27]
+### New
 
-- fix bit-remove to delete authored component files when removing an authored component from an inner directory
+- New `bit watch` command for building components upon file modifications.
+- New `bit eject` for removing local components and installing them as packages by an NPM client
+- Support dynamic namespaces (replaced the namespace/name format with a dynamic name that can have multiple slashes to indicate a hierarchical namespace).
+- Support components with binary files (or non-supported extensions) as the only files.
+- Support ids with wildcards (e.g. `bit tag "utils/*"`) for the following commands: `tag`, `untag`, `remove`, `untrack`, `checkout`, `merge`, `diff` and `export`.
+- Support mix syntax of typescript and javascript inside .ts file
+- Added react docs parsing to extract the description of the properties correctly.
+- Support flow types in react doc generation.
+- Support Vue files with typescript.
+- Support configuring Git executable path.
+- Support the new jsx syntax changes by Babel.
+- Support print multiple external (build / test) errors.
+- Support adding the project `package.json` file to a component.
+- Support `import ~` from a local (authored) file to an imported sass component.
+- Add programmatic API for add multiple components.
+- Set the only dist file as main file in package.json (in case there is only one).
+- Allow removing a component when it is invalid.
 
-## [13.0.5-dev.7 - 2018-09-23]
+### Changes
 
-- support adding the project `package.json` file to a component
-- update bit-javascript to allow `import ~` from a local (authored) file to an imported sass component
-- add programmatic API for add multiple components
+- Improved performance for tracking, versioning and exporting components by up to 700%.
+- CSS parser replaced for better import syntax support.
+- Improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on.
+- Changed `--include-unmodified` to `--all`.
+- Replace caporal package with commander for security reasons.
+- Better error when a component was tagged without its dependencies.
+- Make bit version command faster and support both `bit -v` and `bit -V` to get bit version.
+- Update tty-table, flow-coverage-report and mocha-appveyor-reporter for security reasons.
+- Improve exception handling for old clients connecting to a newer server.
+- Shorten the generated component ID to the minimum possible.
+- Return status code 1 when bit test has failing tests.
+- Suppress an exception of directory-is-empty when adding multiple components and some of them are empty, show a warning instead.
+- Improve "missing a main file" error when adding multiple components to print the problematic components.
+- Improve performance by caching objects after loading them.
+- Fix ci-update command with component version number.
+- Fix `bit status` to not throw an exception for invalid components.
+- Change `--conf` on `bit import` to be a path to the config dir.
+- Replace the deprecated typescript-eslint-parser with @typescript-eslint/typescript-estree
 
-## [13.0.5-dev.6 - 2018-09-16]
+### Bug fixes
 
-- fix ci-update command with component version number (internal)
-
-## [13.0.5-dev.5 - 2018-09-12]
-
-- set the only dist file as main file in package.json (in case there is only one)
-- pass workspace path to add many components API
-
-## [13.0.5-dev.4 - 2018-09-05]
-
-- new programmatic API for add multiple components
-- update bit-javascript to improve scalability of the dependency resolution
-
-## [13.0.5-dev.3 - 2018-08-27]
-
-- update bit-javascript to show a descriptive error when failed to parse css, sass, scss and less files
-- improve auto-tag mechanism to tag not only the dependents but also the dependents of the dependents and so on
-- fix `bit status` to not throw an exception for invalid components
-- support components with binary files (or non-supported extensions) as the only files
-- allow removing a component when it is invalid
-- add `getSchema` to extension life cycle
-- validate extension's rawConfig against extension schema
-- changed `--include-unmodified` to `--all`
-
-## [13.0.5-dev.2 - 2018-08-20]
-
-- change `--conf` on `bit import` to be a path to the config dir
-
-## [13.0.5-dev.1 - 2018-08-14]
-
-- support Bit components dependencies for compilers and testers
-- resolve dependencies of environments configuration files
-- new envs-attach command to attach component's envs to workspace envs
-- automatically detach envs of component when changed from imported workspace
-- support dynamic namespaces (replaced the box+name format with a dynamic name that can have multiple slashes to indicate a hierarchical namespace)
-- new eject-conf command to write bit.json and envs config files to file system
-- new inject-conf command to delete bit.json and envs config files from the file system
-- support return `{ write: true }` from environment init function
+- Fix link files generated to a package when it should point to an internal file of the package.
+- Fix parsing React docs to show the `@example` tag.
+- Fix running `bit link` from an inner directory for author.
+- Fix ampersand and minus signs causing parse error in css files.
+- Fix `bit add` to add the correct letter case even when `--main` or `--test` flags entered with incorrect case.
+- Fix errors when component files require each other using module path.
+- Fix dev-dependency that requires prod-dependency to include the dependency in the flattenedDevDependencies array.
+- Do not delete isolated environment when running ci-update with keep flag and it throws exception.
+- Fix import of components with circular dependencies.
+- Fix link content generation for authored components on bit install.
+- Fix bug with bit show when the remote component has config file.
+- Fix context for testers during ci-update.
+- Fix missing context in getDynamicPackageDependencies.
+- Fix bug with bit show when scope path provided.
+- Fix errors "JavaScript heap out of memory" and "Error: EMFILE: too many open files" when exporting a huge number of components.
+- Fix error "link-generation: failed finding .. in the dependencies array" when a dependency has a devDependency installed as a component.
+- Improve the stability of `bit export --eject` and provide some kind of rollback in case of failure.
+- Fix bit-remove to delete authored component files when removing an authored component from an inner directory.
 
 ## [[13.0.4] - 2018-07-24](https://github.com/teambit/bit/releases/tag/v13.0.4)
 
@@ -429,7 +494,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 ## [0.12.0] - 2018-01-18
 
 ### New
-- [extension system (beta)](https://docs.bitsrc.io/docs/ext-concepts.html)
+- [extension system (beta)](https://docs.bit.dev/docs/ext-concepts.html)
 - [#540](https://github.com/teambit/bit/issues/540) support Yarn as package manager
 - `bit import`: install hub dependencies as npm packages by default
 - `bit import`: install npm packages by default
@@ -572,7 +637,7 @@ As a reminder, we're switching to major versions to indicate that we, like many 
 - prevent exporting a component when the same version has been exported already to the same remote scope
 - avoid running the build and test processes upon `bit status`
 - allow export specific components without specifying the scope-name
-- avoid committing unmodified components unless `--force` flag is being used
+- avoid tagging unmodified components unless `--force` flag is being used
 - resolve dependencies from all component files regardless whether they are referenced from the main file
 - bug fix - the author was not able to update his/her component in case it was changed in another scope
 - bug fix - status command shows an error when components directory has an unreferenced (from bit.map) component

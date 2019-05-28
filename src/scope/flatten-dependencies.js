@@ -19,7 +19,7 @@ export function flattenDependencyIds(dependencies: VersionDependencies[], repo: 
     dependencies.map((dep) => {
       // $FlowFixMe
       const depCompId = dep.component.id.changeScope(dep.sourceScope);
-      return dep.component.flattenedDependencies(repo).then(flattnedDeps => flattnedDeps.concat(depCompId));
+      return dep.component.flattenedDependencies(repo).then(flattenedDeps => flattenedDeps.concat(depCompId));
     })
   ).then((idMatrix) => {
     const ids = flatten(idMatrix);

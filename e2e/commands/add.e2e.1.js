@@ -11,7 +11,8 @@ import {
   VersionShouldBeRemoved,
   MissingMainFileMultipleComponents,
   MissingComponentIdForImportedComponent,
-  MainFileIsDir
+  MainFileIsDir,
+  PathOutsideConsumer
 } from '../../src/consumer/component-ops/add-components/exceptions';
 import { InvalidName } from '../../src/bit-id/exceptions';
 import { statusInvalidComponentsMsg } from '../../src/cli/commands/public-cmds/status-cmd';
@@ -71,7 +72,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/foo.js', { i: 'bar/foo ' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -632,7 +633,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'boo1.js');
       helper.addComponent(path.normalize('bar/foo.js'), { i: 'bar/foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.addComponent('bar/boo1.js', { i: 'bar/foo' });
       bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('bar/foo@0.0.1'); // should not change the component ID
@@ -863,7 +864,7 @@ describe('bit add command', function () {
       helper.addRemoteScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.reInitLocalScope();
       helper.addRemoteScope();
@@ -917,7 +918,7 @@ describe('bit add command', function () {
       helper.addRemoteScope();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitComponentBarFoo();
+      helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       helper.addComponentBarFoo();
     });
@@ -1057,7 +1058,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'index.js');
       helper.createFile('bar', 'foo2.js');
       helper.addComponent('bar/', { i: 'bar/foo ' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.deleteFile('bar/foo2.js');
       helper.addComponent('bar/', { i: 'bar/foo ' });
@@ -1166,6 +1167,50 @@ describe('bit add command', function () {
         expect(files).not.to.include('bar/foo.js');
         expect(files).not.to.include('bar/foo.js');
       }
+    });
+  });
+  describe('adding a file outside the consumer dir', () => {
+    let consumerDir;
+    before(() => {
+      helper.cleanEnv();
+      consumerDir = path.join(helper.localScopePath, 'bar');
+      fs.mkdirSync(consumerDir);
+      helper.createFile('', 'foo.js');
+      helper.runCmd('bit init', consumerDir);
+    });
+    it('should throw PathOutsideConsumer error', () => {
+      const addCmd = () => helper.runCmd('bit add ../foo.js', consumerDir);
+      const error = new PathOutsideConsumer(path.normalize('../foo.js'));
+      helper.expectToThrow(addCmd, error);
+    });
+  });
+  describe('adding a directory outside the consumer dir', () => {
+    let consumerDir;
+    before(() => {
+      helper.cleanEnv();
+      consumerDir = path.join(helper.localScopePath, 'bar');
+      fs.mkdirSync(consumerDir);
+      helper.createFile('foo', 'foo.js');
+      helper.runCmd('bit init', consumerDir);
+    });
+    it('should throw PathOutsideConsumer error', () => {
+      const addCmd = () => helper.runCmd('bit add ../foo', consumerDir);
+      const error = new PathOutsideConsumer(path.normalize('../foo'));
+      helper.expectToThrow(addCmd, error);
+    });
+  });
+  describe('adding a directory and also its files', () => {
+    let output;
+    before(() => {
+      helper.initLocalScope();
+      helper.createFile('src/one', 'first.js');
+      helper.createFile('src/one', 'second.js');
+      helper.createFile('src/two', 'third.js');
+      helper.createFile('src', 'fourth.js');
+      output = helper.addComponent('"src/**/*"');
+    });
+    it('should add them as individual files and ignore the directories', () => {
+      expect(output).to.have.string('tracking 4 new components');
     });
   });
 });

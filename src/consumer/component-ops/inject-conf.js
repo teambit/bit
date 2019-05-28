@@ -1,18 +1,21 @@
 // @flow
 import path from 'path';
 import R from 'ramda';
-import ConsumerComponent from '../component/consumer-component';
-import ComponentBitJson from '../bit-json';
-import { removeEmptyDir } from '../../utils';
+import type ConsumerComponent from '../component/consumer-component';
+import ComponentConfig from '../config';
+import removeEmptyDir from '../../utils/fs/remove-empty-dir';
 import GeneralError from '../../error/general-error';
-import BitMap from '../bit-map';
+import type BitMap from '../bit-map';
 import ConfigDir from '../bit-map/config-dir';
-import { COMPILER_ENV_TYPE } from '../../extensions/compiler-extension';
-import { TESTER_ENV_TYPE } from '../../extensions/tester-extension';
 import { AbstractVinyl } from '../component/sources';
+import { COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../../constants';
 
 export type InjectConfResult = { id: string };
 
+/**
+ * the opposite of 'eject-conf'.
+ * delete configuration files on the fs.
+ */
 export default (async function injectConf(
   component: ConsumerComponent,
   consumerPath: string,
@@ -27,7 +30,7 @@ export default (async function injectConf(
   const componentDir = componentMap.getComponentDir();
 
   if (!force && areEnvsModified(component, component.componentFromModel)) {
-    throw new Error(
+    throw new GeneralError(
       'unable to inject-conf, some or all configuration files are modified. please use "--force" flag to force removing the configuration files'
     );
   }
@@ -46,7 +49,7 @@ export default (async function injectConf(
   // Delete bit.json and bit.json dir
   const bitJsonDir = resolvedConfigDir.getEnvTypeCleaned();
   const bitJsonDirFullPath = path.normalize(path.join(consumerPath, bitJsonDir.dirPath));
-  await ComponentBitJson.removeIfExist(bitJsonDirFullPath);
+  await ComponentConfig.removeIfExist(bitJsonDirFullPath);
   await removeEmptyDir(bitJsonDirFullPath);
 
   return { id: component.id.toStringWithoutVersion() };

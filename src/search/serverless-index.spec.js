@@ -2,7 +2,7 @@
 // import sinon from 'sinon';
 // import path from 'path';
 // import searchIndex from 'search-index';
-// import serverlessIndex from '../../src/search/serverless-index';
+// import serverlessIndex from '../search/serverless-index';
 //
 // describe('SeverLessIndex', () => {
 //   describe('initializeIndex', () => {

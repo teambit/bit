@@ -1,11 +1,10 @@
 /** @flow */
+import chalk from 'chalk';
 import Command from '../../command';
 import { unTagAction } from '../../../api/consumer';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
 import GeneralError from '../../../error/general-error';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
-
-const chalk = require('chalk');
 
 export default class Untag extends Command {
   name = 'untag [id] [version]';

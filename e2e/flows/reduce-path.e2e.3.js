@@ -16,7 +16,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       helper.setNewLocalAndRemoteScopes();
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       const authorScope = helper.cloneLocalScope();
       helper.reInitLocalScope();
@@ -26,7 +26,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
       expect(fs.existsSync(path.join(helper.localScopePath, 'components', 'bar', 'foo', 'foo.js'))).to.be.true;
       helper.createFile(path.join('components', 'bar', 'foo'), 'foo.js', barFooV2); // update component
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       const importedScope = helper.cloneLocalScope();
       helper.getClonedLocalScope(authorScope);
@@ -37,7 +37,7 @@ describe('reduce-path functionality (eliminate the original shared-dir among com
       expect(fs.readFileSync(authorLocation).toString()).to.equal(barFooV2);
       helper.createFile('', 'foo2.js');
       helper.addComponent('foo2.js', { i: 'bar/foo' });
-      helper.commitAllComponents();
+      helper.tagAllComponents();
       helper.exportAllComponents();
       helper.getClonedLocalScope(importedScope);
       // Imported user update the component with the recent changes done by Authored user

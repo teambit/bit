@@ -9,7 +9,7 @@ describe('benchmark', function () {
   after(() => {
     helper.destroyEnv();
   });
-  describe('committing and exporting lots of components', () => {
+  describe('tagging and exporting lots of components', () => {
     // with current configuration APPVEYOR is much slower than CircleCI (which runs multiple tests in parallel)
     if (process.env.APPVEYOR === 'True') {
       this.skip;
@@ -22,7 +22,7 @@ describe('benchmark', function () {
           helper.createFile('utils', `${file}.js`, impl);
         }
         helper.addComponent('utils/*');
-        helper.commitAllComponents();
+        helper.tagAllComponents();
         helper.exportAllComponents();
       });
       it('bit list should show the correct number of exported components', () => {

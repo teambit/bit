@@ -22,7 +22,7 @@ describe('dynamic namespaces', function () {
         helper.createFile('bar', 'foo.js');
         const addOutput = helper.addComponent('bar/foo.js', { i: componentName });
         expect(addOutput).to.have.string('added');
-        tagOutput = helper.tagAllWithoutMessage();
+        tagOutput = helper.tagAllComponents();
         catComp = helper.catComponent(componentName);
       });
       it('should be tagged successfully', () => {
@@ -72,7 +72,7 @@ describe('dynamic namespaces', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.createFile('', 'foo.js');
       helper.addComponent('foo.js', { i: 'foo' });
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       helper.exportAllComponents();
 
       helper.reInitLocalScope();
@@ -87,7 +87,7 @@ describe('dynamic namespaces', function () {
       expect(Object.keys(bitMap)).to.have.lengthOf(1);
     });
     it('should throw an error also after tagging', () => {
-      helper.tagAllWithoutMessage();
+      helper.tagAllComponents();
       const output = helper.runWithTryCatch(`bit import ${helper.remoteScope}/foo`);
       expect(output).to.have.string('unable to import');
     });
