@@ -1,4 +1,5 @@
 /** @flow */
+import yn from 'yn';
 import serializeError from 'serialize-error';
 import format from 'string-format';
 import winston from 'winston';
@@ -13,7 +14,7 @@ const extensionsLoggers = new Map();
 
 export const baseFileTransportOpts = {
   filename: DEBUG_LOG,
-  json: getSync(CFG_LOG_JSON_FORMAT) || false,
+  json: yn(getSync(CFG_LOG_JSON_FORMAT), { default: false }),
   // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
   level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
   maxsize: 10 * 1024 * 1024, // 10MB
