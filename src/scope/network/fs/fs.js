@@ -67,8 +67,8 @@ export default class Fs implements Network {
       .then(componentsIds => componentsIds.map(componentId => componentId.toString()));
   }
 
-  list(): Promise<ListScopeResult[]> {
-    return ComponentsList.listLocalScope(this.getScope());
+  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return ComponentsList.listLocalScope(this.getScope(), namespacesUsingWildcards);
   }
 
   search(query: string, reindex: boolean): Promise<[]> {

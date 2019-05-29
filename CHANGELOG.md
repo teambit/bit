@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support `bit import` with wildcards to import an entire scope or particular namespace(s)
+
 ## [14.1.2-dev.5] - 2019-05-29
 
 - sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
