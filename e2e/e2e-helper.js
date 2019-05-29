@@ -403,6 +403,9 @@ export default class Helper {
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
+  undeprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit undeprecate ${id} ${flags}`);
+  }
   tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }

@@ -7,6 +7,7 @@ export const BEFORE_LOCAL_LIST = 'listing components';
 export const BEFORE_MIGRATION = 'upgrading working directory...';
 export const BEFORE_REMOVE = 'removing components';
 export const BEFORE_REMOTE_DEPRECATE = 'deprecating remote components';
+export const BEFORE_REMOTE_UNDEPRECATE = 'un-deprecating remote components';
 export const BEFORE_IMPORT_ACTION = 'importing components';
 export const BEFORE_REMOTE_SEARCH = ({ scope, queryStr }: { scope: string, queryStr: string }) =>
   `searching remote scope <${scope}> for '${queryStr}'`;

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- introduce a new command `bit undeprecate` to revert deprecation of components
+
 ## [14.1.2-dev.4] - 2019-05-28
 
 - restore node 6 support

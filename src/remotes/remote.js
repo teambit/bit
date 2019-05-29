@@ -80,6 +80,9 @@ export default class Remote {
   deprecateMany(ids: string[], context: ?Object): Promise<Object[]> {
     return connect(this.host).then(network => network.deprecateMany(ids, context));
   }
+  undeprecateMany(ids: string[], context: ?Object): Promise<Object[]> {
+    return connect(this.host).then(network => network.undeprecateMany(ids, context));
+  }
 
   static load(name: string, host: string): Remote {
     const primary = isPrimary(name);
