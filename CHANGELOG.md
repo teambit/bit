@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- introduce a new flag `--machine-name` for `bit login` to help CI servers keep their token not revoked
+
 ## [14.1.2-dev.5] - 2019-05-29
 
 - sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
