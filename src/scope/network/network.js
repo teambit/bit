@@ -11,7 +11,7 @@ export interface Network {
   get(commandName: string): Promise<any>;
   describeScope(): Promise<ScopeDescriptor>;
   fetch(bitIds: BitIds): Promise<ComponentObjects[]>;
-  list(): Promise<ListScopeResult[]>;
+  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]>;
   search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<?Component>;
   deprecateMany(ids: string[], context: ?Object): Promise<Object[]>;

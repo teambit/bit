@@ -15,12 +15,12 @@ export default class List extends Command {
   opts = [];
 
   action([path, args]: [string, string]): Promise<ListScopeResult[]> {
-    const { headers } = unpackCommand(args);
+    const { payload, headers } = unpackCommand(args);
     checkVersionCompatibilityOnTheServer(headers.version);
     logger.info('Checking if a migration is needed');
     const scopePath = fromBase64(path);
     return migrate(scopePath, false).then(() => {
-      return scopeList(scopePath);
+      return scopeList(scopePath, payload);
     });
   }
 

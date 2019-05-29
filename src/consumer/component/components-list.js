@@ -333,9 +333,12 @@ export default class ComponentsList {
   /**
    * get called from a bare-scope, shows only components of that scope
    */
-  static async listLocalScope(scope: Scope): Promise<ListScopeResult[]> {
+  static async listLocalScope(scope: Scope, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
-    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    const componentsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
+      : components;
+    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     return componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
       deprecated: component.deprecated

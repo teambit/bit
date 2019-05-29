@@ -2199,4 +2199,68 @@ console.log(barFoo.default());`;
       expect(output).to.have.string('successfully');
     });
   });
+  describe('import with wildcards', () => {
+    let scopeBeforeImport;
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.createFile('utils', 'is-string.js');
+      helper.createFile('utils', 'is-type.js');
+      helper.addComponentBarFoo();
+      helper.addComponentUtilsIsString();
+      helper.addComponentUtilsIsType();
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      scopeBeforeImport = helper.cloneLocalScope();
+    });
+    describe('import the entire scope', () => {
+      let output;
+      before(() => {
+        output = helper.importComponent('*');
+      });
+      it('should import all components from the remote scope', () => {
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.have.string('utils/is-string');
+        expect(output).to.have.string('utils/is-type');
+      });
+      it('bit ls should show that all components from the remote scope were imported', () => {
+        const ls = helper.listLocalScopeParsed();
+        expect(ls).to.be.lengthOf(3);
+      });
+    });
+    describe('import only bar/* namespace', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeImport);
+        output = helper.importComponent('bar/*');
+      });
+      it('should import only bar/foo but not any component from utils namespace', () => {
+        expect(output).to.have.string('bar/foo');
+        expect(output).to.not.have.string('utils');
+      });
+      it('bit ls should show that only bar/foo has imported', () => {
+        const ls = helper.listLocalScopeParsed();
+        expect(ls).to.be.lengthOf(1);
+        expect(ls[0].id).to.equal(`${helper.remoteScope}/bar/foo`);
+      });
+    });
+    describe('import only utils/* namespace', () => {
+      let output;
+      before(() => {
+        helper.getClonedLocalScope(scopeBeforeImport);
+        output = helper.importComponent('utils/*');
+      });
+      it('should import only utils components but not any component from bar namespace', () => {
+        expect(output).to.not.have.string('bar/foo');
+        expect(output).to.have.string('utils/is-string');
+        expect(output).to.have.string('utils/is-type');
+      });
+      it('bit ls should show that only bar/foo has imported', () => {
+        const ls = helper.listLocalScopeParsed();
+        expect(ls).to.be.lengthOf(2);
+      });
+    });
+  });
 });
