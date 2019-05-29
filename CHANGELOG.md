@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- support changing the log to json format by running `bit config set log_json_format true`
 - introduce a new command `bit undeprecate` to revert deprecation of components
 
 ## [14.1.2-dev.4] - 2019-05-28
