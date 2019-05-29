@@ -129,7 +129,10 @@ export default class ComponentLoader {
       newId = currentId.changeVersion(componentFromModel.version);
       if (componentFromModel.scope) newId = newId.changeScope(componentFromModel.scope);
     }
-
+    if (componentFromModel && componentFromModel.scope && currentId.hasVersion() && !currentId.hasScope()) {
+      // component is not exported in .bitmap but exported in the scope, sync .bitmap with the scope data
+      newId = currentId.changeScope(componentFromModel.scope);
+    }
     if (!componentFromModel && currentId.hasVersion()) {
       // the version used in .bitmap doesn't exist in the scope
       const modelComponent = await this.consumer.scope.getModelComponentIfExist(currentId.changeVersion(null));

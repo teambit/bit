@@ -368,6 +368,18 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
+  undeprecateMany(ids: string[], context: ?Object): Promise<ComponentObjects[]> {
+    return this.exec(
+      '_undeprecate',
+      {
+        ids
+      },
+      context
+    ).then((data: string) => {
+      const { payload } = this._unpack(data);
+      return Promise.resolve(payload);
+    });
+  }
   push(componentObjects: ComponentObjects): Promise<string[]> {
     return this.pushMany([componentObjects]);
   }

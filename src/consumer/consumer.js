@@ -75,7 +75,12 @@ import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import deleteComponentsFiles from './component-ops/delete-component-files';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
-import { deprecateRemote, deprecateMany } from '../scope/component-ops/components-deprecation';
+import {
+  deprecateRemote,
+  deprecateMany,
+  undeprecateRemote,
+  undeprecateMany
+} from '../scope/component-ops/components-deprecation';
 
 type ConsumerProps = {
   projectPath: string,
@@ -795,6 +800,10 @@ export default class Consumer {
 
   async deprecate(bitIds: BitId[], remote: boolean) {
     return remote ? deprecateRemote(this.scope, bitIds) : deprecateMany(this.scope, bitIds);
+  }
+
+  async undeprecate(bitIds: BitId[], remote: boolean) {
+    return remote ? undeprecateRemote(this.scope, bitIds) : undeprecateMany(this.scope, bitIds);
   }
 
   /**
