@@ -2,7 +2,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import { GLOBAL_CONFIG, GLOBAL_CONFIG_FILE } from '../constants';
-import { mapToObject, objectToTupleArray, writeFile } from '../utils';
+import { mapToObject, objectToTupleArray } from '../utils';
 
 function getPath() {
   return path.join(GLOBAL_CONFIG, GLOBAL_CONFIG_FILE);
@@ -18,11 +18,11 @@ export default class Config extends Map<string, string> {
   }
 
   write() {
-    return writeFile(getPath(), this.toJson());
+    return fs.outputFile(getPath(), this.toJson());
   }
 
   writeSync() {
-    return fs.writeFileSync(getPath(), this.toJson());
+    return fs.outputFileSync(getPath(), this.toJson());
   }
 
   static loadSync(): Config {

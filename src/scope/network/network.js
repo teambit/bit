@@ -15,5 +15,6 @@ export interface Network {
   search(query: string, reindex: boolean): Promise<string>;
   show(bitId: BitId): Promise<?Component>;
   deprecateMany(ids: string[], context: ?Object): Promise<Object[]>;
+  undeprecateMany(ids: string[], context: ?Object): Promise<Object[]>;
   latestVersions(bitIds: BitIds): Promise<ComponentObjects[]>;
 }

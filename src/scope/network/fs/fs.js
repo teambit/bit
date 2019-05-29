@@ -1,6 +1,6 @@
 /** @flow */
 import loadScope from '../../scope-loader';
-import { fetch, deprecate, remove, put } from '../../../api/scope';
+import { fetch, deprecate, undeprecate, remove, put } from '../../../api/scope';
 import ComponentObjects from '../../component-objects';
 import { BitIds, BitId } from '../../../bit-id';
 import { FsScopeNotLoaded } from '../exceptions';
@@ -47,6 +47,10 @@ export default class Fs implements Network {
 
   deprecateMany(ids: string[]): Promise<ComponentObjects[]> {
     return deprecate({ path: this.scopePath, ids });
+  }
+
+  undeprecateMany(ids: string[]): Promise<ComponentObjects[]> {
+    return undeprecate({ path: this.scopePath, ids });
   }
 
   fetch(bitIds: BitIds, noDependencies: boolean = false): Promise<ComponentObjects[]> {
