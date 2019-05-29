@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
 - support changing the log to json format by running `bit config set log_json_format true`
 - introduce a new command `bit undeprecate` to revert deprecation of components
 

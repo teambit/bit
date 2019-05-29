@@ -20,7 +20,15 @@ import {
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside, stripTrailingChar } from '../../utils';
+import {
+  outputFile,
+  pathNormalizeToLinux,
+  pathJoinLinux,
+  isDir,
+  pathIsInside,
+  stripTrailingChar,
+  sortObject
+} from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
@@ -887,7 +895,7 @@ export default class BitMap {
       components[id] = componentMap.toPlainObject();
     });
 
-    return components;
+    return sortObject(components);
   }
 
   /**
