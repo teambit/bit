@@ -7,7 +7,7 @@ import type { DeprecationResult } from '../../../scope/component-ops/components-
 
 export default class Undeprecate extends Command {
   name = 'undeprecate <ids...>';
-  description = 'undeprecate a component (local/remote)';
+  description = 'undeprecate a deprecated component (local/remote)';
   alias = '';
   opts = [['r', 'remote [boolean]', 'undeprecate a component from a remote scope']];
   loader = true;
