@@ -17,6 +17,7 @@ import BitIds from '../../bit-id/bit-ids';
 import Repository from '../../scope/objects/repository';
 import ComponentOverrides from '../config/component-overrides';
 import CorruptedComponent from '../../scope/exceptions/corrupted-component';
+import Component from '../component/consumer-component';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
@@ -48,6 +49,17 @@ export async function getManipulateDirForExistingComponents(
     manipulateDirData.push(manipulateDirDep);
   });
   return manipulateDirData;
+}
+
+/**
+ * this doesn't return the manipulate-dir for the dependencies, only for the given component.
+ * it is useful for stripping the shared-dir for author when generating symlinks from node_modules
+ */
+export function getManipulateDirForConsumerComponent(component: Component): ManipulateDirItem {
+  const id: BitId = component.id;
+  const originallySharedDir = calculateOriginallySharedDirForConsumerComponent(component);
+  const wrapDir = isWrapperDirNeededForConsumerComponent(component) ? WRAPPER_DIR : null;
+  return { id, originallySharedDir, wrapDir };
 }
 
 /**
@@ -95,12 +107,27 @@ export function revertDirManipulationForPath(
 /**
  * find a shared directory among the files of the main component and its dependencies
  */
-function calculateOriginallySharedDir(version: Version): ?PathLinux {
-  const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
+function calculateOriginallySharedDirForVersion(version: Version): ?PathLinux {
   const filePaths = version.files.map(file => pathNormalizeToLinux(file.relativePath));
   const allDependencies = new Dependencies(version.getAllDependencies());
-  const dependenciesPaths = allDependencies.getSourcesPaths();
   const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(version.overrides);
+  return _calculateSharedDir(filePaths, allDependencies, overridesDependenciesFiles);
+}
+
+function calculateOriginallySharedDirForConsumerComponent(component: Component): ?PathLinux {
+  const filePaths = component.files.map(file => pathNormalizeToLinux(file.relative));
+  const allDependencies = new Dependencies(component.getAllDependencies());
+  const overridesDependenciesFiles = ComponentOverrides.getAllFilesPaths(component.overrides);
+  return _calculateSharedDir(filePaths, allDependencies, overridesDependenciesFiles);
+}
+
+function _calculateSharedDir(
+  filePaths: PathLinux[],
+  allDependencies: Dependencies,
+  overridesDependenciesFiles: string[]
+): ?PathLinux {
+  const pathSep = '/'; // it works for Windows as well as all paths are normalized to Linux
+  const dependenciesPaths = allDependencies.getSourcesPaths();
   const allPaths = [...filePaths, ...dependenciesPaths, ...overridesDependenciesFiles];
   const sharedStart = sharedStartOfArray(allPaths);
   if (!sharedStart || !sharedStart.includes(pathSep)) return null;
@@ -116,7 +143,7 @@ function calculateOriginallySharedDir(version: Version): ?PathLinux {
 
 function getOriginallySharedDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
   if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
-  return calculateOriginallySharedDir(version);
+  return calculateOriginallySharedDirForVersion(version);
 }
 
 /**
@@ -130,6 +157,15 @@ function isWrapperDirNeeded(version: Version) {
   const dependenciesSourcePaths = allDependencies.getSourcesPaths();
   return (
     version.files.some(file => file.relativePath === PACKAGE_JSON) ||
+    dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
+  );
+}
+
+function isWrapperDirNeededForConsumerComponent(component: Component) {
+  const allDependencies = new Dependencies(component.getAllDependencies());
+  const dependenciesSourcePaths = allDependencies.getSourcesPaths();
+  return (
+    component.files.some(file => file.relative === PACKAGE_JSON) ||
     dependenciesSourcePaths.some(dependencyPath => dependencyPath === PACKAGE_JSON)
   );
 }

@@ -20,6 +20,10 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
 import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
+import {
+  getManipulateDirForConsumerComponent,
+  revertDirManipulationForPath
+} from '../consumer/component-ops/manipulate-dir';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -151,12 +155,20 @@ export default class NodeModuleLinker {
    * authored components are linked only when they were exported before
    */
   _populateAuthoredComponentsLinks(component: Component): void {
-    const componentId = component.id;
-    if (!componentId.scope) return; // scope is a must to generate the link
-    const filesToBind = component.componentMap.getFilesRelativeToConsumer();
-    component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
+    if (!component.id.scope) return; // scope is a must to generate the link
+    const clonedComponent = component.clone();
+    const manipulateDirData = getManipulateDirForConsumerComponent(clonedComponent);
+    clonedComponent.stripOriginallySharedDir([manipulateDirData]);
+    const componentId = clonedComponent.id;
+    const filesToBind = clonedComponent.files.map(f => f.relative);
+    clonedComponent.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, clonedComponent.componentMap);
     filesToBind.forEach((file) => {
-      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer);
+      const fileWithoutManipulation = revertDirManipulationForPath(
+        path.normalize(file),
+        manipulateDirData.originallySharedDir,
+        manipulateDirData.wrapDir
+      );
+      const possiblyDist = clonedComponent.dists.calculateDistFileForAuthored(fileWithoutManipulation, this.consumer);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
       const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
