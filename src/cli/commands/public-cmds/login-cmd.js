@@ -11,19 +11,31 @@ export default class Login extends Command {
     ['p', 'port <port>', 'port number to open for localhost server (default 8085)'],
     ['', 'suppress-browser-launch', 'do not open a browser for authentication'],
     ['', 'npmrc-path <path>', 'path to npmrc file to configure bitsrc registry'],
-    ['', 'skip-registry-config [boolean]', 'dont configure bitsrc registry']
+    ['', 'skip-registry-config [boolean]', "don't configure bitsrc registry"],
+    [
+      '',
+      'machine-name <string>',
+      'specify machine-name to pair with the token (useful for CI to avoid accidentally revoke the token)'
+    ]
   ];
   // $FlowFixMe
   action(
-    [nothing]: [string[]],
+    [],
     {
       port,
       suppressBrowserLaunch = false,
       npmrcPath,
-      skipRegistryConfig = false
-    }: { port: string, suppressBrowserLaunch?: boolean, npmrcPath: string, skipRegistryConfig: boolean }
+      skipRegistryConfig = false,
+      machineName
+    }: {
+      port: string,
+      suppressBrowserLaunch?: boolean,
+      npmrcPath: string,
+      skipRegistryConfig: boolean,
+      machineName?: string
+    }
   ): Promise<any> {
-    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig).then(
+    return login(port, suppressBrowserLaunch, npmrcPath, skipRegistryConfig, machineName).then(
       ({ isAlreadyLoggedIn, username, npmrcPath, writeToNpmrcError }) => ({
         isAlreadyLoggedIn,
         username,
