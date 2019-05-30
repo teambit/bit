@@ -396,8 +396,8 @@ export default class SSH implements Network {
       });
   }
 
-  async list(): Promise<ListScopeResult[]> {
-    return this.exec('_list').then(async (str: string) => {
+  async list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return this.exec('_list', namespacesUsingWildcards).then(async (str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       payload.forEach((result) => {

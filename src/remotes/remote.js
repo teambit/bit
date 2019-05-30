@@ -43,8 +43,8 @@ export default class Remote {
     });
   }
 
-  list(): Promise<ListScopeResult[]> {
-    return this.connect().then(network => network.list());
+  list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return this.connect().then(network => network.list(namespacesUsingWildcards));
   }
 
   search(query: string, reindex: boolean): Promise<any> {
