@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1627](https://github.com/teambit/bit/issues/1627) improve `bit tag` output
 - support `bit import` with wildcards to import an entire scope or particular namespace(s)
 
 ## [14.1.2-dev.5] - 2019-05-29
