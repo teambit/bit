@@ -81,6 +81,7 @@ import {
   undeprecateRemote,
   undeprecateMany
 } from '../scope/component-ops/components-deprecation';
+import type { AutoTagResult } from '../scope/component-ops/auto-tag';
 
 type ConsumerProps = {
   projectPath: string,
@@ -609,7 +610,7 @@ export default class Consumer {
     ignoreUnresolvedDependencies: ?boolean,
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
-  ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
+  ): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
@@ -626,7 +627,7 @@ export default class Consumer {
       throw new ComponentsPendingImport();
     }
 
-    const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       message,
@@ -639,10 +640,11 @@ export default class Consumer {
       verbose
     });
 
+    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
     await this._updateComponentsVersions(allComponents);
 
-    return { taggedComponents, autoTaggedComponents };
+    return { taggedComponents, autoTaggedResults };
   }
 
   _updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {

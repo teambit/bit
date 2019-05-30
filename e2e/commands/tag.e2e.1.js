@@ -151,18 +151,6 @@ describe('bit tag command', function () {
           } tag components/exact 5.5.5 -m message -f\nerror: version 5.5.5 already exists for components/exact\n`
         );
       });
-      it('Should print same output for flaged tag and non flaged tag', () => {
-        helper.reInitLocalScope();
-        helper.createFile('components', 'major.js');
-        helper.addComponent('components/major.js', { i: 'components/major' });
-        const majorOutput = helper.tagComponent('components/major', 'message', '--major');
-        helper.reInitLocalScope();
-        helper.createFile('components', 'major.js');
-        helper.addComponent('components/major.js', { i: 'components/major' });
-        const nonFlagedCommit = helper.tagComponent('components/major');
-        expect(majorOutput).to.contain('1 component(s) tagged | 1 added, 0 changed, 0 auto-tagged');
-        expect(nonFlagedCommit).to.contain('1 component(s) tagged | 1 added, 0 changed, 0 auto-tagged');
-      });
     });
     // TODO: fix all the tests in the following "describe" so they will not rely on the output of the previous test
     // waiting for 'bit remove' bug fix

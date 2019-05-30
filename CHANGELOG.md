@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1627](https://github.com/teambit/bit/issues/1627) improve `bit tag` output
 - introduce a new flag `--machine-name` for `bit login` to help CI servers keep their token not revoked
 - support `bit import` with wildcards to import an entire scope or particular namespace(s)
 
