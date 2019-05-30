@@ -158,6 +158,7 @@ export default class NodeModuleLinker {
     if (!component.id.scope) return; // scope is a must to generate the link
     const clonedComponent = component.clone();
     const manipulateDirData = getManipulateDirForConsumerComponent(clonedComponent);
+    clonedComponent._wasOriginallySharedDirStripped = false;
     clonedComponent.stripOriginallySharedDir([manipulateDirData]);
     const componentId = clonedComponent.id;
     const filesToBind = clonedComponent.files.map(f => f.relative);
@@ -186,8 +187,9 @@ export default class NodeModuleLinker {
         this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
       }
     });
-    this._createPackageJsonForAuthor(component);
+    this._createPackageJsonForAuthor(clonedComponent);
   }
+
   /**
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
    * root-dir. The solution is to go through the node_modules packages one by one and symlink them.

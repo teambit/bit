@@ -38,7 +38,7 @@ describe('bit link', function () {
         helper.exportAllComponents();
 
         // requiring is-type through the internal file (@bit/remoteScope.utils.is-type/utils/is-type)
-        const isStringFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type/utils/is-type');
+        const isStringFixture = `const isType = require('@bit/${helper.remoteScope}.utils.is-type/is-type');
 module.exports = function isString() { return isType() +  ' and got is-string'; };`;
         helper.createFile('utils', 'is-string.js', isStringFixture);
         helper.addComponentUtilsIsString();
