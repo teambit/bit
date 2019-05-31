@@ -2,10 +2,11 @@
 import path from 'path';
 import R from 'ramda';
 import fs from 'fs-extra';
+import pMapSeries from 'p-map-series';
 import { moveExistingComponent } from './move-components';
 import { getAllComponentsLinks } from '../../links';
 import { installNpmPackagesForComponents } from '../../npm-client/install-packages';
-import * as packageJson from '../component/package-json';
+import * as packageJsonUtils from '../component/package-json-utils';
 import type { ComponentWithDependencies } from '../../scope';
 import type Component from '../component/consumer-component';
 import { COMPONENT_ORIGINS } from '../../constants';
@@ -35,7 +36,6 @@ type ManyComponentsWriterParams = {
   writeBitDependencies?: boolean,
   createNpmLinkFiles?: boolean,
   writeDists?: boolean,
-  saveDependenciesAsComponents?: boolean, // as opposed to npm packages
   installNpmPackages?: boolean,
   installPeerDependencies?: boolean,
   addToRootPackageJson?: boolean,
@@ -66,7 +66,6 @@ export default class ManyComponentsWriter {
   writeBitDependencies: boolean;
   createNpmLinkFiles: boolean;
   writeDists: boolean;
-  saveDependenciesAsComponents: boolean; // as opposed to npm packages
   installNpmPackages: boolean;
   installPeerDependencies: boolean;
   addToRootPackageJson: boolean;
@@ -91,6 +90,7 @@ export default class ManyComponentsWriter {
     this.writeBitDependencies = this._setBooleanDefault(params.writeBitDependencies, false);
     this.createNpmLinkFiles = this._setBooleanDefault(params.createNpmLinkFiles, false);
     this.writeDists = this._setBooleanDefault(params.writeDists, true);
+    this.installPeerDependencies = this._setBooleanDefault(params.installPeerDependencies, false);
     this.installNpmPackages = this._setBooleanDefault(params.installNpmPackages, true);
     this.addToRootPackageJson = this._setBooleanDefault(params.addToRootPackageJson, true);
     this.verbose = this._setBooleanDefault(params.verbose, false);
@@ -119,10 +119,9 @@ export default class ManyComponentsWriter {
   async _installPackages() {
     logger.debug('ManyComponentsWriter, _installPackages');
     if (this.consumer) {
-      await packageJson.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
+      await packageJsonUtils.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
       if (this.addToRootPackageJson) {
-        // $FlowFixMe consumer is defined
-        await packageJson.addComponentsToRoot(this.consumer, this.writtenComponents.map(c => c.id));
+        await packageJsonUtils.addComponentsToRoot(this.consumer, this.writtenComponents);
       }
     }
     await this._installPackagesIfNeeded();
@@ -136,13 +135,16 @@ export default class ManyComponentsWriter {
     await links.persistAllToFS();
   }
   async _persistComponentsData() {
-    const persistP = this.componentsWithDependencies.map((componentWithDeps) => {
+    const dataToPersist = new DataToPersist();
+    this.componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      return allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.persistAllToFS() : Promise.resolve();
-      });
+      allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    return Promise.all(R.flatten(persistP));
+    if (this.consumer.config.overrides.hasChanged) {
+      const jsonFiles = await this.consumer.config.prepareToWrite({ bitDir: this.consumer.getPath() });
+      dataToPersist.addManyFiles(jsonFiles);
+    }
+    await dataToPersist.persistAllToFS();
   }
   _addBasePathIfExistToAllFiles() {
     if (!this.basePath) return;
@@ -156,11 +158,16 @@ export default class ManyComponentsWriter {
   }
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
-    const writeComponentsP = writeComponentsParams.map((writeParams) => {
-      const componentWriter = ComponentWriter.getInstance(writeParams);
-      return componentWriter.populateComponentsFilesToWrite();
+    const componentWriterInstances = writeComponentsParams.map(writeParams => ComponentWriter.getInstance(writeParams));
+    // add componentMap entries into .bitmap before starting the process because steps like writing package-json
+    // rely on .bitmap to determine whether a dependency exists and what's its origin
+    componentWriterInstances.forEach((componentWriter) => {
+      componentWriter.existingComponentMap =
+        componentWriter.existingComponentMap || componentWriter.addComponentToBitMap(componentWriter.writeToPath);
     });
-    this.writtenComponents = await Promise.all(writeComponentsP);
+    this.writtenComponents = await pMapSeries(componentWriterInstances, componentWriter =>
+      componentWriter.populateComponentsFilesToWrite()
+    );
   }
   _getWriteComponentsParams(): ComponentWriterProps[] {
     return this.componentsWithDependencies.map((componentWithDeps: ComponentWithDependencies) =>
@@ -204,7 +211,6 @@ export default class ManyComponentsWriter {
   }
   _getDefaultWriteParams(): Object {
     return {
-      override: true,
       writeConfig: this.writeConfig,
       writePackageJson: this.writePackageJson,
       consumer: this.consumer,
@@ -236,21 +242,6 @@ export default class ManyComponentsWriter {
             'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map',
             { dependencyId }
           );
-          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
-          return Promise.resolve(dep);
-        }
-        if (
-          depFromBitMap &&
-          (fs.existsSync(depFromBitMap.rootDir) ||
-            this.writtenComponents.find(c => c.writtenPath === depFromBitMap.rootDir))
-        ) {
-          dep.writtenPath = depFromBitMap.rootDir;
-          logger.debugAndAddBreadCrumb(
-            'writeToComponentsDir',
-            'writeToComponentsDir, ignore dependency {dependencyId} as it already exists in bit map and file system',
-            { dependencyId }
-          );
-          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         if (this.dependenciesIdsCache[dependencyId]) {
@@ -260,7 +251,6 @@ export default class ManyComponentsWriter {
             { dependencyId }
           );
           dep.writtenPath = this.dependenciesIdsCache[dependencyId];
-          this.bitMap.addDependencyToParent(componentWithDeps.component.id, dependencyId);
           return Promise.resolve(dep);
         }
         const depRootPath = this._getDependencyRootDir(dep.id);
@@ -275,7 +265,6 @@ export default class ManyComponentsWriter {
           component: dep,
           writeToPath: depRootPath,
           origin: COMPONENT_ORIGINS.NESTED,
-          parent: componentWithDeps.component.id,
           existingComponentMap: componentMap
         });
         return componentWriter.populateComponentsFilesToWrite();

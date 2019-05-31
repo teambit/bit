@@ -26,7 +26,6 @@ import Put from './commands/private-cmds/_put-cmd';
 import Fetch from './commands/private-cmds/_fetch-cmd';
 import Log from './commands/public-cmds/log-cmd';
 import Build from './commands/public-cmds/build-cmd';
-import EnvsAttach from './commands/public-cmds/envs-attach-cmd';
 import EjectConf from './commands/public-cmds/eject-conf-cmd';
 import InjectConf from './commands/public-cmds/inject-conf-cmd';
 import CiUpdate from './commands/private-cmds/ci-update-cmd';
@@ -51,6 +50,7 @@ import Login from './commands/public-cmds/login-cmd';
 import Logout from './commands/public-cmds/logout-cmd';
 import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
+import Doctor from './commands/public-cmds/doctor-cmd';
 
 export default function registerCommands(extensionsCommands): CommandRegistrar {
   return new CommandRegistrar(
@@ -81,7 +81,6 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new ScopeShow(),
       new Fetch(),
       new Build(),
-      new EnvsAttach(),
       new EjectConf(),
       new InjectConf(),
       new DescribeScope(),
@@ -107,7 +106,8 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Logout(),
       new Eject(),
       new Migrate(),
-      new Watch()
+      new Watch(),
+      new Doctor()
     ],
     extensionsCommands
   );

@@ -6,7 +6,7 @@ export type DependencyStatusResult = { missingFiles: string[] };
 export type DependencyStatusProps = { mainFile: string[] };
 
 async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps: DependencyStatusProps) {
-  const driver = await consumer.driver.getDriver(false);
+  const driver = consumer.driver.getDriver(false);
   const paths = dependencyStatusProps.mainFile;
   const consumerPath = consumer.getPath();
   const tree = await driver.getDependencyTree({
@@ -14,7 +14,7 @@ async function getTopLevelDependencies(consumer: Consumer, dependencyStatusProps
     consumerPath,
     filePaths: paths,
     bindingPrefix: DEFAULT_BINDINGS_PREFIX,
-    resolveModulesConfig: consumer.bitJson.resolveModules
+    resolveModulesConfig: consumer.config.resolveModules
   });
   const topLevelDependencies = Object.keys(tree.tree).map(topLevelFile => topLevelFile);
   return topLevelDependencies;

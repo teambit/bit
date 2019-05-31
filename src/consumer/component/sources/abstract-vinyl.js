@@ -76,6 +76,14 @@ export default class AbstractVinyl extends Vinyl {
     // $FlowFixMe
     return Source.from(eol.lf(this.contents, this.relative));
   }
+
+  async _getStatIfFileExists(): Promise<?fs.Stats> {
+    try {
+      return await fs.lstat(this.path);
+    } catch (err) {
+      return null; // probably file does not exist
+    }
+  }
 }
 
 /**

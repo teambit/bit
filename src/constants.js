@@ -120,19 +120,31 @@ export const DEFAULT_DEPENDENCIES = {};
 
 export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
 
-export const DEFAULT_HUB_DOMAIN = 'hub.bitsrc.io';
+export const BASE_WEB_DOMAIN = 'bit.dev';
 
-export const BASE_DOCS_DOMAIN = 'docs.bitsrc.io';
+export const PREVIOUSLY_BASE_WEB_DOMAIN = 'bitsrc.io';
 
-export const DEFAULT_HUB_LOGIN = 'https://bitsrc.io/bit-login';
+export const DEFAULT_HUB_DOMAIN = `hub.${BASE_WEB_DOMAIN}`;
+
+export const BASE_DOCS_DOMAIN = `docs.${BASE_WEB_DOMAIN}`;
+
+export const REPO_NAME = 'teambit/bit';
+
+export const DEFAULT_HUB_LOGIN = `https://${BASE_WEB_DOMAIN}/bit-login`;
 
 export const DEFAULT_BIT_ENV = 'production';
 
-export const DEFAULT_ANALYTICS_DOMAIN = 'https://analytics.bitsrc.io/';
+export const DEFAULT_ANALYTICS_DOMAIN = `https://analytics.${BASE_WEB_DOMAIN}/`;
 
 export const DEFAULT_REGISTRY_DOMAIN_PREFIX = '@bit';
 
-export const SEARCH_DOMAIN = 'api.bitsrc.io';
+export const SEARCH_DOMAIN = `api.${BASE_WEB_DOMAIN}`;
+
+export const RELEASE_SERVER = `https://api.${BASE_WEB_DOMAIN}/release`;
+
+export const DEFAULT_REGISTRY_URL = `https://node.${BASE_WEB_DOMAIN}`;
+
+export const PREVIOUSLY_DEFAULT_REGISTRY_URL = `https://node.${PREVIOUSLY_BASE_WEB_DOMAIN}`;
 
 export const DEFAULT_SSH_KEY_FILE = `${userHome}/.ssh/id_rsa`;
 
@@ -264,17 +276,12 @@ export const HOOKS_NAMES = [
 export const CACHE_ROOT = getCacheDirectory();
 
 /**
- * modules cache directory
- */
-export const MODULES_CACHE_DIR: PathOsBased = path.join(CACHE_ROOT, 'modules');
-
-/**
  * app cache directory
  */
 export const APP_CACHE_DIR = path.join(CACHE_ROOT, 'app');
 
 /**
- * glboal config directories
+ * global config directories
  */
 export const GLOBAL_CONFIG: PathOsBased = path.join(CACHE_ROOT, 'config');
 
@@ -289,11 +296,6 @@ export const BIT_HIDDEN_DIR = '.bit';
 export const BIT_GIT_DIR = 'bit';
 
 export const DOT_GIT_DIR = '.git';
-
-/**
- * modules cache filename
- */
-export const MODULES_CACHE_FILENAME = path.join(MODULES_CACHE_DIR, '.roadrunner.json');
 
 /**
  * bit registry default URL.
@@ -327,10 +329,6 @@ export const BIT_VERSION = packageFile.version;
 
 export const BIT_INSTALL_METHOD = packageFile.installationMethod;
 
-export const RELEASE_SERVER = 'https://api.bitsrc.io/release';
-
-export const DEFAULT_REGISTRY_URL = 'https://node.bitsrc.io';
-
 export const SKIP_UPDATE_FLAG = '--skip-update';
 
 export const LICENSE_FILENAME = 'LICENSE';
@@ -343,6 +341,20 @@ export const WRAPPER_DIR = 'bit_wrapper_dir';
 
 export const PACKAGE_JSON = 'package.json';
 
+export const PACKAGE_JSON_DEFAULT_INDENT = 2; // as per NPM default
+
 export const COMPILER_ENV_TYPE = 'compiler';
 
 export const TESTER_ENV_TYPE = 'tester';
+
+export const DEBUG_LOG: PathOsBased = path.join(GLOBAL_LOGS, 'debug.log');
+
+export const MANUALLY_REMOVE_DEPENDENCY = '-';
+
+export const MANUALLY_REMOVE_ENVIRONMENT = '-';
+
+export const MANUALLY_ADD_DEPENDENCY = '+';
+
+export const OVERRIDE_FILE_PREFIX = 'file://';
+
+export const OVERRIDE_COMPONENT_PREFIX = '@bit/';

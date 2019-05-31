@@ -27,6 +27,20 @@ export default class Dependencies {
     return this.dependencies;
   }
 
+  sort() {
+    this.dependencies.sort((a, b) => {
+      const idA = a.id.toString();
+      const idB = b.id.toString();
+      if (idA < idB) {
+        return -1;
+      }
+      if (idA > idB) {
+        return 1;
+      }
+      return 0;
+    });
+  }
+
   getClone(): Dependency[] {
     return this.dependencies.map(dependency => Dependency.getClone(dependency));
   }
@@ -159,11 +173,16 @@ export default class Dependencies {
   validate(): void {
     let message = 'failed validating the dependencies.';
     validateType(message, this.dependencies, 'dependencies', 'array');
+    const allIds = this.getAllIds();
     this.dependencies.forEach((dependency) => {
       validateType(message, dependency, 'dependency', 'object');
       if (!dependency.id) throw new ValidationError('one of the dependencies is missing ID');
       if (!dependency.relativePaths) {
         throw new ValidationError(`a dependency ${dependency.id.toString()} is missing relativePaths`);
+      }
+      const sameIds = allIds.filterExact(dependency.id);
+      if (sameIds.length > 1) {
+        throw new ValidationError(`a dependency ${dependency.id.toString()} is duplicated`);
       }
       const permittedProperties = ['id', 'relativePaths'];
       const currentProperties = Object.keys(dependency);
@@ -226,7 +245,7 @@ export default class Dependencies {
                 .toString();
               if (linkFileProps !== specifierProps) {
                 throw new ValidationError(
-                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${mainFileProps}"`
+                  `${message} expected properties of importSpecifier.linkFile "${specifierProps}", got "${linkFileProps}"`
                 );
               }
             }

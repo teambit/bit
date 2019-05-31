@@ -22,10 +22,6 @@ describe('bit export command', function () {
       helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
     });
-    it('should not write the exported component into bit.json', () => {
-      const bitJson = helper.readBitJson();
-      expect(bitJson.dependencies).not.to.have.property(`${helper.remoteScope}/bar/foo`);
-    });
     it('should write the exported component into bit.map', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo${VERSION_DELIMITER}0.0.1`);
@@ -83,6 +79,7 @@ describe('bit export command', function () {
       helper.addComponent('bit add bar/foo1.js', { i: 'bar/foo1' });
       helper.addComponent('bit add bar/foo2.js', { i: 'bar/foo2' });
       helper.tagAllComponents();
+      // DO NOT change the next line to `helper.exportAllComponents()`. the current form catches some wierd bugs
       helper.exportComponent('bar/foo1 bar/foo2');
     });
     it('should export them all', () => {
@@ -418,6 +415,33 @@ describe('bit export command', function () {
         const isType = helper.catComponent(`${helper.remoteScope}/utils/is-type@0.0.1`, remote2Path);
         expect(isType).to.have.property('files');
       });
+    });
+  });
+
+  describe('export a component when the checked out version is not the latest', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo('// v2');
+      helper.addComponentBarFoo();
+      helper.tagScope('2.0.0');
+      helper.exportAllComponents();
+      helper.createComponentBarFoo('// v1');
+      helper.tagScope('1.0.0');
+      helper.exportAllComponents();
+    });
+    it('.bitmap should keep the current version and do not update to the latest version', () => {
+      const bitMap = helper.readBitMap();
+      expect(bitMap).to.have.property(`${helper.remoteScope}/bar/foo@1.0.0`);
+      expect(bitMap).to.not.have.property(`${helper.remoteScope}/bar/foo@2.0.0`);
+    });
+    it('bit show should display the component with the current version, not the latest', () => {
+      const show = helper.showComponent('bar/foo');
+      expect(show).to.have.string('1.0.0');
+      expect(show).to.not.have.string('2.0.0');
+    });
+    it('the file content should not be changed', () => {
+      const barFooFile = helper.readFile('bar/foo.js');
+      expect(barFooFile).to.equal('// v1');
     });
   });
 });

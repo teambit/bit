@@ -7,7 +7,6 @@ import Ajv from 'ajv';
 import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
-import { ScopeNotFound } from '../scope/exceptions';
 import { BitId } from '../bit-id';
 import type { EnvExtensionOptions } from './env-extension';
 import type { ExtensionOptions } from './extension';
@@ -150,13 +149,14 @@ export default class BaseExtension {
     try {
       let initOptions = {};
       if (this.script && this.script.init && typeof this.script.init === 'function') {
-        initOptions = await this.script.init({
+        initOptions = this.script.init({
           rawConfig: this.rawConfig,
           dynamicConfig: this.dynamicConfig,
           api: this.api
         });
       }
-      this.initOptions = initOptions;
+      // wrap in promise, in case a script has async init
+      this.initOptions = await Promise.resolve(initOptions);
       this.initialized = true;
       // Make sure to not kill the process if an extension didn't load correctly
     } catch (err) {
@@ -223,7 +223,7 @@ export default class BaseExtension {
       this.loaded = baseProps.loaded;
       this.script = baseProps.script;
       this.dynamicConfig = baseProps.dynamicConfig;
-      this.init();
+      await this.init();
     }
   }
 
@@ -261,7 +261,6 @@ export default class BaseExtension {
     throws = false,
     context
   }: BaseLoadArgsProps): Promise<BaseExtensionProps> {
-    Analytics.addBreadCrumb('base-extension', 'load extension');
     logger.debug(`base-extension loading ${name}`);
     const concreteBaseAPI = _getConcreteBaseAPI({ name });
     if (options.file) {
@@ -292,7 +291,6 @@ export default class BaseExtension {
     };
     // Require extension from scope
     if (scopePath) {
-      // $FlowFixMe
       const { resolvedPath, componentPath } = _getExtensionPath(name, scopePath, options.core);
       const nameWithVersion = _addVersionToNameFromPathIfMissing(name, componentPath, options);
       staticExtensionProps = await BaseExtension.loadFromFile({
@@ -309,7 +307,6 @@ export default class BaseExtension {
   }
 
   static loadFromModelObject(modelObject: string | BaseExtensionModel) {
-    Analytics.addBreadCrumb('base-extension', 'load extension from model object');
     let staticExtensionProps: StaticProps;
     if (typeof modelObject === 'string') {
       staticExtensionProps = {
@@ -347,8 +344,7 @@ export default class BaseExtension {
     options = {},
     throws = false
   }: BaseLoadFromFileArgsProps): Promise<StaticProps> {
-    logger.debug(`loading extension ${name} from ${filePath}`);
-    Analytics.addBreadCrumb('base-extension', 'load extension from file');
+    logger.debug(`base-extension, loading extension ${name} from ${filePath}`);
     const extensionProps: StaticProps = {
       name,
       rawConfig,
@@ -388,7 +384,8 @@ export default class BaseExtension {
       const script = require(filePath); // eslint-disable-line
       extensionProps.script = script.default ? script.default : script;
       if (extensionProps.script.getSchema && typeof extensionProps.script.getSchema === 'function') {
-        extensionProps.schema = await extensionProps.script.getSchema();
+        // the function may or may not be a promise
+        extensionProps.schema = await Promise.resolve(extensionProps.script.getSchema());
         const valid = ajv.validate(extensionProps.schema, rawConfig);
         if (!valid) {
           throw new ExtensionSchemaError(name, ajv.errorsText());
@@ -417,13 +414,12 @@ export default class BaseExtension {
     return extensionProps;
   }
 
-  static async loadDynamicConfig(extensionProps: StaticProps): Promise<?Object> {
-    Analytics.addBreadCrumb('base-extension', 'loadDynamicConfig');
+  static loadDynamicConfig(extensionProps: StaticProps): ?Object {
     logger.debug('base-extension - loadDynamicConfig');
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], extensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
-        const dynamicConfig = await getDynamicConfig({
+        const dynamicConfig = getDynamicConfig({
           rawConfig: extensionProps.rawConfig
         });
         return dynamicConfig;
@@ -435,12 +431,12 @@ export default class BaseExtension {
   }
 }
 
-const _getExtensionPath = (name: string, scopePath: ?string, isCore: boolean = false): ExtensionPath => {
+const _getExtensionPath = (name: string, scopePath: string, isCore: boolean = false): ExtensionPath => {
   if (isCore) {
     return _getCoreExtensionPath(name);
   }
   if (!scopePath) {
-    throw new ScopeNotFound();
+    throw new Error('base-extension._getExtensionPath expects to get scopePath');
   }
   return _getRegularExtensionPath(name, scopePath);
 };

@@ -16,14 +16,26 @@ import GeneralError from '../../../error/general-error';
 
 export default class Add extends Command {
   name = 'add [path...]';
-  description = `add any subset of files to be tracked as a component(s)\n  https://${BASE_DOCS_DOMAIN}/docs/isolating-and-tracking-components.html`;
+  description = `add any subset of files to be tracked as a component(s)
+  all flags support glob patterns and {PARENT} {FILE_NAME} annotations
+  https://${BASE_DOCS_DOMAIN}/docs/cli-add.html
+  https://${BASE_DOCS_DOMAIN}/docs/add-and-isolate-components.html
+  https://${BASE_DOCS_DOMAIN}/docs/manage-component-files.html`;
   alias = 'a';
   opts = [
-    ['i', 'id <name>', 'component id, if not specified the name will be '],
-    ['m', 'main <file>', 'implementation/index file name or dsl (src/{PARENT}/{FILE_NAME})'],
-    ['t', 'tests <file...>', 'spec/test file name or dsl (tests/{PARENT}/{FILE_NAME})'],
-    ['n', 'namespace <namespace>', 'component namespace'],
-    ['e', 'exclude <file...>', 'exclude file name or dsl (src/{PARENT}/{FILE_NAME})'],
+    ['i', 'id <name>', 'manually set component id'],
+    ['m', 'main <file>', 'define entry point for the components'],
+    [
+      't',
+      'tests <file>/"<file>,<file>"',
+      'specify test files to track. use quotation marks to list files or use a glob pattern'
+    ],
+    ['n', 'namespace <namespace>', 'orginize component in a namespace'],
+    [
+      'e',
+      'exclude <file>/"<file>,<file>"',
+      'exclude file from being tracked. use quotation marks to list files or use a glob pattern'
+    ],
     ['o', 'override <boolean>', 'override existing component if exists (default = false)']
   ];
   loader = true;

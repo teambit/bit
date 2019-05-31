@@ -1,4 +1,3 @@
-import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
@@ -7,34 +6,6 @@ describe('bit import command with no ids', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
-  });
-  describe('with a component in bit.json', () => {
-    before(() => {
-      helper.setNewLocalAndRemoteScopes();
-      // export a new component "bar/foo"
-      helper.createComponentBarFoo();
-      helper.addComponentBarFoo();
-      helper.tagComponentBarFoo();
-      helper.exportComponent('bar/foo');
-      helper.reInitLocalScope();
-      helper.addRemoteScope();
-      // add "foo" as a bit.json dependency
-      const bitJsonPath = path.join(helper.localScopePath, 'bit.json');
-      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo`]: '0.0.1' });
-    });
-    it('should display a successful message with the list of installed components', () => {
-      const output = helper.importAllComponents(true);
-      expect(output.includes('successfully imported one component')).to.be.true;
-    });
-    describe('running bit import with --environment flag when no compiler nor tester is installed', () => {
-      let output;
-      before(() => {
-        output = helper.runCmd('bit import --environment');
-      });
-      it('should not throw an error', () => {
-        expect(output).to.have.string('successfully imported');
-      });
-    });
   });
   describe('with a component in bit.map', () => {
     before(() => {
@@ -52,9 +23,18 @@ describe('bit import command with no ids', function () {
       const output = helper.importAllComponents(true);
       expect(output.includes('successfully imported one component')).to.be.true;
     });
+    describe('running bit import with --environment flag when no compiler nor tester is installed', () => {
+      let output;
+      before(() => {
+        output = helper.runCmd('bit import --environment');
+      });
+      it('should not throw an error', () => {
+        expect(output).to.have.string('successfully imported');
+      });
+    });
   });
 
-  describe('with components in both bit.map and bit.json when they are modified locally', () => {
+  describe('with components in bit.map when they are modified locally', () => {
     let localScope;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
@@ -63,19 +43,12 @@ describe('bit import command with no ids', function () {
       helper.tagComponentBarFoo();
       helper.exportComponent('bar/foo');
       const bitMap = helper.readBitMap();
-      helper.createFile('bar', 'foo2.js');
-      helper.addComponent('bar/foo2.js', { i: 'bar/foo2' });
-      helper.tagAllComponents();
-      helper.exportAllComponents();
       helper.reInitLocalScope();
       helper.addRemoteScope();
       helper.writeBitMap(bitMap);
-      const bitJsonPath = path.join(helper.localScopePath, 'bit.json');
-      helper.addBitJsonDependencies(bitJsonPath, { [`${helper.remoteScope}/bar/foo2`]: '0.0.1' });
       helper.importAllComponents(true);
       const barFooFixtureV2 = "module.exports = function foo() { return 'got foo v2'; };";
       helper.createFile('bar', 'foo.js', barFooFixtureV2);
-      helper.createFile(path.join('components', 'bar', 'foo2'), 'foo2.js', barFooFixtureV2);
       localScope = helper.cloneLocalScope();
     });
     describe('without any flag', () => {
@@ -90,7 +63,6 @@ describe('bit import command with no ids', function () {
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string('bar/foo2');
       });
     });
     describe('with --override flag', () => {
@@ -102,13 +74,11 @@ describe('bit import command with no ids', function () {
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string('bar/foo2');
       });
       it('should override them all', () => {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.not.have.string('modified components');
         expect(statusOutput).to.not.have.string('bar/foo');
-        expect(statusOutput).to.not.have.string('bar/foo2');
       });
     });
     describe('with --merge=manual flag', () => {
@@ -120,7 +90,6 @@ describe('bit import command with no ids', function () {
       it('should display a successful message', () => {
         expect(output).to.have.string('successfully imported');
         expect(output).to.have.string('bar/foo');
-        expect(output).to.have.string('bar/foo2');
       });
       it('should show them as modified', () => {
         const statusOutput = helper.runCmd('bit status');

@@ -2,7 +2,7 @@
 import R from 'ramda';
 import chalk from 'chalk';
 import { NothingToImport } from '../exceptions';
-import { BitId, BitIds } from '../../bit-id';
+import { BitId } from '../../bit-id';
 import Component from '../component';
 import { Consumer } from '../../consumer';
 import { ComponentWithDependencies, Scope } from '../../scope';
@@ -16,6 +16,7 @@ import { applyModifiedVersion } from '../versions-ops/checkout-version';
 import { threeWayMerge, MergeOptions, FileStatus, getMergeStrategyInteractive } from '../versions-ops/merge-version';
 import type { MergeResultsThreeWay } from '../versions-ops/merge-version/three-way-merge';
 import ManyComponentsWriter from './many-components-writer';
+import { COMPONENT_ORIGINS } from '../../constants';
 
 export type ImportOptions = {
   ids: string[], // array might be empty
@@ -59,14 +60,14 @@ export default class ImportComponents {
 
   importComponents(): ImportResult {
     loader.start(BEFORE_IMPORT_ACTION);
-    this.options.saveDependenciesAsComponents = this.consumer.bitJson.saveDependenciesAsComponents;
+    this.options.saveDependenciesAsComponents = this.consumer.config.saveDependenciesAsComponents;
     if (!this.options.writePackageJson) {
       // if package.json is not written, it's impossible to install the packages and dependencies as npm packages
       this.options.installNpmPackages = false;
       this.options.saveDependenciesAsComponents = true;
     }
     if (!this.options.ids || R.isEmpty(this.options.ids)) {
-      return this.importAccordingToBitJsonAndBitMap();
+      return this.importAccordingToBitMap();
     }
     return this.importSpecificComponents();
   }
@@ -86,59 +87,47 @@ export default class ImportComponents {
     return { dependencies: componentsWithDependencies, importDetails };
   }
 
-  async importAccordingToBitJsonAndBitMap(): ImportResult {
+  async importAccordingToBitMap(): ImportResult {
     this.options.objectsOnly = !this.options.merge && !this.options.override;
 
-    const dependenciesFromBitJson = BitIds.fromObject(this.consumer.bitJson.dependencies);
-    const componentsFromBitMap = this.consumer.bitMap.getAuthoredExportedComponents();
+    const authoredExportedComponents = this.consumer.bitMap.getAuthoredExportedComponents();
+    const importedComponents = this.consumer.bitMap.getAllBitIds([COMPONENT_ORIGINS.IMPORTED]);
+    const componentsIdsToImport = [...authoredExportedComponents, ...importedComponents];
 
     let compiler;
     let tester;
 
-    if ((R.isNil(dependenciesFromBitJson) || R.isEmpty(dependenciesFromBitJson)) && R.isEmpty(componentsFromBitMap)) {
+    if (R.isEmpty(componentsIdsToImport)) {
       if (!this.options.withEnvironments) {
-        return Promise.reject(new NothingToImport());
+        throw new NothingToImport();
       }
       compiler = await this.consumer.compiler;
       tester = await this.consumer.tester;
       if (!tester && !compiler) {
-        return Promise.reject(new NothingToImport());
+        throw new NothingToImport();
       }
     }
-    const allDependenciesIds = dependenciesFromBitJson.concat(componentsFromBitMap);
-    await this._throwForModifiedOrNewComponents(allDependenciesIds);
-    const beforeImportVersions = await this._getCurrentVersions(allDependenciesIds);
+    await this._throwForModifiedOrNewComponents(componentsIdsToImport);
+    const beforeImportVersions = await this._getCurrentVersions(componentsIdsToImport);
 
-    let componentsAndDependenciesBitJson = [];
-    let componentsAndDependenciesBitMap = [];
-    if (dependenciesFromBitJson) {
-      // $FlowFixMe
-      componentsAndDependenciesBitJson = await this.consumer.importComponents(dependenciesFromBitJson, true);
-      await this._writeToFileSystem(componentsAndDependenciesBitJson);
+    let componentsAndDependencies = [];
+    if (componentsIdsToImport.length) {
+      componentsAndDependencies = await this.consumer.importComponents(componentsIdsToImport, true);
+      await this._writeToFileSystem(componentsAndDependencies);
     }
-    if (componentsFromBitMap.length) {
-      componentsAndDependenciesBitMap = await this.consumer.importComponents(componentsFromBitMap, true);
-      // don't write the package.json for an authored component, because its dependencies probably managed by the root
-      // package.json. Also, don't install npm packages for the same reason.
-      this.options.writePackageJson = false;
-      this.options.installNpmPackages = false;
-      // don't force the writing to the filesystem because as an author I may have some modified files
-      await this._writeToFileSystem(componentsAndDependenciesBitMap);
-    }
-    const componentsAndDependencies = [...componentsAndDependenciesBitJson, ...componentsAndDependenciesBitMap];
     const importDetails = await this._getImportDetails(beforeImportVersions, componentsAndDependencies);
     if (this.options.withEnvironments) {
       compiler = compiler || (await this.consumer.compiler);
       tester = tester || (await this.consumer.tester);
-      const envsPromises = [];
       const context = { workspaceDir: this.consumer.getPath() };
+      const envsArgs = [this.consumer.scope, { verbose: this.options.verbose }, context];
+      const envComponents = [];
       if (compiler) {
-        envsPromises.push(compiler.install(this.consumer.scope, { verbose: this.options.verbose }, context));
+        envComponents.push(await compiler.install(...envsArgs));
       }
       if (tester) {
-        envsPromises.push(tester.install(this.consumer.scope, { verbose: this.options.verbose }, context));
+        envComponents.push(await tester.install(...envsArgs));
       }
-      const envComponents = await Promise.all(envsPromises);
       return {
         dependencies: componentsAndDependencies,
         envComponents: R.flatten(envComponents),
@@ -271,7 +260,7 @@ export default class ImportComponents {
    * 3) when there is no conflict or there are conflicts and the strategy is manual, write the files
    * according to the merge result. (done by applyModifiedVersion())
    */
-  async _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): Promise<?FilesStatus> {
+  _updateComponentFilesPerMergeStrategy(componentMergeStatus: ComponentMergeStatus): ?FilesStatus {
     const mergeResults = componentMergeStatus.mergeResults;
     if (!mergeResults) return null;
     const component = componentMergeStatus.componentWithDependencies.component;
@@ -317,8 +306,8 @@ export default class ImportComponents {
     }
     this.mergeStatus = {};
 
-    const componentsToWriteP = componentsStatus.map(async (componentStatus) => {
-      const filesStatus: ?FilesStatus = await this._updateComponentFilesPerMergeStrategy(componentStatus);
+    const componentsToWrite = componentsStatus.map((componentStatus) => {
+      const filesStatus: ?FilesStatus = this._updateComponentFilesPerMergeStrategy(componentStatus);
       const componentWithDependencies = componentStatus.componentWithDependencies;
       if (!filesStatus) return componentWithDependencies;
       this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;
@@ -329,7 +318,6 @@ export default class ImportComponents {
       }
       return componentWithDependencies;
     });
-    const componentsToWrite = await Promise.all(componentsToWriteP);
     const removeNulls = R.reject(R.isNil);
     return removeNulls(componentsToWrite);
   }

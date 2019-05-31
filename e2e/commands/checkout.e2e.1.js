@@ -100,7 +100,7 @@ describe('bit checkout command', function () {
             });
             it('should allow tagging when --ignore-newest-version flag is used', () => {
               const tagOutput = helper.tagComponent('bar/foo', 'msg', '--ignore-newest-version');
-              expect(tagOutput).to.have.string('1 components tagged');
+              expect(tagOutput).to.have.string('1 component(s) tagged');
             });
           });
         });
@@ -759,6 +759,43 @@ describe('bit checkout command', function () {
         const diffOutput = helper.runCmd('bit diff bar/foo');
         expect(diffOutput).to.have.string('no diff');
       });
+    });
+  });
+  describe('checkout with latest --all when multiple components have conflicts', () => {
+    let output;
+    let scopeBeforeModified;
+    // for some wierd reason, the bug related to this test was happening when it's 5 components.
+    // tried with 10 and 20 and it didn't happen. probably related to the implementation of
+    // `Promise.all` somehow. also, with 5 components, it was happening in about 30% of the times.
+    const numOfComponents = 5;
+    before(() => {
+      helper.reInitLocalScope();
+      for (let index = 0; index < numOfComponents; index += 1) {
+        helper.createFile('bar', `foo${index}.js`, barFooV1);
+      }
+      helper.addComponent('bar/*');
+      helper.tagAllComponents();
+      for (let index = 0; index < numOfComponents; index += 1) {
+        helper.createFile('bar', `foo${index}.js`, barFooV2);
+      }
+      helper.tagAllComponents();
+      helper.checkout('0.0.1 --all');
+      for (let index = 0; index < numOfComponents; index += 1) {
+        helper.createFile('bar', `foo${index}.js`, barFooV3);
+      }
+      // intermediate step, make sure it shows as modified
+      const statusOutput = helper.runCmd('bit status');
+      expect(statusOutput).to.have.string('modified');
+      scopeBeforeModified = helper.cloneLocalScope();
+    });
+    it('checkout with latest --all should display a successful message', () => {
+      output = helper.checkout('latest --all --theirs');
+      expect(output).to.have.string(successOutput);
+    });
+    it('merge all of them should display a successful message', () => {
+      helper.getClonedLocalScope(scopeBeforeModified);
+      const mergeOutput = helper.mergeVersion('0.0.2', 'foo0 foo1 foo2 foo3 foo4', '--theirs');
+      expect(mergeOutput).to.have.string('successfully merged');
     });
   });
   describe('using a combination of values and flags that are not making sense', () => {

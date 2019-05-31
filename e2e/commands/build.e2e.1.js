@@ -82,6 +82,15 @@ describe('bit build', function () {
             expect(distFileFullPath).to.be.a.file();
             expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
           });
+          it('should not take dist files from cache with -c', () => {
+            helper.deleteFile(compilerFolder);
+            const output = helper.buildComponentWithOptions('bar/foo', { c: '' });
+            expect(output).to.have.string(
+              `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
+            );
+            expect(distFileFullPath).to.be.a.file();
+            expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
+          });
         });
         describe('build all components', () => {
           it('should take dist files from cache (models)', () => {
@@ -91,6 +100,14 @@ describe('bit build', function () {
           });
           it('should not take dist files from cache with --no-cache', () => {
             const output = helper.buildComponentWithOptions('', { '-no-cache': '' });
+            expect(output).to.have.string(
+              `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
+            );
+            expect(distFileFullPath).to.be.a.file();
+            expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
+          });
+          it('should not take dist files from cache with -c', () => {
+            const output = helper.buildComponentWithOptions('', { c: '' });
             expect(output).to.have.string(
               `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
             );
@@ -128,6 +145,10 @@ describe('bit build', function () {
       it('should indicate that compiler was installed', () => {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
+      });
+      it('should not create an index.js file because package.json file already exists', () => {
+        const indexJs = path.join(helper.localScopePath, 'components/bar/foo/index.js');
+        expect(indexJs).to.not.be.a.path();
       });
       describe('changing dist target', () => {
         let rebuildOutput;

@@ -15,6 +15,8 @@ import DependencyNotFound from './dependency-not-found';
 import CorruptedComponent from './corrupted-component';
 import CyclicDependencies from './cyclic-dependencie';
 import HashMismatch from './hash-mismatch';
+import InvalidIndexJson from './invalid-index-json';
+import OutdatedIndexJson from './outdated-index-json';
 
 export {
   ScopeNotFound,
@@ -32,5 +34,7 @@ export {
   ResolutionException,
   DependencyNotFound,
   CorruptedComponent,
-  CyclicDependencies
+  CyclicDependencies,
+  InvalidIndexJson,
+  OutdatedIndexJson
 };

@@ -27,8 +27,7 @@ export async function buildAll(noCache: boolean, verbose: boolean): Promise<Obje
   loader.start(BEFORE_LOADING_COMPONENTS);
   const { components } = await consumer.loadComponents(authoredAndImportedIds);
   loader.stop();
-  const buildAllP = await consumer.scope.buildMultiple(components, consumer, noCache, verbose);
-  const allComponents = await Promise.all(buildAllP);
+  const allComponents = await consumer.scope.buildMultiple(components, consumer, noCache, verbose);
   const componentsObj = {};
   allComponents.forEach((component) => {
     componentsObj[component.component] = component.buildResults;

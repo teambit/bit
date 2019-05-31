@@ -44,7 +44,8 @@ export default (async function buildComponent({
       logger.debug('compiler was not found, nothing to build');
       return null;
     }
-    logger.debug(
+    logger.debugAndAddBreadCrumb(
+      'build-component.buildComponent',
       'compiler was not found, however, because the dists are set to be outside the components directory, save the source file as dists'
     );
     component.copyFilesIntoDists();
@@ -60,7 +61,10 @@ export default (async function buildComponent({
   }
   const needToRebuild = await _isNeededToReBuild(consumer, component.id, noCache);
   if (!needToRebuild && !component.dists.isEmpty()) {
-    logger.debug('skip the build process as the component was not modified, use the dists saved in the model');
+    logger.debugAndAddBreadCrumb(
+      'build-component.buildComponent',
+      'skip the build process as the component was not modified, use the dists saved in the model'
+    );
     return component.dists;
   }
   logger.debug('compiler found, start building');
@@ -188,7 +192,7 @@ const _runBuild = async ({
 
   let componentDir = '';
   if (componentMap) {
-    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.rootDir);
+    const rootDistDirRelative = component.dists.getDistDir(consumer, componentMap.getRootDir());
     if (consumer) rootDistDir = consumer.toAbsolutePath(rootDistDirRelative);
     if (consumerPath && componentMap.getComponentDir()) {
       componentDir = componentMap.getComponentDir() || '';
@@ -209,7 +213,8 @@ const _runBuild = async ({
       // Change the cwd to make sure we found the needed files
       process.chdir(componentRoot);
       if (compiler.action) {
-        const shouldWriteConfig = compiler.writeConfigFilesOnAction && component.getDetachedCompiler();
+        const isCompilerDetached = await component.getDetachedCompiler(consumer);
+        const shouldWriteConfig = compiler.writeConfigFilesOnAction && isCompilerDetached;
         // Write config files to tmp folder
         if (shouldWriteConfig) {
           tmpFolderFullPath = component.getTmpFolder(consumerPath);
@@ -234,7 +239,8 @@ const _runBuild = async ({
           api: compiler.api,
           context
         };
-        const result = await compiler.action(actionParams);
+        // $FlowFixMe we verified above that action is set
+        const result = await Promise.resolve(compiler.action(actionParams));
         if (tmpFolderFullPath) {
           if (verbose) {
             console.log(`\ndeleting tmp directory ${tmpFolderFullPath}`); // eslint-disable-line no-console
@@ -251,7 +257,7 @@ const _runBuild = async ({
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
       }
-      return compiler.oldAction(files, rootDistDir, context);
+      return Promise.resolve(compiler.oldAction(files, rootDistDir, context));
     })
     .catch((e) => {
       if (tmpFolderFullPath) {

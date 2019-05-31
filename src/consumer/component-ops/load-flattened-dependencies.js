@@ -58,7 +58,7 @@ export default (async function loadFlattenedDependencies(
   async function loadFlattenedFromFsRecursively(components: Component[]) {
     const currentIds = BitIds.fromArray(components.map(c => c.id));
     const ids = R.flatten(components.filter(c => c.loadedFromFileSystem).map(c => c.dependencies.getAllIds()));
-    const idsUniq = BitIds.fromArray(ids).getUniq();
+    const idsUniq = BitIds.uniqFromArray(ids);
     const newIds = idsUniq.filter(id => !currentIds.has(id));
     if (R.isEmpty(newIds)) return;
     const deps = await loadManyDependencies(newIds);

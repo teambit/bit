@@ -10,20 +10,18 @@ import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
 import type { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
 import { Repository } from '../scope/objects';
-import { pathJoinLinux } from '../utils';
+import { pathJoinLinux, sortObject, sha1 } from '../utils';
 import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
 import type { PathOsBased } from '../utils/path';
-import type { EnvExtensionObject } from '../consumer/bit-json/abstract-bit-json';
+import type { EnvExtensionObject } from '../consumer/config/abstract-config';
 import { ComponentWithDependencies } from '../scope';
 import { Analytics } from '../analytics/analytics';
 import ExtensionGetDynamicPackagesError from './exceptions/extension-get-dynamic-packages-error';
-import type CompilerExtension from './compiler-extension';
-import type TesterExtension from './tester-extension';
-import { COMPONENT_ORIGINS, COMPILER_ENV_TYPE, TESTER_ENV_TYPE } from '../constants';
+import { COMPONENT_ORIGINS, MANUALLY_REMOVE_ENVIRONMENT } from '../constants';
 import type { ComponentOrigin } from '../consumer/bit-map/component-map';
 import type ConsumerComponent from '../consumer/component';
-import type ConsumerBitJson from '../consumer/bit-json/consumer-bit-json';
-import type ComponentBitJson from '../consumer/bit-json';
+import type WorkspaceConfig from '../consumer/config/workspace-config';
+import type ComponentConfig from '../consumer/config';
 import logger from '../logger/logger';
 import { Dependencies } from '../consumer/component/dependencies';
 import ConfigDir from '../consumer/bit-map/config-dir';
@@ -32,6 +30,9 @@ import installExtensions from '../scope/extensions/install-extensions';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import RemovePath from '../consumer/component/sources/remove-path';
 import type Consumer from '../consumer/consumer';
+import type { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
+import AbstractConfig from '../consumer/config/abstract-config';
+import makeEnv from './env-factory';
 
 // Couldn't find a good way to do this with consts
 // see https://github.com/facebook/flow/issues/627
@@ -120,8 +121,6 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toModelObject(): EnvExtensionModel {
-    Analytics.addBreadCrumb('env-extension', 'toModelObject');
-    logger.debug('env-extension - toModelObject');
     const baseObject: BaseExtensionModel = super.toModelObject();
     const files = this.files.map(file => file.toModelObject());
     const modelObject = { files, ...baseObject };
@@ -129,8 +128,6 @@ export default class EnvExtension extends BaseExtension {
   }
 
   toObject(): Object {
-    Analytics.addBreadCrumb('env-extension', 'toObject');
-    logger.debug('env-extension - toObject');
     const baseObject: Object = super.toObject();
     const files = this.files;
     const object = { ...baseObject, files };
@@ -143,8 +140,7 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   toBitJsonObject(ejectedEnvDirectory: string): { [string]: EnvExtensionObject } {
-    Analytics.addBreadCrumb('env-extension', 'toBitJsonObject');
-    logger.debug('env-extension - toBitJsonObject');
+    logger.debug('env-extension', 'toBitJsonObject');
     const files = {};
     this.files.forEach((file) => {
       const relativePath = pathJoinLinux(ejectedEnvDirectory, file.relative);
@@ -218,15 +214,14 @@ export default class EnvExtension extends BaseExtension {
   }
 
   async reload(scopePath: string, context?: Object): Promise<void> {
-    Analytics.addBreadCrumb('env-extension', 'reload');
-    logger.debug('env-extension - reload');
+    logger.debug('env-extension', 'reload');
     if (context) {
       this.context = context;
     }
     const throws = true;
     await super.reload(scopePath, { throws });
     // $FlowFixMe
-    const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(this);
+    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(this);
     this.dynamicPackageDependencies = dynamicPackageDependencies;
   }
 
@@ -236,8 +231,6 @@ export default class EnvExtension extends BaseExtension {
    * $FlowFixMe seems to be an issue opened for this https://github.com/facebook/flow/issues/4953
    */
   static async load(props: EnvLoadArgsProps): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('env-extension', 'load');
-    logger.debug('env-extension - load');
     const baseExtensionProps: BaseExtensionProps = await super.load(props);
     // $FlowFixMe
     const files = await ExtensionFile.loadFromBitJsonObject(
@@ -248,21 +241,19 @@ export default class EnvExtension extends BaseExtension {
       props.envType
     );
     const envExtensionProps: EnvExtensionProps = { envType: props.envType, files, ...baseExtensionProps };
-    const dynamicPackageDependencies = await EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
+    const dynamicPackageDependencies = EnvExtension.loadDynamicPackageDependencies(envExtensionProps);
     envExtensionProps.dynamicPackageDependencies = dynamicPackageDependencies;
-    const dynamicConfig = await EnvExtension.loadDynamicConfig(envExtensionProps);
+    const dynamicConfig = EnvExtension.loadDynamicConfig(envExtensionProps);
     // $FlowFixMe
     envExtensionProps.dynamicConfig = dynamicConfig;
     return envExtensionProps;
   }
 
-  static async loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): Promise<?Object> {
-    Analytics.addBreadCrumb('env-extension', 'loadDynamicPackageDependencies');
-    logger.debug('env-extension - loadDynamicPackageDependencies');
+  static loadDynamicPackageDependencies(envExtensionProps: EnvExtensionProps): ?Object {
     const getDynamicPackageDependencies = R.path(['script', 'getDynamicPackageDependencies'], envExtensionProps);
     if (getDynamicPackageDependencies && typeof getDynamicPackageDependencies === 'function') {
       try {
-        const dynamicPackageDependencies = await getDynamicPackageDependencies({
+        const dynamicPackageDependencies = getDynamicPackageDependencies({
           rawConfig: envExtensionProps.rawConfig,
           dynamicConfig: envExtensionProps.dynamicConfig,
           configFiles: envExtensionProps.files,
@@ -277,13 +268,11 @@ export default class EnvExtension extends BaseExtension {
   }
 
   // $FlowFixMe
-  static async loadDynamicConfig(envExtensionProps: EnvExtensionProps): Promise<?Object> {
-    Analytics.addBreadCrumb('env-extension', 'loadDynamicConfig');
-    logger.debug('env-extension - loadDynamicConfig');
+  static loadDynamicConfig(envExtensionProps: EnvExtensionProps): ?Object {
     const getDynamicConfig = R.path(['script', 'getDynamicConfig'], envExtensionProps);
     if (getDynamicConfig && typeof getDynamicConfig === 'function') {
       try {
-        const dynamicConfig = await getDynamicConfig({
+        const dynamicConfig = getDynamicConfig({
           rawConfig: envExtensionProps.rawConfig,
           configFiles: envExtensionProps.files,
           context: envExtensionProps.context
@@ -304,8 +293,6 @@ export default class EnvExtension extends BaseExtension {
     modelObject: EnvExtensionModel & { envType: EnvType },
     repository: Repository
   ): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
-    logger.debug('env-extension - loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -318,11 +305,9 @@ export default class EnvExtension extends BaseExtension {
   }
 
   static async loadFromSerializedModelObject(
-    // $FlowFixMe
     modelObject: EnvExtensionSerializedModel & { envType: EnvType }
   ): Promise<EnvExtensionProps> {
-    Analytics.addBreadCrumb('env-extension', 'loadFromModelObject');
-    logger.debug('env-extension - loadFromModelObject');
+    logger.debug('env-extension', 'loadFromModelObject');
     // $FlowFixMe
     const baseExtensionProps: BaseExtensionProps = super.loadFromModelObject(modelObject);
     let files = [];
@@ -335,22 +320,22 @@ export default class EnvExtension extends BaseExtension {
   }
 
   /**
-   * Load the compiler / tester from the correct place
-   * This take into account the component origin (authored / imported)
-   * And the detach status of the env
-   * If a component has a bit.json with compiler defined take it
-   * Else if a component is not authored take if from the models
-   * Else, for authored component check if the compiler has been changed
-   *
+   * load the compiler/tester according to the following strategies:
+   * 1. from component config. (bit.json/package.json of the component) if it was written.
+   * 2. from component model. an imported component might not have the config written.
+   * for author, it's irrelevant, because upon import it's written to consumer config (if changed).
+   * 3. from consumer config overrides. (bit.json/package.json of the consumer when this component
+   * overrides the general env config).
+   * 4. from consumer config.
    */
   static async loadFromCorrectSource({
     consumerPath,
     scopePath,
     componentOrigin,
     componentFromModel,
-    consumerBitJson,
-    componentBitJson,
-    detached,
+    componentConfig,
+    overridesFromConsumer,
+    workspaceConfig,
     envType,
     context
   }: {
@@ -358,89 +343,94 @@ export default class EnvExtension extends BaseExtension {
     scopePath: string,
     componentOrigin: ComponentOrigin,
     componentFromModel: ConsumerComponent,
-    consumerBitJson: ConsumerBitJson,
-    componentBitJson: ?ComponentBitJson,
-    detached: ?boolean,
+    componentConfig: ?ComponentConfig,
+    overridesFromConsumer: ?ConsumerOverridesOfComponent,
+    workspaceConfig: WorkspaceConfig,
     envType: EnvType,
     context?: Object
-  }): Promise<?CompilerExtension | ?TesterExtension> {
-    Analytics.addBreadCrumb('env-extension', 'loadFromCorrectSource');
-    logger.debug(`env-extension (${envType}) loadFromCorrectSource`);
-
-    // Authored component
-    if (componentOrigin === COMPONENT_ORIGINS.AUTHORED) {
-      // The component is not detached - load from the consumer bit.json
-      if (!detached) {
-        return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
+  }): Promise<?EnvExtension> {
+    logger.debug('env-extension', `(${envType}) loadFromCorrectSource`);
+    if (componentConfig && componentConfig.componentHasWrittenConfig) {
+      // load from component config.
+      // $FlowFixMe
+      const envConfig = { [envType]: componentConfig[envType] };
+      const configPath = path.dirname(componentConfig.path);
+      logger.debug(`env-extension loading ${envType} from component config`);
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath, context });
+    }
+    if (componentOrigin !== COMPONENT_ORIGINS.AUTHORED) {
+      // config was not written into component dir, load the config from the model
+      logger.debug(`env-extension, loading ${envType} from the model`);
+      return componentFromModel ? componentFromModel[envType] : undefined;
+    }
+    if (overridesFromConsumer && overridesFromConsumer.env && overridesFromConsumer.env[envType]) {
+      if (overridesFromConsumer.env[envType] === MANUALLY_REMOVE_ENVIRONMENT) {
+        logger.debug(`env-extension, ${envType} was manually removed from the consumer config overrides`);
+        return null;
       }
-      // The component is detached - load from the component bit.json or from the models
-      return loadFromComponentBitJsonOrFromModel({
-        modelComponent: componentFromModel,
-        componentBitJson,
-        envType,
-        consumerPath,
-        scopePath,
-        context
-      });
+      logger.debug(`env-extension, loading ${envType} from the consumer config overrides`);
+      // $FlowFixMe
+      const envConfig = { [envType]: AbstractConfig.transformEnvToObject(overridesFromConsumer.env[envType]) };
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
     }
+    // $FlowFixMe
+    if (workspaceConfig[envType]) {
+      logger.debug(`env-extension, loading ${envType} from the consumer config`);
+      // $FlowFixMe
+      const envConfig = { [envType]: workspaceConfig[envType] };
+      return loadFromConfig({ envConfig, envType, consumerPath, scopePath, configPath: consumerPath, context });
+    }
+    return null;
+  }
 
-    // Not authored components
-    // The component is attached - load from the consumer bit.json
-    // This is in purpose checking false not a falsy. since by default is undefined which is different from false.
-    if (detached === false) {
-      return loadFromBitJson({ bitJson: consumerBitJson, envType, consumerPath, scopePath, context });
-    }
-    return loadFromComponentBitJsonOrFromModel({
-      modelComponent: componentFromModel,
-      componentBitJson,
-      envType,
-      consumerPath,
-      scopePath,
-      context
-    });
+  /**
+   * are two envs (in the model/scope format) different
+   */
+  static areEnvsDifferent(envModelA: ?EnvExtensionModel, envModelB: ?EnvExtensionModel) {
+    const sortEnv = (env) => {
+      env.files = R.sortBy(R.prop('name'), env.files);
+      env.config = sortObject(env.config);
+      const result = sortObject(env);
+      return result;
+    };
+    const stringifyEnv = (env) => {
+      if (!env) {
+        return '';
+      }
+      if (typeof env === 'string') {
+        return env;
+      }
+      return JSON.stringify(sortEnv(env));
+    };
+    const envModelAString = stringifyEnv(envModelA);
+    const envModelBString = stringifyEnv(envModelB);
+    return sha1(envModelAString) !== sha1(envModelBString);
   }
 }
 
-const loadFromBitJson = ({
-  bitJson,
+async function loadFromConfig({
+  envConfig,
   envType,
   consumerPath,
   scopePath,
+  configPath,
   context
-}): Promise<?CompilerExtension | ?TesterExtension> => {
-  logger.debug(`env-extension (${envType}) loadFromBitJson`);
-  if (envType === COMPILER_ENV_TYPE) {
-    return bitJson.loadCompiler(consumerPath, scopePath, context);
-  }
-  return bitJson.loadTester(consumerPath, scopePath, context);
-};
-
-const loadFromComponentBitJsonOrFromModel = async ({
-  modelComponent,
-  componentBitJson,
-  envType,
-  consumerPath,
-  scopePath,
-  context
-}: {
-  modelComponent: ConsumerComponent,
-  componentBitJson: ?ComponentBitJson,
-  envType: EnvType,
-  consumerPath: string,
-  scopePath: string,
-  context?: Object
-}): Promise<?CompilerExtension | ?TesterExtension> => {
-  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel`);
-  if (componentBitJson) {
-    return loadFromBitJson({ bitJson: componentBitJson, envType, consumerPath, scopePath, context });
-  }
-  logger.debug(`env-extension (${envType}) loadFromComponentBitJsonOrFromModel. loading from the model`);
-  if (envType === COMPILER_ENV_TYPE) {
-    return modelComponent ? modelComponent.compiler : undefined;
-  }
-  if (envType === TESTER_ENV_TYPE) {
-    return modelComponent ? modelComponent.tester : undefined;
-  }
-
-  return undefined;
-};
+}): Promise<?EnvExtension> {
+  const env = envConfig[envType];
+  if (!env) return null;
+  const envName = Object.keys(env)[0];
+  const envObject = env[envName];
+  const envProps = {
+    name: envName,
+    consumerPath,
+    scopePath,
+    rawConfig: envObject.rawConfig,
+    files: envObject.files,
+    bitJsonPath: configPath,
+    options: envObject.options,
+    envType,
+    context
+  };
+  // $FlowFixMe
+  return makeEnv(envType, envProps);
+}

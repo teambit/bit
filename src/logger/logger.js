@@ -1,8 +1,9 @@
 /** @flow */
+import serializeError from 'serialize-error';
 import format from 'string-format';
 import winston from 'winston';
 import path from 'path';
-import { GLOBAL_LOGS } from '../constants';
+import { GLOBAL_LOGS, DEBUG_LOG } from '../constants';
 import { Analytics } from '../analytics/analytics';
 
 // Store the extensionsLoggers to prevent create more than one logger for the same extension
@@ -10,7 +11,7 @@ import { Analytics } from '../analytics/analytics';
 const extensionsLoggers = new Map();
 
 export const baseFileTransportOpts = {
-  filename: path.join(GLOBAL_LOGS, 'debug.log'),
+  filename: DEBUG_LOG,
   json: false,
   // Make it debug level also in production until the product will be more stable. in the future this should be changed to error
   level: process.env.NODE_ENV === 'production' ? 'debug' : 'debug',
@@ -93,23 +94,61 @@ logger.exitAfterFlush = async (code: number = 0, commandName: string) => {
   });
 };
 
-function addBreakCrumb(category: string, message: string, data: Object = {}) {
+function addBreakCrumb(category: string, message: string, data: Object = {}, extraData) {
   const hashedData = {};
   Object.keys(data).forEach(key => (hashedData[key] = Analytics.hashData(data[key])));
   const messageWithHashedData = format(message, hashedData);
-  Analytics.addBreadCrumb(category, messageWithHashedData);
+  extraData = extraData instanceof Error ? serializeError(extraData) : extraData;
+  Analytics.addBreadCrumb(category, messageWithHashedData, extraData);
 }
 
-logger.debugAndAddBreadCrumb = (category: string, message: string, data: Object) => {
-  const messageWithData = data ? format(message, data) : message;
-  logger.debug(category, messageWithData);
-  addBreakCrumb(category, message, data);
+logger.debugAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
+  addToLoggerAndToBreadCrumb('debug', category, message, data);
 };
 
+logger.warnAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
+  addToLoggerAndToBreadCrumb('warn', category, message, data, extraData);
+};
+
+logger.errorAndAddBreadCrumb = (category: string, message: string, data: Object, extraData?: Object) => {
+  addToLoggerAndToBreadCrumb('error', category, message, data, extraData);
+};
+
+function addToLoggerAndToBreadCrumb(
+  level: string,
+  category: string,
+  message: string,
+  data: Object,
+  extraData?: ?Object
+) {
+  if (!category) throw new TypeError('addToLoggerAndToBreadCrumb, category is missing');
+  if (!message) throw new TypeError('addToLoggerAndToBreadCrumb, message is missing');
+  const messageWithData = data ? format(message, data) : message;
+  logger[level](category, messageWithData, extraData);
+  addBreakCrumb(category, message, data, extraData);
+}
+
+/**
+ * prefix BIT_LOG to the command, provides the ability to log into the console.
+ * two options are available here:
+ * 1) use the level. e.g. `BIT_LOG=error bit import`.
+ * 2) use the message prefix, e.g. `BIT_LOG=ssh bit import`.
+ * 3) use multiple message prefixes, e.g. `BIT_LOG=ssh,env bit import`.
+ */
 if (process.env.BIT_LOG) {
-  const level = process.env.BIT_LOG;
-  logger.add(winston.transports.Console, { level });
-  logger.cli();
+  const levels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
+  if (levels.includes(process.env.BIT_LOG)) {
+    const level = process.env.BIT_LOG;
+    logger.add(winston.transports.Console, { level });
+    logger.cli();
+  } else {
+    const prefixes = process.env.BIT_LOG.split(',');
+    logger.on('logging', (transport, level, msg) => {
+      if (prefixes.some(prefix => msg.startsWith(prefix))) {
+        console.log(`\n${msg}`);
+      }
+    });
+  }
 }
 
 export default logger;

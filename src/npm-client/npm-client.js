@@ -1,5 +1,7 @@
 // @flow
 import execa from 'execa';
+import pMapSeries from 'p-map-series';
+import semver from 'semver';
 import R, { isNil, merge, toPairs, map, join, is } from 'ramda';
 import chalk from 'chalk';
 import fs from 'fs-extra';
@@ -8,7 +10,7 @@ import logger from '../logger/logger';
 import { DEFAULT_PACKAGE_MANAGER, BASE_DOCS_DOMAIN } from '../constants';
 import type { PathOsBased } from '../utils/path';
 import GeneralError from '../error/general-error';
-import semver from 'semver';
+import { Analytics } from '../analytics/analytics';
 
 type PackageManagerResults = { stdout: string, stderr: string };
 
@@ -173,18 +175,43 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
     return result;
   };
 
-  return execa(packageManager, ['list', '-j'], { cwd: dir })
-    .then((res) => {
-      const resObject = JSON.parse(res.stdout);
-      const peers = parsePeers(resObject.dependencies);
-      return peers;
-    })
-    .catch((err) => {
-      const resObject = JSON.parse(err.stdout);
-      const peers = parsePeers(resObject.dependencies);
-      return peers;
-    });
+  let npmList;
+  try {
+    npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
+  } catch (err) {
+    if (err.stdout && err.stdout.startsWith('{')) {
+      // it's probably a valid json with errors, that's fine, parse it.
+      npmList = err;
+    } else {
+      logger.error(err);
+      throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
+    }
+  }
+  const npmListObject = await parseNpmListJsonGracefully(npmList.stdout, packageManager);
+  const peers = parsePeers(npmListObject.dependencies);
+  return peers;
 };
+
+async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
+  try {
+    const json = JSON.parse(str);
+    return json;
+  } catch (err) {
+    logger.error(err);
+    if (packageManager === 'npm') {
+      const version = await getNpmVersion();
+      Analytics.setExtraData('npmVersion', version);
+      if (version && semver.gte(version, '5.0.0') && semver.lt(version, '5.1.0')) {
+        // see here for more info about this issue with npm 5.0.0
+        // https://github.com/npm/npm/issues/17331
+        throw new Error(
+          `error: your npm version "${version}" has issues returning json, please upgrade to 5.1.0 or above (npm install -g npm@5.1.0)`
+        );
+      }
+    }
+    throw new Error(`failed parsing the output of npm list due to an error: ${err.message}`);
+  }
+}
 
 /**
  * A wrapper function to call the install
@@ -271,7 +298,7 @@ const installAction = async ({
     }
   }
 
-  const promises = dirs.map(dir =>
+  const installInDir = dir =>
     _installInOneDirectoryWithPeerOption({
       modules,
       packageManager,
@@ -280,10 +307,11 @@ const installAction = async ({
       dir,
       installPeerDependencies,
       verbose
-    })
-  );
+    });
 
-  const promisesResults = await Promise.all(promises);
+  // run npm install for each one of the directories serially, not in parallel. Don’t use Promise.all() here.
+  // running them in parallel result in race condition and random NPM errors. (see https://github.com/teambit/bit/issues/1617)
+  const promisesResults = await pMapSeries(dirs, installInDir);
   return results.concat(R.flatten(promisesResults));
 };
 
@@ -297,7 +325,17 @@ async function getNpmVersion(): Promise<?string> {
     const { stdout, stderr } = await execa('npm', ['--version']);
     if (stdout && !stderr) return stdout;
   } catch (err) {
-    logger.debug(`got an error when executing "npm --version". ${err.message}`);
+    logger.debugAndAddBreadCrumb('npm-client', `got an error when executing "npm --version". ${err.message}`);
+  }
+  return null;
+}
+
+async function getYarnVersion(): Promise<?string> {
+  try {
+    const { stdout } = await execa('yarn', ['-v']);
+    return stdout;
+  } catch (e) {
+    logger.debugAndAddBreadCrumb('npm-client', `can't find yarn version by running yarn -v. ${e.message}`);
   }
   return null;
 }
@@ -322,5 +360,7 @@ async function isSupportedInstallationOfSubDirFromRoot(packageManager: string): 
 export default {
   install: installAction,
   printResults,
-  isSupportedInstallationOfSubDirFromRoot
+  isSupportedInstallationOfSubDirFromRoot,
+  getNpmVersion,
+  getYarnVersion
 };

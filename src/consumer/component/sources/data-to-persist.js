@@ -31,6 +31,7 @@ export default class DataToPersist {
         return;
       }
     }
+    this._throwForDirectoryCollision(file);
     this.files.push(file);
   }
   addManyFiles(files: AbstractVinyl[] = []) {
@@ -44,6 +45,8 @@ export default class DataToPersist {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
   }
   addSymlink(symlink: Symlink) {
+    if (!symlink.src) throw new Error('failed adding a symlink into DataToPersist, src is empty');
+    if (!symlink.dest) throw new Error('failed adding a symlink into DataToPersist, dest is empty');
     this.symlinks.push(symlink);
   }
   addManySymlinks(symlinks: Symlink[] = []) {
@@ -139,13 +142,36 @@ export default class DataToPersist {
       logger.debug(`DateToPersist, paths-to-write:\n${filesToWriteStr}`);
     }
     if (this.symlinks.length) {
-      const symlinksStr = this.symlinks.map(symlink => `src: ${symlink.src}, dest: ${symlink.dest}`).join('\n');
+      const symlinksStr = this.symlinks
+        .map(symlink => `src (existing): ${symlink.src}\ndest (new): ${symlink.dest}`)
+        .join('\n');
       logger.debug(`DateToPersist, symlinks:\n${symlinksStr}`);
     }
   }
   _assertRelative(pathToCheck: string) {
     if (path.isAbsolute(pathToCheck)) {
       throw new Error(`DataToPersist expects ${pathToCheck} to be relative, but found it absolute`);
+    }
+  }
+  /**
+   * prevent adding a file which later on will cause an error "EEXIST: file already exists, mkdir {dirname}".
+   * this happens one a file is a directory name of the other file.
+   * e.g. adding these two files, will cause the error above: "bar/foo" and "bar"
+   *
+   * to check for this possibility, we need to consider two scenarios:
+   * 1) "bar/foo" is there and now adding "bar" => check whether one of the files starts with "bar/"
+   * 2) "bar" is there and now adding "bar/foo" => check whether this file "bar/foo" starts with one of the files with '/'
+   * practically, it runs `("bar/foo".startsWith("bar/"))` for both cases above.
+   */
+  _throwForDirectoryCollision(file: AbstractVinyl) {
+    const directoryCollision = this.files.find(
+      f => f.path.startsWith(`${file.path}${path.sep}`) || `${file.path}`.startsWith(`${f.path}${path.sep}`)
+    );
+    if (directoryCollision) {
+      throw new Error(`unable to add the file "${file.path}", because another file "${
+        directoryCollision.path
+      }" is going to be written.
+one of them is a directory of the other one, and is not possible to have them both`);
     }
   }
 }

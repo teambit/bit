@@ -1,9 +1,9 @@
 // @flow
 import path from 'path';
+import pMapSeries from 'p-map-series';
 import type Consumer from '../consumer';
 import { BitIds, BitId } from '../../bit-id';
 import logger from '../../logger/logger';
-import { Analytics } from '../../analytics/analytics';
 import Component from './consumer-component';
 import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
@@ -23,11 +23,9 @@ export default class ComponentLoader {
     ids: BitIds,
     throwOnFailure: boolean = true
   ): Promise<{ components: Component[], invalidComponents: InvalidComponent[] }> {
-    logger.debug(`loading consumer-components from the file-system, ids: ${ids.join(', ')}`);
-    Analytics.addBreadCrumb(
-      'load components',
-      `loading consumer-components from the file-system, ids: ${Analytics.hashData(ids)}`
-    );
+    logger.debugAndAddBreadCrumb('ComponentLoader', 'loading consumer-components from the file-system, ids: {ids}', {
+      ids: ids.toString()
+    });
     const alreadyLoadedComponents = [];
     const idsToProcess: BitId[] = [];
     const invalidComponents: InvalidComponent[] = [];
@@ -35,16 +33,17 @@ export default class ComponentLoader {
       if (!(id instanceof BitId)) {
         throw new TypeError(`consumer.loadComponents expects to get BitId instances, instead, got "${typeof id}"`);
       }
-      const idWithoutVersion = id.toStringWithoutVersion();
-      if (this._componentsCache[idWithoutVersion]) {
-        logger.debug(`the component ${idWithoutVersion} has been already loaded, use the cached component`);
-        Analytics.addBreadCrumb(
-          'load components',
-          `the component ${Analytics.hashData(idWithoutVersion)} has been already loaded, use the cached component`
+      const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+      const idStr = idWithVersion.toString();
+      if (this._componentsCache[idStr]) {
+        logger.debugAndAddBreadCrumb(
+          'ComponentLoader',
+          'the component {idStr} has been already loaded, use the cached component',
+          { idStr }
         );
-        alreadyLoadedComponents.push(this._componentsCache[idWithoutVersion]);
+        alreadyLoadedComponents.push(this._componentsCache[idStr]);
       } else {
-        idsToProcess.push(id);
+        idsToProcess.push(idWithVersion);
       }
     });
     if (!idsToProcess.length) return { components: alreadyLoadedComponents, invalidComponents };
@@ -53,54 +52,43 @@ export default class ComponentLoader {
       'Warning: Bit is not be able calculate the dependencies tree. Please install bit-{lang} driver and run tag again.'
     );
 
-    const components = idsToProcess.map(async (id: BitId) => {
-      return this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
-    });
-
     const allComponents = [];
-    for (const componentP of components) {
-      // load the components one after another (not in parallel).
-      const component = await componentP; // eslint-disable-line no-await-in-loop
+    await pMapSeries(idsToProcess, async (id: BitId) => {
+      const component = await this.loadOne(id, throwOnFailure, driverExists, invalidComponents);
       if (component) {
-        this._componentsCache[component.id.toStringWithoutVersion()] = component;
-        logger.debug(`Finished loading the component, ${component.id.toString()}`);
-        Analytics.addBreadCrumb(
-          'load components',
-          `Finished loading the component, ${Analytics.hashData(component.id.toString())}`
-        );
+        this._componentsCache[component.id.toString()] = component;
+        logger.debugAndAddBreadCrumb('ComponentLoader', 'Finished loading the component "{id}"', {
+          id: component.id.toString()
+        });
         allComponents.push(component);
       }
-    }
+    });
 
     return { components: allComponents.concat(alreadyLoadedComponents), invalidComponents };
   }
 
   async loadOne(id: BitId, throwOnFailure: boolean, driverExists: boolean, invalidComponents: InvalidComponent[]) {
-    const idWithConcreteVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
-
-    const componentMap = this.consumer.bitMap.getComponent(idWithConcreteVersion);
+    const componentMap = this.consumer.bitMap.getComponent(id);
     let bitDir = this.consumer.getPath();
     if (componentMap.rootDir) {
       bitDir = path.join(bitDir, componentMap.rootDir);
     }
-    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(idWithConcreteVersion);
+    const componentFromModel = await this.consumer.loadComponentFromModelIfExist(id);
     let component;
     try {
       component = await Component.loadFromFileSystem({
         bitDir,
         componentMap,
-        id: idWithConcreteVersion,
+        id,
         consumer: this.consumer,
         componentFromModel
       });
     } catch (err) {
       if (throwOnFailure) throw err;
 
-      logger.error(`failed loading ${id.toString()} from the file-system`);
-      Analytics.addBreadCrumb(
-        'load components',
-        `failed loading ${Analytics.hashData(id.toString())} from the file-system`
-      );
+      logger.errorAndAddBreadCrumb('component-loader.loadOne', 'failed loading {id} from the file-system', {
+        id: id.toString()
+      });
       if (Component.isComponentInvalidByErrorType(err)) {
         invalidComponents.push({ id, error: err });
         return null;
@@ -112,7 +100,7 @@ export default class ComponentLoader {
     component.originallySharedDir = componentMap.originallySharedDir || null;
     component.wrapDir = componentMap.wrapDir || null;
     // reload component map as it may be changed after calling Component.loadFromFileSystem()
-    component.componentMap = this.consumer.bitMap.getComponent(idWithConcreteVersion);
+    component.componentMap = this.consumer.bitMap.getComponent(id);
     component.componentFromModel = componentFromModel;
 
     if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
@@ -120,9 +108,9 @@ export default class ComponentLoader {
       return component;
     }
     const loadDependencies = async () => {
-      const dependencyResolver = new DependencyResolver(component, this.consumer, idWithConcreteVersion);
+      const dependencyResolver = new DependencyResolver(component, this.consumer, id);
       await dependencyResolver.loadDependenciesForComponent(bitDir, this.cacheResolvedDependencies);
-      await updateDependenciesVersions(this.consumer, component);
+      updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
     return component;

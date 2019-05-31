@@ -170,7 +170,7 @@ describe('bit test command', function () {
         output = helper.tagAllComponents('--force');
       });
       it('should tag the component successfully', () => {
-        expect(output).to.have.string('1 components tagged');
+        expect(output).to.have.string('1 component(s) tagged');
       });
     });
   });
@@ -201,6 +201,15 @@ describe('bit test command', function () {
     });
     it('should print the error for the before hook failure', () => {
       expect(output).to.have.string('undefinedObj is not defined');
+    });
+    it('should print the stack trace when run with verbose', () => {
+      let outputVerbose;
+      try {
+        helper.testComponentWithOptions('utils/is-type', { v: '' });
+      } catch (err) {
+        outputVerbose = err.stdout.toString();
+      }
+      expect(outputVerbose).to.have.string('utils/is-type-before-fail.spec.js');
     });
     it('should indicate that testes from the same spec and not in the same describe are passed', () => {
       expect(output).to.have.string('✔   isType before hook describe should pass test');
@@ -291,7 +300,7 @@ describe('bit test command', function () {
         helper.importComponent('utils/is-type --conf');
       });
       it('should save the tester with id only without files and config because it does not use them', () => {
-        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/utils/is-type/bit.json'));
+        const bitJson = helper.readBitJson(path.join(helper.localScopePath, 'components/utils/is-type'));
         expect(bitJson).to.have.property('env');
         expect(bitJson.env).to.have.property('tester');
         expect(bitJson.env.tester).to.have.string('testers/mocha');

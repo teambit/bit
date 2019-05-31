@@ -83,9 +83,10 @@ export class ScopeJson {
     return this;
   }
 
-  rmRemote(name: string) {
+  rmRemote(name: string): boolean {
+    if (!this.remotes[name]) return false;
     delete this.remotes[name];
-    return this;
+    return true;
   }
 
   async write(path: string) {

@@ -39,47 +39,24 @@ export default class BitObject {
     return `${this.constructor.name} ${this.hash().toString()} ${buffer.toString().length}${NULL_BYTE}`;
   }
 
-  collectRefs(repo: Repository, throws: boolean = true): Ref[] {
+  async collectRefs(repo: Repository): Promise<Ref[]> {
     const refsCollection = [];
 
-    function addRefs(object: BitObject) {
+    async function addRefs(object: BitObject) {
       const refs = object.refs();
-      const objs = refs
-        .map((ref) => {
-          return ref.loadSync(repo, throws);
-        })
-        .filter(x => x);
-
+      const objs = await Promise.all(refs.map(ref => ref.load(repo, true)));
       refsCollection.push(...refs);
       // $FlowFixMe
-      objs.forEach(obj => addRefs(obj));
+      await Promise.all(objs.map(obj => addRefs(obj)));
     }
 
-    addRefs(this);
+    await addRefs(this);
     return refsCollection;
   }
 
-  collectExistingRefs(repo: Repository, throws: boolean = true): Ref[] {
-    const refsCollection = [];
-
-    function addRefs(object: BitObject) {
-      const refs = object.refs();
-      const objs = refs
-        .map((ref) => {
-          return ref.loadSync(repo, throws);
-        })
-        .filter(x => x);
-      const filtered = refs.filter(ref => repo.loadSync(ref, false));
-      refsCollection.push(...filtered);
-      // $FlowFixMe
-      objs.forEach(obj => addRefs(obj));
-    }
-
-    addRefs(this);
-    return refsCollection;
-  }
-  collectRaw(repo: Repository): Promise<Buffer[]> {
-    return Promise.all(this.collectRefs(repo).map(ref => ref.loadRaw(repo)));
+  async collectRaw(repo: Repository): Promise<Buffer[]> {
+    const refs = await this.collectRefs(repo);
+    return Promise.all(refs.map(ref => ref.loadRaw(repo)));
   }
 
   asRaw(repo: Repository): Promise<Buffer> {
@@ -120,10 +97,16 @@ export default class BitObject {
     return Buffer.concat([Buffer.from(this.getHeader(buffer)), buffer]);
   }
 
+  /**
+   * see `this.parseSync` for the sync version
+   */
   static parseObject(fileContents: Buffer, types: { [string]: Function }): Promise<BitObject> {
     return inflate(fileContents).then(buffer => parse(buffer, types));
   }
 
+  /**
+   * prefer using `this.parseObject()`, unless it must be sync.
+   */
   static parseSync(fileContents: Buffer, types: { [string]: Function }): BitObject {
     const buffer = inflateSync(fileContents);
     return parse(buffer, types);

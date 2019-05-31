@@ -63,7 +63,7 @@ async function getFlattenedDependencies(
   if (!edges) return new BitIds();
   const dependencies = getEdgesWithProdGraph(prodGraph, edges);
   if (!dependencies.length) return new BitIds();
-  const flattenedP = dependencies.map(async (dependency) => {
+  const flattenDependency = async (dependency) => {
     if (cache[dependency]) return cache[dependency];
     // $FlowFixMe if graph doesn't have the node, prodGraph must have it
     const dependencyBitId: BitId = graph.node(dependency) || prodGraph.node(dependency);
@@ -84,9 +84,9 @@ async function getFlattenedDependencies(
     // Store the flatten dependencies in cache
     cache[dependency] = flattenedDependencies;
     return flattenedDependencies;
-  });
-  const flattened = await Promise.all(flattenedP);
-  const flattenedUnique = BitIds.fromArray(R.flatten(flattened)).getUniq();
+  };
+  const flattened = await pMapSeries(dependencies, flattenDependency);
+  const flattenedUnique = BitIds.uniqFromArray(R.flatten(flattened));
   // when a component has cycle dependencies, the flattenedDependencies contains the component itself. remove it.
   return flattenedUnique.removeIfExistWithoutVersion(component.id);
 }
@@ -245,7 +245,7 @@ export default (async function tagModelComponent({
   const componentsToTag = R.values(consumerComponentsIdsMap); // consumerComponents unique
   const componentsToTagIds = componentsToTag.map(c => c.id);
   const componentsToTagIdsLatest = await scope.latestVersions(componentsToTagIds, false);
-  const autoTagCandidates = await consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
+  const autoTagCandidates = consumer.potentialComponentsForAutoTagging(componentsToTagIdsLatest);
   // $FlowFixMe unclear error
   const autoTagComponents = await getAutoTagPending(scope, autoTagCandidates, componentsToTagIdsLatest);
   // scope.toConsumerComponents(autoTaggedCandidates); won't work as it doesn't have the paths according to bitmap

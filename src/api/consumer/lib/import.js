@@ -8,7 +8,6 @@ import { Consumer, loadConsumer } from '../../../consumer';
 import loader from '../../../cli/loader';
 import { BEFORE_IMPORT_ENVIRONMENT } from '../../../cli/loader/loader-messages';
 import { flattenDependencies } from '../../../scope/flatten-dependencies';
-import { COMPONENT_ORIGINS } from '../../../constants';
 import { BitId } from '../../../bit-id';
 import type { ImportOptions } from '../../../consumer/component-ops/import-components';
 import { Analytics } from '../../../analytics/analytics';
@@ -36,40 +35,40 @@ export default (async function importAction(
     const envComponents = await consumer.importEnvironment(bitIdToImport, importOptions.verbose, true);
     if (!envComponents.length) throw new GeneralError(`the environment component ${idToImport} is installed already`);
     const id = envComponents[0].component.id.toString();
-    function writeToBitJsonIfNeeded() {
+    function writeConfigIfNeeded() {
       if (environmentOptions.compiler) {
-        consumer.bitJson.compiler = id;
+        consumer.config.compiler = id;
         Analytics.setExtraData('build_env', id);
-        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ bitDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
-        consumer.bitJson.tester = id;
+        consumer.config.tester = id;
         Analytics.setExtraData('test_env', id);
-        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ bitDir: consumer.getPath() });
       }
 
       if (environmentOptions.extension) {
         const idWithoutVersion = BitId.getStringWithoutVersion(id);
         // don't create the same extension twice - check if older version exists and override it
-        const oldVersion = Object.keys(consumer.bitJson.extensions).find((ext) => {
+        const oldVersion = Object.keys(consumer.config.extensions).find((ext) => {
           return BitId.getStringWithoutVersion(ext) === idWithoutVersion;
         });
         if (oldVersion) {
-          consumer.bitJson.extensions[id] = consumer.bitJson.extensions[oldVersion];
-          delete consumer.bitJson.extensions[oldVersion];
-          return consumer.bitJson.write({ bitDir: consumer.getPath() });
+          consumer.config.extensions[id] = consumer.config.extensions[oldVersion];
+          delete consumer.config.extensions[oldVersion];
+          return consumer.config.write({ bitDir: consumer.getPath() });
         }
-        consumer.bitJson.extensions[id] = {
+        consumer.config.extensions[id] = {
           options: {},
           config: {}
         };
-        return consumer.bitJson.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ bitDir: consumer.getPath() });
       }
 
       return Promise.resolve(true);
     }
-    await writeToBitJsonIfNeeded();
+    await writeConfigIfNeeded();
     return { envComponents };
   }
 
@@ -81,15 +80,6 @@ export default (async function importAction(
   const importComponents = new ImportComponents(consumer, importOptions);
   const { dependencies, envComponents, importDetails } = await importComponents.importComponents();
   const bitIds = dependencies.map(R.path(['component', 'id']));
-  const notAuthored = (bitId) => {
-    const componentMap = consumer.bitMap.getComponentIfExist(bitId);
-    return componentMap && componentMap.origin !== COMPONENT_ORIGINS.AUTHORED;
-  };
-  const notAuthoredBitIds = R.filter(notAuthored, bitIds);
-  if (!R.isEmpty(notAuthoredBitIds)) {
-    // not needed when importing from bit.json/bit.map
-    await consumer.bitJson.addDependencies(notAuthoredBitIds).write({ bitDir: consumer.getPath() });
-  }
 
   const warnings = await warnForPackageDependencies({
     dependencies: flattenDependencies(dependencies),
@@ -164,8 +154,8 @@ const warnForPackageDependencies = ({ dependencies, consumer, installNpmPackages
     glob.sync(path.join(projectDir, 'node_modules', '*')).map(R.compose(getNameAndVersion, getPackageJson))
   );
 
-  dependencies.forEach((dep) => {
-    //eslint-disable-line
+  // eslint-disable-next-line
+  dependencies.forEach(dep => {
     if (!dep.packageDependencies || R.isEmpty(dep.packageDependencies)) return null;
 
     R.forEachObjIndexed((packageDepVersion, packageDepName) => {

@@ -43,6 +43,7 @@ import VersionShouldBeRemoved from './exceptions/version-should-be-removed';
 import { isSupportedExtension } from '../../../links/link-content';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
+import PathOutsideConsumer from './exceptions/path-outside-consumer';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
@@ -442,7 +443,7 @@ export default class AddComponents {
     const componentsWithFilesP = Object.keys(componentPathsStats).map(async (componentPath: PathOsBased) => {
       if (componentPathsStats[componentPath].isDir) {
         const relativeComponentPath = this.consumer.getPathRelativeToConsumer(componentPath);
-
+        this._throwForOutsideConsumer(relativeComponentPath);
         const matches = await glob(path.join(relativeComponentPath, '**'), {
           cwd: this.consumer.getPath(),
           nodir: true
@@ -495,6 +496,7 @@ export default class AddComponents {
       const absolutePath = path.resolve(componentPath);
       const pathParsed = path.parse(absolutePath);
       const relativeFilePath = this.consumer.getPathRelativeToConsumer(componentPath);
+      this._throwForOutsideConsumer(relativeFilePath);
       if (!finalBitId) {
         let dirName = pathParsed.dir;
         if (!dirName) {
@@ -548,14 +550,17 @@ export default class AddComponents {
     };
   }
 
-  getIgnoreList(): string[] {
+  async getIgnoreList(): Promise<string[]> {
     const consumerPath = this.consumer.getPath();
     let ignoreList = retrieveIgnoreList(consumerPath);
     const importedComponents = this.bitMap.getAllComponents(COMPONENT_ORIGINS.IMPORTED);
     const distDirsOfImportedComponents = Object.keys(importedComponents).map(key =>
       pathJoinLinux(importedComponents[key].rootDir, DEFAULT_DIST_DIRNAME, '**')
     );
-    const configsToIgnore = this.bitMap.getConfigDirsAndFilesToIgnore(this.consumer.getPath());
+    const configsToIgnore = await this.bitMap.getConfigDirsAndFilesToIgnore(
+      this.consumer.getPath(),
+      this.consumer.config
+    );
     const configDirs = configsToIgnore.dirs.map(dir => pathJoinLinux(dir, '**'));
     ignoreList = ignoreList.concat(distDirsOfImportedComponents);
     ignoreList = ignoreList.concat(configsToIgnore.files);
@@ -564,7 +569,7 @@ export default class AddComponents {
   }
 
   async add(): Promise<AddActionResults> {
-    this.ignoreList = this.getIgnoreList();
+    this.ignoreList = await this.getIgnoreList();
     this.gitIgnore = ignore().add(this.ignoreList); // add ignore list
 
     // check unknown test files
@@ -609,7 +614,7 @@ export default class AddComponents {
     if (isMultipleComponents) {
       await this.addMultipleComponents(componentPathsStats);
     } else {
-      logger.debug('bit add - one component');
+      logger.debugAndAddBreadCrumb('add-components', 'adding one component');
       // when a user enters more than one directory, he would like to keep the directories names
       // so then when a component is imported, it will write the files into the original directories
       const addedOne = await this.addOneComponent(componentPathsStats);
@@ -624,7 +629,8 @@ export default class AddComponents {
   }
 
   async addMultipleComponents(componentPathsStats: PathsStats): Promise<void> {
-    logger.debug('bit add - multiple components');
+    logger.debugAndAddBreadCrumb('add-components', 'adding multiple components');
+    this._removeDirectoriesWhenTheirFilesAreAdded(componentPathsStats);
     const testToRemove = !R.isEmpty(this.tests)
       ? await this.getFilesAccordingToDsl(Object.keys(componentPathsStats), this.tests)
       : [];
@@ -633,6 +639,22 @@ export default class AddComponents {
     validateNoDuplicateIds(added);
     this._removeNamespaceIfNotNeeded(added);
     await this._addMultipleToBitMap(added);
+  }
+
+  /**
+   * some uses of wildcards might add directories and their files at the same time, in such cases
+   * only the files are needed and the directories can be ignored.
+   * @see https://github.com/teambit/bit/issues/1406 for more details
+   */
+  _removeDirectoriesWhenTheirFilesAreAdded(componentPathsStats: PathsStats) {
+    const allPaths = Object.keys(componentPathsStats);
+    allPaths.forEach((componentPath) => {
+      const foundDir = allPaths.find(p => p === path.dirname(componentPath));
+      if (foundDir && componentPathsStats[foundDir]) {
+        logger.debug(`add-components._removeDirectoriesWhenTheirFilesAreAdded, ignoring ${foundDir}`);
+        delete componentPathsStats[foundDir];
+      }
+    });
   }
 
   async _addMultipleToBitMap(added: AddedComponent[]): Promise<void> {
@@ -684,6 +706,12 @@ export default class AddComponents {
     });
     const added = await Promise.all(addedP);
     return R.reject(R.isNil, added);
+  }
+
+  _throwForOutsideConsumer(relativeToConsumerPath: PathOsBased) {
+    if (relativeToConsumerPath.startsWith('..')) {
+      throw new PathOutsideConsumer(relativeToConsumerPath);
+    }
   }
 }
 

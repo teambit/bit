@@ -39,17 +39,6 @@ export default class SourceRepository {
     return this.scope.objects;
   }
 
-  async findComponent(component: ModelComponent): Promise<?ModelComponent> {
-    try {
-      const foundComponent = await this.objects().findOne(component.hash());
-      if (foundComponent) return foundComponent;
-    } catch (err) {
-      logger.error(`findComponent got an error ${err}`);
-    }
-    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
-    return null;
-  }
-
   getMany(ids: BitId[] | BitIds): Promise<ComponentDef[]> {
     logger.debug(`sources.getMany, Ids: ${ids.join(', ')}`);
     return Promise.all(
@@ -66,25 +55,51 @@ export default class SourceRepository {
 
   async get(bitId: BitId): Promise<?ModelComponent> {
     const component = ModelComponent.fromBitId(bitId);
-    let foundComponent = await this.findComponent(component);
-    if (foundComponent instanceof Symlink) {
-      const realComponentId: BitId = foundComponent.getRealComponentId();
-      foundComponent = await this.findComponent(ModelComponent.fromBitId(realComponentId));
-    }
-
+    const foundComponent: ?ModelComponent = await this._findComponent(component);
     if (foundComponent && bitId.hasVersion()) {
+      // $FlowFixMe
       const msg = `found ${bitId.toStringWithoutVersion()}, however version ${bitId.getVersion().versionNum}`;
+      // $FlowFixMe
       if (!foundComponent.versions[bitId.version]) {
-        logger.debug(`${msg} is not in the component versions array`);
+        logger.debugAndAddBreadCrumb('sources.get', `${msg} is not in the component versions array`);
         return null;
       }
-      const version = await this.objects().findOne(foundComponent.versions[bitId.version]);
+      // $FlowFixMe
+      const version = await this.objects().load(foundComponent.versions[bitId.version]);
       if (!version) {
-        logger.debug(`${msg} object was not found on the filesystem`);
+        logger.debugAndAddBreadCrumb('sources.get', `${msg} object was not found on the filesystem`);
         return null;
       }
     }
 
+    return foundComponent;
+  }
+
+  async _findComponent(component: ModelComponent): Promise<?ModelComponent> {
+    try {
+      const foundComponent = await this.objects().load(component.hash());
+      if (foundComponent instanceof Symlink) {
+        return this._findComponentBySymlink(foundComponent);
+      }
+      if (foundComponent) return foundComponent;
+    } catch (err) {
+      logger.error(`findComponent got an error ${err}`);
+    }
+    logger.debug(`failed finding a component ${component.id()} with hash: ${component.hash().toString()}`);
+    return null;
+  }
+
+  async _findComponentBySymlink(symlink: Symlink): Promise<?ModelComponent> {
+    const realComponentId: BitId = symlink.getRealComponentId();
+    const realModelComponent = ModelComponent.fromBitId(realComponentId);
+    const foundComponent = await this.objects().load(realModelComponent.hash());
+    if (!foundComponent) {
+      throw new Error(
+        `error: found a symlink object "${symlink.id()}" that references to a non-exist component "${realComponentId.toString()}".
+if you have the steps to reproduce the issue, please open a Github issue with the details.
+to quickly fix the issue, please delete the object at "${this.objects().objectPath(symlink.hash())}"`
+      );
+    }
     return foundComponent;
   }
 
@@ -97,7 +112,7 @@ export default class SourceRepository {
 
   findOrAddComponent(props: ComponentProps): Promise<ModelComponent> {
     const comp = ModelComponent.from(props);
-    return this.findComponent(comp).then((component) => {
+    return this._findComponent(comp).then((component) => {
       if (!component) return comp;
       return component;
     });
@@ -109,7 +124,7 @@ export default class SourceRepository {
     return this.findOrAddComponent(source).then((component) => {
       return component.loadVersion(component.latest(), objectRepo).then((version) => {
         version.setCIProps(ciProps);
-        return objectRepo.persistOne(version);
+        return objectRepo._writeOne(version);
       });
     });
   }
@@ -120,7 +135,7 @@ export default class SourceRepository {
     return this.findOrAddComponent(source).then((component) => {
       return component.loadVersion(component.latest(), objectRepo).then((version) => {
         version.setSpecsResults(specsResults);
-        return objectRepo.persistOne(version);
+        return objectRepo._writeOne(version);
       });
     });
   }
@@ -216,20 +231,21 @@ export default class SourceRepository {
         if (!relativePath.isCustomResolveUsed) {
           // for isCustomResolveUsed it was never stripped
           relativePath.sourceRelativePath = manipulateDirs(relativePath.sourceRelativePath);
-          if (depFromBitMap && depFromBitMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-            // when a dependency is imported directly, we need to also change the
-            // destinationRelativePath, which is the path written in the link file, however, the
-            // dir manipulation should be according to this dependency component, not the
-            // consumerComponent passed to this function
-            relativePath.destinationRelativePath = revertDirManipulationForPath(
-              relativePath.destinationRelativePath,
-              depFromBitMap.originallySharedDir,
-              depFromBitMap.wrapDir
-            );
-          }
+        }
+        if (depFromBitMap && depFromBitMap.origin !== COMPONENT_ORIGINS.AUTHORED) {
+          // when a dependency is not authored, we need to also change the
+          // destinationRelativePath, which is the path written in the link file, however, the
+          // dir manipulation should be according to this dependency component, not the
+          // consumerComponent passed to this function
+          relativePath.destinationRelativePath = revertDirManipulationForPath(
+            relativePath.destinationRelativePath,
+            depFromBitMap.originallySharedDir,
+            depFromBitMap.wrapDir
+          );
         }
       });
     });
+    clonedComponent.overrides.addOriginallySharedDir(clonedComponent.originallySharedDir);
     const version: Version = Version.fromComponent({
       component: clonedComponent,
       versionFromModel,
@@ -353,30 +369,54 @@ export default class SourceRepository {
   }
 
   /**
-   * removeVersion - remove specific component version from component
-   * @param {ModelComponent} component - component to remove version from
-   * @param {string} version - version to remove.
-   * @param persist
+   * remove specified component versions from component.
+   * if all versions of a component were deleted, delete also the component.
+   * it doesn't persist anything to the filesystem.
+   * (repository.persist() needs to be called at the end of the operation)
    */
-  async removeVersion(component: ModelComponent, version: string, persist: boolean = true): Promise<void> {
-    logger.debug(`removing version ${version} of ${component.id()} from a local scope`);
+  removeComponentVersions(component: ModelComponent, versions: string[]): void {
+    logger.debug(`removeComponentVersion, component ${component.id()}, versions ${versions.join(', ')}`);
     const objectRepo = this.objects();
-    const modifiedComponent = await component.removeVersion(objectRepo, version);
-    objectRepo.add(modifiedComponent);
-    if (persist) await objectRepo.persist();
-    return modifiedComponent;
+    versions.forEach((version) => {
+      const ref = component.removeVersion(version);
+      objectRepo.removeObject(ref);
+    });
+
+    if (component.versionArray.length) {
+      objectRepo.add(component); // add the modified component object
+    } else {
+      // if all versions were deleted, delete also the component itself from the model
+      objectRepo.removeObject(component.hash());
+    }
   }
 
   /**
-   * clean - remove component or component version
-   * @param {BitId} bitId - id to remove
-   * @param {boolean} deepRemove - remove all component refs or only version refs
+   * @see this.removeComponent()
+   *
    */
-  async clean(bitId: BitId, deepRemove: boolean = false): Promise<void> {
-    logger.debug(`sources.clean: ${bitId}, deepRemove: ${deepRemove.toString()}`);
+  async removeComponentById(bitId: BitId): Promise<void> {
+    logger.debug(`sources.removeComponentById: ${bitId.toString()}`);
     const component = await this.get(bitId);
     if (!component) return;
-    await component.remove(this.objects(), deepRemove);
+    this.removeComponent(component);
+  }
+
+  /**
+   * remove all versions objects of the component from local scope.
+   * if deepRemove is true, it removes also the refs associated with the removed versions.
+   * finally, it removes the component object itself
+   * it doesn't physically delete from the filesystem.
+   * the actual delete is done at a later phase, once Repository.persist() is called.
+   *
+   * @param {ModelComponent} component
+   * @param {boolean} [deepRemove=false] - whether remove all the refs or only the version array
+   */
+  removeComponent(component: ModelComponent): void {
+    const repo = this.objects();
+    logger.debug(`sources.removeComponent: removing a component ${component.id()} from a local scope`);
+    const objectRefs = component.versionArray;
+    objectRefs.push(component.hash());
+    repo.removeManyObjects(objectRefs);
   }
 
   /**
@@ -384,24 +424,34 @@ export default class SourceRepository {
    * here, we assume that there is no conflict between the two, otherwise, this.merge() would throw
    * a MergeConflict exception.
    */
-  mergeTwoComponentsObjects(existingComponent: ModelComponent, incomingComponent: ModelComponent): ModelComponent {
+  mergeTwoComponentsObjects(
+    existingComponent: ModelComponent,
+    incomingComponent: ModelComponent
+  ): { mergedComponent: ModelComponent, mergedVersions: string[] } {
     // the base component to save is the existingComponent because it might contain local data that
     // is not available in the remote component, such as the "state" property.
     const mergedComponent = existingComponent;
-    // in case the existing version has is different than incoming version hash, use the incoming
+    const mergedVersions: string[] = [];
+    // in case the existing version hash is different than incoming version hash, use the incoming
     // version because we hold the incoming component from a remote as the source of truth
     Object.keys(existingComponent.versions).forEach((existingVersion) => {
-      if (incomingComponent.versions[existingVersion]) {
+      if (
+        incomingComponent.versions[existingVersion] &&
+        existingComponent.versions[existingVersion].toString() !==
+          incomingComponent.versions[existingVersion].toString()
+      ) {
         mergedComponent.versions[existingVersion] = incomingComponent.versions[existingVersion];
+        mergedVersions.push(existingVersion);
       }
     });
     // in case the incoming component has versions that are not in the existing component, copy them
     Object.keys(incomingComponent.versions).forEach((incomingVersion) => {
       if (!existingComponent.versions[incomingVersion]) {
         mergedComponent.versions[incomingVersion] = incomingComponent.versions[incomingVersion];
+        mergedVersions.push(incomingVersion);
       }
     });
-    return mergedComponent;
+    return { mergedComponent, mergedVersions };
   }
 
   /**
@@ -421,15 +471,19 @@ export default class SourceRepository {
     { component, objects }: ComponentTree,
     inScope: boolean = false,
     local: boolean = true
-  ): Promise<ModelComponent> {
+  ): Promise<{ mergedComponent: ModelComponent, mergedVersions: string[] }> {
     if (inScope) component.scope = this.scope.name;
-    const existingComponent: ?ModelComponent = await this.findComponent(component);
-    if (!existingComponent) return this.put({ component, objects });
-    const locallyChanged = await existingComponent.isLocallyChanged();
+    const existingComponent: ?ModelComponent = await this._findComponent(component);
+    if (!existingComponent) {
+      this.put({ component, objects });
+      return { mergedComponent: component, mergedVersions: component.listVersions() };
+    }
+    const locallyChanged = existingComponent.isLocallyChanged();
     if ((local && !locallyChanged) || component.compatibleWith(existingComponent, local)) {
       logger.debug(`sources.merge component ${component.id()}`);
-      const mergedComponent = this.mergeTwoComponentsObjects(existingComponent, component);
-      return this.put({ component: mergedComponent, objects });
+      const { mergedComponent, mergedVersions } = this.mergeTwoComponentsObjects(existingComponent, component);
+      this.put({ component: mergedComponent, objects });
+      return { mergedComponent, mergedVersions };
     }
 
     const conflictVersions = component.diffWith(existingComponent, local);

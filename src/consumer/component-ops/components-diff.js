@@ -18,8 +18,9 @@ export type DiffResults = { id: BitId, hasDiff: boolean, filesDiff?: FileDiff[],
 export default (async function componentsDiff(
   consumer: Consumer,
   ids: BitId[],
-  version?: string,
-  toVersion?: string
+  version: ?string,
+  toVersion: ?string,
+  verbose: boolean // whether show internal components diff, such as sourceRelativePath
 ): Promise<DiffResults[]> {
   const { components } = await consumer.loadComponents(ids);
   if (!components) throw new GeneralError('failed loading the components');
@@ -37,16 +38,12 @@ export default (async function componentsDiff(
   try {
     const getResults = (): Promise<DiffResults[]> => {
       if (version && toVersion) {
-        return Promise.all(
-          // $FlowFixMe - version, toVersion are string here, the error is unclear
-          idsWithScope.map(id => getComponentDiffBetweenVersions(consumer, tmp, id, version, toVersion))
-        );
+        return Promise.all(idsWithScope.map(id => getComponentDiffBetweenVersions(id)));
       }
       if (version) {
-        // $FlowFixMe - version is string here, the error is unclear
-        return Promise.all(components.map(component => getComponentDiffOfVersion(consumer, tmp, component, version)));
+        return Promise.all(components.map(component => getComponentDiffOfVersion(component)));
       }
-      return Promise.all(components.map(component => getComponentDiff(consumer, tmp, component)));
+      return Promise.all(components.map(component => getComponentDiff(component)));
     };
     const componentsDiffResults = await getResults();
     await tmp.clear();
@@ -55,90 +52,74 @@ export default (async function componentsDiff(
     await tmp.clear();
     throw err;
   }
+
+  async function getComponentDiffOfVersion(component: Component): Promise<DiffResults> {
+    const diffResult: DiffResults = { id: component.id, hasDiff: false };
+    const modelComponent = await consumer.scope.getModelComponentIfExist(component.id);
+    if (!modelComponent) {
+      throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
+    }
+    const repository = consumer.scope.objects;
+    const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
+    const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
+    const fsFiles = component.files;
+    // $FlowFixMe version must be defined as the component.componentFromModel do exist
+    const versionB: string = component.id.version;
+    // $FlowFixMe this function gets called only when version is set
+    diffResult.filesDiff = await getFilesDiff(tmp, versionFiles, fsFiles, version, versionB);
+    const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
+    await updateFieldsAndEnvsDiff(fromVersionComponent, component, diffResult);
+
+    return diffResult;
+  }
+
+  async function getComponentDiffBetweenVersions(id: BitId): Promise<DiffResults> {
+    const diffResult: DiffResults = { id, hasDiff: false };
+    const modelComponent = await consumer.scope.getModelComponentIfExist(id);
+    if (!modelComponent) {
+      throw new GeneralError(`component ${id.toString()} doesn't have any version yet`);
+    }
+    const repository = consumer.scope.objects;
+    const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
+    const toVersionObject: Version = await modelComponent.loadVersion(toVersion, repository);
+    const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
+    const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
+    // $FlowFixMe version and toVersion are set when calling this function
+    diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, version, toVersion);
+    const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
+    const toVersionComponent = await modelComponent.toConsumerComponent(toVersion, consumer.scope.name, repository);
+    await updateFieldsAndEnvsDiff(fromVersionComponent, toVersionComponent, diffResult);
+
+    return diffResult;
+  }
+
+  async function getComponentDiff(component: Component): Promise<DiffResults> {
+    const diffResult = { id: component.id, hasDiff: false };
+    if (!component.componentFromModel) {
+      // it's a new component. not modified. nothing to check.
+      return diffResult;
+    }
+    const modelFiles = component.componentFromModel.files;
+    const fsFiles = component.files;
+    // $FlowFixMe version must be defined as the component.componentFromModel do exist
+    diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, component.id.version, component.id.version);
+    // $FlowFixMe we made sure already that component.componentFromModel is defined
+    await updateFieldsAndEnvsDiff(component.componentFromModel, component, diffResult);
+
+    return diffResult;
+  }
+
+  async function updateFieldsAndEnvsDiff(componentA: Component, componentB: Component, diffResult: DiffResults) {
+    const envsFilesDiff = await getEnvFilesDiff(tmp, consumer, componentA, componentB);
+    // $FlowFixMe diffResult.filesDiff is populated at this point
+    diffResult.filesDiff = diffResult.filesDiff.concat(envsFilesDiff);
+    diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB, verbose);
+    diffResult.hasDiff = hasDiff(diffResult);
+  }
 });
 
 function hasDiff(diffResult: DiffResults): boolean {
   return !!((diffResult.filesDiff && diffResult.filesDiff.find(file => file.diffOutput)) || diffResult.fieldsDiff);
-}
-
-async function getComponentDiffOfVersion(
-  consumer: Consumer,
-  tmp: Tmp,
-  component: Component,
-  version: string
-): Promise<DiffResults> {
-  const diffResult: DiffResults = { id: component.id, hasDiff: false };
-  const modelComponent = await consumer.scope.getModelComponentIfExist(component.id);
-  if (!modelComponent) {
-    throw new GeneralError(`component ${component.id.toString()} doesn't have any version yet`);
-  }
-  const repository = consumer.scope.objects;
-  const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
-  const versionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
-  const fsFiles = component.files;
-  // $FlowFixMe version must be defined as the component.componentFromModel do exist
-  const versionB: string = component.id.version;
-  diffResult.filesDiff = await getFilesDiff(tmp, versionFiles, fsFiles, version, versionB);
-  const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
-  await updateFieldsAndEnvsDiff(tmp, consumer, fromVersionComponent, component, diffResult);
-
-  return diffResult;
-}
-
-async function getComponentDiffBetweenVersions(
-  consumer: Consumer,
-  tmp: Tmp,
-  id: BitId,
-  version: string,
-  toVersion: string
-): Promise<DiffResults> {
-  const diffResult: DiffResults = { id, hasDiff: false };
-  const modelComponent = await consumer.scope.getModelComponentIfExist(id);
-  if (!modelComponent) {
-    throw new GeneralError(`component ${id.toString()} doesn't have any version yet`);
-  }
-  const repository = consumer.scope.objects;
-  const fromVersionObject: Version = await modelComponent.loadVersion(version, repository);
-  const toVersionObject: Version = await modelComponent.loadVersion(toVersion, repository);
-  const fromVersionFiles = await fromVersionObject.modelFilesToSourceFiles(repository);
-  const toVersionFiles = await toVersionObject.modelFilesToSourceFiles(repository);
-  diffResult.filesDiff = await getFilesDiff(tmp, fromVersionFiles, toVersionFiles, version, toVersion);
-  const fromVersionComponent = await modelComponent.toConsumerComponent(version, consumer.scope.name, repository);
-  const toVersionComponent = await modelComponent.toConsumerComponent(toVersion, consumer.scope.name, repository);
-  await updateFieldsAndEnvsDiff(tmp, consumer, fromVersionComponent, toVersionComponent, diffResult);
-
-  return diffResult;
-}
-
-async function getComponentDiff(consumer: Consumer, tmp: Tmp, component: Component): Promise<DiffResults> {
-  const diffResult = { id: component.id, hasDiff: false };
-  if (!component.componentFromModel) {
-    // it's a new component. not modified. nothing to check.
-    return diffResult;
-  }
-  // $FlowFixMe version must be defined as the component.componentFromModel do exist
-  const version: string = component.id.version;
-  const modelFiles = component.componentFromModel.files;
-  const fsFiles = component.files;
-  diffResult.filesDiff = await getFilesDiff(tmp, modelFiles, fsFiles, version, version);
-  // $FlowFixMe we made sure already that component.componentFromModel is defined
-  await updateFieldsAndEnvsDiff(tmp, consumer, component.componentFromModel, component, diffResult);
-
-  return diffResult;
-}
-
-async function updateFieldsAndEnvsDiff(
-  tmp: Tmp,
-  consumer: Consumer,
-  componentA: Component,
-  componentB: Component,
-  diffResult: DiffResults
-) {
-  const envsFilesDiff = await getEnvFilesDiff(tmp, consumer, componentA, componentB);
-  // $FlowFixMe diffResult.filesDiff is populated at this point
-  diffResult.filesDiff = diffResult.filesDiff.concat(envsFilesDiff);
-  diffResult.fieldsDiff = diffBetweenComponentsObjects(consumer, componentA, componentB);
-  diffResult.hasDiff = hasDiff(diffResult);
 }
 
 async function getOneFileDiff(

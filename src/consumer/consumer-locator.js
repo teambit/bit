@@ -6,6 +6,10 @@
 import * as pathlib from 'path';
 import fs from 'fs-extra';
 import { BIT_JSON, BIT_HIDDEN_DIR, BIT_MAP, OLD_BIT_MAP, BIT_GIT_DIR, DOT_GIT_DIR } from '../constants';
+import WorkspaceConfig from './config/workspace-config';
+import { BitConfigNotFound } from './config/exceptions';
+
+export type ConsumerInfo = { path: string, consumerConfig: ?WorkspaceConfig, hasBitMap: boolean, hasScope: boolean };
 
 function composeBitHiddenDirPath(path: string) {
   return pathlib.join(path, BIT_HIDDEN_DIR);
@@ -19,22 +23,6 @@ function composeBitJsonPath(path: string) {
   return pathlib.join(path, BIT_JSON);
 }
 
-/**
- * determine whether given path has a consumer
- */
-export function pathHasConsumer(path: string) {
-  return (
-    (fs.existsSync(composeBitHiddenDirPath(path)) || fs.existsSync(composeBitGitHiddenDirPath(path))) &&
-    fs.existsSync(composeBitJsonPath(path))
-  );
-}
-
-/**
- * determine whether given path has a bitmap
- */
-export function pathHasBitMap(path: string) {
-  return fs.existsSync(pathlib.join(path, BIT_MAP)) || fs.existsSync(pathlib.join(path, OLD_BIT_MAP));
-}
 /**
  * determine whether given path has a bit.Json
  */
@@ -50,10 +38,29 @@ export function pathHasLocalScope(path: string) {
 }
 
 /**
- * recursively propogate the FS directory structure to find a box.
+ * propagate from the given directory up to the root to find the consumer
  */
-export function locateConsumer(absPath: string): ?string {
-  function buildPropogationPaths(): string[] {
+export async function getConsumerInfo(absPath: string): Promise<?ConsumerInfo> {
+  const searchPaths = buildPropagationPaths();
+  searchPaths.unshift(absPath);
+  for (let i = 0; i < searchPaths.length; i += 1) {
+    const path = searchPaths[i];
+    const hasScope = await pathHasScopeDir(path); // eslint-disable-line no-await-in-loop
+    const consumerConfig = await getConsumerConfigIfExists(path); // eslint-disable-line no-await-in-loop
+    const hasBitMap = await pathHasBitMap(path); // eslint-disable-line no-await-in-loop
+    const consumerExists = (hasScope && consumerConfig) || hasBitMap;
+    if (consumerExists) {
+      return {
+        path,
+        hasScope,
+        consumerConfig,
+        hasBitMap
+      };
+    }
+  }
+  return null;
+
+  function buildPropagationPaths(): string[] {
     const paths: string[] = [];
     const pathParts = absPath.split(pathlib.sep);
 
@@ -66,7 +73,22 @@ export function locateConsumer(absPath: string): ?string {
     return paths.reverse();
   }
 
-  if (pathHasConsumer(absPath) || pathHasBitMap(absPath)) return absPath;
-  const searchPaths = buildPropogationPaths();
-  return searchPaths.find(searchPath => pathHasConsumer(searchPath) || pathHasBitMap(searchPath));
+  async function pathHasBitMap(path: string): Promise<boolean> {
+    return (await fs.exists(pathlib.join(path, BIT_MAP))) || fs.exists(pathlib.join(path, OLD_BIT_MAP));
+  }
+
+  async function pathHasScopeDir(path: string): Promise<boolean> {
+    return (await fs.exists(composeBitHiddenDirPath(path))) || fs.exists(composeBitGitHiddenDirPath(path));
+  }
+
+  async function getConsumerConfigIfExists(path: string): Promise<?WorkspaceConfig> {
+    try {
+      return await WorkspaceConfig.load(path);
+    } catch (err) {
+      if (err instanceof BitConfigNotFound) {
+        return null;
+      }
+      throw err;
+    }
+  }
 }

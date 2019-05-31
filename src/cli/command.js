@@ -16,7 +16,7 @@ export default class Cmd {
   }
 
   // eslint-disable-next-line no-unused-vars
-  report(data: any): string {
+  report(data: any, params: any, opts: { [string]: any }): string {
     return '"report" method not implemented on this command';
   }
 

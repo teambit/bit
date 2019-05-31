@@ -13,12 +13,12 @@ import type { MigrationResult } from '../../../migration/migration-helper';
  * @returns {Promise<MigrationResult>} - wether the process run and wether it successeded
  */
 export default (async function migrate(scopePath: string, verbose: boolean): Promise<MigrationResult> {
-  logger.debug('starting migration process');
+  logger.debug('migrate.migrate, starting migration process');
   if (verbose) console.log('starting migration process'); // eslint-disable-line no-console
   let scope;
   // If a scope path provided we will run the migrate only for the scope
   if (scopePath) {
-    logger.debug(`running migration process for scope in path ${scopePath}`);
+    logger.debug(`migrate.migrate, running migration process for scope in path ${scopePath}`);
     if (verbose) console.log(`running migration process for scope in path ${scopePath}`); // eslint-disable-line no-console
     scope = await loadScope(scopePath);
     return scope.migrate(verbose);
@@ -29,7 +29,7 @@ export default (async function migrate(scopePath: string, verbose: boolean): Pro
   await consumer.migrate(verbose);
   // const consumerMigrationResult = await consumer.migrate(verbose);
   // if (!consumerMigrationResult)
-  logger.debug('running migration process for scope in consumer');
+  logger.debug('migrate.migrate, running migration process for scope in consumer');
   if (verbose) console.log('running migration process for scope in consumer'); // eslint-disable-line no-console
   return scope.migrate(verbose);
 });

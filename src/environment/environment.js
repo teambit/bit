@@ -42,7 +42,7 @@ export default class Environment {
 
   async create(): Promise<void> {
     await mkdirp(this.path);
-    this.consumer = await Consumer.createWithExistingScope(this.path, this.scope, true);
+    this.consumer = await Consumer.createIsolatedWithExistingScope(this.path, this.scope);
   }
 
   /**
@@ -56,7 +56,7 @@ export default class Environment {
   async isolateComponent(bitId: BitId | string, opts: IsolateOptions): Promise<ComponentWithDependencies> {
     // add this if statement due to extentions calling this api directly with bitId as string with version
     if (typeof bitId === 'string') {
-      bitId = await BitId.parse(bitId, true);
+      bitId = BitId.parse(bitId, true);
     }
     const saveDependenciesAsComponents =
       opts.saveDependenciesAsComponents === undefined ? true : opts.saveDependenciesAsComponents;

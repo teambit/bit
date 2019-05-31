@@ -24,6 +24,12 @@ export const supportNpmCiRegistryTesting = !isAppVeyor;
  * 4. run `helper.removeRemoteScope();` otherwise, it'll save components as dependencies
  * 5. run `this.publishComponent(your-component)`.
  * also, make sure to run `this.init()` on the before hook, and `this.destroy()` on the after hook.
+ *
+ * in case you need to init ciRegistry a few times on the same e2e-test file, it's better to
+ * re-init the helper, and pass the new instance to this init. (`helper = new Helper(); const npmCiRegistry = new NpmCiRegistry(helper);`)
+ * so then it'll create new local and remote scope. otherwise, the tests might publish the same packages.
+ * keep in mind that even when the registry is destroyed, the data is still there and is loaded the next
+ * time the registry is running. this solution makes sure the package-names are different.
  */
 export default class NpmCiRegistry {
   registryServer: ChildProcess;
@@ -108,14 +114,41 @@ EOD`;
    */
   publishComponent(componentName: string, componentVersion?: string = '0.0.1') {
     const packDir = path.join(this.helper.localScopePath, 'pack');
-    this.helper.runCmd(`bit npm-pack ${this.helper.remoteScope}/${componentName} -o -k -d ${packDir}`);
+    this.helper.runCmd(
+      `bit npm-pack ${this.helper.remoteScope}/${componentName}@${componentVersion} -o -k -d ${packDir}`
+    );
     const npmComponentName = componentName.replace(/\//g, '.');
     const tarballFileName = `ci-${this.helper.remoteScope}.${npmComponentName}-${componentVersion}.tgz`;
     const tarballFilePath = path.join(packDir, tarballFileName);
+    if (!fs.existsSync(tarballFilePath)) {
+      throw new Error(`publishComponent unable to find the following file, probably you forgot to run setCiScopeInBitJson() method before creating the components
+${tarballFileName}`);
+    }
     tar.x({ file: tarballFilePath, C: packDir, sync: true });
     const extractedDir = path.join(packDir, 'package');
     this._validateRegistryScope(extractedDir);
     this.helper.runCmd('npm publish', extractedDir);
+  }
+
+  /**
+   * a workaround to make Bit save dependencies as packages.
+   * once the resolver is set, it's possible to delete the remote and it'll be still able to import
+   * from that remote.
+   * once the remote scope is deleted from the remote list, Bit assumes that it the remote is a hub
+   * and enable the save-dependencies-as-packages feature.
+   */
+  setResolver() {
+    const scopeJsonPath = '.bit/scope.json';
+    const scopeJson = this.helper.readJsonFile(scopeJsonPath);
+    const resolverPath = path.join(this.helper.localScopePath, 'resolver.js');
+    // $FlowFixMe
+    scopeJson.resolverPath = resolverPath;
+    this.helper.createJsonFile(scopeJsonPath, scopeJson);
+    this.helper.createFile('', 'resolver.js', this._getResolverContent());
+  }
+
+  _getResolverContent() {
+    return `module.exports = () => Promise.resolve('file://${this.helper.remoteScopePath}');`;
   }
 
   _validateRegistryScope(dir: string) {

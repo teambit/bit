@@ -6,6 +6,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
 import { ComponentNotFound } from '../../src/scope/exceptions';
+import { removeChalkCharacters } from '../../src/utils';
 
 chai.use(require('chai-fs'));
 
@@ -16,7 +17,7 @@ const barFooV4 = "module.exports = function foo() { return 'got foo v4'; };";
 const successOutput = 'successfully merged components';
 // eslint-disable-next-line import/prefer-default-export
 export const FileStatusWithoutChalk = R.fromPairs(
-  Object.keys(FileStatus).map(status => [status, Helper.removeChalkCharacters(FileStatus[status])])
+  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
 );
 
 describe('bit merge command', function () {
@@ -240,7 +241,7 @@ describe('bit merge command', function () {
           });
           it('bit tag should tag the component when --ignore-unresolved-dependencies flag is used', () => {
             const tagOutput = helper.tagAllComponents('--ignore-unresolved-dependencies');
-            expect(tagOutput).to.have.string('1 components tagged');
+            expect(tagOutput).to.have.string('1 component(s) tagged');
           });
         });
         describe('when using --ours flag', () => {

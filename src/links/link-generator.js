@@ -16,16 +16,15 @@ import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
 import { getLinkToFileContent } from './link-content';
-import createSymlinkOrCopy from '../utils/fs/create-symlink-or-copy';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
 import BitMap from '../consumer/bit-map';
-import JSONFile from '../consumer/component/sources/json-file';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
+import Symlink from './symlink';
 
-type Symlink = {
+type SymlinkType = {
   source: PathOsBasedAbsolute, // symlink is pointing to this path
   dest: PathOsBasedAbsolute // path where the symlink is written to
 };
@@ -53,8 +52,8 @@ function getComponentLinks({
 }): DataToPersist {
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
-  const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
-  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
+  const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
+  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap, createNpmLinkFiles);
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
     const getDependencyIdWithResolvedVersion = (): BitId => {
@@ -66,16 +65,7 @@ function getComponentLinks({
       return dep.id;
     };
     const dependencyId = getDependencyIdWithResolvedVersion();
-    const getDependencyComponent = () => {
-      return dependencies.find(dependency => dependency.id.isEqual(dependencyId));
-    };
-    const dependencyComponent = getDependencyComponent();
-
-    if (!dependencyComponent) {
-      const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${component.id.toString()}.
-The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
-      throw new Error(errorMessage);
-    }
+    const dependencyComponent = _getDependencyComponent(dependencyId, dependencies, component.id);
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
@@ -83,7 +73,6 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
         bitMap,
         component,
         relativePath,
-        dependencyId,
         dependencyComponent,
         createNpmLinkFiles
       });
@@ -97,66 +86,82 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
     : [];
   const flattenLinks = R.flatten(links).concat(internalCustomResolvedLinks);
 
-  const { postInstallLinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
-  if (postInstallLinks.length) {
-    const postInstallFile = generatePostInstallScript(component, postInstallLinks);
+  const { postInstallLinks, postInstallSymlinks, linksToWrite, symlinks } = groupLinks(flattenLinks);
+  const shouldGeneratePostInstallScript = postInstallLinks.length || postInstallSymlinks.length;
+  if (shouldGeneratePostInstallScript) {
+    const postInstallFile = generatePostInstallScript(component, postInstallLinks, postInstallSymlinks);
     dataToPersist.addFile(postInstallFile);
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
-  if (customResolveAliasesAdded || postInstallLinks.length) {
-    const packageJsonFile = _getPackageJsonFile(component);
+  if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
+    const packageJsonFile = component.packageJsonFile.toJSONFile();
     dataToPersist.addFile(packageJsonFile);
   }
 
   if (symlinks.length) {
-    createSymlinks(symlinks, component.id.toString());
+    dataToPersist.addManySymlinks(symlinks.map(symlink => Symlink.makeInstance(symlink.source, symlink.dest)));
   }
   // $FlowFixMe
   dataToPersist.addManyFiles(linksToWrite.map(linkToWrite => LinkFile.load(linkToWrite)));
   return dataToPersist;
 }
 
-function _getPackageJsonFile(component: Component) {
-  // $FlowFixMe
-  const componentDir: string = component.writtenPath;
-  return JSONFile.load({
-    base: componentDir,
-    path: path.join(componentDir, 'package.json'),
-    content: component.packageJsonInstance,
-    override: true
-  });
+function _getDependencyComponent(dependencyId: BitId, dependencies: Component[], componentId: BitId): Component {
+  const componentWithSameVersion = dependencies.find(dependency => dependency.id.isEqual(dependencyId));
+  if (componentWithSameVersion) return componentWithSameVersion;
+  const dependencyComponent = dependencies.find(dependency => dependency.id.isEqualWithoutVersion(dependencyId));
+  if (!dependencyComponent) {
+    const errorMessage = `link-generation: failed finding ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
+The dependencies array has the following ids: ${dependencies.map(d => d.id).join(', ')}`;
+    throw new Error(errorMessage);
+  }
+  logger.warn(`link-generation: failed finding an exact version of ${dependencyId.toString()} in the dependencies array of ${componentId.toString()}.
+    will use ${dependencyComponent.id.toString()} instead. this might happen when the dependency version is overridden in package.json or bit.json`);
+  return dependencyComponent;
 }
 
-function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
+function _getDirectDependencies(
+  component: Component,
+  componentMap: ComponentMap,
+  createNpmLinkFiles: boolean
+): Dependency[] {
   // devDependencies of Nested components are not written to the filesystem, so no need to link them.
-  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
     ? component.dependencies.get()
     : component.getAllNonEnvsDependencies();
 }
 
-function _getFlattenedDependencies(component: Component, componentMap: ComponentMap): BitIds {
-  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+function _getFlattenedDependencies(
+  component: Component,
+  componentMap: ComponentMap,
+  createNpmLinkFiles: boolean
+): BitIds {
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
     ? component.flattenedDependencies
     : BitIds.fromArray(component.getAllNonEnvsFlattenedDependencies());
 }
 
-function createSymlinks(symlinks: Symlink[], componentId: string) {
-  symlinks.forEach((symlink: Symlink) => {
-    createSymlinkOrCopy(symlink.source, symlink.dest, componentId);
-  });
-}
-
 function groupLinks(
   flattenLinks: LinkFileType[]
-): { postInstallLinks: OutputFileParams[], linksToWrite: OutputFileParams[], symlinks: Symlink[] } {
+): {
+  postInstallLinks: OutputFileParams[],
+  linksToWrite: OutputFileParams[],
+  symlinks: SymlinkType[],
+  postInstallSymlinks: SymlinkType[]
+} {
   const groupedLinks = groupBy(flattenLinks, link => link.linkPath);
   const linksToWrite = [];
   const postInstallLinks = [];
+  const postInstallSymlinks = [];
   const symlinks = [];
   Object.keys(groupedLinks).forEach((group) => {
     let content = '';
     const firstGroupItem = groupedLinks[group][0];
     if (firstGroupItem.symlinkTo) {
+      if (firstGroupItem.postInstallSymlink) {
+        postInstallSymlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
+        return;
+      }
       symlinks.push({ source: firstGroupItem.symlinkTo, dest: firstGroupItem.linkPath });
       return;
     }
@@ -172,7 +177,7 @@ function groupLinks(
       linksToWrite.push(linkFile);
     }
   });
-  return { postInstallLinks, linksToWrite, symlinks };
+  return { postInstallLinks, postInstallSymlinks, linksToWrite, symlinks };
 }
 
 /**
@@ -291,13 +296,22 @@ function getInternalCustomResolvedLinks(
     const destAbs = path.join(componentDir, dest);
     const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
     const linkContent = getLinkToFileContent(destRelative);
+
+    const postInstallSymlink = createNpmLinkFiles && !linkContent;
     const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
     const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
+    const getSymlink = () => {
+      if (linkContent) return undefined;
+      if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
+      return sourceAbs;
+    };
     return {
       linkPath: createNpmLinkFiles ? dest : destAbs,
       linkContent,
       postInstallLink: createNpmLinkFiles,
-      customResolveMapping
+      customResolveMapping,
+      symlinkTo: getSymlink(),
+      postInstallSymlink
     };
   });
 }
@@ -306,7 +320,7 @@ function getInternalCustomResolvedLinks(
  * change the package.json of a component to include postInstall script.
  * @see postInstallTemplate() JSDoc to understand better why this postInstall script is needed
  */
-function generatePostInstallScript(component: Component, postInstallLinks) {
+function generatePostInstallScript(component: Component, postInstallLinks = [], postInstallSymlinks = []): LinkFile {
   // $FlowFixMe todo: is it possible that writtenPath is empty here?
   const componentDir: string = component.writtenPath;
   // convert from array to object for easier parsing in the postinstall script
@@ -314,13 +328,16 @@ function generatePostInstallScript(component: Component, postInstallLinks) {
     acc[val.filePath] = val.content;
     return acc;
   }, {});
-  if (!component.packageJsonInstance) throw new Error(`packageJsonInstance is missing for ${component.id.toString()}`);
-  const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject));
+  const symlinkPathsObject = postInstallSymlinks.reduce((acc, val) => {
+    acc[val.dest] = val.source;
+    return acc;
+  }, {});
+  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
+  const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject), JSON.stringify(symlinkPathsObject));
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
-  // $FlowFixMe packageJsonInstance must be set
-  component.packageJsonInstance.scripts = { postinstall: postInstallScript };
+  component.packageJsonFile.addOrUpdateProperty('scripts', { postinstall: postInstallScript });
   const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
   return postInstallFile;
 }
@@ -332,9 +349,9 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
   }, {});
   if (R.isEmpty(resolveAliases)) return false;
   // @TODO: load the package.json here if not found. it happens during the build process
-  if (!component.packageJsonInstance) return false;
-  if (component.packageJsonInstance.bit) component.packageJsonInstance.bit.resolveAliases = resolveAliases;
-  else component.packageJsonInstance.bit = { resolveAliases };
+  if (!component.packageJsonFile) return false;
+  const bitProperty = component.packageJsonFile.getProperty('bit') || {};
+  bitProperty.resolveAliases = resolveAliases;
   return true;
 }
 
@@ -389,7 +406,6 @@ async function getLinksByDependencies(
         bitMap,
         component,
         relativePath,
-        dependencyId: dependency.id,
         dependencyComponent,
         createNpmLinkFiles: false,
         targetDir

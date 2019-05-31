@@ -8,7 +8,7 @@ import { LATEST_BIT_VERSION, COMPONENT_ORIGINS } from '../../constants';
 import type { ModelComponent } from '../models';
 import { Symlink } from '../models';
 import type ConsumerComponent from '../../consumer/component';
-import type Scope from '../scope';
+import Scope from '../scope';
 import type Consumer from '../../consumer/consumer';
 
 export default class RemoveModelComponents {
@@ -33,6 +33,7 @@ export default class RemoveModelComponents {
       // trying to delete the same file at the same time (happens when removing a component with
       // a dependency and the dependency itself)
       const removedComponents = await pMapSeries(foundComponents, bitId => this._removeSingle(bitId));
+      await this.scope.objects.persist();
       const ids = new BitIds(...removedComponents.map(x => x.bitId));
       const removedDependencies = new BitIds(...R.flatten(removedComponents.map(x => x.removedDependencies)));
       return new RemovedObjects({ removedComponentIds: ids, missingComponents, removedDependencies });
@@ -49,10 +50,10 @@ export default class RemoveModelComponents {
   async _removeSingle(bitId: BitId): Promise<{ bitId: BitId, removedDependencies: BitIds }> {
     logger.debug(`scope.removeSingle ${bitId.toString()}, remove dependencies: ${this.removeSameOrigin.toString()}`);
     // $FlowFixMe
-    const component = (await this.scope.sources.get(bitId)).toComponentVersion();
+    const component = (await this.scope.getModelComponentIfExist(bitId)).toComponentVersion();
     const consumerComponentToRemove = await component.toConsumer(this.scope.objects);
     // $FlowFixMe
-    const componentList = await this.scope.objects.listComponents();
+    const componentList = await this.scope.listIncludesSymlinks();
 
     const dependentBits = await this.scope.findDependentBits(
       consumerComponentToRemove.flattenedDependencies,
@@ -66,7 +67,7 @@ export default class RemoveModelComponents {
       bitId
     );
 
-    await this._removeComponent(bitId, componentList, false);
+    await this._removeComponent(bitId, componentList);
     const version = Object.keys(component.component.versions).length <= 1 ? LATEST_BIT_VERSION : bitId.version;
 
     return { bitId: bitId.changeVersion(version), removedDependencies };
@@ -97,7 +98,7 @@ export default class RemoveModelComponents {
         (dependencyId.scope !== bitId.scope || this.removeSameOrigin) &&
         isNested
       ) {
-        await this._removeComponent(dependencyId, componentList, true);
+        await this._removeComponent(dependencyId, componentList);
         return dependencyId;
       }
       return null;
@@ -107,11 +108,11 @@ export default class RemoveModelComponents {
     return BitIds.fromArray(removedDependencies);
   }
 
-  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>, removeRefs: boolean = false) {
+  async _removeComponent(id: BitId, componentList: Array<ModelComponent | Symlink>) {
     const symlink = componentList.filter(
       component => component instanceof Symlink && id.isEqualWithoutScopeAndVersion(component.toBitId())
     );
-    await this.scope.sources.clean(id, removeRefs);
-    if (!R.isEmpty(symlink)) await this.scope.objects.remove(symlink[0].hash());
+    await this.scope.sources.removeComponentById(id);
+    if (!R.isEmpty(symlink)) this.scope.objects.removeObject(symlink[0].hash());
   }
 }

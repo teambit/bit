@@ -4,7 +4,7 @@ import semver from 'semver';
 import R from 'ramda';
 import type Version from '../../scope/models/version';
 import ModelComponent from '../../scope/models/model-component';
-import type { Scope } from '../../scope';
+import Scope from '../../scope/scope';
 import Component from '../component';
 import { BitId, BitIds } from '../../bit-id';
 import type BitMap from '../bit-map/bit-map';
@@ -13,6 +13,7 @@ import { filterAsync } from '../../utils';
 import { COMPONENT_ORIGINS } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
+import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
 
 export type ObjectsList = Promise<{ [componentId: string]: Version }>;
 
@@ -213,7 +214,7 @@ export default class ComponentsList {
   async listExportPendingComponents(): Promise<ModelComponent[]> {
     const exportPendingComponentsIds: BitIds = await this.listExportPendingComponentsIds();
     // $FlowFixMe
-    return Promise.all(exportPendingComponentsIds.map(id => this.scope.sources.get(id)));
+    return Promise.all(exportPendingComponentsIds.map(id => this.scope.getModelComponentIfExist(id)));
   }
 
   async listAutoTagPendingComponents(): Promise<ModelComponent[]> {
@@ -356,33 +357,16 @@ export default class ComponentsList {
   }
 
   static filterComponentsByWildcard<T>(components: T, idsWithWildcard: string[] | string): T {
-    if (!Array.isArray(idsWithWildcard)) idsWithWildcard = [idsWithWildcard];
     const getBitId = (component): BitId => {
       if (R.is(ModelComponent, component)) return component.toBitId();
       if (R.is(Component, component)) return component.id;
       if (R.is(BitId, component)) return component;
       throw new TypeError(`filterComponentsByWildcard got component with the wrong type: ${typeof component}`);
     };
-    const getRegex = (idWithWildcard) => {
-      if (!R.is(String, idWithWildcard)) {
-        throw new TypeError(
-          `filterComponentsByWildcard expects idWithWildcard to be string, got ${typeof idWithWildcard}`
-        );
-      }
-      const rule = idWithWildcard.replace(/\*/g, '.*');
-      return new RegExp(`^${rule}$`);
-    };
-    const regexPatterns = idsWithWildcard.map(id => getRegex(id));
-    const isNameMatchByWildcard = (name): boolean => {
-      return regexPatterns.some(regex => regex.test(name));
-    };
     // $FlowFixMe
     return components.filter((component) => {
       const bitId: BitId = getBitId(component);
-      return (
-        isNameMatchByWildcard(bitId.toStringWithoutVersion()) ||
-        isNameMatchByWildcard(bitId.toStringWithoutScopeAndVersion())
-      );
+      return isBitIdMatchByWildcards(bitId, idsWithWildcard);
     });
   }
 

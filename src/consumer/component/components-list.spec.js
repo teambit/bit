@@ -3,22 +3,27 @@ import ComponentsList from './components-list';
 import { ModelComponent } from '../../scope/models';
 import { BitId, BitIds } from '../../bit-id';
 
-describe('ComponentList', () => {
+describe('ComponentList', function () {
+  this.timeout(0);
   const getModelComponent = () => ModelComponent.fromBitId({ name: 'myName', scope: 'scope' });
-  describe('listLocalScope', () => {
+  const getScope = modelComponent => ({
+    listLocal: () => {
+      return modelComponent ? Promise.resolve([modelComponent]) : Promise.resolve([]);
+    }
+  });
+  describe('listLocalScope', function () {
     let modelComponent;
     before(() => {
+      this.timeout(0);
       modelComponent = getModelComponent();
     });
     it('should return an empty array when there are no components in the scope', async () => {
-      const scope = { listLocal: () => [] };
+      const scope = getScope();
       const results = await ComponentsList.listLocalScope(scope);
       expect(results).to.deep.equal([]);
     });
     it('should return results with the correct id', async () => {
-      const scope = {
-        listLocal: () => [modelComponent]
-      };
+      const scope = getScope(modelComponent);
       const results = await ComponentsList.listLocalScope(scope);
       const result = results[0];
       expect(result).to.have.property('id');
@@ -26,9 +31,7 @@ describe('ComponentList', () => {
     });
     it('should return results with the correct deprecated status', async () => {
       modelComponent.deprecated = true;
-      const scope = {
-        listLocal: () => [modelComponent]
-      };
+      const scope = getScope(modelComponent);
       const results = await ComponentsList.listLocalScope(scope);
       const result = results[0];
       expect(result).to.have.property('deprecated');

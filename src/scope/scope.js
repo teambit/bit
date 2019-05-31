@@ -6,7 +6,6 @@ import R from 'ramda';
 import pMapSeries from 'p-map-series';
 import ComponentObjects from './component-objects';
 import { Symlink, Version, ModelComponent } from './models';
-import types from './object-registrar';
 import { propogateUntil, currentDirName, pathHasAll, first } from '../utils';
 import {
   BIT_HIDDEN_DIR,
@@ -58,7 +57,7 @@ export type ScopeProps = {
   created?: boolean,
   tmp?: Tmp,
   sources?: SourcesRepository,
-  objects?: Repository
+  objects: Repository
 };
 
 export type IsolateOptions = {
@@ -92,12 +91,12 @@ export default class Scope {
     this.created = scopeProps.created || false;
     this.tmp = scopeProps.tmp || new Tmp(this);
     this.sources = scopeProps.sources || new SourcesRepository(this);
-    this.objects = scopeProps.objects || new Repository(this, types());
+    this.objects = scopeProps.objects;
   }
 
   async getDependencyGraph(): Promise<DependencyGraph> {
     if (!this._dependencyGraph) {
-      this._dependencyGraph = await DependencyGraph.load(this.objects);
+      this._dependencyGraph = await DependencyGraph.load(this);
     }
     return this._dependencyGraph;
   }
@@ -167,25 +166,29 @@ export default class Scope {
    * @memberof Consumer
    */
   async migrate(verbose: boolean): Promise<MigrationResult> {
-    logger.debugAndAddBreadCrumb('scope.migrate', 'running migration process for scope');
+    logger.debug('scope.migrate, running migration process for scope');
     if (verbose) console.log('running migration process for scope'); // eslint-disable-line
     // We start to use this process after version 0.10.9, so we assume the scope is in the last production version
     const scopeVersion = this.scopeJson.get('version') || '0.10.9';
     if (semver.gte(scopeVersion, BIT_VERSION)) {
       const upToDateMsg = 'scope version is up to date';
       if (verbose) console.log(upToDateMsg); // eslint-disable-line
-      logger.debugAndAddBreadCrumb('scope.migrate', upToDateMsg);
+      logger.debug(`scope.migrate, ${upToDateMsg}`);
       return {
         run: false
       };
     }
     loader.start(BEFORE_MIGRATION);
+    logger.debugAndAddBreadCrumb(
+      'scope.migrate',
+      `start scope migration. scope version ${scopeVersion}, bit version ${BIT_VERSION}`
+    );
     const rawObjects = await this.objects.listRawObjects();
     const resultObjects: ScopeMigrationResult = await migrate(scopeVersion, migratonManifest, rawObjects, verbose);
     // Add the new / updated objects
     this.objects.addMany(resultObjects.newObjects);
     // Remove old objects
-    await this.objects.removeMany(resultObjects.refsToRemove);
+    this.objects.removeManyObjects(resultObjects.refsToRemove);
     // Persists new / remove objects
     const validateBeforePersist = false;
     await this.objects.persist(validateBeforePersist);
@@ -215,7 +218,11 @@ export default class Scope {
   }
 
   async list(): Promise<ModelComponent[]> {
-    return this.objects.listComponents(false);
+    return this.objects.listComponents();
+  }
+
+  async listIncludesSymlinks(): Promise<Array<ModelComponent | Symlink>> {
+    return this.objects.listComponentsIncludeSymlinks();
   }
 
   async listLocal(): Promise<ModelComponent[]> {
@@ -352,13 +359,13 @@ export default class Scope {
    * Writes components as objects into the 'objects' directory
    */
   async writeManyComponentsToModel(componentsObjects: ComponentObjects[], persist: boolean = true): Promise<any> {
-    const manyObjects = componentsObjects.map(componentObjects => componentObjects.toObjects(this.objects));
     logger.debugAndAddBreadCrumb(
       'scope.writeManyComponentsToModel',
-      'writing into the model, ids: {ids}. They might have dependencies which are going to be written too',
-      { ids: manyObjects.map(objects => objects.component.id()).join(', ') }
+      `total componentsObjects ${componentsObjects.length}`
     );
-    await Promise.all(manyObjects.map(objects => this.sources.merge(objects)));
+    await pMapSeries(componentsObjects, componentObjects =>
+      componentObjects.toObjectsAsync(this.objects).then(objects => this.sources.merge(objects))
+    );
     return persist ? this.objects.persist() : Promise.resolve();
   }
 
@@ -375,16 +382,15 @@ export default class Scope {
   }
 
   async deprecateSingle(bitId: BitId): Promise<string> {
-    const component = await this.sources.get(bitId);
+    const component = await this.getModelComponentIfExist(bitId);
     component.deprecated = true;
     this.objects.add(component);
-    await this.objects.persist();
     return bitId.toStringWithoutVersion();
   }
 
   /**
    * Remove components from scope
-   * @force Boolean  - remove component from scope even if other components use it
+   * @force Boolean - remove component from scope even if other components use it
    */
   async removeMany(
     bitIds: BitIds,
@@ -435,7 +441,7 @@ export default class Scope {
       });
 
       if (!R.isEmpty(dependencies)) {
-        dependentBits[bitId.toStringWithoutVersion()] = BitIds.fromArray(dependencies).getUniq();
+        dependentBits[bitId.toStringWithoutVersion()] = BitIds.uniqFromArray(dependencies);
       }
     });
     return Promise.resolve(dependentBits);
@@ -450,12 +456,12 @@ export default class Scope {
     const missingComponents = new BitIds();
     const foundComponents = new BitIds();
     const resultP = bitIds.map(async (id) => {
-      const component = await this.sources.get(id);
+      const component = await this.getModelComponentIfExist(id);
       if (!component) missingComponents.push(id);
       else foundComponents.push(id);
     });
     await Promise.all(resultP);
-    return Promise.resolve({ missingComponents, foundComponents });
+    return { missingComponents, foundComponents };
   }
 
   /**
@@ -466,6 +472,7 @@ export default class Scope {
     const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
     const deprecatedComponentsP = foundComponents.map(bitId => this.deprecateSingle(bitId));
     const deprecatedComponents = await Promise.all(deprecatedComponentsP);
+    await this.objects.persist();
     const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
     return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
@@ -486,14 +493,14 @@ export default class Scope {
   }
 
   loadComponentLogs(id: BitId): Promise<{ [number]: { message: string, date: string, hash: string } }> {
-    return this.sources.get(id).then((componentModel) => {
+    return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectLogs(this.objects);
     });
   }
 
   loadAllVersions(id: BitId): Promise<Component[]> {
-    return this.sources.get(id).then((componentModel) => {
+    return this.getModelComponentIfExist(id).then((componentModel) => {
       if (!componentModel) throw new ComponentNotFound(id.toString());
       return componentModel.collectVersions(this.objects);
     });
@@ -506,7 +513,7 @@ export default class Scope {
    * @see getModelComponentIgnoreScope to ignore the scope name
    */
   async getModelComponent(id: BitId): Promise<ModelComponent> {
-    const component = await this.sources.get(id);
+    const component = await this.getModelComponentIfExist(id);
     if (component) return component;
     throw new ComponentNotFound(id.toString());
   }
@@ -518,7 +525,7 @@ export default class Scope {
    * it throws an error if the component wasn't found.
    */
   async getModelComponentIgnoreScope(id: BitId): Promise<ModelComponent> {
-    const component = await this.sources.get(id);
+    const component = await this.getModelComponentIfExist(id);
     if (component) return component;
     if (!id.scope) {
       // search for the complete ID
@@ -582,17 +589,10 @@ export default class Scope {
       .then(() => this);
   }
 
-  clean(bitId: BitId): Promise<void> {
-    return this.sources.clean(bitId);
-  }
-
   /**
    * find the components in componentsPool which one of their dependencies include in potentialDependencies
    */
-  async findDirectDependentComponents(
-    componentsPool: BitIds,
-    potentialDependencies: BitIds
-  ): Promise<ComponentVersion[]> {
+  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<BitIds> {
     const componentsVersions = await this.loadLocalComponents(componentsPool);
     const dependentsP = componentsVersions.map(async (componentVersion: ComponentVersion) => {
       const component: Version = await componentVersion.getVersion(this.objects);
@@ -602,7 +602,8 @@ export default class Scope {
       return found ? componentVersion : null;
     });
     const dependents = await Promise.all(dependentsP);
-    return removeNils(dependents);
+    const dependentsWithoutNull = removeNils(dependents);
+    return BitIds.fromArray(dependentsWithoutNull.map(c => c.id));
   }
 
   async runComponentSpecs({
@@ -692,10 +693,12 @@ export default class Scope {
     if (pathHasScope(path)) return this.load(path);
     if (!name) name = currentDirName();
     const scopeJson = new ScopeJson({ name, groupName, version: BIT_VERSION });
-    return Promise.resolve(new Scope({ path, created: true, scopeJson }));
+    const repository = Repository.create({ scopePath: path, scopeJson });
+    return Promise.resolve(new Scope({ path, created: true, scopeJson, objects: repository }));
   }
 
   static async reset(path: PathOsBasedAbsolute, resetHard: boolean): Promise<void> {
+    await Repository.reset(path);
     if (resetHard) {
       logger.info(`deleting the whole scope at ${path}`);
       await fs.emptyDir(path);
@@ -704,13 +707,13 @@ export default class Scope {
 
   static async load(absPath: string): Promise<Scope> {
     let scopePath = propogateUntil(absPath);
-    if (!scopePath) throw new ScopeNotFound();
+    if (!scopePath) throw new ScopeNotFound(absPath);
     if (fs.existsSync(pathLib.join(scopePath, BIT_HIDDEN_DIR))) {
       scopePath = pathLib.join(scopePath, BIT_HIDDEN_DIR);
     }
-    const path = scopePath;
 
     const scopeJson = await ScopeJson.loadFromFile(getScopeJsonPath(scopePath));
-    return new Scope({ path, scopeJson });
+    const objects = await Repository.load({ scopePath, scopeJson });
+    return new Scope({ path: scopePath, scopeJson, objects });
   }
 }

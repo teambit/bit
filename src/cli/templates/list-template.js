@@ -3,6 +3,7 @@ import c from 'chalk';
 import R from 'ramda';
 import semver from 'semver';
 import Table from 'tty-table';
+import { removeChalkCharacters } from '../../utils';
 import type { ListScopeResult } from '../../consumer/component/components-list';
 
 type Row = { id: string, localVersion: string, currentVersion: string, remoteVersion?: string };
@@ -50,8 +51,24 @@ export default (listScopeResults: ListScopeResult[], json: boolean, showRemoteVe
     return data;
   }
 
+  function toJsonComponent(listScopeResult: ListScopeResult): Object {
+    const id = listScopeResult.id.toStringWithoutVersion();
+    const version = listScopeResult.id.version;
+    const data = {
+      id,
+      localVersion: version,
+      deprecated: listScopeResult.deprecated,
+      currentVersion: listScopeResult.currentlyUsedVersion || 'N/A',
+      remoteVersion: listScopeResult.remoteVersion || 'N/A'
+    };
+    return data;
+  }
+
+  if (json) {
+    const jsonResults = listScopeResults.map(toJsonComponent);
+    return JSON.stringify(jsonResults, null, 2);
+  }
   const rows = listScopeResults.map(tabulateComponent);
-  if (json) return JSON.stringify(rows);
 
   const table = new Table(header, rows.map(row => R.values(row)), opts);
   return table.render();
