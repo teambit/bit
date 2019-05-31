@@ -223,16 +223,15 @@ function jsLookup(options: Options) {
  */
 function cssPreprocessorLookup(options: Options) {
   const { filename, partial, directory, resolveConfig } = options;
-
+  if (resolveConfig && !isRelativeImport(partial)) {
+    const result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+    if (result) return result;
+  }
   if (partial.startsWith('~') && !partial.startsWith('~/')) {
     // webpack syntax for resolving a module from node_modules
     debug('changing the resolver of css preprocessor to resolveWebpackPath as it has a ~ prefix');
     const partialWithNoTilda = partial.replace('~', '');
     return resolveWebpack(partialWithNoTilda, filename, directory, { extensions: styleExtensions, symlinks: false });
-  }
-  if (resolveConfig && !isRelativeImport(partial)) {
-    const result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
-    if (result) return result;
   }
 
   // Less and Sass imports are very similar
