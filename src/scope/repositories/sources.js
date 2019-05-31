@@ -9,7 +9,7 @@ import { MergeConflict, ComponentNotFound } from '../exceptions';
 import { ModelComponent, Version, Source, Symlink } from '../models';
 import { BitId, BitIds } from '../../bit-id';
 import type { ComponentProps } from '../models/model-component';
-import type ConsumerComponent from '../../consumer/component';
+import ConsumerComponent from '../../consumer/component';
 import * as globalConfig from '../../api/consumer/lib/global-config';
 import logger from '../../logger/logger';
 import Repository from '../objects/repository';

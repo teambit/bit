@@ -272,4 +272,11 @@ export default class Dists {
       .map(pathNormalizeToLinux)
       .join(NODE_PATH_SEPARATOR);
   }
+
+  clone(): Dists {
+    // $FlowFixMe
+    const clone: Dists = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    clone.dists = this.dists.map(d => d.clone());
+    return clone;
+  }
 }

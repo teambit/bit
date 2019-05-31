@@ -151,8 +151,19 @@ export default class NodeModuleLinker {
       this.dataToPersist.addManySymlinks(dependenciesLinks);
     }
   }
+
   /**
    * authored components are linked only when they were exported before
+   * the implementation here is tricky.
+   * the purpose of this link is for the author to be able to require its components using module
+   * path (such as `require('@bit/remote/component')`). so then, later on, the author could
+   * `bit eject` the component to remove it from the workspace and consumer it as an NPM package.
+   * the problem is that as an NPM package, the paths are reduced (sharedDir is stripped), so we
+   * have to mimic those paths here in the node_modules links.
+   * This becomes tricky because we must work with two paths in parallel. The link file should be
+   * written after stripping sharedDir, however, it should point to the original file, which was
+   * not stripped. To achieve this, we clone the original component, stripping the sharedDir, so
+   * then we get two components. The original and the clone with the modified paths.
    */
   _populateAuthoredComponentsLinks(component: Component): void {
     if (!component.id.scope) return; // scope is a must to generate the link
@@ -162,14 +173,14 @@ export default class NodeModuleLinker {
     clonedComponent.stripOriginallySharedDir([manipulateDirData]);
     const componentId = clonedComponent.id;
     const filesToBind = clonedComponent.files.map(f => f.relative);
-    clonedComponent.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, clonedComponent.componentMap);
+    component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
       const fileWithoutManipulation = revertDirManipulationForPath(
         path.normalize(file),
         manipulateDirData.originallySharedDir,
         manipulateDirData.wrapDir
       );
-      const possiblyDist = clonedComponent.dists.calculateDistFileForAuthored(fileWithoutManipulation, this.consumer);
+      const possiblyDist = component.dists.calculateDistFileForAuthored(fileWithoutManipulation, this.consumer);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
       const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);

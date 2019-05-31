@@ -74,10 +74,12 @@ describe('binary files', function () {
       expect(files.some(f => f.includes('png_fixture.png'))).to.be.true;
       expect(files.some(f => f.includes('package.json'))).to.be.true;
     });
-    it('should create the file in node_modules/@bit as a symlink', () => {
+    it('should create the file in node_modules/@bit as a symlink after stripping sharedDir', () => {
+      // notice how the path inside node_modules is png_fixture.png and not bar/png_fixture.png
+      // this is because "bar" has been stripped as it's a sharedDir of this component
       const symlinkPath = path.join(
         helper.localScopePath,
-        `node_modules/@bit/${helper.remoteScope}.bar.foo/bar/png_fixture.png`
+        `node_modules/@bit/${helper.remoteScope}.bar.foo/png_fixture.png`
       );
       const symlinkValue = fs.readlinkSync(symlinkPath);
       expect(symlinkValue).to.have.string(path.join('bar', 'png_fixture.png'));
