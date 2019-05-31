@@ -184,7 +184,7 @@ export default class NodeModuleLinker {
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithoutManipulation, dest, componentId));
       }
     });
     this._createPackageJsonForAuthor(clonedComponent);
