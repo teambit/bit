@@ -198,6 +198,12 @@ export default class NodeModuleLinker {
         this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithoutManipulation, dest, componentId));
       }
     });
+    // needed to set areDistsInsideComponentDir correctly
+    clonedComponent.dists.updateDistsPerWorkspaceConfig(
+      clonedComponent.id,
+      this.consumer,
+      clonedComponent.componentMap
+    );
     this._createPackageJsonForAuthor(clonedComponent);
   }
 
