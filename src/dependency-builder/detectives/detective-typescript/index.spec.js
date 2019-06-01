@@ -113,4 +113,10 @@ describe('detective-typescript', () => {
       detective("import foo from 'foo'; var baz = <baz>bar;");
     });
   });
+
+  it('does not throw with empty import and export', () => {
+    assert.doesNotThrow(() => {
+      detective("import './layout.scss'; export default something;");
+    });
+  });
 });

@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.10] - 2019-05-31
+
+- [#1690](https://github.com/teambit/bit/issues/1690) fix error "Cannot read property 'find' of undefined" with typescript files
+
 ## [2.0.9] - 2019-05-31
 
 - [#1665](https://github.com/teambit/bit/issues/1665) fix resolve-modules prefix with tilda
