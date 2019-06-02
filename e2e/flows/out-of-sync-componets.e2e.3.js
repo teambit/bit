@@ -255,9 +255,6 @@ describe('components that are not synced between the scope and the consumer', fu
         const newId = `${helper.remoteScope}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
       });
-      it('should indicate that such a sync had happened', () => {
-        expect(output).to.have.string('the following components were found in the local store');
-      });
     });
   });
   describe('consumer has exported components and scope is empty', () => {
