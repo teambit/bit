@@ -213,7 +213,7 @@ describe('components that are not synced between the scope and the consumer', fu
         expect(lsRemote[0].id).to.have.string('bar/foo');
       });
       it('should tell the user that no local changes have been made because the components are not tracked', () => {
-        expect(output).to.have.string('no local changes have been made');
+        expect(output).to.have.string('bit did not update the workspace as the component files are not tracked');
       });
     });
     describe('bit export id', () => {
@@ -229,7 +229,7 @@ describe('components that are not synced between the scope and the consumer', fu
         expect(lsRemote[0].id).to.have.string('bar/foo');
       });
       it('should tell the user that no local changes have been made because the components are not tracked', () => {
-        expect(output).to.have.string('no local changes have been made');
+        expect(output).to.have.string('bit did not update the workspace as the component files are not tracked');
       });
     });
   });
