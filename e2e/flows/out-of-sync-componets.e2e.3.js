@@ -245,18 +245,13 @@ describe('components that are not synced between the scope and the consumer', fu
       scopeOutOfSync = helper.cloneLocalScope();
     });
     describe('bit add of the same component', () => {
-      let output;
       before(() => {
         helper.getClonedLocalScope(scopeOutOfSync);
-        output = helper.addComponentBarFoo();
       });
       it('should sync the new component with the scope and assign a version and a scope name', () => {
         const bitMap = helper.readBitMap();
         const newId = `${helper.remoteScope}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
-      });
-      it('should indicate that such a sync had happened', () => {
-        expect(output).to.have.string('the following components were found in the local store');
       });
     });
   });
