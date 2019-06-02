@@ -49,12 +49,12 @@ describe('bit doctor - git exec validation', function () {
       expect(parsedOutput.examineResult.bareResult.valid).to.be.false;
     });
     it('should show the symptoms correctly', () => {
-      const formattedSymptoms = `git executable not found (on path '${helper.localScopePath}')`;
+      const formattedSymptoms = `git executable not found (path '${helper.localScopePath}')`;
       expect(parsedOutput.examineResult.formattedSymptoms).to.equal(formattedSymptoms);
     });
     it('should show the suggestion for fix correctly', () => {
       const formattedManualTreat =
-        "please ensure git is installed and/or git_path is configured using the 'bit config set git_path <GIT_PATH>'";
+        "please ensure that git is installed and/or git_path is configured correctly - 'bit config set git_path <GIT_PATH>'";
       expect(parsedOutput.examineResult.formattedManualTreat).to.equal(formattedManualTreat);
     });
   });
