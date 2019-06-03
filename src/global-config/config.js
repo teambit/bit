@@ -27,24 +27,32 @@ export default class Config extends Map<string, string> {
 
   static loadSync(): Config {
     try {
-      const contents = fs.readFileSync(getPath());
+      const configPath = getPath();
+      if (!fs.existsSync(configPath)) {
+        const config = new Config([]);
+        config.writeSync();
+        return config;
+      }
+      const contents = fs.readFileSync(configPath);
       return new Config(objectToTupleArray(JSON.parse(contents.toString())));
     } catch (err) {
-      if (err.code !== 'ENOENT') return err;
-      const config = new Config([]);
-      config.writeSync();
-      return config;
+      return err;
     }
   }
 
-  static load(): Promise<Config> {
-    return fs
-      .readFile(getPath())
-      .then(contents => new Config(objectToTupleArray(JSON.parse(contents.toString()))))
-      .catch((err) => {
-        if (err.code !== 'ENOENT') return err;
+  static async load(): Promise<Config> {
+    try {
+      const configPath = getPath();
+      const exists = await fs.exists(configPath);
+      if (!exists) {
         const config = new Config([]);
-        return config.write().then(() => config);
-      });
+        await config.write();
+        return config;
+      }
+      const contents = await fs.readFile(configPath);
+      return new Config(objectToTupleArray(JSON.parse(contents.toString())));
+    } catch (err) {
+      return err;
+    }
   }
 }

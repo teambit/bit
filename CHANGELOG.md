@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1699](https://github.com/teambit/bit/issues/1699) fix config.get is not a function
+
 ## [14.1.2] - 2019-06-02
 
 ### New
