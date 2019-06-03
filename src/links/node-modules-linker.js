@@ -20,6 +20,7 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
 import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
+import PackageJsonFile from '../consumer/component/package-json-file';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -212,7 +213,7 @@ export default class NodeModuleLinker {
     const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
-      if (!dependencyComponentMap) return dependenciesLinks;
+      if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(
@@ -302,7 +303,7 @@ export default class NodeModuleLinker {
     const hasPackageJsonAsComponentFile = component.files.some(file => file.relative === PACKAGE_JSON);
     if (hasPackageJsonAsComponentFile) return; // don't generate package.json on top of the user package.json
     const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, component.id));
-    const { packageJson } = preparePackageJsonToWrite(this.consumer, component, dest, true);
+    const packageJson = PackageJsonFile.createFromComponent(dest, component);
     this.dataToPersist.addFile(packageJson.toJSONFile());
   }
 
