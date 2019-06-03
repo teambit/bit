@@ -237,16 +237,19 @@ export default class NodeModuleLinker {
   _getMissingLinks(component: Component): Symlink[] {
     const missingLinks = component.issues.missingLinks;
     const result = Object.keys(component.issues.missingLinks).map((key) => {
-      return missingLinks[key].map((dependencyIdRaw: BitId) => {
-        const dependencyId: BitId = this.bitMap.getBitId(dependencyIdRaw, { ignoreVersion: true });
-        const dependencyComponentMap = this.bitMap.getComponent(dependencyId);
-        return this._getDependencyLink(
-          component.componentMap.rootDir,
-          dependencyId,
-          dependencyComponentMap.rootDir,
-          component.bindingPrefix
-        );
-      });
+      return missingLinks[key]
+        .map((dependencyIdRaw: BitId) => {
+          const dependencyId: BitId = this.bitMap.getBitId(dependencyIdRaw, { ignoreVersion: true });
+          const dependencyComponentMap = this.bitMap.getComponent(dependencyId);
+          if (!dependencyComponentMap.rootDir) return null;
+          return this._getDependencyLink(
+            component.componentMap.rootDir,
+            dependencyId,
+            dependencyComponentMap.rootDir,
+            component.bindingPrefix
+          );
+        })
+        .filter(x => x);
     });
     return R.flatten(result);
   }
