@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1698](https://github.com/teambit/bit/issues/1698) fix dependency version resolution when imported component requires authored component
+- [#1702](https://github.com/teambit/bit/issues/1702) fix error "failed adding a symlink into DataToPersist, src is empty"
 - [#1699](https://github.com/teambit/bit/issues/1699) fix config.get is not a function
 
 ## [14.1.2] - 2019-06-02
