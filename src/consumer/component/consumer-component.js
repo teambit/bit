@@ -374,7 +374,7 @@ export default class Component {
       if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
-    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance);
+    const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap, configDirInstance);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
