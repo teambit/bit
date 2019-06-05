@@ -28,6 +28,7 @@ export type ComponentWriterProps = {
   configDir?: string,
   writePackageJson?: boolean,
   override?: boolean,
+  isolated?: boolean,
   origin: ComponentOrigin,
   consumer: ?Consumer,
   bitMap: BitMap,
@@ -46,7 +47,6 @@ export default class ComponentWriter {
   override: boolean;
   isolated: ?boolean;
   origin: ComponentOrigin;
-  parent: ?BitId;
   consumer: ?Consumer;
   bitMap: BitMap;
   writeBitDependencies: boolean;
@@ -277,8 +277,8 @@ export default class ComponentWriter {
     // so if the overrides or envs were changed, it should be written to the consumer-config
     const areEnvsChanged = async (): Promise<boolean> => {
       const context = { componentDir: this.componentMap.getRootDir() };
-      const compilerFromConsumer = await this.consumer.getEnv(COMPILER_ENV_TYPE, context);
-      const testerFromConsumer = await this.consumer.getEnv(TESTER_ENV_TYPE, context);
+      const compilerFromConsumer = this.consumer ? await this.consumer.getEnv(COMPILER_ENV_TYPE, context) : null;
+      const testerFromConsumer = this.consumer ? await this.consumer.getEnv(TESTER_ENV_TYPE, context) : null;
       const compilerFromComponent = this.component.compiler ? this.component.compiler.toModelObject() : null;
       const testerFromComponent = this.component.tester ? this.component.tester.toModelObject() : null;
       return (
@@ -292,7 +292,7 @@ export default class ComponentWriter {
         )
       );
     };
-    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
+    if (this.componentMap.origin === COMPONENT_ORIGINS.AUTHORED && this.consumer) {
       this.consumer.config.overrides.updateOverridesIfChanged(this.component, await areEnvsChanged());
     }
   }
@@ -365,13 +365,18 @@ export default class ComponentWriter {
     const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
     await Promise.all(
       directDependentIds.map((dependentId) => {
-        const dependentComponentMap = this.consumer.bitMap.getComponent(dependentId);
-        const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id);
-        const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
-          path.join(dependentComponentMap.getRootDir(), relativeLinkPath)
-        );
-        logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
-        return fs.remove(nodeModulesLinkAbs);
+        const dependentComponentMap = this.consumer ? this.consumer.bitMap.getComponent(dependentId) : null;
+        const relativeLinkPath = this.consumer
+          ? getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id)
+          : null;
+        const nodeModulesLinkAbs =
+          this.consumer && dependentComponentMap && relativeLinkPath
+            ? this.consumer.toAbsolutePath(path.join(dependentComponentMap.getRootDir(), relativeLinkPath))
+            : null;
+        if (nodeModulesLinkAbs) {
+          logger.debug(`deleting an obsolete link to node_modules at ${nodeModulesLinkAbs}`);
+        }
+        return nodeModulesLinkAbs ? fs.remove(nodeModulesLinkAbs) : Promise.resolve();
       })
     );
   }

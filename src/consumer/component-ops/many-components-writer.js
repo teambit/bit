@@ -24,7 +24,7 @@ import { composeComponentPath, composeDependencyPathForIsolated } from '../../ut
 import { BitId } from '../../bit-id';
 
 type ManyComponentsWriterParams = {
-  consumer: ?Consumer,
+  consumer?: ?Consumer,
   silentPackageManagerResult?: boolean,
   componentsWithDependencies: ComponentWithDependencies[],
   writeToPath?: string,
@@ -74,7 +74,7 @@ export default class ManyComponentsWriter {
   dependenciesIdsCache: Object;
   writtenComponents: Component[];
   writtenDependencies: Component[];
-  isolated: Boolean; // a preparation for the capsule feature
+  isolated: boolean; // a preparation for the capsule feature
   bitMap: BitMap;
   basePath: ?string;
   constructor(params: ManyComponentsWriterParams) {
@@ -120,7 +120,7 @@ export default class ManyComponentsWriter {
     logger.debug('ManyComponentsWriter, _installPackages');
     if (this.consumer) {
       await packageJsonUtils.addWorkspacesToPackageJson(this.consumer, this.writeToPath);
-      if (this.addToRootPackageJson) {
+      if (this.addToRootPackageJson && this.consumer) {
         await packageJsonUtils.addComponentsToRoot(this.consumer, this.writtenComponents);
       }
     }
@@ -140,7 +140,7 @@ export default class ManyComponentsWriter {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    if (this.consumer.config.overrides.hasChanged) {
+    if (this.consumer && this.consumer.config.overrides.hasChanged) {
       const jsonFiles = await this.consumer.config.prepareToWrite({ bitDir: this.consumer.getPath() });
       dataToPersist.addManyFiles(jsonFiles);
     }

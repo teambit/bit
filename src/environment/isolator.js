@@ -70,7 +70,10 @@ export default class Isolator {
    * of the dependency we need to load its dependencies as well until we got them all.
    */
   async _loadComponent(id: BitId): Promise<ComponentWithDependencies> {
-    return this.consumer ? await this._loadComponentFromConsumer(id) : await this._loadComponentFromScope(id);
+    if (this.consumer) {
+      return this._loadComponentFromConsumer(id);
+    }
+    throw new Error('loading components from scope is not implemented yet');
   }
 
   async _loadComponentFromConsumer(id: BitId): Promise<ComponentWithDependencies> {
@@ -79,8 +82,6 @@ export default class Isolator {
     const component = await consumer.loadComponent(id);
     return loadFlattenedDependencies(consumer, component);
   }
-
-  async _loadComponentFromScope(id: BitId): Promise<ComponentWithDependencies> {}
 
   async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
     const persistP = componentsWithDependencies.map((componentWithDeps) => {
@@ -104,12 +105,10 @@ export default class Isolator {
         output += data;
       });
       execResults.stdout.on('error', (error: string) => {
-        console.log('on error', error);
         return reject(error);
       });
       // @ts-ignore
       execResults.on('close', () => {
-        console.log('close ', output);
         return resolve(output);
       });
     });

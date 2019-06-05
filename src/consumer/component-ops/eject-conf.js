@@ -31,8 +31,7 @@ export default (async function ejectConf(
     component,
     consumer,
     consumer.bitMap,
-    configDir,
-    override
+    configDir
   );
   dataToPersist.addBasePath(consumer.getPath());
   await dataToPersist.persistAllToFS();
@@ -47,8 +46,7 @@ export async function getEjectConfDataToPersist(
   component: ConsumerComponent,
   consumer: ?Consumer,
   bitMap: BitMap,
-  configDir: ConfigDir,
-  override?: boolean = true
+  configDir: ConfigDir
 ): Promise<EjectConfData> {
   const oldConfigDir = R.path(['componentMap', 'configDir'], component);
   const componentMap = component.componentMap;
@@ -196,7 +194,7 @@ export async function populateEnvFilesToWrite({
   configDir: PathOsBased,
   env?: ?CompilerExtension | ?TesterExtension,
   consumer?: ?Consumer,
-  bitMap: BitMap,
+  bitMap?: BitMap,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
   verbose: boolean
