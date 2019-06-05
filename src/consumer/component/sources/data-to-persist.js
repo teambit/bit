@@ -39,7 +39,9 @@ export default class DataToPersist {
   }
   removePath(pathToRemove: RemovePath) {
     if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
-    this.remove.push(pathToRemove);
+    if (!this.remove.includes(pathToRemove)) {
+      this.remove.push(pathToRemove);
+    }
   }
   removeManyPaths(pathsToRemove: RemovePath[] = []) {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
