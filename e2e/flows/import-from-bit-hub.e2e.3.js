@@ -60,7 +60,7 @@ chai.use(require('chai-fs'));
   after(() => {
     return bitsrcTester.deleteScope(scopeName);
   });
-  describe.only('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
+  describe('when saveDependenciesAsComponents is the default (FALSE) in consumer bit.json', () => {
     before(() => {
       helper.reInitLocalScope();
       helper.runCmd(`bit import ${componentTestId}`);
