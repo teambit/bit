@@ -3,7 +3,7 @@ import os from 'os';
 import v4 from 'uuid';
 import path from 'path';
 import { spawn } from 'child_process';
-import { Container, ExecOptions, Exec, ContainerStatus } from '@bit/bit.capsule-dev.core.capsule';
+import { Container, ExecOptions, Exec, ContainerStatus } from '../../core/capsule';
 
 const debug = require('debug')('fs-container');
 

@@ -1,6 +1,6 @@
 // @flow
 import R from 'ramda';
-import Capsule from '@bit/bit.capsule-dev.core.capsule';
+import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
 import { Scope, ComponentWithDependencies } from '../scope';

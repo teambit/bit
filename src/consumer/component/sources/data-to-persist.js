@@ -1,6 +1,6 @@
 // @flow
 import path from 'path';
-import Capsule from '@bit/bit.capsule-dev.core.capsule';
+import Capsule from '../../../../components/core/capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
