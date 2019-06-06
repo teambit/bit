@@ -254,7 +254,7 @@ jobs:
       # change the npm config to avoid using sudo
       NPM_CONFIG_PREFIX: ~/.npm-global
       BITSRC_ENV: stg
-    parallelism: 1
+    parallelism: 4
     steps:
       -
         attach_workspace:
