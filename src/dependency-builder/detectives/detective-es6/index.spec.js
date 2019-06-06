@@ -116,6 +116,18 @@ describe('detective-es6', () => {
     });
   });
 
+  describe('string in apostrophes', () => {
+    it('should recognize when using require statement', () => {
+      const deps = detective('const foo = require(`foo`);'); // eslint-disable-line
+      const depsKeys = Object.keys(deps);
+      assert.equal(depsKeys.length, 1);
+      assert.equal(depsKeys[0], 'foo');
+    });
+    it('should throw when using import syntax', () => {
+      expect(() => detective('import foo from `foo`;')).to.throw(); // eslint-disable-line
+    });
+  });
+
   describe('import-specifiers detection (for tree shaking)', () => {
     it('should recognize default imports as default', () => {
       const deps = detective('import foo from "foo";');

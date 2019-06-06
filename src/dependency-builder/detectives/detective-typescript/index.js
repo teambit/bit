@@ -1,6 +1,7 @@
 /**
  * this file had been forked from https://github.com/pahen/detective-typescript
  */
+import { getDependenciesFromMemberExpression, getDependenciesFromCallExpression } from '../parser-helper';
 
 const Parser = require('@typescript-eslint/typescript-estree');
 const Walker = require('node-source-walk');
@@ -81,30 +82,15 @@ module.exports = function (src, options = {}) {
         }
         break;
       case 'CallExpression':
-        if (node.callee.type === 'Import' && node.arguments.length) {
-          addDependency(node.arguments[0].value);
-        }
-        if (
-          node.callee.type === 'Identifier' && // taken from detective-cjs
-          node.callee.name === 'require' &&
-          node.arguments &&
-          node.arguments.length &&
-          (node.arguments[0].type === 'Literal' || node.arguments[0].type === 'StringLiteral')
-        ) {
-          addDependency(node.arguments[0].value);
+        {
+          const value = getDependenciesFromCallExpression(node);
+          if (value) addDependency(value);
         }
         break;
       case 'MemberExpression':
-        if (
-          node.object.type === 'CallExpression' &&
-          node.object.callee.type === 'Identifier' &&
-          node.object.callee.name === 'require' &&
-          node.object.arguments &&
-          node.object.arguments.length &&
-          (node.object.arguments[0].type === 'Literal' || node.object.arguments[0].type === 'StringLiteral')
-        ) {
-          const depValue = node.object.arguments[0].value;
-          addDependency(depValue);
+        {
+          const value = getDependenciesFromMemberExpression(node);
+          if (value) addDependency(value);
         }
         break;
       default:

@@ -4,7 +4,8 @@ import { getDependenciesAction } from '../../actions';
 import { DEFAULT_BINDINGS_PREFIX } from '../../constants';
 
 const report = (data) => {
-  console.log('dependencies', JSON.stringify(data, null, '  '));
+  if (!data) return 'No dependencies found!';
+  return JSON.stringify(data, null, '  ');
 };
 
 const resolveConfig = undefined; // @todo: figure out how to get the data from the command line, maybe as a file

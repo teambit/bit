@@ -119,4 +119,13 @@ describe('detective-typescript', () => {
       detective("import './layout.scss'; export default something;");
     });
   });
+
+  describe('string in apostrophes', () => {
+    it('should recognize when using require statement', () => {
+      const deps = detective('const foo = require(`foo`);'); // eslint-disable-line
+      const depsKeys = Object.keys(deps);
+      assert.equal(depsKeys.length, 1);
+      assert.equal(depsKeys[0], 'foo');
+    });
+  });
 });
