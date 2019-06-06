@@ -106,7 +106,7 @@ export default class NodeModuleLinker {
     const bindingPrefix =
       this.consumer && this.consumer.bitJson
         ? this.consumer.bitJson.bindingPrefix
-        : this.consumer.config && this.consumer.config.bindingPrefix
+        : this.consumer && this.consumer.config && this.consumer.config.bindingPrefix
           ? this.consumer.config.bindingPrefix
           : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
