@@ -1,6 +1,6 @@
 // @flow
-import Capsule from '../components/core/capsule';
-import FsContainer from '../components/container/fs-container';
+import Capsule from '../../components/core/capsule';
+import FsContainer from '../../components/container/fs-container';
 
 export default (async function createCapsule(type: string = 'fs', dir?: string): Promise<Capsule> {
   const containerFactory = getContainerFactory();
