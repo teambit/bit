@@ -368,6 +368,18 @@ export default class SSH implements Network {
       return Promise.resolve(payload);
     });
   }
+  undeprecateMany(ids: string[], context: ?Object): Promise<ComponentObjects[]> {
+    return this.exec(
+      '_undeprecate',
+      {
+        ids
+      },
+      context
+    ).then((data: string) => {
+      const { payload } = this._unpack(data);
+      return Promise.resolve(payload);
+    });
+  }
   push(componentObjects: ComponentObjects): Promise<string[]> {
     return this.pushMany([componentObjects]);
   }
@@ -384,8 +396,8 @@ export default class SSH implements Network {
       });
   }
 
-  async list(): Promise<ListScopeResult[]> {
-    return this.exec('_list').then(async (str: string) => {
+  async list(namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
+    return this.exec('_list', namespacesUsingWildcards).then(async (str: string) => {
       const { payload, headers } = this._unpack(str);
       checkVersionCompatibility(headers.version);
       payload.forEach((result) => {

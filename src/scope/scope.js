@@ -381,13 +381,6 @@ export default class Scope {
     return this.sources.get(id);
   }
 
-  async deprecateSingle(bitId: BitId): Promise<string> {
-    const component = await this.getModelComponentIfExist(bitId);
-    component.deprecated = true;
-    this.objects.add(component);
-    return bitId.toStringWithoutVersion();
-  }
-
   /**
    * Remove components from scope
    * @force Boolean - remove component from scope even if other components use it
@@ -462,19 +455,6 @@ export default class Scope {
     });
     await Promise.all(resultP);
     return { missingComponents, foundComponents };
-  }
-
-  /**
-   * deprecate components from scope
-   */
-  async deprecateMany(bitIds: BitIds): Promise<any> {
-    logger.debug(`scope.deprecateMany, ids: ${bitIds.toString()}`);
-    const { missingComponents, foundComponents } = await this.filterFoundAndMissingComponents(bitIds);
-    const deprecatedComponentsP = foundComponents.map(bitId => this.deprecateSingle(bitId));
-    const deprecatedComponents = await Promise.all(deprecatedComponentsP);
-    await this.objects.persist();
-    const missingComponentsStrings = missingComponents.map(id => id.toStringWithoutVersion());
-    return { bitIds: deprecatedComponents, missingComponents: missingComponentsStrings };
   }
 
   /**

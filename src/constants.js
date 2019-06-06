@@ -207,6 +207,8 @@ export const CFG_CI_ENABLE_KEY = 'ci_enable';
 
 export const CFG_GIT_EXECUTABLE_PATH = 'git_path';
 
+export const CFG_LOG_JSON_FORMAT = 'log_json_format';
+
 /**
  * git hooks
  */
@@ -245,7 +247,11 @@ export const POST_RECEIVE_OBJECTS = 'post-receive-objects'; // post-put
 
 export const PRE_DEPRECATE_REMOTE = 'pre-deprecate-remote';
 
+export const PRE_UNDEPRECATE_REMOTE = 'pre-undeprecate-remote';
+
 export const POST_DEPRECATE_REMOTE = 'post-deprecate-remote';
+
+export const POST_UNDEPRECATE_REMOTE = 'post-undeprecate-remote';
 
 export const PRE_REMOVE_REMOTE = 'pre-remove-remote';
 
@@ -265,7 +271,9 @@ export const HOOKS_NAMES = [
   PRE_RECEIVE_OBJECTS,
   POST_RECEIVE_OBJECTS,
   PRE_DEPRECATE_REMOTE,
+  PRE_UNDEPRECATE_REMOTE,
   POST_DEPRECATE_REMOTE,
+  POST_UNDEPRECATE_REMOTE,
   PRE_REMOVE_REMOTE,
   POST_REMOVE_REMOTE
 ];

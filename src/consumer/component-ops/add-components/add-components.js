@@ -44,11 +44,13 @@ import { isSupportedExtension } from '../../../links/link-content';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
+import { ModelComponent } from '../../../scope/models';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
   alreadyUsed: Object,
-  emptyDirectory: string[]
+  emptyDirectory: string[],
+  existInScope: BitId[]
 };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
@@ -118,7 +120,8 @@ export default class AddComponents {
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {
       alreadyUsed: {},
-      emptyDirectory: []
+      emptyDirectory: [],
+      existInScope: []
     };
     this.addedComponents = [];
   }
@@ -240,6 +243,7 @@ export default class AddComponents {
   async addOrUpdateComponentInBitMap(component: AddedComponent): Promise<?AddResult> {
     const consumerPath = this.consumer.getPath();
     const parsedBitId = component.componentId;
+    const componentFromScope = await this._getComponentFromScopeIfExist(parsedBitId);
     const files: ComponentMapFile[] = component.files;
     const foundComponentFromBitMap = this.bitMap.getComponentIfExist(component.componentId, {
       ignoreScopeAndVersion: true
@@ -290,6 +294,11 @@ export default class AddComponents {
         // $FlowFixMe null is removed later on
         return null;
       }
+      if (!foundComponentFromBitMap && componentFromScope) {
+        const newId = componentFromScope.toBitIdWithLatestVersion();
+        component.componentId = newId;
+        this.warnings.existInScope.push(newId);
+      }
       return file;
     });
     const componentFiles = (await Promise.all(componentFilesP)).filter(file => file);
@@ -297,6 +306,14 @@ export default class AddComponents {
     // $FlowFixMe it can't be null due to the filter function
     component.files = componentFiles;
     return this.addToBitMap(component);
+  }
+
+  async _getComponentFromScopeIfExist(id: BitId): Promise<?ModelComponent> {
+    try {
+      return await this.consumer.scope.getModelComponentIgnoreScope(id);
+    } catch (err) {
+      return null;
+    }
   }
 
   // remove excluded files from file list

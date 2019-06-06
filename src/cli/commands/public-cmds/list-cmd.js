@@ -7,6 +7,7 @@ import listTemplate from '../../templates/list-template';
 import bareListTemplate from '../../templates/bare-list-template';
 import { BASE_DOCS_DOMAIN } from '../../../constants';
 import type { ListScopeResult } from '../../../consumer/component/components-list';
+import hasWildcard from '../../../utils/string/has-wildcard';
 
 export default class List extends Command {
   name = 'list [scope]';
@@ -32,7 +33,13 @@ export default class List extends Command {
       outdated = false
     }: { ids?: boolean, scope?: boolean, bare?: boolean, json?: boolean, outdated?: boolean }
   ): Promise<any> {
-    return listScope({ scopeName, showAll: scope, showRemoteVersion: outdated }).then(listScopeResults => ({
+    const params = { scopeName, showAll: scope, showRemoteVersion: outdated };
+    if (hasWildcard(scopeName) && scopeName.includes('/')) {
+      const scopeNameSplit = scopeName.split('/');
+      params.scopeName = R.head(scopeNameSplit);
+      params.namespacesUsingWildcards = R.tail(scopeNameSplit).join('/');
+    }
+    return listScope(params).then(listScopeResults => ({
       listScopeResults,
       scope: scopeName,
       ids,

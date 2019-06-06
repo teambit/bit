@@ -95,7 +95,7 @@ export default class Component extends BitObject {
   }
 
   hasVersion(version: string): boolean {
-    return !!this.versions[version];
+    return Boolean(this.versions[version]);
   }
 
   /**

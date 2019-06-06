@@ -1,11 +1,14 @@
 // @flow
 import fs from 'fs-extra';
 import path from 'path';
+import R from 'ramda';
 import detectIndent from 'detect-indent';
 import type { PathOsBased } from '../../utils/path';
 import { PACKAGE_JSON, PACKAGE_JSON_DEFAULT_INDENT } from '../../constants';
 import JSONFile from './sources/json-file';
 import logger from '../../logger/logger';
+import Component from './consumer-component';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 
 export default class PackageJsonFile {
   packageJsonObject: Object;
@@ -41,6 +44,32 @@ export default class PackageJsonFile {
 
   static create(dir: string, packageJsonObject: Object): PackageJsonFile {
     const filePath = composePath(dir);
+    return new PackageJsonFile(filePath, packageJsonObject, false);
+  }
+
+  static createFromComponent(
+    dir: string,
+    component: Component,
+    excludeRegistryPrefix?: boolean = false
+  ): PackageJsonFile {
+    const filePath = composePath(dir);
+    const name = excludeRegistryPrefix
+      ? componentIdToPackageName(component.id, component.bindingPrefix, false)
+      : componentIdToPackageName(component.id, component.bindingPrefix);
+    const packageJsonObject = {
+      name,
+      version: component.version,
+      homepage: component._getHomepage(),
+      main: component.mainFile,
+      dependencies: component.packageDependencies,
+      devDependencies: {
+        ...component.devPackageDependencies,
+        ...component.compilerPackageDependencies,
+        ...component.testerPackageDependencies
+      },
+      peerDependencies: component.peerPackageDependencies,
+      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
+    };
     return new PackageJsonFile(filePath, packageJsonObject, false);
   }
 

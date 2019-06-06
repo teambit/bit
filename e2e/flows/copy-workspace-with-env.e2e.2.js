@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
+import { DIAGNOSIS_NAME } from '../../src/doctor/core-diagnoses/broken-symlink-files';
 
 chai.use(require('chai-fs'));
 
@@ -28,8 +29,8 @@ describe('custom module resolutions', function () {
       expect(func).to.throw();
     });
     it('bit doctor should diagnose the issue and suggest a solution to delete the env path', () => {
-      const doctor = helper.runCmd('bit doctor broken-symlink-files --json', copiedPath);
-      const parsedDoctor = JSON.parse(doctor);
+      const output = helper.doctorOne(DIAGNOSIS_NAME, { j: '' }, copiedPath);
+      const parsedDoctor = JSON.parse(output);
       expect(parsedDoctor.examineResult).to.have.property('bareResult');
       const results = parsedDoctor.examineResult.bareResult;
       expect(results.valid).to.be.false;

@@ -5,9 +5,9 @@ import type { ExamineBareResult } from '../diagnosis';
 import npmClient from '../../npm-client';
 
 export default class ValidateNpmExec extends Diagnosis {
-  name = 'validate-npm-exec';
+  name = 'validate npm exec';
   description = 'validate that npm executable found';
-  category = '3rd-parties';
+  category = 'vendors';
 
   _formatSymptoms(): string {
     return 'npm executable not found';

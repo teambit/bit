@@ -1213,4 +1213,46 @@ describe('bit add command', function () {
       expect(output).to.have.string('tracking 4 new components');
     });
   });
+  describe('sort .bitmap components', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFileOnRootLevel('aaa.js');
+      helper.createFileOnRootLevel('bbb.js');
+      helper.createFileOnRootLevel('ccc.js');
+      helper.createFileOnRootLevel('ddd.js');
+      helper.addComponent('bbb.js');
+      helper.addComponent('ddd.js');
+      helper.addComponent('aaa.js');
+      helper.addComponent('ccc.js');
+    });
+    it('should sort the components in .bitmap file alphabetically', () => {
+      const bitMap = helper.readBitMap();
+      const ids = Object.keys(bitMap);
+      expect(ids[0]).to.equal('aaa');
+      expect(ids[1]).to.equal('bbb');
+      expect(ids[2]).to.equal('ccc');
+      expect(ids[3]).to.equal('ddd');
+    });
+  });
+  describe('sort .bitmap files', () => {
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFileOnRootLevel('aaa.js');
+      helper.createFileOnRootLevel('bbb.js');
+      helper.createFileOnRootLevel('ccc.js');
+      helper.createFileOnRootLevel('ddd.js');
+      helper.addComponent('bbb.js', { i: 'foo' });
+      helper.addComponent('ddd.js', { i: 'foo' });
+      helper.addComponent('aaa.js', { i: 'foo' });
+      helper.addComponent('ccc.js', { i: 'foo' });
+    });
+    it('should sort the components in .bitmap file alphabetically', () => {
+      const bitMap = helper.readBitMap();
+      const files = bitMap.foo.files;
+      expect(files[0].relativePath).to.equal('aaa.js');
+      expect(files[1].relativePath).to.equal('bbb.js');
+      expect(files[2].relativePath).to.equal('ccc.js');
+      expect(files[3].relativePath).to.equal('ddd.js');
+    });
+  });
 });
