@@ -1,6 +1,6 @@
 // @flow
-import Capsule from '@bit/bit.capsule-dev.core.capsule';
-import FsContainer from '@bit/bit.capsule-dev.container.fs-container';
+import Capsule from '../components/core/capsule';
+import FsContainer from '../components/container/fs-container';
 
 export default (async function createCapsule(type: string = 'fs', dir?: string): Promise<Capsule> {
   const containerFactory = getContainerFactory();
