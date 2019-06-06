@@ -420,18 +420,6 @@ workflows:
           requires:
             - install_bit_javascript_npm_deps
       -
-        unit_test:
-          requires:
-            - build
-      -
-        unit_test_bit_javascript:
-          requires:
-            - build_bit_javascript
-      -
-        lint:
-          requires:
-            - install_npm_deps
-      -
         e2e_test:
           requires:
             - build
