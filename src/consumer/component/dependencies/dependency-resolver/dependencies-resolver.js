@@ -118,7 +118,7 @@ export default class DependencyResolver {
   async loadDependenciesForComponent(
     bitDir: string,
     cacheResolvedDependencies: Object,
-    cacheProjectAst: Object
+    cacheProjectAst: ?Object
   ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();

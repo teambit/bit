@@ -54,7 +54,7 @@ export default class Driver {
     bindingPrefix: string,
     resolveModulesConfig: ResolveModulesConfig,
     cacheResolvedDependencies: Object,
-    cacheProjectAst: Object
+    cacheProjectAst: ?Object
   ): Promise<{ tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
