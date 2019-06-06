@@ -310,12 +310,20 @@ jobs:
       -
         run: 'bit config set user.email ci@bit.dev'
       -
-        # uncomment to configure circle to run against stg enviorment
-        run: 'bit config set hub_domain hub-stg.bit.dev'
+        # do not change this one, it's important to use the production for getting components bit use for running
+        # if you want the tests to work with stage, you should change the hub domain few lines below
+        run: 'bit config set hub_domain hub.bit.dev'
+      -
+        run:
+          name: 'bit import'
+          command: 'cd bit && bit import'
       -
         run:
           name: 'npm install'
           command: 'cd bit && bit install'
+      -
+        # uncomment to configure circle to run against stg environment
+        run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run:
           name: 'Run e2e tests'
