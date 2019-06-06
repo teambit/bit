@@ -104,7 +104,11 @@ export default class NodeModuleLinker {
     const componentId = component.id;
     if (!componentId.hasScope()) return; // when isolating new components// from isolated;
     const bindingPrefix =
-      this.consumer && this.consumer.bitJson ? this.consumer.bitJson.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
+      this.consumer && this.consumer.bitJson
+        ? this.consumer.bitJson.bindingPrefix
+        : this.consumer.config && this.consumer.config.bindingPrefix
+          ? this.consumer.config.bindingPrefix
+          : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
