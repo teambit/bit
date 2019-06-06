@@ -98,6 +98,13 @@ export default class Isolator {
   }
 
   async _installPackagesOnOneDirectory(directory: string) {
+    await this.capsule.exec('npm version 1.0.0', { cwd: directory });
+    // *** ugly hack alert ***
+    // we change the version to 1.0.0 here because for untagged
+    // components, the version is set by bit to "latest" in the package.json
+    // this is an invalid semver, and so npm refuses to install.
+    // A better fix would be to change this behaviour of bit, but that is a much bigger
+    // change. Until the capsule API is finalized, ths should do
     const execResults = await this.capsule.exec('npm install', { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {
