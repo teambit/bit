@@ -7,7 +7,6 @@ import type { Scope } from '..';
 import type Consumer from '../../consumer/consumer';
 import { BEFORE_PERSISTING_PUT_ON_SCOPE, BEFORE_IMPORT_PUT_ON_SCOPE } from '../../cli/loader/loader-messages';
 import type Component from '../../consumer/component/consumer-component';
-import type ModelComponent from '../models/model-component';
 import loader from '../../cli/loader';
 import logger from '../../logger/logger';
 import { Analytics } from '../../analytics/analytics';
@@ -22,6 +21,7 @@ import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
 import { Dependency, Dependencies } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
+import type { AutoTagResult } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import ScopeComponentsImporter from './scope-components-importer';
 
@@ -232,7 +232,7 @@ export default (async function tagModelComponent({
   ignoreNewestVersion: boolean,
   skipTests: boolean,
   verbose?: boolean
-}): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
+}): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
   loader.start(BEFORE_IMPORT_PUT_ON_SCOPE);
   const consumerComponentsIdsMap = {};
   // Concat and unique all the dependencies from all the components so we will not import
@@ -371,8 +371,8 @@ export default (async function tagModelComponent({
   loader.start(BEFORE_PERSISTING_PUT_ON_SCOPE);
 
   const taggedComponents = await pMapSeries(componentsToTag, consumerComponent => persistComponent(consumerComponent));
-  const autoTaggedComponents = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
+  const autoTaggedResults = await bumpDependenciesVersions(scope, autoTagCandidates, taggedComponents);
   validateDirManipulation(taggedComponents);
   await scope.objects.persist();
-  return { taggedComponents, autoTaggedComponents };
+  return { taggedComponents, autoTaggedResults };
 });

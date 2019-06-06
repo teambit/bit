@@ -102,6 +102,8 @@ import DiagnosisNotFound from '../api/consumer/lib/exceptions/diagnosis-not-foun
 import MissingDiagnosisName from '../api/consumer/lib/exceptions/missing-diagnosis-name';
 import RemoteResolverError from '../scope/network/exceptions/remote-resolver-error';
 import ExportAnotherOwnerPrivate from '../scope/network/exceptions/export-another-owner-private';
+import ComponentsPendingImport from '../consumer/component-ops/exceptions/components-pending-import';
+import { importPendingMsg } from './commands/public-cmds/status-cmd';
 
 const reportIssueToGithubMsg =
   'This error should have never happened. Please report this issue on Github https://github.com/teambit/bit/issues';
@@ -156,6 +158,7 @@ const errorsMap: Array<[Class<Error>, (err: Class<Error>) => string]> = [
     () => 'error: could not eject config for authored component which are bound to the workspace configuration'
   ],
   [InjectNonEjected, () => 'error: could not inject config for already injected component'],
+  [ComponentsPendingImport, () => importPendingMsg],
   [
     EjectNoDir,
     err =>
@@ -557,7 +560,12 @@ function getErrorFunc(errorDefinition) {
 
 function getErrorMessage(error: ?Error, func: ?Function): string {
   if (!error || !func) return '';
-  const errorMessage = func(error);
+  let errorMessage = func(error);
+  if (error.showDoctorMessage) {
+    errorMessage = `${errorMessage}
+
+run 'bit doctor' to get detailed workspace diagnosis and issue resolution.`;
+  }
   return errorMessage;
 }
 

@@ -407,6 +407,9 @@ export default class Helper {
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
+  undeprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit undeprecate ${id} ${flags}`);
+  }
   tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
@@ -662,9 +665,9 @@ export default class Helper {
     return this.runCmd(`bit doctor ${parsedOpts}`);
   }
 
-  doctorOne(diagnosisName: string, options: Object) {
+  doctorOne(diagnosisName: string, options: Object, cwd: ?string) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit doctor ${diagnosisName} ${parsedOpts}`);
+    return this.runCmd(`bit doctor "${diagnosisName}" ${parsedOpts}`, cwd);
   }
 
   doctorList(options: Object) {
