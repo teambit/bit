@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1708](https://github.com/teambit/bit/issues/1708) support `require` with apostrophes
+
 ## [14.1.3-dev.1] - 2019-06-04
 
 - [#1698](https://github.com/teambit/bit/issues/1698) fix dependency version resolution when imported component requires authored component
