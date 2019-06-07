@@ -501,7 +501,7 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
           const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'dist/components/bar/foo'));
           expect(packageJson.main).to.equal('bar/foo.js');
         });
-        it.only('should be able to require its direct dependency and print results from all dependencies', () => {
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
           runAppJs();
         });
         describe('ejecting the component', () => {
