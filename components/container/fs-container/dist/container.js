@@ -90,7 +90,7 @@ var FsContainer = /** @class */ (function () {
             return __generator(this, function (_a) {
                 cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
                 debug("executing the following command: " + execOptions.command.join(' ') + ", on cwd: " + cwd);
-                childProcess = child_process_1.spawn(execOptions.command.shift(), execOptions.command, { cwd: cwd });
+                childProcess = child_process_1.spawn(execOptions.command.shift(), execOptions.command, { cwd: cwd, shell: true });
                 childProcess.abort = function () { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
                     return [2 /*return*/, childProcess.kill()];
                 }); }); };
