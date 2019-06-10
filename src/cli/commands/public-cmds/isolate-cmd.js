@@ -52,7 +52,6 @@ export default class Isolate extends Command {
     }
   ): Promise<any> {
     opts.writeToPath = opts.directory;
-    delete opts.directory;
     return isolate(id, scopePath || process.cwd(), opts);
   }
 
