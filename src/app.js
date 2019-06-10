@@ -6,8 +6,7 @@ import loadExtensions from './extensions/extensions-loader';
 import HooksManager from './hooks';
 
 Promise.config({
-  longStackTraces: true // change it to true for easy debugging. by default, leave it as false for better performance
-  // longStackTraces: false // change it to true for easy debugging. by default, leave it as false for better performance
+  longStackTraces: false // change it to true for easy debugging. by default, leave it as false for better performance
 });
 
 loudRejection();
