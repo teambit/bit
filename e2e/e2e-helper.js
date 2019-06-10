@@ -110,6 +110,7 @@ export default class Helper {
     if (this.cache) {
       fs.removeSync(this.cache.localScopePath);
       fs.removeSync(this.cache.remoteScopePath);
+      delete this.cache;
     }
     if (this.clonedScopes && this.clonedScopes.length) {
       this.clonedScopes.forEach(scopePath => fs.removeSync(scopePath));
@@ -296,6 +297,9 @@ export default class Helper {
   }
 
   getClonedLocalScope(clonedScopePath: string, deleteCurrentScope: boolean = true) {
+    if (!fs.existsSync(clonedScopePath)) {
+      throw new Error(`getClonedLocalScope was unable to find the clonedScopePath at ${clonedScopePath}`);
+    }
     if (deleteCurrentScope) {
       fs.removeSync(this.localScopePath);
     } else {
@@ -398,6 +402,9 @@ export default class Helper {
   }
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
+  }
+  undeprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit undeprecate ${id} ${flags}`);
   }
   tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
@@ -654,9 +661,9 @@ export default class Helper {
     return this.runCmd(`bit doctor ${parsedOpts}`);
   }
 
-  doctorOne(diagnosisName: string, options: Object) {
+  doctorOne(diagnosisName: string, options: Object, cwd: ?string) {
     const parsedOpts = this.parseOptions(options);
-    return this.runCmd(`bit doctor ${diagnosisName} ${parsedOpts}`);
+    return this.runCmd(`bit doctor "${diagnosisName}" ${parsedOpts}`, cwd);
   }
 
   doctorList(options: Object) {

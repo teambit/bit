@@ -21,6 +21,78 @@ import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
 /**
+ * use this method when loading an existing component. don't use it during the import process
+ */
+export async function getManipulateDirForExistingComponents(
+  consumer: Consumer,
+  componentVersion: ComponentVersion
+): Promise<ManipulateDirItem[]> {
+  const id: BitId = componentVersion.id;
+  const manipulateDirData = [];
+  const componentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
+  const version: Version = await componentVersion.getVersion(consumer.scope.objects);
+  if (!version) {
+    throw new CorruptedComponent(id.toString(), componentVersion.version);
+  }
+  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
+  const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
+  manipulateDirData.push({ id, originallySharedDir, wrapDir });
+  const dependencies = version.getAllDependencies();
+  dependencies.forEach((dependency) => {
+    const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
+    const manipulateDirDep: ManipulateDirItem = {
+      id: dependency.id,
+      originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
+      wrapDir: depComponentMap ? depComponentMap.wrapDir : null
+    };
+    manipulateDirData.push(manipulateDirDep);
+  });
+  return manipulateDirData;
+}
+
+/**
+ * use this method while importing a component.
+ * the data from bitMap is not enough because a component might be NESTED on bitmap but is now
+ * imported.
+ */
+export async function getManipulateDirWhenImportingComponents(
+  bitMap: BitMap,
+  versionsDependencies: VersionDependencies[],
+  repository: Repository
+): Promise<ManipulateDirItem[]> {
+  const nonDependencies = BitIds.fromArray(
+    versionsDependencies.map(versionDependency => versionDependency.component.id)
+  );
+  const manipulateDirDataP = versionsDependencies.map(async (versionDependency: VersionDependencies) => {
+    const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(
+      versionDependency.component,
+      bitMap,
+      repository,
+      false
+    );
+    const manipulateDirDependenciesP = versionDependency.allDependencies.map((dependency: ComponentVersion) => {
+      return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, true);
+    });
+    const manipulateDirDependencies = await Promise.all(manipulateDirDependenciesP);
+    // a component might be a dependency and directly imported at the same time, in which case,
+    // it should be considered as imported, not nested
+    const manipulateDirDependenciesOnly = manipulateDirDependencies.filter(m => !nonDependencies.has(m.id));
+    return [manipulateDirComponent, ...manipulateDirDependenciesOnly];
+  });
+  const manipulateDirData = await Promise.all(manipulateDirDataP);
+  return R.flatten(manipulateDirData);
+}
+
+export function revertDirManipulationForPath(
+  pathStr: PathOsBased,
+  originallySharedDir: ?PathLinux,
+  wrapDir: ?PathLinux
+): PathLinux {
+  const withSharedDir: PathLinux = addSharedDirForPath(pathStr, originallySharedDir);
+  return removeWrapperDirFromPath(withSharedDir, wrapDir);
+}
+
+/**
  * find a shared directory among the files of the main component and its dependencies
  */
 function calculateOriginallySharedDir(version: Version): ?PathLinux {
@@ -65,38 +137,6 @@ function isWrapperDirNeeded(version: Version) {
 function getWrapDirIfNeeded(origin: ComponentOrigin, version: Version): ?PathLinux {
   if (origin === COMPONENT_ORIGINS.AUTHORED) return null;
   return isWrapperDirNeeded(version) ? WRAPPER_DIR : null;
-}
-
-/**
- * use this method when loading an existing component. don't use it during the import process
- */
-export async function getManipulateDirForExistingComponents(
-  consumer: Consumer,
-  componentVersion: ComponentVersion
-): Promise<ManipulateDirItem[]> {
-  const id: BitId = componentVersion.id;
-  const manipulateDirData = [];
-  // in case this is a dependency that was installed via NPM, the file is in the scope but not on
-  // the filesystem, in that case, no need for wrapDir or sharedDir
-  const componentMap: ?ComponentMap = consumer.bitMap.getComponentIfExist(id, { ignoreVersion: true });
-  const version: Version = await componentVersion.getVersion(consumer.scope.objects);
-  if (!version) {
-    throw new CorruptedComponent(id.toString(), componentVersion.version);
-  }
-  const originallySharedDir = componentMap ? getOriginallySharedDirIfNeeded(componentMap.origin, version) : null;
-  const wrapDir = componentMap ? getWrapDirIfNeeded(componentMap.origin, version) : null;
-  manipulateDirData.push({ id, originallySharedDir, wrapDir });
-  const dependencies = version.getAllDependencies();
-  dependencies.forEach((dependency) => {
-    const depComponentMap: ?ComponentMap = getDependencyComponentMap(consumer.bitMap, dependency.id);
-    const manipulateDirDep: ManipulateDirItem = {
-      id: dependency.id,
-      originallySharedDir: depComponentMap ? depComponentMap.originallySharedDir : null,
-      wrapDir: depComponentMap ? depComponentMap.wrapDir : null
-    };
-    manipulateDirData.push(manipulateDirDep);
-  });
-  return manipulateDirData;
 }
 
 /**
@@ -145,56 +185,6 @@ async function getManipulateDirItemFromComponentVersion(
   const originallySharedDir = getOriginallySharedDirIfNeeded(origin, version);
   const wrapDir = getWrapDirIfNeeded(origin, version);
   return { id, originallySharedDir, wrapDir };
-}
-
-/**
- * use this method while importing a component.
- * the data from bitMap is not enough because a component might be NESTED on bitmap but is now
- * imported.
- */
-export async function getManipulateDirWhenImportingComponents(
-  bitMap: BitMap,
-  versionsDependencies: VersionDependencies[],
-  repository: Repository,
-  shouldDependenciesSavedAsComponents: Object[]
-): Promise<ManipulateDirItem[]> {
-  const nonDependencies = BitIds.fromArray(
-    versionsDependencies.map(versionDependency => versionDependency.component.id)
-  );
-  const manipulateDirDataP = versionsDependencies.map(async (versionDependency: VersionDependencies) => {
-    const manipulateDirComponent = await getManipulateDirItemFromComponentVersion(
-      versionDependency.component,
-      bitMap,
-      repository,
-      false
-    );
-    const dependenciesSavedAsComponents = shouldDependenciesSavedAsComponents.find(c =>
-      c.id.isEqual(versionDependency.component.id)
-    );
-    // when dependencies are not save as components but as packages, they have the same behavior as
-    // imported components because each one of these dependencies is going to be isolated before
-    // npm installing it
-    const isDependency = !dependenciesSavedAsComponents || dependenciesSavedAsComponents.saveDependenciesAsComponents;
-    const manipulateDirDependenciesP = versionDependency.allDependencies.map((dependency: ComponentVersion) => {
-      return getManipulateDirItemFromComponentVersion(dependency, bitMap, repository, isDependency);
-    });
-    const manipulateDirDependencies = await Promise.all(manipulateDirDependenciesP);
-    // a component might be a dependency and directly imported at the same time, in which case,
-    // it should be considered as imported, not nested
-    const manipulateDirDependenciesOnly = manipulateDirDependencies.filter(m => !nonDependencies.has(m.id));
-    return [manipulateDirComponent, ...manipulateDirDependenciesOnly];
-  });
-  const manipulateDirData = await Promise.all(manipulateDirDataP);
-  return R.flatten(manipulateDirData);
-}
-
-export function revertDirManipulationForPath(
-  pathStr: PathOsBased,
-  originallySharedDir: ?PathLinux,
-  wrapDir: ?PathLinux
-): PathLinux {
-  const withSharedDir: PathLinux = addSharedDirForPath(pathStr, originallySharedDir);
-  return removeWrapperDirFromPath(withSharedDir, wrapDir);
 }
 
 function addSharedDirForPath(pathStr: string, originallySharedDir: ?PathLinux): PathLinux {

@@ -54,8 +54,8 @@ function getComponentLinks({
   bitMap = bitMap || consumer.bitMap;
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
-  const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap);
-  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap);
+  const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
+  const flattenedDependencies: BitIds = _getFlattenedDependencies(component, componentMap, createNpmLinkFiles);
   const links = directDependencies.map((dep: Dependency) => {
     if (!dep.relativePaths || R.isEmpty(dep.relativePaths)) return [];
     const getDependencyIdWithResolvedVersion = (): BitId => {
@@ -122,15 +122,23 @@ The dependencies array has the following ids: ${dependencies.map(d => d.id).join
   return dependencyComponent;
 }
 
-function _getDirectDependencies(component: Component, componentMap: ComponentMap): Dependency[] {
+function _getDirectDependencies(
+  component: Component,
+  componentMap: ComponentMap,
+  createNpmLinkFiles: boolean
+): Dependency[] {
   // devDependencies of Nested components are not written to the filesystem, so no need to link them.
-  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
     ? component.dependencies.get()
     : component.getAllNonEnvsDependencies();
 }
 
-function _getFlattenedDependencies(component: Component, componentMap: ComponentMap): BitIds {
-  return componentMap.origin === COMPONENT_ORIGINS.NESTED
+function _getFlattenedDependencies(
+  component: Component,
+  componentMap: ComponentMap,
+  createNpmLinkFiles: boolean
+): BitIds {
+  return componentMap.origin === COMPONENT_ORIGINS.NESTED || createNpmLinkFiles
     ? component.flattenedDependencies
     : BitIds.fromArray(component.getAllNonEnvsFlattenedDependencies());
 }

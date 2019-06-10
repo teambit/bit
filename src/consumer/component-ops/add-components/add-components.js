@@ -45,11 +45,13 @@ import { isSupportedExtension } from '../../../links/link-content';
 import MissingMainFile from '../../bit-map/exceptions/missing-main-file';
 import MissingMainFileMultipleComponents from './exceptions/missing-main-file-multiple-components';
 import PathOutsideConsumer from './exceptions/path-outside-consumer';
+import { ModelComponent } from '../../../scope/models';
 
 export type AddResult = { id: string, files: ComponentMapFile[] };
 type Warnings = {
   alreadyUsed: Object,
-  emptyDirectory: string[]
+  emptyDirectory: string[],
+  existInScope: BitId[]
 };
 export type AddActionResults = { addedComponents: AddResult[], warnings: Warnings };
 export type PathOrDSL = PathOsBased | string; // can be a path or a DSL, e.g: tests/{PARENT}/{FILE_NAME}
@@ -119,7 +121,8 @@ export default class AddComponents {
     this.origin = addProps.origin || COMPONENT_ORIGINS.AUTHORED;
     this.warnings = {
       alreadyUsed: {},
-      emptyDirectory: []
+      emptyDirectory: [],
+      existInScope: []
     };
     this.addedComponents = [];
   }
@@ -223,6 +226,7 @@ export default class AddComponents {
   async addOrUpdateComponentInBitMap(component: AddedComponent): Promise<?AddResult> {
     const consumerPath = this.consumer.getPath();
     const parsedBitId = component.componentId;
+    const componentFromScope = await this._getComponentFromScopeIfExist(parsedBitId);
     const files: ComponentMapFile[] = component.files;
     const foundComponentFromBitMap = this.bitMap.getComponentIfExist(component.componentId, {
       ignoreScopeAndVersion: true
@@ -273,6 +277,11 @@ export default class AddComponents {
         // $FlowFixMe null is removed later on
         return null;
       }
+      if (!foundComponentFromBitMap && componentFromScope) {
+        const newId = componentFromScope.toBitIdWithLatestVersion();
+        component.componentId = newId;
+        this.warnings.existInScope.push(newId);
+      }
       return file;
     });
     // $FlowFixMe it can't be null due to the filter function
@@ -289,8 +298,7 @@ export default class AddComponents {
     }
     if (!this.override && foundComponentFromBitMap) {
       this._updateFilesWithCurrentLetterCases(foundComponentFromBitMap, componentFiles);
-      // override the current componentMap.files with the given files argument
-      component.files = R.unionWith(R.eqBy(R.prop('relativePath')), foundComponentFromBitMap.files, componentFiles);
+      component.files = this._mergeFilesWithExistingComponentMapFiles(componentFiles, foundComponentFromBitMap.files);
     } else {
       component.files = componentFiles;
     }
@@ -314,6 +322,21 @@ export default class AddComponents {
   }
 
   /**
+   * the risk with merging the currently added files with the existing bitMap files is overriding
+   * the `test` property. e.g. the component directory is re-added without adding the tests flag to
+   * track new files in that directory. in this case, we want to preserve the `test` property.
+   */
+  _mergeFilesWithExistingComponentMapFiles(componentFiles: ComponentMapFile[], existingComponentMapFile: ComponentMapFile[]) {
+    if (this.tests.length) {
+      // in case when the `--tests` flag was entered, we use the currently added files as the
+      // base and merge the existing file so then the `test` property of the currently added files
+      // won't be overridden
+      return R.unionWith(R.eqBy(R.prop('relativePath')), componentFiles, existingComponentMapFile);
+    }
+    return R.unionWith(R.eqBy(R.prop('relativePath')), existingComponentMapFile, componentFiles);
+  }
+
+  /**
    * if an existing file is for example uppercase and the new file is lowercase it has different
    * behavior according to the OS. some OS are case sensitive, some are not.
    * it's safer to avoid saving both files and instead, replacing the old file with the new one.
@@ -332,6 +355,14 @@ export default class AddComponents {
         currentFile.relativePath = sameFile.relativePath;
       }
     });
+  }
+
+  async _getComponentFromScopeIfExist(id: BitId): Promise<?ModelComponent> {
+    try {
+      return await this.consumer.scope.getModelComponentIgnoreScope(id);
+    } catch (err) {
+      return null;
+    }
   }
 
   // remove excluded files from file list

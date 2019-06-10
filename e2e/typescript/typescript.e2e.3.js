@@ -2,15 +2,24 @@
 
 import path from 'path';
 import fs from 'fs-extra';
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import normalize from 'normalize-path';
 import Helper from '../e2e-helper';
 import BitsrcTester, { username, supportTestingOnBitsrc } from '../bitsrc-tester';
+import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
+
+chai.use(require('chai-fs'));
 
 const helper = new Helper();
 
 describe('typescript', function () {
   this.timeout(0);
+  let scopeWithTypescriptCompiler;
+  before(() => {
+    helper.reInitLocalScope();
+    helper.importCompiler('bit.envs/compilers/react-typescript');
+    scopeWithTypescriptCompiler = helper.cloneLocalScope();
+  });
   after(() => {
     helper.destroyEnv();
   });
@@ -51,7 +60,8 @@ describe('typescript', function () {
       let localConsumerFiles;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.importCompiler('bit.envs/compilers/react-typescript');
+        helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.addRemoteScope();
         const isTypeFixture = "export default function isType() { return 'got is-type'; };";
         helper.createFile('utils', 'is-type.ts', isTypeFixture);
         helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
@@ -240,7 +250,8 @@ export class List extends React.Component {
   describe('with default and non default export', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.importCompiler('bit.envs/compilers/react-typescript');
+      helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+      helper.addRemoteScope();
       const isArrayFixture = "export default function isArray() { return 'got is-array'; };";
       helper.createFile('utils', 'is-array.ts', isArrayFixture);
       helper.addComponent('utils/is-array.ts', { i: 'utils/is-array' });
@@ -292,7 +303,8 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
       let localScope;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
-        helper.importCompiler('bit.envs/compilers/react-typescript');
+        helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+        helper.addRemoteScope();
         const bitJson = helper.readBitJson();
         bitJson.resolveModules = { modulesDirectories: ['src'] };
         helper.writeBitJson(bitJson);
@@ -353,7 +365,6 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
             });
         });
         after(() => {
-          helper.destroyEnv();
           return bitsrcTester.deleteScope(scopeName);
         });
         describe('exporting to bitsrc and importing locally', () => {
@@ -408,6 +419,99 @@ export default function foo() { return isArray() +  ' and ' + isString() +  ' an
         expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.ts');
         expect(dependency.relativePaths[0].importSource).to.equal('@/utils/is-string');
         expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+      });
+    });
+  });
+  describe('when dist is outside the components dir', () => {
+    let npmCiRegistry;
+    before(() => {
+      npmCiRegistry = new NpmCiRegistry(helper);
+      helper.setNewLocalAndRemoteScopes();
+      helper.getClonedLocalScope(scopeWithTypescriptCompiler);
+      npmCiRegistry.setCiScopeInBitJson();
+      helper.addRemoteScope();
+      const isTypeFixture = "export default function isType() { return 'got is-type'; };";
+      helper.createFile('utils', 'is-type.ts', isTypeFixture);
+      helper.addComponent('utils/is-type.ts', { i: 'utils/is-type' });
+      const isStringFixture =
+        "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
+      helper.createFile('utils', 'is-string.ts', isStringFixture);
+      helper.addComponent('utils/is-string.ts', { i: 'utils/is-string' });
+      const fooBarFixture =
+        "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
+      helper.createFile('bar', 'foo.ts', fooBarFixture);
+      helper.addComponent('bar/foo.ts', { i: 'bar/foo' });
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.reInitLocalScope();
+      helper.addRemoteScope();
+      helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+      helper.importComponent('bar/foo');
+    });
+    it('should be able to require its direct dependency and print results from all dependencies', () => {
+      const appJsFixture = `const barFoo = require('@bit/${
+        helper.remoteScope
+      }.bar.foo'); console.log(barFoo.default());`;
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    (supportNpmCiRegistryTesting ? describe : describe.skip)('when dependencies are saved as packages', () => {
+      before(async () => {
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        await npmCiRegistry.init();
+        helper.importNpmPackExtension();
+        helper.removeRemoteScope();
+        npmCiRegistry.publishComponent('utils/is-type');
+        npmCiRegistry.publishComponent('utils/is-string');
+        npmCiRegistry.publishComponent('bar/foo');
+      });
+      after(() => {
+        npmCiRegistry.destroy();
+      });
+      function runAppJs() {
+        const appJsFixture = `const barFoo = require('@ci/${
+          helper.remoteScope
+        }.bar.foo'); console.log(barFoo.default());`;
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      }
+      describe('installing a component using NPM', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.runCmd('npm init -y');
+          helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          runAppJs();
+        });
+      });
+      describe('importing a component using Bit', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
+          npmCiRegistry.setResolver();
+          helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+          helper.importComponent('bar/foo');
+        });
+        it('package.json of the dist should point to the dist file with .js extension (not .ts)', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'dist/components/bar/foo'));
+          expect(packageJson.main).to.equal('bar/foo.js');
+        });
+        it('should be able to require its direct dependency and print results from all dependencies', () => {
+          runAppJs();
+        });
+        describe('ejecting the component', () => {
+          before(() => {
+            helper.ejectComponents('bar/foo');
+          });
+          it('should delete also the dist directory', () => {
+            expect(path.join(helper.localScopePath, 'dist/components/bar')).to.not.be.a.path();
+          });
+        });
       });
     });
   });

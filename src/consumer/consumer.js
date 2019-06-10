@@ -25,7 +25,8 @@ import {
   DOT_GIT_DIR,
   BIT_WORKSPACE_TMP_DIRNAME,
   COMPILER_ENV_TYPE,
-  TESTER_ENV_TYPE
+  TESTER_ENV_TYPE,
+  LATEST
 } from '../constants';
 import { Scope, ComponentWithDependencies } from '../scope';
 import migratonManifest from './migrations/consumer-migrator-manifest';
@@ -72,6 +73,15 @@ import { dependenciesFields } from './config/consumer-overrides';
 import makeEnv from '../extensions/env-factory';
 import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
+import deleteComponentsFiles from './component-ops/delete-component-files';
+import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
+import {
+  deprecateRemote,
+  deprecateMany,
+  undeprecateRemote,
+  undeprecateMany
+} from '../scope/component-ops/components-deprecation';
+import type { AutoTagResult } from '../scope/component-ops/auto-tag';
 
 type ConsumerProps = {
   projectPath: string,
@@ -280,7 +290,7 @@ export default class Consumer {
     // $FlowFixMe, bitId is always defined as shouldThrow is true
     const bitId: BitId = this.bitMap.getExistingBitId(id);
     const version = BitId.getVersionOnlyFromString(id);
-    return bitId.changeVersion(version);
+    return bitId.changeVersion(version || LATEST);
   }
 
   getParsedIdIfExist(id: BitIdStr): ?BitId {
@@ -331,7 +341,11 @@ export default class Consumer {
     }
     const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
     const versionDependencies = await scopeComponentsImporter.componentToVersionDependencies(modelComponent, id);
-    const manipulateDirData = await getManipulateDirForExistingComponents(this, versionDependencies.component);
+    const manipulateDirData = await getManipulateDirWhenImportingComponents(
+      this.bitMap,
+      [versionDependencies],
+      this.scope.objects
+    );
     return versionDependencies.toConsumer(this.scope.objects, manipulateDirData);
   }
 
@@ -367,8 +381,7 @@ export default class Consumer {
     const manipulateDirData = await getManipulateDirWhenImportingComponents(
       this.bitMap,
       versionDependenciesArr,
-      this.scope.objects,
-      shouldDependenciesSavedAsComponents
+      this.scope.objects
     );
     const componentWithDependencies = await pMapSeries(versionDependenciesArr, versionDependencies =>
       versionDependencies.toConsumer(this.scope.objects, manipulateDirData)
@@ -536,7 +549,11 @@ export default class Consumer {
       const componentFromModel: ?ModelComponent = await this.scope.getModelComponentIfExist(id);
       let componentFromFileSystem;
       try {
-        componentFromFileSystem = await this.loadComponent(id.changeVersion(null));
+        // change to 'latest' before loading from FS. don't change to null, otherwise, it'll cause
+        // loadOne to not find model component as it assumes there is no version
+        // also, don't leave the id as is, otherwise, it'll cause issues with import --merge, when
+        // imported version is bigger than .bitmap, it won't find it and will consider as deleted
+        componentFromFileSystem = await this.loadComponent(id.changeVersion(LATEST));
       } catch (err) {
         if (
           err instanceof MissingFilesFromComponent ||
@@ -593,7 +610,7 @@ export default class Consumer {
     ignoreUnresolvedDependencies: ?boolean,
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
-  ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
+  ): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
@@ -605,8 +622,12 @@ export default class Consumer {
       });
       if (!R.isEmpty(componentsWithMissingDeps)) throw new MissingDependencies(componentsWithMissingDeps);
     }
+    const areComponentsMissingFromScope = components.some(c => !c.componentFromModel && c.id.hasScope());
+    if (areComponentsMissingFromScope) {
+      throw new ComponentsPendingImport();
+    }
 
-    const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       message,
@@ -619,10 +640,11 @@ export default class Consumer {
       verbose
     });
 
+    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
     await this._updateComponentsVersions(allComponents);
 
-    return { taggedComponents, autoTaggedComponents };
+    return { taggedComponents, autoTaggedResults };
   }
 
   _updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
@@ -778,25 +800,12 @@ export default class Consumer {
     });
   }
 
-  async deprecateRemote(bitIds: Array<BitId>) {
-    const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await getScopeRemotes(this.scope);
-    const context = {};
-    enrichContextFromGlobal(context);
-    const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
-      const resolvedRemote = await remotes.resolve(scopeName, this.scope);
-      const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
-      const deprecateResult = await resolvedRemote.deprecateMany(idsStr, context);
-      return deprecateResult;
-    });
-    const deprecatedComponentsResult = await Promise.all(deprecateP);
-    return deprecatedComponentsResult;
-  }
-  async deprecateLocal(bitIds: Array<BitId>) {
-    return this.scope.deprecateMany(bitIds);
-  }
   async deprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
+    return remote ? deprecateRemote(this.scope, bitIds) : deprecateMany(this.scope, bitIds);
+  }
+
+  async undeprecate(bitIds: BitId[], remote: boolean) {
+    return remote ? undeprecateRemote(this.scope, bitIds) : undeprecateMany(this.scope, bitIds);
   }
 
   /**
@@ -861,40 +870,6 @@ export default class Consumer {
 
     return Promise.all(removeP);
   }
-  /**
-   * delete files from fs according to imported/created
-   * @param {BitIds} bitIds - list of remote component ids to delete
-   * @param {boolean} deleteFiles - delete component files for authored
-   */
-  async removeComponentFromFs(bitIds: BitIds, deleteFiles: boolean) {
-    logger.debug(`consumer.removeComponentFromFs, ids: ${bitIds.toString()}`);
-    const deletePath = async (pathToDelete) => {
-      if (!path.isAbsolute(pathToDelete)) {
-        throw new Error(`consumer.removeComponentFromFs, expect pathToDelete to be absolute. Got "${pathToDelete}"`);
-      }
-      logger.debug(`consumer.removeComponentFromFs deleting the following path: ${pathToDelete}`);
-      return fs.remove(pathToDelete);
-    };
-    return Promise.all(
-      bitIds.map(async (id) => {
-        const ignoreVersion = id.isLocal() || !id.hasVersion();
-        const componentMap = this.bitMap.getComponentIfExist(id, { ignoreVersion });
-        if (!componentMap) {
-          logger.warn(
-            `removeComponentFromFs wasn't able to delete ${id.toString()} because the id is missing from bitmap`
-          );
-          return null;
-        }
-        if (componentMap.origin === COMPONENT_ORIGINS.IMPORTED || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
-          // $FlowFixMe rootDir is set for non authored
-          return deletePath(this.toAbsolutePath(componentMap.rootDir));
-        } else if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED && deleteFiles) {
-          return Promise.all(componentMap.files.map(file => deletePath(this.toAbsolutePath(file.relativePath))));
-        }
-        return null;
-      })
-    );
-  }
 
   /**
    * clean up removed components from bitmap
@@ -948,8 +923,8 @@ export default class Consumer {
     );
 
     if (!R.isEmpty(removedComponentIds)) {
-      await this.removeComponentFromFs(removedComponentIds, deleteFiles);
-      await this.removeComponentFromFs(removedDependencies, false);
+      await deleteComponentsFiles(this, removedComponentIds, deleteFiles);
+      await deleteComponentsFiles(this, removedDependencies, false);
       if (!track) {
         await packageJsonUtils.removeComponentsFromWorkspacesAndDependencies(this, removedComponentIds);
         await this.cleanFromBitMap(removedComponentIds, removedDependencies);
@@ -992,29 +967,29 @@ export default class Consumer {
     await component.testerDependencies.addRemoteAndLocalVersions(this.scope, modelTesterDependencies);
   }
 
-  async getAuthoredAndImportedDependentsOfComponents(components: Component[]): Promise<Component[]> {
+  async getAuthoredAndImportedDependentsIdsOf(components: Component[]): Promise<BitIds> {
     const authoredAndImportedComponents = this.bitMap.getAllBitIds([
       COMPONENT_ORIGINS.IMPORTED,
       COMPONENT_ORIGINS.AUTHORED
     ]);
     const componentsIds = BitIds.fromArray(components.map(c => c.id));
-    return this.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
+    return this.scope.findDirectDependentComponents(authoredAndImportedComponents, componentsIds);
   }
 
-  /**
-   * find the components in componentsPool which one of their dependencies include in potentialDependencies
-   */
-  async findDirectDependentComponents(componentsPool: BitIds, potentialDependencies: BitIds): Promise<Component[]> {
-    const componentsVersions: ComponentVersion[] = await this.scope.findDirectDependentComponents(
-      componentsPool,
-      potentialDependencies
+  async getAuthoredAndImportedDependentsComponentsOf(components: Component[]): Promise<Component[]> {
+    const dependentsIds = await this.getAuthoredAndImportedDependentsIdsOf(components);
+    const scopeComponentsImporter = ScopeComponentsImporter.getInstance(this.scope);
+
+    const versionDependenciesArr = await scopeComponentsImporter.importMany(dependentsIds, true, false);
+    const manipulateDirData = await getManipulateDirWhenImportingComponents(
+      this.bitMap,
+      versionDependenciesArr,
+      this.scope.objects
     );
-    return Promise.all(
-      componentsVersions.map(async (componentVersion) => {
-        const manipulateDirData = await getManipulateDirForExistingComponents(this, componentVersion);
-        return componentVersion.toConsumer(this.scope.objects, manipulateDirData);
-      })
+    const dependentComponentsP = versionDependenciesArr.map(c =>
+      c.component.toConsumer(this.scope.objects, manipulateDirData)
     );
+    return Promise.all(dependentComponentsP);
   }
 
   async ejectConf(componentId: BitId, { ejectPath }: { ejectPath: ?string }) {

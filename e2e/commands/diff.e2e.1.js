@@ -2,8 +2,9 @@ import fs from 'fs-extra';
 import path from 'path';
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
-import { ComponentNotFound, VersionNotFound } from '../../src/scope/exceptions';
+import { VersionNotFound } from '../../src/scope/exceptions';
 import * as fixtures from '../fixtures/fixtures';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 const barFooV1 = "module.exports = function foo() { return 'got foo'; };\n";
 const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };\n";
@@ -24,7 +25,7 @@ describe('bit diff command', function () {
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
       const diffFunc = () => helper.runCmd('bit diff utils/non-exist');
-      const error = new ComponentNotFound('utils/non-exist');
+      const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(diffFunc, error);
     });
   });

@@ -5,8 +5,8 @@ import chai, { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
-import { ComponentNotFound } from '../../src/scope/exceptions';
 import { removeChalkCharacters } from '../../src/utils';
+import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
 
@@ -32,7 +32,7 @@ describe('bit merge command', function () {
   describe('for non existing component', () => {
     it('show an error saying the component was not found', () => {
       const mergeFunc = () => helper.runCmd('bit merge 1.0.0 utils/non-exist');
-      const error = new ComponentNotFound('utils/non-exist');
+      const error = new MissingBitMapComponent('utils/non-exist');
       helper.expectToThrow(mergeFunc, error);
     });
   });

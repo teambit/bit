@@ -343,12 +343,10 @@ export default class ComponentWriter {
   }
 
   async _removeNodeModulesLinksFromDependents() {
-    const directDependentComponents = await this.consumer.getAuthoredAndImportedDependentsOfComponents([
-      this.component
-    ]);
+    const directDependentIds = await this.consumer.getAuthoredAndImportedDependentsIdsOf([this.component]);
     await Promise.all(
-      directDependentComponents.map((dependent) => {
-        const dependentComponentMap = this.consumer.bitMap.getComponent(dependent.id);
+      directDependentIds.map((dependentId) => {
+        const dependentComponentMap = this.consumer.bitMap.getComponent(dependentId);
         const relativeLinkPath = getNodeModulesPathOfComponent(this.consumer.config.bindingPrefix, this.component.id);
         const nodeModulesLinkAbs = this.consumer.toAbsolutePath(
           path.join(dependentComponentMap.getRootDir(), relativeLinkPath)

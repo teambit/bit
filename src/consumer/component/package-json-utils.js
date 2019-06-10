@@ -17,6 +17,8 @@ import JSONFile from './sources/json-file';
 import npmRegistryName from '../../utils/bit/npm-registry-name';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import PackageJsonFile from './package-json-file';
+import searchFilesIgnoreExt from '../../utils/fs/search-files-ignore-ext';
+import ComponentVersion from '../../scope/component-version';
 
 /**
  * Add components as dependencies to root package.json
@@ -40,16 +42,14 @@ export async function addComponentsToRoot(consumer: Consumer, components: Compon
 /**
  * Add given components with their versions to root package.json
  */
-export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsIds: BitIds) {
-  const driver = consumer.driver.getDriver(false);
-  const PackageJson = driver.PackageJson;
-
+export async function addComponentsWithVersionToRoot(consumer: Consumer, componentsVersions: ComponentVersion[]) {
   const componentsToAdd = R.fromPairs(
-    componentsIds.map((id) => {
-      return [id.toStringWithoutVersion(), id.version];
+    componentsVersions.map(({ component, version }) => {
+      const packageName = componentIdToPackageName(component.toBitId(), component.bindingPrefix);
+      return [packageName, version];
     })
   );
-  await PackageJson.addComponentsIntoExistingPackageJson(consumer.getPath(), componentsToAdd, npmRegistryName());
+  await _addDependenciesPackagesIntoPackageJson(consumer.getPath(), componentsToAdd);
 }
 
 export async function changeDependenciesToRelativeSyntax(
@@ -135,40 +135,26 @@ export function preparePackageJsonToWrite(
       return acc;
     }, {});
   };
+  const addDependencies = (packageJsonFile: PackageJsonFile) => {
+    packageJsonFile.addDependencies(bitDependencies);
+    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
+  };
   const bitDependencies = getBitDependencies(component.dependencies);
   const bitDevDependencies = getBitDependencies(component.devDependencies);
   const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
   const bitTesterDependencies = getBitDependencies(component.testerDependencies);
-  const name = excludeRegistryPrefix
-    ? componentIdToPackageName(component.id, component.bindingPrefix, false)
-    : componentIdToPackageName(component.id, component.bindingPrefix);
-  const createPackageJsonFile = (dir): PackageJsonFile => {
-    const packageJsonFile = PackageJsonFile.create(dir, {
-      name,
-      version: component.version,
-      homepage: component._getHomepage(),
-      main: pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile)),
-      dependencies: component.packageDependencies,
-      // Add environments PackageDependencies to the devDependencies in the package.json
-      devDependencies: {
-        ...component.devPackageDependencies,
-        ...component.compilerPackageDependencies,
-        ...component.testerPackageDependencies
-      },
-      peerDependencies: component.peerPackageDependencies,
-      componentRootFolder: dir,
-      license: `SEE LICENSE IN ${!R.isEmpty(component.license) ? 'LICENSE' : 'UNLICENSED'}`
-    });
-    packageJsonFile.addDependencies(bitDependencies);
-    packageJsonFile.addDevDependencies({ ...bitDevDependencies, ...bitCompilerDependencies, ...bitTesterDependencies });
-    return packageJsonFile;
-  };
-  const packageJson = createPackageJsonFile(bitDir);
+  const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
+  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  packageJson.addOrUpdateProperty('main', main);
+  addDependencies(packageJson);
   let distPackageJson;
   if (!component.dists.isEmpty() && !component.dists.areDistsInsideComponentDir) {
     const distRootDir = component.dists.distsRootDir;
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
-    distPackageJson = createPackageJsonFile(distRootDir);
+    distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix);
+    const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
+    distPackageJson.addOrUpdateProperty('main', distMainFile);
+    addDependencies(distPackageJson);
   }
 
   return { packageJson, distPackageJson };
