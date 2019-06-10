@@ -49,8 +49,9 @@ export default class FsContainer implements Container {
     const cwd = execOptions.cwd ? this.composePath(execOptions.cwd) : this.getPath();
     debug(`executing the following command: ${execOptions.command.join(' ')}, on cwd: ${cwd}`);
     // first item in the array is the command itself, other items are the flags
+    // `shell: true` is a must for Windows. otherwise, it throws an error  Error: spawn {command} ENOENT
     // @ts-ignore
-    const childProcess = spawn(execOptions.command.shift(), execOptions.command, { cwd });
+    const childProcess = spawn(execOptions.command.shift(), execOptions.command, { cwd, shell: true });
     childProcess.abort = async () => childProcess.kill();
     childProcess.inspect = async () => ({
       pid: childProcess.pid,
