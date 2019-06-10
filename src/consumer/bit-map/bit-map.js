@@ -678,7 +678,7 @@ export default class BitMap {
     return this.components[componentIdStr];
   }
 
-  sortValidateAndMarkAsChanged(componentIdStr) {
+  sortValidateAndMarkAsChanged(componentIdStr: BitIdStr) {
     this.components[componentIdStr].sort();
     this.components[componentIdStr].validate();
     this.markAsChanged();
