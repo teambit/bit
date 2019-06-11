@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add option to isolate component into "capsule"
 - enable compilers to isolate components using capsule
 
+## [14.1.4-angular.1] - 2019-06-10
+
+- support identify angular dependencies
+
 ## [14.1.3] - 2019-06-06
 
 ### Bug fixes

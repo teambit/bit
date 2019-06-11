@@ -17,9 +17,13 @@ export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
   consumer: Consumer;
   cacheResolvedDependencies: Object;
+  cacheProjectAst: ?{ angular: Object }; // specific platforms (like Angular) need to parse the entire project
   constructor(consumer: Consumer) {
     this.consumer = consumer;
     this.cacheResolvedDependencies = {};
+    if (this._isAngularProject()) {
+      this.cacheProjectAst = { angular: {} };
+    }
   }
 
   async loadMany(
@@ -112,7 +116,11 @@ export default class ComponentLoader {
     }
     const loadDependencies = async () => {
       const dependencyResolver = new DependencyResolver(component, this.consumer, id);
-      await dependencyResolver.loadDependenciesForComponent(bitDir, this.cacheResolvedDependencies);
+      await dependencyResolver.loadDependenciesForComponent(
+        bitDir,
+        this.cacheResolvedDependencies,
+        this.cacheProjectAst
+      );
       updateDependenciesVersions(this.consumer, component);
     };
     await loadDependencies();
@@ -176,6 +184,14 @@ export default class ComponentLoader {
     }
     const remoteComponent = await componentsObjects[0].toObjectsAsync(this.consumer.scope.objects);
     return remoteComponent.component;
+  }
+
+  _isAngularProject(): boolean {
+    return Boolean(
+      this.consumer.config.packageJsonObject &&
+        this.consumer.config.packageJsonObject.dependencies &&
+        this.consumer.config.packageJsonObject.dependencies['@angular/core']
+    );
   }
 
   static getInstance(consumer: Consumer): ComponentLoader {
