@@ -78,7 +78,7 @@ export default class Driver {
     return driver.npmLogin(token, npmrcPath, registryUrl);
   }
 
-  static load(lang) {
+  static load(lang?: string) {
     return new Driver(lang);
   }
 }

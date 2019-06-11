@@ -4,7 +4,7 @@ import R from 'ramda';
 import glob from 'glob';
 import { BitId } from '../bit-id';
 import type Component from '../consumer/component/consumer-component';
-import { COMPONENT_ORIGINS, PACKAGE_JSON } from '../constants';
+import { COMPONENT_ORIGINS, PACKAGE_JSON, DEFAULT_BINDINGS_PREFIX } from '../constants';
 import type ComponentMap from '../consumer/bit-map/component-map';
 import logger from '../logger/logger';
 import { pathRelativeLinux, first, pathNormalizeToLinux } from '../utils';
@@ -37,10 +37,10 @@ export default class NodeModuleLinker {
   consumer: ?Consumer;
   bitMap: BitMap; // preparation for the capsule, which is going to have only BitMap with no Consumer
   dataToPersist: DataToPersist;
-  constructor(components: Component[], consumer: ?Consumer, bitMap: ?BitMap) {
+  constructor(components: Component[], consumer: ?Consumer, bitMap: BitMap) {
     this.components = ComponentsList.getUniqueComponents(components);
-    this.consumer = consumer; // $FlowFixMe
-    this.bitMap = bitMap || consumer.bitMap;
+    this.consumer = consumer;
+    this.bitMap = bitMap;
     this.dataToPersist = new DataToPersist();
   }
   async link(): Promise<LinksResult[]> {
@@ -103,7 +103,8 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
-    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : null;
+    if (!componentId.hasScope()) return; // when isolating new components// from isolated;
+    const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
     const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
@@ -214,6 +215,7 @@ export default class NodeModuleLinker {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
+      if (!dependency.id.hasScope()) return dependenciesLinks; // when isolating new components
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(
@@ -268,7 +270,7 @@ export default class NodeModuleLinker {
 
   async _getMissingCustomResolvedLinks(component: Component): Promise<DataToPersist> {
     if (!component.componentFromModel) return new DataToPersist();
-
+    if (!this.consumer) throw new Error('_getMissingCustomResolvedLinks expects to have consumer set');
     const componentWithDependencies = await component.toComponentWithDependencies(this.consumer);
     const missingLinks = component.issues.missingCustomModuleResolutionLinks;
     const dependenciesStr = R.flatten(Object.keys(missingLinks).map(fileName => missingLinks[fileName]));
@@ -276,7 +278,8 @@ export default class NodeModuleLinker {
     const componentsDependenciesLinks = getComponentsDependenciesLinks(
       [componentWithDependencies],
       this.consumer,
-      false
+      false,
+      this.bitMap
     );
     return componentsDependenciesLinks;
   }
@@ -314,7 +317,7 @@ export default class NodeModuleLinker {
    * @todo: avoid repopulating for imported. (not easy because by default, all components get "true").
    */
   async _populateShouldDependenciesSavedAsComponentsData(): Promise<void> {
-    if (!this.components.length) return;
+    if (!this.components.length || !this.consumer) return;
     const bitIds = this.components.map(c => c.id);
     const shouldDependenciesSavedAsComponents = await this.consumer.shouldDependenciesSavedAsComponents(bitIds);
     this.components.forEach((component) => {

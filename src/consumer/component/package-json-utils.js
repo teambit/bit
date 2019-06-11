@@ -118,7 +118,7 @@ export async function write(
 }
 
 export function preparePackageJsonToWrite(
-  consumer: Consumer,
+  consumer: ?Consumer,
   component: Component,
   bitDir: string,
   override?: boolean = true,
@@ -129,7 +129,7 @@ export function preparePackageJsonToWrite(
   const getBitDependencies = (dependencies: Dependencies) => {
     if (!writeBitDependencies) return {};
     return dependencies.get().reduce((acc, dep) => {
-      const packageDependency = getPackageDependency(consumer, dep.id, component.id);
+      const packageDependency = consumer ? getPackageDependency(consumer, dep.id, component.id) : null;
       const packageName = componentIdToPackageName(dep.id, component.bindingPrefix || npmRegistryName());
       acc[packageName] = packageDependency;
       return acc;

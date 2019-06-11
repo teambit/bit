@@ -1,9 +1,9 @@
 {
     "env": {},
-    "dependencies": {},
+    "dependencies": {
+        "bit.capsule-dev/core/capsule": "0.0.10",
+        "bit.capsule-dev/container/fs-container": "0.0.4"
+    },
     "componentsDefaultDirectory": "components/{namespace}/{name}",
-    "packageManager": "npm",
-    "dist": {
-        "target": "dist"
-    }
+    "packageManager": "npm"
 }
