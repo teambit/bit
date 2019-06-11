@@ -5,6 +5,12 @@ import Helper from '../e2e-helper';
 
 chai.use(require('chai-fs'));
 
+/**
+ * this test makes sure the compiler can specify a different main-file for the dists.
+ * in order for the test to prove it, the source files print to the console "from source" and the
+ * dist files are generated with an extra file with a suffix "-main" and the text "from source" is
+ * replaced by "from dist". See the compiler at e2e/fixtures/compilers/dist-main/compiler.js
+ */
 describe('mainFile of the dist is different than the source', function () {
   this.timeout(0);
   const helper = new Helper();
