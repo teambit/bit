@@ -78,7 +78,7 @@ export default (async function buildComponent({
     );
   }
 
-  const builtFiles =
+  const compilerResults =
     (await _buildIfNeeded({
       component,
       consumer,
@@ -87,19 +87,32 @@ export default (async function buildComponent({
       keep,
       verbose: !!verbose
     })) || [];
-  // return buildFilesP.then((buildedFiles) => {
+  const { builtFiles, mainDist } = _extractCompilerResults(compilerResults);
   builtFiles.forEach((file) => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
   });
   component.setDists(builtFiles.map(file => new Dist(file)));
-
+  component.dists.setMainDistFile(mainDist);
   if (save) {
     await scope.sources.updateDist({ source: component });
   }
   return component.dists;
 });
+
+function _extractCompilerResults(compilerResults): { builtFiles: Vinyl[], mainDist: ?string } {
+  if (Array.isArray(compilerResults)) {
+    return { builtFiles: compilerResults, mainDist: null };
+  }
+  if (typeof compilerResults === 'object') {
+    if (!compilerResults.dists) {
+      throw new GeneralError('fatal: compiler that returns an object, must include "dists" property');
+    }
+    return { builtFiles: compilerResults.dists, mainDist: compilerResults.mainFile };
+  }
+  throw new GeneralError(`fatal: compiler must return an array or object, instead, got ${typeof compilerResults}`);
+}
 
 async function _buildIfNeeded({
   component,
