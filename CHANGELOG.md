@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - add option to isolate component into "capsule"
+- enable compilers to isolate components using capsule
 
 ## [14.1.3] - 2019-06-06
 

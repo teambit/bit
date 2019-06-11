@@ -70,15 +70,15 @@ var Capsule = /** @class */ (function () {
     /**
      * container implementation the capsule is being executed within.
      */
-    container, 
+    container,
     /**
      * the capsule's file system.
      */
-    fs, 
+    fs,
     /**
      * console for controlling process streams as stdout, stdin and stderr.
      */
-    console, 
+    console,
     /**
      * capsule's state.
      */
@@ -149,6 +149,9 @@ var Capsule = /** @class */ (function () {
                 }
             });
         });
+    };
+    Capsule.prototype.get = function (options) {
+      return this.container.get(options);
     };
     Capsule.prototype.destroy = function () {
         return this.container.stop();

@@ -71,4 +71,18 @@ describe('capsule', function () {
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
   });
+  describe('build into capsule', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponents();
+      helper.importDummyCompiler('capsule');
+      helper.build();
+    });
+    it('should be able to require the component and its dependencies from the dist directory', () => {
+      const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
+      fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+      const result = helper.runCmd('node app.js');
+      expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+  });
 });

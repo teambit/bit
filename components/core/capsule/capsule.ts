@@ -107,6 +107,10 @@ export default class Capsule {
     });
   }
 
+  async get(options: { path: string }): Promise<NodeJS.ReadableStream> {
+    return this.container.get(options);
+  }
+
   destroy() {
     return this.container.stop();
   }

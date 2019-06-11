@@ -484,9 +484,9 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
-  importDummyCompiler() {
+  importDummyCompiler(dummyType?: string = 'dummy') {
     const id = `${this.envScope}/compilers/dummy`;
-    this.createDummyCompiler();
+    this.createDummyCompiler(dummyType);
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
@@ -680,7 +680,7 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  createDummyCompiler() {
+  createDummyCompiler(dummyType: string) {
     if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
@@ -689,7 +689,7 @@ export default class Helper {
 
     this.runCmd('bit init', tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'dummy');
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
