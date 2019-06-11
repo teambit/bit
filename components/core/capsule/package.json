@@ -1,0 +1,17 @@
+{
+  "name": "@bit/bit.capsule-dev.core.capsule",
+  "version": "0.0.10",
+  "homepage": "https://bitsrc.io/bit/capsule-dev/core/capsule",
+  "main": "dist/index.js",
+  "dependencies": {
+    "memfs": "^2.14.2",
+    "unionfs": "^3.0.2",
+    "readable-stream": "^3.1.1"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "sinon": "^7.2.2"
+  },
+  "peerDependencies": {},
+  "license": "SEE LICENSE IN LICENSE"
+}

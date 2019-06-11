@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import Capsule from '../../../../components/core/capsule';
 import AbstractVinyl from './abstract-vinyl';
 import Symlink from '../../../links/symlink';
 import logger from '../../../logger/logger';
@@ -38,7 +39,9 @@ export default class DataToPersist {
   }
   removePath(pathToRemove: RemovePath) {
     if (!pathToRemove) throw new Error('failed adding a path to remove into DataToPersist');
-    this.remove.push(pathToRemove);
+    if (!this.remove.includes(pathToRemove)) {
+      this.remove.push(pathToRemove);
+    }
   }
   removeManyPaths(pathsToRemove: RemovePath[] = []) {
     pathsToRemove.forEach(pathToRemove => this.removePath(pathToRemove));
@@ -65,8 +68,15 @@ export default class DataToPersist {
     await this._persistFilesToFS();
     await this._persistSymlinksToFS();
   }
-  async persistAllToCapsule() {
-    throw new Error('not implemented yet');
+  async persistAllToCapsule(capsule: Capsule) {
+    this._log();
+    // const filesForCapsule = this.files.reduce(
+    //   (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
+    //   {}
+    // );
+    await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
+    await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
+    await Promise.all(this.symlinks.map(symlink => capsule.symlink(symlink.src, symlink.dest)));
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {

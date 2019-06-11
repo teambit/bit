@@ -48,10 +48,8 @@ function getComponentLinks({
   component: Component,
   dependencies: Component[], // Array of the dependencies components (the full component) - used to generate a dist link (with the correct extension)
   createNpmLinkFiles: boolean,
-  bitMap?: ?BitMap
+  bitMap: BitMap
 }): DataToPersist {
-  // $FlowFixMe
-  bitMap = bitMap || consumer.bitMap;
   const componentMap: ComponentMap = bitMap.getComponent(component.id);
   component.componentMap = componentMap;
   const directDependencies: Dependency[] = _getDirectDependencies(component, componentMap, createNpmLinkFiles);
@@ -71,8 +69,8 @@ function getComponentLinks({
 
     const dependencyLinks = dep.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
-        // $FlowFixMe
         consumer,
+        bitMap,
         component,
         relativePath,
         dependencyComponent,
@@ -202,10 +200,8 @@ function getComponentsDependenciesLinks(
   componentDependencies: ComponentWithDependencies[],
   consumer: ?Consumer,
   createNpmLinkFiles: boolean,
-  bitMap?: BitMap
+  bitMap: BitMap
 ): DataToPersist {
-  // $FlowFixMe
-  bitMap = bitMap || consumer.bitMap;
   const componentsDependenciesLinks = new DataToPersist();
   const linkedComponents = new BitIds();
   const componentsToLink = getComponentsToLink();
@@ -215,7 +211,6 @@ function getComponentsDependenciesLinks(
   function getComponentsToLink(): ComponentWithDependencies[] {
     return componentDependencies.reduce((acc, componentWithDeps) => {
       const component = componentWithDeps.component;
-      // $FlowFixMe bitMap is set at this point
       const componentMap = bitMap.getComponent(component.id);
       component.componentMap = componentMap;
       if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) {
@@ -237,7 +232,8 @@ function getComponentsDependenciesLinks(
         consumer,
         component,
         dependencies: componentWithDeps.allDependencies,
-        createNpmLinkFiles
+        createNpmLinkFiles,
+        bitMap
       });
       componentsDependenciesLinks.merge(componentsLinks);
       linkedComponents.push(component.id);
@@ -257,7 +253,8 @@ function getComponentsDependenciesLinks(
           consumer,
           component: dep,
           dependencies,
-          createNpmLinkFiles
+          createNpmLinkFiles,
+          bitMap
         });
         componentsDependenciesLinks.merge(dependencyLinks);
         linkedComponents.push(dep.id);
@@ -361,9 +358,9 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
 /**
  * Relevant for IMPORTED and NESTED only
  */
-function getEntryPointsForComponent(component: Component, consumer: Consumer): LinkFile[] {
+function getEntryPointsForComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile[] {
   const files = [];
-  const componentMap = consumer.bitMap.getComponent(component.id);
+  const componentMap = bitMap.getComponent(component.id);
   // $FlowFixMe
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
@@ -371,7 +368,12 @@ function getEntryPointsForComponent(component: Component, consumer: Consumer): L
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);
-  if (!component.dists.isEmpty() && component.dists.writeDistsFiles && !consumer.shouldDistsBeInsideTheComponent()) {
+  if (
+    !component.dists.isEmpty() &&
+    component.dists.writeDistsFiles &&
+    consumer &&
+    !consumer.shouldDistsBeInsideTheComponent()
+  ) {
     const distDir = component.dists.getDistDirForConsumer(consumer, componentRoot);
     const entryPointDist = path.join(distDir, indexName);
     logger.debug(`writeEntryPointFile, on ${entryPointDist}`);
@@ -386,19 +388,22 @@ function getEntryPointsForComponent(component: Component, consumer: Consumer): L
  * used for writing compiler and tester dependencies to the directory of their configuration file
  * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
  * this methods write the environment dependency links no matter where the directory located on the workspace
- *
  */
 async function getLinksByDependencies(
   targetDir: PathOsBased,
   component: Component,
   dependencies: Dependencies,
-  consumer: Consumer
+  consumer: Consumer,
+  bitMap: BitMap
 ): Promise<LinkFile[]> {
+  // @todo: isolate consumer from this function for the Capsule.
+  if (!consumer) throw new Error('getLinksByDependencies expects to get Consumer');
   const linksP = dependencies.get().map(async (dependency: Dependency) => {
     const dependencyComponent = await consumer.loadComponentFromModel(dependency.id);
     const dependencyLinks = dependency.relativePaths.map((relativePath: RelativePath) => {
       const dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
         consumer,
+        bitMap,
         component,
         relativePath,
         dependencyComponent,

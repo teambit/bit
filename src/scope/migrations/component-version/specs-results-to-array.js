@@ -2,7 +2,7 @@
 
 /**
  * Convert specsResults from object to array and add the spec file
- * @param {Object} versionModel 
+ * @param {Object} versionModel
  */
 function specsResultstoArray(versionModel: Object): Object {
   if (versionModel.specsResults && !Array.isArray(versionModel.specsResults)) {

@@ -1,5 +1,6 @@
 /** @flow */
 import type Component from '../consumer/component/consumer-component';
+import BitId from '../bit-id/bit-id';
 
 export default class ComponentWithDependencies {
   component: Component;
@@ -21,11 +22,13 @@ export default class ComponentWithDependencies {
     this.devDependencies = props.devDependencies || [];
     this.compilerDependencies = props.compilerDependencies || [];
     this.testerDependencies = props.testerDependencies || [];
-    this.allDependencies = [
-      ...this.dependencies,
-      ...this.devDependencies,
-      ...this.compilerDependencies,
-      ...this.testerDependencies
-    ];
+  }
+
+  get allDependencies() {
+    return [...this.dependencies, ...this.devDependencies, ...this.compilerDependencies, ...this.testerDependencies];
+  }
+
+  hasDependency(id: BitId) {
+    this.allDependencies.some(dependency => dependency.id.isEqual(id));
   }
 }

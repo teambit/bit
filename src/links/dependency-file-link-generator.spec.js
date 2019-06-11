@@ -60,6 +60,7 @@ describe('DependencyFileLinkGenerator', () => {
         const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsString));
         dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
           consumer: mockConsumer(),
+          bitMap: mockBitMap(),
           component,
           relativePath: component.dependencies.get()[0].relativePaths[0],
           dependencyComponent,
@@ -117,6 +118,7 @@ describe('DependencyFileLinkGenerator', () => {
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             consumer: mockConsumer(),
+            bitMap: mockBitMap(),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
@@ -220,6 +222,7 @@ describe('DependencyFileLinkGenerator', () => {
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringEs6));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             consumer: mockConsumer(false),
+            bitMap: mockBitMap(),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
@@ -326,6 +329,7 @@ describe('DependencyFileLinkGenerator', () => {
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             consumer: mockConsumer(),
+            bitMap: mockBitMap(),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
@@ -388,6 +392,7 @@ describe('DependencyFileLinkGenerator', () => {
           const dependencyComponent = await Component.fromString(JSON.stringify(utilsIsStringCustomResolved));
           dependencyFileLinkGenerator = new DependencyFileLinkGenerator({
             consumer: mockConsumer(false),
+            bitMap: mockBitMap(),
             component,
             relativePath: component.dependencies.get()[0].relativePaths[0],
             dependencyComponent,
