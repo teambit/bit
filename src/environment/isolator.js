@@ -14,19 +14,19 @@ export default class Isolator {
   capsule: Capsule;
   consumer: ?Consumer;
   scope: Scope;
-  constructor(capsule: Capsule, scope: Scope, consumer?: Consumer) {
+  constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
     this.capsule = capsule;
     this.scope = scope;
     this.consumer = consumer;
   }
 
-  static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: Consumer, dir?: string) {
+  static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: ?Consumer, dir?: string) {
     logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
   }
 
-  async isolate(componentId: BitId, opts: Object) {
+  async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
     const componentWithDependencies = await this._loadComponent(componentId);
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
@@ -59,6 +59,7 @@ export default class Isolator {
     await this.installPackagesOnDirs(allRootDirs);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
+    return componentWithDependencies;
   }
 
   /**
