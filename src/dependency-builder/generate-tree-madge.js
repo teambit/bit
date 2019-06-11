@@ -141,7 +141,8 @@ export default function generateTree(files = [], config) {
         },
         detective,
         nonExistent,
-        pathMap
+        pathMap,
+        cacheProjectAst: config.cacheProjectAst
       });
       Object.assign(depTree, dependencyTreeResult);
     } catch (err) {

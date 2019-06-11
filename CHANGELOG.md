@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.12-angular.2] - 2019-06-10
+
+- add rxjs package
+
+## [2.0.12-angular.1] - 2019-06-10
+
+- support angular components (experimental)
+
 ## [2.0.11] - 2019-06-05
 
 - [#1708](https://github.com/teambit/bit/issues/1708) support `require` with apostrophes

@@ -387,7 +387,8 @@ export async function getDependencyTree({
   filePaths,
   bindingPrefix,
   resolveModulesConfig,
-  visited = {}
+  visited = {},
+  cacheProjectAst
 }: DependencyTreeParams): Promise<{ tree: Tree }> {
   const resolveConfigAbsolute = getResolveConfigAbsolute(consumerPath, resolveModulesConfig);
   const config = {
@@ -397,7 +398,8 @@ export async function getDependencyTree({
     webpackConfig: null,
     visited,
     nonExistent: [],
-    resolveConfig: resolveConfigAbsolute
+    resolveConfig: resolveConfigAbsolute,
+    cacheProjectAst
   };
   const { madgeTree, skipped, pathMap, errors } = generateTree(filePaths, config);
   const tree: Tree = groupDependencyTree(madgeTree, baseDir, bindingPrefix);

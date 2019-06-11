@@ -17,6 +17,7 @@ function Config(options) {
   this.detectiveConfig = options.detective || options.detectiveConfig || {};
   this.pathMap = options.pathMap || [];
   this.resolveConfig = options.resolveConfig;
+  this.cacheProjectAst = options.cacheProjectAst;
 
   this.filter = options.filter;
 

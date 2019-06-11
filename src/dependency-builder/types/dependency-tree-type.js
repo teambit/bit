@@ -61,5 +61,6 @@ export type DependencyTreeParams = {
   filePaths: string[],
   bindingPrefix: string,
   resolveModulesConfig: ?ResolveModulesConfig,
-  visited: ?Object
+  visited: ?Object,
+  cacheProjectAst: ?Object
 };
