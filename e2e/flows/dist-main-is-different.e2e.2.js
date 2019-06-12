@@ -84,6 +84,7 @@ describe('mainFile of the dist is different than the source', function () {
       describe('import to another workspace', () => {
         before(() => {
           helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
           helper.addRemoteScope();
           helper.importComponent('bar/foo');
         });
@@ -97,6 +98,7 @@ describe('mainFile of the dist is different than the source', function () {
       describe('import to another workspace when dist is outside the components dir', () => {
         before(() => {
           helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
           helper.addRemoteScope();
           helper.modifyFieldInBitJson('dist', { target: 'dist' });
           helper.importComponent('bar/foo');
@@ -111,6 +113,7 @@ describe('mainFile of the dist is different than the source', function () {
       (supportNpmCiRegistryTesting ? describe : describe.skip)('publishing to registry', () => {
         before(async () => {
           helper.reInitLocalScope();
+          npmCiRegistry.setCiScopeInBitJson();
           helper.addRemoteScope();
           helper.importComponent('bar/foo@0.0.1');
           helper.importComponent('utils/is-type@0.0.1');
