@@ -8,7 +8,6 @@ import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
-import { getAllRootDirectoriesFor } from '../npm-client/install-packages';
 
 export default class Isolator {
   capsule: Capsule;
@@ -49,14 +48,14 @@ export default class Isolator {
       isolated: true,
       capsule: this.capsule
     };
+    // $FlowFixMe
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule([componentWithDependencies]);
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    const allRootDirs = getAllRootDirectoriesFor([componentWithDependencies]);
-    await this.installPackagesOnDirs(allRootDirs);
+    await this._installPackages(componentWithDependencies.component.writtenPath);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
     return componentWithDependencies;
@@ -94,11 +93,7 @@ export default class Isolator {
     return Promise.all(R.flatten(persistP));
   }
 
-  async installPackagesOnDirs(dirs: string[]) {
-    return Promise.all(dirs.map(dir => this._installPackagesOnOneDirectory(dir)));
-  }
-
-  async _installPackagesOnOneDirectory(directory: string) {
+  async _installPackages(directory: string) {
     await this.capsule.exec('npm version 1.0.0', { cwd: directory });
     // *** ugly hack alert ***
     // we change the version to 1.0.0 here because for untagged
