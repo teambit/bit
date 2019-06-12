@@ -198,17 +198,16 @@ export default class Dists {
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
   calculateMainDistFile(mainSourceFile: PathOsBased): PathOsBased {
-    if (this.writeDistsFiles && this.areDistsInsideComponentDir) {
-      const getMainFile = () => {
-        if (this._mainDistFile) return this._mainDistFile;
-        // Take the only dist file if there is only one or search for one with the same name as the main source file
-        if (this.dists && this.dists.length === 1) return this.dists[0].relative;
-        return searchFilesIgnoreExt(this.dists, mainSourceFile, 'relative');
-      };
-      const mainFile = getMainFile();
-      if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
-    }
-    return this._mainDistFile || mainSourceFile;
+    if (!this.writeDistsFiles) return mainSourceFile;
+    const getMainFile = () => {
+      if (this._mainDistFile) return this._mainDistFile;
+      // Take the only dist file if there is only one or search for one with the same name as the main source file
+      if (this.dists && this.dists.length === 1) return this.dists[0].relative;
+      return searchFilesIgnoreExt(this.dists, mainSourceFile, 'relative');
+    };
+    const mainFile = getMainFile();
+    if (!mainFile) return mainSourceFile;
+    return this.areDistsInsideComponentDir ? path.join(DEFAULT_DIST_DIRNAME, mainFile) : mainFile;
   }
 
   /**
