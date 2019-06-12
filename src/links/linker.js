@@ -37,7 +37,7 @@ export async function getLinksInDistToWrite(
     false,
     consumer.bitMap
   );
-  const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile());
   const rootDir = componentMap.rootDir;
   if (!rootDir) {
     throw new GeneralError('getLinksInDistToWrite should get called on imported components only');

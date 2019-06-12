@@ -144,7 +144,7 @@ export function preparePackageJsonToWrite(
   const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
   const bitTesterDependencies = getBitDependencies(component.testerDependencies);
   const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
-  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
+  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile());
   packageJson.addOrUpdateProperty('main', main);
   addDependencies(packageJson);
   let distPackageJson;
@@ -153,7 +153,7 @@ export function preparePackageJsonToWrite(
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
     distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix);
     const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
-    distPackageJson.addOrUpdateProperty('main', distMainFile);
+    distPackageJson.addOrUpdateProperty('main', component.dists.getMainDistFile() || distMainFile);
     addDependencies(distPackageJson);
   }
 

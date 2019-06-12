@@ -364,7 +364,7 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   // $FlowFixMe
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
-  const mainFile = component.dists.calculateMainDistFile(component.mainFile);
+  const mainFile = component.dists.calculateMainDistFile();
   const indexName = getIndexFileName(mainFile); // Move to bit-javascript
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
   const entryPointPath = path.join(componentRoot, indexName);

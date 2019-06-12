@@ -93,8 +93,7 @@ export default (async function buildComponent({
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
   });
-  component.setDists(builtFiles.map(file => new Dist(file)));
-  component.dists.setMainDistFile(mainDist);
+  component.setDists(builtFiles.map(file => new Dist(file)), mainDist);
   if (save) {
     await scope.sources.updateDist({ source: component });
   }

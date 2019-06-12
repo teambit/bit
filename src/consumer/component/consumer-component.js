@@ -246,8 +246,7 @@ export default class Component {
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
     this._docs = docs;
-    this.setDists(dists);
-    this.dists.setMainDistFile(mainDistFile ? path.normalize(mainDistFile) : null);
+    this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -313,8 +312,8 @@ export default class Component {
     this.testerDependencies = new Dependencies(testerDependencies);
   }
 
-  setDists(dists?: Dist[]) {
-    this.dists = new Dists(dists);
+  setDists(dists: ?(Dist[]), mainDistFile?: ?PathOsBased) {
+    this.dists = new Dists(this.mainFile, dists, mainDistFile);
   }
 
   getFileExtension(): string {

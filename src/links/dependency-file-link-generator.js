@@ -169,9 +169,7 @@ export default class DependencyFileLinkGenerator {
     relativePathInDependency: PathOsBased,
     depRootDir: ?PathOsBasedAbsolute
   }): LinkFileType {
-    const mainFile: PathOsBased = this.dependencyComponent.dists.calculateMainDistFile(
-      this.dependencyComponent.mainFile
-    );
+    const mainFile: PathOsBased = this.dependencyComponent.dists.calculateMainDistFile();
     let actualFilePath = depRootDir ? path.join(depRootDir, relativePathInDependency) : relativePathInDependency;
     if (relativePathInDependency === mainFile) {
       actualFilePath = depRootDir ? path.join(depRootDir, mainFile) : mainFile;
