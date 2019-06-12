@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-angular.3] - 2019-06-12
+
 - support different main-file for dists
 
 ## [14.1.4-angular.2] - 2019-06-11

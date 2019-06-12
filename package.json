@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.1.4-angular.2",
+  "version": "14.1.4-angular.3",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
