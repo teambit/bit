@@ -313,7 +313,7 @@ export default class Component {
   }
 
   setDists(dists: ?(Dist[]), mainDistFile?: ?PathOsBased) {
-    this.dists = new Dists(this.mainFile, dists, mainDistFile);
+    this.dists = new Dists(dists, mainDistFile);
   }
 
   getFileExtension(): string {

@@ -144,7 +144,7 @@ export function preparePackageJsonToWrite(
   const bitCompilerDependencies = getBitDependencies(component.compilerDependencies);
   const bitTesterDependencies = getBitDependencies(component.testerDependencies);
   const packageJson = PackageJsonFile.createFromComponent(bitDir, component, excludeRegistryPrefix);
-  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile());
+  const main = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   packageJson.addOrUpdateProperty('main', main);
   addDependencies(packageJson);
   let distPackageJson;

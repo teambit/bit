@@ -56,10 +56,8 @@ export default class Dists {
   distEntryShouldBeStripped: ?boolean = false;
   _distsPathsAreUpdated: ?boolean = false; // makes sure to not update twice
   _mainDistFile: ?PathOsBasedRelative;
-  _mainSourceFile: PathOsBasedRelative;
   distsRootDir: ?PathOsBasedRelative; // populated only after getDistDirForConsumer() is called
-  constructor(mainSourceFile: PathOsBased, dists?: ?(Dist[]), mainDistFile: ?PathOsBased) {
-    this._mainSourceFile = mainSourceFile;
+  constructor(dists?: ?(Dist[]), mainDistFile: ?PathOsBased) {
     this._mainDistFile = mainDistFile;
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
@@ -199,18 +197,18 @@ export default class Dists {
   // In case there are dist files, we want to point the index to the main dist file, not to source.
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
-  calculateMainDistFile(): PathOsBased {
+  calculateMainDistFile(mainSourceFile: PathOsBased): PathOsBased {
     if (this.writeDistsFiles && this.areDistsInsideComponentDir) {
       const getMainFile = () => {
         if (this._mainDistFile) return this._mainDistFile;
         // Take the only dist file if there is only one or search for one with the same name as the main source file
         if (this.dists && this.dists.length === 1) return this.dists[0].relative;
-        return searchFilesIgnoreExt(this.dists, this._mainSourceFile, 'relative');
+        return searchFilesIgnoreExt(this.dists, mainSourceFile, 'relative');
       };
       const mainFile = getMainFile();
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
-    return this._mainDistFile || this._mainSourceFile;
+    return this._mainDistFile || mainSourceFile;
   }
 
   /**
