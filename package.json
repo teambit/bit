@@ -28,7 +28,7 @@
     "performance-test-circle": "mocha --require babel-core/register --reporter mocha-circleci-reporter ./e2e/performance/*.performance*.js",
     "clean": "rm -rf dist",
     "build": "babel src -d dist",
-    "pkg": "pkg . --targets node10 --out-path releases/",
+    "pkg": "pkg ./dist/bit.js --targets node12 --out-path releases/",
     "bundle:test-worker": "ncc build ./dist/specs-runner/worker.js -o releases/test-worker -m",
     "bundle:test-worker:debug": "ncc build ./dist/specs-runner/worker.js -o releases/test-worker -s",
     "watch": "babel --watch bin src -d dist --source-maps",
