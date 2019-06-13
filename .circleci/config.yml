@@ -180,6 +180,10 @@ jobs:
           command: 'pwd'
       -
         run:
+          name: 'list dist files'
+          command: 'ls dist -l'
+      -
+        run:
           name: 'cat'
           command: 'cat ./dist/bit.js'
       -
