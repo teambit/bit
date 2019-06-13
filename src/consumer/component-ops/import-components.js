@@ -335,20 +335,14 @@ export default class ImportComponents {
     }
     this.mergeStatus = {};
 
-    const componentsToWrite = componentsStatus.map((componentStatus) => {
+    return componentsStatus.map((componentStatus) => {
       const filesStatus: ?FilesStatus = this._updateComponentFilesPerMergeStrategy(componentStatus);
       const componentWithDependencies = componentStatus.componentWithDependencies;
-      if (!filesStatus) return componentWithDependencies;
-      this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;
-      const unchangedFiles = Object.keys(filesStatus).filter(file => filesStatus[file] === FileStatus.unchanged);
-      if (unchangedFiles.length === Object.keys(filesStatus).length) {
-        // all files are unchanged
-        return null;
+      if (filesStatus) {
+        this.mergeStatus[componentWithDependencies.component.id.toStringWithoutVersion()] = filesStatus;
       }
       return componentWithDependencies;
     });
-    const removeNulls = R.reject(R.isNil);
-    return removeNulls(componentsToWrite);
   }
 
   async _writeToFileSystem(componentsWithDependencies: ComponentWithDependencies[]) {
