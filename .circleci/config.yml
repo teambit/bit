@@ -149,7 +149,7 @@ jobs:
   pack:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -197,7 +197,7 @@ jobs:
   bundle-test-worker:
     docker:
       -
-        image: 'circleci/node:8.10.0'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -240,7 +240,7 @@ jobs:
   unit_test:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -372,8 +372,8 @@ jobs:
         run:
           name: 'npm link bit-javascript to bit'
           command: 'cd bit && npm link ../bit-javascript'
-      -
-        run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+      # -
+      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       -
         run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       - 
