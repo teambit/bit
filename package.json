@@ -31,7 +31,9 @@
     "pkg": "pkg . --out-path releases/",
     "watch": "babel --watch bin src -d dist --source-maps",
     "build-debug": "babel src -d dist --source-maps",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run build",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "bin": {
     "bit": "bin/bit.js"
@@ -118,7 +120,8 @@
     "vinyl": "^2.1.0",
     "vinyl-file": "^3.0.0",
     "winston": "^2.4.0",
-    "yn": "^2.0.0"
+    "yn": "^2.0.0",
+    "snyk": "^1.177.1"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
@@ -166,5 +169,6 @@
       "prettier-eslint --write",
       "git add"
     ]
-  }
+  },
+  "snyk": true
 }

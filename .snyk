@@ -1,0 +1,10 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  'npm:extend:20180424':
+    - '@teambit/gitconfig > objnest > extend':
+        patched: '2019-06-13T10:23:12.196Z'
+    - '@teambit/gitconfig > askconfig > objnest > extend':
+        patched: '2019-06-13T10:23:12.196Z'
