@@ -176,8 +176,16 @@ jobs:
           command: 'cd bit && ls -l'
       -
         run:
+          name: 'pwd'
+          command: 'pwd'
+      -
+        run:
+          name: 'cat'
+          command: 'cat ./dist/bit.js'
+      -
+        run:
           name: 'Pack bit'
-          command: 'cd bit && npm run pkg'
+          command: 'npm run pkg'
       -
         save_cache:
           key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
