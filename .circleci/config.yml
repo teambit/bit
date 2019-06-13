@@ -172,6 +172,10 @@ jobs:
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
       -
         run:
+          name: 'pwd'
+          command: 'pwd'
+      -
+        run:
           name: 'list files'
           command: 'cd bit && ls -l'
       -
@@ -181,15 +185,15 @@ jobs:
       -
         run:
           name: 'list dist files'
-          command: 'ls dist -l'
+          command: 'cd bit && ls dist -l'
       -
         run:
           name: 'cat'
-          command: 'cat ./dist/bit.js'
+          command: 'cd bit && cat ./dist/bit.js'
       -
         run:
           name: 'Pack bit'
-          command: 'npm run pkg'
+          command: 'cd bit && npm run pkg'
       -
         save_cache:
           key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
