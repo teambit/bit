@@ -172,6 +172,10 @@ jobs:
           command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
       -
         run:
+          name: 'list files'
+          command: 'cd bit && ls -l'
+      -
+        run:
           name: 'Pack bit'
           command: 'cd bit && npm run pkg'
       -
