@@ -1,5 +1,7 @@
 // @flow
 import path from 'path';
+// This is imported directly to make sure we pack it with bit when creating the binary file
+import 'bit-javascript';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
