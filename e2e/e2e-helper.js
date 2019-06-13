@@ -55,7 +55,7 @@ export default class Helper {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-    const cmdOutput = childProcess.execSync(cmd, { cwd });
+    const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
   }
@@ -138,6 +138,10 @@ export default class Helper {
 
   getBitVersion() {
     return BIT_VERSION;
+  }
+
+  generateRandomTmpDirName() {
+    return path.join(this.e2eDir, generateRandomStr());
   }
   // #endregion
 
@@ -403,6 +407,9 @@ export default class Helper {
   deprecateComponent(id: string, flags: string = '') {
     return this.runCmd(`bit deprecate ${id} ${flags}`);
   }
+  undeprecateComponent(id: string, flags: string = '') {
+    return this.runCmd(`bit undeprecate ${id} ${flags}`);
+  }
   tagComponent(id: string, tagMsg: string = 'tag-message', options: string = '') {
     return this.runCmd(`bit tag ${id} -m ${tagMsg} ${options}`);
   }
@@ -477,9 +484,9 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
-  importDummyCompiler() {
+  importDummyCompiler(dummyType?: string = 'dummy') {
     const id = `${this.envScope}/compilers/dummy`;
-    this.createDummyCompiler();
+    this.createDummyCompiler(dummyType);
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
@@ -673,7 +680,7 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  createDummyCompiler() {
+  createDummyCompiler(dummyType: string) {
     if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
@@ -682,7 +689,7 @@ export default class Helper {
 
     this.runCmd('bit init', tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'dummy');
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
@@ -984,6 +991,21 @@ export default class Helper {
     const distFile = path.join(cwd, newName);
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
+  }
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type
+   */
+  populateWorkspaceWithComponents() {
+    this.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
   }
   // #endregion
 

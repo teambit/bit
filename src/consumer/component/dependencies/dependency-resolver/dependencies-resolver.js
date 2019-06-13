@@ -115,7 +115,11 @@ export default class DependencyResolver {
    * 6) In case the driver found a file dependency that is not on the file-system, we add that file to
    * component.issues.missingDependenciesOnFs
    */
-  async loadDependenciesForComponent(bitDir: string, cacheResolvedDependencies: Object): Promise<Component> {
+  async loadDependenciesForComponent(
+    bitDir: string,
+    cacheResolvedDependencies: Object,
+    cacheProjectAst: ?Object
+  ): Promise<Component> {
     const driver: Driver = this.consumer.driver;
     const { nonTestsFiles, testsFiles } = this.componentMap.getFilesGroupedByBeingTests();
     this.setCompilerFiles();
@@ -128,7 +132,8 @@ export default class DependencyResolver {
         allFiles,
         this.component.bindingPrefix,
         this.consumer.config.resolveModules,
-        cacheResolvedDependencies
+        cacheResolvedDependencies,
+        cacheProjectAst
       );
     };
     // find the dependencies (internal files and packages) through automatic dependency resolution

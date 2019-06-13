@@ -26,7 +26,7 @@ It lets you **extend Git's workflow** to **develop components from any consuming
 
 ## Why?
 
-Modular software makes for better software. It's faster to build, easier to test, simpler to maintain and more fun to collaborate on. Bit turns modularity into a practical commodity, bringing source-code management and reusable modules together. It helps teams build better software faster together.
+Modular software makes for better software. It's faster to build, easier to test, simpler to maintain and more fun to collaborate on. Bit turns modularity into a practical commodity, bringing component source-code management and dependency management together. It helps teams build better software faster together.
 
 *Bit is a collaborative open source project, actively developed and maintained by a venture-backed team and used by more teams and communities every day*.  
 

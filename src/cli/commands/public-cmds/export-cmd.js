@@ -45,7 +45,7 @@ export default class Export extends Command {
       if (R.isEmpty(nonExistOnBitMap)) return '';
       const ids = nonExistOnBitMap.map(id => id.toString()).join(', ');
       return chalk.yellow(
-        `the following components were exported successfully, however, they're not tracked locally, as a result, no local changes have been made\n${ids}\n`
+        `${ids}\nexported successfully. bit did not update the workspace as the component files are not tracked. this might happen when a component was tracked in a different git branch. to fix it check if they where tracked in a different git branch, checkout to that branch and resync by running 'bit import'. or stay on your branch and track the components again using 'bit add'.`
       );
     };
     const ejectOutput = () => {

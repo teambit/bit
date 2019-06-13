@@ -67,6 +67,7 @@ import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
+import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { dependenciesFields } from './config/consumer-overrides';
@@ -75,6 +76,13 @@ import EnvExtension from '../extensions/env-extension';
 import type { EnvType } from '../extensions/env-extension';
 import deleteComponentsFiles from './component-ops/delete-component-files';
 import ComponentsPendingImport from './component-ops/exceptions/components-pending-import';
+import {
+  deprecateRemote,
+  deprecateMany,
+  undeprecateRemote,
+  undeprecateMany
+} from '../scope/component-ops/components-deprecation';
+import type { AutoTagResult } from '../scope/component-ops/auto-tag';
 
 type ConsumerProps = {
   projectPath: string,
@@ -603,7 +611,7 @@ export default class Consumer {
     ignoreUnresolvedDependencies: ?boolean,
     ignoreNewestVersion: boolean,
     skipTests: boolean = false
-  ): Promise<{ taggedComponents: Component[], autoTaggedComponents: ModelComponent[] }> {
+  ): Promise<{ taggedComponents: Component[], autoTaggedResults: AutoTagResult[] }> {
     logger.debug(`tagging the following components: ${ids.toString()}`);
     Analytics.addBreadCrumb('tag', `tagging the following components: ${Analytics.hashData(ids)}`);
     const { components } = await this.loadComponents(ids);
@@ -620,7 +628,7 @@ export default class Consumer {
       throw new ComponentsPendingImport();
     }
 
-    const { taggedComponents, autoTaggedComponents } = await tagModelComponent({
+    const { taggedComponents, autoTaggedResults } = await tagModelComponent({
       consumerComponents: components,
       scope: this.scope,
       message,
@@ -633,10 +641,11 @@ export default class Consumer {
       verbose
     });
 
+    const autoTaggedComponents = autoTaggedResults.map(r => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
     await this._updateComponentsVersions(allComponents);
 
-    return { taggedComponents, autoTaggedComponents };
+    return { taggedComponents, autoTaggedResults };
   }
 
   _updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
@@ -692,8 +701,8 @@ export default class Consumer {
   }
 
   composeRelativeComponentPath(bitId: BitId): string {
-    const componentsDefaultDirectory = this.dirStructure.componentsDefaultDirectory;
-    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
+    const { componentsDefaultDirectory } = this.dirStructure;
+    return composeComponentPath(bitId, componentsDefaultDirectory);
   }
 
   composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
@@ -705,7 +714,7 @@ export default class Consumer {
 
   composeRelativeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return path.join(dependenciesDir, bitId.toFullPath());
+    return composeDependencyPath(bitId, dependenciesDir);
   }
 
   composeDependencyPath(bitId: BitId): PathOsBased {
@@ -792,25 +801,12 @@ export default class Consumer {
     });
   }
 
-  async deprecateRemote(bitIds: Array<BitId>) {
-    const groupedBitsByScope = groupArray(bitIds, 'scope');
-    const remotes = await getScopeRemotes(this.scope);
-    const context = {};
-    enrichContextFromGlobal(context);
-    const deprecateP = Object.keys(groupedBitsByScope).map(async (scopeName) => {
-      const resolvedRemote = await remotes.resolve(scopeName, this.scope);
-      const idsStr = groupedBitsByScope[scopeName].map(id => id.toStringWithoutVersion());
-      const deprecateResult = await resolvedRemote.deprecateMany(idsStr, context);
-      return deprecateResult;
-    });
-    const deprecatedComponentsResult = await Promise.all(deprecateP);
-    return deprecatedComponentsResult;
-  }
-  async deprecateLocal(bitIds: Array<BitId>) {
-    return this.scope.deprecateMany(bitIds);
-  }
   async deprecate(bitIds: BitId[], remote: boolean) {
-    return remote ? this.deprecateRemote(bitIds) : this.deprecateLocal(bitIds);
+    return remote ? deprecateRemote(this.scope, bitIds) : deprecateMany(this.scope, bitIds);
+  }
+
+  async undeprecate(bitIds: BitId[], remote: boolean) {
+    return remote ? undeprecateRemote(this.scope, bitIds) : undeprecateMany(this.scope, bitIds);
   }
 
   /**

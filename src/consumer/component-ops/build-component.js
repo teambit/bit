@@ -1,3 +1,4 @@
+// @flow
 import path from 'path';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
@@ -17,8 +18,9 @@ import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
 import { Dist } from '../component/sources';
 import { writeEnvFiles } from './eject-conf';
-
-// @flow
+import Isolator from '../../environment/isolator';
+import Capsule from '../../../components/core/capsule';
+import ComponentWithDependencies from '../../scope/component-dependencies';
 
 export default (async function buildComponent({
   component,
@@ -76,7 +78,7 @@ export default (async function buildComponent({
     );
   }
 
-  const builtFiles =
+  const compilerResults =
     (await _buildIfNeeded({
       component,
       consumer,
@@ -85,19 +87,31 @@ export default (async function buildComponent({
       keep,
       verbose: !!verbose
     })) || [];
-  // return buildFilesP.then((buildedFiles) => {
+  const { builtFiles, mainDist } = _extractCompilerResults(compilerResults);
   builtFiles.forEach((file) => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
     }
   });
-  component.setDists(builtFiles.map(file => new Dist(file)));
-
+  component.setDists(builtFiles.map(file => new Dist(file)), mainDist);
   if (save) {
     await scope.sources.updateDist({ source: component });
   }
   return component.dists;
 });
+
+function _extractCompilerResults(compilerResults): { builtFiles: Vinyl[], mainDist: ?string } {
+  if (Array.isArray(compilerResults)) {
+    return { builtFiles: compilerResults, mainDist: null };
+  }
+  if (typeof compilerResults === 'object') {
+    if (!compilerResults.dists) {
+      throw new GeneralError('fatal: compiler that returns an object, must include "dists" property');
+    }
+    return { builtFiles: compilerResults.dists, mainDist: compilerResults.mainFile };
+  }
+  throw new GeneralError(`fatal: compiler must return an array or object, instead, got ${typeof compilerResults}`);
+}
 
 async function _buildIfNeeded({
   component,
@@ -126,9 +140,14 @@ async function _buildIfNeeded({
     throw new InvalidCompilerInterface(compiler.name);
   }
 
-  if (consumer) return _runBuild({ component, componentRoot: consumer.getPath(), consumer, componentMap, verbose });
+  const runBuildParams = { component, consumer, scope, componentMap, verbose };
+
+  if (consumer) {
+    return _runBuild({ ...runBuildParams, componentRoot: consumer.getPath() });
+  }
   if (component.isolatedEnvironment) {
-    return _runBuild({ component, componentRoot: component.writtenPath, consumer, componentMap, verbose });
+    // $FlowFixMe
+    return _runBuild({ ...runBuildParams, componentRoot: component.writtenPath });
   }
 
   const isolatedEnvironment = new IsolatedEnvironment(scope, directory);
@@ -141,13 +160,7 @@ async function _buildIfNeeded({
     };
     const componentWithDependencies = await isolatedEnvironment.isolateComponent(component.id, isolateOpts);
     const isolatedComponent = componentWithDependencies.component;
-    const result = await _runBuild({
-      component,
-      componentRoot: isolatedComponent.writtenPath,
-      consumer,
-      componentMap,
-      verbose
-    });
+    const result = await _runBuild({ ...runBuildParams, componentRoot: isolatedComponent.writtenPath });
     if (!keep) await isolatedEnvironment.destroy();
     return result;
   } catch (err) {
@@ -159,7 +172,7 @@ async function _buildIfNeeded({
 // Ideally it's better to use the dists from the model.
 // If there is no consumer, it comes from the scope or isolated environment, which the dists are already saved.
 // If there is consumer, check whether the component was modified. If it wasn't, no need to re-build.
-const _isNeededToReBuild = async (consumer: Consumer, componentId: BitId, noCache: ?boolean): Promise<boolean> => {
+const _isNeededToReBuild = async (consumer: ?Consumer, componentId: BitId, noCache: ?boolean): Promise<boolean> => {
   // Forcly rebuild
   if (noCache) return true;
   if (!consumer) return false;
@@ -171,13 +184,15 @@ const _runBuild = async ({
   component,
   componentRoot,
   consumer,
+  scope,
   componentMap,
   verbose
 }: {
   component: ConsumerComponent,
   componentRoot: PathLinux,
   consumer: ?Consumer,
-  componentMap: ComponentMap,
+  scope: Scope,
+  componentMap: ?ComponentMap,
   verbose: boolean
 }): Promise<Vinyl[]> => {
   const compiler = component.compiler;
@@ -204,10 +219,19 @@ const _runBuild = async ({
         throw new InvalidCompilerInterface(compiler.name);
       }
 
+      const isolateFunc = async (
+        destDir?: string
+      ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
+        const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
+        const componentWithDependencies = await isolator.isolate(component.id, {});
+        return { capsule: isolator.capsule, componentWithDependencies };
+      };
+
       const context: Object = {
         componentObject: component.toObject(),
         rootDistDir,
-        componentDir
+        componentDir,
+        isolate: isolateFunc
       };
 
       // Change the cwd to make sure we found the needed files

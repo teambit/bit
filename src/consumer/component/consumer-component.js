@@ -101,6 +101,7 @@ export type ComponentProps = {
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
+  mainDistFile?: ?PathLinux,
   specsResults?: ?SpecsResults,
   license?: ?License,
   deprecated: ?boolean,
@@ -211,6 +212,7 @@ export default class Component {
     overrides,
     docs,
     dists,
+    mainDistFile,
     specsResults,
     license,
     log,
@@ -243,7 +245,7 @@ export default class Component {
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
     this._docs = docs;
-    this.setDists(dists);
+    this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -309,8 +311,8 @@ export default class Component {
     this.testerDependencies = new Dependencies(testerDependencies);
   }
 
-  setDists(dists?: Dist[]) {
-    this.dists = new Dists(dists);
+  setDists(dists: ?(Dist[]), mainDistFile?: ?PathOsBased) {
+    this.dists = new Dists(dists, mainDistFile);
   }
 
   getFileExtension(): string {
@@ -345,14 +347,17 @@ export default class Component {
   }
 
   async writeConfig(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfResult> {
-    const ejectConfData = await this.getConfigToWrite(consumer, configDir);
+    const ejectConfData = await this.getConfigToWrite(consumer, consumer.bitMap, configDir);
     if (consumer) ejectConfData.dataToPersist.addBasePath(consumer.getPath());
     await ejectConfData.dataToPersist.persistAllToFS();
     return ejectConfData;
   }
 
-  async getConfigToWrite(consumer: Consumer, configDir: PathOsBased | ConfigDir): Promise<EjectConfData> {
-    const bitMap: BitMap = consumer.bitMap;
+  async getConfigToWrite(
+    consumer: ?Consumer,
+    bitMap: BitMap,
+    configDir: PathOsBased | ConfigDir
+  ): Promise<EjectConfData> {
     this.componentMap = this.componentMap || bitMap.getComponentIfExist(this.id);
     const componentMap = this.componentMap;
     if (!componentMap) {
@@ -370,7 +375,7 @@ export default class Component {
       if (!isCompilerDetached && !isTesterDetached) throw new EjectBoundToWorkspace();
     }
 
-    const res = await getEjectConfDataToPersist(this, consumer, configDirInstance);
+    const res = await getEjectConfDataToPersist(this, consumer, consumer.bitMap, configDirInstance);
     if (this.componentMap) {
       this.componentMap.setConfigDir(res.ejectedPath);
     }
@@ -824,7 +829,7 @@ export default class Component {
       // when loaded from filesystem, it doesn't have the flatten, fetch them from model.
       return this.loadedFromFileSystem ? this.componentFromModel[field] : this[field];
     };
-    const getDependenciesComponents = (ids: BitIds) => {
+    const getDependenciesComponents = (ids: BitIds): Component[] => {
       return Promise.all(
         ids.map((dependencyId) => {
           if (consumer.bitMap.isExistWithSameVersion(dependencyId)) {
@@ -966,6 +971,7 @@ export default class Component {
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
+    const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
@@ -1095,6 +1101,7 @@ export default class Component {
       loadedFromFileSystem: true,
       componentMap,
       dists,
+      mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,

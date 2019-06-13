@@ -3,6 +3,7 @@ import R from 'ramda';
 import chalk from 'chalk';
 import { deprecate } from '../../../api/consumer';
 import Command from '../../command';
+import type { DeprecationResult } from '../../../scope/component-ops/components-deprecation';
 
 export default class Deprecate extends Command {
   name = 'deprecate <ids...>';
@@ -12,19 +13,23 @@ export default class Deprecate extends Command {
   loader = true;
   migration = true;
 
-  action([ids]: [string], { remote = false }: { remote: Boolean }): Promise<any> {
+  action([ids]: [string], { remote = false }: { remote: boolean }): Promise<any> {
     return deprecate({ ids, remote });
   }
 
-  report(bitObj: Object | Array<any>): string {
-    return Array.isArray(bitObj) ? this.paintMany(bitObj) : this.paintSingle(bitObj);
+  report(deprecationResult: DeprecationResult | DeprecationResult[]): string {
+    const paintMissingComponents = missingComponents =>
+      (!R.isEmpty(missingComponents)
+        ? chalk.underline('missing components:') + chalk(` ${missingComponents.join(', ')}\n`)
+        : '');
+    const paintRemoved = bitIds =>
+      (!R.isEmpty(bitIds) && !R.isNil(bitIds)
+        ? chalk.underline('deprecated components:') + chalk(` ${bitIds.join(', ')}\n`)
+        : '');
+    const paintSingle = obj => paintRemoved(obj.bitIds) + paintMissingComponents(obj.missingComponents);
+    const paintMany = (deprecationResults: DeprecationResult[]) =>
+      deprecationResults.map(obj => paintSingle(obj)).join('\n');
+
+    return Array.isArray(deprecationResult) ? paintMany(deprecationResult) : paintSingle(deprecationResult);
   }
-
-  paintMissingComponents = missingComponents =>
-    (!R.isEmpty(missingComponents) ? chalk.underline('missing components:') + chalk(` ${missingComponents}\n`) : '');
-  paintRemoved = bitIds =>
-    (!R.isEmpty(bitIds) && !R.isNil(bitIds) ? chalk.underline('deprecated components:') + chalk(` ${bitIds}\n`) : '');
-  paintSingle = bitObj => this.paintRemoved(bitObj.bitIds) + this.paintMissingComponents(bitObj.missingComponents);
-
-  paintMany = bitObjs => bitObjs.map(obj => this.paintSingle(obj));
 }

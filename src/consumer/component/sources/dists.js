@@ -55,8 +55,10 @@ export default class Dists {
   areDistsInsideComponentDir: ?boolean = true;
   distEntryShouldBeStripped: ?boolean = false;
   _distsPathsAreUpdated: ?boolean = false; // makes sure to not update twice
+  _mainDistFile: ?PathOsBasedRelative;
   distsRootDir: ?PathOsBasedRelative; // populated only after getDistDirForConsumer() is called
-  constructor(dists?: ?(Dist[])) {
+  constructor(dists?: ?(Dist[]), mainDistFile: ?PathOsBased) {
+    this._mainDistFile = mainDistFile;
     this.dists = dists || []; // cover also case of null (when it comes from the model)
   }
 
@@ -70,6 +72,9 @@ export default class Dists {
 
   getAsReadable(): string[] {
     return this.dists.map(file => file.toReadableString());
+  }
+  getMainDistFile() {
+    return this._mainDistFile;
   }
 
   /**
@@ -135,6 +140,10 @@ export default class Dists {
       return dist.relative;
     };
     this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
+    this._mainDistFile =
+      this._mainDistFile && distEntryShouldBeStripped // $FlowFixMe distEntry is set when distEntryShouldBeStripped
+        ? this._mainDistFile.replace(distEntry, '')
+        : this._mainDistFile;
     this._distsPathsAreUpdated = true;
   }
 
@@ -143,6 +152,9 @@ export default class Dists {
       const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir);
       distFile.updatePaths({ newBase: distFile.base, newRelative });
     });
+    this._mainDistFile = this._mainDistFile
+      ? pathWithoutSharedDir(this._mainDistFile, originallySharedDir)
+      : this._mainDistFile;
   }
 
   /**
@@ -162,7 +174,7 @@ export default class Dists {
    */
   async getDistsToWrite(
     component: Component,
-    consumer?: Consumer,
+    consumer: ?Consumer,
     writeLinks?: boolean = true
   ): Promise<?DataToPersist> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
@@ -185,23 +197,25 @@ export default class Dists {
   // In case there are dist files, we want to point the index to the main dist file, not to source.
   // This important since when you require a module without specify file, it will give you the file specified under this key
   // (or index.js if key not exists)
-  calculateMainDistFile(componentMainFile: PathOsBased): PathOsBased {
+  calculateMainDistFile(mainSourceFile: PathOsBased): PathOsBased {
     if (this.writeDistsFiles && this.areDistsInsideComponentDir) {
-      // Take the only dist file if there is only one or search for one with the same name as the main source file
-      const mainFile =
-        this.dists && this.dists.length === 1
-          ? this.dists[0].relative
-          : searchFilesIgnoreExt(this.dists, componentMainFile, 'relative');
+      const getMainFile = () => {
+        if (this._mainDistFile) return this._mainDistFile;
+        // Take the only dist file if there is only one or search for one with the same name as the main source file
+        if (this.dists && this.dists.length === 1) return this.dists[0].relative;
+        return searchFilesIgnoreExt(this.dists, mainSourceFile, 'relative');
+      };
+      const mainFile = getMainFile();
       if (mainFile) return path.join(DEFAULT_DIST_DIRNAME, mainFile);
     }
-    return componentMainFile;
+    return this._mainDistFile || mainSourceFile;
   }
 
   /**
    * authored components have the dists outside the components dir and they don't have rootDir.
    * it returns the file or dist file relative to consumer-root.
    */
-  calculateDistFileForAuthored(componentFile: PathOsBased, consumer: Consumer): PathOsBased {
+  calculateDistFileForAuthored(componentFile: PathOsBased, consumer: Consumer, isMain: boolean): PathOsBased {
     if (this.isEmpty()) return componentFile;
     const getFileToSearch = (): PathOsBased => {
       if (!consumer.config.distEntry) return componentFile;
@@ -209,7 +223,8 @@ export default class Dists {
       return componentFile.replace(`${distEntryNormalized}${path.sep}`, '');
     };
     const fileToSearch = getFileToSearch();
-    const distFile = searchFilesIgnoreExt(this.dists, fileToSearch, 'relative');
+    const distFile =
+      isMain && this._mainDistFile ? this._mainDistFile : searchFilesIgnoreExt(this.dists, fileToSearch, 'relative');
     if (!distFile) return componentFile;
     const distTarget = consumer.config.distTarget || DEFAULT_DIST_DIRNAME;
     return path.join(distTarget, distFile);
@@ -219,7 +234,7 @@ export default class Dists {
     consumer: Consumer,
     originallySharedDir: ?PathLinux,
     compiler: ?CompilerExtension
-  ): ?(DistFileModel[]) {
+  ): { dists?: DistFileModel[], mainDistFile?: ?PathOsBasedRelative } {
     // when a component is written to the filesystem, the originallySharedDir may be stripped, if it was, the
     // originallySharedDir is written in bit.map, and then set in consumerComponent.originallySharedDir when loaded.
     // similarly, when the dists are written to the filesystem, the dist.entry may be stripped, if it was, the
@@ -234,16 +249,19 @@ export default class Dists {
       return pathNormalizeToLinux(withDistEntry);
     };
 
-    if (this.isEmpty() || !compiler) return null;
+    if (this.isEmpty() || !compiler) return {};
 
-    return this.get().map((dist) => {
+    const dists = this.get().map((dist) => {
       return {
         name: dist.basename,
-        relativePath: addSharedDirAndDistEntry(dist.relative), // $FlowFixMe
+        relativePath: addSharedDirAndDistEntry(dist.relative),
         file: Source.from(dist.contents),
         test: dist.test
       };
     });
+    const mainDistFile = this._mainDistFile ? addSharedDirAndDistEntry(this._mainDistFile) : this._mainDistFile;
+    // $FlowFixMe
+    return { dists, mainDistFile };
   }
 
   /**

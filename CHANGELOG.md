@@ -7,34 +7,62 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.1.2-dev.4] - 2019-05-28
+## [14.1.4-angular.3] - 2019-06-12
 
-- restore node 6 support
+- support different main-file for dists
 
-## [14.1.2-dev.3] - 2019-05-28
+## [14.1.4-angular.2] - 2019-06-11
 
-- improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
+- add option to isolate component into "capsule"
+- enable compilers to isolate components using capsule
+
+## [14.1.4-angular.1] - 2019-06-10
+
+- support identify angular dependencies
+
+## [14.1.3] - 2019-06-06
+
+### Bug fixes
+
+- [#1708](https://github.com/teambit/bit/issues/1708) support `require` with apostrophes
+- [#1698](https://github.com/teambit/bit/issues/1698) fix dependency version resolution when imported component requires authored component
+- [#1702](https://github.com/teambit/bit/issues/1702) fix error "failed adding a symlink into DataToPersist, src is empty"
+- [#1699](https://github.com/teambit/bit/issues/1699) fix config.get is not a function
+
+## [14.1.2] - 2019-06-02
+
+### New
+
+- introduce a new command `bit undeprecate` to revert deprecation of components
+- introduce a new flag `--machine-name` for `bit login` to help CI servers keep their token not revoked
+- support `bit import` with wildcards to import an entire scope or particular namespace(s)
+- support changing the log to json format by running `bit config set log_json_format true`
 - add bit version validation to `bit doctor` command
-- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
-- fix `bit eject` to support component custom npm registry scope
-- add suggestion to run `bit doctor` on various errors
-- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
-- avoid generating links of devDependencies when installing component as packages (#1614)
-
-## [14.1.2-dev.2] - 2019-05-20
-
-- add metadata to `bit doctor` output
 - add validation for npm executable on `bit doctor`
 - add validation for yarn executable on `bit doctor`
+
+### Changes
+
+- sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
+- [#1627](https://github.com/teambit/bit/issues/1627) improve `bit tag` output
+- add a suggestion to run `bit doctor` on various errors
+- avoid generating links of devDependencies when installing component as packages (#1614)
+- add metadata to `bit doctor` output
 - update `bit add` help message with instructions for using glob patterns with `--tests`
-
-## [14.1.2-dev.1] - 2019-05-20
-
-- ignore `import`/`require` statements from CDN (http/https)
-- avoid generating package.json inside node_modules for author when one of the component files is package.json
-- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
 - rewrite dependencies when installed as components even when exist to rebuild their dist directory
+
+### Bug fixes
+
+- [#1665](https://github.com/teambit/bit/issues/1665) fix resolve-modules prefix with Tilda
+- improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
+- ignore `import`/`require` statements from CDN (HTTP/HTTPS)
+- avoid generating package.json inside node_modules for an author when one of the component files is package.json
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
 - show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
 
 ## [14.1.1] - 2019-05-16
 

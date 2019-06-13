@@ -4,6 +4,7 @@ import fs from 'fs-extra';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { AUTO_TAGGED_MSG } from '../../src/cli/commands/public-cmds/tag-cmd';
 
 chai.use(require('chai-fs'));
 
@@ -43,7 +44,7 @@ describe('auto tagging functionality', function () {
         const statusOutput = helper.runCmd('bit status');
         expect(statusOutput).to.have.string('components pending to be tagged automatically');
         const tagOutput = helper.tagComponent('utils/is-type');
-        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
         expect(tagOutput).to.have.string('utils/is-string');
         // notice how is-string is not manually tagged again!
         helper.exportAllComponents();
@@ -65,7 +66,7 @@ describe('auto tagging functionality', function () {
           const isTypeFixtureV3 = "module.exports = function isType() { return 'got is-type v3'; };";
           helper.createFile('utils', 'is-type.js', isTypeFixtureV3); // modify is-type
           const tagOutput = helper.tagComponent('utils/is-type');
-          expect(tagOutput).to.have.string('auto-tagged components');
+          expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
           expect(tagOutput).to.have.string('utils/is-string');
         });
         it('the dependent should not be shown as modified after the tag', () => {
@@ -98,7 +99,7 @@ describe('auto tagging functionality', function () {
       });
       it('should auto-tag the dependents', () => {
         expect(tagOutput).to.not.have.string('no auto-tag pending components');
-        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
         expect(tagOutput).to.have.string('utils/is-string');
       });
       it('should use the updated dependencies and print the results from the latest versions', () => {
@@ -222,7 +223,7 @@ describe('auto tagging functionality', function () {
         tagOutput = helper.tagComponent('utils/is-type');
       });
       it('should auto tag the dependencies and the nested dependencies', () => {
-        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
         expect(tagOutput).to.have.string('utils/is-string@0.0.2');
         expect(tagOutput).to.have.string('bar/foo@0.0.2');
       });
@@ -291,7 +292,7 @@ describe('auto tagging functionality', function () {
       });
       it('should auto-tag the dependents', () => {
         expect(tagOutput).to.not.have.string('no auto-tag pending components');
-        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
         expect(tagOutput).to.have.string('utils/is-string');
         expect(tagOutput).to.have.string('bar/foo');
       });
@@ -342,7 +343,7 @@ describe('auto tagging functionality', function () {
         tagOutput = helper.tagAllComponents();
       });
       it('should auto tag only IMPORTED', () => {
-        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
         expect(tagOutput).to.have.string('bar/c@0.0.2');
         expect(tagOutput).to.have.string('bar/d@0.0.2');
         expect(tagOutput).to.not.have.string('bar/b');
@@ -401,7 +402,7 @@ describe('auto tagging functionality', function () {
         tagOutput = helper.tagAllComponents();
       });
       it('should auto tag all dependents', () => {
-        expect(tagOutput).to.have.string('auto-tagged components');
+        expect(tagOutput).to.have.string(AUTO_TAGGED_MSG);
         expect(tagOutput).to.have.string('bar/a@0.0.2');
         expect(tagOutput).to.have.string('bar/b@0.0.2');
       });

@@ -20,7 +20,15 @@ import {
 } from '../../constants';
 import { InvalidBitMap, MissingMainFile, MissingBitMapComponent } from './exceptions';
 import { BitId, BitIds } from '../../bit-id';
-import { outputFile, pathNormalizeToLinux, pathJoinLinux, isDir, pathIsInside, stripTrailingChar } from '../../utils';
+import {
+  outputFile,
+  pathNormalizeToLinux,
+  pathJoinLinux,
+  isDir,
+  pathIsInside,
+  stripTrailingChar,
+  sortObject
+} from '../../utils';
 import ComponentMap from './component-map';
 import type { ComponentMapFile, ComponentOrigin, PathChange } from './component-map';
 import type { PathLinux, PathOsBased, PathOsBasedRelative, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
@@ -740,23 +748,6 @@ export default class BitMap {
   removeComponents(ids: BitIds) {
     return ids.map(id => this.removeComponent(id));
   }
-  addMainDistFileToComponent(id: string, distFilesPaths: string[]): void {
-    if (!this.components[id]) {
-      logger.warn(`unable to find the component ${id} in bit.map file`);
-      return;
-    }
-    const distFilesPathsNormalized = distFilesPaths.map(filePath => pathNormalizeToLinux(filePath));
-
-    const mainDistFile = distFilesPathsNormalized.find(distFile => distFile.endsWith(this.components[id].mainFile));
-    if (!mainDistFile) {
-      logger.warn(
-        `unable to find the main dist file of component ${id}. Dist files: ${distFilesPathsNormalized.join(', ')}`
-      );
-      return;
-    }
-    this.components[id].mainDistFile = this._makePathRelativeToProjectRoot(mainDistFile);
-    this.markAsChanged();
-  }
 
   isExistWithSameVersion(id: BitId) {
     return id.hasVersion() && this.components[id.toString()];
@@ -887,7 +878,7 @@ export default class BitMap {
       components[id] = componentMap.toPlainObject();
     });
 
-    return components;
+    return sortObject(components);
   }
 
   /**

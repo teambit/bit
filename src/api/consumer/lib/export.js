@@ -81,7 +81,7 @@ async function getComponentsToExport(ids?: string[], consumer: Consumer, remote:
   return BitIds.fromArray(idsToExport);
 }
 
-async function getParsedId(consumer: Consumer, id: string) {
+async function getParsedId(consumer: Consumer, id: string): Promise<BitId> {
   // reason why not calling `consumer.getParsedId()` first is because a component might not be on
   // .bitmap and only in the scope. we support this case and enable to export
   const parsedId: BitId = await consumer.scope.getParsedId(id);
@@ -101,7 +101,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // some of the components might be authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const components = await Promise.all(ids.map(id => consumer.loadComponentFromModel(id)));
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   await nodeModuleLinker.link();
 }
 

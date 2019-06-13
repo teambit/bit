@@ -10,7 +10,7 @@ import { BitId, BitIds } from '../../bit-id';
 import BitMap from '../bit-map/bit-map';
 import type Consumer from '../consumer';
 import { filterAsync } from '../../utils';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, LATEST } from '../../constants';
 import NoIdMatchWildcard from '../../api/consumer/lib/exceptions/no-id-match-wildcard';
 import { fetchRemoteVersions } from '../../scope/scope-remotes';
 import isBitIdMatchByWildcards from '../../utils/bit/is-bit-id-match-by-wildcards';
@@ -207,7 +207,23 @@ export default class ComponentsList {
   async listExportPendingComponentsIds(): Promise<BitIds> {
     const modelComponents = await this.getModelComponents();
     const pendingExportComponents = modelComponents.filter(component => component.isLocallyChanged());
-    return BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
+    const ids = BitIds.fromArray(pendingExportComponents.map(c => c.toBitId()));
+    return this.updateIdsFromModelIfTheyOutOfSync(ids);
+  }
+
+  async updateIdsFromModelIfTheyOutOfSync(ids: BitIds): Promise<BitIds> {
+    const authoredAndImported = this.bitMap.getAuthoredAndImportedBitIds();
+    const updatedIdsP = ids.map(async (id: BitId) => {
+      const idFromBitMap = authoredAndImported.searchWithoutScopeAndVersion(id);
+      if (idFromBitMap && !idFromBitMap.hasVersion()) {
+        // component is out of sync, fix it by loading it from the consumer
+        const component = await this.consumer.loadComponent(id.changeVersion(LATEST));
+        return component.id;
+      }
+      return id;
+    });
+    const updatedIds = await Promise.all(updatedIdsP);
+    return BitIds.fromArray(updatedIds);
   }
 
   async listExportPendingComponents(): Promise<ModelComponent[]> {
@@ -317,9 +333,12 @@ export default class ComponentsList {
   /**
    * get called from a bare-scope, shows only components of that scope
    */
-  static async listLocalScope(scope: Scope): Promise<ListScopeResult[]> {
+  static async listLocalScope(scope: Scope, namespacesUsingWildcards?: string): Promise<ListScopeResult[]> {
     const components = await scope.listLocal();
-    const componentsSorted = ComponentsList.sortComponentsByName(components);
+    const componentsFilteredByWildcards = namespacesUsingWildcards
+      ? ComponentsList.filterComponentsByWildcard(components, namespacesUsingWildcards)
+      : components;
+    const componentsSorted = ComponentsList.sortComponentsByName(componentsFilteredByWildcards);
     return componentsSorted.map((component: ModelComponent) => ({
       id: component.toBitIdWithLatestVersion(),
       deprecated: component.deprecated
