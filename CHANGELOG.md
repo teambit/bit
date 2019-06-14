@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-angular.4] - 2019-06-14
+
 - [#1734](https://github.com/teambit/bit/issues/1734) fix error "unable to add the file ..." when the require statement was of `.` or `..` as the only string
 
 ## [14.1.4-angular.3] - 2019-06-12
