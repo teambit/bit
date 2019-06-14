@@ -11,6 +11,7 @@ import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
 
 import PackageJsonFile from '../consumer/component/package-json-file';
+import type Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 
@@ -110,6 +111,7 @@ export default class Isolator {
     // rather than fetching its folder and using it
     const rootPathInCapsule = path.join(capsulePath, rootDir);
     const componentsToAdd = components.reduce((acc, component) => {
+      // $FlowFixMe - writtenPath is defined
       const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
       const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
       const locationAsUnixFormat = convertToValidPathForPackageManager(relativeDepLocation);
