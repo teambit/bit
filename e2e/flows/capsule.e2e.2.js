@@ -4,7 +4,7 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 
-describe.only('capsule', function () {
+describe('capsule', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
