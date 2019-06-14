@@ -1,6 +1,6 @@
 {
   "name": "bit-javascript",
-  "version": "2.0.12-angular.2",
+  "version": "2.0.12-angular.3",
   "scripts": {
     "flow": "flow; test $? -eq 0 -o $? -eq 2",
     "lint": "eslint src && flow check || true",

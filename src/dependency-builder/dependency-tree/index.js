@@ -139,9 +139,7 @@ module.exports._getDependencies = function (config) {
     if (!isDependenciesArray && dependenciesRaw[dependency].importSpecifiers) {
       pathMap.importSpecifiers = dependenciesRaw[dependency].importSpecifiers;
     }
-    if (!isRelativeImport(dependency) && config.resolveConfig) {
-      // is includes also packages, which actually don't use customResolve, however, they will be
-      // filtered out later.
+    if (cabinetParams.wasCustomResolveUsed) {
       pathMap.isCustomResolveUsed = true;
     }
 

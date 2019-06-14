@@ -17,25 +17,26 @@ module.exports = function (options) {
   const { script, styles } = compiler.parseComponent(fileContent.toString(), { pad: 'line' });
   if (isScript) {
     const scriptExt = script.lang ? languageMap[script.lang] || script.lang : DEFAULT_SCRIPT_LANG;
-    return cabinet({
-      partial,
-      filename,
-      directory: path.dirname(filename),
-      content: script.content,
-      resolveConfig,
-      ext: `.${scriptExt}` || path.extname(partial)
-    });
+    return cabinet(
+      Object.assign(options, {
+        directory: path.dirname(filename),
+        content: script.content,
+        ast: null,
+        ext: `.${scriptExt}` || path.extname(partial)
+      })
+    );
   }
   const stylesResult = styles.map((style) => {
     const styleExt = style.lang ? languageMap[style.lang] || style.lang : DEFAULT_STYLE_LANG;
-    return cabinet({
-      partial,
-      filename: `${path.join(path.dirname(filename), path.parse(filename).name)}.${styleExt}`,
-      directory: path.dirname(filename),
-      content: style.content,
-      resolveConfig,
-      ext: `.${styleExt}`
-    });
+    return cabinet(
+      Object.assign(options, {
+        filename: `${path.join(path.dirname(filename), path.parse(filename).name)}.${styleExt}`,
+        directory: path.dirname(filename),
+        content: style.content,
+        ast: null,
+        ext: `.${styleExt}`
+      })
+    );
   });
   return stylesResult[0];
 };

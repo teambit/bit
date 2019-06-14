@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.12-angular.3] - 2019-06-14
+
+- fix dependency resolution of `.` and `..` to not be identified as custom-resolved used.
+
 ## [2.0.12-angular.2] - 2019-06-10
 
 - add rxjs package

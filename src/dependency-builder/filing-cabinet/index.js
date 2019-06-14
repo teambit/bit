@@ -52,7 +52,8 @@ type Options = {
   isScript?: boolean, // relevant for Vue files
   ast?: string,
   ext?: string,
-  content?: string
+  content?: string,
+  wasCustomResolveUsed?: boolean
 };
 
 module.exports = function cabinet(options: Options) {
@@ -163,18 +164,7 @@ module.exports._getJSType = function (options) {
  * @return {String}
  */
 function jsLookup(options: Options) {
-  const {
-    configPath,
-    partial,
-    directory,
-    config,
-    webpackConfig,
-    filename,
-    ast,
-    isScript,
-    content,
-    resolveConfig
-  } = options;
+  const { configPath, partial, directory, config, webpackConfig, filename, ast, isScript, content } = options;
   const type = module.exports._getJSType({
     config,
     webpackConfig,
@@ -204,7 +194,7 @@ function jsLookup(options: Options) {
     case 'es6':
     default:
       debug(`using commonjs resolver ${type}`);
-      return commonJSLookup(partial, filename, directory, resolveConfig);
+      return commonJSLookup(options);
   }
 }
 
@@ -225,7 +215,10 @@ function cssPreprocessorLookup(options: Options) {
   const { filename, partial, directory, resolveConfig } = options;
   if (resolveConfig && !isRelativeImport(partial)) {
     const result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
-    if (result) return result;
+    if (result) {
+      options.wasCustomResolveUsed = true;
+      return result;
+    }
   }
   if (partial.startsWith('~') && !partial.startsWith('~/')) {
     // webpack syntax for resolving a module from node_modules
@@ -239,10 +232,10 @@ function cssPreprocessorLookup(options: Options) {
 }
 
 function tsLookup(options: Options) {
-  const { partial, filename, directory, resolveConfig } = options;
+  const { partial, filename } = options;
   if (partial[0] !== '.') {
     // when a path is not relative, use the standard commonJS lookup
-    return commonJSLookup(partial, filename, directory, resolveConfig);
+    return commonJSLookup(options);
   }
   debug('performing a typescript lookup');
 
@@ -262,7 +255,7 @@ function tsLookup(options: Options) {
   if (!resolvedModule) {
     // ts.resolveModuleName doesn't always work, fallback to commonJSLookup
     debug('failed resolving with tsLookup, trying commonJSLookup');
-    return commonJSLookup(partial, filename, directory, resolveConfig);
+    return commonJSLookup(options);
   }
   debug('ts resolved module: ', resolvedModule);
   const result = resolvedModule ? resolvedModule.resolvedFileName : '';
@@ -291,8 +284,9 @@ function resolveNonRelativePath(partial, filename, directory, resolveConfig) {
  * @param  {String} directory
  * @return {String}
  */
-function commonJSLookup(partial, filename, directory, resolveConfig) {
-  directory = path.dirname(filename); // node_modules should be propagated from the file location backwards
+function commonJSLookup(options: Options) {
+  const { filename, resolveConfig } = options;
+  const directory = path.dirname(filename); // node_modules should be propagated from the file location backwards
   // Need to resolve partials within the directory of the module, not filing-cabinet
   const moduleLookupDir = path.join(directory, 'node_modules');
 
@@ -302,6 +296,7 @@ function commonJSLookup(partial, filename, directory, resolveConfig) {
 
   // Make sure the partial is being resolved to the filename's context
   // 3rd party modules will not be relative
+  let partial = options.partial;
   if (partial[0] === '.') {
     partial = path.resolve(path.dirname(filename), partial);
   }
@@ -319,6 +314,7 @@ function commonJSLookup(partial, filename, directory, resolveConfig) {
     if (!isRelativeImport(partial) && resolveConfig) {
       debug(`trying to resolve using resolveConfig ${JSON.stringify(resolveConfig)}`);
       result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+      if (result) options.wasCustomResolveUsed = true;
     } else {
       debug(`could not resolve ${partial}`);
     }

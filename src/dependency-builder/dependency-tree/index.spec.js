@@ -16,6 +16,7 @@ require('../../utils');
 require('../../utils/is-relative-import');
 require('../../dependency-builder/detectives/detective-css-and-preprocessors');
 require('../../dependency-builder/detectives/detective-typescript');
+require('../../dependency-builder/detectives/parser-helper');
 
 const dependencyTree = rewire('./');
 const fixtures = path.resolve(`${__dirname}/../../../fixtures/dependency-tree`);
@@ -916,6 +917,54 @@ describe('dependencyTree', function () {
         visited
       });
       expect(visited[filename].missing).to.be.undefined;
+    });
+  });
+  describe('resolve config when the dependency is "."', () => {
+    it('should not set the dependency with isCustomResolveUsed=true', () => {
+      mockfs({
+        [`${__dirname}/src`]: {
+          'foo.js': "require('.');",
+          'index.js': 'module.exports = {}'
+        }
+      });
+      const directory = path.normalize(`${__dirname}/src`);
+      const filename = path.normalize(`${directory}/foo.js`);
+      const config = {
+        filename,
+        directory,
+        pathMap: [],
+        resolveConfig: { aliases: { something: 'anything' } }
+      };
+      dependencyTree(config);
+      const pathMapRecord = config.pathMap.find(f => f.file === filename);
+      expect(pathMapRecord.dependencies).to.have.lengthOf(1);
+      const dependency = pathMapRecord.dependencies[0];
+      expect(dependency).to.not.have.property('isCustomResolveUsed');
+    });
+  });
+  describe('resolve config when the dependency is ".."', () => {
+    it('should not set the dependency with isCustomResolveUsed=true', () => {
+      mockfs({
+        [`${__dirname}/src`]: {
+          'index.js': 'module.exports = {}',
+          bar: {
+            'foo.js': "require('..');"
+          }
+        }
+      });
+      const directory = path.normalize(`${__dirname}/src`);
+      const filename = path.normalize(`${directory}/bar/foo.js`);
+      const config = {
+        filename,
+        directory,
+        pathMap: [],
+        resolveConfig: { aliases: { something: 'anything' } }
+      };
+      dependencyTree(config);
+      const pathMapRecord = config.pathMap.find(f => f.file === filename);
+      expect(pathMapRecord.dependencies).to.have.lengthOf(1);
+      const dependency = pathMapRecord.dependencies[0];
+      expect(dependency).to.not.have.property('isCustomResolveUsed');
     });
   });
 });
