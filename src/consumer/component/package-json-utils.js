@@ -229,7 +229,7 @@ async function removeComponentsFromNodeModules(consumer: Consumer, componentIds:
   return Promise.all(pathsToRemove.map(componentPath => fs.remove(consumer.toAbsolutePath(componentPath))));
 }
 
-function convertToValidPathForPackageManager(pathStr: PathLinux): string {
+export function convertToValidPathForPackageManager(pathStr: PathLinux): string {
   const prefix = 'file:'; // it works for both, Yarn and NPM
   return prefix + (pathStr.startsWith('.') ? pathStr : `./${pathStr}`);
 }

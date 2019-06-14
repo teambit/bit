@@ -4,7 +4,7 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 
-describe('capsule', function () {
+describe.only('capsule', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -21,6 +21,19 @@ describe('capsule', function () {
     it('should have the components and dependencies installed correctly with all the links', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+  });
+  describe('new components with package dependencies (untagged)', () => {
+    const capsuleDir = helper.generateRandomTmpDirName();
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponentsAndPackages();
+      helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFoo);
+    });
+    it('should have the components and dependencies installed correctly with all the links', () => {
+      const result = helper.runCmd('node app.js', capsuleDir);
+      expect(result.trim()).to.equal('0000got is-type and got is-string and got foo');
     });
   });
   describe('tagged components with dependencies (before export)', () => {

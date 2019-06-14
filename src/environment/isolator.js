@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import path from 'path';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -8,6 +9,10 @@ import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
+
+import PackageJsonFile from '../consumer/component/package-json-file';
+import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
+import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 
 export default class Isolator {
   capsule: Capsule;
@@ -54,6 +59,10 @@ export default class Isolator {
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule([componentWithDependencies]);
+    await this._addComponentsToRoot(
+      componentWithDependencies.component.writtenPath,
+      componentWithDependencies.allDependencies
+    );
     logger.debug('ManyComponentsWriter, install packages on capsule');
     await this._installPackages(componentWithDependencies.component.writtenPath);
     const links = await manyComponentsWriter._getAllLinks();
@@ -93,14 +102,28 @@ export default class Isolator {
     return Promise.all(R.flatten(persistP));
   }
 
+  async _addComponentsToRoot(rootDir: string, components: Component[]): Promise<void> {
+    const capsulePath = this.capsule.container.getPath();
+    // the capsulePath hack only works for the fs-capsule
+    // for other capsule types, we would need to do this
+    // (and other things) inside the capsule itself
+    // rather than fetching its folder and using it
+    const rootPathInCapsule = path.join(capsulePath, rootDir);
+    const componentsToAdd = components.reduce((acc, component) => {
+      const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
+      const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
+      const locationAsUnixFormat = convertToValidPathForPackageManager(relativeDepLocation);
+      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+      acc[packageName] = locationAsUnixFormat;
+      return acc;
+    }, {});
+    if (R.isEmpty(componentsToAdd)) return;
+    const packageJsonFile = await PackageJsonFile.load(rootPathInCapsule);
+    packageJsonFile.addDependencies(componentsToAdd);
+    await packageJsonFile.write();
+  }
+
   async _installPackages(directory: string) {
-    await this.capsule.exec('npm version 1.0.0', { cwd: directory });
-    // *** ugly hack alert ***
-    // we change the version to 1.0.0 here because for untagged
-    // components, the version is set by bit to "latest" in the package.json
-    // this is an invalid semver, and so npm refuses to install.
-    // A better fix would be to change this behaviour of bit, but that is a much bigger
-    // change. Until the capsule API is finalized, ths should do
     const execResults = await this.capsule.exec('npm install', { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {

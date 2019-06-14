@@ -76,7 +76,16 @@ export default class DataToPersist {
     // );
     await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
-    await Promise.all(this.symlinks.map(symlink => capsule.symlink(symlink.src, symlink.dest)));
+    await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
+  }
+  async atomicSymlink(capsule: Capsule, symlink: Symlink) {
+    try {
+      await capsule.symlink(symlink.src, symlink.dest);
+    } catch (e) {
+      if (e.code !== 'EEXIST') {
+        throw e;
+      }
+    }
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
