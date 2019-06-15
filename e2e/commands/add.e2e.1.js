@@ -1213,6 +1213,39 @@ describe('bit add command', function () {
       expect(output).to.have.string('tracking 4 new components');
     });
   });
+  describe.skip('running add command with id without any path to change a component', () => {
+    let scopeAfterAdd;
+    before(() => {
+      helper.reInitLocalScope();
+      helper.createFile('src', 'main1.js');
+      helper.createFile('src', 'main2.js');
+      helper.createFile('src', 'main1.spec.js');
+      helper.createFile('src', 'main2.spec.js');
+      helper.addComponent('src/main1.js', { i: 'foo' });
+      scopeAfterAdd = helper.cloneLocalScope();
+    });
+    describe('changing the main file', () => {
+      before(() => {
+        helper.addComponent('', { i: 'foo', m: 'src/main2.js' });
+      });
+      it('should change the main file', () => {
+        const bitMap = helper.readBitMap();
+        expect(bitMap.foo.mainFile).to.equal('src/main2.js');
+      });
+    });
+    describe('adding test files', () => {
+      before(() => {
+        helper.getClonedLocalScope(scopeAfterAdd);
+        helper.addComponent('', { i: 'foo', t: 'src/main1.spec.js' });
+      });
+      it('should add the test files', () => {
+        const bitMap = helper.readBitMap();
+        const specFile = bitMap.foo.files.find(f => f.relativePath === 'src/main1.spec.js');
+        expect(specFile).to.not.be.undefined;
+        expect(specFile.test).to.be.true;
+      });
+    });
+  });
   describe('sort .bitmap components', () => {
     before(() => {
       helper.reInitLocalScope();
