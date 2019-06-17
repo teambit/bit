@@ -10,7 +10,7 @@ import type { Doclet } from '../../jsdoc/parser';
 import { DEFAULT_BUNDLE_FILENAME, DEFAULT_BINDINGS_PREFIX, COMPONENT_ORIGINS } from '../../constants';
 import type { Results } from '../../specs-runner/specs-runner';
 import { Dependencies, Dependency } from '../../consumer/component/dependencies';
-import type { PathLinux } from '../../utils/path';
+import type { PathLinux, PathLinuxRelative } from '../../utils/path';
 import type { CompilerExtensionModel } from '../../extensions/compiler-extension';
 import type { TesterExtensionModel } from '../../extensions/tester-extension';
 import ExtensionFile from '../../extensions/extension-file';
@@ -48,6 +48,7 @@ export type VersionProps = {
   mainFile: PathLinux,
   files: Array<SourceFileModel>,
   dists?: ?Array<DistFileModel>,
+  mainDistFile: ?PathLinux,
   compiler?: ?CompilerExtensionModel,
   tester?: ?TesterExtensionModel,
   log: Log,
@@ -79,6 +80,7 @@ export default class Version extends BitObject {
   mainFile: PathLinux;
   files: Array<SourceFileModel>;
   dists: ?Array<DistFileModel>;
+  mainDistFile: ?PathLinuxRelative;
   compiler: ?CompilerExtensionModel;
   tester: ?TesterExtensionModel;
   log: Log;
@@ -107,6 +109,7 @@ export default class Version extends BitObject {
     this.mainFile = props.mainFile;
     this.files = props.files;
     this.dists = props.dists;
+    this.mainDistFile = props.mainDistFile;
     this.compiler = props.compiler;
     this.tester = props.tester;
     this.log = props.log;
@@ -290,6 +293,7 @@ export default class Version extends BitObject {
         files: this.files ? this.files.map(_convertFileToObject) : null,
         mainFile: this.mainFile,
         dists: this.dists ? this.dists.map(_convertFileToObject) : null,
+        mainDistFile: this.mainDistFile,
         compiler: this.compiler ? _convertEnvToObject(this.compiler) : null,
         bindingPrefix: this.bindingPrefix || DEFAULT_BINDINGS_PREFIX,
         tester: this.tester ? _convertEnvToObject(this.tester) : null,
@@ -343,6 +347,7 @@ export default class Version extends BitObject {
     const {
       mainFile,
       dists,
+      mainDistFile,
       files,
       compiler,
       bindingPrefix,
@@ -414,6 +419,7 @@ export default class Version extends BitObject {
       mainFile,
       files: files ? files.map(parseFile) : null,
       dists: dists ? dists.map(parseFile) : null,
+      mainDistFile,
       compiler: compiler ? parseEnv(compiler) : null,
       bindingPrefix: bindingPrefix || null,
       tester: tester ? parseEnv(tester) : null,
@@ -460,6 +466,7 @@ export default class Version extends BitObject {
     versionFromModel,
     files,
     dists,
+    mainDistFile,
     flattenedDependencies,
     flattenedDevDependencies,
     flattenedCompilerDependencies,
@@ -478,6 +485,7 @@ export default class Version extends BitObject {
     flattenedTesterDependencies: BitIds,
     message: string,
     dists: ?Array<DistFileModel>,
+    mainDistFile: PathLinuxRelative,
     specsResults: ?Results,
     username: ?string,
     email: ?string
@@ -504,6 +512,7 @@ export default class Version extends BitObject {
       mainFile: component.mainFile,
       files: files.map(parseFile),
       dists: dists ? dists.map(parseFile) : null,
+      mainDistFile,
       compiler,
       bindingPrefix: component.bindingPrefix,
       tester,

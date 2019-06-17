@@ -340,6 +340,7 @@ export default class Component extends BitObject {
       testerPackageDependencies: clone(version.testerPackageDependencies),
       files,
       dists,
+      mainDistFile: version.mainDistFile,
       docs: version.docs,
       license: scopeMeta ? License.deserialize(scopeMeta.license) : null, // todo: make sure we have license in case of local scope
       specsResults: version.specsResults ? version.specsResults.map(res => SpecsResults.deserialize(res)) : null,

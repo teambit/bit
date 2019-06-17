@@ -104,6 +104,7 @@ export type ComponentProps = {
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
+  mainDistFile?: ?PathLinux,
   specsResults?: ?SpecsResults,
   license?: ?License,
   deprecated: ?boolean,
@@ -214,6 +215,7 @@ export default class Component {
     overrides,
     docs,
     dists,
+    mainDistFile,
     specsResults,
     license,
     log,
@@ -246,7 +248,7 @@ export default class Component {
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
     this._docs = docs;
-    this.setDists(dists);
+    this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
     this.license = license;
     this.log = log;
@@ -312,8 +314,8 @@ export default class Component {
     this.testerDependencies = new Dependencies(testerDependencies);
   }
 
-  setDists(dists?: Dist[]) {
-    this.dists = new Dists(dists);
+  setDists(dists: ?(Dist[]), mainDistFile?: ?PathOsBased) {
+    this.dists = new Dists(dists, mainDistFile);
   }
 
   getFileExtension(): string {
@@ -988,6 +990,7 @@ export default class Component {
     const deprecated = componentFromModel ? componentFromModel.deprecated : false;
     const componentDir = componentMap.getComponentDir();
     let dists = componentFromModel ? componentFromModel.dists.get() : undefined;
+    const mainDistFile = componentFromModel ? componentFromModel.dists.getMainDistFile() : undefined;
     const getLoadedFiles = async (): Promise<SourceFile[]> => {
       const sourceFiles = [];
       await componentMap.trackDirectoryChanges(consumer, id);
@@ -1117,6 +1120,7 @@ export default class Component {
       loadedFromFileSystem: true,
       componentMap,
       dists,
+      mainDistFile: mainDistFile ? path.normalize(mainDistFile) : null,
       compilerPackageDependencies,
       testerPackageDependencies,
       deprecated,

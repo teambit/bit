@@ -120,6 +120,11 @@ export default function validateVersionInstance(version: Version): void {
     version.dists.forEach((file) => {
       validateFile(file, true);
     });
+  } else if (version.mainDistFile) {
+    throw new VersionInvalid(`${message} the mainDistFile cannot be set when the dists are empty`);
+  }
+  if (version.mainDistFile && !isValidPath(version.mainDistFile)) {
+    throw new VersionInvalid(`${message}, the mainDistFile ${version.mainDistFile} is invalid`);
   }
   const dependenciesInstances = ['dependencies', 'devDependencies', 'compilerDependencies', 'testerDependencies'];
   dependenciesInstances.forEach((dependenciesType) => {
