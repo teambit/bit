@@ -7,7 +7,7 @@ import { getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
 import type { ComponentWithDependencies } from '../scope';
-import type Component from '../consumer/component/consumer-component';
+import Component from '../consumer/component/consumer-component';
 import type { Dependency, Dependencies } from '../consumer/component/dependencies';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import { BitIds, BitId } from '../bit-id';
@@ -290,7 +290,9 @@ function getInternalCustomResolvedLinks(
     throw new Error(`getInternalCustomResolvedLinks, unable to find the written path of ${component.id.toString()}`);
   }
   const getDestination = (importSource: string) => `node_modules/${importSource}`;
-  return component.customResolvedPaths.map((customPath) => {
+  const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
+  const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
+  return component.customResolvedPaths.filter(customPath => isResolvePathsInvalid(customPath)).map((customPath) => {
     const sourceAbs = path.join(componentDir, customPath.destinationPath);
     const dest = getDestination(customPath.importSource);
     const destAbs = path.join(componentDir, dest);

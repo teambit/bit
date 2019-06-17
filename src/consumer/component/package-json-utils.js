@@ -153,7 +153,7 @@ export function preparePackageJsonToWrite(
     if (!distRootDir) throw new GeneralError('component.dists.distsRootDir is not defined yet');
     distPackageJson = PackageJsonFile.createFromComponent(distRootDir, component, excludeRegistryPrefix);
     const distMainFile = searchFilesIgnoreExt(component.dists.get(), component.mainFile, 'relative');
-    distPackageJson.addOrUpdateProperty('main', distMainFile);
+    distPackageJson.addOrUpdateProperty('main', component.dists.getMainDistFile() || distMainFile);
     addDependencies(distPackageJson);
   }
 
