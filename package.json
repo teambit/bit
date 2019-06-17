@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.1.4-angular.4",
+  "version": "14.1.4-dev.1",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -161,6 +161,11 @@
   "optionalDependencies": {
     "posix": "^4.1.1"
   },
+  "files": [
+    "/bin",
+    "/components",
+    "/dist"
+  ],
   "lint-staged": {
     "*.{js,css}": [
       "prettier-eslint --write",
