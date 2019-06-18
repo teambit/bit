@@ -37,6 +37,52 @@ describe('capsule', function () {
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
   });
+  describe('components with peer packages', () => {
+    const capsuleDir = helper.generateRandomTmpDirName();
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.installNpmPackage('left-pad', '1.3.0');
+      helper.createPackageJson({ peerDependencies: { 'left-pad': '1.3.0' } });
+      helper.createFile(
+        'utils',
+        'is-type.js',
+        "module.exports = function isType() { return require('left-pad')('got is-type', 15, 0); };"
+      );
+      helper.addComponentUtilsIsType();
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.runCmd(`bit isolate utils/is-type --use-capsule --directory ${capsuleDir}`);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintIsType);
+    });
+    it('should have the component installed correctly with the peer dependencies', () => {
+      const result = helper.runCmd('node app.js', capsuleDir);
+      expect(result.trim()).to.equal('0000got is-type');
+    });
+  });
+  describe('components with peer packages of the dependencies', () => {
+    const capsuleDir = helper.generateRandomTmpDirName();
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.installNpmPackage('left-pad', '1.3.0');
+      helper.createPackageJson({ peerDependencies: { 'left-pad': '1.3.0' } });
+      helper.createFile(
+        'utils',
+        'is-type.js',
+        "module.exports = function isType() { return require('left-pad')('got is-type', 15, 0); };"
+      );
+      helper.addComponentUtilsIsType();
+      helper.createComponentUtilsIsString();
+      helper.addComponentUtilsIsString();
+      helper.tagAllComponents();
+      helper.exportAllComponents();
+      helper.runCmd(`bit isolate utils/is-string --use-capsule --directory ${capsuleDir}`);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintIsString);
+    });
+    it('should have the component installed correctly with the peer packages of the dependency', () => {
+      const result = helper.runCmd('node app.js', capsuleDir);
+      expect(result.trim()).to.equal('0000got is-type and got is-string');
+    });
+  });
   describe('exported components with dependencies', () => {
     const capsuleDir = helper.generateRandomTmpDirName();
     before(() => {

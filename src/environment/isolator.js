@@ -9,6 +9,8 @@ import ManyComponentsWriter from '../consumer/component-ops/many-components-writ
 import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
 import { getAllRootDirectoriesFor } from '../npm-client/install-packages';
+import npmClient from '../npm-client';
+import { DEFAULT_PACKAGE_MANAGER } from '../constants';
 
 export default class Isolator {
   capsule: Capsule;
@@ -95,10 +97,10 @@ export default class Isolator {
   }
 
   async installPackagesOnDirs(dirs: string[]) {
-    return Promise.all(dirs.map(dir => this._installPackagesOnOneDirectory(dir)));
+    return Promise.all(dirs.map(dir => this._installInOneDirectoryWithPeerOption(dir)));
   }
 
-  async _installPackagesOnOneDirectory(directory: string) {
+  async _installPackagesOnOneDirectory(directory: string, modules: string[] = []) {
     await this.capsule.exec('npm version 1.0.0', { cwd: directory });
     // *** ugly hack alert ***
     // we change the version to 1.0.0 here because for untagged
@@ -106,7 +108,8 @@ export default class Isolator {
     // this is an invalid semver, and so npm refuses to install.
     // A better fix would be to change this behaviour of bit, but that is a much bigger
     // change. Until the capsule API is finalized, ths should do
-    const execResults = await this.capsule.exec('npm install', { cwd: directory });
+    const args = ['install', ...modules];
+    const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {
@@ -118,6 +121,51 @@ export default class Isolator {
       // @ts-ignore
       execResults.on('close', () => {
         return resolve(output);
+      });
+    });
+  }
+
+  async _installInOneDirectoryWithPeerOption(directory: string, installPeerDependencies: boolean = true) {
+    await this._installPackagesOnOneDirectory(directory);
+    if (installPeerDependencies) {
+      const peers = await this._getPeerDependencies(directory);
+      if (!R.isEmpty(peers)) {
+        await this._installPackagesOnOneDirectory(directory, peers);
+      }
+    }
+  }
+
+  async _getPeerDependencies(dir: string): Promise<string[]> {
+    const packageManager = DEFAULT_PACKAGE_MANAGER;
+    let npmList;
+    try {
+      npmList = await this._getNpmListOutput(dir, packageManager);
+    } catch (err) {
+      logger.error(err);
+      throw new Error(
+        `failed running "${packageManager} list -j" to find the peer dependencies due to an error: ${err}`
+      );
+    }
+    return npmClient.getPeerDepsFromNpmList(npmList, packageManager);
+  }
+
+  async _getNpmListOutput(dir: string, packageManager: string) {
+    const args = [packageManager, 'list', '-j'];
+    const execResults = await this.capsule.exec(args.join(' '), { cwd: dir });
+    let output = '';
+    let outputErr = '';
+    return new Promise((resolve, reject) => {
+      execResults.stdout.on('data', (data: string) => {
+        output += data;
+      });
+      execResults.stdout.on('error', (error: string) => {
+        outputErr += error;
+      });
+      // @ts-ignore
+      execResults.on('close', () => {
+        if (output) return resolve(output);
+        if (outputErr && outputErr.startsWith('{')) return resolve(output); // it's probably a valid json with errors, that's fine, parse it.
+        return reject(outputErr);
       });
     });
   }
