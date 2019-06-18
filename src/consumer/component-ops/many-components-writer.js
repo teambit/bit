@@ -59,7 +59,6 @@ export default class ManyComponentsWriter {
   componentsWithDependencies: ComponentWithDependencies[];
   writeToPath: ?string;
   override: boolean;
-  isolated: boolean;
   writePackageJson: boolean;
   writeConfig: boolean;
   configDir: ?string;

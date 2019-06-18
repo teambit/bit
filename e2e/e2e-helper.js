@@ -516,7 +516,11 @@ export default class Helper {
       'excludeRegistryPrefix: true',
       'excludeRegistryPrefix: false'
     );
-    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
+    const extensionFileWithJsonOutput = extensionFileIncludeRegistry.replace(
+      'return result;',
+      'return JSON.stringify(result, null, 2);'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 
   build(id?: string = '') {

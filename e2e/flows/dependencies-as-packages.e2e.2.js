@@ -37,6 +37,7 @@ chai.use(require('chai-fs'));
         helper.tagAllComponents('-s 0.0.2');
         helper.exportAllComponents();
         helper.reInitLocalScope();
+        npmCiRegistry.setCiScopeInBitJson();
         helper.addRemoteScope();
         helper.importComponent('bar/foo');
         helper.importComponent('utils/is-type');

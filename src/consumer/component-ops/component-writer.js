@@ -155,7 +155,10 @@ export default class ComponentWriter {
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);
-      if (!this.consumer || this.consumer.isolated) {
+      // @todo: temporarily this is running only when there is no version (or version is "latest")
+      // so then package.json always has a valid version. we'll need to figure out when the version
+      // needs to be incremented and when it should not.
+      if ((!this.consumer || this.consumer.isolated) && !this.component.id.hasVersion()) {
         // this only needs to be done in an isolated
         // or consumerless (dependency in an isolated) environment
         packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
