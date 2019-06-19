@@ -6,33 +6,20 @@ module.exports = function (api) {
       '@babel/preset-env',
       {
         targets: {
-          node: 4
+          node: 6
         }
       }
     ],
     '@babel/preset-flow'
   ];
   const plugins = [
-    ['@babel/plugin-transform-flow-strip-types'],
     [
       '@babel/plugin-transform-modules-commonjs',
       {
         lazy: () => true
       }
     ],
-    [
-      'babel-plugin-transform-builtin-extend',
-      {
-        globals: ['Error', 'Array', 'Map']
-      }
-    ],
-    [
-      '@babel/plugin-transform-runtime',
-      {
-        helpers: false,
-        regenerator: true
-      }
-    ],
+
     ['@babel/plugin-proposal-class-properties'],
     [
       '@babel/plugin-transform-async-to-generator',
