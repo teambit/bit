@@ -41,6 +41,7 @@
     "url": "https://github.com/teambit/bit"
   },
   "dependencies": {
+    "@babel/runtime": "^7.4.5",
     "@teambit/gitconfig": "^2.0.6",
     "ajv": "^6.5.3",
     "array-difference": "^0.0.1",
@@ -124,8 +125,11 @@
     "@babel/cli": "^7.0.0",
     "@babel/core": "^7.0.0",
     "@babel/plugin-proposal-class-properties": "^7.0.0",
+    "@babel/plugin-proposal-object-rest-spread": "^7.4.4",
     "@babel/plugin-transform-async-to-generator": "^7.4.4",
+    "@babel/plugin-transform-flow-strip-types": "^7.4.4",
     "@babel/plugin-transform-modules-commonjs": "^7.2.0",
+    "@babel/plugin-transform-runtime": "^7.4.4",
     "@babel/preset-env": "^7.0.0",
     "@babel/preset-flow": "^7.0.0",
     "@babel/register": "^7.4.4",

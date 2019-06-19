@@ -13,13 +13,14 @@ module.exports = function (api) {
     '@babel/preset-flow'
   ];
   const plugins = [
+    ['@babel/plugin-transform-flow-strip-types'],
     [
       '@babel/plugin-transform-modules-commonjs',
       {
         lazy: () => true
       }
     ],
-
+    ['@babel/plugin-transform-runtime'],
     ['@babel/plugin-proposal-class-properties'],
     [
       '@babel/plugin-transform-async-to-generator',
