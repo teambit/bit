@@ -37,10 +37,6 @@ for:
 
 
 
-# build cache to preserve files/folders between builds
-cache:
-  - node_modules                    # local npm modules
-  - '%APPDATA%\npm-cache'           # npm cache
 
 environment:
   priv_key:
