@@ -38,6 +38,8 @@ describe('foo', () => {
     expect(foo())${testShouldPass ? '' : '.not'}.to.equal('got is-type and got is-string and got foo');
   });
 });`;
+export const appPrintIsType = "const isType = require('./components/utils/is-type'); console.log(isType());";
+export const appPrintIsString = "const isString = require('./components/utils/is-string'); console.log(isString());";
 export const appPrintBarFoo = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
 export const appPrintBarFooES6 = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";
 export const appPrintBarFooAuthor = "const barFoo = require('./bar/foo'); console.log(barFoo());";

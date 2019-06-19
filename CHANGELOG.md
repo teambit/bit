@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- improve isolation by capsule to install peer-dependencies
+
 ## [14.1.4-dev.1] - 2019-06-17
 
 - fix publishing of bit-bin package to include the components directory
