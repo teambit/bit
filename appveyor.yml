@@ -103,6 +103,9 @@ install:
   - "bit config set error_reporting false"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
 
+build_script:
+- ps: >-
+
 
 test_script:
   - npm run test:appveyor
