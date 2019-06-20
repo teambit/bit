@@ -94,7 +94,11 @@ install:
   - ps: Install-Product node 6
   - ps: npm i -g npm
   - "npm i"
+
+build_script:
   - "npm run build"
+
+after_build:
   - "npm install -g"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bit.dev"
@@ -102,9 +106,6 @@ install:
   - "bit config set analytics_reporting false"
   - "bit config set error_reporting false"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
-build_script:
-- ps: >-
 
 
 test_script:
