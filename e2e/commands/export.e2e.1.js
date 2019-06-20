@@ -445,6 +445,8 @@ describe('bit export command', function () {
     });
   });
   describe('applying permissions on the remote scope when was init with shared flag', () => {
+    let isWin;
+    let scopeBeforeExport;
     before(() => {
       helper.reInitLocalScope();
       fs.emptyDirSync(helper.remoteScopePath);
@@ -453,6 +455,8 @@ describe('bit export command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.tagAllComponents();
+      isWin = process.platform === 'win32';
+      scopeBeforeExport = helper.cloneLocalScope();
     });
     describe('when the group name does not exist', () => {
       before(() => {
@@ -460,34 +464,31 @@ describe('bit export command', function () {
         helper.runCmd('bit init --bare --shared nonExistGroup', helper.remoteScopePath);
         helper.addRemoteScope();
       });
-      it('should throw an error indicating that the group does not exist', () => {
+      it('should throw an error indicating that the group does not exist (unless it is Windows)', () => {
         const output = helper.runWithTryCatch(`bit export ${helper.remoteScope}`);
-        expect(output).to.have.string('unable to resolve group id of "nonExistGroup", the group does not exist');
+        if (isWin) {
+          expect(output).to.have.string('exported 1 components');
+        } else {
+          expect(output).to.have.string('unable to resolve group id of "nonExistGroup", the group does not exist');
+        }
       });
     });
-    describe('when the current user does not have permission to get info of that group', () => {
-      before(() => {
-        fs.emptyDirSync(helper.remoteScopePath);
-        helper.runCmd('bit init --bare --shared nobody', helper.remoteScopePath);
-        helper.addRemoteScope();
-      });
-      it('should throw an error indicating that missing permissions', () => {
-        const output = helper.runWithTryCatch(`bit export ${helper.remoteScope}`);
-        expect(output).to.have.string(
-          'unable to resolve group id of "nobody", current user does not have sufficient permissions'
-        );
-      });
-    });
-    describe('when the group exists and the current user has permission to that group', () => {
-      before(() => {
-        fs.emptyDirSync(helper.remoteScopePath);
-        helper.runCmd('bit init --bare --shared staff', helper.remoteScopePath);
-        helper.addRemoteScope();
-      });
-      it('should export the component successfully and change the owner to that group', () => {
-        const output = helper.exportAllComponents();
-        expect(output).to.have.string('exported 1 components');
-      });
+    describe('when the group exists and the current user has permission to that group', function () {
+      if (isWin || process.env.npm_config_with_ssh) {
+        this.skip();
+      } else {
+        before(() => {
+          helper.getClonedLocalScope(scopeBeforeExport);
+          fs.emptyDirSync(helper.remoteScopePath);
+          const currentGroup = helper.runCmd('id -gn');
+          helper.runCmd(`bit init --bare --shared ${currentGroup}`, helper.remoteScopePath);
+          helper.addRemoteScope();
+        });
+        it('should export the component successfully and change the owner to that group', () => {
+          const output = helper.exportAllComponents();
+          expect(output).to.have.string('exported 1 components');
+        });
+      }
     });
   });
 });
