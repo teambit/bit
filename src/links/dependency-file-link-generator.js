@@ -71,8 +71,7 @@ export default class DependencyFileLinkGenerator {
     this.dependencyId = dependencyComponent.id;
     this.createNpmLinkFiles = createNpmLinkFiles;
     this.targetDir = targetDir;
-    // this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
-    this.isLinkToPackage = true;
+    this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
   }
 
   generate(): LinkFileType[] {
@@ -202,10 +201,11 @@ export default class DependencyFileLinkGenerator {
   }
 
   getLinkContent(relativeFilePath: PathOsBased): string {
-    if (this.isLinkToPackage) {
-      return getLinkToPackageContent(relativeFilePath, this._getPackagePath());
-    }
-    return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
+    return getLinkToPackageContent(relativeFilePath, this._getPackagePath());
+    // if (this.isLinkToPackage) {
+    //   return getLinkToPackageContent(relativeFilePath, this._getPackagePath());
+    // }
+    // return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
   }
 
   _getPackagePath(): string {

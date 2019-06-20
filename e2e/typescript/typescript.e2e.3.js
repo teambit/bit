@@ -157,51 +157,19 @@ describe('typescript', function () {
       });
       it('should link the direct dependency to its source file from main component source folder', () => {
         const expectedLocation = path.join('components', 'bar', 'foo', 'utils', 'is-string.ts');
-        const linkPath = path.join(helper.localScopePath, expectedLocation);
-        const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'is-string')
-        );
         expect(localConsumerFiles).to.include(expectedLocation);
-        expect(linkPathContent).to.have.string(
-          `../../../${expectedPathSuffix}`,
-          'dependency link file point to the wrong place'
-        );
       });
       it('should link the direct dependency to its index file from main component dist folder', () => {
         const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'utils', 'is-string.js');
-        const linkPath = path.join(helper.localScopePath, expectedLocation);
-        const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(
-          path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1')
-        );
         expect(localConsumerFiles).to.include(expectedLocation);
-        expect(linkPathContent).to.have.string(
-          `../../../../${expectedPathSuffix}`,
-          'dependency link file point to the wrong place'
-        );
       });
       it('should link the indirect dependency from dependent component source folder to its source file in the dependency directory', () => {
         const expectedLocation = path.join(isStringPath, 'is-type.ts');
-        const linkPath = path.join(helper.localScopePath, expectedLocation);
-        const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'is-type'));
         expect(localConsumerFiles).to.include(expectedLocation);
-        expect(linkPathContent).to.have.string(
-          `../../../${expectedPathSuffix}`,
-          'in direct dependency link file point to the wrong place'
-        );
       });
       it('should link the indirect dependency from dependent component dist folder to its index file in the dependency directory', () => {
         const expectedLocation = path.join(isStringPath, 'dist', 'is-type.js');
-        const linkPath = path.join(helper.localScopePath, expectedLocation);
-        const linkPathContent = fs.readFileSync(linkPath).toString();
-        const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1'));
         expect(localConsumerFiles).to.include(expectedLocation);
-        expect(linkPathContent).to.have.string(
-          `../../../../${expectedPathSuffix}`,
-          'in direct dependency link file point to the wrong place'
-        );
       });
       it('should be able to require its direct dependency and print results from all dependencies', () => {
         const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo.default());";

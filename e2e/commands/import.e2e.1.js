@@ -567,18 +567,10 @@ describe('bit import', function () {
       it('should link the level0 dep from the dependencies folder to the first comp', () => {
         const expectedLocation = path.join('components', 'comp', 'comp1', 'level0.js');
         expect(localConsumerFiles).to.include(expectedLocation);
-        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
-        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/0.0.1/level0`;
-        expect(linkFilePathContent).to.have.string(requireLink);
       });
       it('should link the level0 dep from the dependencies folder to the second comp', () => {
         const expectedLocation = path.join('components', 'comp', 'comp2', 'level0.js');
         expect(localConsumerFiles).to.include(expectedLocation);
-        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
-        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/0.0.1/level0`;
-        expect(linkFilePathContent).to.have.string(requireLink);
       });
 
       it('should create an index.js file on the level0 dependency root dir pointing to the main file', () => {
@@ -656,10 +648,6 @@ describe('bit import', function () {
           'level1.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
-        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
-        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../../level1/${helper.remoteScope}/0.0.1/level1`;
-        expect(linkFilePathContent).to.have.string(requireLink);
       });
     });
   });
@@ -1041,11 +1029,6 @@ describe('bit import', function () {
     it('should link the style dependency to its original location', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'style', 'style.css');
       expect(localConsumerFiles).to.include(expectedLocation);
-      const indexPath = path.join(helper.localScopePath, expectedLocation);
-      const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string(
-        `@import '../../../.dependencies/style/style/${helper.remoteScope}/0.0.1/style.css';`
-      );
     });
   });
 
