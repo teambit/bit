@@ -445,7 +445,7 @@ describe('bit export command', function () {
     });
   });
   describe('applying permissions on the remote scope when was init with shared flag', () => {
-    let isWin;
+    const isWin = process.platform === 'win32';
     let scopeBeforeExport;
     before(() => {
       helper.reInitLocalScope();
@@ -455,7 +455,6 @@ describe('bit export command', function () {
       helper.createComponentBarFoo();
       helper.addComponentBarFoo();
       helper.tagAllComponents();
-      isWin = process.platform === 'win32';
       scopeBeforeExport = helper.cloneLocalScope();
     });
     describe('when the group name does not exist', () => {
@@ -474,7 +473,7 @@ describe('bit export command', function () {
       });
     });
     describe('when the group exists and the current user has permission to that group', function () {
-      if (isWin || process.env.npm_config_with_ssh || process.env.APPVEYOR === 'True') {
+      if (isWin || process.env.npm_config_with_ssh) {
         this.skip;
       } else {
         before(() => {
