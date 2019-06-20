@@ -103,9 +103,8 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
-    if (!componentId.hasScope()) return; // when isolating new components// from isolated;
     const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
     const srcTarget: PathOsBasedRelative = component.writtenPath || componentMap.rootDir;
@@ -216,7 +215,6 @@ export default class NodeModuleLinker {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
-      if (!dependency.id.hasScope()) return dependenciesLinks; // when isolating new components
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(
@@ -264,7 +262,7 @@ export default class NodeModuleLinker {
     rootDir: PathOsBasedRelative,
     bindingPrefix: string
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId);
+    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true);
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
