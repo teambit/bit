@@ -71,7 +71,8 @@ export default class DependencyFileLinkGenerator {
     this.dependencyId = dependencyComponent.id;
     this.createNpmLinkFiles = createNpmLinkFiles;
     this.targetDir = targetDir;
-    this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
+    // this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
+    this.isLinkToPackage = true;
   }
 
   generate(): LinkFileType[] {
