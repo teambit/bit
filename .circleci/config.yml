@@ -3,7 +3,7 @@ jobs:
   checkout_code:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       - checkout
@@ -24,7 +24,7 @@ jobs:
   set_ssh_key:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/.ssh
     steps:
       -
@@ -44,7 +44,7 @@ jobs:
   set_bitsrc_registry:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       # prod registry
@@ -66,7 +66,7 @@ jobs:
   install_npm_deps:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -97,7 +97,7 @@ jobs:
   install_bit_javascript_npm_deps:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -115,7 +115,7 @@ jobs:
   build:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -206,7 +206,7 @@ jobs:
   build_bit_javascript:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -256,7 +256,7 @@ jobs:
   unit_test_bit_javascript:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -284,7 +284,7 @@ jobs:
   lint:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -311,7 +311,7 @@ jobs:
   e2e_test:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
@@ -414,7 +414,7 @@ jobs:
   performence_test:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
