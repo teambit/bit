@@ -121,7 +121,8 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
-  - path: "../../Users/appveyor/AppData/Roaming/npm-cache/_logs"
+  # artifacts below are not working! they only support artifacts relative to the current directory (C:\projects\bit-wikt3)
+  # - path: "../../Users/appveyor/AppData/Roaming/npm-cache/_logs"
   # - path: "%LOCALAPPDATA%\\Roaming\\npm-cache\\_logs"
   # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
   # - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
