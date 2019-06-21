@@ -121,7 +121,8 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
-  - path: "%LOCALAPPDATA%\\Roaming\\npm-cache\\_logs"
+  - path: "../../Users/appveyor/AppData/Roaming/npm-cache/_logs"
+  # - path: "%LOCALAPPDATA%\\Roaming\\npm-cache\\_logs"
   # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
   # - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
   #   name: bit-logs
