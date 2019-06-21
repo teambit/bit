@@ -35,12 +35,10 @@ for:
       - ps: "npm run e2e-test:appveyor3"
 
 
-
-
 # build cache to preserve files/folders between builds
 cache:
-  - node_modules                    # local npm modules
-  - '%APPDATA%\npm-cache'           # npm cache
+  - node_modules -> package.json, package-lock.json, appveyor.yml           # local npm modules
+  - '%APPDATA%\npm-cache -> package.json, package-lock.json, appveyor.yml'  # npm cache
 
 environment:
   priv_key:
