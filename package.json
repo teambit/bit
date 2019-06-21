@@ -1,6 +1,6 @@
 {
   "name": "bit-bin",
-  "version": "14.1.4-dev.1",
+  "version": "14.1.4-dev.2",
   "license": "Apache-2.0",
   "main": "./dist/api.js",
   "preferGlobal": true,
@@ -110,6 +110,7 @@
     "tar-stream": "^2.0.1",
     "tty-table": "^2.6.9",
     "typescript": "3.2.4",
+    "uid-number": "0.0.6",
     "unionfs": "^3.0.2",
     "uniqid": "^5.0.3",
     "user-home": "^2.0.0",
@@ -158,9 +159,6 @@
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
     "verdaccio": "^3.11.6"
-  },
-  "optionalDependencies": {
-    "posix": "^4.1.1"
   },
   "files": [
     "/bin",

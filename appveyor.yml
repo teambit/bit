@@ -93,7 +93,11 @@ install:
   - ps: Install-Product node 10
   - ps: npm i -g npm
   - "npm i"
+
+build_script:
   - "npm run build"
+
+after_build:
   - "npm install -g"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bit.dev"
@@ -101,12 +105,6 @@ install:
   - "bit config set analytics_reporting false"
   - "bit config set error_reporting false"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
-build_script:
-- ps: >-
-    mv .\package.json .\package.json.bak
-
-    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
 
 
 test_script:
