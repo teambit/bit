@@ -37,9 +37,8 @@ for:
 
 # build cache to preserve files/folders between builds
 cache:
-  - node_modules -> package.json, appveyor.yml           # local npm modules (invalidate upon package.json or appveyor.yml changes)
-  - '%APPDATA%\npm-cache -> package.json, appveyor.yml'  # npm cache
-
+  - node_modules -> package.json, package-lock.json, appveyor.yml           # local npm modules
+  - '%APPDATA%\npm-cache -> package.json, package-lock.json, appveyor.yml'  # npm cache
 
 environment:
   priv_key:
