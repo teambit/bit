@@ -79,26 +79,14 @@ jobs:
       -
         restore_cache:
           keys:
-            # Find a cache corresponding to this specific package.json checksum
-            # when this file is changed, this key will fail	
-            # Gilad: The 1 after the deps is a workaround to clean the cache of the node modules	
-            # A real solution will be to clear all the cache once circle will support it (for v2)	
-            # or move the packakge.json resotre to be from workspace instead of cache, then we can run	
-            # this step without cache
-            - 'npm-deps12-{{ checksum "./bit/package.json" }}'
-            - npm-deps12
+            - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
       -
         run:
-          name: 'Insatll npm dependencies'
+          name: 'Install npm dependencies'
           command: 'cd bit && npm install'
       -
         save_cache:
-          key: 'npm-deps12-{{ checksum "./bit/package.json" }}'
-          paths:
-            - ./bit/node_modules
-      -
-        save_cache:
-          key: npm-deps12
+          key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
           paths:
             - ./bit/node_modules
       -
@@ -117,7 +105,7 @@ jobs:
           at: ./
       -
         run:
-          name: 'Insatll npm dependencies'
+          name: 'Install npm dependencies'
           command: 'cd bit-javascript && npm install'
       -
         persist_to_workspace:
@@ -208,7 +196,7 @@ jobs:
       -
         run:
           name: 'Pack test worker'
-          command: 'cd bit && npm run bundle:test-worker'    
+          command: 'cd bit && npm run bundle:test-worker'
       -
         persist_to_workspace:
           root: .
@@ -376,11 +364,11 @@ jobs:
       #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       -
         run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
-      - 
+      -
         run:
           name: 'npm link bit to global'
           command: cd bit && npm link
-      - 
+      -
         run: which bit
       -
         run: 'bit config set analytics_reporting false'
@@ -410,7 +398,7 @@ jobs:
           name: 'Run e2e tests'
           command: 'cd bit && circleci tests glob "e2e/**/*.e2e*.js" | circleci tests split --split-by=timings | xargs -n 1 npm run mocha-circleci'
           # command which support only - for debug purpose
-          # command: cd bit && npm run e2e-test-circle --debug	
+          # command: cd bit && npm run e2e-test-circle --debug
           environment:
             MOCHA_FILE: junit/e2e-test-results.xml
           when: always
@@ -516,7 +504,7 @@ workflows:
         bundle-test-worker:
           requires:
             - build
-            - build_bit_javascript   
+            - build_bit_javascript
       -
         e2e_test:
           requires:

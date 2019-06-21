@@ -35,13 +35,11 @@ for:
       - ps: "npm run e2e-test:appveyor3"
 
 
-
-
 # build cache to preserve files/folders between builds
 cache:
-  - node_modules                    # local npm modules
-  - '%APPDATA%\npm-cache'           # npm cache
-  - C:\pkg-cache
+  - node_modules -> package.json, package-lock.json, appveyor.yml           # local npm modules
+  - '%APPDATA%\npm-cache -> package.json, package-lock.json, appveyor.yml'  # npm cache
+  - C:\pkg-cache -> package.json, package-lock.json, appveyor.yml
 
 environment:
   priv_key:
@@ -103,7 +101,11 @@ install:
   # Set active Node version in PATH to v6
   - ps: Set-NodeVersion 6
   - "npm i"
+
+build_script:
   - "npm run build"
+
+after_build:
   - "npm install -g"
   - "npm install -g pkg"
   - "npm install -g @zeit/ncc"
@@ -121,12 +123,6 @@ install:
   - "bit config set analytics_reporting false"
   - "bit config set error_reporting false"
   - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
-build_script:
-- ps: >-
-    mv .\package.json .\package.json.bak
-
-    Get-Content .\package.json.bak | Where-Object {$_ -notmatch 'posix'} | Where-Object {$_ -notmatch 'gitbook-cli'} | Set-Content package.json
 
 
 test_script:
