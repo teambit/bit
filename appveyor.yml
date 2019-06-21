@@ -89,8 +89,8 @@ install:
   - ps: $npmrcContent += "//node-stg.bit.dev/:_authToken=$env:registryStgToken`n"
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
-  - ps: Install-Product node 6
-  - ps: npm i -g npm
+  - ps: Install-Product node 10 x64 # since upgrading to babel 7, AppVeyor fails when node is 6
+  - ps: npm i -g npm@latest
   - "npm i"
 
 build_script:
@@ -121,6 +121,9 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
+  # artifacts below are not working! they only support artifacts relative to the current directory (C:\projects\bit-wikt3)
+  # - path: "../../Users/appveyor/AppData/Roaming/npm-cache/_logs"
+  # - path: "%LOCALAPPDATA%\\Roaming\\npm-cache\\_logs"
   # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
   # - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
   #   name: bit-logs
