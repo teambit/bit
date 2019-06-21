@@ -90,8 +90,8 @@ install:
   - ps: $npmrcContent += "//node-stg.bit.dev/:_authToken=$env:registryStgToken`n"
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
-  - ps: Install-Product node 6
-  - ps: npm i -g npm
+  - ps: Install-Product node 6 x64
+  - ps: npm i -g npm@latest
   - "npm i"
 
 build_script:
@@ -122,6 +122,7 @@ test_script:
 #    .\scripts\copyArtifacts.ps1
 
 artifacts:
+  - path: "%LOCALAPPDATA%\\Roaming\\npm-cache\\_logs"
   # - path: "%LOCALAPPDATA%\\Bit\\Logs\\debug.log"
   # - path: "../../Users/appveyor/AppData/Local/Bit/Logs/debug.log"
   #   name: bit-logs
