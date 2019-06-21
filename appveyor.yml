@@ -106,7 +106,7 @@ after_build:
   - "npm run bundle:test-worker"
   - "dir C:\\pkg-cache"
   - "dir C:\\projects\\bit-wikt3\\releases"
-  - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
+  # - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bit.dev"
