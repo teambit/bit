@@ -103,11 +103,10 @@ after_build:
   - "npm install -g @zeit/ncc"
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - "npm run pkg"
-  - ps: Set-NodeVersion 8
   - "npm run bundle:test-worker"
-  - ps: Set-NodeVersion 6
   - "dir C:\\pkg-cache"
-  - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
+  - "dir C:\\projects\\bit-wikt3\\releases"
+  # - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bit.dev"
