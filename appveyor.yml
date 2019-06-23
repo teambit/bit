@@ -100,7 +100,9 @@ build_script:
 after_build:
   - "npm install -g"
   - "npm install -g pkg"
-  - "npm install -g @zeit/ncc"
+  # installing v0.18.5 since newer versions (up to 0.20.1) currently not working on windows
+  # see more here https://github.com/zeit/ncc/issues/439
+  - "npm install -g @zeit/ncc@0.18.5"
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - "npm run pkg"
   - "npm run bundle:test-worker"
