@@ -8,7 +8,7 @@ import semver from 'semver';
 import logger, { createExtensionLogger } from '../logger/logger';
 import { Scope } from '../scope';
 import { BitId } from '../bit-id';
-import type { EnvExtensionOptions } from './env-extension';
+import type { EnvExtensionOptions } from './env-extension-types';
 import type { ExtensionOptions } from './extension';
 import ExtensionNameNotValid from './exceptions/extension-name-not-valid';
 import ExtensionGetDynamicConfigError from './exceptions/extension-get-dynamic-config-error';
