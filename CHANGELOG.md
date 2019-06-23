@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-dev.3] - 2019-06-23
+
 - upgrade to babel 7
 - fix installation errors on Windows related to `posix` package by replacing it with `uid-number`
 
