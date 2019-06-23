@@ -495,6 +495,7 @@ workflows:
       -
         unit_test_bit_javascript:
           requires:
+            - build_bit_javascript
       -
         lint:
           requires:
