@@ -625,14 +625,16 @@ export default class Scope {
     consumer,
     verbose,
     directory,
-    keep
+    keep,
+    noCache
   }: {
     bitId: BitId,
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory?: ?string,
-    keep?: ?boolean
+    keep?: ?boolean,
+    noCache?: ?boolean
   }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');
@@ -644,7 +646,8 @@ export default class Scope {
       consumer,
       verbose,
       directory,
-      keep
+      keep,
+      noCache
     });
   }
 
