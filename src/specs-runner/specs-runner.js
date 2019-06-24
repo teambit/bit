@@ -1,5 +1,5 @@
 /** @flow */
-import path from 'path';
+import R from 'ramda';
 import execa from 'execa';
 import deserializeError from 'deserialize-error';
 import { Results } from '../consumer/specs-results';
