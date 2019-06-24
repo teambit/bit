@@ -366,3 +366,7 @@ export const MANUALLY_ADD_DEPENDENCY = '+';
 export const OVERRIDE_FILE_PREFIX = 'file://';
 
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
+
+export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
+
+export const ANGULAR_BIT_ENTRY_POINT_FILE = '__index.ts';
