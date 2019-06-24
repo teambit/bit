@@ -2,7 +2,12 @@
 import path from 'path';
 import R from 'ramda';
 import groupBy from 'lodash.groupby';
-import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../constants';
+import {
+  DEFAULT_INDEX_NAME,
+  COMPONENT_ORIGINS,
+  ANGULAR_PACKAGE_IDENTIFIER,
+  ANGULAR_BIT_ENTRY_POINT_FILE
+} from '../constants';
 import { getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
@@ -386,6 +391,27 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   return files;
 }
 
+function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile {
+  if (!_isAngularComponent(component)) return null;
+  const componentMap = bitMap.getComponent(component.id);
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
+  const mainFile = component.mainFile;
+  const dependenciesFiles = component.dependencies.getSourcesPaths();
+  const pathsToExport = [mainFile, ...dependenciesFiles];
+  const content = pathsToExport.map(p => getLinkToFileContent(p, [])).join('\n');
+  const filePath = path.join(componentRoot, ANGULAR_BIT_ENTRY_POINT_FILE);
+  return LinkFile.load({ filePath, content });
+}
+
+function _isAngularComponent(component: Component): boolean {
+  return (
+    component.packageDependencies[ANGULAR_PACKAGE_IDENTIFIER] ||
+    component.peerPackageDependencies[ANGULAR_PACKAGE_IDENTIFIER]
+  );
+}
+
 /**
  * used for writing compiler and tester dependencies to the directory of their configuration file
  * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
@@ -424,4 +450,10 @@ async function getLinksByDependencies(
   return linksToWrite.map(link => LinkFile.load(link));
 }
 
-export { getEntryPointsForComponent, getComponentsDependenciesLinks, getIndexFileName, getLinksByDependencies };
+export {
+  getEntryPointsForComponent,
+  getComponentsDependenciesLinks,
+  getIndexFileName,
+  getLinksByDependencies,
+  getEntryPointForAngularComponent
+};
