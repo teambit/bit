@@ -88,8 +88,8 @@ async function runOnChildProcess({
   includeUnmodified: ?boolean,
   verbose: ?boolean
 }): Promise<?SpecsResultsWithComponentId> {
-  const debugPort = getDebugPort();
-  const openPort = debugPort ? debugPort + 1 : null;
+  // const debugPort = getDebugPort();
+  // const openPort = debugPort ? debugPort + 1 : null;
 
   // Check if we run from npm or from binary (pkg)
   let args = ['test-worker'];
@@ -104,8 +104,7 @@ async function runOnChildProcess({
   }
   try {
     const bitExecName = process.env.BIT_EXEC_NAME || 'bit';
-    const { stdout, stderr } = await execa(bitExecName, args);
-    // console.log('stdout', stdout)
+    const { stdout } = await execa(bitExecName, args);
     const parsedResults = JSON.parse(stdout);
     const deserializedResults = deserializeResults(parsedResults);
     if (!deserializedResults) return undefined;

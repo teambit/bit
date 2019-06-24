@@ -5,6 +5,13 @@ import { testInProcess } from '../api/consumer/lib/test';
 import loader from '../cli/loader';
 import ExternalErrors from '../error/external-errors';
 import ExternalError from '../error/external-error';
+import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+
+export type SerializedSpecsResultsWithComponentId = {
+  type: 'error' | 'results',
+  error?: Object,
+  results?: SpecsResultsWithComponentId[]
+};
 
 const testOneComponent = verbose => async (id: string) => {
   // $FlowFixMe
@@ -20,38 +27,38 @@ export default function run({
   ids?: ?(string[]),
   includeUnmodified: boolean,
   verbose: ?boolean
-}): Promise<void> {
+}): Promise<SerializedSpecsResultsWithComponentId> {
   if (!ids || !ids.length) {
     return testInProcess(undefined, includeUnmodified, verbose)
       .then((results) => {
         const serializedResults = serializeResults(results);
-        // $FlowFixMe
-        return JSON.stringify(serializedResults);
+        return serializedResults;
       })
       .catch((e) => {
         loader.off();
         const serializedResults = serializeResults(e);
-        // $FlowFixMe
-        return process.send(serializedResults);
+        return serializedResults;
       });
   }
   const testAllP = ids.map(testOneComponent(verbose));
   return Promise.all(testAllP)
     .then((results) => {
       const serializedResults = serializeResults(results);
-      // $FlowFixMe
-      return process.send(serializedResults);
+      return serializedResults;
     })
     .catch((e) => {
       loader.off();
       const serializedResults = serializeResults(e);
-      // $FlowFixMe
-      return process.send(serializedResults);
+      return serializedResults;
     });
 }
 
-function serializeResults(results) {
-  if (!results) return undefined;
+function serializeResults(results): SerializedSpecsResultsWithComponentId {
+  // if (!results) return undefined;
+  if (!results) {
+    return { type: 'results', results: [] };
+  }
+
   if (results instanceof Error) {
     // In case of external error also serialize the original error
     if (results instanceof ExternalErrors) {
@@ -91,5 +98,6 @@ function serializeResults(results) {
   };
 
   const serializedResults = results.map(serializeResult);
+  // $FlowFixMe
   return { type: 'results', results: serializedResults };
 }
