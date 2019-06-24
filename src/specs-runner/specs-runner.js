@@ -66,19 +66,6 @@ export default (async function run({
   return finalResults;
 });
 
-function getDebugPort(): ?number {
-  const debugPortArgName = '--debug-brk';
-  try {
-    const execArgv = process.execArgv.map(arg => arg.split('='));
-    const execArgvObj = R.fromPairs(execArgv);
-    if (execArgvObj[debugPortArgName]) return parseInt(execArgvObj[debugPortArgName]);
-  } catch (e) {
-    return null;
-  }
-
-  return null;
-}
-
 async function runOnChildProcess({
   ids,
   includeUnmodified,
@@ -88,9 +75,6 @@ async function runOnChildProcess({
   includeUnmodified: ?boolean,
   verbose: ?boolean
 }): Promise<?SpecsResultsWithComponentId> {
-  // const debugPort = getDebugPort();
-  // const openPort = debugPort ? debugPort + 1 : null;
-
   // Check if we run from npm or from binary (pkg)
   let args = ['test-worker'];
   if (ids) {
