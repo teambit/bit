@@ -532,12 +532,14 @@ export default class Component {
     consumer,
     noCache,
     verbose,
+    directory,
     keep
   }: {
     scope: Scope,
     save?: boolean,
     consumer?: Consumer,
     noCache?: boolean,
+    directory?: string,
     verbose?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
@@ -547,6 +549,7 @@ export default class Component {
       save,
       consumer,
       noCache,
+      directory,
       verbose,
       keep
     });
