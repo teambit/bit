@@ -1,8 +1,6 @@
 /** @flow */
 import path from 'path';
-import fs from 'fs-extra';
-import R from 'ramda';
-import { fork } from 'child_process';
+import execa from 'execa';
 import deserializeError from 'deserialize-error';
 import { Results } from '../consumer/specs-results';
 import type { ForkLevel } from '../api/consumer/lib/test';
@@ -81,7 +79,7 @@ function getDebugPort(): ?number {
   return null;
 }
 
-function runOnChildProcess({
+async function runOnChildProcess({
   ids,
   includeUnmodified,
   verbose
@@ -90,56 +88,34 @@ function runOnChildProcess({
   includeUnmodified: ?boolean,
   verbose: ?boolean
 }): Promise<?SpecsResultsWithComponentId> {
-  return new Promise((resolve, reject) => {
-    const debugPort = getDebugPort();
-    const openPort = debugPort ? debugPort + 1 : null;
-    const baseEnv: Object = {
-      __verbose__: verbose,
-      __includeUnmodified__: includeUnmodified
-    };
-    // Don't use ternary condition since if we put it as undefined
-    // It will pass to the fork as "undefined" (string) instad of not passing it at all
-    // __ids__: ids ? ids.join() : undefined,
-    if (ids) {
-      baseEnv.__ids__ = ids.join();
+  const debugPort = getDebugPort();
+  const openPort = debugPort ? debugPort + 1 : null;
+
+  // Check if we run from npm or from binary (pkg)
+  let args = ['test-worker'];
+  if (ids) {
+    args = args.concat(ids);
+  }
+  if (verbose) {
+    args.push('--verbose');
+  }
+  if (includeUnmodified) {
+    args.push('--all');
+  }
+  try {
+    const bitExecName = process.env.BIT_EXEC_NAME || 'bit';
+    const { stdout, stderr } = await execa(bitExecName, args);
+    // console.log('stdout', stdout)
+    const parsedResults = JSON.parse(stdout);
+    const deserializedResults = deserializeResults(parsedResults);
+    if (!deserializedResults) return undefined;
+    if (deserializedResults.type === 'error') {
+      throw new Error(deserializedResults.error);
     }
-
-    // Merge process.env from the main process
-    const env = Object.assign({}, process.env, baseEnv);
-    let workerPath = path.join(path.dirname(process.execPath), 'test-worker');
-
-    // Check if we run from npm or from binary (pkg)
-    if (!fs.pathExistsSync(workerPath)) {
-      workerPath = path.join(__dirname, 'worker.js');
-    }
-    const child = fork(workerPath, {
-      execArgv: openPort ? [`--debug=${openPort.toString()}`] : [],
-      silent: false,
-      env
-    });
-
-    child.on('exit', (code) => {
-      if (code !== 0) reject();
-    });
-    process.on('exit', () => {
-      child.kill('SIGKILL');
-    });
-
-    child.on('message', (results) => {
-      // if (type === 'error') return reject(payload);
-      // if (payload.specPath) payload.specPath = testFile.relative;
-      const deserializedResults = deserializeResults(results);
-      if (!deserializedResults) return resolve(undefined);
-      if (deserializedResults.type === 'error') {
-        return reject(deserializedResults.error);
-      }
-      return resolve(deserializedResults.results);
-    });
-
-    child.on('error', (e) => {
-      reject(e);
-    });
-  });
+    return deserializedResults.results;
+  } catch (e) {
+    throw e;
+  }
 }
 
 function deserializeResults(

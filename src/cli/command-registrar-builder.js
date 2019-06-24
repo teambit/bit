@@ -17,6 +17,7 @@ import Remote from './commands/public-cmds/remote-cmd';
 import Search from './commands/public-cmds/search-cmd';
 import Test from './commands/public-cmds/test-cmd';
 import Show from './commands/public-cmds/show-cmd';
+import TestWorker from './commands/private-cmds/test-worker-cmd';
 import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
@@ -77,6 +78,7 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Log(),
       new Search(),
       new Test(),
+      new TestWorker(),
       new Put(),
       new ScopeList(),
       new ScopeSearch(),

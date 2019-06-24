@@ -12,19 +12,21 @@ const testOneComponent = verbose => async (id: string) => {
   return res[0];
 };
 
-function run(): Promise<void> {
-  // Start the loader to make sure we show it on forked process
-  loader.on();
-  const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
-  const verbose: boolean = process.env.__verbose__ === true || process.env.__verbose__ === 'true';
-  const includeUnmodified: boolean =
-    process.env.__includeUnmodified__ === true || process.env.__includeUnmodified__ === 'true';
+export default function run({
+  ids,
+  includeUnmodified = false,
+  verbose
+}: {
+  ids?: ?(string[]),
+  includeUnmodified: boolean,
+  verbose: ?boolean
+}): Promise<void> {
   if (!ids || !ids.length) {
     return testInProcess(undefined, includeUnmodified, verbose)
       .then((results) => {
         const serializedResults = serializeResults(results);
         // $FlowFixMe
-        return process.send(serializedResults);
+        return JSON.stringify(serializedResults);
       })
       .catch((e) => {
         loader.off();
@@ -47,8 +49,6 @@ function run(): Promise<void> {
       return process.send(serializedResults);
     });
 }
-
-run();
 
 function serializeResults(results) {
   if (!results) return undefined;
