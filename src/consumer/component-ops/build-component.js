@@ -28,6 +28,7 @@ export default (async function buildComponent({
   save,
   consumer,
   noCache,
+  directory,
   verbose,
   keep
 }: {
@@ -36,6 +37,7 @@ export default (async function buildComponent({
   save?: boolean,
   consumer?: Consumer,
   noCache?: boolean,
+  directory?: string,
   verbose?: boolean,
   keep?: boolean
 }): Promise<?Dists> {
@@ -85,6 +87,7 @@ export default (async function buildComponent({
       componentMap,
       scope,
       keep,
+      directory,
       verbose: !!verbose
     })) || [];
   const { builtFiles, mainDist } = _extractCompilerResults(compilerResults);
