@@ -117,7 +117,7 @@ export { isString };`
               helper.runCmd('npm init -y');
               helper.runCmd(`npm install @ci/${helper.remoteScope}.bar.foo`);
             });
-            it('should be able to require its direct dependency and print results from all dependencies', () => {
+            it('should be able to create the dependency link correctly and print the result', () => {
               const appJsFixture = `const barFoo = require('@ci/${
                 helper.remoteScope
               }.bar.foo'); console.log(barFoo.default());`;
@@ -133,7 +133,7 @@ export { isString };`
               npmCiRegistry.setResolver();
               helper.importComponent('bar/foo');
             });
-            it('should not create .dependencies directory', () => {
+            it('should be able to create the dependency link correctly and print the result', () => {
               const appJsFixture = `const barFoo = require('@ci/${
                 helper.remoteScope
               }.bar.foo'); console.log(barFoo.default());`;

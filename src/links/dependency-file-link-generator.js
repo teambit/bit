@@ -202,7 +202,7 @@ export default class DependencyFileLinkGenerator {
 
   getLinkContent(relativeFilePath: PathOsBased): string {
     if (this.isLinkToPackage) {
-      return getLinkToPackageContent(relativeFilePath, this._getPackagePath());
+      return getLinkToPackageContent(relativeFilePath, this._getPackagePath(), this.relativePath.importSpecifiers);
     }
     return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
   }
