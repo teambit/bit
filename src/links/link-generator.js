@@ -391,16 +391,13 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   return files;
 }
 
-function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile {
+function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): ?LinkFile {
   if (!_isAngularComponent(component)) return null;
   const componentMap = bitMap.getComponent(component.id);
   // $FlowFixMe
   const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
-  const mainFile = component.mainFile;
-  const dependenciesFiles = component.dependencies.getSourcesPaths();
-  const pathsToExport = [mainFile, ...dependenciesFiles];
-  const content = pathsToExport.map(p => getLinkToFileContent(p, [])).join('\n');
+  const content = getLinkToFileContent(component.mainFile, []);
   const filePath = path.join(componentRoot, ANGULAR_BIT_ENTRY_POINT_FILE);
   return LinkFile.load({ filePath, content });
 }
