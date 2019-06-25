@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-dev.5] - 2019-06-25
+
 - add experimental `post-add` hook
 
 ## [14.1.4-dev.4] - 2019-06-24
