@@ -110,7 +110,7 @@ export default class ComponentLoader {
     component.componentFromModel = componentFromModel;
     await this._handleOutOfSyncScenarios(component);
 
-    if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+    if (!driverExists) {
       // no need to resolve dependencies
       return component;
     }

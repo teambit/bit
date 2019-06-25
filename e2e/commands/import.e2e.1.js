@@ -9,6 +9,7 @@ import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -894,12 +895,25 @@ describe('bit import', function () {
           const output = helper.listLocalScope('--scope');
           expect(output).to.have.string('found 3 components in local scope');
         });
-        it('should not override the current files', () => {
-          // as opposed to running import with '--merge', the files should remain intact
-          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-          const result = helper.runCmd('node app.js');
-          expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+        it('bit status should show missing links because the symlinks from the component node_modules to the dependencies are missing', () => {
+          const status = helper.status();
+          expect(status).to.have.string(componentIssuesLabels.missingLinks);
+        });
+        describe('after running bit link', () => {
+          before(() => {
+            helper.runCmd('bit link');
+          });
+          it('bit status should not show issues', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string(componentIssuesLabels);
+          });
+          it('should not override the current files', () => {
+            // as opposed to running import with '--merge', the files should remain intact
+            const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+            fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+          });
         });
       });
     });

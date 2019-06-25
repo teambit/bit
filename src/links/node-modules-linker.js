@@ -124,29 +124,10 @@ export default class NodeModuleLinker {
     } else {
       this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
-
-    if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
-      this.dataToPersist.addManySymlinks(dependenciesLinks);
-    }
-    const missingDependenciesLinks =
-      this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
-    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
-    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
-      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
-      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
-      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
-    }
+    await this._populateDependenciesAndMissingLinks(component);
   }
-  /**
-   * nested components are linked only during the import process. running `bit link` command won't
-   * link them because the nested dependencies are not loaded during consumer.loadComponents()
-   */
-  _populateNestedComponentsLinks(component: Component): void {
-    if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
-      this.dataToPersist.addManySymlinks(dependenciesLinks);
-    }
+  async _populateNestedComponentsLinks(component: Component): Promise<void> {
+    await this._populateDependenciesAndMissingLinks(component);
   }
   /**
    * authored components are linked only when they were exported before
@@ -177,6 +158,23 @@ export default class NodeModuleLinker {
       }
     });
     this._createPackageJsonForAuthor(component);
+  }
+  /**
+   * for IMPORTED and NESTED components
+   */
+  async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
+    if (component.hasDependencies()) {
+      const dependenciesLinks = this._getDependenciesLinks(component);
+      this.dataToPersist.addManySymlinks(dependenciesLinks);
+    }
+    const missingDependenciesLinks =
+      this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
+    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
+    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
+      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
+      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
+      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
+    }
   }
   /**
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
