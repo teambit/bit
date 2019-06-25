@@ -221,11 +221,14 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePathToInternalFile() {
-    const packageName = this._getPackageName();
+    const dependencySavedLocallyAndDistIsOutside = this.dependencyComponentMap && !this.shouldDistsBeInsideTheComponent;
     const distPrefix =
-      this.dependencyComponent.dists.isEmpty() || this.relativePath.isCustomResolveUsed
+      this.dependencyComponent.dists.isEmpty() ||
+      this.relativePath.isCustomResolveUsed ||
+      dependencySavedLocallyAndDistIsOutside
         ? ''
         : `${DEFAULT_DIST_DIRNAME}/`;
+    const packageName = this._getPackageName();
     return `${packageName}/${distPrefix}${this.relativePath.destinationRelativePath}`;
   }
 
