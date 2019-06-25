@@ -1135,7 +1135,7 @@ describe('bit import', function () {
     });
     it('should link the direct dependency to its index file from main component dist folder', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'utils', 'is-string.js');
-      expect(linkPathContent).to.have.string(expectedPathSuffix);
+      expect(localConsumerFiles).to.include(expectedLocation);
     });
     it('should link the indirect dependency from dependent component source folder to its index file in the dependency directory', () => {
       const expectedLocation = path.join(isStringLocation, 'is-type.js');
