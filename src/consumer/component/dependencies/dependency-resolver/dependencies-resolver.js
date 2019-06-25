@@ -296,6 +296,22 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
           depFile,
           rootDir
         ));
+      } else if (!isSupportedExtension(depFile) && this.componentFromModel) {
+        // unsupported files, such as binary files, don't have link files. instead, they have a
+        // symlink (or sometimes a copy on Windows) of the dependency inside the component. to
+        // check whether a file is a symlink to a dependency we loop through the
+        // sourceRelativePaths of the dependency, if there is match, we use the data from the model
+        const dependenciesFromModel = this.componentFromModel.getAllDependenciesCloned();
+        const sourcePaths = dependenciesFromModel.getSourcesPaths();
+        if (sourcePaths.includes(depFile)) {
+          const dependencyFromModel = dependenciesFromModel.getBySourcePath(depFile);
+          componentId = dependencyFromModel.id;
+          ({ componentId, destination, depFileRelative } = this.getDependencyPathsFromModel(
+            componentId,
+            depFile,
+            rootDir
+          ));
+        }
       }
     }
 
