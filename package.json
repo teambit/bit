@@ -33,10 +33,11 @@
     "bundle:test-worker:debug": "ncc build ./dist/specs-runner/worker.js -o releases/test-worker -s",
     "watch": "babel --watch bin src -d dist --source-maps --verbose",
     "build-debug": "babel src -d dist --source-maps",
-    "prepublishOnly": "npm run clean && npm run build"
+    "prepublishOnly": "npm run clean && npm run build",
+    "install": "node scripts/install.js"
   },
   "bin": {
-    "bit": "bin/bit.js"
+    "bit": "bin/bit"
   },
   "repository": {
     "type": "git",
@@ -82,6 +83,7 @@
     "lodash.unionby": "^4.8.0",
     "lodash.uniqby": "^4.7.0",
     "loud-rejection": "^1.6.0",
+    "make-fetch-happen": "^4.0.1",
     "memfs": "^2.15.4",
     "minimatch": "^3.0.4",
     "mkdirp": "^0.5.1",
