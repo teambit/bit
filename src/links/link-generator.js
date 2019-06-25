@@ -391,7 +391,7 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   return files;
 }
 
-function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile {
+function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): ?LinkFile {
   if (!_isAngularComponent(component)) return null;
   const componentMap = bitMap.getComponent(component.id);
   // $FlowFixMe

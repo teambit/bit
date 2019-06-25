@@ -9,7 +9,7 @@ import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import type ComponentMap from '../consumer/bit-map/component-map';
-import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
+import { getLinkToPackageContent } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
 import BitMap from '../consumer/bit-map';
