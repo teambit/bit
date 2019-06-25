@@ -8,7 +8,6 @@ import barFooEs6 from '../../fixtures/consumer-components/es6/bar-foo.json';
 import utilsIsStringEs6 from '../../fixtures/consumer-components/es6/utils-is-string.json';
 import barFooCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/bar-foo.json';
 import utilsIsStringCustomResolved from '../../fixtures/consumer-components/custom-resolved-modules/utils-is-string.json';
-import { pathRelativeLinux } from '../utils/path';
 import * as globalConfig from '../api/consumer/lib/global-config';
 
 const mockBitMap = () => {
@@ -73,15 +72,8 @@ describe('DependencyFileLinkGenerator', () => {
       it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
         expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.js'));
       });
-      it('should generate linkContent that points to dependency rootDir + destinationRelativePath', () => {
-        expect(linkResult.linkContent).to.have.string(
-          '.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string'
-        );
-      });
-      it('should generate linkContent that is relative to the linkPath', () => {
-        const absoluteDest = 'components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string';
-        const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-        expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+      it('should generate linkContent that points to the package', () => {
+        expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
       });
       it('should set isEs6 to false as it does not have ImportSpecifiers', () => {
         expect(linkResult.isEs6).to.be.false;
@@ -138,15 +130,8 @@ describe('DependencyFileLinkGenerator', () => {
           it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
             expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.js'));
           });
-          it('should generate linkContent that points to dependency rootDir + destinationRelativePath', () => {
-            expect(linkResult.linkContent).to.have.string(
-              '.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string'
-            );
-          });
-          it('should generate linkContent that is relative to the linkPath', () => {
-            const absoluteDest = 'components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string';
-            const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-            expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+          it('should generate linkContent that points to the package', () => {
+            expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
           it('should set isEs6 to true as it has ImportSpecifiers', () => {
             expect(linkResult.isEs6).to.be.true;
@@ -160,15 +145,8 @@ describe('DependencyFileLinkGenerator', () => {
           it('should generate linkPath that consist of component rootDir + dist + sourceRelativePath', () => {
             expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/dist/utils/is-string.js'));
           });
-          it('should generate linkContent that points to dependency rootDir + dist + destinationRelativePath', () => {
-            expect(linkResult.linkContent).to.have.string(
-              '.dependencies/utils/is-string/remote-scope/0.0.1/dist/utils/is-string'
-            );
-          });
-          it('should generate linkContent that is relative to the linkPath', () => {
-            const absoluteDest = 'components/.dependencies/utils/is-string/remote-scope/0.0.1/dist/utils/is-string';
-            const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-            expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+          it('should generate linkContent that points to the package', () => {
+            expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
           it('should set isEs6 to true as it has ImportSpecifiers', () => {
             expect(linkResult.isEs6).to.be.true;
@@ -242,15 +220,8 @@ describe('DependencyFileLinkGenerator', () => {
           it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
             expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.js'));
           });
-          it('should generate linkContent that points to dependency rootDir + destinationRelativePath', () => {
-            expect(linkResult.linkContent).to.have.string(
-              '.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string'
-            );
-          });
           it('should generate linkContent that is relative to the linkPath', () => {
-            const absoluteDest = 'components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string';
-            const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-            expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+            expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
           it('should set isEs6 to true as it has ImportSpecifiers', () => {
             expect(linkResult.isEs6).to.be.true;
@@ -264,15 +235,8 @@ describe('DependencyFileLinkGenerator', () => {
           it('should generate linkPath that consist of dist + component rootDir + sourceRelativePath', () => {
             expect(linkResult.linkPath).to.equal(path.normalize('dist/components/bar/foo/utils/is-string.js'));
           });
-          it('should generate linkContent that points to dependency rootDir + destinationRelativePath (the dist should not be there as it is already inside dist)', () => {
-            expect(linkResult.linkContent).to.have.string(
-              '.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string'
-            );
-          });
-          it('should generate linkContent that is relative to the linkPath', () => {
-            const absoluteDest = 'dist/components/.dependencies/utils/is-string/remote-scope/0.0.1/utils/is-string';
-            const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-            expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+          it('should generate linkContent that points to the package', () => {
+            expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
           it('should set isEs6 to true as it has ImportSpecifiers', () => {
             expect(linkResult.isEs6).to.be.true;
@@ -347,15 +311,8 @@ describe('DependencyFileLinkGenerator', () => {
             path.normalize('components/bar/foo/node_modules/utils/is-string/index.js')
           );
         });
-        it('should generate linkContent that points to dependency rootDir + dist + destinationRelativePath', () => {
-          expect(linkResult.linkContent).to.have.string(
-            '.dependencies/utils/is-string/remote-scope/0.0.1/dist/src/utils/is-string'
-          );
-        });
-        it('should generate linkContent that is relative to the linkPath', () => {
-          const absoluteDest = 'components/.dependencies/utils/is-string/remote-scope/0.0.1/dist/src/utils/is-string';
-          const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-          expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+        it('should generate linkContent that points to the package', () => {
+          expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
         });
         describe('when createNpmLinkFiles is set to true', () => {
           before(() => {
@@ -414,15 +371,8 @@ describe('DependencyFileLinkGenerator', () => {
               path.normalize('components/bar/foo/node_modules/utils/is-string/index.js')
             );
           });
-          it('should generate linkContent that points to dependency rootDir + destinationRelativePath', () => {
-            expect(linkResult.linkContent).to.have.string(
-              '.dependencies/utils/is-string/remote-scope/0.0.1/src/utils/is-string'
-            );
-          });
-          it('should generate linkContent that is relative to the linkPath', () => {
-            const absoluteDest = 'components/.dependencies/utils/is-string/remote-scope/0.0.1/src/utils/is-string';
-            const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-            expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+          it('should generate linkContent that points to the package', () => {
+            expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
           it('should set isEs6 to true as it has ImportSpecifiers', () => {
             expect(linkResult.isEs6).to.be.true;
@@ -438,15 +388,8 @@ describe('DependencyFileLinkGenerator', () => {
               path.normalize('dist/components/bar/foo/node_modules/utils/is-string/index.js')
             );
           });
-          it('should generate linkContent that points to dependency rootDir + destinationRelativePath (the dist should not be there as it is already inside dist)', () => {
-            expect(linkResult.linkContent).to.have.string(
-              '.dependencies/utils/is-string/remote-scope/0.0.1/src/utils/is-string'
-            );
-          });
-          it('should generate linkContent that is relative to the linkPath', () => {
-            const absoluteDest = 'dist/components/.dependencies/utils/is-string/remote-scope/0.0.1/src/utils/is-string';
-            const relativeDest = pathRelativeLinux(linkResult.linkPath, absoluteDest);
-            expect(linkResult.linkContent).to.have.string(`require('${relativeDest}')`);
+          it('should generate linkContent that points to the package', () => {
+            expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
           });
         });
         describe('when isLinkToPackage is set to true', () => {
