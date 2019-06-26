@@ -399,7 +399,7 @@ function getEntryPointForAngularComponent(component: Component, consumer: ?Consu
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
   const content = getLinkToFileContent(component.mainFile, []);
   const filePath = path.join(componentRoot, ANGULAR_BIT_ENTRY_POINT_FILE);
-  return LinkFile.load({ filePath, content });
+  return LinkFile.load({ filePath, content, override: false });
 }
 
 function _isAngularComponent(component: Component): boolean {
