@@ -16,7 +16,7 @@ describe('capsule', function () {
       helper.setNewLocalAndRemoteScopes();
       helper.populateWorkspaceWithComponents();
       helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
-      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFoo);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
     });
     it('should have the components and dependencies installed correctly with all the links', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
@@ -30,7 +30,7 @@ describe('capsule', function () {
       helper.populateWorkspaceWithComponents();
       helper.tagAllComponents();
       helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
-      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFoo);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
     });
     it('should have the components and dependencies installed correctly with all the links', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
@@ -52,7 +52,7 @@ describe('capsule', function () {
       helper.tagAllComponents();
       helper.exportAllComponents();
       helper.runCmd(`bit isolate utils/is-type --use-capsule --directory ${capsuleDir}`);
-      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintIsType);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintIsTypeCapsule);
     });
     it('should have the component installed correctly with the peer dependencies', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
@@ -76,7 +76,7 @@ describe('capsule', function () {
       helper.tagAllComponents();
       helper.exportAllComponents();
       helper.runCmd(`bit isolate utils/is-string --use-capsule --directory ${capsuleDir}`);
-      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintIsString);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintIsStringCapsule);
     });
     it('should have the component installed correctly with the peer packages of the dependency', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
@@ -91,7 +91,7 @@ describe('capsule', function () {
       helper.tagAllComponents();
       helper.exportAllComponents();
       helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
-      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFoo);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
     });
     it('should have the components and dependencies installed correctly with all the links', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
@@ -110,7 +110,7 @@ describe('capsule', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
       helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
-      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFoo);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
     });
     it('should have the components and dependencies installed correctly with all the links', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
