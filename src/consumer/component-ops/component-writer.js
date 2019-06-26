@@ -124,7 +124,6 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
-    this.component.dataToPersist.toConsole();
     return this.component;
   }
 
