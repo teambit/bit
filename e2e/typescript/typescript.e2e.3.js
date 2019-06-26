@@ -11,7 +11,7 @@ chai.use(require('chai-fs'));
 
 const helper = new Helper();
 
-describe('typescript', function() {
+describe('typescript', function () {
   this.timeout(0);
   let scopeWithTypescriptCompiler;
   before(() => {
@@ -260,7 +260,7 @@ export class List extends React.Component {
           'bit.envs'
         );
         let version = '';
-        fs.readdirSync(compilerPrefix).forEach(file => {
+        fs.readdirSync(compilerPrefix).forEach((file) => {
           version = file;
         });
         const compilerPath = path.join(compilerPrefix, version, 'node_modules', 'typescript', 'bin');
@@ -331,7 +331,7 @@ export class List extends React.Component {
           return bitsrcTester
             .loginToBitSrc()
             .then(() => bitsrcTester.createScope())
-            .then(scope => {
+            .then((scope) => {
               scopeName = scope;
               fullScopeName = `${username}.${scopeName}`;
             });

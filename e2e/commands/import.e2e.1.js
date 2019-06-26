@@ -17,7 +17,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-string'));
 
-describe('bit import', function() {
+describe('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
 
@@ -357,7 +357,7 @@ describe('bit import', function() {
           expect(localConsumerFiles).to.include(path.join('src', 'utils', 'myUtil.js'));
         });
         it('should not write the dist files', () => {
-          localConsumerFiles.forEach(file => {
+          localConsumerFiles.forEach((file) => {
             expect(file.startsWith('components')).to.be.false;
             expect(file.endsWith('.map.js')).to.be.false;
           });
@@ -518,7 +518,7 @@ describe('bit import', function() {
       expect(localConsumerFiles).not.to.include('foo.js'); // it shouldn't remove 'bar'.
     });
     it('should not write any file into components directory', () => {
-      localConsumerFiles.forEach(fileName => {
+      localConsumerFiles.forEach((fileName) => {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
@@ -528,7 +528,7 @@ describe('bit import', function() {
         localConsumerFiles = helper.getConsumerFiles();
       });
       it('should not create an "undefined" package on node_modules', () => {
-        localConsumerFiles.forEach(fileName => {
+        localConsumerFiles.forEach((fileName) => {
           expect(fileName.startsWith(path.join('node_modules', 'undefined'))).to.be.false;
         });
       });
@@ -858,7 +858,7 @@ describe('bit import', function() {
           localConsumerFiles = helper.getConsumerFiles();
         });
         it('should not write the components files', () => {
-          localConsumerFiles.forEach(file => {
+          localConsumerFiles.forEach((file) => {
             expect(file).to.not.startsWith('components');
           });
         });
@@ -1712,7 +1712,7 @@ console.log(barFoo.default());`;
       expect(result.trim()).to.equal('got is-type and got is-string v2');
     });
     it('should not write any file into components directory', () => {
-      localConsumerFiles.forEach(fileName => {
+      localConsumerFiles.forEach((fileName) => {
         expect(fileName.startsWith('components')).to.be.false;
       });
     });
