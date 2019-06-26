@@ -188,9 +188,10 @@ export default class DependencyFileLinkGenerator {
     if (this.createNpmLinkFiles) {
       return this._getPackagePathToInternalFile();
     }
-    if (this.component.dependenciesSavedAsComponents) {
+    if (!this.component.dependenciesSavedAsComponents) {
       return path.join(this.getTargetDir(), 'node_modules', this._getPackagePathToInternalFile());
     }
+    // if dependencies are saved as components, the above logic will create a symlink to a symlink
     return filePath;
   }
 
