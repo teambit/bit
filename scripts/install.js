@@ -31,7 +31,10 @@ function findFileUrl() {
 }
 
 async function fetchBinary(binaryFileUrl) {
-  const res = await fetch(binaryFileUrl, { cacheManager: EXECUTABLE_CACHE_LOCATION });
+  const res = await fetch(binaryFileUrl, {
+    cacheManager: EXECUTABLE_CACHE_LOCATION,
+    retry: 3 // 3 is arbitrary
+  });
   if (res.status !== 200) {
     throw new Error(`failed to fetch binary: ${res.statusText}`);
   }
@@ -46,7 +49,7 @@ function checkExistingBinary() {
     const stdout = execSync(pathToBinaryFile, ['--help'], { stdio: 'ignore' });
     if (stdout.toString().includes('usage: bit')) {
       return true;
-    } 
+    }
     return false;
   } catch (e) {
     return false;
