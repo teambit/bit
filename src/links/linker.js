@@ -166,6 +166,11 @@ export async function getAllComponentsLinks({
     );
     dataToPersist.addManyFiles(R.flatten(entryPoints));
   }
+  const bitAngularEntryPoints = writtenComponents
+    .map(component => linkGenerator.getEntryPointForAngularComponent(component, consumer, bitMap))
+    .filter(x => x); // remove nulls when components are not Angular
+  dataToPersist.addManyFiles(bitAngularEntryPoints);
+
   const allComponents = writtenDependencies
     ? [...writtenComponents, ...R.flatten(writtenDependencies)]
     : writtenComponents;
