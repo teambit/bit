@@ -3,12 +3,12 @@ import chai, { expect } from 'chai';
 import path from 'path';
 import fs from 'fs-extra';
 import glob from 'glob';
-import normalize from 'normalize-path';
 import Helper, { VERSION_DELIMITER } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 import { ComponentNotFound } from '../../src/scope/exceptions';
 import InvalidConfigPropPath from '../../src/consumer/config/exceptions/invalid-config-prop-path';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -567,18 +567,10 @@ describe('bit import', function () {
       it('should link the level0 dep from the dependencies folder to the first comp', () => {
         const expectedLocation = path.join('components', 'comp', 'comp1', 'level0.js');
         expect(localConsumerFiles).to.include(expectedLocation);
-        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
-        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/0.0.1/level0`;
-        expect(linkFilePathContent).to.have.string(requireLink);
       });
       it('should link the level0 dep from the dependencies folder to the second comp', () => {
         const expectedLocation = path.join('components', 'comp', 'comp2', 'level0.js');
         expect(localConsumerFiles).to.include(expectedLocation);
-        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
-        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../.dependencies/dep/level0/${helper.remoteScope}/0.0.1/level0`;
-        expect(linkFilePathContent).to.have.string(requireLink);
       });
 
       it('should create an index.js file on the level0 dependency root dir pointing to the main file', () => {
@@ -656,10 +648,6 @@ describe('bit import', function () {
           'level1.js'
         );
         expect(localConsumerFiles).to.include(expectedLocation);
-        const linkFilePath = path.join(helper.localScopePath, expectedLocation);
-        const linkFilePathContent = fs.readFileSync(linkFilePath).toString();
-        const requireLink = `../../../level1/${helper.remoteScope}/0.0.1/level1`;
-        expect(linkFilePathContent).to.have.string(requireLink);
       });
     });
   });
@@ -906,12 +894,25 @@ describe('bit import', function () {
           const output = helper.listLocalScope('--scope');
           expect(output).to.have.string('found 3 components in local scope');
         });
-        it('should not override the current files', () => {
-          // as opposed to running import with '--merge', the files should remain intact
-          const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
-          fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
-          const result = helper.runCmd('node app.js');
-          expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+        it('bit status should show missing links because the symlinks from the component node_modules to the dependencies are missing', () => {
+          const status = helper.status();
+          expect(status).to.have.string(componentIssuesLabels.missingLinks);
+        });
+        describe('after running bit link', () => {
+          before(() => {
+            helper.runCmd('bit link');
+          });
+          it('bit status should not show issues', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string(componentIssuesLabels);
+          });
+          it('should not override the current files', () => {
+            // as opposed to running import with '--merge', the files should remain intact
+            const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
+            fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+            const result = helper.runCmd('node app.js');
+            expect(result.trim()).to.equal('got is-type and got is-string and got foo v2');
+          });
         });
       });
     });
@@ -1041,11 +1042,6 @@ describe('bit import', function () {
     it('should link the style dependency to its original location', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'style', 'style.css');
       expect(localConsumerFiles).to.include(expectedLocation);
-      const indexPath = path.join(helper.localScopePath, expectedLocation);
-      const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string(
-        `@import '../../../.dependencies/style/style/${helper.remoteScope}/0.0.1/style.css';`
-      );
     });
   });
 
@@ -1148,39 +1144,19 @@ describe('bit import', function () {
     });
     it('should link the direct dependency to its index file from main component source folder', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'utils', 'is-string.js');
-      const linkPath = path.join(helper.localScopePath, expectedLocation);
-      const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(
-        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1', 'is-string')
-      );
       expect(localConsumerFiles).to.include(expectedLocation);
-      expect(linkPathContent).to.have.string(expectedPathSuffix);
     });
     it('should link the direct dependency to its index file from main component dist folder', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'utils', 'is-string.js');
-      const linkPath = path.join(helper.localScopePath, expectedLocation);
-      const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(
-        path.join('.dependencies', 'utils', 'is-string', helper.remoteScope, '0.0.1')
-      );
       expect(localConsumerFiles).to.include(expectedLocation);
-      expect(linkPathContent).to.have.string(expectedPathSuffix);
     });
     it('should link the indirect dependency from dependent component source folder to its index file in the dependency directory', () => {
       const expectedLocation = path.join(isStringLocation, 'is-type.js');
-      const linkPath = path.join(helper.localScopePath, expectedLocation);
-      const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1', 'is-type'));
       expect(localConsumerFiles).to.include(expectedLocation);
-      expect(linkPathContent).to.have.string(expectedPathSuffix);
     });
     it('should link the indirect dependency from dependent component dist folder to its index file in the dependency directory', () => {
       const expectedLocation = path.join(isStringLocation, 'dist', 'is-type.js');
-      const linkPath = path.join(helper.localScopePath, expectedLocation);
-      const linkPathContent = fs.readFileSync(linkPath).toString();
-      const expectedPathSuffix = normalize(path.join('is-type', helper.remoteScope, '0.0.1'));
       expect(localConsumerFiles).to.include(expectedLocation);
-      expect(linkPathContent).to.have.string(expectedPathSuffix);
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), fixtures.appPrintBarFooES6);

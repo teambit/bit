@@ -7,7 +7,7 @@ import logger from '../../logger/logger';
 import Component from './consumer-component';
 import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
-import { COMPONENT_ORIGINS, ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
+import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
@@ -110,7 +110,7 @@ export default class ComponentLoader {
     component.componentFromModel = componentFromModel;
     await this._handleOutOfSyncScenarios(component);
 
-    if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+    if (!driverExists) {
       // no need to resolve dependencies
       return component;
     }

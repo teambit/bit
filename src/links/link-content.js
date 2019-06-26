@@ -8,6 +8,7 @@ import type { ImportSpecifier } from '../consumer/component/dependencies/depende
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
+  // ts: "import myVar from '{filePath}'; export default myVar;",
   ts: "export * from '{filePath}';",
   jsx: "export * from '{filePath}';",
   tsx: "export * from '{filePath}';",

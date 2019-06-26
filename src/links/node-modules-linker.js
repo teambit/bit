@@ -103,9 +103,8 @@ export default class NodeModuleLinker {
   async _populateImportedComponentsLinks(component: Component): Promise<void> {
     const componentMap = component.componentMap;
     const componentId = component.id;
-    if (!componentId.hasScope()) return; // when isolating new components// from isolated;
     const bindingPrefix = this.consumer ? this.consumer.config.bindingPrefix : DEFAULT_BINDINGS_PREFIX;
-    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId);
+    const linkPath: PathOsBasedRelative = getNodeModulesPathOfComponent(bindingPrefix, componentId, true);
     // when a user moves the component directory, use component.writtenPath to find the correct target
     // $FlowFixMe
     const srcTarget: PathOsBasedRelative = component.writtenPath || componentMap.rootDir;
@@ -125,29 +124,10 @@ export default class NodeModuleLinker {
     } else {
       this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
-
-    if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
-      this.dataToPersist.addManySymlinks(dependenciesLinks);
-    }
-    const missingDependenciesLinks =
-      this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
-    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
-    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
-      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
-      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
-      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
-    }
+    await this._populateDependenciesAndMissingLinks(component);
   }
-  /**
-   * nested components are linked only during the import process. running `bit link` command won't
-   * link them because the nested dependencies are not loaded during consumer.loadComponents()
-   */
-  _populateNestedComponentsLinks(component: Component): void {
-    if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
-      this.dataToPersist.addManySymlinks(dependenciesLinks);
-    }
+  async _populateNestedComponentsLinks(component: Component): Promise<void> {
+    await this._populateDependenciesAndMissingLinks(component);
   }
   /**
    * authored components are linked only when they were exported before
@@ -180,6 +160,32 @@ export default class NodeModuleLinker {
     this._createPackageJsonForAuthor(component);
   }
   /**
+   * for IMPORTED and NESTED components
+   */
+  async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
+    // $FlowFixMe loaded from FS, componentMap must be set
+    const componentMap: ComponentMap = component.componentMap;
+    if (component.hasDependencies()) {
+      const dependenciesLinks = this._getDependenciesLinks(component, componentMap);
+      this.dataToPersist.addManySymlinks(dependenciesLinks);
+    }
+    const missingDependenciesLinks =
+      this.consumer && component.issues && component.issues.missingLinks ? this._getMissingLinks(component) : [];
+    this.dataToPersist.addManySymlinks(missingDependenciesLinks);
+    if (this.consumer && component.issues && component.issues.missingCustomModuleResolutionLinks) {
+      const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
+      this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
+      this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
+      if (component.componentFromModel && component.componentFromModel.hasDependencies()) {
+        // when custom-resolve links are missing, the component has been loaded without that
+        // dependency. (see "deleting the link generated for the custom-module-resolution" test)
+        // as a result, dependency links were not generated. our option is to get it from the scope
+        const dependenciesLinks = this._getDependenciesLinks(component.componentFromModel, componentMap);
+        this.dataToPersist.addManySymlinks(dependenciesLinks);
+      }
+    }
+  }
+  /**
    * When the dists is outside the components directory, it doesn't have access to the node_modules of the component's
    * root-dir. The solution is to go through the node_modules packages one by one and symlink them.
    */
@@ -209,14 +215,11 @@ export default class NodeModuleLinker {
     });
   }
 
-  _getDependenciesLinks(component: Component): Symlink[] {
-    // $FlowFixMe
-    const componentMap: ComponentMap = component.componentMap;
+  _getDependenciesLinks(component: Component, componentMap: ComponentMap): Symlink[] {
     const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
       if (!dependencyComponentMap || !dependencyComponentMap.rootDir) return dependenciesLinks;
-      if (!dependency.id.hasScope()) return dependenciesLinks; // when isolating new components
       const parentRootDir = componentMap.getRootDir();
       const dependencyRootDir = dependencyComponentMap.getRootDir();
       dependenciesLinks.push(
@@ -264,7 +267,7 @@ export default class NodeModuleLinker {
     rootDir: PathOsBasedRelative,
     bindingPrefix: string
   ): Symlink {
-    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId);
+    const relativeDestPath = getNodeModulesPathOfComponent(bindingPrefix, bitId, true);
     const destPathInsideParent = path.join(parentRootDir, relativeDestPath);
     return Symlink.makeInstance(rootDir, destPathInsideParent, bitId);
   }
