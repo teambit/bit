@@ -163,8 +163,10 @@ export default class NodeModuleLinker {
    * for IMPORTED and NESTED components
    */
   async _populateDependenciesAndMissingLinks(component: Component): Promise<void> {
+    // $FlowFixMe loaded from FS, componentMap must be set
+    const componentMap: ComponentMap = component.componentMap;
     if (component.hasDependencies()) {
-      const dependenciesLinks = this._getDependenciesLinks(component);
+      const dependenciesLinks = this._getDependenciesLinks(component, componentMap);
       this.dataToPersist.addManySymlinks(dependenciesLinks);
     }
     const missingDependenciesLinks =
@@ -174,6 +176,13 @@ export default class NodeModuleLinker {
       const missingCustomResolvedLinks = await this._getMissingCustomResolvedLinks(component);
       this.dataToPersist.addManyFiles(missingCustomResolvedLinks.files);
       this.dataToPersist.addManySymlinks(missingCustomResolvedLinks.symlinks);
+      if (component.componentFromModel && component.componentFromModel.hasDependencies()) {
+        // when custom-resolve links are missing, the component has been loaded without that
+        // dependency. (see "deleting the link generated for the custom-module-resolution" test)
+        // as a result, dependency links were not generated. our option is to get it from the scope
+        const dependenciesLinks = this._getDependenciesLinks(component.componentFromModel, componentMap);
+        this.dataToPersist.addManySymlinks(dependenciesLinks);
+      }
     }
   }
   /**
@@ -206,9 +215,7 @@ export default class NodeModuleLinker {
     });
   }
 
-  _getDependenciesLinks(component: Component): Symlink[] {
-    // $FlowFixMe
-    const componentMap: ComponentMap = component.componentMap;
+  _getDependenciesLinks(component: Component, componentMap: ComponentMap): Symlink[] {
     const getSymlinks = (dependency: Dependency): Symlink[] => {
       const dependencyComponentMap = this.bitMap.getComponentIfExist(dependency.id);
       const dependenciesLinks: Symlink[] = [];
