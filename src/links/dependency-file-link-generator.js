@@ -39,7 +39,6 @@ export default class DependencyFileLinkGenerator {
   dependencyComponent: Component;
   createNpmLinkFiles: boolean;
   targetDir: ?string;
-  isLinkToPackage: boolean;
   dependencyComponentMap: ?ComponentMap;
   linkFiles: LinkFileType[];
   relativePathInDependency: PathOsBased;
@@ -71,7 +70,6 @@ export default class DependencyFileLinkGenerator {
     this.dependencyId = dependencyComponent.id;
     this.createNpmLinkFiles = createNpmLinkFiles;
     this.targetDir = targetDir;
-    this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
   }
 
   generate(): LinkFileType[] {
@@ -110,14 +108,10 @@ export default class DependencyFileLinkGenerator {
     const isCustomResolvedWithDistInside = Boolean(
       depRootDirDist && this.shouldDistsBeInsideTheComponent && this.hasDist
     );
-    const isCustomResolvedWithDistAndNpmLink = Boolean(
-      this.shouldDistsBeInsideTheComponent && this.hasDist && this.isLinkToPackage
-    );
 
-    const relativePathInDependency =
-      isCustomResolvedWithDistInside || isCustomResolvedWithDistAndNpmLink
-        ? `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`
-        : this.relativePathInDependency;
+    const relativePathInDependency = isCustomResolvedWithDistInside
+      ? `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`
+      : this.relativePathInDependency;
 
     const linkFile = this.prepareLinkFile({
       linkPath: this.getLinkPathForCustomResolve(relativeDistExtInDependency),
@@ -191,10 +185,10 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getSymlinkDest(filePath: PathOsBased): string {
-    if (this.isLinkToPackage) {
-      if (this.createNpmLinkFiles) {
-        return this._getPackagePathToInternalFile();
-      }
+    if (this.createNpmLinkFiles) {
+      return this._getPackagePathToInternalFile();
+    }
+    if (this.component.dependenciesSavedAsComponents) {
       return path.join(this.getTargetDir(), 'node_modules', this._getPackagePathToInternalFile());
     }
     return filePath;
@@ -202,10 +196,6 @@ export default class DependencyFileLinkGenerator {
 
   getLinkContent(relativeFilePath: PathOsBased): string {
     return getLinkToPackageContent(relativeFilePath, this._getPackagePath(), this.relativePath.importSpecifiers);
-    // if (this.isLinkToPackage) {
-    //   return getLinkToPackageContent(relativeFilePath, this._getPackagePath(), this.relativePath.importSpecifiers);
-    // }
-    // return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
   }
 
   _getPackagePath(): string {

@@ -78,22 +78,6 @@ describe('DependencyFileLinkGenerator', () => {
       it('should set isEs6 to false as it does not have ImportSpecifiers', () => {
         expect(linkResult.isEs6).to.be.false;
       });
-      describe('when isLinkToPackage is set to true', () => {
-        before(() => {
-          dependencyFileLinkGenerator.isLinkToPackage = true;
-          const linkResults = dependencyFileLinkGenerator.generate();
-          linkResult = linkResults[0];
-        });
-        it('should generate linkContent that points to the package name instead of a file', () => {
-          expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-        });
-        it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
-          expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.js'));
-        });
-        it('should set isEs6 to false as it does not have ImportSpecifiers', () => {
-          expect(linkResult.isEs6).to.be.false;
-        });
-      });
     });
     describe('using ES6', () => {
       describe('when dist is inside the component dir', () => {
@@ -150,39 +134,6 @@ describe('DependencyFileLinkGenerator', () => {
           });
           it('should set isEs6 to true as it has ImportSpecifiers', () => {
             expect(linkResult.isEs6).to.be.true;
-          });
-        });
-        describe('when createNpmLinkFiles is set to true', () => {
-          before(() => {
-            dependencyFileLinkGenerator.isLinkToPackage = true;
-            linkResults = dependencyFileLinkGenerator.generate();
-          });
-          it('should generate two link files, one for the source and one for the dist', () => {
-            expect(linkResults).to.have.lengthOf(2);
-          });
-          describe('link file of the source', () => {
-            let linkResult;
-            before(() => {
-              linkResult = linkResults[0];
-            });
-            it('should generate linkContent that points to the package name instead of a file', () => {
-              expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-            });
-            it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
-              expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.js'));
-            });
-          });
-          describe('link file of the dist', () => {
-            let linkResult;
-            before(() => {
-              linkResult = linkResults[1];
-            });
-            it('should generate linkContent that points to the package name instead of a file', () => {
-              expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-            });
-            it('should generate linkPath that consist of component rootDir + dist + sourceRelativePath', () => {
-              expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/dist/utils/is-string.js'));
-            });
           });
         });
       });
@@ -242,39 +193,6 @@ describe('DependencyFileLinkGenerator', () => {
             expect(linkResult.isEs6).to.be.true;
           });
         });
-        describe('when isLinkToPackage is set to true', () => {
-          before(() => {
-            dependencyFileLinkGenerator.isLinkToPackage = true;
-            linkResults = dependencyFileLinkGenerator.generate();
-          });
-          it('should generate two link files, one for the source and one for the dist', () => {
-            expect(linkResults).to.have.lengthOf(2);
-          });
-          describe('link file of the source', () => {
-            let linkResult;
-            before(() => {
-              linkResult = linkResults[0];
-            });
-            it('should generate linkContent that points to the package name instead of a file', () => {
-              expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-            });
-            it('should generate linkPath that consist of component rootDir + sourceRelativePath', () => {
-              expect(linkResult.linkPath).to.equal(path.normalize('components/bar/foo/utils/is-string.js'));
-            });
-          });
-          describe('link file of the dist', () => {
-            let linkResult;
-            before(() => {
-              linkResult = linkResults[1];
-            });
-            it('should generate linkContent that points to the package name instead of a file', () => {
-              expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-            });
-            it('should generate linkPath that consist of dist + component rootDir + sourceRelativePath', () => {
-              expect(linkResult.linkPath).to.equal(path.normalize('dist/components/bar/foo/utils/is-string.js'));
-            });
-          });
-        });
       });
     });
     describe('using custom resolved modules with ES6', () => {
@@ -316,7 +234,6 @@ describe('DependencyFileLinkGenerator', () => {
         });
         describe('when createNpmLinkFiles is set to true', () => {
           before(() => {
-            dependencyFileLinkGenerator.isLinkToPackage = true;
             dependencyFileLinkGenerator.createNpmLinkFiles = true;
             linkResults = dependencyFileLinkGenerator.generate();
             linkResult = linkResults[0];
@@ -390,43 +307,6 @@ describe('DependencyFileLinkGenerator', () => {
           });
           it('should generate linkContent that points to the package', () => {
             expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-          });
-        });
-        describe('when isLinkToPackage is set to true', () => {
-          before(() => {
-            dependencyFileLinkGenerator.isLinkToPackage = true;
-            linkResults = dependencyFileLinkGenerator.generate();
-          });
-          it('should generate two link files, one for the source and one for the dist', () => {
-            expect(linkResults).to.have.lengthOf(2);
-          });
-          describe('link file of the source', () => {
-            let linkResult;
-            before(() => {
-              linkResult = linkResults[0];
-            });
-            it('should generate linkContent that points to the package name instead of a file', () => {
-              expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-            });
-            it('should generate linkPath that consist of component rootDir + importSource + index.js', () => {
-              expect(linkResult.linkPath).to.equal(
-                path.normalize('components/bar/foo/node_modules/utils/is-string/index.js')
-              );
-            });
-          });
-          describe('link file of the dist', () => {
-            let linkResult;
-            before(() => {
-              linkResult = linkResults[1];
-            });
-            it('should generate linkContent that points to the package name instead of a file', () => {
-              expect(linkResult.linkContent).to.equal("module.exports = require('@bit/remote-scope.utils.is-string');");
-            });
-            it('should generate linkPath that consist of dist + component rootDir + importSource + index.js', () => {
-              expect(linkResult.linkPath).to.equal(
-                path.normalize('dist/components/bar/foo/node_modules/utils/is-string/index.js')
-              );
-            });
           });
         });
       });
