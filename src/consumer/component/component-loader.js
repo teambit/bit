@@ -7,7 +7,7 @@ import logger from '../../logger/logger';
 import Component from './consumer-component';
 import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
-import { COMPONENT_ORIGINS } from '../../constants';
+import { COMPONENT_ORIGINS, ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
@@ -190,7 +190,7 @@ export default class ComponentLoader {
     return Boolean(
       this.consumer.config.packageJsonObject &&
         this.consumer.config.packageJsonObject.dependencies &&
-        this.consumer.config.packageJsonObject.dependencies['@angular/core']
+        this.consumer.config.packageJsonObject.dependencies[ANGULAR_PACKAGE_IDENTIFIER]
     );
   }
 
