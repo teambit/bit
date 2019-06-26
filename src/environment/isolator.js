@@ -1,6 +1,7 @@
 // @flow
 import R from 'ramda';
 import path from 'path';
+import semver from 'semver';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -14,6 +15,7 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import type Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
+import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
 
 export default class Isolator {
   capsule: Capsule;
@@ -125,7 +127,36 @@ export default class Isolator {
     await packageJsonFile.write();
   }
 
+  async _getNpmVersion() {
+    const execResults = await this.capsule.exec('npm --version');
+    const versionString = await new Promise((resolve, reject) => {
+      let version = '';
+      execResults.stdout.on('data', (data: string) => {
+        version += data;
+      });
+      execResults.stdout.on('error', (error: string) => {
+        return reject(error);
+      });
+      // @ts-ignore
+      execResults.on('close', () => {
+        return resolve(version);
+      });
+    });
+    const validVersion = semver.coerce(versionString);
+    return validVersion ? validVersion.raw : null;
+  }
+
   async _installPackages(directory: string) {
+    const npmVersion = await this._getNpmVersion();
+    if (!npmVersion) {
+      return Promise.reject('Failed to isolate component: unable to run npm');
+    }
+    if (!semver.satisfies(npmVersion, ACCEPTABLE_NPM_VERSIONS)) {
+      return Promise.reject(
+        `Failed to isolate component: found an old version of npm (${npmVersion}). ` +
+          `To get rid of this error, please upgrade to npm ${ACCEPTABLE_NPM_VERSIONS}`
+      );
+    }
     const execResults = await this.capsule.exec('npm install', { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {
