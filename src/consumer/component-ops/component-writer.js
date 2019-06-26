@@ -124,6 +124,7 @@ export default class ComponentWriter {
     await this._updateConsumerConfigIfNeeded();
     this._determineWhetherToWritePackageJson();
     await this.populateFilesToWriteToComponentDir();
+    this.component.dataToPersist.toConsole();
     return this.component;
   }
 
@@ -143,7 +144,10 @@ export default class ComponentWriter {
     // make sure the project's package.json is not overridden by Bit
     // If a consumer is of isolated env it's ok to override the root package.json (used by the env installation
     // of compilers / testers / extensions)
-    if (this.writePackageJson && ((this.consumer && this.consumer.isolated) || this.writeToPath !== '.')) {
+    if (
+      this.writePackageJson &&
+      (this.isolated || (this.consumer && this.consumer.isolated) || this.writeToPath !== '.')
+    ) {
       const { packageJson, distPackageJson } = preparePackageJsonToWrite(
         this.consumer,
         this.component,
