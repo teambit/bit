@@ -149,12 +149,14 @@ export default class Isolator {
   async _installPackages(directory: string) {
     const npmVersion = await this._getNpmVersion();
     if (!npmVersion) {
-      return Promise.reject('Failed to isolate component: unable to run npm');
+      return Promise.reject(new Error('Failed to isolate component: unable to run npm'));
     }
     if (!semver.satisfies(npmVersion, ACCEPTABLE_NPM_VERSIONS)) {
       return Promise.reject(
-        `Failed to isolate component: found an old version of npm (${npmVersion}). ` +
-          `To get rid of this error, please upgrade to npm ${ACCEPTABLE_NPM_VERSIONS}`
+        new Error(
+          `Failed to isolate component: found an old version of npm (${npmVersion}). ` +
+            `To get rid of this error, please upgrade to npm ${ACCEPTABLE_NPM_VERSIONS}`
+        )
       );
     }
     const execResults = await this.capsule.exec('npm install', { cwd: directory });
