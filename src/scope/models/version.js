@@ -70,7 +70,8 @@ export type VersionProps = {
   testerPackageDependencies?: { [string]: string },
   bindingPrefix?: string,
   customResolvedPaths?: customResolvedPath[],
-  overrides: ComponentOverridesData
+  overrides: ComponentOverridesData,
+  packageJsonChangedProps?: Object
 };
 
 /**
@@ -103,6 +104,7 @@ export default class Version extends BitObject {
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
   overrides: ComponentOverridesData;
+  packageJsonChangedProps: ?Object;
 
   constructor(props: VersionProps) {
     super();
@@ -132,6 +134,7 @@ export default class Version extends BitObject {
     this.bindingPrefix = props.bindingPrefix;
     this.customResolvedPaths = props.customResolvedPaths;
     this.overrides = props.overrides || {};
+    this.packageJsonChangedProps = props.packageJsonChangedProps || {};
     this.validateVersion();
   }
 
@@ -320,7 +323,8 @@ export default class Version extends BitObject {
         compilerPackageDependencies: this.compilerPackageDependencies,
         testerPackageDependencies: this.testerPackageDependencies,
         customResolvedPaths: this.customResolvedPaths,
-        overrides: this.overrides
+        overrides: this.overrides,
+        packageJsonChangedProps: this.packageJsonChangedProps
       },
       val => !!val
     );
@@ -370,7 +374,8 @@ export default class Version extends BitObject {
       testerPackageDependencies,
       packageDependencies,
       customResolvedPaths,
-      overrides
+      overrides,
+      packageJsonChangedProps
     } = JSON.parse(contents);
     const _getDependencies = (deps = []): Dependency[] => {
       if (deps.length && R.is(String, first(deps))) {
@@ -446,7 +451,8 @@ export default class Version extends BitObject {
       testerPackageDependencies,
       packageDependencies,
       customResolvedPaths,
-      overrides
+      overrides,
+      packageJsonChangedProps
     });
   }
 
@@ -544,7 +550,8 @@ export default class Version extends BitObject {
       flattenedCompilerDependencies,
       flattenedTesterDependencies,
       customResolvedPaths: component.customResolvedPaths,
-      overrides: component.overrides.componentOverridesData
+      overrides: component.overrides.componentOverridesData,
+      packageJsonChangedProps: component.packageJsonChangedProps
     });
   }
 

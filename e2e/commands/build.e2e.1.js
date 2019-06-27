@@ -1,7 +1,6 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
-import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const assertArrays = require('chai-arrays');
 chai.use(require('chai-fs'));
@@ -203,24 +202,29 @@ describe('bit build', function () {
         const packageJson = helper.readPackageJson();
         expect(packageJson).to.not.have.property('foo');
       });
-      describe('as imported', () => {
+      describe('tagging the component', () => {
         before(() => {
           helper.tagAllComponents();
-          helper.exportAllComponents();
-          helper.reInitLocalScope();
-          helper.addRemoteScope();
-          helper.addRemoteEnvironment();
-          helper.importComponent('bar/foo');
-          helper.runCmd('bit build --no-cache');
         });
-        it('should add the packageJson properties to the component package.json', () => {
-          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
-          expect(packageJson).to.have.property('foo');
-          expect(packageJson.foo).equal('bar');
+        it('should save the additional package.json props into the scope', () => {
+          const catComponent = helper.catComponent('bar/foo@latest');
+          expect(catComponent).to.have.property('packageJsonChangedProps');
+          expect(catComponent.packageJsonChangedProps)
+            .to.have.property('foo')
+            .that.equal('bar');
         });
-        it('status should not show as modified', () => {
-          const status = helper.status();
-          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        describe('importing the component to a new workspace', () => {
+          before(() => {
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('bar/foo');
+          });
+          it('should write the added props into the component package.json', () => {
+            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+            expect(packageJson).to.have.property('foo');
+            expect(packageJson.foo).equal('bar');
+          });
         });
       });
     });

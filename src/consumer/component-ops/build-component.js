@@ -23,11 +23,12 @@ import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
 import type { CompilerResults } from '../../extensions/compiler-api';
+import PackageJsonFile from '../component/package-json-file';
 
 export default (async function buildComponent({
   component,
   scope,
-  save,
+  save, // this is true only when originated from `runAndUpdateCI()`
   consumer,
   noCache,
   directory,
@@ -102,8 +103,9 @@ export default (async function buildComponent({
   if (save) {
     await scope.sources.updateDist({ source: component });
   }
-  if (packageJson) {
+  if (packageJson && !R.isEmpty(packageJson)) {
     await _updateComponentPackageJson(component, packageJson);
+    component.packageJsonChangedProps = Object.assign(component.packageJsonChangedProps || {}, packageJson);
   }
   return component.dists;
 });
@@ -116,14 +118,7 @@ async function _updateComponentPackageJson(component: ConsumerComponent, package
     );
     return;
   }
-  if (R.isEmpty(packageJsonPropsToAdd)) return;
-  Object.keys(packageJsonPropsToAdd).forEach(prop =>
-    componentPackageJsonFile.addOrUpdateProperty(prop, packageJsonPropsToAdd[prop])
-  );
-  componentPackageJsonFile.packageJsonObject = Object.assign(
-    componentPackageJsonFile.packageJsonObject,
-    packageJsonPropsToAdd
-  );
+  componentPackageJsonFile.mergePackageJsonObject(packageJsonPropsToAdd);
   await componentPackageJsonFile.write();
 }
 
@@ -158,17 +153,7 @@ function _verifyPackageJsonReturnedByCompiler(packageJson: Object) {
   if (typeof packageJson !== 'object') {
     throw new GeneralError(`fatal: compiler must return packageJson as an object, got ${typeof packageJson}`);
   }
-  const propsForbiddenToModify = [
-    'name',
-    'version',
-    'main',
-    'dependencies',
-    'devDependencies',
-    'peerDependencies',
-    'license',
-    'bit'
-  ];
-  propsForbiddenToModify.forEach((prop) => {
+  PackageJsonFile.propsNonUserChangeable().forEach((prop) => {
     if (packageJson[prop]) {
       throw new GeneralError(`fatal: compiler must not return packageJson with "${prop}" property`);
     }

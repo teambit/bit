@@ -347,6 +347,7 @@ export default class Component extends BitObject {
       log,
       customResolvedPaths: clone(version.customResolvedPaths),
       overrides: ComponentOverrides.loadFromScope(version.overrides),
+      packageJsonChangedProps: clone(version.packageJsonChangedProps),
       deprecated: this.deprecated
     });
     if (manipulateDirData) {

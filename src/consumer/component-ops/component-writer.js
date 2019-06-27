@@ -160,6 +160,7 @@ export default class ComponentWriter {
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
+      packageJson.mergePackageJsonObject(this.component.packageJsonChangedProps);
       await this._populateEnvFilesIfNeeded();
       this.component.dataToPersist.addFile(packageJson.toJSONFile());
       if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toJSONFile());

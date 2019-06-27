@@ -102,6 +102,7 @@ export type ComponentProps = {
   customResolvedPaths?: ?(customResolvedPath[]),
   overrides: ComponentOverrides,
   packageJsonFile?: ?PackageJsonFile,
+  packageJsonChangedProps?: ?{ [string]: any },
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -161,6 +162,7 @@ export default class Component {
   _driver: Driver;
   _isModified: boolean;
   packageJsonFile: ?PackageJsonFile; // populated when loadedFromFileSystem or when writing the components. for author it never exists
+  packageJsonChangedProps: ?Object; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
@@ -215,6 +217,7 @@ export default class Component {
     testerPackageDependencies,
     overrides,
     packageJsonFile,
+    packageJsonChangedProps,
     docs,
     dists,
     mainDistFile,
@@ -250,6 +253,7 @@ export default class Component {
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
     this.packageJsonFile = packageJsonFile;
+    this.packageJsonChangedProps = packageJsonChangedProps;
     this._docs = docs;
     this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
@@ -1112,6 +1116,7 @@ export default class Component {
       isAuthor
     );
     const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
+    const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
 
     return new Component({
       name: id.name,
@@ -1133,7 +1138,8 @@ export default class Component {
       deprecated,
       origin: componentMap.origin,
       overrides,
-      packageJsonFile
+      packageJsonFile,
+      packageJsonChangedProps
     });
   }
 }

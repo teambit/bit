@@ -99,6 +99,15 @@ export default class PackageJsonFile {
     return this.packageJsonObject[propertyName];
   }
 
+  mergePackageJsonObject(packageJsonObject: ?Object): void {
+    if (!packageJsonObject || R.isEmpty(packageJsonObject)) return;
+    this.packageJsonObject = Object.assign(this.packageJsonObject, packageJsonObject);
+  }
+
+  static propsNonUserChangeable() {
+    return ['name', 'version', 'main', 'dependencies', 'devDependencies', 'peerDependencies', 'license', 'bit'];
+  }
+
   static parsePackageJsonStr(str: string, dir: string) {
     try {
       return JSON.parse(str);
