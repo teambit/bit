@@ -372,4 +372,4 @@ export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
 export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 
-export const ANGULAR_BIT_ENTRY_POINT_FILE = '__index.ts';
+export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';
