@@ -200,7 +200,14 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePath(): string {
-    if (this.relativePath.destinationRelativePath === pathNormalizeToLinux(this.dependencyComponent.mainFile)) {
+    const dependencyMainFile = pathNormalizeToLinux(this.dependencyComponent.mainFile);
+    if (
+      this.relativePath.destinationRelativePath === dependencyMainFile ||
+      // @todo: this is a temporary workaround for #1764. we need to investigate why the
+      // destinationRelativePath has `index.ts` prefix while the dependency has the main-file with
+      // public_api.ts suffix
+      this.relativePath.destinationRelativePath.replace('index.ts', 'public_api.ts') === dependencyMainFile
+    ) {
       return this._getPackageName();
     }
     // the link is to an internal file, not to the main file
