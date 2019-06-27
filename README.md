@@ -129,7 +129,7 @@ Bit can be extended to play with the tools you work with, including [build and t
 
 Pre-made environments, which are also Bit components that can be imported into your project before tagging the components, save the overhead of configurations for each component. You can use the [example environments](https://bit.dev/bit/envs) in Bit’s hub, or create your own. You can learn more about it [in the docs](https://docs.bit.dev/docs/building-components.html).
 
-Update: An extensive extension system is in the works and should become availabe within weeks. This will make the process of creating extensions effortless, and open new possibilities to integrate any tool or workflow into Bit’s code-sharing workflow.
+Update: An extensive extension system is in the works and should become available within weeks. This will make the process of creating extensions effortless, and open new possibilities to integrate any tool or workflow into Bit’s code-sharing workflow.
 
 ## Bit in the wild
 
@@ -138,7 +138,7 @@ Update: An extensive extension system is in the works and should become availabe
 Any repository or library containing components is already a Bit monorepo.  
 
 Adding Bit to the repository will not change its structure, source code or configurations. You won’t need to refactor or create separate directories and configurations for every component.  
-Instead, you can use Bit to track and share the components from your library directly to Bit’s hub. Then, they become availabe to install as individual NPM packages.   
+Instead, you can use Bit to track and share the components from your library directly to Bit’s hub. Then, they become available to install as individual NPM packages.   
 
 This means that your React UI library + Bit will become a monorepo from which components can be individually discovered and installed, without changing the library. Component dependencies will be automatically defined by Bit, and build/test configurations will be [applied to all the components](https://docs.bit.dev/docs/building-components.html) using [Bit’s environments](https://bit.dev/bit/envs). In addition, you will get discoverability for the components across your team, community or organization.
 
