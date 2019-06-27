@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
+import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
 const assertArrays = require('chai-arrays');
 chai.use(require('chai-fs'));
@@ -180,6 +181,47 @@ describe('bit build', function () {
       it('should indicate that compiler was installed', () => {
         expect(buildOutput).to.have.string('successfully installed the');
         expect(buildOutput).to.have.string('compiler');
+      });
+    });
+  });
+  /**
+   * this test uses the `pkg-json` compiler, which adds `{ foo: 'bar' }` to the package.json
+   */
+  describe('change package.json values', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.importDummyCompiler('pkg-json');
+    });
+    describe('as author', () => {
+      before(() => {
+        helper.initNpm();
+        helper.build();
+      });
+      it('should not change the root package.json', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.not.have.property('foo');
+      });
+      describe('as imported', () => {
+        before(() => {
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.addRemoteEnvironment();
+          helper.importComponent('bar/foo');
+          helper.runCmd('bit build --no-cache');
+        });
+        it('should add the packageJson properties to the component package.json', () => {
+          const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+          expect(packageJson).to.have.property('foo');
+          expect(packageJson.foo).equal('bar');
+        });
+        it('status should not show as modified', () => {
+          const status = helper.status();
+          expect(status).to.have.string(statusWorkspaceIsCleanMsg);
+        });
       });
     });
   });

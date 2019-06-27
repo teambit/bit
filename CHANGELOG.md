@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file
 - change dependency links generated when dependencies are saved as components to be module paths and not relative paths
 - add a custom entry point file for Angular components
 - [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing

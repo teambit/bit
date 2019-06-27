@@ -8,6 +8,7 @@ import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import type { ComponentOverridesData } from './component-overrides';
 import filterObject from '../../utils/filter-object';
+import PackageJsonFile from '../component/package-json-file';
 
 type ConfigProps = {
   lang?: string,
@@ -21,7 +22,7 @@ type ConfigProps = {
 export default class ComponentConfig extends AbstractConfig {
   overrides: ?ComponentOverridesData;
   componentHasWrittenConfig: boolean = false; // whether a component has bit.json written to FS or package.json written with 'bit' property
-  packageJsonObject: ?Object;
+  packageJsonFile: ?PackageJsonFile;
   constructor({ compiler, tester, lang, bindingPrefix, extensions, overrides }: ConfigProps) {
     super({
       compiler,
@@ -113,7 +114,6 @@ export default class ComponentConfig extends AbstractConfig {
   ): Promise<ComponentConfig> {
     if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
     const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);
-    const packageJsonPath = componentDir ? AbstractConfig.composePackageJsonPath(componentDir) : null;
     const loadBitJson = async () => {
       try {
         const file = await AbstractConfig.loadJsonFileIfExist(bitJsonPath);
@@ -124,27 +124,31 @@ export default class ComponentConfig extends AbstractConfig {
         );
       }
     };
-    const loadPackageJson = async () => {
-      if (!packageJsonPath) return null;
+    const loadPackageJson = async (): Promise<?PackageJsonFile> => {
+      if (!componentDir) return null;
       try {
-        const file = await AbstractConfig.loadJsonFileIfExist(packageJsonPath);
+        const file = await PackageJsonFile.load(componentDir);
+        if (!file.fileExist) return null;
         return file;
       } catch (e) {
         throw new GeneralError(
-          `package.json at ${packageJsonPath} is not a valid JSON file, consider to re-import the file to re-generate the file`
+          `package.json at ${AbstractConfig.composePackageJsonPath(
+            componentDir
+          )} is not a valid JSON file, consider to re-import the file to re-generate the file`
         );
       }
     };
     const [bitJsonFile, packageJsonFile] = await Promise.all([loadBitJson(), loadPackageJson()]);
     const bitJsonConfig = bitJsonFile || {};
-    const packageJsonHasConfig = Boolean(packageJsonFile && packageJsonFile.bit);
-    const packageJsonConfig = packageJsonHasConfig ? packageJsonFile.bit : {};
+    const packageJsonObject = packageJsonFile ? packageJsonFile.packageJsonObject : null;
+    const packageJsonHasConfig = Boolean(packageJsonObject && packageJsonObject.bit);
+    const packageJsonConfig = packageJsonHasConfig ? packageJsonObject.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
     const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
     componentConfig.path = bitJsonPath;
     componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
-    componentConfig.packageJsonObject = packageJsonFile;
+    componentConfig.packageJsonFile = packageJsonFile;
     return componentConfig;
   }
 }
