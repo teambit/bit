@@ -10,7 +10,7 @@ import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import type { PathLinux, PathOsBasedAbsolute } from '../../utils/path';
+import type { PathLinux, PathOsBasedAbsolute, PathRelative } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
@@ -162,7 +162,7 @@ export function preparePackageJsonToWrite(
 
 export async function updateAttribute(
   consumer: Consumer,
-  componentDir: PathLinux,
+  componentDir: PathRelative,
   attributeName: string,
   attributeValue: string
 ): Promise<void> {

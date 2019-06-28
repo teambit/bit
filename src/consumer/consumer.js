@@ -662,7 +662,7 @@ export default class Consumer {
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
-        ? packageJsonUtils.updateAttribute(this, path.join(this.getPath(), packageJsonDir), 'version', id.version)
+        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version)
         : Promise.resolve();
     });
     return Promise.all(updateVersionsP);
