@@ -99,6 +99,7 @@ function getComponentLinks({
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
   if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
+    // $FlowFixMe it has been verified above that component.packageJsonFile is not empty
     const packageJsonFile = component.packageJsonFile.toJSONFile();
     dataToPersist.addFile(packageJsonFile);
   }
@@ -339,11 +340,11 @@ function generatePostInstallScript(component: Component, postInstallLinks = [], 
     acc[val.dest] = val.source;
     return acc;
   }, {});
-  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject), JSON.stringify(symlinkPathsObject));
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
+  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   component.packageJsonFile.addOrUpdateProperty('scripts', { postinstall: postInstallScript });
   const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
   return postInstallFile;
@@ -355,8 +356,7 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
     return acc;
   }, {});
   if (R.isEmpty(resolveAliases)) return false;
-  // @TODO: load the package.json here if not found. it happens during the build process
-  if (!component.packageJsonFile) return false;
+  if (!component.packageJsonFile) return false; // e.g. author doesn't have package.json per component
   const bitProperty = component.packageJsonFile.getProperty('bit') || {};
   bitProperty.resolveAliases = resolveAliases;
   return true;

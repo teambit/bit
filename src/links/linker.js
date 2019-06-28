@@ -47,7 +47,7 @@ export async function getLinksInDistToWrite(
   const dataToPersist = new DataToPersist();
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
-  const packageJsonFile = await PackageJsonFile.load(rootDir);
+  const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), rootDir);
   if (packageJsonFile.fileExist) {
     packageJsonFile.addOrUpdateProperty('main', newMainFile);
     dataToPersist.addFile(packageJsonFile.toJSONFile());

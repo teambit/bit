@@ -1,7 +1,7 @@
 // @flow
 import path from 'path';
 import GeneralError from '../../error/general-error';
-import type { PathOsBased } from '../path';
+import type { PathOsBasedRelative } from '../path';
 import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 
@@ -9,7 +9,7 @@ export default function getNodeModulesPathOfComponent(
   bindingPrefix: ?string,
   id: BitId,
   allowNonScope: boolean = false
-): PathOsBased {
+): PathOsBasedRelative {
   if (!id.scope && !allowNonScope) {
     throw new GeneralError(
       `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`

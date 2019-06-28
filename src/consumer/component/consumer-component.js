@@ -101,6 +101,8 @@ export type ComponentProps = {
   testerPackageDependencies?: ?Object,
   customResolvedPaths?: ?(customResolvedPath[]),
   overrides: ComponentOverrides,
+  packageJsonFile?: ?PackageJsonFile,
+  packageJsonChangedProps?: ?{ [string]: any },
   files: SourceFile[],
   docs?: ?(Doclet[]),
   dists?: Dist[],
@@ -159,7 +161,8 @@ export default class Component {
   customResolvedPaths: customResolvedPath[]; // used when in the same component, one file requires another file using custom-resolve
   _driver: Driver;
   _isModified: boolean;
-  packageJsonFile: PackageJsonFile;
+  packageJsonFile: ?PackageJsonFile; // populated when loadedFromFileSystem or when writing the components. for author it never exists
+  packageJsonChangedProps: ?Object; // manually changed or added by the user or by the compiler (currently, it's only populated by the build process). relevant for author also.
   _currentlyUsedVersion: BitId; // used by listScope functionality
   pendingVersion: Version; // used during tagging process. It's the version that going to be saved or saved already in the model
   dataToPersist: DataToPersist;
@@ -213,6 +216,8 @@ export default class Component {
     compilerPackageDependencies,
     testerPackageDependencies,
     overrides,
+    packageJsonFile,
+    packageJsonChangedProps,
     docs,
     dists,
     mainDistFile,
@@ -247,6 +252,8 @@ export default class Component {
     this.compilerPackageDependencies = compilerPackageDependencies || {};
     this.testerPackageDependencies = testerPackageDependencies || {};
     this.overrides = overrides;
+    this.packageJsonFile = packageJsonFile;
+    this.packageJsonChangedProps = packageJsonChangedProps;
     this._docs = docs;
     this.setDists(dists, mainDistFile ? path.normalize(mainDistFile) : null);
     this.specsResults = specsResults;
@@ -1039,9 +1046,8 @@ export default class Component {
     // (like dependencies)
     let componentConfig: ?ComponentConfig;
     if (configDir !== consumerPath) {
-      const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
       // $FlowFixMe unclear error
-      componentConfig = await ComponentConfig.load(componentPkgJsonDir, configDir, workspaceConfig);
+      componentConfig = await ComponentConfig.load({ componentDir: componentMap.rootDir, workspaceDir: consumerPath, configDir, workspaceConfig });
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       if (componentFromModel) {
@@ -1108,6 +1114,8 @@ export default class Component {
       componentConfig,
       isAuthor
     );
+    const packageJsonFile = (componentConfig && componentConfig.packageJsonFile) || null;
+    const packageJsonChangedProps = componentFromModel ? componentFromModel.packageJsonChangedProps : null;
 
     return new Component({
       name: id.name,
@@ -1128,7 +1136,9 @@ export default class Component {
       testerPackageDependencies,
       deprecated,
       origin: componentMap.origin,
-      overrides
+      overrides,
+      packageJsonFile,
+      packageJsonChangedProps
     });
   }
 }

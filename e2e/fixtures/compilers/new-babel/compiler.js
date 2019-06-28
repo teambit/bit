@@ -91,7 +91,7 @@ const compiler = {
 
     try {
       const builtFiles = files.map(file => runBabel(file, babelrc, context.rootDistDir)).reduce((a, b) => a.concat(b));
-      return {files: builtFiles};
+      return { dists: builtFiles};
     } catch (e) {
       throw e;
     }

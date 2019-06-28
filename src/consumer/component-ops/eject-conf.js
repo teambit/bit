@@ -119,10 +119,13 @@ export async function getEjectConfDataToPersist(
   if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
   if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
   const bitJson = getBitJsonToWrite(component, relativeEjectedCompilerDirectory, relativeEjectedTesterDirectory);
-  const jsonFilesToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
+  const jsonFilesToWrite = await bitJson.prepareToWrite({
+    workspaceDir: consumer.getPath(),
+    componentDir: bitJsonDir.dirPath
+  });
   dataToPersist.addManyFiles(jsonFilesToWrite);
   if (removedFromOverrides) {
-    const consumerConfigFiles = await consumer.config.prepareToWrite({ bitDir: '.' });
+    const consumerConfigFiles = await consumer.config.prepareToWrite({ workspaceDir: consumerPath });
     dataToPersist.addManyFiles(consumerConfigFiles);
   }
 
