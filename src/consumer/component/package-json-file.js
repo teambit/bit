@@ -16,7 +16,13 @@ export default class PackageJsonFile {
   fileExist: boolean;
   filePath: PathOsBasedRelative;
   workspaceDir: ?PathOsBasedAbsolute;
-  constructor(filePath: PathOsBasedRelative, packageJsonObject: Object, fileExist: boolean, workspaceDir?: PathOsBasedAbsolute, indent?: number) {
+  constructor(
+    filePath: PathOsBasedRelative,
+    packageJsonObject: Object,
+    fileExist: boolean,
+    workspaceDir?: PathOsBasedAbsolute,
+    indent?: number
+  ) {
     this.filePath = filePath;
     this.packageJsonObject = packageJsonObject;
     this.fileExist = fileExist;

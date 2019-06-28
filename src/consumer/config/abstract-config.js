@@ -178,7 +178,13 @@ export default class AbstractConfig {
     );
   }
 
-  async write({ workspaceDir, componentDir }: { workspaceDir: PathOsBasedAbsolute, componentDir?: PathOsBasedRelative }): Promise<string[]> {
+  async write({
+    workspaceDir,
+    componentDir
+  }: {
+    workspaceDir: PathOsBasedAbsolute,
+    componentDir?: PathOsBasedRelative
+  }): Promise<string[]> {
     const jsonFiles = await this.prepareToWrite({ workspaceDir, componentDir });
     const dataToPersist = new DataToPersist();
     dataToPersist.addManyFiles(jsonFiles);
@@ -186,7 +192,13 @@ export default class AbstractConfig {
     return dataToPersist.persistAllToFS();
   }
 
-  async prepareToWrite({ workspaceDir, componentDir = '.' }: { workspaceDir: PathOsBasedAbsolute, componentDir?: PathOsBasedRelative }): Promise<JSONFile[]> {
+  async prepareToWrite({
+    workspaceDir,
+    componentDir = '.'
+  }: {
+    workspaceDir: PathOsBasedAbsolute,
+    componentDir?: PathOsBasedRelative
+  }): Promise<JSONFile[]> {
     const plainObject = this.toPlainObject();
     const JsonFiles = [];
     if (this.writeToPackageJson) {
