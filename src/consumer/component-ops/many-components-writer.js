@@ -113,7 +113,6 @@ export default class ManyComponentsWriter {
     await this._populateComponentsFilesToWrite();
     await this._populateComponentsDependenciesToWrite();
     this._moveComponentsIfNeeded();
-    this._addBasePathIfExistToAllFiles();
     await this._persistComponentsData();
   }
   async _installPackages() {
@@ -144,17 +143,8 @@ export default class ManyComponentsWriter {
       const jsonFiles = await this.consumer.config.prepareToWrite({ workspaceDir: this.consumer.getPath() });
       dataToPersist.addManyFiles(jsonFiles);
     }
+    dataToPersist.addBasePath(this.basePath);
     await dataToPersist.persistAllToFS();
-  }
-  _addBasePathIfExistToAllFiles() {
-    if (!this.basePath) return;
-    this.componentsWithDependencies.forEach((componentWithDeps) => {
-      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      allComponents.forEach((component) => {
-        // $FlowFixMe
-        if (component.dataToPersist) component.dataToPersist.addBasePath(this.basePath);
-      });
-    });
   }
   async _populateComponentsFilesToWrite() {
     const writeComponentsParams = this._getWriteComponentsParams();
