@@ -10,7 +10,7 @@ import type Consumer from '../consumer';
 import type { Dependencies } from './dependencies';
 import { pathNormalizeToLinux } from '../../utils/path';
 import getNodeModulesPathOfComponent from '../../utils/bit/component-node-modules-path';
-import type { PathLinux } from '../../utils/path';
+import type { PathLinux, PathOsBasedAbsolute } from '../../utils/path';
 import logger from '../../logger/logger';
 import GeneralError from '../../error/general-error';
 import JSONFile from './sources/json-file';
@@ -62,7 +62,7 @@ export async function changeDependenciesToRelativeSyntax(
     const componentMap = consumer.bitMap.getComponent(component.id);
     const componentRootDir = componentMap.rootDir;
     if (!componentRootDir) return null;
-    const packageJsonFile = await PackageJsonFile.load(componentRootDir);
+    const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentRootDir);
     if (!packageJsonFile.fileExist) return null; // if package.json doesn't exist no need to update anything
     const devDeps = getPackages(component.devDependencies, componentMap);
     const compilerDeps = getPackages(component.compilerDependencies, componentMap);
@@ -166,7 +166,7 @@ export async function updateAttribute(
   attributeName: string,
   attributeValue: string
 ): Promise<void> {
-  const packageJsonFile = await PackageJsonFile.load(componentDir);
+  const packageJsonFile = await PackageJsonFile.load(consumer.getPath(), componentDir);
   if (!packageJsonFile.fileExist) return; // package.json doesn't exist, that's fine, no need to update anything
   packageJsonFile.addOrUpdateProperty(attributeName, attributeValue);
   await packageJsonFile.write();
@@ -208,7 +208,7 @@ export async function removeComponentsFromWorkspacesAndDependencies(consumer: Co
   await removeComponentsFromNodeModules(consumer, componentIds);
 }
 
-async function _addDependenciesPackagesIntoPackageJson(dir: string, dependencies: Object) {
+async function _addDependenciesPackagesIntoPackageJson(dir: PathOsBasedAbsolute, dependencies: Object) {
   const packageJsonFile = await PackageJsonFile.load(dir);
   packageJsonFile.addDependencies(dependencies);
   await packageJsonFile.write();

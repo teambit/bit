@@ -3,7 +3,7 @@ import R from 'ramda';
 import AbstractConfig from './abstract-config';
 import type { Compilers, Testers } from './abstract-config';
 import type WorkspaceConfig from './workspace-config';
-import type { PathOsBasedAbsolute } from '../../utils/path';
+import type { PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import type Component from '../component/consumer-component';
 import GeneralError from '../../error/general-error';
 import type { ComponentOverridesData } from './component-overrides';
@@ -105,13 +105,19 @@ export default class ComponentConfig extends AbstractConfig {
    * @param {*} componentDir root component directory, needed for loading package.json file.
    * in case a component is authored, leave this param empty to not load the project package.json
    * @param {*} configDir dir where bit.json and other envs files are written (by eject-conf or import --conf)
-   * @param {*} consumerConfig
+   * @param {*} workspaceConfig
    */
-  static async load(
-    componentDir: ?PathOsBasedAbsolute,
+  static async load({
+    componentDir,
+    workspaceDir,
+    configDir,
+    workspaceConfig
+  }: {
+    componentDir: ?PathOsBasedRelative,
+    workspaceDir: PathOsBasedRelative,
     configDir: PathOsBasedAbsolute,
-    consumerConfig: WorkspaceConfig
-  ): Promise<ComponentConfig> {
+    workspaceConfig: WorkspaceConfig
+  }): Promise<ComponentConfig> {
     if (!configDir) throw new TypeError('component-config.load configDir arg is empty');
     const bitJsonPath = AbstractConfig.composeBitJsonPath(configDir);
     const loadBitJson = async () => {
@@ -127,7 +133,7 @@ export default class ComponentConfig extends AbstractConfig {
     const loadPackageJson = async (): Promise<?PackageJsonFile> => {
       if (!componentDir) return null;
       try {
-        const file = await PackageJsonFile.load(componentDir);
+        const file = await PackageJsonFile.load(workspaceDir, componentDir);
         if (!file.fileExist) return null;
         return file;
       } catch (e) {
@@ -145,7 +151,7 @@ export default class ComponentConfig extends AbstractConfig {
     const packageJsonConfig = packageJsonHasConfig ? packageJsonObject.bit : {};
     // in case of conflicts, bit.json wins package.json
     const config = Object.assign(packageJsonConfig, bitJsonConfig);
-    const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, consumerConfig);
+    const componentConfig = ComponentConfig.mergeWithWorkspaceConfig(config, workspaceConfig);
     componentConfig.path = bitJsonPath;
     componentConfig.componentHasWrittenConfig = packageJsonHasConfig || Boolean(bitJsonFile);
     componentConfig.packageJsonFile = packageJsonFile;

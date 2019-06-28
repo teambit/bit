@@ -1046,9 +1046,8 @@ export default class Component {
     // (like dependencies)
     let componentConfig: ?ComponentConfig;
     if (configDir !== consumerPath) {
-      const componentPkgJsonDir = componentMap.rootDir ? consumer.toAbsolutePath(componentMap.rootDir) : null;
       // $FlowFixMe unclear error
-      componentConfig = await ComponentConfig.load(componentPkgJsonDir, configDir, workspaceConfig);
+      componentConfig = await ComponentConfig.load({ componentDir: componentMap.rootDir, workspaceDir: consumerPath, configDir, workspaceConfig });
       // by default, imported components are not written with bit.json file.
       // use the component from the model to get their bit.json values
       if (componentFromModel) {

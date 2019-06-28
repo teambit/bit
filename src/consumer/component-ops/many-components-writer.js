@@ -141,7 +141,7 @@ export default class ManyComponentsWriter {
       allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
     if (this.consumer && this.consumer.config.overrides.hasChanged) {
-      const jsonFiles = await this.consumer.config.prepareToWrite({ bitDir: this.consumer.getPath() });
+      const jsonFiles = await this.consumer.config.prepareToWrite({ workspaceDir: this.consumer.getPath() });
       dataToPersist.addManyFiles(jsonFiles);
     }
     await dataToPersist.persistAllToFS();
