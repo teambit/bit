@@ -104,7 +104,7 @@ export default class Version extends BitObject {
   bindingPrefix: ?string;
   customResolvedPaths: ?(customResolvedPath[]);
   overrides: ComponentOverridesData;
-  packageJsonChangedProps: ?Object;
+  packageJsonChangedProps: Object;
 
   constructor(props: VersionProps) {
     super();
