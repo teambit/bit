@@ -9,7 +9,7 @@ import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import type ComponentMap from '../consumer/bit-map/component-map';
-import { getLinkToPackageContent } from './link-content';
+import { getLinkToPackageContent, EXTENSIONS_TO_STRIP_FROM_PACKAGES } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
 import BitMap from '../consumer/bit-map';
@@ -212,6 +212,16 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePathToInternalFile() {
+    const packageName = this._getPackageName();
+    const internalFileInsidePackage = this._getInternalFileInsidePackage();
+    const ext = getExt(internalFileInsidePackage);
+    const internalFileWithoutExt = EXTENSIONS_TO_STRIP_FROM_PACKAGES.includes(ext)
+      ? getWithoutExt(internalFileInsidePackage)
+      : internalFileInsidePackage;
+    return `${packageName}/${internalFileWithoutExt}`;
+  }
+
+  _getInternalFileInsidePackage() {
     const dependencySavedLocallyAndDistIsOutside = this.dependencyComponentMap && !this.shouldDistsBeInsideTheComponent;
     const distPrefix =
       this.dependencyComponent.dists.isEmpty() ||
@@ -219,8 +229,7 @@ export default class DependencyFileLinkGenerator {
       dependencySavedLocallyAndDistIsOutside
         ? ''
         : `${DEFAULT_DIST_DIRNAME}/`;
-    const packageName = this._getPackageName();
-    return `${packageName}/${distPrefix}${this.relativePath.destinationRelativePath}`;
+    return distPrefix + this.relativePath.destinationRelativePath;
   }
 
   _getCustomResolveMapping() {
