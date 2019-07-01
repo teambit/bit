@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix require statements to an internal package file to not include extensions if they're [.js, .ts, .tsx, .jsx]
 - [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file
 - change dependency links generated when dependencies are saved as components to be module paths and not relative paths
 - add a custom entry point file for Angular components

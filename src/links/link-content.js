@@ -8,7 +8,6 @@ import type { ImportSpecifier } from '../consumer/component/dependencies/depende
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
-  // ts: "import myVar from '{filePath}'; export default myVar;",
   ts: "export * from '{filePath}';",
   jsx: "export * from '{filePath}';",
   tsx: "export * from '{filePath}';",
@@ -29,6 +28,8 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 };
 
 const fileExtensionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
+
+export const EXTENSIONS_TO_STRIP_FROM_PACKAGES = ['js', 'ts', 'jsx', 'tsx'];
 
 export function isSupportedExtension(filePath: string) {
   const ext = getExt(filePath);
