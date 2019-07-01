@@ -7,13 +7,15 @@ async function runAndUpdateCI({
   scopePath,
   verbose,
   directory,
-  keep
+  keep,
+  noCache
 }: {
   id: string,
   scopePath: string,
   verbose: boolean,
   directory: ?string,
-  keep?: boolean
+  keep?: boolean,
+  noCache?: boolean
 }): Promise<any> {
   function addCIAttrsInTheModel({ error, startTime }: { error?: any, startTime: string }) {
     const endTime = Date.now().toString();
@@ -33,7 +35,7 @@ async function runAndUpdateCI({
   try {
     // define options
     const save = true;
-    const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep });
+    const buildResults = await buildInScope({ id, scopePath, save, verbose, directory, keep, noCache });
     const testResults = await testInScope({ id, scopePath, save, verbose, directory, keep });
     const dists = buildResults ? buildResults.dists : null;
     await addCIAttrsInTheModel({ startTime });

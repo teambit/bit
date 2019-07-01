@@ -5,6 +5,7 @@ import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import NpmCiRegistry, { supportNpmCiRegistryTesting } from '../npm-ci-registry';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
+import { componentIssuesLabels } from '../../src/cli/templates/component-issues-template';
 
 chai.use(require('chai-fs'));
 
@@ -294,6 +295,16 @@ chai.use(require('chai-fs'));
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+        describe('deleting the dependency package from the FS', () => {
+          before(() => {
+            helper.deleteFile('components/bar/foo/node_modules/@ci');
+          });
+          it('bit status should show missing components and not untracked components', () => {
+            const status = helper.status();
+            expect(status).to.have.string(componentIssuesLabels.missingComponents);
+            expect(status).not.to.have.string(componentIssuesLabels.untrackedDependencies);
+          });
         });
         describe('import with dist outside the component directory', () => {
           before(() => {

@@ -8,6 +8,7 @@ import type { ImportSpecifier } from '../consumer/component/dependencies/depende
 
 const LINKS_CONTENT_TEMPLATES = {
   js: "module.exports = require('{filePath}');",
+  // ts: "import myVar from '{filePath}'; export default myVar;",
   ts: "export * from '{filePath}';",
   jsx: "export * from '{filePath}';",
   tsx: "export * from '{filePath}';",
@@ -47,9 +48,13 @@ export function getLinkToFileContent(filePath: PathOsBased, importSpecifiers?: I
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
 
-export function getLinkToPackageContent(filePath: PathOsBased, bitPackageName: string): string {
+export function getLinkToPackageContent(
+  filePath: PathOsBased,
+  bitPackageName: string,
+  importSpecifiers?: ImportSpecifier[]
+): string {
   const fileExt = getExt(filePath);
-  const template = getTemplateForPackage(fileExt);
+  const template = getTemplateForPackage(fileExt, importSpecifiers);
   if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
   return template.replace(/{filePath}/g, bitPackageName);
 }
@@ -83,11 +88,19 @@ function getTemplateForFile(fileExt: string, filePath: PathOsBased, importSpecif
   return _getTemplate(fileExt, importSpecifiers);
 }
 
-function getTemplateForPackage(fileExt: string) {
+function getTemplateForPackage(fileExt: string, importSpecifiers?: ImportSpecifier[]) {
+  if (importSpecifiers && importSpecifiers.length) {
+    if (fileExt === 'js' || fileExt === 'jsx') {
+      // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
+      return es6TemplateWithImportSpecifiers(importSpecifiers);
+    } else if (fileExt === 'ts' || fileExt === 'tsx') {
+      return tsTemplateWithImportSpecifiers(importSpecifiers);
+    }
+  }
   if (!fileExtensionsForNpmLinkGenerator.includes(fileExt)) {
     return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
   }
-  return _getTemplate(fileExt);
+  return _getTemplate(fileExt, importSpecifiers);
 }
 
 function _getTemplate(fileExt: string, importSpecifiers?: ImportSpecifier[]) {

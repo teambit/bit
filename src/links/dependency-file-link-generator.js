@@ -9,7 +9,7 @@ import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import type ComponentMap from '../consumer/bit-map/component-map';
-import { getLinkToFileContent, getLinkToPackageContent } from './link-content';
+import { getLinkToPackageContent } from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
 import BitMap from '../consumer/bit-map';
@@ -39,7 +39,6 @@ export default class DependencyFileLinkGenerator {
   dependencyComponent: Component;
   createNpmLinkFiles: boolean;
   targetDir: ?string;
-  isLinkToPackage: boolean;
   dependencyComponentMap: ?ComponentMap;
   linkFiles: LinkFileType[];
   relativePathInDependency: PathOsBased;
@@ -71,7 +70,6 @@ export default class DependencyFileLinkGenerator {
     this.dependencyId = dependencyComponent.id;
     this.createNpmLinkFiles = createNpmLinkFiles;
     this.targetDir = targetDir;
-    this.isLinkToPackage = this.createNpmLinkFiles || !this.component.dependenciesSavedAsComponents;
   }
 
   generate(): LinkFileType[] {
@@ -110,14 +108,10 @@ export default class DependencyFileLinkGenerator {
     const isCustomResolvedWithDistInside = Boolean(
       depRootDirDist && this.shouldDistsBeInsideTheComponent && this.hasDist
     );
-    const isCustomResolvedWithDistAndNpmLink = Boolean(
-      this.shouldDistsBeInsideTheComponent && this.hasDist && this.isLinkToPackage
-    );
 
-    const relativePathInDependency =
-      isCustomResolvedWithDistInside || isCustomResolvedWithDistAndNpmLink
-        ? `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`
-        : this.relativePathInDependency;
+    const relativePathInDependency = isCustomResolvedWithDistInside
+      ? `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`
+      : this.relativePathInDependency;
 
     const linkFile = this.prepareLinkFile({
       linkPath: this.getLinkPathForCustomResolve(relativeDistExtInDependency),
@@ -191,20 +185,18 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getSymlinkDest(filePath: PathOsBased): string {
-    if (this.isLinkToPackage) {
-      if (this.createNpmLinkFiles) {
-        return this._getPackagePathToInternalFile();
-      }
+    if (this.createNpmLinkFiles) {
+      return this._getPackagePathToInternalFile();
+    }
+    if (!this.component.dependenciesSavedAsComponents) {
       return path.join(this.getTargetDir(), 'node_modules', this._getPackagePathToInternalFile());
     }
+    // if dependencies are saved as components, the above logic will create a symlink to a symlink
     return filePath;
   }
 
   getLinkContent(relativeFilePath: PathOsBased): string {
-    if (this.isLinkToPackage) {
-      return getLinkToPackageContent(relativeFilePath, this._getPackagePath());
-    }
-    return getLinkToFileContent(relativeFilePath, this.relativePath.importSpecifiers);
+    return getLinkToPackageContent(relativeFilePath, this._getPackagePath(), this.relativePath.importSpecifiers);
   }
 
   _getPackagePath(): string {
@@ -220,11 +212,14 @@ export default class DependencyFileLinkGenerator {
   }
 
   _getPackagePathToInternalFile() {
-    const packageName = this._getPackageName();
+    const dependencySavedLocallyAndDistIsOutside = this.dependencyComponentMap && !this.shouldDistsBeInsideTheComponent;
     const distPrefix =
-      this.dependencyComponent.dists.isEmpty() || this.relativePath.isCustomResolveUsed
+      this.dependencyComponent.dists.isEmpty() ||
+      this.relativePath.isCustomResolveUsed ||
+      dependencySavedLocallyAndDistIsOutside
         ? ''
         : `${DEFAULT_DIST_DIRNAME}/`;
+    const packageName = this._getPackageName();
     return `${packageName}/${distPrefix}${this.relativePath.destinationRelativePath}`;
   }
 

@@ -69,6 +69,8 @@ import type { OverriddenDependencies } from './dependencies/dependency-resolver/
 import ComponentOverrides from '../config/component-overrides';
 import makeEnv from '../../extensions/env-factory';
 import PackageJsonFile from './package-json-file';
+import Isolator from '../../environment/isolator';
+import Capsule from '../../../components/core/capsule';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -530,12 +532,14 @@ export default class Component {
     consumer,
     noCache,
     verbose,
+    directory,
     keep
   }: {
     scope: Scope,
     save?: boolean,
     consumer?: Consumer,
     noCache?: boolean,
+    directory?: string,
     verbose?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
@@ -545,6 +549,7 @@ export default class Component {
       save,
       consumer,
       noCache,
+      directory,
       verbose,
       keep
     });
@@ -661,7 +666,19 @@ export default class Component {
           const oneFileSpecResult = async (testFile) => {
             const testFilePath = testFile.path;
             try {
-              const results = await tester.oldAction(testFilePath);
+              const isolateFunc = async (
+                destDir?: string
+              ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
+                const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
+                const componentWithDependencies = await isolator.isolate(component.id, {});
+                return { capsule: isolator.capsule, componentWithDependencies };
+              };
+              const context: Object = {
+                componentDir: cwd,
+                isolate: isolateFunc
+              };
+
+              const results = await tester.oldAction(testFilePath, context);
               results.specPath = testFile.relative;
               return results;
             } catch (err) {

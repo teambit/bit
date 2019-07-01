@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- change dependency links generated when dependencies are saved as components to be module paths and not relative paths
+- add a custom entry point file for Angular components
+- [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing
+- [#1752](https://github.com/teambit/bit/issues/1752) fix dependency links generation when originally there were multiple link files
+
+## [14.1.4-dev.5] - 2019-06-25
+
+- add experimental `post-add` hook
+
+## [14.1.4-dev.4] - 2019-06-24
+
+- add `--no-cache` flag to `bit ci-update` command
+- fix `directory` flag of `bit ci-update` command
+
+## [14.1.4-dev.3] - 2019-06-23
+
+- upgrade to babel 7
+- fix installation errors on Windows related to `posix` package by replacing it with `uid-number`
+
+## [14.1.4-dev.2] - 2019-06-18
+
+- improve isolation by capsule to install peer-dependencies
+- provide testers with a capsule isolate function
+
 ## [14.1.4-dev.1] - 2019-06-17
 
 - fix publishing of bit-bin package to include the components directory

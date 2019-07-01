@@ -2,7 +2,12 @@
 import path from 'path';
 import R from 'ramda';
 import groupBy from 'lodash.groupby';
-import { DEFAULT_INDEX_NAME, COMPONENT_ORIGINS } from '../constants';
+import {
+  DEFAULT_INDEX_NAME,
+  COMPONENT_ORIGINS,
+  ANGULAR_PACKAGE_IDENTIFIER,
+  ANGULAR_BIT_ENTRY_POINT_FILE
+} from '../constants';
 import { getExt } from '../utils';
 import type { OutputFileParams } from '../utils/fs-output-file';
 import logger from '../logger/logger';
@@ -292,30 +297,32 @@ function getInternalCustomResolvedLinks(
   const getDestination = (importSource: string) => `node_modules/${importSource}`;
   const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
   const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
-  return component.customResolvedPaths.filter(customPath => isResolvePathsInvalid(customPath)).map((customPath) => {
-    const sourceAbs = path.join(componentDir, customPath.destinationPath);
-    const dest = getDestination(customPath.importSource);
-    const destAbs = path.join(componentDir, dest);
-    const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
-    const linkContent = getLinkToFileContent(destRelative);
+  return component.customResolvedPaths
+    .filter(customPath => isResolvePathsInvalid(customPath))
+    .map((customPath) => {
+      const sourceAbs = path.join(componentDir, customPath.destinationPath);
+      const dest = getDestination(customPath.importSource);
+      const destAbs = path.join(componentDir, dest);
+      const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
+      const linkContent = getLinkToFileContent(destRelative);
 
-    const postInstallSymlink = createNpmLinkFiles && !linkContent;
-    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
-    const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
-    const getSymlink = () => {
-      if (linkContent) return undefined;
-      if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
-      return sourceAbs;
-    };
-    return {
-      linkPath: createNpmLinkFiles ? dest : destAbs,
-      linkContent,
-      postInstallLink: createNpmLinkFiles,
-      customResolveMapping,
-      symlinkTo: getSymlink(),
-      postInstallSymlink
-    };
-  });
+      const postInstallSymlink = createNpmLinkFiles && !linkContent;
+      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+      const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
+      const getSymlink = () => {
+        if (linkContent) return undefined;
+        if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
+        return sourceAbs;
+      };
+      return {
+        linkPath: createNpmLinkFiles ? dest : destAbs,
+        linkContent,
+        postInstallLink: createNpmLinkFiles,
+        customResolveMapping,
+        symlinkTo: getSymlink(),
+        postInstallSymlink
+      };
+    });
 }
 
 /**
@@ -386,6 +393,24 @@ function getEntryPointsForComponent(component: Component, consumer: ?Consumer, b
   return files;
 }
 
+function getEntryPointForAngularComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): ?LinkFile {
+  if (!_isAngularComponent(component)) return null;
+  const componentMap = bitMap.getComponent(component.id);
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
+  if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return null;
+  const content = getLinkToFileContent(component.mainFile, []);
+  const filePath = path.join(componentRoot, ANGULAR_BIT_ENTRY_POINT_FILE);
+  return LinkFile.load({ filePath, content, override: false });
+}
+
+function _isAngularComponent(component: Component): boolean {
+  return (
+    component.packageDependencies[ANGULAR_PACKAGE_IDENTIFIER] ||
+    component.peerPackageDependencies[ANGULAR_PACKAGE_IDENTIFIER]
+  );
+}
+
 /**
  * used for writing compiler and tester dependencies to the directory of their configuration file
  * the configuration directory is not always the same as the component, it can be moved by 'eject-conf' command
@@ -424,4 +449,10 @@ async function getLinksByDependencies(
   return linksToWrite.map(link => LinkFile.load(link));
 }
 
-export { getEntryPointsForComponent, getComponentsDependenciesLinks, getIndexFileName, getLinksByDependencies };
+export {
+  getEntryPointsForComponent,
+  getComponentsDependenciesLinks,
+  getIndexFileName,
+  getLinksByDependencies,
+  getEntryPointForAngularComponent
+};

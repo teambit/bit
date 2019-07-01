@@ -34,6 +34,7 @@ export default class Helper {
   bitBin: string;
   compilerCreated: boolean;
   dummyCompilerCreated: boolean;
+  dummyTesterCreated: boolean;
   cache: Object;
   clonedScopes: string[] = [];
   keepEnvs: boolean;
@@ -490,6 +491,12 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
+  importDummyTester(dummyType?: string = 'dummy') {
+    const id = `${this.envScope}/testers/dummy`;
+    this.createDummyTester(dummyType);
+    return this.runCmd(`bit import ${id} --tester`);
+  }
+
   importTester(id) {
     // Temporary - for checking new serialization against the stage env
     // this.setHubDomain(`hub-stg.${BASE_WEB_DOMAIN}`);
@@ -706,6 +713,40 @@ export default class Helper {
     this.runCmd(`bit export ${this.envScope} compilers/dummy`, tempScopePath);
     this.addRemoteScope(this.envScopePath);
     this.dummyCompilerCreated = true;
+    return true;
+  }
+
+  createDummyTester(dummyType: string) {
+    if (this.dummyTesterCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
+    const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'tester.js'), tester);
+
+    ensureAndWriteJson(path.join(tempScopePath, 'package.json'), {
+      name: 'dummy-compiler',
+      version: '1.0.0',
+      dependencies: {
+        mocha: '6.1.4',
+        chai: '4.2.0'
+      }
+    });
+    this.runCmd('npm install', tempScopePath);
+    this.runCmd('bit add tester.js -i testers/dummy', tempScopePath);
+    this.runCmd('bit tag testers/dummy -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} testers/dummy`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.dummyTesterCreated = true;
     return true;
   }
 

@@ -15,7 +15,10 @@ import PackageJsonFile from '../consumer/component/package-json-file';
 import type Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
-import { ACCEPTABLE_NPM_VERSIONS } from '../constants';
+import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
+
+import npmClient from '../npm-client';
+
 
 export default class Isolator {
   capsule: Capsule;
@@ -67,7 +70,8 @@ export default class Isolator {
       componentWithDependencies.allDependencies
     );
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    await this._installPackages(componentWithDependencies.component.writtenPath);
+    // await this._installPackages(componentWithDependencies.component.writtenPath);
+    await this._installWithPeerOption(componentWithDependencies.component.writtenPath);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
     return componentWithDependencies;
@@ -146,7 +150,7 @@ export default class Isolator {
     return validVersion ? validVersion.raw : null;
   }
 
-  async _installPackages(directory: string) {
+  async _installPackages(directory: string, modules: string[] = []) {
     const npmVersion = await this._getNpmVersion();
     if (!npmVersion) {
       return Promise.reject(new Error('Failed to isolate component: unable to run npm'));
@@ -159,7 +163,8 @@ export default class Isolator {
         )
       );
     }
-    const execResults = await this.capsule.exec('npm install', { cwd: directory });
+    const args = ['install', ...modules];
+    const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {
       execResults.stdout.on('data', (data: string) => {
@@ -171,6 +176,51 @@ export default class Isolator {
       // @ts-ignore
       execResults.on('close', () => {
         return resolve(output);
+      });
+    });
+  }
+
+  async _installWithPeerOption(directory: string, installPeerDependencies: boolean = true) {
+    await this._installPackages(directory);
+    if (installPeerDependencies) {
+      const peers = await this._getPeerDependencies(directory);
+      if (!R.isEmpty(peers)) {
+        await this._installPackages(directory, peers);
+      }
+    }
+  }
+
+  async _getPeerDependencies(dir: string): Promise<string[]> {
+    const packageManager = DEFAULT_PACKAGE_MANAGER;
+    let npmList;
+    try {
+      npmList = await this._getNpmListOutput(dir, packageManager);
+    } catch (err) {
+      logger.error(err);
+      throw new Error(
+        `failed running "${packageManager} list -j" to find the peer dependencies due to an error: ${err}`
+      );
+    }
+    return npmClient.getPeerDepsFromNpmList(npmList, packageManager);
+  }
+
+  async _getNpmListOutput(dir: string, packageManager: string) {
+    const args = [packageManager, 'list', '-j'];
+    const execResults = await this.capsule.exec(args.join(' '), { cwd: dir });
+    let output = '';
+    let outputErr = '';
+    return new Promise((resolve, reject) => {
+      execResults.stdout.on('data', (data: string) => {
+        output += data;
+      });
+      execResults.stdout.on('error', (error: string) => {
+        outputErr += error;
+      });
+      // @ts-ignore
+      execResults.on('close', () => {
+        if (output) return resolve(output);
+        if (outputErr && outputErr.startsWith('{')) return resolve(output); // it's probably a valid json with errors, that's fine, parse it.
+        return reject(outputErr);
       });
     });
   }

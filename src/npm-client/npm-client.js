@@ -162,19 +162,6 @@ const _installInOneDirectory = ({
  */
 const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
   const packageManager = DEFAULT_PACKAGE_MANAGER;
-
-  const parsePeers = (deps: Object): Object => {
-    const result = {};
-    R.forEachObjIndexed((dep) => {
-      if (dep.peerMissing) {
-        const name = dep.required.name;
-        const version = dep.required.version;
-        result[name] = version;
-      }
-    }, deps);
-    return result;
-  };
-
   let npmList;
   try {
     npmList = await execa(packageManager, ['list', '-j'], { cwd: dir });
@@ -187,10 +174,26 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
       throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
     }
   }
-  const npmListObject = await parseNpmListJsonGracefully(npmList.stdout, packageManager);
-  const peers = parsePeers(npmListObject.dependencies);
-  return peers;
+  return getPeerDepsFromNpmList(npmList.stdout, packageManager);
 };
+
+async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<string[]> {
+  const parsePeers = (deps: Object): Object => {
+    const result = {};
+    R.forEachObjIndexed((dep) => {
+      if (dep.peerMissing) {
+        const name = dep.required.name;
+        const version = dep.required.version;
+        result[name] = version;
+      }
+    }, deps);
+    return result;
+  };
+
+  const npmListObject = await parseNpmListJsonGracefully(npmList, packageManager);
+  const peers = parsePeers(npmListObject.dependencies);
+  return objectToArray(peers);
+}
 
 async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
   try {
@@ -376,5 +379,6 @@ export default {
   isSupportedInstallationOfSubDirFromRoot,
   getNpmVersion,
   getYarnVersion,
+  getPeerDepsFromNpmList,
   getPackageLatestVersion
 };
