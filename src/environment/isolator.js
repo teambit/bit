@@ -19,7 +19,6 @@ import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
 
 import npmClient from '../npm-client';
 
-
 export default class Isolator {
   capsule: Capsule;
   consumer: ?Consumer;
@@ -74,6 +73,13 @@ export default class Isolator {
     await this._installWithPeerOption(componentWithDependencies.component.writtenPath);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
+    // @todo: find a better solution. since the capsule structure has changed to have the rootDir
+    // of the component, the component and the capsule package.json are the same one.
+    // as a result, when writing the links, the capsule package.json is overwritten
+    await this._addComponentsToRoot(
+      componentWithDependencies.component.writtenPath,
+      componentWithDependencies.allDependencies
+    );
     return componentWithDependencies;
   }
 
