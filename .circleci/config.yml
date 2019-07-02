@@ -270,10 +270,10 @@ jobs:
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
           command: 'sudo apt-get install expect'
-      -
-        run:
-          name: 'create global npm directory (to avoid using sudo for npm link)'
-          command: 'mkdir ~/.npm-global'
+      # -
+      #   run:
+      #     name: 'create global npm directory (to avoid using sudo for npm link)'
+      #     command: 'mkdir ~/.npm-global'
       -
         restore_cache:
           key: bitsrc-ssh-key3
