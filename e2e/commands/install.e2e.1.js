@@ -6,7 +6,7 @@ import Helper from '../e2e-helper';
 chai.use(require('chai-fs'));
 
 describe('run bit install', function () {
-  if (process.env.APPVEYOR === 'True') {
+  if (process.env.APPVEYOR !== 'True') {
     // for some reason, on AppVeyor it throws an error:
     // ```
     // Error: Command failed: bit install
