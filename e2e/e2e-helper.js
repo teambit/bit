@@ -1063,6 +1063,10 @@ export default class Helper {
   writeIndexJson(indexJson: Object) {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
   }
+  installAndGetTypeScriptCompilerDir(): string {
+    this.installNpmPackage('typescript');
+    return path.join(this.localScopePath, 'node_modules', '.bin');
+  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {

@@ -125,20 +125,8 @@ describe('typescript components with link files', function () {
       it('should be able to compile the main component with auto-generated .ts files without errors', () => {
         helper.importCompiler('bit.envs/compilers/react-typescript');
         const barFooFile = path.join(helper.localScopePath, 'components', 'bar', 'foo', 'bar', 'foo.ts');
-        const compilerPrefix = path.join(
-          helper.localScopePath,
-          '.bit',
-          'components',
-          'compilers',
-          'react-typescript',
-          'bit.envs'
-        );
-        let version = '';
-        fs.readdirSync(compilerPrefix).forEach((file) => {
-          version = file;
-        });
-        const compilerPath = path.join(compilerPrefix, version, 'node_modules', 'typescript', 'bin');
-        const result = helper.runCmd(`tsc ${barFooFile}`, compilerPath);
+        const tscPath = helper.installAndGetTypeScriptCompilerDir();
+        const result = helper.runCmd(`tsc ${barFooFile}`, tscPath);
         // in case of compilation error it throws an exception
         expect(result.trim()).to.equal('');
       });
