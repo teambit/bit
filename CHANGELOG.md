@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 - add a custom entry point file for Angular components
 - [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing
 - [#1752](https://github.com/teambit/bit/issues/1752) fix dependency links generation when originally there were multiple link files
+- await for a promise calls on post-add hook
 
 ## [14.1.4-dev.5] - 2019-06-25
 
