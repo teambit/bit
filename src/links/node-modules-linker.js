@@ -121,7 +121,8 @@ export default class NodeModuleLinker {
       const distSymlink = Symlink.makeInstance(distTarget, linkPath, componentId);
       distSymlink.forDistOutsideComponentsDir = true;
       this.dataToPersist.addSymlink(distSymlink);
-    } else {
+    } else if (srcTarget !== '.') {
+      // avoid creating symlinks from node_modules to itself
       this.dataToPersist.addSymlink(Symlink.makeInstance(srcTarget, linkPath, componentId));
     }
     await this._populateDependenciesAndMissingLinks(component);

@@ -1,8 +1,10 @@
-import { expect } from 'chai';
+import chai, { expect } from 'chai';
 import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+
+chai.use(require('chai-fs'));
 
 describe('capsule', function () {
   this.timeout(0);
@@ -21,6 +23,10 @@ describe('capsule', function () {
     it('should have the components and dependencies installed correctly with all the links', () => {
       const result = helper.runCmd('node app.js', capsuleDir);
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    it('should not symlink the capsule root to node_modules', () => {
+      const symlink = path.join(capsuleDir, 'node_modules', '@bit/bar.foo');
+      expect(symlink).to.not.be.a.path();
     });
   });
   describe('tagged components with dependencies (before export)', () => {
