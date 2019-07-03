@@ -76,19 +76,19 @@ jobs:
       -
         attach_workspace:
           at: ./
-      -
-        restore_cache:
-          keys:
-            - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
       -
         run:
           name: 'Install npm dependencies'
           command: 'cd bit && npm install'
-      -
-        save_cache:
-          key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-          paths:
-            - ./bit/node_modules
+      # -
+      #   save_cache:
+      #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+      #     paths:
+      #       - ./bit/node_modules
       -
         persist_to_workspace:
           root: .

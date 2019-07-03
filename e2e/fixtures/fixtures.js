@@ -14,6 +14,7 @@ export const isTypeLeftPad = `
 const leftPad = require('left-pad');
 module.exports = function isType() { return leftPad('got is-type', 15, 0); };
 `;
+export const isTypeTS = "export default function isType() { return 'got is-type'; };";
 export const isString =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";
 export const isStringV2 =
@@ -28,12 +29,16 @@ describe('isString', () => {
 });`;
 export const isStringES6 =
   "import isType from './is-type.js'; export default function isString() { return isType() +  ' and got is-string'; };";
+export const isStringTS =
+  "import isType from './is-type'; export default function isString() { return isType() +  ' and got is-string'; };";
 export const barFooFixture =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo'; };";
 export const barFooFixtureV2 =
   "const isString = require('../utils/is-string.js'); module.exports = function foo() { return isString() + ' and got foo v2'; };";
 export const barFooES6 =
   "import isString from '../utils/is-string.js'; export default function foo() { return isString() + ' and got foo'; };";
+export const barFooTS =
+  "import isString from '../utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
 export const barFooSpecES6 = testShouldPass => `const expect = require('chai').expect;
 const foo = require('./foo.js');
 

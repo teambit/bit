@@ -99,6 +99,7 @@ function getComponentLinks({
   }
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
   if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
+    // $FlowFixMe it has been verified above that component.packageJsonFile is not empty
     const packageJsonFile = component.packageJsonFile.toJSONFile();
     dataToPersist.addFile(packageJsonFile);
   }
@@ -297,32 +298,30 @@ function getInternalCustomResolvedLinks(
   const getDestination = (importSource: string) => `node_modules/${importSource}`;
   const invalidImportSources = ['.', '..']; // before v14.1.4 components might have an invalid importSource saved. see #1734
   const isResolvePathsInvalid = customPath => !invalidImportSources.includes(customPath.importSource);
-  return component.customResolvedPaths
-    .filter(customPath => isResolvePathsInvalid(customPath))
-    .map((customPath) => {
-      const sourceAbs = path.join(componentDir, customPath.destinationPath);
-      const dest = getDestination(customPath.importSource);
-      const destAbs = path.join(componentDir, dest);
-      const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
-      const linkContent = getLinkToFileContent(destRelative);
+  return component.customResolvedPaths.filter(customPath => isResolvePathsInvalid(customPath)).map((customPath) => {
+    const sourceAbs = path.join(componentDir, customPath.destinationPath);
+    const dest = getDestination(customPath.importSource);
+    const destAbs = path.join(componentDir, dest);
+    const destRelative = path.relative(path.dirname(destAbs), sourceAbs);
+    const linkContent = getLinkToFileContent(destRelative);
 
-      const postInstallSymlink = createNpmLinkFiles && !linkContent;
-      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
-      const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
-      const getSymlink = () => {
-        if (linkContent) return undefined;
-        if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
-        return sourceAbs;
-      };
-      return {
-        linkPath: createNpmLinkFiles ? dest : destAbs,
-        linkContent,
-        postInstallLink: createNpmLinkFiles,
-        customResolveMapping,
-        symlinkTo: getSymlink(),
-        postInstallSymlink
-      };
-    });
+    const postInstallSymlink = createNpmLinkFiles && !linkContent;
+    const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+    const customResolveMapping = { [customPath.importSource]: `${packageName}/${customPath.destinationPath}` };
+    const getSymlink = () => {
+      if (linkContent) return undefined;
+      if (createNpmLinkFiles) return `${packageName}/${customPath.destinationPath}`;
+      return sourceAbs;
+    };
+    return {
+      linkPath: createNpmLinkFiles ? dest : destAbs,
+      linkContent,
+      postInstallLink: createNpmLinkFiles,
+      customResolveMapping,
+      symlinkTo: getSymlink(),
+      postInstallSymlink
+    };
+  });
 }
 
 /**
@@ -341,11 +340,11 @@ function generatePostInstallScript(component: Component, postInstallLinks = [], 
     acc[val.dest] = val.source;
     return acc;
   }, {});
-  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   const postInstallCode = postInstallTemplate(JSON.stringify(linkPathsObject), JSON.stringify(symlinkPathsObject));
   const POST_INSTALL_FILENAME = '.bit.postinstall.js';
   const postInstallFilePath = path.join(componentDir, POST_INSTALL_FILENAME);
   const postInstallScript = `node ${POST_INSTALL_FILENAME}`;
+  if (!component.packageJsonFile) throw new Error(`packageJsonFile is missing for ${component.id.toString()}`);
   component.packageJsonFile.addOrUpdateProperty('scripts', { postinstall: postInstallScript });
   const postInstallFile = LinkFile.load({ filePath: postInstallFilePath, content: postInstallCode, override: true });
   return postInstallFile;
@@ -357,8 +356,7 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
     return acc;
   }, {});
   if (R.isEmpty(resolveAliases)) return false;
-  // @TODO: load the package.json here if not found. it happens during the build process
-  if (!component.packageJsonFile) return false;
+  if (!component.packageJsonFile) return false; // e.g. author doesn't have package.json per component
   const bitProperty = component.packageJsonFile.getProperty('bit') || {};
   bitProperty.resolveAliases = resolveAliases;
   return true;

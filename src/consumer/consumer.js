@@ -267,7 +267,7 @@ export default class Consumer {
   }
 
   async write(): Promise<Consumer> {
-    await Promise.all([this.config.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
+    await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.bitMap.write();
     return this;
@@ -662,7 +662,7 @@ export default class Consumer {
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
-        ? packageJsonUtils.updateAttribute(this, path.join(this.getPath(), packageJsonDir), 'version', id.version)
+        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version)
         : Promise.resolve();
     });
     return Promise.all(updateVersionsP);
@@ -789,7 +789,7 @@ export default class Consumer {
     }
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
       const consumer = await Consumer.create(consumerInfo.path);
-      await Promise.all([consumer.config.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
+      await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
       consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);

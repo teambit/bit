@@ -363,6 +363,10 @@ export default class Helper {
     return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
+  outputFile(filePathRelativeToLocalScope: string, data: string): string {
+    return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
@@ -1080,6 +1084,10 @@ export default class Helper {
   }
   writeIndexJson(indexJson: Object) {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
+  }
+  installAndGetTypeScriptCompilerDir(): string {
+    this.installNpmPackage('typescript');
+    return path.join(this.localScopePath, 'node_modules', '.bin');
   }
 }
 

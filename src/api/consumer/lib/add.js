@@ -53,6 +53,6 @@ export async function addMany(components: AddProps[], alternateCwd?: string): Pr
     })
   );
   await consumer.onDestroy();
-  HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults);
+  await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults);
   return addResults;
 }

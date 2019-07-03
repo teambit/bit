@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import R from 'ramda';
 import fs from 'fs-extra';
 import Vinyl from 'vinyl';
 import Dists from '../component/sources/dists';
@@ -21,11 +22,13 @@ import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
 import ComponentWithDependencies from '../../scope/component-dependencies';
+import type { CompilerResults } from '../../extensions/compiler-api';
+import PackageJsonFile from '../component/package-json-file';
 
 export default (async function buildComponent({
   component,
   scope,
-  save,
+  save, // this is true only when originated from `runAndUpdateCI()`
   consumer,
   noCache,
   directory,
@@ -90,7 +93,7 @@ export default (async function buildComponent({
       directory,
       verbose: !!verbose
     })) || [];
-  const { builtFiles, mainDist } = _extractCompilerResults(compilerResults);
+  const { builtFiles, mainDist, packageJson } = _extractAndVerifyCompilerResults(compilerResults);
   builtFiles.forEach((file) => {
     if (file && (!file.contents || !isString(file.contents.toString()))) {
       throw new GeneralError('builder interface has to return object with a code attribute that contains string');
@@ -100,20 +103,61 @@ export default (async function buildComponent({
   if (save) {
     await scope.sources.updateDist({ source: component });
   }
+  if (packageJson && !R.isEmpty(packageJson)) {
+    await _updateComponentPackageJson(component, packageJson);
+    component.packageJsonChangedProps = Object.assign(component.packageJsonChangedProps || {}, packageJson);
+  }
   return component.dists;
 });
 
-function _extractCompilerResults(compilerResults): { builtFiles: Vinyl[], mainDist: ?string } {
+async function _updateComponentPackageJson(component: ConsumerComponent, packageJsonPropsToAdd: Object): Promise<void> {
+  const componentPackageJsonFile = component.packageJsonFile;
+  if (!componentPackageJsonFile) {
+    logger.debug(
+      `ignore compiler packageJson result as the component ${component.id.toString()} does not have a package.json file`
+    );
+    return;
+  }
+  componentPackageJsonFile.mergePackageJsonObject(packageJsonPropsToAdd);
+  await componentPackageJsonFile.write();
+}
+
+function _extractAndVerifyCompilerResults(
+  compilerResults: CompilerResults
+): { builtFiles: Vinyl[], mainDist: ?string, packageJson: ?Object } {
   if (Array.isArray(compilerResults)) {
-    return { builtFiles: compilerResults, mainDist: null };
+    return { builtFiles: compilerResults, mainDist: null, packageJson: null };
   }
   if (typeof compilerResults === 'object') {
+    // $FlowFixMe
+    if (compilerResults.files && !compilerResults.dists) {
+      // previously, the new compiler "action" method expected to get "files", suggest to replace with 'dists'.
+      throw new GeneralError('fatal: compiler returned "files" instead of "dists", please change it to "dists"');
+    }
     if (!compilerResults.dists) {
       throw new GeneralError('fatal: compiler that returns an object, must include "dists" property');
     }
-    return { builtFiles: compilerResults.dists, mainDist: compilerResults.mainFile };
+    if (compilerResults.packageJson) {
+      _verifyPackageJsonReturnedByCompiler(compilerResults.packageJson);
+    }
+    return {
+      builtFiles: compilerResults.dists,
+      mainDist: compilerResults.mainFile,
+      packageJson: compilerResults.packageJson
+    };
   }
   throw new GeneralError(`fatal: compiler must return an array or object, instead, got ${typeof compilerResults}`);
+}
+
+function _verifyPackageJsonReturnedByCompiler(packageJson: Object) {
+  if (typeof packageJson !== 'object') {
+    throw new GeneralError(`fatal: compiler must return packageJson as an object, got ${typeof packageJson}`);
+  }
+  PackageJsonFile.propsNonUserChangeable().forEach((prop) => {
+    if (packageJson[prop]) {
+      throw new GeneralError(`fatal: compiler must not return packageJson with "${prop}" property`);
+    }
+  });
 }
 
 async function _buildIfNeeded({
@@ -132,7 +176,7 @@ async function _buildIfNeeded({
   verbose: boolean,
   directory?: ?string,
   keep: ?boolean
-}): Promise<Vinyl[]> {
+}): Promise<CompilerResults> {
   const compiler = component.compiler;
 
   if (!compiler) {
@@ -197,7 +241,7 @@ const _runBuild = async ({
   scope: Scope,
   componentMap: ?ComponentMap,
   verbose: boolean
-}): Promise<Vinyl[]> => {
+}): Promise<CompilerResults> => {
   const compiler = component.compiler;
   if (!compiler) {
     throw new GeneralError('compiler was not found, nothing to build');
@@ -275,11 +319,7 @@ const _runBuild = async ({
           logger.info(`build-components, deleting ${tmpFolderFullPath}`);
           await fs.remove(tmpFolderFullPath);
         }
-        // TODO: Gilad - handle return of main dist file
-        if (!result || !result.files) {
-          throw new Error('compiler return invalid response');
-        }
-        return result.files;
+        return result;
       }
       if (!compiler.oldAction) {
         throw new InvalidCompilerInterface(compiler.name);
