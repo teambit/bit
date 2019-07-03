@@ -12,22 +12,22 @@ const rootBitDir = path.join(__dirname, '..');
 
 const { platform } = process;
 const fileNames = {
-  linux: 'bit-bin-linux',
-  win32: 'bit-bin-win.exe',
-  darwin: 'bit-bin-macos'
+  linux: 'bit-linux',
+  win32: 'bit-win.exe',
+  darwin: 'bit-macos'
 };
 
 const binaryDir = path.join(__dirname, '..', 'bin');
 const pathToBinaryFile = path.join(binaryDir, 'bit');
 
-const baseUrl = 'http://localhost:1337'; // TODO: change to github releases url
+const baseUrl = 'https://github.com/teambit/bit/releases/download';
 
 function log(msg) {
   console.log(chalk.green('bit install:'), msg);
 }
 
 function findFileUrl() {
-  return `${baseUrl}/v${version}-${fileNames[platform]}`;
+  return `${baseUrl}/v${version}/${fileNames[platform]}`;
 }
 
 async function fetchBinary(binaryFileUrl) {

@@ -33,7 +33,9 @@
     "watch": "babel --watch bin src -d dist --source-maps --verbose",
     "build-debug": "babel src -d dist --source-maps",
     "prepublishOnly": "npm run clean && npm run build",
-    "install": "node scripts/install.js"
+    "install": "node scripts/install.js",
+    "pre-release": "npm run pkg:all && gh-release -a releases/bit-linux,releases/bit-win.exe,releases/bit-macos --prerelease",
+    "release": "npm run pkg:all && gh-release -a releases/bit-linux,releases/bit-win.exe,releases/bit-macos"
   },
   "bin": {
     "bit": "bin/bit"
@@ -151,6 +153,7 @@
     "eslint-plugin-react": "^7.8.2",
     "flow-bin": "^0.75.0",
     "flow-coverage-report": "^0.6.1",
+    "gh-release": "^3.5.0",
     "husky": "^0.14.3",
     "lint-staged": "^7.3.0",
     "mocha": "^5.1.1",
