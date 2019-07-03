@@ -105,9 +105,7 @@ export default class DependencyFileLinkGenerator {
     const depRootDir = this._getDepRootDir();
     const depRootDirDist = this._getDepRootDirDist();
 
-    const isCustomResolvedWithDistInside = Boolean(
-      depRootDirDist && this.shouldDistsBeInsideTheComponent && this.hasDist
-    );
+    const isCustomResolvedWithDistInside = Boolean(this.shouldDistsBeInsideTheComponent && this.hasDist);
 
     const relativePathInDependency = isCustomResolvedWithDistInside
       ? `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`
