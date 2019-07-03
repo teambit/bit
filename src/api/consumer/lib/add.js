@@ -20,7 +20,7 @@ export async function addOne(addProps: AddProps): Promise<AddActionResults> {
   const addComponents = new AddComponents(addContext, addProps);
   const addResults = await addComponents.add();
   await consumer.onDestroy();
-  HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults);
+  await HooksManagerInstance.triggerHook(POST_ADD_HOOK, addResults);
   return addResults;
 }
 
