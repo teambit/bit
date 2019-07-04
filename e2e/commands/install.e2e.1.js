@@ -57,7 +57,9 @@ describe('run bit install', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
       });
-      describe('cloning the project to somewhere else without the node-modules directories', () => {
+      // @todo: this thrown an error "npm ERR! Cannot read property 'match' of undefined"
+      // see https://github.com/teambit/bit/issues/1746 for more details. enable it once fixed
+      describe.skip('cloning the project to somewhere else without the node-modules directories', () => {
         let output;
         before(() => {
           helper.mimicGitCloneLocalProject();
