@@ -1,0 +1,70 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.13.5
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-450202:
+    - tty-table > babel-core > babel-helpers > babel-template > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - graphlib > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - react-docgen > async > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-generator > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-template > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-traverse > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-generator > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-template > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-helpers > babel-template > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-traverse > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-template > babel-traverse > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - table > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-generator > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-template > babel-traverse > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-traverse > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-template > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-helpers > babel-template > babel-traverse > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-template > babel-traverse > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-helpers > babel-template > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-generator > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-template > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-helpers > babel-template > babel-traverse > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-traverse > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-helpers > babel-template > babel-traverse > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-template > babel-traverse > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-helpers > babel-template > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
+    - tty-table > babel-core > babel-register > babel-core > babel-helpers > babel-template > babel-traverse > babel-types > lodash:
+        patched: '2019-07-04T00:09:50.766Z'
