@@ -55,10 +55,10 @@ describe('custom module resolutions', function () {
         const packageJson = helper.readPackageJson(capsuleDir);
         expect(packageJson.dependencies)
           .to.have.property('@bit/utils.is-string')
-          .that.equal('file:.dependencies/utils/is-string');
+          .that.equal(path.normalize('file:.dependencies/utils/is-string'));
         expect(packageJson.dependencies)
           .to.have.property('@bit/utils.is-type')
-          .that.equal('file:.dependencies/utils/is-type');
+          .that.equal(path.normalize('file:.dependencies/utils/is-type'));
       });
     });
     describe('importing the component', () => {
