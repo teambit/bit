@@ -82,8 +82,12 @@ export default class DataToPersist {
     try {
       await capsule.symlink(symlink.src, symlink.dest);
     } catch (e) {
-      if (e.code !== 'EEXIST') {
+      // On windows when the link already created by npm we got EPERM error
+      // TODO: We should handle this better and avoid creating the symlink if it's already exists
+      if (e.code !== 'EEXIST' && e.code !== 'EPERM') {
         throw e;
+      } else {
+        logger.debug(`ignoring ${e.code} error on atomicSymlink creation`);
       }
     }
   }
