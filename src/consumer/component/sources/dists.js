@@ -183,6 +183,7 @@ export default class Dists {
     const componentMap = consumer
       ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
       : component.componentMap;
+    if (!componentMap) throw new Error('getDistsToWrite expect componentMap to be defined');
     this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
     dataToPersist.addManyFiles(this.dists);
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
