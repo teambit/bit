@@ -3,7 +3,7 @@ import Vinyl from 'vinyl';
 import type { PathOsBasedRelative, PathLinuxRelative } from '../utils/path';
 import { SourceFile } from '../consumer/component/sources';
 import ExtensionFile from './extension-file';
-import Capsule from '../../components/core/capsule/capsule';
+import Capsule from '../../components/core/capsule';
 import ComponentWithDependencies from '../scope/component-dependencies';
 
 export type CompilerResults = Vinyl[] | { dists: Vinyl[], mainFile?: string, packageJson?: Object };
