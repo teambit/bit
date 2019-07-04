@@ -144,6 +144,36 @@ describe('capsule', function () {
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
     });
+    describe('building with shouldBuildDependencies option enabled', () => {
+      let capsuleDir;
+      before(() => {
+        helper.deleteFile('dist');
+        const compilerPath = path.join('.bit/components/compilers/dummy', helper.envScope, '0.0.1/compiler.js');
+        const compilerContent = helper.readFile(compilerPath);
+        capsuleDir = helper.generateRandomTmpDirName();
+        const compilerWithBuildDependenciesEnabled = compilerContent
+          .replace('shouldBuildDependencies: false', 'shouldBuildDependencies: true')
+          .replace('targetDir,', `targetDir: '${capsuleDir}',`);
+        helper.outputFile(compilerPath, compilerWithBuildDependenciesEnabled);
+        helper.build('bar/foo --no-cache');
+      });
+      it('should write all dependencies dists into the capsule', () => {
+        const isStringDist = path.join(capsuleDir, '.dependencies/utils/is-string/dist/utils/is-string.js');
+        const isTypeDist = path.join(capsuleDir, '.dependencies/utils/is-type/dist/utils/is-type.js');
+        expect(isStringDist).to.be.a.file();
+        expect(isTypeDist).to.be.a.file();
+      });
+      it('should not write the same paths written to the capsule into the author workspace', () => {
+        expect(path.join(helper.localScopePath, '.dependencies')).to.not.be.a.path();
+      });
+      it('should be able to require the component and its dependencies from the dist directory', () => {
+        helper.build();
+        const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
   });
   describe('test in capsule', () => {
     before(() => {

@@ -38,7 +38,9 @@ export default class Isolator {
       await pMapSeries(componentWithDependencies.dependencies.reverse(), dep =>
         dep.build({ scope: this.scope, consumer: this.consumer })
       );
-      componentWithDependencies.dependencies.forEach(dependency => (dependency.dists._distsPathsAreUpdated = false));
+      // dists paths must be recalculated here because the same dependency might be built multiple
+      // times within different capsules and different paths
+      componentWithDependencies.dependencies.forEach(dependency => (dependency.dists.distsPathsAreUpdated = false));
     }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
@@ -71,6 +73,10 @@ export default class Isolator {
     await this.installPackagesOnDirs(allRootDirs);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
+    if (opts.shouldBuildDependencies) {
+      // dist paths must be cleared again, otherwise, it writes the capsule paths into author workspace
+      componentWithDependencies.dependencies.forEach(dependency => (dependency.dists.distsPathsAreUpdated = false));
+    }
     return componentWithDependencies;
   }
 

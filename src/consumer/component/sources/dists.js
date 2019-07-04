@@ -77,6 +77,10 @@ export default class Dists {
     return this._mainDistFile;
   }
 
+  set distsPathsAreUpdated(value: boolean) {
+    this._distsPathsAreUpdated = value;
+  }
+
   /**
    * When dists are written by a consumer (as opposed to isolated-environment for example), the dist-entry and
    * dist-target are taken into account for calculating the path.
