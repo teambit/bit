@@ -78,7 +78,7 @@ var FsContainer = /** @class */ (function () {
                         return [4 /*yield*/, fs_extra_1.default.ensureDir(path_1.default.dirname(destPath))];
                     case 1:
                         _a.sent();
-                        return [2 /*return*/, fs_extra_1.default.symlink(srcPath, destPath)];
+                        return [2 /*return*/, fs_extra_1.default.ensureSymlink(srcPath, destPath)];
                 }
             });
         });
