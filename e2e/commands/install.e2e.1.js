@@ -57,14 +57,14 @@ describe('run bit install', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('isBoolean: true, isString: false and got is-string and got foo');
       });
-      // @todo: this thrown an error "npm ERR! Cannot read property 'match' of undefined"
-      // see https://github.com/teambit/bit/issues/1746 for more details. enable it once fixed
-      describe.skip('cloning the project to somewhere else without the node-modules directories', () => {
+      describe('cloning the project to somewhere else without the node-modules directories', () => {
         let output;
         before(() => {
           helper.mimicGitCloneLocalProject();
           helper.addRemoteScope();
           helper.runCmd('bit import');
+          // @todo: to reproduce issue #1746, remove the next line
+          helper.deleteFile('package-lock.json');
           output = helper.runCmd('bit install');
         });
         it('bit install should npm-install all missing node-modules and link all components', () => {
