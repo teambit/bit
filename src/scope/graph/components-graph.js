@@ -1,10 +1,6 @@
 // @flow
 import graphLib from 'graphlib';
 import R from 'ramda';
-import { BitId, BitIds } from '../../bit-id';
-import type { ModelComponent, Version } from '../models';
-import { LATEST_BIT_VERSION, VERSION_DELIMITER } from '../../constants';
-import Scope from '../scope';
 import Component from '../../consumer/component/consumer-component';
 import Dependencies from '../../consumer/component/dependencies/dependencies';
 import ComponentWithDependencies from '../component-dependencies';

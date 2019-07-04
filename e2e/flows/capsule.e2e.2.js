@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
 
 chai.use(require('chai-fs'));
 
@@ -126,8 +127,15 @@ describe('capsule', function () {
   describe('build into capsule', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.populateWorkspaceWithComponents();
+      const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
+      helper.createFile('utils', 'is-type.js', strToAdd + fixtures.isType);
+      helper.addComponentUtilsIsType();
+      helper.createFile('utils', 'is-string.js', strToAdd + fixtures.isString);
+      helper.addComponentUtilsIsString();
+      helper.createComponentBarFoo(strToAdd + fixtures.barFooFixture);
+      helper.addComponentBarFoo();
       helper.importDummyCompiler('capsule');
+
       helper.build();
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {

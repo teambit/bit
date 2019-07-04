@@ -1,9 +1,11 @@
 /**
  * compiler that supports the capsule interface.
- * do nothing to the source code, just replace ";" with ";\n".
+ * remove the string stringToRemovedByCompiler so then the dists will be valid to run
  */
 const path = require('path');
 const os = require('os');
+
+const stringToRemovedByCompiler = 'THIS STRING SHOULD BE REMOVED BY THE DUMMY COMPILER\n';
 
 function compile(files, distPath, context) {
   const targetDir = path.join(os.tmpdir(), generateRandomStr());
@@ -13,7 +15,7 @@ function compile(files, distPath, context) {
     return files
       .map((file) => {
         const distFile = file.clone();
-        const content = distSignature + file.contents.toString().replace(/;/g, ";\n");
+        const content = distSignature + file.contents.toString().replace(stringToRemovedByCompiler, '');
         distFile.base = distPath;
         distFile.path = path.join(distPath, file.relative);
         distFile.contents = Buffer.from(content);
@@ -29,5 +31,6 @@ function generateRandomStr(size = 8) {
 }
 
 module.exports = {
-  compile
+  compile,
+  stringToRemovedByCompiler
 };
