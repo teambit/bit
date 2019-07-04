@@ -54,7 +54,6 @@ export default class Dists {
   writeDistsFiles: boolean = true; // changed only when importing a component
   areDistsInsideComponentDir: ?boolean = true;
   distEntryShouldBeStripped: ?boolean = false;
-  _distsPathsAreUpdated: ?boolean = false; // makes sure to not update twice
   _mainDistFile: ?PathOsBasedRelative;
   distsRootDir: ?PathOsBasedRelative; // populated only after getDistDirForConsumer() is called
   constructor(dists?: ?(Dist[]), mainDistFile: ?PathOsBased) {
@@ -75,10 +74,6 @@ export default class Dists {
   }
   getMainDistFile() {
     return this._mainDistFile;
-  }
-
-  set distsPathsAreUpdated(value: boolean) {
-    this._distsPathsAreUpdated = value;
   }
 
   /**
@@ -113,10 +108,17 @@ export default class Dists {
   }
 
   updateDistsPerWorkspaceConfig(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
-    if (this._distsPathsAreUpdated || this.isEmpty()) return;
+    if (this.isEmpty()) return;
     const newDistBase = this.getDistDir(consumer, componentMap.getRootDir());
-    const distEntry = consumer ? consumer.config.distEntry : undefined;
-    const shouldDistEntryBeStripped = () => {
+    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase }));
+    if (consumer) this.stripDistEntryIfNeeded(id, consumer, componentMap);
+  }
+
+  stripDistEntryIfNeeded(id: BitId, consumer: Consumer, componentMap: ComponentMap) {
+    const distEntry = consumer.config.distEntry;
+    if (!distEntry) return;
+    const shouldDistEntryBeStripped = (): boolean => {
+      if (this.distEntryShouldBeStripped) return false; // it has been already stripped, don't strip twice!
       if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
       const areAllDistsStartWithDistEntry = () => {
         return this.dists.map(dist => dist.relative.startsWith(distEntry)).every(x => x);
@@ -131,24 +133,13 @@ export default class Dists {
       return componentMap.rootDir.startsWith(distEntry) && areAllDistsStartWithDistEntry();
     };
     const distEntryShouldBeStripped = shouldDistEntryBeStripped();
-    if (distEntryShouldBeStripped) {
-      // $FlowFixMe
-      logger.debug(`stripping dist.entry "${distEntry}" from ${id}`);
-      this.distEntryShouldBeStripped = true;
+    if (!distEntryShouldBeStripped) return;
+    logger.debug(`stripping dist.entry "${distEntry}" from ${id.toString()}`);
+    this.distEntryShouldBeStripped = true;
+    this.dists.forEach(dist => dist.updatePaths({ newRelative: dist.relative.replace(distEntry, '') }));
+    if (this._mainDistFile) {
+      this._mainDistFile.replace(distEntry, '');
     }
-    const getNewRelative = (dist) => {
-      if (distEntryShouldBeStripped) {
-        // $FlowFixMe distEntry is set when distEntryShouldBeStripped
-        return dist.relative.replace(distEntry, '');
-      }
-      return dist.relative;
-    };
-    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
-    this._mainDistFile =
-      this._mainDistFile && distEntryShouldBeStripped // $FlowFixMe distEntry is set when distEntryShouldBeStripped
-        ? this._mainDistFile.replace(distEntry, '')
-        : this._mainDistFile;
-    this._distsPathsAreUpdated = true;
   }
 
   stripOriginallySharedDir(originallySharedDir: string, pathWithoutSharedDir: Function) {

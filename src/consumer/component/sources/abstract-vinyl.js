@@ -21,10 +21,11 @@ export default class AbstractVinyl extends Vinyl {
   verbose: boolean = false;
 
   // Update the base path and keep the relative value to be the same
-  updatePaths({ newBase, newRelative, newCwd }: { newBase: string, newRelative?: string, newCwd?: string }) {
+  updatePaths({ newBase, newRelative, newCwd }: { newBase?: string, newRelative?: string, newCwd?: string }) {
     const relative = newRelative || this.relative;
+    const base = newBase || this.base;
     if (newCwd) this.cwd = newCwd;
-    this.base = newBase;
+    this.base = base;
     this.path = path.join(this.base, relative);
   }
 
