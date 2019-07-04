@@ -266,11 +266,15 @@ const _runBuild = async ({
         throw new InvalidCompilerInterface(compiler.name);
       }
 
-      const isolateFunc = async (
-        destDir?: string
-      ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
-        const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
-        const componentWithDependencies = await isolator.isolate(component.id, {});
+      const isolateFunc = async ({
+        targetDir,
+        shouldBuildDependencies
+      }: {
+        targetDir?: string,
+        shouldBuildDependencies?: boolean
+      }): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
+        const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
+        const componentWithDependencies = await isolator.isolate(component.id, { shouldBuildDependencies });
         return { capsule: isolator.capsule, componentWithDependencies };
       };
 

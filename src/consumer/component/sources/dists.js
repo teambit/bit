@@ -180,11 +180,10 @@ export default class Dists {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
     if (writeLinks && !consumer) throw new Error('getDistsToWrite expects to get consumer when writeLinks is true');
     const dataToPersist = new DataToPersist();
-    let componentMap;
-    if (consumer) {
-      componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
-      this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
-    }
+    const componentMap = consumer
+      ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
+      : component.componentMap;
+    this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
     dataToPersist.addManyFiles(this.dists);
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
       const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);

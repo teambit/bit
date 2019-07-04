@@ -1,5 +1,6 @@
 // @flow
 import R from 'ramda';
+import pMapSeries from 'p-map-series';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -11,6 +12,8 @@ import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-
 import { getAllRootDirectoriesFor } from '../npm-client/install-packages';
 import npmClient from '../npm-client';
 import { DEFAULT_PACKAGE_MANAGER } from '../constants';
+import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
 
 export default class Isolator {
   capsule: Capsule;
@@ -23,13 +26,20 @@ export default class Isolator {
   }
 
   static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: ?Consumer, dir?: string) {
-    logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container`);
+    logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
   }
 
   async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
     const componentWithDependencies = await this._loadComponent(componentId);
+    if (opts.shouldBuildDependencies) {
+      topologicalSortComponentDependencies(componentWithDependencies);
+      await pMapSeries(componentWithDependencies.dependencies.reverse(), dep =>
+        dep.build({ scope: this.scope, consumer: this.consumer })
+      );
+      componentWithDependencies.dependencies.forEach(dependency => (dependency.dists._distsPathsAreUpdated = false));
+    }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
       // consumer: this.consumer,
@@ -87,13 +97,12 @@ export default class Isolator {
   }
 
   async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
-    const persistP = componentsWithDependencies.map((componentWithDeps) => {
+    const dataToPersist = new DataToPersist();
+    componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      return allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.persistAllToCapsule(this.capsule) : Promise.resolve();
-      });
+      allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    return Promise.all(R.flatten(persistP));
+    await dataToPersist.persistAllToCapsule(this.capsule);
   }
 
   async installPackagesOnDirs(dirs: string[]) {
