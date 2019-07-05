@@ -10,6 +10,10 @@ describe('isType', () => {
   });
 });`;
 export const isTypeES6 = "export default function isType() { return 'got is-type'; };";
+export const isTypeLeftPad = `
+const leftPad = require('left-pad');
+module.exports = function isType() { return leftPad('got is-type', 15, 0); };
+`;
 export const isTypeTS = "export default function isType() { return 'got is-type'; };";
 export const isString =
   "const isType = require('./is-type.js'); module.exports = function isString() { return isType() +  ' and got is-string'; };";

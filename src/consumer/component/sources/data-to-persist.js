@@ -77,7 +77,20 @@ export default class DataToPersist {
     // );
     await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
-    await Promise.all(this.symlinks.map(symlink => capsule.symlink(symlink.src, symlink.dest)));
+    await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
+  }
+  async atomicSymlink(capsule: Capsule, symlink: Symlink) {
+    try {
+      await capsule.symlink(symlink.src, symlink.dest);
+    } catch (e) {
+      // On windows when the link already created by npm we got EPERM error
+      // TODO: We should handle this better and avoid creating the symlink if it's already exists
+      if (e.code !== 'EEXIST' && e.code !== 'EPERM') {
+        throw e;
+      } else {
+        logger.debug(`ignoring ${e.code} error on atomicSymlink creation`);
+      }
+    }
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {

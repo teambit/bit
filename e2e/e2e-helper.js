@@ -527,7 +527,11 @@ export default class Helper {
       'excludeRegistryPrefix: true',
       'excludeRegistryPrefix: false'
     );
-    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
+    const extensionFileWithJsonOutput = extensionFileIncludeRegistry.replace(
+      'return result;',
+      'return JSON.stringify(result, null, 2);'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 
   build(id?: string = '') {
@@ -1046,6 +1050,24 @@ export default class Helper {
    */
   populateWorkspaceWithComponents() {
     this.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
+
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'   => requires the left-pad package
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type => left-pad
+   */
+  populateWorkspaceWithComponentsAndPackages() {
+    this.initNpm();
+    this.installNpmPackage('left-pad', '1.3.0');
+    this.createFile('utils', 'is-type.js', fixtures.isTypeLeftPad);
     this.addComponentUtilsIsType();
     this.createFile('utils', 'is-string.js', fixtures.isString);
     this.addComponentUtilsIsString();

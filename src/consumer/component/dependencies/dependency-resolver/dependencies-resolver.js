@@ -352,9 +352,7 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
       throw new GeneralError( // $FlowFixMe
-        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
-          this.componentFromModel.id
-        }`
+        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
       );
     }
     const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);

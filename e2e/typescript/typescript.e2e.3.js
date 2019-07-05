@@ -405,9 +405,7 @@ export class List extends React.Component {
       helper.importComponent('bar/foo');
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
-      const appJsFixture = `const barFoo = require('@bit/${
-        helper.remoteScope
-      }.bar.foo'); console.log(barFoo.default());`;
+      const appJsFixture = `const barFoo = require('@bit/${helper.remoteScope}.bar.foo'); console.log(barFoo.default());`;
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
@@ -428,9 +426,7 @@ export class List extends React.Component {
         npmCiRegistry.destroy();
       });
       function runAppJs() {
-        const appJsFixture = `const barFoo = require('@ci/${
-          helper.remoteScope
-        }.bar.foo'); console.log(barFoo.default());`;
+        const appJsFixture = `const barFoo = require('@ci/${helper.remoteScope}.bar.foo'); console.log(barFoo.default());`;
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');

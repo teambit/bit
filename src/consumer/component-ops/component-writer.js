@@ -1,5 +1,6 @@
 // @flow
 import fs from 'fs-extra';
+import semver from 'semver';
 import * as RA from 'ramda-adjunct';
 import path from 'path';
 import type Component from '../component/consumer-component';
@@ -157,6 +158,15 @@ export default class ComponentWriter {
       );
 
       const componentConfig = ComponentConfig.fromComponent(this.component);
+      // @todo: temporarily this is running only when there is no version (or version is "latest")
+      // so then package.json always has a valid version. we'll need to figure out when the version
+      // needs to be incremented and when it should not.
+      if ((!this.consumer || this.consumer.isolated) && !this.component.id.hasVersion()) {
+        // this only needs to be done in an isolated
+        // or consumerless (dependency in an isolated) environment
+        packageJson.addOrUpdateProperty('version', this._getNextPatchVersion());
+      }
+
       componentConfig.compiler = this.component.compiler ? this.component.compiler.toBitJsonObject('.') : {};
       componentConfig.tester = this.component.tester ? this.component.tester.toBitJsonObject('.') : {};
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
@@ -389,5 +399,9 @@ export default class ComponentWriter {
     if (this.configDir) return this.configDir;
     if (this.consumer) return this.consumer.dirStructure.ejectedEnvsDirStructure;
     return new ConfigDir(DEFAULT_EJECTED_ENVS_DIR_PATH);
+  }
+
+  _getNextPatchVersion() {
+    return semver.inc(this.component.version, 'prerelease') || '0.0.1-0';
   }
 }

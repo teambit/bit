@@ -1387,9 +1387,7 @@ console.log(barFoo.default());`;
     });
     it('should not allow tagging the component', () => {
       expect(output).to.have.string(
-        `error: issues found with the following component dependencies\n\n${
-          helper.remoteScope
-        }/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
+        `error: issues found with the following component dependencies\n\n${helper.remoteScope}/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
       );
     });
   });

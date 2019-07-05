@@ -1,5 +1,7 @@
 // @flow
 import R from 'ramda';
+import path from 'path';
+import semver from 'semver';
 import pMapSeries from 'p-map-series';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
@@ -9,9 +11,12 @@ import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
-import { getAllRootDirectoriesFor } from '../npm-client/install-packages';
+import PackageJsonFile from '../consumer/component/package-json-file';
+import type Component from '../consumer/component/consumer-component';
+import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
+import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
+import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
 import npmClient from '../npm-client';
-import { DEFAULT_PACKAGE_MANAGER } from '../constants';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 
@@ -32,7 +37,7 @@ export default class Isolator {
   }
 
   async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
-    const componentWithDependencies = await this._loadComponent(componentId);
+    const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
       await pMapSeries(componentWithDependencies.dependencies.reverse(), dep =>
@@ -60,16 +65,24 @@ export default class Isolator {
       isolated: true,
       capsule: this.capsule
     };
+    // $FlowFixMe
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule([componentWithDependencies]);
+    // $FlowFixMe
+    const componentRootDir: string = componentWithDependencies.component.writtenPath;
+    await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    const allRootDirs = getAllRootDirectoriesFor([componentWithDependencies]);
-    await this.installPackagesOnDirs(allRootDirs);
+    // await this._installPackages(componentWithDependencies.component.writtenPath);
+    await this._installWithPeerOption(componentRootDir);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
+    // @todo: find a better solution. since the capsule structure has changed to have the rootDir
+    // of the component, the component and the capsule package.json are the same one.
+    // as a result, when writing the links, the capsule package.json is overwritten
+    await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
     return componentWithDependencies;
   }
 
@@ -104,18 +117,60 @@ export default class Isolator {
     await dataToPersist.persistAllToCapsule(this.capsule);
   }
 
-  async installPackagesOnDirs(dirs: string[]) {
-    return Promise.all(dirs.map(dir => this._installInOneDirectoryWithPeerOption(dir)));
+  async _addComponentsToRoot(rootDir: string, components: Component[]): Promise<void> {
+    const capsulePath = this.capsule.container.getPath();
+    // the capsulePath hack only works for the fs-capsule
+    // for other capsule types, we would need to do this
+    // (and other things) inside the capsule itself
+    // rather than fetching its folder and using it
+    const rootPathInCapsule = path.join(capsulePath, rootDir);
+    const componentsToAdd = components.reduce((acc, component) => {
+      // $FlowFixMe - writtenPath is defined
+      const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
+      const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
+      const locationAsUnixFormat = convertToValidPathForPackageManager(relativeDepLocation);
+      const packageName = componentIdToPackageName(component.id, component.bindingPrefix);
+      acc[packageName] = locationAsUnixFormat;
+      return acc;
+    }, {});
+    if (R.isEmpty(componentsToAdd)) return;
+    const packageJsonFile = await PackageJsonFile.load(rootPathInCapsule);
+    packageJsonFile.addDependencies(componentsToAdd);
+    await packageJsonFile.write();
   }
 
-  async _installPackagesOnOneDirectory(directory: string, modules: string[] = []) {
-    await this.capsule.exec('npm version 1.0.0', { cwd: directory });
-    // *** ugly hack alert ***
-    // we change the version to 1.0.0 here because for untagged
-    // components, the version is set by bit to "latest" in the package.json
-    // this is an invalid semver, and so npm refuses to install.
-    // A better fix would be to change this behaviour of bit, but that is a much bigger
-    // change. Until the capsule API is finalized, ths should do
+  async _getNpmVersion() {
+    const execResults = await this.capsule.exec('npm --version');
+    const versionString = await new Promise((resolve, reject) => {
+      let version = '';
+      execResults.stdout.on('data', (data: string) => {
+        version += data;
+      });
+      execResults.stdout.on('error', (error: string) => {
+        return reject(error);
+      });
+      // @ts-ignore
+      execResults.on('close', () => {
+        return resolve(version);
+      });
+    });
+    const validVersion = semver.coerce(versionString);
+    return validVersion ? validVersion.raw : null;
+  }
+
+  async _installPackages(directory: string, modules: string[] = []) {
+    const npmVersion = await this._getNpmVersion();
+    if (!npmVersion) {
+      return Promise.reject(new Error('Failed to isolate component: unable to run npm'));
+    }
+    if (!semver.satisfies(npmVersion, ACCEPTABLE_NPM_VERSIONS)) {
+      return Promise.reject(
+        new Error(
+          `Failed to isolate component: found an old version of npm (${npmVersion}). ` +
+            `To get rid of this error, please upgrade to npm ${ACCEPTABLE_NPM_VERSIONS}`
+        )
+      );
+    }
     const args = ['install', ...modules];
     const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
     let output = '';
@@ -133,12 +188,12 @@ export default class Isolator {
     });
   }
 
-  async _installInOneDirectoryWithPeerOption(directory: string, installPeerDependencies: boolean = true) {
-    await this._installPackagesOnOneDirectory(directory);
+  async _installWithPeerOption(directory: string, installPeerDependencies: boolean = true) {
+    await this._installPackages(directory);
     if (installPeerDependencies) {
       const peers = await this._getPeerDependencies(directory);
       if (!R.isEmpty(peers)) {
-        await this._installPackagesOnOneDirectory(directory, peers);
+        await this._installPackages(directory, peers);
       }
     }
   }

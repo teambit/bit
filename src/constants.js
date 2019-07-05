@@ -370,6 +370,8 @@ export const OVERRIDE_FILE_PREFIX = 'file://';
 
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
 
+export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
+
 export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
 
 export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';

@@ -30,6 +30,19 @@ describe('capsule', function () {
       expect(symlink).to.not.be.a.path();
     });
   });
+  describe('new components with package dependencies (untagged)', () => {
+    const capsuleDir = helper.generateRandomTmpDirName();
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.populateWorkspaceWithComponentsAndPackages();
+      helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
+      fs.outputFileSync(path.join(capsuleDir, 'app.js'), fixtures.appPrintBarFooCapsule);
+    });
+    it('should have the components and dependencies installed correctly with all the links', () => {
+      const result = helper.runCmd('node app.js', capsuleDir);
+      expect(result.trim()).to.equal('0000got is-type and got is-string and got foo');
+    });
+  });
   describe('tagged components with dependencies (before export)', () => {
     const capsuleDir = helper.generateRandomTmpDirName();
     before(() => {
