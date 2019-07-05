@@ -31,9 +31,10 @@ export async function getLinksInDistToWrite(
   bitMap: BitMap,
   componentWithDependencies?: ComponentWithDependencies
 ): Promise<DataToPersist> {
-  if (!componentWithDependencies && !consumer) { throw new Error('getLinksInDistToWrite expects either consumer or componentWithDependencies to be defined'); }
-  // $FlowFixMe
-  const componentWithDeps: ComponentWithDependencies =
+  if (!componentWithDependencies && !consumer) {
+    throw new Error('getLinksInDistToWrite expects either consumer or componentWithDependencies to be defined');
+  }
+  const componentWithDeps: ComponentWithDependencies = // $FlowFixMe
     componentWithDependencies || (await component.toComponentWithDependencies(consumer));
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     [componentWithDeps],
