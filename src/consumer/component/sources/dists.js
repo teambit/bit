@@ -16,6 +16,8 @@ import type CompilerExtension from '../../../extensions/compiler-extension';
 import type { DistFileModel } from '../../../scope/models/version';
 import DataToPersist from './data-to-persist';
 import WorkspaceConfig from '../../config/workspace-config';
+import { ComponentWithDependencies } from '../../../scope';
+import BitMap from '../../bit-map';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -155,8 +157,8 @@ export default class Dists {
   /**
    * write dists files to the filesystem
    */
-  async writeDists(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
-    const dataToPersist = await this.getDistsToWrite(component, consumer, writeLinks);
+  async writeDists(component: Component, consumer: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
+    const dataToPersist = await this.getDistsToWrite(component, consumer.bitMap, consumer, writeLinks);
     if (!dataToPersist) return null;
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAllToFS();
@@ -169,11 +171,12 @@ export default class Dists {
    */
   async getDistsToWrite(
     component: Component,
+    bitMap: BitMap,
     consumer: ?Consumer,
-    writeLinks?: boolean = true
+    writeLinks?: boolean = true,
+    componentWithDependencies?: ComponentWithDependencies
   ): Promise<?DataToPersist> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
-    if (writeLinks && !consumer) throw new Error('getDistsToWrite expects to get consumer when writeLinks is true');
     const dataToPersist = new DataToPersist();
     const componentMap = consumer
       ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
@@ -182,7 +185,13 @@ export default class Dists {
     this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
     dataToPersist.addManyFiles(this.dists);
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);
+      const linksInDist = await getLinksInDistToWrite(
+        component,
+        componentMap,
+        consumer,
+        bitMap,
+        componentWithDependencies
+      );
       dataToPersist.merge(linksInDist);
     }
 

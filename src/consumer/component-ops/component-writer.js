@@ -134,7 +134,7 @@ export default class ComponentWriter {
     }
     this.component.files.forEach(file => (file.override = this.override));
     this.component.files.map(file => this.component.dataToPersist.addFile(file));
-    const dists = await this.component.dists.getDistsToWrite(this.component, this.consumer, false);
+    const dists = await this.component.dists.getDistsToWrite(this.component, this.bitMap, this.consumer, false);
     if (dists) this.component.dataToPersist.merge(dists);
     if (this.writeConfig && this.consumer) {
       const resolvedConfigDir = this.configDir || this.consumer.dirStructure.ejectedEnvsDirStructure;
