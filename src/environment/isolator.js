@@ -2,6 +2,7 @@
 import R from 'ramda';
 import path from 'path';
 import semver from 'semver';
+import pMapSeries from 'p-map-series';
 import Capsule from '../../components/core/capsule';
 import createCapsule from './capsule-factory';
 import Consumer from '../consumer/consumer';
@@ -10,14 +11,14 @@ import { BitId } from '../bit-id';
 import ManyComponentsWriter from '../consumer/component-ops/many-components-writer';
 import logger from '../logger/logger';
 import loadFlattenedDependencies from '../consumer/component-ops/load-flattened-dependencies';
-
 import PackageJsonFile from '../consumer/component/package-json-file';
 import type Component from '../consumer/component/consumer-component';
 import { convertToValidPathForPackageManager } from '../consumer/component/package-json-utils';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
-
 import npmClient from '../npm-client';
+import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
+import DataToPersist from '../consumer/component/sources/data-to-persist';
 
 export default class Isolator {
   capsule: Capsule;
@@ -30,13 +31,19 @@ export default class Isolator {
   }
 
   static async getInstance(containerType: string = 'fs', scope: Scope, consumer?: ?Consumer, dir?: string) {
-    logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container`);
+    logger.debug(`Isolator.getInstance, creating a capsule with an ${containerType} container, dir ${dir || 'N/A'}`);
     const capsule = await createCapsule(containerType, dir);
     return new Isolator(capsule, scope, consumer);
   }
 
   async isolate(componentId: BitId, opts: Object): Promise<ComponentWithDependencies> {
-    const componentWithDependencies = await this._loadComponent(componentId);
+    const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
+    if (opts.shouldBuildDependencies) {
+      topologicalSortComponentDependencies(componentWithDependencies);
+      await pMapSeries(componentWithDependencies.dependencies.reverse(), dep =>
+        dep.build({ scope: this.scope, consumer: this.consumer })
+      );
+    }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
       // consumer: this.consumer,
@@ -64,22 +71,18 @@ export default class Isolator {
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule([componentWithDependencies]);
-    await this._addComponentsToRoot(
-      componentWithDependencies.component.writtenPath,
-      componentWithDependencies.allDependencies
-    );
+    // $FlowFixMe
+    const componentRootDir: string = componentWithDependencies.component.writtenPath;
+    await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
     logger.debug('ManyComponentsWriter, install packages on capsule');
     // await this._installPackages(componentWithDependencies.component.writtenPath);
-    await this._installWithPeerOption(componentWithDependencies.component.writtenPath);
+    await this._installWithPeerOption(componentRootDir);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
     // @todo: find a better solution. since the capsule structure has changed to have the rootDir
     // of the component, the component and the capsule package.json are the same one.
     // as a result, when writing the links, the capsule package.json is overwritten
-    await this._addComponentsToRoot(
-      componentWithDependencies.component.writtenPath,
-      componentWithDependencies.allDependencies
-    );
+    await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
     return componentWithDependencies;
   }
 
@@ -106,13 +109,12 @@ export default class Isolator {
   }
 
   async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
-    const persistP = componentsWithDependencies.map((componentWithDeps) => {
+    const dataToPersist = new DataToPersist();
+    componentsWithDependencies.forEach((componentWithDeps) => {
       const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      return allComponents.map((component) => {
-        return component.dataToPersist ? component.dataToPersist.persistAllToCapsule(this.capsule) : Promise.resolve();
-      });
+      allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     });
-    return Promise.all(R.flatten(persistP));
+    await dataToPersist.persistAllToCapsule(this.capsule);
   }
 
   async _addComponentsToRoot(rootDir: string, components: Component[]): Promise<void> {

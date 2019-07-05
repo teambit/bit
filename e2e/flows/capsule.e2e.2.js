@@ -3,6 +3,7 @@ import fs from 'fs-extra';
 import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
+import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
 
 chai.use(require('chai-fs'));
 
@@ -139,8 +140,15 @@ describe('capsule', function () {
   describe('build into capsule', () => {
     before(() => {
       helper.setNewLocalAndRemoteScopes();
-      helper.populateWorkspaceWithComponents();
+      const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
+      helper.createFile('utils', 'is-type.js', strToAdd + fixtures.isType);
+      helper.addComponentUtilsIsType();
+      helper.createFile('utils', 'is-string.js', strToAdd + fixtures.isString);
+      helper.addComponentUtilsIsString();
+      helper.createComponentBarFoo(strToAdd + fixtures.barFooFixture);
+      helper.addComponentBarFoo();
       helper.importDummyCompiler('capsule');
+
       helper.build();
     });
     it('should be able to require the component and its dependencies from the dist directory', () => {
@@ -148,6 +156,36 @@ describe('capsule', function () {
       fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
       const result = helper.runCmd('node app.js');
       expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+    });
+    describe('building with shouldBuildDependencies option enabled', () => {
+      let capsuleDir;
+      before(() => {
+        helper.deleteFile('dist');
+        const compilerPath = path.join('.bit/components/compilers/dummy', helper.envScope, '0.0.1/compiler.js');
+        const compilerContent = helper.readFile(compilerPath);
+        capsuleDir = helper.generateRandomTmpDirName();
+        const compilerWithBuildDependenciesEnabled = compilerContent
+          .replace('shouldBuildDependencies: false', 'shouldBuildDependencies: true')
+          .replace('targetDir,', `targetDir: '${capsuleDir}',`);
+        helper.outputFile(compilerPath, compilerWithBuildDependenciesEnabled);
+        helper.build('bar/foo --no-cache');
+      });
+      it('should write all dependencies dists into the capsule', () => {
+        const isStringDist = path.join(capsuleDir, '.dependencies/utils/is-string/dist/utils/is-string.js');
+        const isTypeDist = path.join(capsuleDir, '.dependencies/utils/is-type/dist/utils/is-type.js');
+        expect(isStringDist).to.be.a.file();
+        expect(isTypeDist).to.be.a.file();
+      });
+      it('should not write the same paths written to the capsule into the author workspace', () => {
+        expect(path.join(helper.localScopePath, '.dependencies')).to.not.be.a.path();
+      });
+      it('should be able to require the component and its dependencies from the dist directory', () => {
+        helper.build();
+        const appJsFixture = "const barFoo = require('./dist/bar/foo'); console.log(barFoo());";
+        fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
+        const result = helper.runCmd('node app.js');
+        expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
     });
   });
   describe('test in capsule', () => {
