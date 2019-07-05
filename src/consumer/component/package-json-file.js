@@ -34,7 +34,8 @@ export default class PackageJsonFile {
     if (!this.workspaceDir) throw new Error('PackageJsonFile is unable to write, workspaceDir is not defined');
     const pathToWrite = path.join(this.workspaceDir, this.filePath);
     logger.debug(`package-json-file.write, path ${pathToWrite}`);
-    return fs.outputJSON(pathToWrite, this.packageJsonObject, { spaces: this.indent });
+    await fs.outputJSON(pathToWrite, this.packageJsonObject, { spaces: this.indent });
+    this.fileExist = true;
   }
 
   /**

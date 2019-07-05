@@ -19,11 +19,13 @@ import { ACCEPTABLE_NPM_VERSIONS, DEFAULT_PACKAGE_MANAGER } from '../constants';
 import npmClient from '../npm-client';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
+import BitMap from '../consumer/bit-map';
 
 export default class Isolator {
   capsule: Capsule;
   consumer: ?Consumer;
   scope: Scope;
+  capsuleBitMap: BitMap;
   constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
     this.capsule = capsule;
     this.scope = scope;
@@ -83,6 +85,7 @@ export default class Isolator {
     // of the component, the component and the capsule package.json are the same one.
     // as a result, when writing the links, the capsule package.json is overwritten
     await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
+    this.capsuleBitMap = manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
 
