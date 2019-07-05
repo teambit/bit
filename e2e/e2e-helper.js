@@ -696,7 +696,7 @@ export default class Helper {
   }
 
   createDummyCompiler(dummyType: string) {
-    if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
+    // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);

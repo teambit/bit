@@ -4,6 +4,7 @@ import path from 'path';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import * as capsuleCompiler from '../fixtures/compilers/capsule/compiler';
+import { AUTO_GENERATED_STAMP } from '../../src/constants';
 
 chai.use(require('chai-fs'));
 
@@ -185,6 +186,57 @@ describe('capsule', function () {
         fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+      });
+    });
+  });
+  describe('tag with capsule compiler that saves link files into the dists', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      const strToAdd = capsuleCompiler.stringToRemovedByCompiler;
+      helper.createFile('utils', 'is-type.js', strToAdd + fixtures.isType);
+      helper.addComponentUtilsIsType();
+      helper.createFile('utils', 'is-string.js', strToAdd + fixtures.isString);
+      helper.addComponentUtilsIsString();
+      helper.createComponentBarFoo(strToAdd + fixtures.barFooFixture);
+      helper.addComponentBarFoo();
+      helper.importDummyCompiler('capsule-save-links');
+      helper.tagAllComponents();
+    });
+    it('should save the link into the dists', () => {
+      const barFoo = helper.catComponent('bar/foo@latest');
+      const distLink = barFoo.dists.find(d => d.relativePath === 'utils/is-string.js');
+      expect(distLink).to.not.be.undefined;
+      const fileHash = distLink.file;
+      const content = helper.catObject(fileHash);
+      // expect the link file to include only the name, without the scope name.
+      // this will be changed once exported
+      expect(content).to.have.string('@bit/utils.is-string');
+    });
+    describe('exporting the component', () => {
+      before(() => {
+        helper.exportAllComponents();
+      });
+      it('should change the dists', () => {
+        const barFoo = helper.catComponent('bar/foo@latest');
+        const distLink = barFoo.dists.find(d => d.relativePath === 'utils/is-string.js');
+        expect(distLink).to.not.be.undefined;
+        const fileHash = distLink.file;
+        const content = helper.catObject(fileHash);
+        // expect the link file to include the full name including the scope name
+        expect(content).to.have.string(`@bit/${helper.remoteScope}.utils.is-string`);
+        expect(content).to.not.have.string('@bit/utils.is-string');
+      });
+      describe('importing the component to another workspace', () => {
+        before(() => {
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should write the dist link file from the scope and not the generated one', () => {
+          const fileContent = helper.readFile('components/bar/foo/dist/utils/is-string.js');
+          expect(fileContent).to.not.have.string(AUTO_GENERATED_STAMP);
+          expect(fileContent).to.have.string(`@bit/${helper.remoteScope}.utils.is-string`);
+        });
       });
     });
   });
