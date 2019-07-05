@@ -62,7 +62,7 @@ export default class DataToPersist {
   }
   async persistAllToFS() {
     this._log();
-    this._validate();
+    this._validateAbsolute();
     // the order is super important. first remove, then create and finally symlink
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
@@ -70,6 +70,7 @@ export default class DataToPersist {
   }
   async persistAllToCapsule(capsule: Capsule) {
     this._log();
+    this._validateRelative();
     // const filesForCapsule = this.files.reduce(
     //   (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
     //   {}
@@ -115,7 +116,7 @@ export default class DataToPersist {
     }
     return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
   }
-  _validate() {
+  _validateAbsolute() {
     // it's important to make sure that all paths are absolute before writing them to the
     // filesystem. relative paths won't work when running bit commands from an inner dir
     const validateAbsolutePath = (pathToValidate) => {
@@ -132,6 +133,24 @@ export default class DataToPersist {
     this.symlinks.forEach((symlink) => {
       validateAbsolutePath(symlink.src);
       validateAbsolutePath(symlink.dest);
+    });
+  }
+  _validateRelative() {
+    // it's important to make sure that all paths are relative before writing them to the capsule
+    const validateRelativePath = (pathToValidate) => {
+      if (path.isAbsolute(pathToValidate)) {
+        throw new Error(`DataToPersist expects ${pathToValidate} to be relative, got absolute`);
+      }
+    };
+    this.files.forEach((file) => {
+      validateRelativePath(file.path);
+    });
+    this.remove.forEach((removePath) => {
+      validateRelativePath(removePath.path);
+    });
+    this.symlinks.forEach((symlink) => {
+      validateRelativePath(symlink.src);
+      validateRelativePath(symlink.dest);
     });
   }
   _log() {
