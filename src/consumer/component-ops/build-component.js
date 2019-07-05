@@ -25,6 +25,7 @@ import ComponentWithDependencies from '../../scope/component-dependencies';
 import type { CompilerResults } from '../../extensions/compiler-api';
 import PackageJsonFile from '../component/package-json-file';
 import DataToPersist from '../component/sources/data-to-persist';
+import { getComponentsDependenciesLinks } from '../../links/link-generator';
 
 export default (async function buildComponent({
   component,
@@ -276,12 +277,12 @@ const _runBuild = async ({
       }): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
         const isolator = await Isolator.getInstance('fs', scope, consumer, targetDir);
         const componentWithDependencies = await isolator.isolate(component.id, { shouldBuildDependencies });
-        const writeDists = async (builtFiles, mainDist) => {
+        const writeDists = async (builtFiles, mainDist): Promise<void> => {
           const capsuleComponent: ConsumerComponent = componentWithDependencies.component;
           capsuleComponent.setDists(builtFiles.map(file => new Dist(file)), mainDist);
-          // $FlowFixMe result is null here because the dists exist
+          // $FlowFixMe result is not null here because the dists exist
           const distsToWrite: DataToPersist = await capsuleComponent.dists.getDistsToWrite(
-            component,
+            capsuleComponent,
             isolator.capsuleBitMap,
             null,
             true,
@@ -289,7 +290,16 @@ const _runBuild = async ({
           );
           distsToWrite.persistAllToCapsule(isolator.capsule);
         };
-        return { capsule: isolator.capsule, componentWithDependencies, writeDists };
+        const getDependenciesLinks = (): Vinyl[] => {
+          const links = getComponentsDependenciesLinks(
+            [componentWithDependencies],
+            null,
+            false,
+            isolator.capsuleBitMap
+          );
+          return links.files;
+        };
+        return { capsule: isolator.capsule, componentWithDependencies, writeDists, getDependenciesLinks };
       };
 
       const context: Object = {
