@@ -15,6 +15,7 @@ import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
+import { FileStatus } from '../src/consumer/versions-ops/merge-version';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -696,7 +697,7 @@ export default class Helper {
   }
 
   createDummyCompiler(dummyType: string) {
-    if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
+    // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
@@ -1095,5 +1096,10 @@ function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
+
+// eslint-disable-next-line import/prefer-default-export
+export const FileStatusWithoutChalk = R.fromPairs(
+  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
+);
 
 export { VERSION_DELIMITER };

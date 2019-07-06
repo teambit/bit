@@ -1,10 +1,9 @@
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { FileStatusWithoutChalk } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 import { NewerVersionFound } from '../../src/consumer/exceptions';
-import { FileStatusWithoutChalk } from './merge.e2e.2';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));

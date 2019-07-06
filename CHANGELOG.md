@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1770](https://github.com/teambit/bit/issues/1770) update dependency link files when bundling them
 - [#1663](https://github.com/teambit/bit/issues/1663) allow compilers to get the capsule ready with dependencies built in a topological order
 
 ## [14.1.4-dev.7] - 2019-07-03
