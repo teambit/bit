@@ -180,27 +180,27 @@ function convertNonScopeToCorrectScope(
 
 /**
  * see https://github.com/teambit/bit/issues/1770 for complete info
+ * some compilers require the links to be part of the bundle, in case a dist file has the same path
+ * of a dependency.sourceRelativePath, it means it was used by these compilers.
+ * change the component name in these link files from the id without scope to the id with the scope
+ * e.g. `@bit/utils.is-string` becomes `@bit/scope-name.utils.is-string`
  */
 async function changePartialNamesToFullNamesInDists(
   scope: Scope,
   component: ModelComponent,
   objects: BitObject[]
 ): Promise<void> {
-  await Promise.all(
-    objects.map(async (object: BitObject) => {
-      if (object instanceof Version && object.dists) {
-        return _replaceDistsOfVersionIfNeeded(object);
-      }
-      return null;
-    })
-  );
+  // $FlowFixMe
+  const versions: Version[] = objects.filter(object => object instanceof Version);
+  await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
 
   async function _replaceDistsOfVersionIfNeeded(version: Version) {
+    const dists = version.dists;
+    if (!dists) return;
     const allDependencies = new Dependencies(version.getAllDependencies());
     const dependenciesSourcePaths = allDependencies.getSourcesPaths();
-    // $FlowFixMe version.dists must be set here
     await Promise.all(
-      version.dists.map(async (dist) => {
+      dists.map(async (dist) => {
         if (!dependenciesSourcePaths.includes(dist.relativePath)) return null;
         const newDistObject = await _createNewDistIfNeeded(version, dist);
         if (newDistObject) {
