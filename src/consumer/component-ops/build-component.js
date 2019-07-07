@@ -121,7 +121,10 @@ async function _updateComponentPackageJson(component: ConsumerComponent, package
     return;
   }
   componentPackageJsonFile.mergePackageJsonObject(packageJsonPropsToAdd);
-  await componentPackageJsonFile.write();
+  // When running in capsule there is no workspace dir, so no need to update the package.json
+  if (componentPackageJsonFile.workspaceDir) {
+    await componentPackageJsonFile.write();
+  }
 }
 
 function _extractAndVerifyCompilerResults(

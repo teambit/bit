@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - [#1770](https://github.com/teambit/bit/issues/1770) update dependency link files when bundling them
 - [#1663](https://github.com/teambit/bit/issues/1663) allow compilers to get the capsule ready with dependencies built in a topological order
+- [#1788](https://github.com/teambit/bit/issues/1788) can't update the `pacakge.json` props from compiler who uses capsule
 
 ## [14.1.4-dev.7] - 2019-07-03
 
