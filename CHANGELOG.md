@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1798](https://github.com/teambit/bit/issues/1798) fix replacing the component to full ids to work for all cases
+
 ## [14.1.4-dev.8] - 2019-07-07
 
 - [#1770](https://github.com/teambit/bit/issues/1770) update dependency link files when bundling them

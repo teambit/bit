@@ -180,9 +180,8 @@ function convertNonScopeToCorrectScope(
 
 /**
  * see https://github.com/teambit/bit/issues/1770 for complete info
- * some compilers require the links to be part of the bundle, in case a dist file has the same path
- * of a dependency.sourceRelativePath, it means it was used by these compilers.
- * change the component name in these link files from the id without scope to the id with the scope
+ * some compilers require the links to be part of the bundle, change the component name in these
+ * files from the id without scope to the id with the scope
  * e.g. `@bit/utils.is-string` becomes `@bit/scope-name.utils.is-string`
  */
 async function changePartialNamesToFullNamesInDists(
@@ -197,11 +196,8 @@ async function changePartialNamesToFullNamesInDists(
   async function _replaceDistsOfVersionIfNeeded(version: Version) {
     const dists = version.dists;
     if (!dists) return;
-    const allDependencies = new Dependencies(version.getAllDependencies());
-    const dependenciesSourcePaths = allDependencies.getSourcesPaths();
     await Promise.all(
       dists.map(async (dist) => {
-        if (!dependenciesSourcePaths.includes(dist.relativePath)) return null;
         const newDistObject = await _createNewDistIfNeeded(version, dist);
         if (newDistObject) {
           dist.file = newDistObject.hash();
@@ -217,13 +213,14 @@ async function changePartialNamesToFullNamesInDists(
     // $FlowFixMe
     const distObject: Source = await scope.objects.load(currentHash);
     const distString = distObject.contents.toString();
-    const allDependenciesIds = version.getAllDependencies().map(d => d.id);
+    const dependenciesIds = version.getAllDependencies().map(d => d.id);
+    const allIds = [...dependenciesIds, component.toBitId()];
     let newDistString = distString;
-    allDependenciesIds.forEach((id) => {
+    allIds.forEach((id) => {
       const idWithoutScope = id.changeScope(null);
       const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
       const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
-      newDistString = newDistString.replace(pkgNameWithoutScope, pkgNameWithScope);
+      newDistString = newDistString.replace(new RegExp(pkgNameWithoutScope, 'g'), pkgNameWithScope);
     });
     if (newDistString !== distString) {
       return Source.from(Buffer.from(newDistString));
