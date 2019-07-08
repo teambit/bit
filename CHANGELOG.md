@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1798](https://github.com/teambit/bit/issues/1798) fix replacing the component to full ids to work for all cases
+- [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
 
 ## [14.1.4-dev.8] - 2019-07-07
 
