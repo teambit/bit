@@ -523,6 +523,7 @@ either, use the ignore file syntax or change the require statement to have a mod
       if (!existingDepRelativePaths) {
         // it is another file of an already existing component. Just add the new path
         existingDependency.relativePaths.push(depsPaths);
+        return;
       }
       // The dep path is already exist but maybe with different import specifiers
       const nonExistingImportSpecifires = this.getDiffSpecifires(
