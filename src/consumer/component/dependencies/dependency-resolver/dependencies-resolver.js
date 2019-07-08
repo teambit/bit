@@ -352,7 +352,9 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
       .find(dep => dep.id.isEqualWithoutVersion(componentId));
     if (!dependency) {
       throw new GeneralError( // $FlowFixMe
-        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${this.componentFromModel.id}`
+        `the auto-generated file ${depFile} should be connected to ${componentId}, however, it's not part of the model dependencies of ${
+          this.componentFromModel.id
+        }`
       );
     }
     const isCompilerDependency = this.componentFromModel.compilerDependencies.getById(componentId);
@@ -420,8 +422,11 @@ Try to run "bit import ${this.component.id.toString()} --objects" to get the com
     fileType: FileType,
     depFileObject: FileObject
   ) {
-    if (this.processedFiles.includes(depFile)) return;
-    this.processedFiles.push(depFile);
+    // We don't just return because different files of the component might import different things from the depFile
+    // See more info here: https://github.com/teambit/bit/issues/1796
+    if (!this.processedFiles.includes(depFile)) {
+      this.processedFiles.push(depFile);
+    }
 
     // if the dependency of an envFile is already included in the env files of the component, we're good
     if (fileType.isCompilerFile && this.compilerFiles.includes(depFile)) return;
@@ -514,8 +519,17 @@ either, use the ignore file syntax or change the require statement to have a mod
     ];
     const existingDependency = this.getExistingDependency(allDependencies, componentId);
     if (existingDependency) {
-      // it is another file of an already existing component. Just add the new path
-      existingDependency.relativePaths.push(depsPaths);
+      const existingDepRelativePaths = this.getExistingDepRelativePaths(existingDependency, depsPaths);
+      if (!existingDepRelativePaths) {
+        // it is another file of an already existing component. Just add the new path
+        existingDependency.relativePaths.push(depsPaths);
+      }
+      // The dep path is already exist but maybe with different import specifiers
+      const nonExistingImportSpecifires = this.getDiffSpecifires(
+        existingDepRelativePaths.importSpecifiers,
+        depsPaths.importSpecifiers
+      );
+      existingDepRelativePaths.importSpecifiers.push(...nonExistingImportSpecifires);
     } else {
       this.pushToDependenciesArray(currentComponentsDeps, fileType);
     }
@@ -871,6 +885,21 @@ either, use the ignore file syntax or change the require statement to have a mod
 
   getExistingDependency(dependencies: Dependency[], id: BitId): ?Dependency {
     return dependencies.find(d => d.id.isEqual(id));
+  }
+
+  getExistingDepRelativePaths(dependency: Dependency, relativePath: RelativePath) {
+    if (!dependency.relativePaths || R.isEmpty(dependency.relativePaths)) return null;
+    return dependency.relativePaths.find(
+      paths =>
+        paths.sourceRelativePath === relativePath.sourceRelativePath &&
+        paths.destinationRelativePath === relativePath.destinationRelativePath
+    );
+  }
+
+  getDiffSpecifires(originSpecifires: ImportSpecifier[], targetSpecifires: ImportSpecifier[]) {
+    const cmp = (specifier1, specifier2) => specifier1.mainFile.name === specifier2.mainFile.name;
+    const res = R.differenceWith(cmp, targetSpecifires, originSpecifires);
+    return res;
   }
 
   setCompilerFiles() {
