@@ -14,7 +14,6 @@ import ScopeComponentsImporter from './scope-components-importer';
 import type { Remotes, Remote } from '../../remotes';
 import type Scope from '../scope';
 import { LATEST } from '../../constants';
-import { Dependencies } from '../../consumer/component/dependencies';
 import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
 import Source from '../models/source';
 
