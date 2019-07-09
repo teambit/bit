@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1799](https://github.com/teambit/bit/issues/1799) strip shared directory before writing files into the capsule
 - [#1798](https://github.com/teambit/bit/issues/1798) fix replacing the component to full ids to work for all cases
 - [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
 

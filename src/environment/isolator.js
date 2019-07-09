@@ -107,6 +107,8 @@ export default class Isolator {
    * flattenedDependencies. However, when loading from the consumer, we have only the dependencies
    * loaded, not the flattened. To get the flattened, we have to load the dependencies and each one
    * of the dependency we need to load its dependencies as well until we got them all.
+   * Also, we have to clone each component we load, because when writing them into the capsule, we
+   * strip their shared-dir and we don't want these changed paths to affect the workspace
    */
   async _loadComponent(id: BitId): Promise<ComponentWithDependencies> {
     if (this.consumer) {
@@ -119,7 +121,9 @@ export default class Isolator {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
     const component = await consumer.loadComponent(id);
-    return loadFlattenedDependencies(consumer, component);
+    const clonedComponent = component.clone();
+    const shouldClone = true;
+    return loadFlattenedDependencies(consumer, clonedComponent, shouldClone);
   }
 
   async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {

@@ -9,7 +9,8 @@ import { COMPONENT_ORIGINS } from '../../constants';
 
 export default (async function loadFlattenedDependencies(
   consumer: Consumer,
-  component: Component
+  component: Component,
+  shouldClone: boolean = false
 ): Promise<ComponentWithDependencies> {
   const dependencies = await loadManyDependencies(component.dependencies.getAllIds());
   const devDependencies = await loadManyDependencies(component.devDependencies.getAllIds());
@@ -30,7 +31,8 @@ export default (async function loadFlattenedDependencies(
   });
 
   async function loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {
-    return Promise.all(dependenciesIds.map(dep => loadDependency(dep)));
+    const dependenciesComponents = await Promise.all(dependenciesIds.map(dep => loadDependency(dep)));
+    return shouldClone ? dependenciesComponents.map(dep => dep.clone()) : dependenciesComponents;
   }
 
   async function loadDependency(dependencyId: BitId): Promise<Component> {

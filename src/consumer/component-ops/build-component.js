@@ -314,7 +314,15 @@ const _runBuild = async ({
           }
           return updatedFiles;
         };
-        return { capsule: isolator.capsule, componentWithDependencies, writeDists, getDependenciesLinks, addSharedDir };
+        const capsuleFiles = componentWithDependencies.component.files;
+        return {
+          capsule: isolator.capsule,
+          capsuleFiles,
+          componentWithDependencies,
+          writeDists,
+          getDependenciesLinks,
+          addSharedDir
+        };
       };
 
       const context: Object = {

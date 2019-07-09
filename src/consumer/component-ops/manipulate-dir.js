@@ -18,6 +18,7 @@ import Repository from '../../scope/objects/repository';
 import ComponentOverrides from '../config/component-overrides';
 import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 import Component from '../component/consumer-component';
+import { ComponentWithDependencies } from '../../scope';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
@@ -112,7 +113,7 @@ export function revertDirManipulationForPath(
   return removeWrapperDirFromPath(withSharedDir, wrapDir);
 }
 
-export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: PathLinux): PathOsBased {
+export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: ?PathLinux): PathOsBased {
   if (!sharedDir) return pathStr;
   const partToRemove = path.normalize(sharedDir) + path.sep;
   return pathStr.replace(partToRemove, '');

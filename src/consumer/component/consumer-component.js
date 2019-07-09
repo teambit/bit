@@ -276,7 +276,8 @@ export default class Component {
   }
 
   /**
-   * Warning: this method does not return a deep copy for objects properties except dependencies and devDependencies
+   * Warning: this method does not return a deep copy for all objects in this class, only for the
+   * ones you see in the implementation below.
    * Implement deep copy of other properties if needed
    */
   clone() {
@@ -287,6 +288,8 @@ export default class Component {
     newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
     newInstance.setTesterDependencies(this.testerDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
+    newInstance.files = this.files.map(file => file.clone());
+    newInstance.dists = this.dists.clone();
     return newInstance;
   }
 
@@ -540,7 +543,7 @@ export default class Component {
   }: {
     scope: Scope,
     save?: boolean,
-    consumer?: Consumer,
+    consumer?: ?Consumer,
     noCache?: boolean,
     directory?: string,
     verbose?: boolean,

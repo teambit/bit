@@ -145,10 +145,10 @@ export default class Dists {
     }
   }
 
-  stripOriginallySharedDir(originallySharedDir: string) {
+  stripOriginallySharedDir(originallySharedDir: ?string) {
     this.dists.forEach((distFile) => {
       const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
-      distFile.updatePaths({ newBase: distFile.base, newRelative });
+      distFile.updatePaths({ newRelative });
     });
     this._mainDistFile = this._mainDistFile
       ? stripSharedDirFromPath(this._mainDistFile, originallySharedDir)
@@ -294,5 +294,12 @@ export default class Dists {
       .map(nodePath => consumer.toAbsolutePath(nodePath))
       .map(pathNormalizeToLinux)
       .join(NODE_PATH_SEPARATOR);
+  }
+
+  clone(): Dists {
+    // $FlowFixMe
+    const clone: Dists = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    clone.dists = this.dists.map(d => d.clone());
+    return clone;
   }
 }
