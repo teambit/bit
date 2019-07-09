@@ -19,9 +19,9 @@ A clear and concise description of the issue.
 
 ### Steps to Reproduce
 
-  1.
-  1.
-  1.
+1.
+1.
+1.
 
 ### Expected Behavior
 
