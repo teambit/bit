@@ -33,12 +33,12 @@ If applicable, add screenshots, exceptions, and logs to help explain your proble
 
 ### Specifications
 
-  - Bit version:
-  - Node version:
-  - npm / yarn version:
-  - Platform:
-  - Bit compiler (include version):
-  - Bit tester (include version):
+- Bit version:
+- Node version:
+- npm / yarn version:
+- Platform:
+- Bit compiler (include version):
+- Bit tester (include version):
 
 ### Additional context
 
