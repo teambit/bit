@@ -674,7 +674,11 @@ export default class Component {
               ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
                 const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
                 const componentWithDependencies = await isolator.isolate(component.id, {});
-                return { capsule: isolator.capsule, componentWithDependencies };
+                const testFileWithoutSharedDir = stripSharedDirFromPath(
+                  testFilePath,
+                  componentWithDependencies.component.originallySharedDir
+                );
+                return { capsule: isolator.capsule, componentWithDependencies, testFile: testFileWithoutSharedDir };
               };
               const context: Object = {
                 componentDir: cwd,
