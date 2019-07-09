@@ -17,7 +17,7 @@ import type Consumer from '../consumer';
 import type { PathLinux } from '../../utils/path';
 import { isString } from '../../utils';
 import GeneralError from '../../error/general-error';
-import { Dist } from '../component/sources';
+import { Dist, AbstractVinyl } from '../component/sources';
 import { writeEnvFiles } from './eject-conf';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
@@ -302,7 +302,27 @@ const _runBuild = async ({
           );
           return links.files;
         };
-        return { capsule: isolator.capsule, componentWithDependencies, writeDists, getDependenciesLinks };
+        const addSharedDir = (filesToAdd: Vinyl[]): Vinyl[] => {
+          const sharedDir = componentWithDependencies.component.originallySharedDir;
+          let updatedFiles = filesToAdd;
+          if (sharedDir) {
+            updatedFiles = filesToAdd.map((file) => {
+              const fileAsAbstractVinyl = AbstractVinyl.fromVinyl(file);
+              fileAsAbstractVinyl.updatePaths({ newRelative: path.join(sharedDir, file.relative) });
+              return fileAsAbstractVinyl;
+            });
+          }
+          return updatedFiles;
+        };
+        const capsuleFiles = componentWithDependencies.component.files;
+        return {
+          capsule: isolator.capsule,
+          capsuleFiles,
+          componentWithDependencies,
+          writeDists,
+          getDependenciesLinks,
+          addSharedDir
+        };
       };
 
       const context: Object = {

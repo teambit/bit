@@ -18,6 +18,7 @@ import DataToPersist from './data-to-persist';
 import WorkspaceConfig from '../../config/workspace-config';
 import { ComponentWithDependencies } from '../../../scope';
 import BitMap from '../../bit-map';
+import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -144,13 +145,13 @@ export default class Dists {
     }
   }
 
-  stripOriginallySharedDir(originallySharedDir: string, pathWithoutSharedDir: Function) {
+  stripOriginallySharedDir(originallySharedDir: ?string) {
     this.dists.forEach((distFile) => {
-      const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir);
-      distFile.updatePaths({ newBase: distFile.base, newRelative });
+      const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
+      distFile.updatePaths({ newRelative });
     });
     this._mainDistFile = this._mainDistFile
-      ? pathWithoutSharedDir(this._mainDistFile, originallySharedDir)
+      ? stripSharedDirFromPath(this._mainDistFile, originallySharedDir)
       : this._mainDistFile;
   }
 
@@ -293,5 +294,12 @@ export default class Dists {
       .map(nodePath => consumer.toAbsolutePath(nodePath))
       .map(pathNormalizeToLinux)
       .join(NODE_PATH_SEPARATOR);
+  }
+
+  clone(): Dists {
+    // $FlowFixMe
+    const clone: Dists = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    clone.dists = this.dists.map(d => d.clone());
+    return clone;
   }
 }

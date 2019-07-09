@@ -71,6 +71,7 @@ import makeEnv from '../../extensions/env-factory';
 import PackageJsonFile from './package-json-file';
 import Isolator from '../../environment/isolator';
 import Capsule from '../../../components/core/capsule';
+import { stripSharedDirFromPath } from '../component-ops/manipulate-dir';
 
 export type customResolvedPath = { destinationPath: PathLinux, importSource: string };
 
@@ -275,7 +276,8 @@ export default class Component {
   }
 
   /**
-   * Warning: this method does not return a deep copy for objects properties except dependencies and devDependencies
+   * Warning: this method does not return a deep copy for all objects in this class, only for the
+   * ones you see in the implementation below.
    * Implement deep copy of other properties if needed
    */
   clone() {
@@ -286,6 +288,8 @@ export default class Component {
     newInstance.setCompilerDependencies(this.compilerDependencies.getClone());
     newInstance.setTesterDependencies(this.testerDependencies.getClone());
     newInstance.overrides = this.overrides.clone();
+    newInstance.files = this.files.map(file => file.clone());
+    newInstance.dists = this.dists.clone();
     return newInstance;
   }
 
@@ -476,8 +480,8 @@ export default class Component {
    * Before writing the files into the file-system, remove the path-prefix that is shared among the main component files
    * and its dependencies. It helps to avoid large file-system paths.
    *
-   * This is relevant for IMPORTED components only as the author may have long paths that are not needed for whoever
-   * imports it. NESTED and AUTHORED components are written as is.
+   * This is relevant for IMPORTED and NESTED components only as the author may have long paths
+   * that are not needed for whoever imports it. AUTHORED components are written as is.
    *
    * @see sources.consumerComponentToVersion() for the opposite action. meaning, adding back the sharedDir.
    */
@@ -488,24 +492,19 @@ export default class Component {
     if (originallySharedDir) {
       logger.debug(`stripping originallySharedDir "${originallySharedDir}" from ${this.id}`);
     }
-    const pathWithoutSharedDir = (pathStr: PathOsBased, sharedDir: PathLinux): PathOsBased => {
-      if (!sharedDir) return pathStr;
-      const partToRemove = path.normalize(sharedDir) + path.sep;
-      return pathStr.replace(partToRemove, '');
-    };
     this.files.forEach((file) => {
-      const newRelative = pathWithoutSharedDir(file.relative, originallySharedDir);
+      const newRelative = stripSharedDirFromPath(file.relative, originallySharedDir);
       file.updatePaths({ newBase: file.base, newRelative });
     });
-    this.dists.stripOriginallySharedDir(originallySharedDir, pathWithoutSharedDir);
-    this.mainFile = pathWithoutSharedDir(this.mainFile, originallySharedDir);
+    this.dists.stripOriginallySharedDir(originallySharedDir);
+    this.mainFile = stripSharedDirFromPath(this.mainFile, originallySharedDir);
     this.dependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.devDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.compilerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.testerDependencies.stripOriginallySharedDir(manipulateDirData, originallySharedDir);
     this.customResolvedPaths.forEach((customPath) => {
       customPath.destinationPath = pathNormalizeToLinux(
-        pathWithoutSharedDir(path.normalize(customPath.destinationPath), originallySharedDir)
+        stripSharedDirFromPath(path.normalize(customPath.destinationPath), originallySharedDir)
       );
     });
     this.overrides.stripOriginallySharedDir(originallySharedDir);
@@ -544,7 +543,7 @@ export default class Component {
   }: {
     scope: Scope,
     save?: boolean,
-    consumer?: Consumer,
+    consumer?: ?Consumer,
     noCache?: boolean,
     directory?: string,
     verbose?: boolean,
@@ -678,7 +677,11 @@ export default class Component {
               ): Promise<{ capsule: Capsule, componentWithDependencies: ComponentWithDependencies }> => {
                 const isolator = await Isolator.getInstance('fs', scope, consumer, destDir);
                 const componentWithDependencies = await isolator.isolate(component.id, {});
-                return { capsule: isolator.capsule, componentWithDependencies };
+                const testFileWithoutSharedDir = stripSharedDirFromPath(
+                  testFilePath,
+                  componentWithDependencies.component.originallySharedDir
+                );
+                return { capsule: isolator.capsule, componentWithDependencies, testFile: testFileWithoutSharedDir };
               };
               const context: Object = {
                 componentDir: cwd,

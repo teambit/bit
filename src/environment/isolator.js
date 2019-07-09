@@ -20,6 +20,7 @@ import npmClient from '../npm-client';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import BitMap from '../consumer/bit-map';
+import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 
 export default class Isolator {
   capsule: Capsule;
@@ -42,9 +43,10 @@ export default class Isolator {
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
-      await pMapSeries(componentWithDependencies.dependencies.reverse(), dep =>
-        dep.build({ scope: this.scope, consumer: this.consumer })
-      );
+      await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
+        await dep.build({ scope: this.scope, consumer: this.consumer });
+        dep.dists.stripOriginallySharedDir(dep.originallySharedDir);
+      });
     }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
@@ -70,6 +72,7 @@ export default class Isolator {
     // $FlowFixMe
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
+    this._manipulateDir(componentWithDependencies);
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule([componentWithDependencies]);
@@ -89,6 +92,14 @@ export default class Isolator {
     return componentWithDependencies;
   }
 
+  _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
+    const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
+    const manipulateDirData = getManipulateDirForComponentWithDependencies(componentWithDependencies);
+    allComponents.forEach((component) => {
+      component.stripOriginallySharedDir(manipulateDirData);
+    });
+  }
+
   /**
    * To write a component into an isolated environment, we need not only its dependencies, but
    * also the dependencies of its dependencies and so on.
@@ -96,6 +107,8 @@ export default class Isolator {
    * flattenedDependencies. However, when loading from the consumer, we have only the dependencies
    * loaded, not the flattened. To get the flattened, we have to load the dependencies and each one
    * of the dependency we need to load its dependencies as well until we got them all.
+   * Also, we have to clone each component we load, because when writing them into the capsule, we
+   * strip their shared-dir and we don't want these changed paths to affect the workspace
    */
   async _loadComponent(id: BitId): Promise<ComponentWithDependencies> {
     if (this.consumer) {
@@ -108,7 +121,9 @@ export default class Isolator {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
     const component = await consumer.loadComponent(id);
-    return loadFlattenedDependencies(consumer, component);
+    const clonedComponent = component.clone();
+    const shouldClone = true;
+    return loadFlattenedDependencies(consumer, clonedComponent, shouldClone);
   }
 
   async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
