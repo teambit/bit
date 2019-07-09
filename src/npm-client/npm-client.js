@@ -160,7 +160,7 @@ const _installInOneDirectory = ({
  * you should run this after you run npm install
  * internally it uses npm list -j
  */
-const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
+const _getPeerDeps = async (dir: PathOsBased): Promise<string[]> => {
   const packageManager = DEFAULT_PACKAGE_MANAGER;
   let npmList;
   try {
@@ -174,10 +174,11 @@ const _getPeerDeps = async (dir: PathOsBased): Promise<Object> => {
       throw new Error(`failed running ${err.cmd} to find the peer dependencies due to an error: ${err.message}`);
     }
   }
-  return getPeerDepsFromNpmList(npmList.stdout, packageManager);
+  const peerDepsObject = await getPeerDepsFromNpmList(npmList.stdout, packageManager);
+  return objectToArray(peerDepsObject);
 };
 
-async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<string[]> {
+async function getPeerDepsFromNpmList(npmList: string, packageManager: string): Promise<Object> {
   const parsePeers = (deps: Object): Object => {
     const result = {};
     R.forEachObjIndexed((dep) => {
@@ -191,8 +192,7 @@ async function getPeerDepsFromNpmList(npmList: string, packageManager: string): 
   };
 
   const npmListObject = await parseNpmListJsonGracefully(npmList, packageManager);
-  const peers = parsePeers(npmListObject.dependencies);
-  return objectToArray(peers);
+  return parsePeers(npmListObject.dependencies);
 }
 
 async function parseNpmListJsonGracefully(str: string, packageManager: string): Object {
