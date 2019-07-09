@@ -20,6 +20,7 @@ import npmClient from '../npm-client';
 import { topologicalSortComponentDependencies } from '../scope/graph/components-graph';
 import DataToPersist from '../consumer/component/sources/data-to-persist';
 import BitMap from '../consumer/bit-map';
+import { getManipulateDirForComponentWithDependencies } from '../consumer/component-ops/manipulate-dir';
 
 export default class Isolator {
   capsule: Capsule;
@@ -42,9 +43,10 @@ export default class Isolator {
     const componentWithDependencies: ComponentWithDependencies = await this._loadComponent(componentId);
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
-      await pMapSeries(componentWithDependencies.dependencies.reverse(), dep =>
-        dep.build({ scope: this.scope, consumer: this.consumer })
-      );
+      await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
+        await dep.build({ scope: this.scope, consumer: this.consumer });
+        dep.dists.stripOriginallySharedDir(dep.originallySharedDir);
+      });
     }
     const writeToPath = opts.writeToPath;
     const concreteOpts = {
@@ -70,6 +72,7 @@ export default class Isolator {
     // $FlowFixMe
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
+    this._manipulateDir(componentWithDependencies);
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
     await this._persistComponentsDataToCapsule([componentWithDependencies]);
@@ -87,6 +90,14 @@ export default class Isolator {
     await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
     this.capsuleBitMap = manyComponentsWriter.bitMap;
     return componentWithDependencies;
+  }
+
+  _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
+    const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
+    const manipulateDirData = getManipulateDirForComponentWithDependencies(componentWithDependencies);
+    allComponents.forEach((component) => {
+      component.stripOriginallySharedDir(manipulateDirData);
+    });
   }
 
   /**

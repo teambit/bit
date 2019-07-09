@@ -302,7 +302,14 @@ const _runBuild = async ({
           );
           return links.files;
         };
-        return { capsule: isolator.capsule, componentWithDependencies, writeDists, getDependenciesLinks };
+        const addSharedDir = (filesToAdd: Vinyl[]): Vinyl[] => {
+          const sharedDir = componentWithDependencies.component.originallySharedDir;
+          if (sharedDir) {
+            filesToAdd.forEach(file => file.updatePaths({ newRelative: path.join(sharedDir, file.relative) }));
+          }
+          return filesToAdd;
+        };
+        return { capsule: isolator.capsule, componentWithDependencies, writeDists, getDependenciesLinks, addSharedDir };
       };
 
       const context: Object = {

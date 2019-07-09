@@ -18,6 +18,7 @@ import DataToPersist from './data-to-persist';
 import WorkspaceConfig from '../../config/workspace-config';
 import { ComponentWithDependencies } from '../../../scope';
 import BitMap from '../../bit-map';
+import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -144,13 +145,13 @@ export default class Dists {
     }
   }
 
-  stripOriginallySharedDir(originallySharedDir: string, pathWithoutSharedDir: Function) {
+  stripOriginallySharedDir(originallySharedDir: string) {
     this.dists.forEach((distFile) => {
-      const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir);
+      const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
       distFile.updatePaths({ newBase: distFile.base, newRelative });
     });
     this._mainDistFile = this._mainDistFile
-      ? pathWithoutSharedDir(this._mainDistFile, originallySharedDir)
+      ? stripSharedDirFromPath(this._mainDistFile, originallySharedDir)
       : this._mainDistFile;
   }
 
