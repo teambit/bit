@@ -27,6 +27,8 @@ export default class Isolator {
   consumer: ?Consumer;
   scope: Scope;
   capsuleBitMap: BitMap;
+  capsulePackageJson: PackageJsonFile; // this is the same packageJson of the main component as it located on the root
+  componentWithDependencies: ComponentWithDependencies;
   constructor(capsule: Capsule, scope: Scope, consumer?: ?Consumer) {
     this.capsule = capsule;
     this.scope = scope;
@@ -69,32 +71,30 @@ export default class Isolator {
       isolated: true,
       capsule: this.capsule
     };
+    this.componentWithDependencies = componentWithDependencies;
     // $FlowFixMe
     const manyComponentsWriter = new ManyComponentsWriter(concreteOpts);
     logger.debug('ManyComponentsWriter, writeAllToIsolatedCapsule');
-    this._manipulateDir(componentWithDependencies);
+    this._manipulateDir();
     await manyComponentsWriter._populateComponentsFilesToWrite();
     await manyComponentsWriter._populateComponentsDependenciesToWrite();
-    await this._persistComponentsDataToCapsule([componentWithDependencies]);
+    await this._persistComponentsDataToCapsule();
+    // $FlowFixMe
+    this.capsulePackageJson = componentWithDependencies.component.packageJsonFile;
     // $FlowFixMe
     const componentRootDir: string = componentWithDependencies.component.writtenPath;
-    await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
+    await this._addComponentsToRoot(componentRootDir);
     logger.debug('ManyComponentsWriter, install packages on capsule');
-    // await this._installPackages(componentWithDependencies.component.writtenPath);
     await this._installWithPeerOption(componentRootDir);
     const links = await manyComponentsWriter._getAllLinks();
     await links.persistAllToCapsule(this.capsule);
-    // @todo: find a better solution. since the capsule structure has changed to have the rootDir
-    // of the component, the component and the capsule package.json are the same one.
-    // as a result, when writing the links, the capsule package.json is overwritten
-    await this._addComponentsToRoot(componentRootDir, componentWithDependencies.allDependencies);
     this.capsuleBitMap = manyComponentsWriter.bitMap;
     return componentWithDependencies;
   }
 
-  _manipulateDir(componentWithDependencies: ComponentWithDependencies) {
-    const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
-    const manipulateDirData = getManipulateDirForComponentWithDependencies(componentWithDependencies);
+  _manipulateDir() {
+    const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
+    const manipulateDirData = getManipulateDirForComponentWithDependencies(this.componentWithDependencies);
     allComponents.forEach((component) => {
       component.stripOriginallySharedDir(manipulateDirData);
     });
@@ -126,23 +126,21 @@ export default class Isolator {
     return loadFlattenedDependencies(consumer, clonedComponent, shouldClone);
   }
 
-  async _persistComponentsDataToCapsule(componentsWithDependencies: ComponentWithDependencies[]) {
+  async _persistComponentsDataToCapsule() {
     const dataToPersist = new DataToPersist();
-    componentsWithDependencies.forEach((componentWithDeps) => {
-      const allComponents = [componentWithDeps.component, ...componentWithDeps.allDependencies];
-      allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
-    });
+    const allComponents = [this.componentWithDependencies.component, ...this.componentWithDependencies.allDependencies];
+    allComponents.forEach(component => dataToPersist.merge(component.dataToPersist));
     await dataToPersist.persistAllToCapsule(this.capsule);
   }
 
-  async _addComponentsToRoot(rootDir: string, components: Component[]): Promise<void> {
+  async _addComponentsToRoot(rootDir: string): Promise<void> {
     const capsulePath = this.capsule.container.getPath();
     // the capsulePath hack only works for the fs-capsule
     // for other capsule types, we would need to do this
     // (and other things) inside the capsule itself
     // rather than fetching its folder and using it
     const rootPathInCapsule = path.join(capsulePath, rootDir);
-    const componentsToAdd = components.reduce((acc, component) => {
+    const componentsToAdd = this.componentWithDependencies.allDependencies.reduce((acc, component) => {
       // $FlowFixMe - writtenPath is defined
       const componentPathInCapsule = path.join(capsulePath, component.writtenPath);
       const relativeDepLocation = path.relative(rootPathInCapsule, componentPathInCapsule);
@@ -152,9 +150,14 @@ export default class Isolator {
       return acc;
     }, {});
     if (R.isEmpty(componentsToAdd)) return;
-    const packageJsonFile = await PackageJsonFile.load(rootPathInCapsule);
-    packageJsonFile.addDependencies(componentsToAdd);
-    await packageJsonFile.write();
+    this.capsulePackageJson.addDependencies(componentsToAdd);
+    await this._writeCapsulePackageJson();
+  }
+
+  async _writeCapsulePackageJson() {
+    const dataToPersist = new DataToPersist();
+    dataToPersist.addFile(this.capsulePackageJson.toJSONFile());
+    dataToPersist.persistAllToCapsule(this.capsule);
   }
 
   async _getNpmVersion() {
@@ -189,7 +192,7 @@ export default class Isolator {
         )
       );
     }
-    const args = ['install', ...modules];
+    const args = ['install', ...modules, '--no-save'];
     const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {
@@ -206,17 +209,28 @@ export default class Isolator {
     });
   }
 
+  /**
+   * it must be done in this order. first, `npm install`, then, `npm list -j` shows the missing
+   * peer dependencies, then, add these peerDependencies into devDependencies and run `npm install`
+   * again. The reason for adding the missing peer into devDependencies is to not get them deleted
+   * once `npm install` is running along the road.
+   */
   async _installWithPeerOption(directory: string, installPeerDependencies: boolean = true) {
     await this._installPackages(directory);
     if (installPeerDependencies) {
       const peers = await this._getPeerDependencies(directory);
       if (!R.isEmpty(peers)) {
-        await this._installPackages(directory, peers);
+        this.capsulePackageJson.packageJsonObject.devDependencies = Object.assign(
+          this.capsulePackageJson.packageJsonObject.devDependencies || {},
+          peers
+        );
+        await this._writeCapsulePackageJson();
+        await this._installPackages(directory);
       }
     }
   }
 
-  async _getPeerDependencies(dir: string): Promise<string[]> {
+  async _getPeerDependencies(dir: string): Promise<Object> {
     const packageManager = DEFAULT_PACKAGE_MANAGER;
     let npmList;
     try {

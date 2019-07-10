@@ -103,6 +103,16 @@ describe('capsule', function () {
       const result = helper.runCmd('node app.js', capsuleDir);
       expect(result.trim()).to.equal('0000got is-type and got is-string');
     });
+    describe('running "npm install" inside the capsule', () => {
+      before(() => {
+        helper.runCmd('npm install', capsuleDir);
+      });
+      it('should not remove the peerDependencies from node_modules', () => {
+        expect(path.join(capsuleDir, 'node_modules/left-pad')).to.be.a.path();
+        const result = helper.runCmd('node app.js', capsuleDir);
+        expect(result.trim()).to.equal('0000got is-type and got is-string');
+      });
+    });
   });
   describe('exported components with dependencies', () => {
     const capsuleDir = helper.generateRandomTmpDirName();
