@@ -349,6 +349,7 @@ export class List extends React.Component {
       });
     });
     describe('using aliases', () => {
+      let scopeAfterAdding;
       before(() => {
         helper.setNewLocalAndRemoteScopes();
         helper.getClonedLocalScope(scopeWithTypescriptCompiler);
@@ -368,6 +369,7 @@ export class List extends React.Component {
           "import isString from '@/utils/is-string'; export default function foo() { return isString() + ' and got foo'; };";
         helper.createFile('src/bar', 'foo.ts', fooBarFixture);
         helper.addComponent('src/bar/foo.ts', { i: 'bar/foo' });
+        scopeAfterAdding = helper.cloneLocalScope();
       });
       it('bit status should not warn about missing packages', () => {
         const output = helper.runCmd('bit status');
@@ -398,6 +400,29 @@ export class List extends React.Component {
           fs.outputFileSync(path.join(helper.localScopePath, 'app.js'), appJsFixture);
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
+        });
+      });
+      describe('using bundler compiler that generates a dist file with a different name than the source', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterAdding);
+          helper.importDummyCompiler('bundle');
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          helper.reInitLocalScope();
+          helper.addRemoteScope();
+          helper.importComponent('bar/foo');
+        });
+        it('should generate the link inside node_modules with .js extension and not .ts', () => {
+          const expectedFile = path.join(
+            helper.localScopePath,
+            'components/bar/foo/node_modules/@/utils/is-string/index.js'
+          );
+          expect(expectedFile).to.be.a.file();
+          const notExpectedFile = path.join(
+            helper.localScopePath,
+            'components/bar/foo/node_modules/@/utils/is-string/index.ts'
+          );
+          expect(notExpectedFile).not.to.be.a.path();
         });
       });
     });
