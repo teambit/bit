@@ -531,6 +531,13 @@ either, use the ignore file syntax or change the require statement to have a mod
         depsPaths.importSpecifiers
       );
       existingDepRelativePaths.importSpecifiers.push(...nonExistingImportSpecifires);
+      // Handle cases when the first dep paths are not custom resolved and the new one is
+      if (depsPaths.isCustomResolveUsed && !existingDepRelativePaths.isCustomResolveUsed) {
+        existingDepRelativePaths.isCustomResolveUsed = depsPaths.isCustomResolveUsed;
+      }
+      if (depsPaths.importSource && !existingDepRelativePaths.importSource) {
+        existingDepRelativePaths.importSource = depsPaths.importSource;
+      }
     } else {
       this.pushToDependenciesArray(currentComponentsDeps, fileType);
     }
