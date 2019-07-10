@@ -192,7 +192,7 @@ export default class Isolator {
         )
       );
     }
-    const args = ['install', ...modules];
+    const args = ['install', ...modules, '--no-save'];
     const execResults = await this.capsule.exec(`npm ${args.join(' ')}`, { cwd: directory });
     let output = '';
     return new Promise((resolve, reject) => {
