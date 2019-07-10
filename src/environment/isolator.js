@@ -46,8 +46,10 @@ export default class Isolator {
     if (opts.shouldBuildDependencies) {
       topologicalSortComponentDependencies(componentWithDependencies);
       await pMapSeries(componentWithDependencies.dependencies.reverse(), async (dep: Component) => {
-        await dep.build({ scope: this.scope, consumer: this.consumer });
-        dep.dists.stripOriginallySharedDir(dep.originallySharedDir);
+        if (!dep.dists || dep.dists.isEmpty()) {
+          await dep.build({ scope: this.scope, consumer: this.consumer });
+          dep.dists.stripOriginallySharedDir(dep.originallySharedDir);
+        }
       });
     }
     const writeToPath = opts.writeToPath;
@@ -120,10 +122,9 @@ export default class Isolator {
   async _loadComponentFromConsumer(id: BitId): Promise<ComponentWithDependencies> {
     const consumer = this.consumer;
     if (!consumer) throw new Error('missing consumer');
-    const component = await consumer.loadComponent(id);
-    const clonedComponent = component.clone();
-    const shouldClone = true;
-    return loadFlattenedDependencies(consumer, clonedComponent, shouldClone);
+    const component = await consumer.loadComponentForCapsule(id);
+    const forCapsule = true;
+    return loadFlattenedDependencies(consumer, component, forCapsule);
   }
 
   async _persistComponentsDataToCapsule() {

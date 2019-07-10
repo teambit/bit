@@ -355,6 +355,10 @@ export default class Consumer {
     return components[0];
   }
 
+  loadComponentForCapsule(id: BitId): Promise<Component> {
+    return this.componentLoader.loadForCapsule(id);
+  }
+
   async loadComponents(
     ids: BitIds,
     throwOnFailure: boolean = true
