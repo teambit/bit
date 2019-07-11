@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1809](https://github.com/teambit/bit/issues/1809) avoid building components multiple times for compilers that support building dependencies
 - [#1807](https://github.com/teambit/bit/issues/1807) fix resolution of dependency when 2 files require it and one of them using alias
 
 ## [14.1.4-dev.9] - 2019-07-10
