@@ -9,7 +9,11 @@ import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import type { RelativePath } from '../consumer/component/dependencies/dependency';
 import type ComponentMap from '../consumer/bit-map/component-map';
-import { getLinkToPackageContent, EXTENSIONS_TO_STRIP_FROM_PACKAGES } from './link-content';
+import {
+  getLinkToPackageContent,
+  EXTENSIONS_TO_STRIP_FROM_PACKAGES,
+  EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES
+} from './link-content';
 import componentIdToPackageName from '../utils/bit/component-id-to-package-name';
 import { pathNormalizeToLinux } from '../utils/path';
 import BitMap from '../consumer/bit-map';
@@ -101,15 +105,16 @@ export default class DependencyFileLinkGenerator {
   generateForCustomResolve(): LinkFileType[] {
     const distRoot = this._getDistRoot();
     const relativeDistPathInDependency = this._getRelativeDistPathInDependency();
-    const relativeDistExtInDependency = getExt(relativeDistPathInDependency);
+    const dependencyDistExt = getExt(relativeDistPathInDependency);
+    const relativeDistExtInDependency = EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES.includes(dependencyDistExt)
+      ? 'js'
+      : dependencyDistExt;
     const depRootDir = this._getDepRootDir();
     const depRootDirDist = this._getDepRootDirDist();
 
     const isCustomResolvedWithDistInside = Boolean(this.shouldDistsBeInsideTheComponent && this.hasDist);
 
-    const relativePathInDependency = isCustomResolvedWithDistInside
-      ? `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`
-      : this.relativePathInDependency;
+    const relativePathInDependency = `${getWithoutExt(this.relativePathInDependency)}.${relativeDistExtInDependency}`;
 
     const linkFile = this.prepareLinkFile({
       linkPath: this.getLinkPathForCustomResolve(relativeDistExtInDependency),
