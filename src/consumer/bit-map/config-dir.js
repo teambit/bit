@@ -4,11 +4,12 @@ import path from 'path';
 import format from 'string-format';
 import { pathNormalizeToLinux } from '../../utils';
 import { COMPONENT_DIR } from '../../constants';
+import type { PathRelative } from '../../utils/path';
 
 export default class ConfigDir {
-  dirPath: string;
+  dirPath: PathRelative;
 
-  constructor(dirPath: string) {
+  constructor(dirPath: PathRelative) {
     this.dirPath = dirPath;
   }
 
@@ -33,7 +34,7 @@ export default class ConfigDir {
     return new ConfigDir(this.dirPath);
   }
 
-  repalceByComponentDirDSL(componentDir: string) {
+  replaceByComponentDirDSL(componentDir: string) {
     if (this.linuxDirPath.startsWith(componentDir)) {
       const replaced = this.linuxDirPath.replace(componentDir, `{${COMPONENT_DIR}}`);
       this.dirPath = path.normalize(replaced);

@@ -14,6 +14,8 @@ import ScopeComponentsImporter from './scope-components-importer';
 import type { Remotes, Remote } from '../../remotes';
 import type Scope from '../scope';
 import { LATEST } from '../../constants';
+import componentIdToPackageName from '../../utils/bit/component-id-to-package-name';
+import Source from '../models/source';
 
 /**
  * @TODO there is no real difference between bare scope and a working directory scope - let's adjust terminology to avoid confusions in the future
@@ -57,6 +59,7 @@ export async function exportMany(scope: Scope, ids: BitIds, remoteName: string, 
     const componentAndObject = componentObject.toObjects(scope.objects);
     componentAndObject.component.clearStateData();
     convertNonScopeToCorrectScope(scope, componentAndObject, remoteName);
+    await changePartialNamesToFullNamesInDists(scope, componentAndObject.component, componentAndObject.objects);
     componentsAndObjects.push(componentAndObject);
     const componentBuffer = await componentAndObject.component.compress();
     const objectsBuffer = await Promise.all(componentAndObject.objects.map(obj => obj.compress()));
@@ -172,4 +175,55 @@ function convertNonScopeToCorrectScope(
   });
 
   componentsObjects.component.scope = remoteScope;
+}
+
+/**
+ * see https://github.com/teambit/bit/issues/1770 for complete info
+ * some compilers require the links to be part of the bundle, change the component name in these
+ * files from the id without scope to the id with the scope
+ * e.g. `@bit/utils.is-string` becomes `@bit/scope-name.utils.is-string`
+ */
+async function changePartialNamesToFullNamesInDists(
+  scope: Scope,
+  component: ModelComponent,
+  objects: BitObject[]
+): Promise<void> {
+  // $FlowFixMe
+  const versions: Version[] = objects.filter(object => object instanceof Version);
+  await Promise.all(versions.map(version => _replaceDistsOfVersionIfNeeded(version)));
+
+  async function _replaceDistsOfVersionIfNeeded(version: Version) {
+    const dists = version.dists;
+    if (!dists) return;
+    await Promise.all(
+      dists.map(async (dist) => {
+        const newDistObject = await _createNewDistIfNeeded(version, dist);
+        if (newDistObject) {
+          dist.file = newDistObject.hash();
+          objects.push(newDistObject);
+        }
+        return null;
+      })
+    );
+  }
+
+  async function _createNewDistIfNeeded(version: Version, dist: Object): Promise<?Source> {
+    const currentHash = dist.file;
+    // $FlowFixMe
+    const distObject: Source = await scope.objects.load(currentHash);
+    const distString = distObject.contents.toString();
+    const dependenciesIds = version.getAllDependencies().map(d => d.id);
+    const allIds = [...dependenciesIds, component.toBitId()];
+    let newDistString = distString;
+    allIds.forEach((id) => {
+      const idWithoutScope = id.changeScope(null);
+      const pkgNameWithoutScope = componentIdToPackageName(idWithoutScope, component.bindingPrefix);
+      const pkgNameWithScope = componentIdToPackageName(id, component.bindingPrefix);
+      newDistString = newDistString.replace(new RegExp(pkgNameWithoutScope, 'g'), pkgNameWithScope);
+    });
+    if (newDistString !== distString) {
+      return Source.from(Buffer.from(newDistString));
+    }
+    return null;
+  }
 }

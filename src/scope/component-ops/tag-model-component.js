@@ -1,7 +1,7 @@
 // @flow
 import R from 'ramda';
 import * as RA from 'ramda-adjunct';
-import graphlib, { Graph } from 'graphlib';
+import graphlib from 'graphlib';
 import pMapSeries from 'p-map-series';
 import type { Scope } from '..';
 import type Consumer from '../../consumer/consumer';
@@ -19,36 +19,12 @@ import ValidationError from '../../error/validation-error';
 import { COMPONENT_ORIGINS } from '../../constants';
 import type { PathLinux } from '../../utils/path';
 import GeneralError from '../../error/general-error';
-import { Dependency, Dependencies } from '../../consumer/component/dependencies';
+import { Dependency } from '../../consumer/component/dependencies';
 import { bumpDependenciesVersions, getAutoTagPending } from './auto-tag';
 import type { AutoTagResult } from './auto-tag';
 import type { BitIdStr } from '../../bit-id/bit-id';
 import ScopeComponentsImporter from './scope-components-importer';
-
-function buildComponentsGraph(components: Component[]) {
-  const setGraphEdges = (component: Component, dependencies: Dependencies, graph) => {
-    const id = component.id.toString();
-    dependencies.get().forEach((dependency) => {
-      const depId = dependency.id.toString();
-      // save the full BitId of a string id to be able to retrieve it later with no confusion
-      if (!graph.hasNode(id)) graph.setNode(id, component.id);
-      if (!graph.hasNode(depId)) graph.setNode(depId, dependency.id);
-      graph.setEdge(id, depId);
-    });
-  };
-
-  const graphDeps = new Graph();
-  const graphDevDeps = new Graph();
-  const graphCompilerDeps = new Graph();
-  const graphTesterDeps = new Graph();
-  components.forEach((component) => {
-    setGraphEdges(component, component.dependencies, graphDeps);
-    setGraphEdges(component, component.devDependencies, graphDevDeps);
-    setGraphEdges(component, component.compilerDependencies, graphCompilerDeps);
-    setGraphEdges(component, component.testerDependencies, graphTesterDeps);
-  });
-  return { graphDeps, graphDevDeps, graphCompilerDeps, graphTesterDeps };
-}
+import { buildComponentsGraph } from '../graph/components-graph';
 
 async function getFlattenedDependencies(
   scope: Scope,

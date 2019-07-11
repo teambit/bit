@@ -29,6 +29,9 @@ const PACKAGES_LINKS_CONTENT_TEMPLATES = {
 
 const fileExtensionsForNpmLinkGenerator = ['js', 'ts', 'jsx', 'tsx'];
 
+export const EXTENSIONS_TO_STRIP_FROM_PACKAGES = ['js', 'ts', 'jsx', 'tsx'];
+export const EXTENSIONS_TO_REPLACE_TO_JS_IN_PACKAGES = ['ts', 'jsx', 'tsx'];
+
 export function isSupportedExtension(filePath: string) {
   const ext = getExt(filePath);
   const supportedExtensions = getSupportedExtensions();
@@ -47,9 +50,13 @@ export function getLinkToFileContent(filePath: PathOsBased, importSpecifiers?: I
   return template.replace(/{filePath}/g, normalize(filePathWithoutExt));
 }
 
-export function getLinkToPackageContent(filePath: PathOsBased, bitPackageName: string): string {
+export function getLinkToPackageContent(
+  filePath: PathOsBased,
+  bitPackageName: string,
+  importSpecifiers?: ImportSpecifier[]
+): string {
   const fileExt = getExt(filePath);
-  const template = getTemplateForPackage(fileExt);
+  const template = getTemplateForPackage(fileExt, importSpecifiers);
   if (!template) return _logWhenNoTemplateWasFound(filePath, fileExt);
   return template.replace(/{filePath}/g, bitPackageName);
 }
@@ -83,11 +90,19 @@ function getTemplateForFile(fileExt: string, filePath: PathOsBased, importSpecif
   return _getTemplate(fileExt, importSpecifiers);
 }
 
-function getTemplateForPackage(fileExt: string) {
+function getTemplateForPackage(fileExt: string, importSpecifiers?: ImportSpecifier[]) {
+  if (importSpecifiers && importSpecifiers.length) {
+    if (fileExt === 'js' || fileExt === 'jsx') {
+      // @see e2e/flows/es6-link-files.e2e.js file for cases covered by the following snippet
+      return es6TemplateWithImportSpecifiers(importSpecifiers);
+    } else if (fileExt === 'ts' || fileExt === 'tsx') {
+      return tsTemplateWithImportSpecifiers(importSpecifiers);
+    }
+  }
   if (!fileExtensionsForNpmLinkGenerator.includes(fileExt)) {
     return PACKAGES_LINKS_CONTENT_TEMPLATES[fileExt];
   }
-  return _getTemplate(fileExt);
+  return _getTemplate(fileExt, importSpecifiers);
 }
 
 function _getTemplate(fileExt: string, importSpecifiers?: ImportSpecifier[]) {

@@ -67,6 +67,7 @@ import { getScopeRemotes } from '../scope/scope-remotes';
 import ScopeComponentsImporter from '../scope/component-ops/scope-components-importer';
 import installExtensions from '../scope/extensions/install-extensions';
 import type { Remotes } from '../remotes';
+import { composeComponentPath, composeDependencyPath } from '../utils/bit/compose-component-path';
 import ComponentOutOfSync from './exceptions/component-out-of-sync';
 import getNodeModulesPathOfComponent from '../utils/bit/component-node-modules-path';
 import { dependenciesFields } from './config/consumer-overrides';
@@ -266,7 +267,7 @@ export default class Consumer {
   }
 
   async write(): Promise<Consumer> {
-    await Promise.all([this.config.write({ bitDir: this.projectPath }), this.scope.ensureDir()]);
+    await Promise.all([this.config.write({ workspaceDir: this.projectPath }), this.scope.ensureDir()]);
     this.bitMap.markAsChanged();
     await this.bitMap.write();
     return this;
@@ -352,6 +353,10 @@ export default class Consumer {
   async loadComponent(id: BitId): Promise<Component> {
     const { components } = await this.loadComponents(BitIds.fromArray([id]));
     return components[0];
+  }
+
+  loadComponentForCapsule(id: BitId): Promise<Component> {
+    return this.componentLoader.loadForCapsule(id);
   }
 
   async loadComponents(
@@ -661,7 +666,7 @@ export default class Consumer {
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);
       return packageJsonDir
-        ? packageJsonUtils.updateAttribute(this, path.join(this.getPath(), packageJsonDir), 'version', id.version)
+        ? packageJsonUtils.updateAttribute(this, packageJsonDir, 'version', id.version)
         : Promise.resolve();
     });
     return Promise.all(updateVersionsP);
@@ -700,8 +705,8 @@ export default class Consumer {
   }
 
   composeRelativeComponentPath(bitId: BitId): string {
-    const componentsDefaultDirectory = this.dirStructure.componentsDefaultDirectory;
-    return format(componentsDefaultDirectory, { name: bitId.name, scope: bitId.scope });
+    const { componentsDefaultDirectory } = this.dirStructure;
+    return composeComponentPath(bitId, componentsDefaultDirectory);
   }
 
   composeComponentPath(bitId: BitId): PathOsBasedAbsolute {
@@ -713,7 +718,7 @@ export default class Consumer {
 
   composeRelativeDependencyPath(bitId: BitId): PathOsBased {
     const dependenciesDir = this.dirStructure.dependenciesDirStructure;
-    return path.join(dependenciesDir, bitId.toFullPath());
+    return composeDependencyPath(bitId, dependenciesDir);
   }
 
   composeDependencyPath(bitId: BitId): PathOsBased {
@@ -788,7 +793,7 @@ export default class Consumer {
     }
     if ((!consumerInfo.consumerConfig || !consumerInfo.hasScope) && consumerInfo.hasBitMap) {
       const consumer = await Consumer.create(consumerInfo.path);
-      await Promise.all([consumer.config.write({ bitDir: consumer.projectPath }), consumer.scope.ensureDir()]);
+      await Promise.all([consumer.config.write({ workspaceDir: consumer.projectPath }), consumer.scope.ensureDir()]);
       consumerInfo.consumerConfig = await WorkspaceConfig.load(consumerInfo.path);
     }
     const scopePath = Consumer.locateProjectScope(consumerInfo.path);

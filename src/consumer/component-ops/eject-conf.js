@@ -19,19 +19,21 @@ import RemovePath from '../component/sources/remove-path';
 import AbstractConfig from '../config/abstract-config';
 
 export type EjectConfResult = { id: string, ejectedPath: string, ejectedFullPath: string };
-export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath: string, dataToPersist: DataToPersist };
+export type EjectConfData = { id: string, ejectedPath: string, ejectedFullPath?: string, dataToPersist: DataToPersist };
 
 export default (async function ejectConf(
   component: ConsumerComponent,
   consumer: Consumer,
   configDir: ConfigDir
 ): Promise<EjectConfResult> {
+  // $FlowFixMe
   const { id, ejectedPath, ejectedFullPath, dataToPersist } = await getEjectConfDataToPersist(
     component,
     consumer,
+    consumer.bitMap,
     configDir
   );
-  if (consumer) dataToPersist.addBasePath(consumer.getPath());
+  dataToPersist.addBasePath(consumer.getPath());
   await dataToPersist.persistAllToFS();
   return {
     id,
@@ -42,11 +44,10 @@ export default (async function ejectConf(
 
 export async function getEjectConfDataToPersist(
   component: ConsumerComponent,
-  consumer: Consumer,
+  consumer: ?Consumer,
+  bitMap: BitMap,
   configDir: ConfigDir
 ): Promise<EjectConfData> {
-  const consumerPath: PathOsBased = consumer.getPath();
-  const bitMap: BitMap = consumer.bitMap;
   const oldConfigDir = R.path(['componentMap', 'configDir'], component);
   const componentMap = component.componentMap;
   if (!componentMap) {
@@ -59,10 +60,10 @@ export async function getEjectConfDataToPersist(
   // In case the user pass a path with the component dir replace it by the {COMPONENT_DIR} DSL
   // (To better support bit move for example)
   if (componentDir) {
-    configDir.repalceByComponentDirDSL(componentDir);
+    configDir.replaceByComponentDirDSL(componentDir);
   }
   if (!configDir.isUnderComponentDir) {
-    const configDirToValidate = _getDirToValidateAgainsetOtherComps(configDir);
+    const configDirToValidate = _getDirToValidateAgainstOtherComps(configDir);
     bitMap.validateConfigDir(component.id.toStringWithoutVersion(), configDirToValidate);
   }
   const deleteOldFiles = !!componentMap.configDir && componentMap.configDir !== configDir.linuxDirPath;
@@ -72,6 +73,7 @@ export async function getEjectConfDataToPersist(
     configDir: resolvedConfigDir.dirPath,
     env: component.compiler,
     consumer,
+    bitMap,
     component,
     deleteOldFiles,
     verbose: false
@@ -80,6 +82,7 @@ export async function getEjectConfDataToPersist(
     configDir: resolvedConfigDir.dirPath,
     env: component.tester,
     consumer,
+    bitMap,
     component,
     deleteOldFiles,
     verbose: false
@@ -88,7 +91,21 @@ export async function getEjectConfDataToPersist(
     ejectedCompilerDirectoryP,
     ejectedTesterDirectoryP
   ]);
+  const dataToPersist = new DataToPersist();
+  if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
+  if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
+
+  const id = component.id.toStringWithoutVersion();
+  if (!consumer) {
+    return {
+      id,
+      ejectedPath: configDir.linuxDirPath,
+      dataToPersist
+    };
+  }
+
   const bitJsonDir = resolvedConfigDir.getEnvTypeCleaned();
+  const consumerPath: PathOsBased = consumer.getPath();
   const bitJsonDirFullPath = path.normalize(path.join(consumerPath, bitJsonDir.dirPath));
   const relativeEjectedCompilerDirectory = _getRelativeDir(
     bitJsonDirFullPath,
@@ -99,14 +116,16 @@ export async function getEjectConfDataToPersist(
     consumer.toAbsolutePath(ejectedTesterDirectory)
   );
   const removedFromOverrides = consumer.config.overrides.removeExactMatch(component.id);
-  const dataToPersist = new DataToPersist();
   if (component.compiler) dataToPersist.merge(component.compiler.dataToPersist);
   if (component.tester) dataToPersist.merge(component.tester.dataToPersist);
   const bitJson = getBitJsonToWrite(component, relativeEjectedCompilerDirectory, relativeEjectedTesterDirectory);
-  const jsonFilesToWrite = await bitJson.prepareToWrite({ bitDir: bitJsonDir.dirPath });
+  const jsonFilesToWrite = await bitJson.prepareToWrite({
+    workspaceDir: consumer.getPath(),
+    componentDir: bitJsonDir.dirPath
+  });
   dataToPersist.addManyFiles(jsonFilesToWrite);
   if (removedFromOverrides) {
-    const consumerConfigFiles = await consumer.config.prepareToWrite({ bitDir: '.' });
+    const consumerConfigFiles = await consumer.config.prepareToWrite({ workspaceDir: consumerPath });
     dataToPersist.addManyFiles(consumerConfigFiles);
   }
 
@@ -121,7 +140,7 @@ export async function getEjectConfDataToPersist(
     }
   }
   return {
-    id: component.id.toStringWithoutVersion(),
+    id,
     ejectedPath: configDir.linuxDirPath,
     ejectedFullPath: bitJsonDir.linuxDirPath,
     dataToPersist
@@ -150,6 +169,8 @@ export async function writeEnvFiles({
     configDir,
     env,
     consumer,
+    // $FlowFixMe todo: fix!
+    bitMap: consumer.bitMap,
     component,
     deleteOldFiles,
     verbose
@@ -168,6 +189,7 @@ export async function populateEnvFilesToWrite({
   configDir,
   env,
   consumer,
+  bitMap,
   component,
   deleteOldFiles,
   verbose = false
@@ -175,6 +197,7 @@ export async function populateEnvFilesToWrite({
   configDir: PathOsBased,
   env?: ?CompilerExtension | ?TesterExtension,
   consumer?: ?Consumer,
+  bitMap?: BitMap,
   component: ConsumerComponent,
   deleteOldFiles: boolean,
   verbose: boolean
@@ -186,7 +209,7 @@ export async function populateEnvFilesToWrite({
   const ejectedDirectory = env.populateDataToPersist({ configDir, deleteOldFiles, consumer, envType, verbose });
   const deps = env instanceof CompilerExtension ? component.compilerDependencies : component.testerDependencies;
   // $FlowFixMe will be fixed with the Capsule feature
-  const links = await getLinksByDependencies(configDir, component, deps, consumer);
+  const links = await getLinksByDependencies(configDir, component, deps, consumer, bitMap);
   env.dataToPersist.addManyFiles(links);
   return ejectedDirectory;
 }
@@ -218,7 +241,7 @@ const _getRelativeDir = (bitJsonDir, envDir) => {
  * and get the dir without the dynamic parts
  * @param {*} configDir
  */
-const _getDirToValidateAgainsetOtherComps = (configDir: ConfigDir) => {
+const _getDirToValidateAgainstOtherComps = (configDir: ConfigDir) => {
   // In case it's inside the component dir it can't conflicts with other comps
   if (configDir.isUnderComponentDir) {
     return null;

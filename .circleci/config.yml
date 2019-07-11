@@ -3,7 +3,7 @@ jobs:
   checkout_code:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       - checkout
@@ -24,7 +24,7 @@ jobs:
   set_ssh_key:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/.ssh
     steps:
       -
@@ -44,7 +44,7 @@ jobs:
   set_bitsrc_registry:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       # prod registry
@@ -66,7 +66,7 @@ jobs:
   install_npm_deps:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -76,25 +76,19 @@ jobs:
       -
         attach_workspace:
           at: ./
-      -
-        restore_cache:
-          keys:
-            - 'npm-deps12-{{ checksum "./bit/package.json" }}'
-            - npm-deps12
+      # -
+      #   restore_cache:
+      #     keys:
+      #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
       -
         run:
-          name: 'Insatll npm dependencies'
+          name: 'Install npm dependencies'
           command: 'cd bit && npm install'
-      -
-        save_cache:
-          key: 'npm-deps12-{{ checksum "./bit/package.json" }}'
-          paths:
-            - ./bit/node_modules
-      -
-        save_cache:
-          key: npm-deps12
-          paths:
-            - ./bit/node_modules
+      # -
+      #   save_cache:
+      #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+      #     paths:
+      #       - ./bit/node_modules
       -
         persist_to_workspace:
           root: .
@@ -103,7 +97,7 @@ jobs:
   install_bit_javascript_npm_deps:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -111,7 +105,7 @@ jobs:
           at: ./
       -
         run:
-          name: 'Insatll npm dependencies'
+          name: 'Install npm dependencies'
           command: 'cd bit-javascript && npm install'
       -
         persist_to_workspace:
@@ -121,7 +115,7 @@ jobs:
   build:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -143,7 +137,7 @@ jobs:
   build_bit_javascript:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -165,7 +159,7 @@ jobs:
   unit_test:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -193,7 +187,7 @@ jobs:
   unit_test_bit_javascript:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -221,7 +215,7 @@ jobs:
   lint:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     steps:
       -
@@ -248,7 +242,7 @@ jobs:
   e2e_test:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
@@ -262,6 +256,11 @@ jobs:
       -
         run: 'sudo npm i -g yarn'
       -
+        run:
+          # there are bugs in version 6.4.1 see https://github.com/teambit/bit/issues/1746
+          name: 'update npm to latest version'
+          command: 'npm i -g npm@latest'
+      -
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
         run:
@@ -271,10 +270,10 @@ jobs:
         run:
           name: 'install expect lib (needed to add user for CI NPM registry, see npm-ci-registry.js)'
           command: 'sudo apt-get install expect'
-      -
-        run:
-          name: 'create global npm directory (to avoid using sudo for npm link)'
-          command: 'mkdir ~/.npm-global'
+      # -
+      #   run:
+      #     name: 'create global npm directory (to avoid using sudo for npm link)'
+      #     command: 'mkdir ~/.npm-global'
       -
         restore_cache:
           key: bitsrc-ssh-key3
@@ -310,7 +309,19 @@ jobs:
       -
         run: 'bit config set user.email ci@bit.dev'
       -
-        # uncomment to configure circle to run against stg enviorment
+        # do not change this one, it's important to use the production for getting components bit use for running
+        # if you want the tests to work with stage, you should change the hub domain few lines below
+        run: 'bit config set hub_domain hub.bit.dev'
+      # -
+      #   run:
+      #     name: 'bit import'
+      #     command: 'cd bit && bit import'
+      -
+        run:
+          name: 'npm install'
+          command: 'cd bit && bit install'
+      -
+        # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
       -
         run:
@@ -333,7 +344,7 @@ jobs:
   performence_test:
     docker:
       -
-        image: 'circleci/node:6.14.3'
+        image: 'circleci/node:10.16'
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo

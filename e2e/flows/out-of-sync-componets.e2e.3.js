@@ -213,7 +213,7 @@ describe('components that are not synced between the scope and the consumer', fu
         expect(lsRemote[0].id).to.have.string('bar/foo');
       });
       it('should tell the user that no local changes have been made because the components are not tracked', () => {
-        expect(output).to.have.string('no local changes have been made');
+        expect(output).to.have.string('bit did not update the workspace as the component files are not tracked');
       });
     });
     describe('bit export id', () => {
@@ -229,7 +229,7 @@ describe('components that are not synced between the scope and the consumer', fu
         expect(lsRemote[0].id).to.have.string('bar/foo');
       });
       it('should tell the user that no local changes have been made because the components are not tracked', () => {
-        expect(output).to.have.string('no local changes have been made');
+        expect(output).to.have.string('bit did not update the workspace as the component files are not tracked');
       });
     });
   });
@@ -245,18 +245,14 @@ describe('components that are not synced between the scope and the consumer', fu
       scopeOutOfSync = helper.cloneLocalScope();
     });
     describe('bit add of the same component', () => {
-      let output;
       before(() => {
         helper.getClonedLocalScope(scopeOutOfSync);
-        output = helper.addComponentBarFoo();
+        helper.addComponentBarFoo();
       });
       it('should sync the new component with the scope and assign a version and a scope name', () => {
         const bitMap = helper.readBitMap();
         const newId = `${helper.remoteScope}/bar/foo@0.0.1`;
         expect(bitMap).to.have.property(newId);
-      });
-      it('should indicate that such a sync had happened', () => {
-        expect(output).to.have.string('the following components were found in the local store');
       });
     });
   });

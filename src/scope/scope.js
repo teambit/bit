@@ -34,7 +34,7 @@ import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '..
 import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import { RemovedObjects } from './removed-components';
-import DependencyGraph from './graph/graph';
+import DependencyGraph from './graph/scope-graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';
@@ -625,14 +625,16 @@ export default class Scope {
     consumer,
     verbose,
     directory,
-    keep
+    keep,
+    noCache
   }: {
     bitId: BitId,
     save?: ?boolean,
     consumer?: Consumer,
     verbose?: ?boolean,
     directory?: ?string,
-    keep?: ?boolean
+    keep?: ?boolean,
+    noCache?: ?boolean
   }): Promise<?Dists> {
     if (!bitId.isLocal(this.name)) {
       throw new GeneralError('cannot run build on remote component');
@@ -644,7 +646,8 @@ export default class Scope {
       consumer,
       verbose,
       directory,
-      keep
+      keep,
+      noCache
     });
   }
 

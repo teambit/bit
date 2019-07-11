@@ -53,7 +53,8 @@ export default class Driver {
     filePaths: string[],
     bindingPrefix: string,
     resolveModulesConfig: ResolveModulesConfig,
-    cacheResolvedDependencies: Object
+    cacheResolvedDependencies: Object,
+    cacheProjectAst: ?Object
   ): Promise<{ tree: Tree }> {
     // This is important because without this, madge won't know to resolve files if we run the
     // CMD not from the root dir
@@ -66,7 +67,8 @@ export default class Driver {
       filePaths: fullPaths,
       bindingPrefix,
       resolveModulesConfig,
-      visited: cacheResolvedDependencies
+      visited: cacheResolvedDependencies,
+      cacheProjectAst
     });
   }
 
@@ -76,7 +78,7 @@ export default class Driver {
     return driver.npmLogin(token, npmrcPath, registryUrl);
   }
 
-  static load(lang) {
+  static load(lang?: string) {
     return new Driver(lang);
   }
 }

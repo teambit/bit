@@ -116,16 +116,12 @@ export default function updateDependenciesVersions(consumer: Consumer, component
 
   function getIdFromDependentPackageJson(componentId: BitId): ?BitId {
     // for author, there is not package.json of a component
-    if (
-      !component.bitJson ||
-      !component.bitJson.packageJsonObject ||
-      !component.bitJson.packageJsonObject.dependencies
-    ) {
+    if (!component.packageJsonFile || !component.packageJsonFile.packageJsonObject.dependencies) {
       return null;
     }
     const dependencyIdAsPackage = componentIdToPackageName(componentId, component.bindingPrefix);
     // $FlowFixMe
-    const version = component.bitJson.packageJsonObject.dependencies[dependencyIdAsPackage];
+    const version = component.packageJsonFile.packageJsonObject.dependencies[dependencyIdAsPackage];
     if (!semver.valid(version) && !semver.validRange(version)) return null; // it's probably a relative path to the component
     const validVersion = version.replace(/[^0-9.]/g, ''); // allow only numbers and dots to get an exact version
     return componentId.changeVersion(validVersion);

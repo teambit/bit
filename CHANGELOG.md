@@ -7,44 +7,122 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-- [#1627](https://github.com/teambit/bit/issues/1627) improve `bit tag` output
+## [14.1.4-dev.10] - 2019-07-11
+
+- [#1810](https://github.com/teambit/bit/issues/1810) avoid generating link files with ts/jsx/tsx extensions inside node_modules
+- [#1809](https://github.com/teambit/bit/issues/1809) avoid building components multiple times for compilers that support building dependencies
+- [#1807](https://github.com/teambit/bit/issues/1807) fix resolution of dependency when 2 files require it and one of them using alias
+
+## [14.1.4-dev.9] - 2019-07-10
+
+- [#1789](https://github.com/teambit/bit/issues/1789) prevent removal of peer-dependencies from capsule
+- [#1799](https://github.com/teambit/bit/issues/1799) strip shared directory before writing files into the capsule
+- [#1798](https://github.com/teambit/bit/issues/1798) fix replacing the component to full ids to work for all cases
+- [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
+
+## [14.1.4-dev.8] - 2019-07-07
+
+- [#1770](https://github.com/teambit/bit/issues/1770) update dependency link files when bundling them
+- [#1663](https://github.com/teambit/bit/issues/1663) allow compilers to get the capsule ready with dependencies built in a topological order
+- [#1788](https://github.com/teambit/bit/issues/1788) can't update the `pacakge.json` props from compiler who uses capsule
+
+## [14.1.4-dev.7] - 2019-07-03
+
+- await for a promise calls on post-add (one) hook
+
+## [14.1.4-dev.6] - 2019-07-02
+
+- fix require statements to an internal package file to not include extensions if they're [.js, .ts, .tsx, .jsx]
+- [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file
+- change dependency links generated when dependencies are saved as components to be module paths and not relative paths
+- add a custom entry point file for Angular components
+- [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing
+- [#1752](https://github.com/teambit/bit/issues/1752) fix dependency links generation when originally there were multiple link files
+- await for a promise calls on post-add (many) hook
+
+## [14.1.4-dev.5] - 2019-06-25
+
+- add experimental `post-add` hook
+
+## [14.1.4-dev.4] - 2019-06-24
+
+- add `--no-cache` flag to `bit ci-update` command
+- fix `directory` flag of `bit ci-update` command
+
+## [14.1.4-dev.3] - 2019-06-23
+
+- upgrade to babel 7
+- fix installation errors on Windows related to `posix` package by replacing it with `uid-number`
+
+## [14.1.4-dev.2] - 2019-06-18
+
+- improve isolation by capsule to install peer-dependencies
+- provide testers with a capsule isolate function
+
+## [14.1.4-dev.1] - 2019-06-17
+
+- fix publishing of bit-bin package to include the components directory
+
+## [14.1.4-angular.4] - 2019-06-14
+
+- [#1734](https://github.com/teambit/bit/issues/1734) fix error "unable to add the file ..." when the require statement was of `.` or `..` as the only string
+
+## [14.1.4-angular.3] - 2019-06-12
+
+- support different main-file for dists
+
+## [14.1.4-angular.2] - 2019-06-11
+
+- add option to isolate component into "capsule"
+- enable compilers to isolate components using capsule
+
+## [14.1.4-angular.1] - 2019-06-10
+
+- support identify angular dependencies
+
+## [14.1.3] - 2019-06-06
+
+### Bug fixes
+
+- [#1708](https://github.com/teambit/bit/issues/1708) support `require` with apostrophes
+- [#1698](https://github.com/teambit/bit/issues/1698) fix dependency version resolution when imported component requires authored component
+- [#1702](https://github.com/teambit/bit/issues/1702) fix error "failed adding a symlink into DataToPersist, src is empty"
+- [#1699](https://github.com/teambit/bit/issues/1699) fix config.get is not a function
+
+## [14.1.2] - 2019-06-02
+
+### New
+
+- introduce a new command `bit undeprecate` to revert deprecation of components
 - introduce a new flag `--machine-name` for `bit login` to help CI servers keep their token not revoked
 - support `bit import` with wildcards to import an entire scope or particular namespace(s)
-
-## [14.1.2-dev.5] - 2019-05-29
-
-- sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
 - support changing the log to json format by running `bit config set log_json_format true`
-- introduce a new command `bit undeprecate` to revert deprecation of components
-
-## [14.1.2-dev.4] - 2019-05-28
-
-- restore node 6 support
-
-## [14.1.2-dev.3] - 2019-05-28
-
-- improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
 - add bit version validation to `bit doctor` command
-- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
-- fix `bit eject` to support component custom npm registry scope
-- add suggestion to run `bit doctor` on various errors
-- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
-- avoid generating links of devDependencies when installing component as packages (#1614)
-
-## [14.1.2-dev.2] - 2019-05-20
-
-- add metadata to `bit doctor` output
 - add validation for npm executable on `bit doctor`
 - add validation for yarn executable on `bit doctor`
+
+### Changes
+
+- sort `.bitmap` component ids alphabetically to reduce chances for git conflicts (#1671)
+- [#1627](https://github.com/teambit/bit/issues/1627) improve `bit tag` output
+- add a suggestion to run `bit doctor` on various errors
+- avoid generating links of devDependencies when installing component as packages (#1614)
+- add metadata to `bit doctor` output
 - update `bit add` help message with instructions for using glob patterns with `--tests`
-
-## [14.1.2-dev.1] - 2019-05-20
-
-- ignore `import`/`require` statements from CDN (http/https)
-- avoid generating package.json inside node_modules for author when one of the component files is package.json
-- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
 - rewrite dependencies when installed as components even when exist to rebuild their dist directory
+
+### Bug fixes
+
+- [#1665](https://github.com/teambit/bit/issues/1665) fix resolve-modules prefix with Tilda
+- improve sync between `.bitmap` file and the local store, see [#1543](https://github.com/teambit/bit/issues/1543) for complete use cases
+- fix `bit remove` and `bit eject` to delete the dist directory when located outside the components dir
+- fix `bit eject` to support component custom npm registry scope
+- fix generated `package.json` when dist is outside the components dir to point the `main` to the dist file (#1648)
+- ignore `import`/`require` statements from CDN (HTTP/HTTPS)
+- avoid generating package.json inside node_modules for an author when one of the component files is package.json
+- preserve indentation of `package.json` files and default to 2 spaces, similar to NPM (#1630)
 - show a descriptive error when the dist directory configured to be outside the components dir and is missing files
+
 
 ## [14.1.1] - 2019-05-16
 

@@ -15,6 +15,7 @@ import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
+import { FileStatus } from '../src/consumer/versions-ops/merge-version';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -34,6 +35,7 @@ export default class Helper {
   bitBin: string;
   compilerCreated: boolean;
   dummyCompilerCreated: boolean;
+  dummyTesterCreated: boolean;
   cache: Object;
   clonedScopes: string[] = [];
   keepEnvs: boolean;
@@ -55,7 +57,7 @@ export default class Helper {
     if (this.debugMode) console.log(rightpad(chalk.green('cwd: '), 20, ' '), cwd); // eslint-disable-line
     if (cmd.startsWith('bit ')) cmd = cmd.replace('bit', this.bitBin);
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
-    const cmdOutput = childProcess.execSync(cmd, { cwd });
+    const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
     return cmdOutput.toString();
   }
@@ -138,6 +140,13 @@ export default class Helper {
 
   getBitVersion() {
     return BIT_VERSION;
+  }
+
+  generateRandomTmpDirName() {
+    const randomStr = generateRandomStr();
+    // never start the str with 'x', otherwise, when injected into a file it may throw
+    // "SyntaxError: Invalid hexadecimal escape sequence"
+    return path.join(this.e2eDir, randomStr.startsWith('x') ? randomStr.replace('x', 'a') : randomStr);
   }
   // #endregion
 
@@ -358,6 +367,10 @@ export default class Helper {
     return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
+  outputFile(filePathRelativeToLocalScope: string, data: string): string {
+    return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
@@ -480,10 +493,16 @@ export default class Helper {
     return this.runCmd(`bit import ${id} --compiler`);
   }
 
-  importDummyCompiler() {
+  importDummyCompiler(dummyType?: string = 'dummy') {
     const id = `${this.envScope}/compilers/dummy`;
-    this.createDummyCompiler();
+    this.createDummyCompiler(dummyType);
     return this.runCmd(`bit import ${id} --compiler`);
+  }
+
+  importDummyTester(dummyType?: string = 'dummy') {
+    const id = `${this.envScope}/testers/dummy`;
+    this.createDummyTester(dummyType);
+    return this.runCmd(`bit import ${id} --tester`);
   }
 
   importTester(id) {
@@ -512,7 +531,11 @@ export default class Helper {
       'excludeRegistryPrefix: true',
       'excludeRegistryPrefix: false'
     );
-    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
+    const extensionFileWithJsonOutput = extensionFileIncludeRegistry.replace(
+      'return result;',
+      'return JSON.stringify(result, null, 2);'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 
   build(id?: string = '') {
@@ -676,8 +699,8 @@ export default class Helper {
     return JSON.parse(result);
   }
 
-  createDummyCompiler() {
-    if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
+  createDummyCompiler(dummyType: string) {
+    // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
@@ -685,7 +708,7 @@ export default class Helper {
 
     this.runCmd('bit init', tempScopePath);
 
-    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', 'dummy');
+    const sourceDir = path.join(__dirname, 'fixtures', 'compilers', dummyType);
     const compiler = fs.readFileSync(path.join(sourceDir, 'compiler.js'), 'utf-8');
     fs.writeFileSync(path.join(tempScopePath, 'compiler.js'), compiler);
 
@@ -698,6 +721,40 @@ export default class Helper {
     this.runCmd(`bit export ${this.envScope} compilers/dummy`, tempScopePath);
     this.addRemoteScope(this.envScopePath);
     this.dummyCompilerCreated = true;
+    return true;
+  }
+
+  createDummyTester(dummyType: string) {
+    if (this.dummyTesterCreated) return this.addRemoteScope(this.envScopePath);
+
+    const tempScope = `${generateRandomStr()}-temp`;
+    const tempScopePath = path.join(this.e2eDir, tempScope);
+    fs.emptyDirSync(tempScopePath);
+
+    this.runCmd('bit init', tempScopePath);
+
+    const sourceDir = path.join(__dirname, 'fixtures', 'testers', dummyType);
+    const tester = fs.readFileSync(path.join(sourceDir, 'tester.js'), 'utf-8');
+    fs.writeFileSync(path.join(tempScopePath, 'tester.js'), tester);
+
+    ensureAndWriteJson(path.join(tempScopePath, 'package.json'), {
+      name: 'dummy-compiler',
+      version: '1.0.0',
+      dependencies: {
+        mocha: '6.1.4',
+        chai: '4.2.0'
+      }
+    });
+    this.runCmd('npm install', tempScopePath);
+    this.runCmd('bit add tester.js -i testers/dummy', tempScopePath);
+    this.runCmd('bit tag testers/dummy -m msg', tempScopePath);
+
+    fs.emptyDirSync(this.envScopePath);
+    this.runCmd('bit init --bare', this.envScopePath);
+    this.runCmd(`bit remote add file://${this.envScopePath}`, tempScopePath);
+    this.runCmd(`bit export ${this.envScope} testers/dummy`, tempScopePath);
+    this.addRemoteScope(this.envScopePath);
+    this.dummyTesterCreated = true;
     return true;
   }
 
@@ -988,6 +1045,39 @@ export default class Helper {
     if (this.debugMode) console.log(chalk.green(`copying fixture ${sourceFile} to ${distFile}\n`)); // eslint-disable-line
     fs.copySync(sourceFile, distFile);
   }
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type
+   */
+  populateWorkspaceWithComponents() {
+    this.createFile('utils', 'is-type.js', fixtures.isType);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
+
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'   => requires the left-pad package
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type => left-pad
+   */
+  populateWorkspaceWithComponentsAndPackages() {
+    this.initNpm();
+    this.installNpmPackage('left-pad', '1.3.0');
+    this.createFile('utils', 'is-type.js', fixtures.isTypeLeftPad);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
   // #endregion
 
   indexJsonPath() {
@@ -999,11 +1089,20 @@ export default class Helper {
   writeIndexJson(indexJson: Object) {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
   }
+  installAndGetTypeScriptCompilerDir(): string {
+    this.installNpmPackage('typescript');
+    return path.join(this.localScopePath, 'node_modules', '.bin');
+  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
+
+// eslint-disable-next-line import/prefer-default-export
+export const FileStatusWithoutChalk = R.fromPairs(
+  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
+);
 
 export { VERSION_DELIMITER };

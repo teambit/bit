@@ -101,7 +101,7 @@ async function linkComponents(ids: BitId[], consumer: Consumer): Promise<void> {
   // some of the components might be authored, some might be imported.
   // when a component has dists, we need the consumer-component object to retrieve the dists info.
   const components = await Promise.all(ids.map(id => consumer.loadComponentFromModel(id)));
-  const nodeModuleLinker = new NodeModuleLinker(components, consumer);
+  const nodeModuleLinker = new NodeModuleLinker(components, consumer, consumer.bitMap);
   await nodeModuleLinker.link();
 }
 

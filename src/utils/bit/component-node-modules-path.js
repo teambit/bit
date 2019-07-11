@@ -1,12 +1,16 @@
 // @flow
 import path from 'path';
 import GeneralError from '../../error/general-error';
-import type { PathOsBased } from '../path';
+import type { PathOsBasedRelative } from '../path';
 import { NODE_PATH_COMPONENT_SEPARATOR, DEFAULT_BINDINGS_PREFIX } from '../../constants';
 import BitId from '../../bit-id/bit-id';
 
-export default function getNodeModulesPathOfComponent(bindingPrefix: ?string, id: BitId): PathOsBased {
-  if (!id.scope) {
+export default function getNodeModulesPathOfComponent(
+  bindingPrefix: ?string,
+  id: BitId,
+  allowNonScope: boolean = false
+): PathOsBasedRelative {
+  if (!id.scope && !allowNonScope) {
     throw new GeneralError(
       `Failed creating a path in node_modules for ${id.toString()}, as it does not have a scope yet`
     );
@@ -16,5 +20,6 @@ export default function getNodeModulesPathOfComponent(bindingPrefix: ?string, id
   bindingPrefix = bindingPrefix === 'bit' ? '@bit' : bindingPrefix;
   const allSlashes = new RegExp('/', 'g');
   const name = id.name.replace(allSlashes, NODE_PATH_COMPONENT_SEPARATOR);
-  return path.join('node_modules', bindingPrefix, [id.scope, name].join(NODE_PATH_COMPONENT_SEPARATOR));
+  const partsToJoin = id.scope ? [id.scope, name] : [name];
+  return path.join('node_modules', bindingPrefix, partsToJoin.join(NODE_PATH_COMPONENT_SEPARATOR));
 }

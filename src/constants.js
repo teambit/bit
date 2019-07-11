@@ -225,6 +225,8 @@ export const PRE_TAG_HOOK = 'pre-tag';
 
 export const POST_TAG_HOOK = 'post-tag';
 
+export const POST_ADD_HOOK = 'post-add';
+
 export const PRE_TAG_ALL_HOOK = 'pre-tag-all';
 
 export const POST_TAG_ALL_HOOK = 'post-tag-all';
@@ -260,6 +262,7 @@ export const POST_REMOVE_REMOTE = 'post-remove-remote';
 export const HOOKS_NAMES = [
   PRE_TAG_HOOK,
   POST_TAG_HOOK,
+  POST_ADD_HOOK,
   PRE_TAG_ALL_HOOK,
   POST_TAG_ALL_HOOK,
   PRE_IMPORT_HOOK,
@@ -366,3 +369,9 @@ export const MANUALLY_ADD_DEPENDENCY = '+';
 export const OVERRIDE_FILE_PREFIX = 'file://';
 
 export const OVERRIDE_COMPONENT_PREFIX = '@bit/';
+
+export const ACCEPTABLE_NPM_VERSIONS = '>=5.0.0';
+
+export const ANGULAR_PACKAGE_IDENTIFIER = '@angular/core';
+
+export const ANGULAR_BIT_ENTRY_POINT_FILE = 'public_api.ts';

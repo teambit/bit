@@ -183,4 +183,107 @@ describe('bit build', function () {
       });
     });
   });
+  /**
+   * this test uses the `pkg-json` compiler, which adds `{ foo: 'bar' }` to the package.json
+   */
+  describe('change package.json values', () => {
+    before(() => {
+      helper.setNewLocalAndRemoteScopes();
+      helper.createComponentBarFoo();
+      helper.addComponentBarFoo();
+      helper.importDummyCompiler('pkg-json');
+    });
+    describe('as author', () => {
+      before(() => {
+        helper.initNpm();
+        helper.build();
+      });
+      it('should not change the root package.json', () => {
+        const packageJson = helper.readPackageJson();
+        expect(packageJson).to.not.have.property('foo');
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should save the additional package.json props into the scope', () => {
+          const catComponent = helper.catComponent('bar/foo@latest');
+          expect(catComponent).to.have.property('packageJsonChangedProps');
+          expect(catComponent.packageJsonChangedProps)
+            .to.have.property('foo')
+            .that.equal('bar');
+        });
+        describe('importing the component to a new workspace', () => {
+          before(() => {
+            helper.exportAllComponents();
+            helper.reInitLocalScope();
+            helper.addRemoteScope();
+            helper.importComponent('bar/foo');
+          });
+          it('should write the added props into the component package.json', () => {
+            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+            expect(packageJson).to.have.property('foo');
+            expect(packageJson.foo).equal('bar');
+          });
+        });
+      });
+    });
+    describe('as imported', () => {
+      before(() => {
+        helper.setNewLocalAndRemoteScopes();
+        helper.createComponentBarFoo();
+        helper.addComponentBarFoo();
+        helper.tagAllComponents();
+        helper.exportAllComponents();
+        helper.reInitLocalScope();
+        helper.addRemoteScope();
+        helper.importComponent('bar/foo');
+        helper.importDummyCompiler('pkg-json');
+        const componentDir = path.join(helper.localScopePath, 'components/bar/foo');
+        const packageJson = helper.readPackageJson(componentDir);
+        packageJson.bit.env = {
+          compiler: `${helper.envScope}/compilers/dummy@0.0.1`
+        };
+        // an intermediate step, make sure packageJson doesn't have this "foo" property
+        expect(packageJson).to.not.have.property('foo');
+        helper.writePackageJson(packageJson, componentDir);
+        helper.runCmd('bit build --no-cache');
+      });
+      it('should add the packageJson properties to the component package.json', () => {
+        const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+        expect(packageJson).to.have.property('foo');
+        expect(packageJson.foo).equal('bar');
+      });
+      describe('tagging the component', () => {
+        before(() => {
+          helper.tagAllComponents();
+        });
+        it('should save the additional package.json props into the scope', () => {
+          const catComponent = helper.catComponent(`${helper.remoteScope}/bar/foo@latest`);
+          expect(catComponent).to.have.property('packageJsonChangedProps');
+          expect(catComponent.packageJsonChangedProps)
+            .to.have.property('foo')
+            .that.equal('bar');
+        });
+        describe('changing the compiler to generate a different value in the package.json file', () => {
+          before(() => {
+            const compilerPath = `.bit/components/compilers/dummy/${helper.envScope}/0.0.1/compiler.js`;
+            const compiler = helper.readFile(compilerPath);
+            const changedCompiler = compiler.replace('bar', 'baz');
+            helper.outputFile(compilerPath, changedCompiler);
+            helper.runCmd('bit build --no-cache');
+          });
+          it('status should not show as modified', () => {
+            const status = helper.status();
+            expect(status).to.not.have.string('modified components');
+          });
+          it('should add the changed packageJson properties to the component package.json', () => {
+            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+            expect(packageJson).to.have.property('foo');
+            expect(packageJson.foo).equal('baz');
+          });
+        });
+      });
+    });
+  });
 });

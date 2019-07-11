@@ -305,7 +305,7 @@ describe('binary files', function () {
       const fixture = 'require("../bar/png_fixture.png")';
       helper.createFile('src/foo', 'foo.js', fixture);
       helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.importCompiler('bit.envs/compilers/react');
+      helper.importDummyCompiler();
       helper.tagAllComponents();
       helper.exportAllComponents();
 
@@ -404,7 +404,7 @@ describe('binary files', function () {
       const fixture = 'require("../bar/png_fixture.png")';
       helper.createFile('src/foo', 'foo.js', fixture);
       helper.addComponent('src/foo/foo.js', { i: 'bar/foo' });
-      helper.importCompiler('bit.envs/compilers/react');
+      helper.importDummyCompiler();
       helper.tagAllComponents();
       helper.exportAllComponents();
 

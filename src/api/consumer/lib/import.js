@@ -39,13 +39,13 @@ export default (async function importAction(
       if (environmentOptions.compiler) {
         consumer.config.compiler = id;
         Analytics.setExtraData('build_env', id);
-        return consumer.config.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       if (environmentOptions.tester) {
         consumer.config.tester = id;
         Analytics.setExtraData('test_env', id);
-        return consumer.config.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       if (environmentOptions.extension) {
@@ -57,13 +57,13 @@ export default (async function importAction(
         if (oldVersion) {
           consumer.config.extensions[id] = consumer.config.extensions[oldVersion];
           delete consumer.config.extensions[oldVersion];
-          return consumer.config.write({ bitDir: consumer.getPath() });
+          return consumer.config.write({ workspaceDir: consumer.getPath() });
         }
         consumer.config.extensions[id] = {
           options: {},
           config: {}
         };
-        return consumer.config.write({ bitDir: consumer.getPath() });
+        return consumer.config.write({ workspaceDir: consumer.getPath() });
       }
 
       return Promise.resolve(true);

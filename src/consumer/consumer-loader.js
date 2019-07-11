@@ -2,7 +2,7 @@
 import path from 'path';
 import Consumer from './consumer';
 
-export default async function loadConsumer(
+export default (async function loadConsumer(
   currentPath?: string = process.cwd(),
   newInstance?: boolean = false
 ): Promise<Consumer> {
@@ -12,4 +12,4 @@ export default async function loadConsumer(
     loadConsumer.cache[currentPath] = consumer;
   }
   return loadConsumer.cache[currentPath];
-}
+});

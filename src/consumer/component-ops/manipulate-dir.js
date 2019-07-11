@@ -18,6 +18,7 @@ import Repository from '../../scope/objects/repository';
 import ComponentOverrides from '../config/component-overrides';
 import CorruptedComponent from '../../scope/exceptions/corrupted-component';
 import Component from '../component/consumer-component';
+import { ComponentWithDependencies } from '../../scope';
 
 export type ManipulateDirItem = { id: BitId, originallySharedDir: ?PathLinux, wrapDir: ?PathLinux };
 
@@ -49,17 +50,6 @@ export async function getManipulateDirForExistingComponents(
     manipulateDirData.push(manipulateDirDep);
   });
   return manipulateDirData;
-}
-
-/**
- * this doesn't return the manipulate-dir for the dependencies, only for the given component.
- * it is useful for stripping the shared-dir for author when generating symlinks from node_modules
- */
-export function getManipulateDirForConsumerComponent(component: Component): ManipulateDirItem {
-  const id: BitId = component.id;
-  const originallySharedDir = calculateOriginallySharedDirForConsumerComponent(component);
-  const wrapDir = isWrapperDirNeededForConsumerComponent(component) ? WRAPPER_DIR : null;
-  return { id, originallySharedDir, wrapDir };
 }
 
 /**
@@ -95,6 +85,25 @@ export async function getManipulateDirWhenImportingComponents(
   return R.flatten(manipulateDirData);
 }
 
+/**
+ * this doesn't return the manipulate-dir for the dependencies, only for the given component.
+ * it is useful for stripping the shared-dir for author when generating symlinks from node_modules
+ */
+export function getManipulateDirForConsumerComponent(component: Component): ManipulateDirItem {
+  const id: BitId = component.id;
+  const originallySharedDir =
+    component.originallySharedDir || calculateOriginallySharedDirForConsumerComponent(component);
+  const wrapDir = isWrapperDirNeededForConsumerComponent(component) ? WRAPPER_DIR : null;
+  return { id, originallySharedDir, wrapDir };
+}
+
+export function getManipulateDirForComponentWithDependencies(
+  componentWithDependencies: ComponentWithDependencies
+): ManipulateDirItem[] {
+  const allComponents = [componentWithDependencies.component, ...componentWithDependencies.allDependencies];
+  return allComponents.map(component => getManipulateDirForConsumerComponent(component));
+}
+
 export function revertDirManipulationForPath(
   pathStr: PathOsBased,
   originallySharedDir: ?PathLinux,
@@ -102,6 +111,12 @@ export function revertDirManipulationForPath(
 ): PathLinux {
   const withSharedDir: PathLinux = addSharedDirForPath(pathStr, originallySharedDir);
   return removeWrapperDirFromPath(withSharedDir, wrapDir);
+}
+
+export function stripSharedDirFromPath(pathStr: PathOsBased, sharedDir: ?PathLinux): PathOsBased {
+  if (!sharedDir) return pathStr;
+  const partToRemove = path.normalize(sharedDir) + path.sep;
+  return pathStr.replace(partToRemove, '');
 }
 
 /**
