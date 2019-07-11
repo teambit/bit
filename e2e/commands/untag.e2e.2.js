@@ -266,12 +266,6 @@ describe('bit untag command', function () {
             const packageJsonUtilsIsString = helper.readPackageJson(packageJsonUtilsIsStringPath);
             expect(packageJsonUtilsIsString.version).to.equal('2.0.0');
           });
-          describe('tagging the components after the untag', () => {
-            it('should not throw an error componentNotFound', () => {
-              const tagFunc = () => helper.tagComponent('utils/is-string -f');
-              expect(tagFunc).to.not.throw();
-            });
-          });
         });
       });
     });
