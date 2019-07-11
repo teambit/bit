@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- [#1792](https://github.com/teambit/bit/issues/1792) don't generate entry-point files for nested dependencies when their `package.json` is written
+
 ## [14.1.4-dev.10] - 2019-07-11
 
 - [#1810](https://github.com/teambit/bit/issues/1810) avoid generating link files with ts/jsx/tsx extensions inside node_modules

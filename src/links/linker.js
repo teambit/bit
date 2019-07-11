@@ -157,15 +157,16 @@ export async function getAllComponentsLinks({
     createNpmLinkFiles,
     bitMap
   );
-  if (writtenDependencies) {
-    const uniqDependencies = ComponentsList.getUniqueComponents(R.flatten(writtenDependencies));
-    const entryPoints = uniqDependencies.map(component =>
-      linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
-    );
-    dataToPersist.addManyFiles(R.flatten(entryPoints));
-  }
+  // no need for entry-point file if package.json is written.
   if (!writePackageJson) {
-    // no need for entry-point file if package.json is written.
+    if (writtenDependencies) {
+      const uniqDependencies = ComponentsList.getUniqueComponents(R.flatten(writtenDependencies));
+      const entryPoints = uniqDependencies.map(component =>
+        linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
+      );
+      dataToPersist.addManyFiles(R.flatten(entryPoints));
+    }
+
     const entryPoints = writtenComponents.map(component =>
       linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
     );
