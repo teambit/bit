@@ -23,7 +23,7 @@ export default (async function diffFiles(
     const result = await execa(gitExecutablePath, params);
     return result.stdout;
   } catch (err) {
-    if (err.exitCodeName && err.exitCodeName === 'EPERM' && err.stdout) {
+    if (err.stdout && err.stdout.includes('--git')) {
       // diff has been found, return the diff results.
       return err.stdout;
     }
