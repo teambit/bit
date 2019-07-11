@@ -55,7 +55,8 @@ export default (async function mergeFiles({
     mergeResult.output = result.stdout;
     return mergeResult;
   } catch (err) {
-    if (err.code && Number.isInteger(err.code) && err.stdout) {
+    if (err.exitCodeName && err.exitCodeName === 'EPERM' && err.stdout) {
+      // merge has been succeeded, return the diff results.
       mergeResult.conflict = err.stdout;
       return mergeResult;
     }
