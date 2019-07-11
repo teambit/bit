@@ -1,5 +1,5 @@
 /** @flow */
-import isTextOrBinary from 'istextorbinary';
+import { isBinaryFileSync } from 'isbinaryfile';
 import replaceBuffer from './buffer/replace-buffer-non-recursive';
 
 const isWindows = typeof process !== 'undefined' && process.platform === 'win32';
@@ -9,7 +9,7 @@ const newline = /\r\n|\r|\n/g;
 
 function converts(fileName: string, text: string | Buffer, to: string) {
   if (Buffer.isBuffer(text)) {
-    if (isTextOrBinary.isBinarySync(fileName, text)) return text; // don't touch binary files
+    if (isBinaryFileSync(fileName, text)) return text; // don't touch binary files
     newLines.forEach((newLine) => {
       // $FlowFixMe text is Buffer here
       if (newLine !== to) text = replaceBuffer(text, newLine, to);
