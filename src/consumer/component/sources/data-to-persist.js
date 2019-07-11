@@ -62,7 +62,7 @@ export default class DataToPersist {
   }
   async persistAllToFS() {
     this._log();
-    this._validate();
+    this._validateAbsolute();
     // the order is super important. first remove, then create and finally symlink
     await this._deletePathsFromFS();
     await this._persistFilesToFS();
@@ -70,13 +70,27 @@ export default class DataToPersist {
   }
   async persistAllToCapsule(capsule: Capsule) {
     this._log();
+    this._validateRelative();
     // const filesForCapsule = this.files.reduce(
     //   (acc, current) => Object.assign(acc, { [current.path]: current.contents }),
     //   {}
     // );
     await Promise.all(this.remove.map(pathToRemove => capsule.removePath(pathToRemove.path)));
     await Promise.all(this.files.map(file => capsule.outputFile(file.path, file.contents)));
-    await Promise.all(this.symlinks.map(symlink => capsule.symlink(symlink.src, symlink.dest)));
+    await Promise.all(this.symlinks.map(symlink => this.atomicSymlink(capsule, symlink)));
+  }
+  async atomicSymlink(capsule: Capsule, symlink: Symlink) {
+    try {
+      await capsule.symlink(symlink.src, symlink.dest);
+    } catch (e) {
+      // On windows when the link already created by npm we got EPERM error
+      // TODO: We should handle this better and avoid creating the symlink if it's already exists
+      if (e.code !== 'EEXIST' && e.code !== 'EPERM') {
+        throw e;
+      } else {
+        logger.debug(`ignoring ${e.code} error on atomicSymlink creation`);
+      }
+    }
   }
   addBasePath(basePath: string) {
     this.files.forEach((file) => {
@@ -115,7 +129,7 @@ export default class DataToPersist {
     }
     return Promise.all(restPaths.map(removePath => removePath.persistToFS()));
   }
-  _validate() {
+  _validateAbsolute() {
     // it's important to make sure that all paths are absolute before writing them to the
     // filesystem. relative paths won't work when running bit commands from an inner dir
     const validateAbsolutePath = (pathToValidate) => {
@@ -132,6 +146,24 @@ export default class DataToPersist {
     this.symlinks.forEach((symlink) => {
       validateAbsolutePath(symlink.src);
       validateAbsolutePath(symlink.dest);
+    });
+  }
+  _validateRelative() {
+    // it's important to make sure that all paths are relative before writing them to the capsule
+    const validateRelativePath = (pathToValidate) => {
+      if (path.isAbsolute(pathToValidate)) {
+        throw new Error(`DataToPersist expects ${pathToValidate} to be relative, got absolute`);
+      }
+    };
+    this.files.forEach((file) => {
+      validateRelativePath(file.path);
+    });
+    this.remove.forEach((removePath) => {
+      validateRelativePath(removePath.path);
+    });
+    this.symlinks.forEach((symlink) => {
+      validateRelativePath(symlink.src);
+      validateRelativePath(symlink.dest);
     });
   }
   _log() {

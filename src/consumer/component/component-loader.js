@@ -7,7 +7,7 @@ import logger from '../../logger/logger';
 import Component from './consumer-component';
 import type { InvalidComponent } from '../component/consumer-component';
 import { getLatestVersionNumber } from '../../utils';
-import { COMPONENT_ORIGINS, ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
+import { ANGULAR_PACKAGE_IDENTIFIER } from '../../constants';
 import { DependencyResolver, updateDependenciesVersions } from './dependencies/dependency-resolver';
 import { getScopeRemotes } from '../../scope/scope-remotes';
 import { ModelComponent } from '../../scope/models';
@@ -15,6 +15,7 @@ import ComponentsPendingImport from '../component-ops/exceptions/components-pend
 
 export default class ComponentLoader {
   _componentsCache: Object = {}; // cache loaded components
+  _componentsCacheForCapsule: Object = {}; // cache loaded components for capsule, must not use the cache for the workspace
   consumer: Consumer;
   cacheResolvedDependencies: Object;
   cacheProjectAst: ?{ angular: Object }; // specific platforms (like Angular) need to parse the entire project
@@ -24,6 +25,18 @@ export default class ComponentLoader {
     if (this._isAngularProject()) {
       this.cacheProjectAst = { angular: {} };
     }
+  }
+
+  async loadForCapsule(id: BitId): Promise<Component> {
+    const idWithVersion: BitId = getLatestVersionNumber(this.consumer.bitmapIds, id);
+    const idStr = idWithVersion.toString();
+    if (this._componentsCacheForCapsule[idStr]) {
+      return this._componentsCacheForCapsule[idStr];
+    }
+    const { components } = await this.loadMany(BitIds.fromArray([id]));
+    const component = components[0].clone();
+    this._componentsCacheForCapsule[idStr] = component;
+    return component;
   }
 
   async loadMany(
@@ -110,7 +123,7 @@ export default class ComponentLoader {
     component.componentFromModel = componentFromModel;
     await this._handleOutOfSyncScenarios(component);
 
-    if (!driverExists || componentMap.origin === COMPONENT_ORIGINS.NESTED) {
+    if (!driverExists) {
       // no need to resolve dependencies
       return component;
     }

@@ -16,6 +16,9 @@ import type CompilerExtension from '../../../extensions/compiler-extension';
 import type { DistFileModel } from '../../../scope/models/version';
 import DataToPersist from './data-to-persist';
 import WorkspaceConfig from '../../config/workspace-config';
+import { ComponentWithDependencies } from '../../../scope';
+import BitMap from '../../bit-map';
+import { stripSharedDirFromPath } from '../../component-ops/manipulate-dir';
 
 /**
  * Dist paths are by default saved into the component's root-dir/dist. However, when dist is set in bit.json, the paths
@@ -54,7 +57,6 @@ export default class Dists {
   writeDistsFiles: boolean = true; // changed only when importing a component
   areDistsInsideComponentDir: ?boolean = true;
   distEntryShouldBeStripped: ?boolean = false;
-  _distsPathsAreUpdated: ?boolean = false; // makes sure to not update twice
   _mainDistFile: ?PathOsBasedRelative;
   distsRootDir: ?PathOsBasedRelative; // populated only after getDistDirForConsumer() is called
   constructor(dists?: ?(Dist[]), mainDistFile: ?PathOsBased) {
@@ -109,10 +111,17 @@ export default class Dists {
   }
 
   updateDistsPerWorkspaceConfig(id: BitId, consumer: ?Consumer, componentMap: ComponentMap): void {
-    if (this._distsPathsAreUpdated || this.isEmpty()) return;
+    if (this.isEmpty()) return;
     const newDistBase = this.getDistDir(consumer, componentMap.getRootDir());
-    const distEntry = consumer ? consumer.config.distEntry : undefined;
-    const shouldDistEntryBeStripped = () => {
+    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase }));
+    if (consumer) this.stripDistEntryIfNeeded(id, consumer, componentMap);
+  }
+
+  stripDistEntryIfNeeded(id: BitId, consumer: Consumer, componentMap: ComponentMap) {
+    const distEntry = consumer.config.distEntry;
+    if (!distEntry) return;
+    const shouldDistEntryBeStripped = (): boolean => {
+      if (this.distEntryShouldBeStripped) return false; // it has been already stripped, don't strip twice!
       if (!distEntry || componentMap.origin === COMPONENT_ORIGINS.NESTED) return false;
       const areAllDistsStartWithDistEntry = () => {
         return this.dists.map(dist => dist.relative.startsWith(distEntry)).every(x => x);
@@ -127,41 +136,30 @@ export default class Dists {
       return componentMap.rootDir.startsWith(distEntry) && areAllDistsStartWithDistEntry();
     };
     const distEntryShouldBeStripped = shouldDistEntryBeStripped();
-    if (distEntryShouldBeStripped) {
-      // $FlowFixMe
-      logger.debug(`stripping dist.entry "${distEntry}" from ${id}`);
-      this.distEntryShouldBeStripped = true;
+    if (!distEntryShouldBeStripped) return;
+    logger.debug(`stripping dist.entry "${distEntry}" from ${id.toString()}`);
+    this.distEntryShouldBeStripped = true;
+    this.dists.forEach(dist => dist.updatePaths({ newRelative: dist.relative.replace(distEntry, '') }));
+    if (this._mainDistFile) {
+      this._mainDistFile.replace(distEntry, '');
     }
-    const getNewRelative = (dist) => {
-      if (distEntryShouldBeStripped) {
-        // $FlowFixMe distEntry is set when distEntryShouldBeStripped
-        return dist.relative.replace(distEntry, '');
-      }
-      return dist.relative;
-    };
-    this.dists.forEach(dist => dist.updatePaths({ newBase: newDistBase, newRelative: getNewRelative(dist) }));
-    this._mainDistFile =
-      this._mainDistFile && distEntryShouldBeStripped // $FlowFixMe distEntry is set when distEntryShouldBeStripped
-        ? this._mainDistFile.replace(distEntry, '')
-        : this._mainDistFile;
-    this._distsPathsAreUpdated = true;
   }
 
-  stripOriginallySharedDir(originallySharedDir: string, pathWithoutSharedDir: Function) {
+  stripOriginallySharedDir(originallySharedDir: ?string) {
     this.dists.forEach((distFile) => {
-      const newRelative = pathWithoutSharedDir(distFile.relative, originallySharedDir);
-      distFile.updatePaths({ newBase: distFile.base, newRelative });
+      const newRelative = stripSharedDirFromPath(distFile.relative, originallySharedDir);
+      distFile.updatePaths({ newRelative });
     });
     this._mainDistFile = this._mainDistFile
-      ? pathWithoutSharedDir(this._mainDistFile, originallySharedDir)
+      ? stripSharedDirFromPath(this._mainDistFile, originallySharedDir)
       : this._mainDistFile;
   }
 
   /**
    * write dists files to the filesystem
    */
-  async writeDists(component: Component, consumer?: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
-    const dataToPersist = await this.getDistsToWrite(component, consumer, writeLinks);
+  async writeDists(component: Component, consumer: Consumer, writeLinks?: boolean = true): Promise<?(string[])> {
+    const dataToPersist = await this.getDistsToWrite(component, consumer.bitMap, consumer, writeLinks);
     if (!dataToPersist) return null;
     if (consumer) dataToPersist.addBasePath(consumer.getPath());
     await dataToPersist.persistAllToFS();
@@ -174,20 +172,27 @@ export default class Dists {
    */
   async getDistsToWrite(
     component: Component,
+    bitMap: BitMap,
     consumer: ?Consumer,
-    writeLinks?: boolean = true
+    writeLinks?: boolean = true,
+    componentWithDependencies?: ComponentWithDependencies
   ): Promise<?DataToPersist> {
     if (this.isEmpty() || !this.writeDistsFiles) return null;
-    if (writeLinks && !consumer) throw new Error('getDistsToWrite expects to get consumer when writeLinks is true');
     const dataToPersist = new DataToPersist();
-    let componentMap;
-    if (consumer) {
-      componentMap = consumer.bitMap.getComponent(component.id, { ignoreVersion: true });
-      this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
-    }
+    const componentMap = consumer
+      ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
+      : component.componentMap;
+    if (!componentMap) throw new Error('getDistsToWrite expect componentMap to be defined');
+    this.updateDistsPerWorkspaceConfig(component.id, consumer, componentMap);
     dataToPersist.addManyFiles(this.dists);
     if (writeLinks && componentMap && componentMap.origin === COMPONENT_ORIGINS.IMPORTED) {
-      const linksInDist = await getLinksInDistToWrite(component, componentMap, consumer);
+      const linksInDist = await getLinksInDistToWrite(
+        component,
+        componentMap,
+        consumer,
+        bitMap,
+        componentWithDependencies
+      );
       dataToPersist.merge(linksInDist);
     }
 
@@ -289,5 +294,12 @@ export default class Dists {
       .map(nodePath => consumer.toAbsolutePath(nodePath))
       .map(pathNormalizeToLinux)
       .join(NODE_PATH_SEPARATOR);
+  }
+
+  clone(): Dists {
+    // $FlowFixMe
+    const clone: Dists = Object.assign(Object.create(Object.getPrototypeOf(this)), this);
+    clone.dists = this.dists.map(d => d.clone());
+    return clone;
   }
 }

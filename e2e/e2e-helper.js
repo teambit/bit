@@ -15,6 +15,7 @@ import defaultErrorHandler from '../src/cli/default-error-handler';
 import * as fixtures from './fixtures/fixtures';
 import { NOTHING_TO_TAG_MSG } from '../src/cli/commands/public-cmds/tag-cmd';
 import { removeChalkCharacters } from '../src/utils';
+import { FileStatus } from '../src/consumer/versions-ops/merge-version';
 
 const generateRandomStr = (size: number = 8): string => {
   return Math.random()
@@ -142,7 +143,10 @@ export default class Helper {
   }
 
   generateRandomTmpDirName() {
-    return path.join(this.e2eDir, generateRandomStr());
+    const randomStr = generateRandomStr();
+    // never start the str with 'x', otherwise, when injected into a file it may throw
+    // "SyntaxError: Invalid hexadecimal escape sequence"
+    return path.join(this.e2eDir, randomStr.startsWith('x') ? randomStr.replace('x', 'a') : randomStr);
   }
   // #endregion
 
@@ -363,6 +367,10 @@ export default class Helper {
     return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
+  outputFile(filePathRelativeToLocalScope: string, data: string): string {
+    return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
+  }
+
   /**
    * adds "\n" at the beginning of the file to make it modified.
    */
@@ -523,7 +531,11 @@ export default class Helper {
       'excludeRegistryPrefix: true',
       'excludeRegistryPrefix: false'
     );
-    fs.writeFileSync(extensionFilePath, extensionFileIncludeRegistry);
+    const extensionFileWithJsonOutput = extensionFileIncludeRegistry.replace(
+      'return result;',
+      'return JSON.stringify(result, null, 2);'
+    );
+    fs.writeFileSync(extensionFilePath, extensionFileWithJsonOutput);
   }
 
   build(id?: string = '') {
@@ -688,7 +700,7 @@ export default class Helper {
   }
 
   createDummyCompiler(dummyType: string) {
-    if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
+    // if (this.dummyCompilerCreated) return this.addRemoteScope(this.envScopePath);
 
     const tempScope = `${generateRandomStr()}-temp`;
     const tempScopePath = path.join(this.e2eDir, tempScope);
@@ -1048,6 +1060,24 @@ export default class Helper {
     this.createComponentBarFoo(fixtures.barFooFixture);
     this.addComponentBarFoo();
   }
+
+  /**
+   * populates the local workspace with the following components:
+   * 'bar/foo'         => requires a file from 'utils/is-string' component
+   * 'utils/is-string' => requires a file from 'utils/is-type' component
+   * 'utils/is-type'   => requires the left-pad package
+   * in other words, the dependency chain is: bar/foo => utils/is-string => utils/is-type => left-pad
+   */
+  populateWorkspaceWithComponentsAndPackages() {
+    this.initNpm();
+    this.installNpmPackage('left-pad', '1.3.0');
+    this.createFile('utils', 'is-type.js', fixtures.isTypeLeftPad);
+    this.addComponentUtilsIsType();
+    this.createFile('utils', 'is-string.js', fixtures.isString);
+    this.addComponentUtilsIsString();
+    this.createComponentBarFoo(fixtures.barFooFixture);
+    this.addComponentBarFoo();
+  }
   // #endregion
 
   indexJsonPath() {
@@ -1059,11 +1089,20 @@ export default class Helper {
   writeIndexJson(indexJson: Object) {
     return ensureAndWriteJson(this.indexJsonPath(), indexJson);
   }
+  installAndGetTypeScriptCompilerDir(): string {
+    this.installNpmPackage('typescript');
+    return path.join(this.localScopePath, 'node_modules', '.bin');
+  }
 }
 
 function ensureAndWriteJson(filePath, fileContent) {
   fs.ensureFileSync(filePath);
   fs.writeJsonSync(filePath, fileContent, { spaces: 2 });
 }
+
+// eslint-disable-next-line import/prefer-default-export
+export const FileStatusWithoutChalk = R.fromPairs(
+  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
+);
 
 export { VERSION_DELIMITER };

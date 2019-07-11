@@ -42,7 +42,7 @@ export default class FsContainer implements Container {
     const srcPath = this.composePath(src);
     const destPath = this.composePath(dest);
     await fs.ensureDir(path.dirname(destPath));
-    return fs.symlink(srcPath, destPath);
+    return fs.ensureSymlink(srcPath, destPath);
   }
 
   async exec(execOptions: ExecOptions): Promise<Exec> {

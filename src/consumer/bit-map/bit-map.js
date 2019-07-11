@@ -277,7 +277,7 @@ export default class BitMap {
    */
   async getConfigDirsAndFilesToIgnore(
     consumerPath: PathLinux,
-    consumerConfig: WorkspaceConfig
+    workspaceConfig: WorkspaceConfig
   ): Promise<IgnoreFilesDirs> {
     const ignoreList = {
       files: [],
@@ -289,8 +289,12 @@ export default class BitMap {
       if (configDir && componentDir) {
         const resolvedBaseConfigDir = component.getBaseConfigDir() || '';
         const fullConfigDir = path.join(consumerPath, resolvedBaseConfigDir);
-        const componentPkgJsonDir = component.rootDir ? path.join(consumerPath, component.rootDir) : null;
-        const componentConfig = await ComponentConfig.load(componentPkgJsonDir, fullConfigDir, consumerConfig);
+        const componentConfig = await ComponentConfig.load({
+          componentDir: component.rootDir,
+          workspaceDir: consumerPath,
+          configDir: fullConfigDir,
+          workspaceConfig
+        });
         const compilerObj = R.values(componentConfig.compiler)[0];
         const compilerFilesObj = compilerObj && compilerObj.files ? compilerObj.files : undefined;
         const testerObj = R.values(componentConfig.tester)[0];

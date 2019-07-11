@@ -7,9 +7,38 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-dev.10] - 2019-07-11
+
+- [#1810](https://github.com/teambit/bit/issues/1810) avoid generating link files with ts/jsx/tsx extensions inside node_modules
+- [#1809](https://github.com/teambit/bit/issues/1809) avoid building components multiple times for compilers that support building dependencies
+- [#1807](https://github.com/teambit/bit/issues/1807) fix resolution of dependency when 2 files require it and one of them using alias
+
+## [14.1.4-dev.9] - 2019-07-10
+
+- [#1789](https://github.com/teambit/bit/issues/1789) prevent removal of peer-dependencies from capsule
+- [#1799](https://github.com/teambit/bit/issues/1799) strip shared directory before writing files into the capsule
+- [#1798](https://github.com/teambit/bit/issues/1798) fix replacing the component to full ids to work for all cases
+- [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
+
+## [14.1.4-dev.8] - 2019-07-07
+
+- [#1770](https://github.com/teambit/bit/issues/1770) update dependency link files when bundling them
+- [#1663](https://github.com/teambit/bit/issues/1663) allow compilers to get the capsule ready with dependencies built in a topological order
+- [#1788](https://github.com/teambit/bit/issues/1788) can't update the `pacakge.json` props from compiler who uses capsule
+
+## [14.1.4-dev.7] - 2019-07-03
+
+- await for a promise calls on post-add (one) hook
+
+## [14.1.4-dev.6] - 2019-07-02
+
+- fix require statements to an internal package file to not include extensions if they're [.js, .ts, .tsx, .jsx]
+- [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file
+- change dependency links generated when dependencies are saved as components to be module paths and not relative paths
 - add a custom entry point file for Angular components
 - [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing
 - [#1752](https://github.com/teambit/bit/issues/1752) fix dependency links generation when originally there were multiple link files
+- await for a promise calls on post-add (many) hook
 
 ## [14.1.4-dev.5] - 2019-06-25
 

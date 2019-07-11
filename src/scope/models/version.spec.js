@@ -299,5 +299,13 @@ describe('Version', () => {
       version.bindingPrefix = {};
       expect(validateFunc).to.throw('to be string, got object');
     });
+    it('should throw when packageJsonChangedProps tries to override built-in package.json prop', () => {
+      version.packageJsonChangedProps = { main: 'my-new-main.js' };
+      expect(validateFunc).to.throw('the packageJsonChangedProps should not override the prop main');
+    });
+    it('should throw when packageJsonChangedProps is not an object', () => {
+      version.packageJsonChangedProps = [1, 2, 3, 4];
+      expect(validateFunc).to.throw('expected packageJsonChangedProps to be object, got array');
+    });
   });
 });

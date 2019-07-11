@@ -19,9 +19,9 @@ A clear and concise description of the issue.
 
 ### Steps to Reproduce
 
-  1.
-  1.
-  1.
+1.
+1.
+1.
 
 ### Expected Behavior
 
@@ -33,12 +33,12 @@ If applicable, add screenshots, exceptions, and logs to help explain your proble
 
 ### Specifications
 
-  - Bit version:
-  - Node version:
-  - npm / yarn version:
-  - Platform:
-  - Bit compiler (include version):
-  - Bit tester (include version):
+- Bit version:
+- Node version:
+- npm / yarn version:
+- Platform:
+- Bit compiler (include version):
+- Bit tester (include version):
 
 ### Additional context
 

@@ -1,11 +1,8 @@
-import R from 'ramda';
 import fs from 'fs-extra';
 import path from 'path';
 import chai, { expect } from 'chai';
-import Helper from '../e2e-helper';
+import Helper, { FileStatusWithoutChalk } from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
-import { FileStatus } from '../../src/consumer/versions-ops/merge-version';
-import { removeChalkCharacters } from '../../src/utils';
 import { MissingBitMapComponent } from '../../src/consumer/bit-map/exceptions';
 
 chai.use(require('chai-fs'));
@@ -15,10 +12,6 @@ const barFooV2 = "module.exports = function foo() { return 'got foo v2'; };";
 const barFooV3 = "module.exports = function foo() { return 'got foo v3'; };";
 const barFooV4 = "module.exports = function foo() { return 'got foo v4'; };";
 const successOutput = 'successfully merged components';
-// eslint-disable-next-line import/prefer-default-export
-export const FileStatusWithoutChalk = R.fromPairs(
-  Object.keys(FileStatus).map(status => [status, removeChalkCharacters(FileStatus[status])])
-);
 
 describe('bit merge command', function () {
   this.timeout(0);

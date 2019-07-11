@@ -34,7 +34,7 @@ import { BEFORE_MIGRATION, BEFORE_RUNNING_BUILD, BEFORE_RUNNING_SPECS } from '..
 import logger from '../logger/logger';
 import type Component from '../consumer/component/consumer-component';
 import { RemovedObjects } from './removed-components';
-import DependencyGraph from './graph/graph';
+import DependencyGraph from './graph/scope-graph';
 import RemoveModelComponents from './component-ops/remove-model-components';
 import Dists from '../consumer/component/sources/dists';
 import SpecsResults from '../consumer/specs-results';

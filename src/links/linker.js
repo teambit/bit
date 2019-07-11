@@ -15,7 +15,6 @@ import DataToPersist from '../consumer/component/sources/data-to-persist';
 import { BitIds } from '../bit-id';
 import ComponentsList from '../consumer/component/components-list';
 import BitMap from '../consumer/bit-map/bit-map';
-import PackageJsonFile from '../consumer/component/package-json-file';
 
 export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksResult[]> {
   const componentsIds = consumer.bitmapIds;
@@ -28,32 +27,38 @@ export async function linkAllToNodeModules(consumer: Consumer): Promise<LinksRes
 export async function getLinksInDistToWrite(
   component: Component,
   componentMap: ComponentMap,
-  consumer: Consumer
+  consumer: ?Consumer,
+  bitMap: BitMap,
+  componentWithDependencies?: ComponentWithDependencies
 ): Promise<DataToPersist> {
-  const componentWithDeps: ComponentWithDependencies = await component.toComponentWithDependencies(consumer);
+  if (!componentWithDependencies && !consumer) {
+    throw new Error('getLinksInDistToWrite expects either consumer or componentWithDependencies to be defined');
+  }
+  const componentWithDeps: ComponentWithDependencies = // $FlowFixMe
+    componentWithDependencies || (await component.toComponentWithDependencies(consumer));
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
     [componentWithDeps],
     consumer,
     false,
-    consumer.bitMap
+    bitMap
   );
   const newMainFile = pathNormalizeToLinux(component.dists.calculateMainDistFile(component.mainFile));
   const rootDir = componentMap.rootDir;
   if (!rootDir) {
     throw new GeneralError('getLinksInDistToWrite should get called on imported components only');
   }
-  const nodeModuleLinker = new NodeModuleLinker([component], consumer, consumer.bitMap);
+  const nodeModuleLinker = new NodeModuleLinker([component], consumer, bitMap);
   const nodeModuleLinks = await nodeModuleLinker.getLinks();
   const dataToPersist = new DataToPersist();
   dataToPersist.merge(nodeModuleLinks);
   dataToPersist.merge(componentsDependenciesLinks);
-  const packageJsonFile = await PackageJsonFile.load(rootDir);
-  if (packageJsonFile.fileExist) {
+  const packageJsonFile = component.packageJsonFile;
+  if (packageJsonFile) {
     packageJsonFile.addOrUpdateProperty('main', newMainFile);
     dataToPersist.addFile(packageJsonFile.toJSONFile());
   } else {
     // if package.json doesn't exist, we can't use its 'main' property to point to the entry point
-    const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer);
+    const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, bitMap);
     dataToPersist.addManyFiles(entryPoints);
   }
   return dataToPersist;

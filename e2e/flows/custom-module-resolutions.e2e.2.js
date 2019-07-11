@@ -45,6 +45,22 @@ describe('custom module resolutions', function () {
       expect(dependency.relativePaths[0].importSource).to.equal('utils/is-string');
       expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
     });
+    describe('isolation the component using the capsule', () => {
+      let capsuleDir;
+      before(() => {
+        capsuleDir = helper.generateRandomTmpDirName();
+        helper.runCmd(`bit isolate bar/foo --use-capsule --directory ${capsuleDir}`);
+      });
+      it('should not delete the dependencies file paths', () => {
+        const packageJson = helper.readPackageJson(capsuleDir);
+        expect(packageJson.dependencies)
+          .to.have.property('@bit/utils.is-string')
+          .that.equal(path.normalize('file:.dependencies/utils/is-string'));
+        expect(packageJson.dependencies)
+          .to.have.property('@bit/utils.is-type')
+          .that.equal(path.normalize('file:.dependencies/utils/is-type'));
+      });
+    });
     describe('importing the component', () => {
       before(() => {
         helper.tagAllComponents();
