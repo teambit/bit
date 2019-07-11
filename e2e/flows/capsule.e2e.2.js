@@ -197,6 +197,14 @@ describe('capsule', function () {
         const result = helper.runCmd('node app.js');
         expect(result.trim()).to.equal('got is-type and got is-string and got foo');
       });
+      it('should not build the same component twice', () => {
+        const result = helper.build('bar/foo');
+        // this compiler console.log a message for every component it builds. this makes sure that
+        // for utils/is-type there is only one message.
+        const regex = new RegExp('generated a capsule for utils/is-type', 'g');
+        const count = result.match(regex);
+        expect(count).to.have.lengthOf(1);
+      });
     });
   });
   describe('tag with capsule compiler that saves link files into the dists', () => {
