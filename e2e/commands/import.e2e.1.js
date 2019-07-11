@@ -793,17 +793,6 @@ describe('bit import', function () {
      *
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
-     *
-     * Expected structure after importing bar/foo in another project
-     * components/bar/foo/bar/foo.js
-     * components/bar/foo/index.js (generated index file)
-     * components/bar/foo/utils/is-string.js (generated link file)
-     * components/.dependencies/utils/is-string/scope-name/version-number/utils/index.js (generated index file - point to is-string.js)
-     * components/.dependencies/utils/is-string/scope-name/version-number/utils/is-string.js
-     * components/.dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
-     * components/.dependencies/utils/is-type/scope-name/version-number/utils/index.js (generated index file - point to is-type.js)
-     * components/.dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
-     *
      */
     let localConsumerFiles;
     let clonedLocalScope;
@@ -826,6 +815,9 @@ describe('bit import', function () {
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
       expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should not generate index.js files because package.json main already takes care of finding the entry-point', () => {
+      localConsumerFiles.forEach(file => expect(file).to.not.include('index.js'));
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1387,7 +1379,9 @@ console.log(barFoo.default());`;
     });
     it('should not allow tagging the component', () => {
       expect(output).to.have.string(
-        `error: issues found with the following component dependencies\n\n${helper.remoteScope}/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
+        `error: issues found with the following component dependencies\n\n${
+          helper.remoteScope
+        }/utils/is-string@0.0.1\ncomponents with relative import statements (please use absolute paths for imported components): \n     is-string.js -> utils/is-type\n\n`
       );
     });
   });
