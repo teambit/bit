@@ -46,7 +46,7 @@ export default class AbstractVinyl extends Vinyl {
     }
     logger.debug(msg);
     if (!override && fs.existsSync(filePath)) return null;
-    await fs.outputFile(filePath, eol.auto(this.contents, this.relative));
+    await fs.outputFile(filePath, eol.auto(this.contents));
     return filePath;
   }
 
@@ -80,7 +80,7 @@ export default class AbstractVinyl extends Vinyl {
    */
   toSourceAsLinuxEOL(): Source {
     // $FlowFixMe
-    return Source.from(eol.lf(this.contents, this.relative));
+    return Source.from(eol.lf(this.contents));
   }
 
   async _getStatIfFileExists(): Promise<?fs.Stats> {
