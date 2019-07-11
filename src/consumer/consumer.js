@@ -647,12 +647,12 @@ export default class Consumer {
 
     const autoTaggedComponents = autoTaggedResults.map(r => r.component);
     const allComponents = [...taggedComponents, ...autoTaggedComponents];
-    await this._updateComponentsVersions(allComponents);
+    await this.updateComponentsVersions(allComponents);
 
     return { taggedComponents, autoTaggedResults };
   }
 
-  _updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
+  updateComponentsVersions(components: Array<ModelComponent | Component>): Promise<any> {
     const getPackageJsonDir = (componentMap: ComponentMap, bitId: BitId, bindingPrefix: string): ?PathRelative => {
       if (componentMap.rootDir) return componentMap.rootDir;
       // it's author
@@ -661,7 +661,8 @@ export default class Consumer {
     };
 
     const updateVersionsP = components.map((component) => {
-      const id: BitId = component instanceof ModelComponent ? component.toBitIdWithLatestVersion() : component.id;
+      const id: BitId =
+        component instanceof ModelComponent ? component.toBitIdWithLatestVersionAllowNull() : component.id;
       this.bitMap.updateComponentId(id);
       const componentMap = this.bitMap.getComponent(id);
       const packageJsonDir = getPackageJsonDir(componentMap, id, component.bindingPrefix);

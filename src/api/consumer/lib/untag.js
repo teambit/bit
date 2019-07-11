@@ -1,6 +1,5 @@
 // @flow
 import { loadConsumer, Consumer } from '../../../consumer';
-import { BitId } from '../../../bit-id';
 import {
   removeLocalVersion,
   removeLocalVersionsForAllComponents,
@@ -8,22 +7,6 @@ import {
 } from '../../../scope/component-ops/untag-component';
 import type { untagResult } from '../../../scope/component-ops/untag-component';
 import hasWildcard from '../../../utils/string/has-wildcard';
-
-/**
- * in case the untagged version is the current version in bitmap, update to the latest version
- * or, remove the version completely in case all versions were untagged
- */
-function updateBitMap(consumer: Consumer, untagResults: untagResult[]): void {
-  untagResults.forEach((result: untagResult) => {
-    const { id, versions, component } = result;
-    const currentId: BitId = consumer.bitMap.getBitId(id, { ignoreVersion: true });
-    if (currentId.hasVersion() && versions.includes(currentId.version)) {
-      const newVersion = component.versionArray.length ? component.latest() : null;
-      const newId = currentId.changeVersion(newVersion);
-      consumer.bitMap.updateComponentId(newId);
-    }
-  });
-}
 
 export default (async function unTagAction(version?: string, force: boolean, id?: string): Promise<untagResult[]> {
   const consumer: Consumer = await loadConsumer();
@@ -44,7 +27,8 @@ export default (async function unTagAction(version?: string, force: boolean, id?
   };
   const results = await untag();
   await consumer.scope.objects.persist();
-  updateBitMap(consumer, results);
+  const components = results.map(result => result.component);
+  await consumer.updateComponentsVersions(components);
   await consumer.onDestroy();
   return results;
 });
