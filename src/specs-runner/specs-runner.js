@@ -1,4 +1,5 @@
 /** @flow */
+import path from 'path';
 import R from 'ramda';
 import execa from 'execa';
 import deserializeError from 'deserialize-error';
@@ -86,12 +87,32 @@ async function runOnChildProcess({
   if (includeUnmodified) {
     args.push('--all');
   }
+  let stdout;
   try {
-    const bitExecName = process.env.BIT_EXEC_NAME || 'bit';
-    const { stdout } = await execa(bitExecName, args);
+    // process.env.npm_config_bit_bin is used for e2e tests, see e2e helper for more details
+    // process.env.BIT_EXEC_NAME is used for local debugging
+    const bitExecName = process.env.BIT_EXEC_NAME || process.env.npm_config_bit_bin || process.argv[1];
+    let execName = process.title;
+    if (execName === 'node') {
+      execName = process.argv[1];
+      const res = await execa(bitExecName, args);
+      stdout = res.stdout;
+      // Ignoring line in flow since pkg is not exist on process by the node flow defintion
+      // Since v0.68 of flow it won't allow access to unknown props in conditions.
+      // see more here: https://medium.com/flow-type/new-flow-errors-on-unknown-property-access-in-conditionals-461da66ea10
+      // $FlowFixMe
+    } else if (process.pkg) {
+      // const entryPoint = process.pkg.entrypoint;
+      const entryPoint = process.argv[1];
+      const res = await execa.node(entryPoint, args);
+      stdout = res.stdout;
+    }
+    if (!stdout) {
+      return null;
+    }
     const parsedResults = JSON.parse(stdout);
     const deserializedResults = deserializeResults(parsedResults);
-    if (!deserializedResults) return undefined;
+    if (!deserializedResults) return null;
     if (deserializedResults.type === 'error') {
       throw new Error(deserializedResults.error);
     }
