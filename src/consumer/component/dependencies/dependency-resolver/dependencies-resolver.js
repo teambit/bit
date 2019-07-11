@@ -173,6 +173,16 @@ export default class DependencyResolver {
    * generating links upon import:
    * sourceRelativePath - location of the link file.
    * destinationRelativePath - destination written inside the link file.
+   *
+   * When a dependency is found in a regular (implementation) file, it goes to `dependencies`. If
+   * it found on a test file, it goes to `devDependencies`. Same goes for environment dependencies,
+   * such ad `compilerDependencies` and `testerDependencies`.
+   * Similarly, when a package is found in a regular file, it goes to `packageDependencies`. When
+   * if found in a test file, it goes to `devPackageDependencies`.
+   * An exception for the above is when a package is required in a regular or test file but is also
+   * mentioned in the `package.json` file as a peerDependency, in that case, the package is added
+   * to `peerPackageDependencies` and removed from other places. Unless this package is overridden
+   * and marked as ignored in the consumer or component config file.
    */
   populateDependencies(files: string[], testsFiles: string[]) {
     files.forEach((file: string) => {
