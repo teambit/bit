@@ -27,7 +27,7 @@ export default (async function diffFiles(
       // diff has been found, return the diff results.
       return err.stdout;
     }
-    if (err.code === 'ENOENT') {
+    if (err.exitCodeName === 'ENOENT') {
       logger.error(`failed running Git at ${gitExecutablePath}. full command: ${err.cmd}`);
       throw new GitNotFound(gitExecutablePath, err);
     }
