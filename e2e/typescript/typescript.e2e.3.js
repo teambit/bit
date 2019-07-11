@@ -407,6 +407,7 @@ export class List extends React.Component {
           helper.getClonedLocalScope(scopeAfterAdding);
           helper.importDummyCompiler('bundle');
           helper.tagAllComponents();
+          helper.reInitRemoteScope();
           helper.exportAllComponents();
           helper.reInitLocalScope();
           helper.addRemoteScope();
