@@ -10,7 +10,7 @@ import { COMPONENT_ORIGINS } from '../../constants';
 export default (async function loadFlattenedDependencies(
   consumer: Consumer,
   component: Component,
-  shouldClone: boolean = false
+  forCapsule: boolean = false
 ): Promise<ComponentWithDependencies> {
   const dependencies = await loadManyDependencies(component.dependencies.getAllIds());
   const devDependencies = await loadManyDependencies(component.devDependencies.getAllIds());
@@ -31,17 +31,17 @@ export default (async function loadFlattenedDependencies(
   });
 
   async function loadManyDependencies(dependenciesIds: BitId[]): Promise<Component[]> {
-    const dependenciesComponents = await Promise.all(dependenciesIds.map(dep => loadDependency(dep)));
-    return shouldClone ? dependenciesComponents.map(dep => dep.clone()) : dependenciesComponents;
+    return Promise.all(dependenciesIds.map(dep => loadDependency(dep)));
   }
 
   async function loadDependency(dependencyId: BitId): Promise<Component> {
     const componentMap = consumer.bitMap.getComponentIfExist(dependencyId);
     const couldBeModified = componentMap && componentMap.origin !== COMPONENT_ORIGINS.NESTED;
     if (couldBeModified) {
-      return consumer.loadComponent(dependencyId);
+      return forCapsule ? consumer.loadComponentForCapsule(dependencyId) : consumer.loadComponent(dependencyId);
     }
-    return consumer.loadComponentFromModel(dependencyId);
+    const componentFromModel = await consumer.loadComponentFromModel(dependencyId);
+    return forCapsule ? componentFromModel.clone() : componentFromModel;
   }
 
   async function loadFlattened(deps: Component[]) {
