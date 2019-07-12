@@ -21,6 +21,10 @@ import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
 import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
 import PackageJsonFile from '../consumer/component/package-json-file';
+import {
+  revertDirManipulationForPath,
+  getManipulateDirForConsumerComponent
+} from '../consumer/component-ops/manipulate-dir';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -132,15 +136,33 @@ export default class NodeModuleLinker {
   }
   /**
    * authored components are linked only when they were exported before
+   * the implementation here is tricky.
+   * the purpose of this link is for the author to be able to require its components using module
+   * path (such as `require('@bit/remote/component')`). so then, later on, the author could
+   * `bit eject` the component to remove it from the workspace and consumer it as an NPM package.
+   * the problem is that as an NPM package, the paths are reduced (sharedDir is stripped), so we
+   * have to mimic those paths here in the node_modules links.
+   * This becomes tricky because we must work with two paths in parallel. The link file should be
+   * written after stripping sharedDir, however, it should point to the original file, which was
+   * not stripped. To achieve this, we clone the original component, stripping the sharedDir, so
+   * then we get two components. The original and the clone with the modified paths.
    */
   _populateAuthoredComponentsLinks(component: Component): void {
-    const componentId = component.id;
-    if (!componentId.scope) return; // scope is a must to generate the link
-    const filesToBind = component.componentMap.getFilesRelativeToConsumer();
+    if (!component.id.scope) return; // scope is a must to generate the link
+    const clonedComponent = component.clone();
+    const manipulateDirData = getManipulateDirForConsumerComponent(clonedComponent);
+    clonedComponent._wasOriginallySharedDirStripped = false;
+    clonedComponent.stripOriginallySharedDir([manipulateDirData]);
+    const componentId = clonedComponent.id;
+    const filesToBind = clonedComponent.files.map(f => f.relative);
     component.dists.updateDistsPerWorkspaceConfig(component.id, this.consumer, component.componentMap);
     filesToBind.forEach((file) => {
-      const isMain = file === component.componentMap.mainFile;
-      const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
+      const fileWithoutManipulation = revertDirManipulationForPath(
+        path.normalize(file),
+        manipulateDirData.originallySharedDir,
+        manipulateDirData.wrapDir
+      );
+      const possiblyDist = component.dists.calculateDistFileForAuthored(fileWithoutManipulation, this.consumer);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
       const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
@@ -155,11 +177,18 @@ export default class NodeModuleLinker {
         this.dataToPersist.addFile(linkFile);
       } else {
         // it's an un-supported file, create a symlink instead
-        this.dataToPersist.addSymlink(Symlink.makeInstance(file, dest, componentId));
+        this.dataToPersist.addSymlink(Symlink.makeInstance(fileWithoutManipulation, dest, componentId));
       }
     });
-    this._createPackageJsonForAuthor(component);
+    // needed to set areDistsInsideComponentDir correctly
+    clonedComponent.dists.updateDistsPerWorkspaceConfig(
+      clonedComponent.id,
+      this.consumer,
+      clonedComponent.componentMap
+    );
+    this._createPackageJsonForAuthor(clonedComponent);
   }
+
   /**
    * for IMPORTED and NESTED components
    */
