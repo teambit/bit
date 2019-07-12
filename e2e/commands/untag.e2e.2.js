@@ -247,6 +247,26 @@ describe('bit untag command', function () {
         it('should show an error', () => {
           expect(output).to.have.string(`unable to untag ${helper.remoteScope}/utils/is-type`);
         });
+        describe('tagging after the export, then, un-tagging the local tag', () => {
+          let packageJsonUtilsIsStringPath;
+          before(() => {
+            helper.tagScope('2.0.0');
+            helper.tagScope('2.0.1');
+            // an intermediate step, make sure the package.json is updated to that version
+            packageJsonUtilsIsStringPath = path.join(
+              helper.localScopePath,
+              `node_modules/@bit/${helper.remoteScope}.utils.is-string`
+            );
+            const packageJson = helper.readPackageJson(packageJsonUtilsIsStringPath);
+            expect(packageJson.version).to.equal('2.0.1');
+
+            helper.untag('-a 2.0.1');
+          });
+          it('should change the version in the author package.json', () => {
+            const packageJsonUtilsIsString = helper.readPackageJson(packageJsonUtilsIsStringPath);
+            expect(packageJsonUtilsIsString.version).to.equal('2.0.0');
+          });
+        });
       });
     });
     describe('untag all components', () => {
