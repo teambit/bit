@@ -11,7 +11,7 @@ function compile(files, distPath) {
       distFile.path = path.join(distPath, file.relative);
       return distFile;
     });
-    return { dists, packageJson: { foo: 'bar' } };
+    return { dists, packageJson: { foo: 'bar', dynamicValue: `{COMPONENT_DIST_PATH}/${files[0].relative}` } };
 }
 
 module.exports = {

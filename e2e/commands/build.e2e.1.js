@@ -1,6 +1,7 @@
 import chai, { expect } from 'chai';
 import path from 'path';
 import Helper from '../e2e-helper';
+import { COMPONENT_DIST_PATH_TEMPLATE } from '../../src/constants';
 
 const assertArrays = require('chai-arrays');
 chai.use(require('chai-fs'));
@@ -214,16 +215,32 @@ describe('bit build', function () {
             .that.equal('bar');
         });
         describe('importing the component to a new workspace', () => {
+          let packageJson;
           before(() => {
             helper.exportAllComponents();
             helper.reInitLocalScope();
             helper.addRemoteScope();
             helper.importComponent('bar/foo');
+            packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
           });
           it('should write the added props into the component package.json', () => {
-            const packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
             expect(packageJson).to.have.property('foo');
             expect(packageJson.foo).equal('bar');
+          });
+          it(`should search for ${COMPONENT_DIST_PATH_TEMPLATE} template and replace with the path to the dist`, () => {
+            expect(packageJson).to.have.property('dynamicValue');
+            expect(packageJson.dynamicValue).equal('dist/bar/foo.js');
+          });
+          describe('importing when the dist is outside the components dir', () => {
+            before(() => {
+              helper.modifyFieldInBitJson('dist', { target: 'dist', entry: 'src' });
+              helper.importComponent('bar/foo -O');
+              packageJson = helper.readPackageJson(path.join(helper.localScopePath, 'components/bar/foo'));
+            });
+            it(`should search for ${COMPONENT_DIST_PATH_TEMPLATE} template and replace with the correct path of the dist`, () => {
+              expect(packageJson).to.have.property('dynamicValue');
+              expect(packageJson.dynamicValue).equal('../../../dist/components/bar/foo/bar/foo.js');
+            });
           });
         });
       });
