@@ -91,6 +91,7 @@ install:
   - npm config ls
   - ps: Install-Product node 10 x64 # since upgrading to babel 7, AppVeyor fails when node is 6
   - ps: npm i -g npm@6.9.0
+  - cmd: del package-lock.json
   - "npm i"
 
 build_script:
