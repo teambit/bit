@@ -143,10 +143,7 @@ export default class Helper {
   }
 
   generateRandomTmpDirName() {
-    const randomStr = generateRandomStr();
-    // never start the str with 'x', otherwise, when injected into a file it may throw
-    // "SyntaxError: Invalid hexadecimal escape sequence"
-    return path.join(this.e2eDir, randomStr.startsWith('x') ? randomStr.replace('x', 'a') : randomStr);
+    return path.join(this.e2eDir, generateRandomStr());
   }
   // #endregion
 

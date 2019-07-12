@@ -174,12 +174,13 @@ describe('capsule', function () {
         helper.deleteFile('dist');
         const compilerPath = path.join('.bit/components/compilers/dummy', helper.envScope, '0.0.1/compiler.js');
         const compilerContent = helper.readFile(compilerPath);
-        capsuleDir = helper.generateRandomTmpDirName();
-        const compilerWithBuildDependenciesEnabled = compilerContent
-          .replace('shouldBuildDependencies: false', 'shouldBuildDependencies: true')
-          .replace('targetDir,', `targetDir: '${capsuleDir}',`);
+        const compilerWithBuildDependenciesEnabled = compilerContent.replace(
+          'shouldBuildDependencies: false',
+          'shouldBuildDependencies: true'
+        );
         helper.outputFile(compilerPath, compilerWithBuildDependenciesEnabled);
-        helper.build('bar/foo --no-cache');
+        const buildOutput = helper.build('bar/foo --no-cache');
+        capsuleDir = capsuleCompiler.getCapsuleDirByComponentName(buildOutput, 'bar/foo');
       });
       it('should write all dependencies dists into the capsule', () => {
         const isStringDist = path.join(capsuleDir, '.dependencies/utils/is-string/dist/is-string.js');
