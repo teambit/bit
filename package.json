@@ -21,7 +21,7 @@
     "mocha-circleci": "mocha --require @babel/register --reporter mocha-circleci-reporter",
     "e2e-test": "mocha --require @babel/register ./e2e/**/*.e2e*.js",
     "e2e-test:appveyor1": "mocha --require @babel/register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.1.js 2> output.err",
-    "e2e-test:appveyor2": "mocha --require @babel/register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.2.js --debug --reporter-options appveyorBatchSize=1",
+    "e2e-test:appveyor2": "set npm_config_debug=true && mocha --require @babel/register --reporter mocha-appveyor-reporter ./e2e/**/*e2e.2.js --reporter-options appveyorBatchSize=1",
     "e2e-test:appveyor3": "mocha --require @babel/register --reporter mocha-appveyor-reporter ./e2e/**/*.e2e.3.js 2> output.err",
     "e2e-test-circle": "mocha --require @babel/register --reporter mocha-circleci-reporter ./e2e/**/*.e2e*.js",
     "performance-test": "mocha --require @babel/register ./e2e/performance/*.performance*.js",
