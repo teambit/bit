@@ -205,6 +205,20 @@ describe('capsule', function () {
         const count = result.match(regex);
         expect(count).to.have.lengthOf(1);
       });
+      describe('tag, export, tag, untag then tag', () => {
+        before(() => {
+          helper.tagAllComponents();
+          helper.exportAllComponents();
+          helper.tagScope('2.0.0');
+          helper.tagScope('2.0.1');
+          helper.untag('-a 2.0.1');
+        });
+        // @see https://github.com/teambit/bit/issues/1817
+        it('should not throw an error componentNotFound', () => {
+          const tagFunc = () => helper.tagComponent('utils/is-string -f');
+          expect(tagFunc).to.not.throw();
+        });
+      });
     });
   });
   describe('tag with capsule compiler that saves link files into the dists', () => {

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - update execa to v2.0.3
+- [#1792](https://github.com/teambit/bit/issues/1792) don't generate entry-point files for nested dependencies when their `package.json` is written
+- [#1817](https://github.com/teambit/bit/issues/1817) fix ComponentNotFound error when tagging after export & tag & untag for author using compiler that builds dependencies
 
 ## [14.1.4-dev.10] - 2019-07-11
 

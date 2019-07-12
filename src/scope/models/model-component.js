@@ -53,6 +53,8 @@ export type ComponentProps = {
   state?: State // get deleted after export
 };
 
+const VERSION_ZERO = '0.0.0';
+
 /**
  * we can't rename the class as ModelComponent because old components are already saved in the model
  * with 'Component' in their headers. see object-registrar.types()
@@ -133,7 +135,7 @@ export default class Component extends BitObject {
   }
 
   latest(): string {
-    if (empty(this.versions)) return '0.0.0';
+    if (empty(this.versions)) return VERSION_ZERO;
     return semver.maxSatisfying(this.listVersions(), '*');
   }
 
@@ -147,7 +149,7 @@ export default class Component extends BitObject {
    * @memberof Component
    */
   latestExisting(repository: Repository): string {
-    if (empty(this.versions)) return '0.0.0';
+    if (empty(this.versions)) return VERSION_ZERO;
     const versions = this.listVersions('ASC');
     let version = null;
     let versionStr = null;
@@ -155,7 +157,7 @@ export default class Component extends BitObject {
       versionStr = versions.pop();
       version = this.loadVersionSync(versionStr, repository, false);
     }
-    return versionStr || '0.0.0';
+    return versionStr || VERSION_ZERO;
   }
 
   collectLogs(repo: Repository): Promise<{ [number]: { message: string, date: string, hash: string } }> {
@@ -209,6 +211,11 @@ export default class Component extends BitObject {
 
   toBitIdWithLatestVersion(): BitId {
     return new BitId({ scope: this.scope, name: this.name, version: this.latest() });
+  }
+
+  toBitIdWithLatestVersionAllowNull(): BitId {
+    const id = this.toBitIdWithLatestVersion();
+    return id.version === VERSION_ZERO ? id.changeVersion(null) : id;
   }
 
   toObject() {

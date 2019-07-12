@@ -103,16 +103,6 @@ describe('typescript', function () {
         const expectedLocation = path.join('components', 'bar', 'foo', 'index.js');
         expect(localConsumerFiles).to.not.include(expectedLocation);
       });
-      it('should create an index.js file on the is-string dependency root dir pointing to the main file', () => {
-        const expectedLocation = path.join(isStringPath, 'index.js');
-        expect(localConsumerFiles).to.include(expectedLocation);
-        const indexPath = path.join(helper.localScopePath, expectedLocation);
-        const indexFileContent = fs.readFileSync(indexPath).toString();
-        expect(indexFileContent).to.have.string(
-          "module.exports = require('./dist/is-string');",
-          'dependency index file point to the wrong place'
-        );
-      });
       it('should point the main file key in the is-string dependency package.json to the dist main file', () => {
         const packageJsonFolder = path.join(helper.localScopePath, isStringPath);
         const packageJsonContent = helper.readPackageJson(packageJsonFolder);
@@ -121,16 +111,6 @@ describe('typescript', function () {
           version: '0.0.1',
           main: 'dist/is-string.js'
         });
-      });
-      it('should create an index.js file on the is-type dependency root dir pointing to the main file', () => {
-        const expectedLocation = path.join(isTypePath, 'index.js');
-        expect(localConsumerFiles).to.include(expectedLocation);
-        const indexPath = path.join(helper.localScopePath, expectedLocation);
-        const indexFileContent = fs.readFileSync(indexPath).toString();
-        expect(indexFileContent).to.have.string(
-          "module.exports = require('./dist/is-type');",
-          'dependency index file point to the wrong place'
-        );
       });
       it('should point the main file key in the is-type dependency package.json to the dist main file', () => {
         const packageJsonFolder = path.join(helper.localScopePath, isTypePath);
