@@ -56,11 +56,9 @@ export async function getLinksInDistToWrite(
   if (packageJsonFile) {
     packageJsonFile.addOrUpdateProperty('main', newMainFile);
     dataToPersist.addFile(packageJsonFile.toJSONFile());
-  } else {
-    // if package.json doesn't exist, we can't use its 'main' property to point to the entry point
-    const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, bitMap);
-    dataToPersist.addManyFiles(entryPoints);
   }
+  const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, bitMap);
+  dataToPersist.addManyFiles(entryPoints);
   return dataToPersist;
 }
 
@@ -139,16 +137,14 @@ export async function getAllComponentsLinks({
   writtenDependencies,
   consumer,
   bitMap,
-  createNpmLinkFiles,
-  writePackageJson
+  createNpmLinkFiles
 }: {
   componentsWithDependencies: ComponentWithDependencies[],
   writtenComponents: Component[],
   writtenDependencies: ?(Component[]),
   consumer: ?Consumer,
   bitMap: BitMap,
-  createNpmLinkFiles: boolean,
-  writePackageJson: boolean
+  createNpmLinkFiles: boolean
 }): Promise<DataToPersist> {
   const dataToPersist = new DataToPersist();
   const componentsDependenciesLinks = linkGenerator.getComponentsDependenciesLinks(
@@ -164,13 +160,10 @@ export async function getAllComponentsLinks({
     );
     dataToPersist.addManyFiles(R.flatten(entryPoints));
   }
-  if (!writePackageJson) {
-    // no need for entry-point file if package.json is written.
-    const entryPoints = writtenComponents.map(component =>
-      linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
-    );
-    dataToPersist.addManyFiles(R.flatten(entryPoints));
-  }
+  const entryPoints = writtenComponents.map(component =>
+    linkGenerator.getEntryPointsForComponent(component, consumer, bitMap)
+  );
+  dataToPersist.addManyFiles(R.flatten(entryPoints));
   const bitAngularEntryPoints = writtenComponents
     .map(component => linkGenerator.getEntryPointForAngularComponent(component, consumer, bitMap))
     .filter(x => x); // remove nulls when components are not Angular

@@ -20,7 +20,7 @@ import type Consumer from '../consumer/consumer';
 import ComponentMap from '../consumer/bit-map/component-map';
 import type { PathOsBased, PathOsBasedAbsolute } from '../utils/path';
 import postInstallTemplate from '../consumer/component/templates/postinstall.default-template';
-import { getLinkToFileContent } from './link-content';
+import { getLinkToFileContent, JAVASCRIPT_FLAVORS_EXTENSIONS } from './link-content';
 import DependencyFileLinkGenerator from './dependency-file-link-generator';
 import type { LinkFileType } from './dependency-file-link-generator';
 import LinkFile from './link-file';
@@ -366,14 +366,21 @@ function addCustomResolveAliasesToPackageJson(component: Component, links: LinkF
  * Relevant for IMPORTED and NESTED only
  */
 function getEntryPointsForComponent(component: Component, consumer: ?Consumer, bitMap: BitMap): LinkFile[] {
-  const files = [];
   const componentMap = bitMap.getComponent(component.id);
-  // $FlowFixMe
-  const componentRoot: string = component.writtenPath || componentMap.rootDir;
   if (componentMap.origin === COMPONENT_ORIGINS.AUTHORED) return [];
   const mainFile = component.dists.calculateMainDistFile(component.mainFile);
-  const indexName = getIndexFileName(mainFile); // Move to bit-javascript
+  const mainFileExt = getExt(mainFile);
+  if (JAVASCRIPT_FLAVORS_EXTENSIONS.includes(mainFileExt) && component.packageJsonFile) {
+    // throw new Error('hi')
+    // if the main file is a javascript kind of file and the component has package.json file, no
+    // need for an entry-point file because the "main" attribute of package.json takes care of that
+    return [];
+  }
+  const files = [];
+  const indexName = getIndexFileName(mainFile);
   const entryPointFileContent = getLinkToFileContent(`./${mainFile}`);
+  // $FlowFixMe
+  const componentRoot: string = component.writtenPath || componentMap.rootDir;
   const entryPointPath = path.join(componentRoot, indexName);
   if (
     !component.dists.isEmpty() &&
