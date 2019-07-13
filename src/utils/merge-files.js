@@ -55,11 +55,12 @@ export default (async function mergeFiles({
     mergeResult.output = result.stdout;
     return mergeResult;
   } catch (err) {
-    if (err.code && Number.isInteger(err.code) && err.stdout) {
+    if (err.exitCode && Number.isInteger(err.exitCode) && err.stdout) {
+      // merge has been succeeded, return the diff results.
       mergeResult.conflict = err.stdout;
       return mergeResult;
     }
-    if (err.code === 'ENOENT') {
+    if (err.exitCodeName === 'ENOENT') {
       logger.error(`failed running Git at ${gitExecutablePath}. full command: ${err.cmd}`);
       throw new GitNotFound(gitExecutablePath, err);
     }
