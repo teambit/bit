@@ -274,9 +274,8 @@ export default class ComponentWriter {
         `package.json has a dynamic value ${COMPONENT_DIST_PATH_TEMPLATE}, however, the dist root is not set`
       );
     }
-    // $FlowFixMe
     const distRelativeToPackageJson = getPathRelativeRegardlessCWD(
-      path.dirname(packageJson.filePath),
+      path.dirname(packageJson.filePath), // $FlowFixMe
       this.component.dists.distsRootDir
     );
     return Object.keys(packageJsonChangedProps).reduce((acc, key) => {
