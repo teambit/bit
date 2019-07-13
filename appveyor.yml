@@ -90,8 +90,8 @@ install:
   - ps: Set-Content $env:userprofile\.npmrc $npmrcContent
   - npm config ls
   - ps: Install-Product node 10 x64 # since upgrading to babel 7, AppVeyor fails when node is 6
-  - ps: npm i -g npm@latest
-  - "npm i"
+  - ps: npm i -g npm@6.9.0
+  - "npm ci"
 
 build_script:
   - "npm run build"

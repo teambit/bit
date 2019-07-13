@@ -70,7 +70,7 @@
     "ignore": "^3.3.7",
     "is-array-buffer-x": "^1.0.13",
     "is-glob": "^4.0.0",
-    "istextorbinary": "^2.2.1",
+    "isbinaryfile": "^4.0.2",
     "jfs": "^0.2.6",
     "lodash.assignwith": "^4.2.0",
     "lodash.groupby": "^4.6.0",
