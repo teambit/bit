@@ -21,6 +21,7 @@ import LinkFile from './link-file';
 import ComponentsList from '../consumer/component/components-list';
 import { preparePackageJsonToWrite } from '../consumer/component/package-json-utils';
 import PackageJsonFile from '../consumer/component/package-json-file';
+import { getPathRelativeRegardlessCWD } from '../utils/path';
 
 type LinkDetail = { from: string, to: string };
 export type LinksResult = {
@@ -142,7 +143,7 @@ export default class NodeModuleLinker {
       const isMain = file === component.componentMap.mainFile;
       const possiblyDist = component.dists.calculateDistFileForAuthored(path.normalize(file), this.consumer, isMain);
       const dest = path.join(getNodeModulesPathOfComponent(component.bindingPrefix, componentId), file);
-      const destRelative = this._getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
+      const destRelative = getPathRelativeRegardlessCWD(path.dirname(dest), possiblyDist);
       const fileContent = getLinkToFileContent(destRelative);
       if (fileContent) {
         const linkFile = LinkFile.load({
@@ -287,17 +288,6 @@ export default class NodeModuleLinker {
       this.bitMap
     );
     return componentsDependenciesLinks;
-  }
-
-  /**
-   * path.resolve uses current working dir.
-   * for us, the cwd is not important. a user may running bit command from an inner dir.
-   */
-  _getPathRelativeRegardlessCWD(from: PathOsBasedRelative, to: PathOsBasedRelative): PathLinuxRelative {
-    const fromLinux = pathNormalizeToLinux(from);
-    const toLinux = pathNormalizeToLinux(to);
-    // change them to absolute so path.relative won't consider the cwd
-    return pathRelativeLinux(`/${fromLinux}`, `/${toLinux}`);
   }
 
   /**

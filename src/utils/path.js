@@ -25,3 +25,14 @@ export function pathRelativeLinux(from: PathOsBased, to: PathOsBased): PathLinux
 export function pathResolveToLinux(arr: PathOsBased[]): PathLinux {
   return normalize(path.resolve(arr.join(',')));
 }
+
+/**
+ * path.resolve uses current working dir.
+ * sometimes the cwd is not important. a user may running bit command from an inner dir.
+ */
+export function getPathRelativeRegardlessCWD(from: PathOsBasedRelative, to: PathOsBasedRelative): PathLinuxRelative {
+  const fromLinux = pathNormalizeToLinux(from);
+  const toLinux = pathNormalizeToLinux(to);
+  // change them to absolute so path.relative won't consider the cwd
+  return pathRelativeLinux(`/${fromLinux}`, `/${toLinux}`);
+}
