@@ -113,6 +113,9 @@ async function runOnChildProcess({
     const deserializedResults = deserializeResults(parsedResults);
     if (!deserializedResults) return null;
     if (deserializedResults.type === 'error') {
+      if (deserializedResults.error instanceof Error) {
+        throw deserializedResults.error;
+      }
       throw new Error(deserializedResults.error);
     }
     return deserializedResults.results;
