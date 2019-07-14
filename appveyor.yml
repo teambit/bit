@@ -100,8 +100,8 @@ build_script:
   - "npm run build"
 
 after_build:
-  - "npm install"
   - "npm install -g pkg"
+  - "npm install"
   # installing v0.18.5 since newer versions (up to 0.20.1) currently not working on windows
   # see more here https://github.com/zeit/ncc/issues/439
   # - "npm install -g @zeit/ncc@0.18.5"
