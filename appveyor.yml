@@ -105,6 +105,8 @@ install:
 build_script:
   # no need for now, since the install script will do it for us
   # - "npm run build"
+  
+  # We move this into here since leaving the build step blank make problems..
   - "npm i"
 
 after_build:
