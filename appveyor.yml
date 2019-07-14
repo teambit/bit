@@ -39,7 +39,7 @@ for:
 cache:
   # - node_modules -> package.json, package-lock.json, appveyor.yml           # local npm modules
   # - '%APPDATA%\npm-cache -> package.json, package-lock.json, appveyor.yml'  # npm cache
-  - C:\pkg-cache -> package.json, package-lock.json, appveyor.yml
+  # - C:\pkg-cache -> package.json, package-lock.json, appveyor.yml
 
 environment:
   nodejs_version: "10.15.3"
