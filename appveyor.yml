@@ -101,12 +101,11 @@ install:
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - ps: Remove-Item package-lock.json
   - "npm install -g pkg"
-  - "npm i"
-  - "dir releases"
 
 build_script:
   # no need for now, since the install script will do it for us
   # - "npm run build"
+  - "npm i"
 
 after_build:
   # installing v0.18.5 since newer versions (up to 0.20.1) currently not working on windows
