@@ -24,7 +24,7 @@ const fileNames = {
 };
 
 const binaryDir = path.join(__dirname, '..', 'bin');
-const binaryName = IS_WINDOWS ? 'bit.ext' : 'bit';
+const binaryName = IS_WINDOWS ? 'bit.exe' : 'bit';
 const pathToBinaryFile = path.join(binaryDir, binaryName);
 
 const baseUrl = 'https://github.com/teambit/bit/releases/download';
