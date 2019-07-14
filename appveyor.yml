@@ -100,7 +100,7 @@ build_script:
   - "npm run build"
 
 after_build:
-  - "npm install -g"
+  - "npm install"
   - "npm install -g pkg"
   # installing v0.18.5 since newer versions (up to 0.20.1) currently not working on windows
   # see more here https://github.com/zeit/ncc/issues/439
@@ -111,14 +111,12 @@ after_build:
   - "dir C:\\pkg-cache"
   - "dir C:\\projects\\bit-wikt3\\releases"
   # - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
-  - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;$ENV:PATH"
+  - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bit.dev"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
   - "bit config set analytics_reporting false"
   - "bit config set error_reporting false"
-  - ps: $ENV:PATH="C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
-
 
 test_script:
   - npm run test:appveyor
