@@ -100,7 +100,7 @@ install:
   - ps: npm i -g npm@6.9.0
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - "npm install -g pkg"
-  - "npm install"
+  - "npm ci"
 
 build_script:
   # no need for now, since the install script will do it for us
