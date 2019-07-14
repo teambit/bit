@@ -572,45 +572,6 @@ describe('bit import', function () {
         const expectedLocation = path.join('components', 'comp', 'comp2', 'level0.js');
         expect(localConsumerFiles).to.include(expectedLocation);
       });
-
-      it('should create an index.js file on the level0 dependency root dir pointing to the main file', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'dep',
-          'level0',
-          helper.remoteScope,
-          '0.0.1',
-          'index.js'
-        );
-        expect(localConsumerFiles).to.include(expectedLocation);
-        const indexPath = path.join(helper.localScopePath, expectedLocation);
-        const indexFileContent = fs.readFileSync(indexPath).toString();
-        expect(indexFileContent).to.have.string(
-          "module.exports = require('./level0');",
-          'dependency index file point to the wrong place'
-        );
-      });
-
-      it('should create an index.js file on the level1 dependency root dir pointing to the main file', () => {
-        const expectedLocation = path.join(
-          'components',
-          '.dependencies',
-          'dep',
-          'level1',
-          helper.remoteScope,
-          '0.0.1',
-          'index.js'
-        );
-        expect(localConsumerFiles).to.include(expectedLocation);
-        const indexPath = path.join(helper.localScopePath, expectedLocation);
-        const indexFileContent = fs.readFileSync(indexPath).toString();
-        expect(indexFileContent).to.have.string(
-          "module.exports = require('./level1');",
-          'dependency index file point to the wrong place'
-        );
-      });
-
       it('should save the direct dependency in the components/.dependencies directory', () => {
         const expectedLocation = path.join(
           'components',
@@ -793,17 +754,6 @@ describe('bit import', function () {
      *
      * bar/foo depends on utils/is-string.
      * utils/is-string depends on utils/is-type
-     *
-     * Expected structure after importing bar/foo in another project
-     * components/bar/foo/bar/foo.js
-     * components/bar/foo/index.js (generated index file)
-     * components/bar/foo/utils/is-string.js (generated link file)
-     * components/.dependencies/utils/is-string/scope-name/version-number/utils/index.js (generated index file - point to is-string.js)
-     * components/.dependencies/utils/is-string/scope-name/version-number/utils/is-string.js
-     * components/.dependencies/utils/is-string/scope-name/version-number/utils/is-type.js (generated link file)
-     * components/.dependencies/utils/is-type/scope-name/version-number/utils/index.js (generated index file - point to is-type.js)
-     * components/.dependencies/utils/is-type/scope-name/version-number/utils/is-type.js
-     *
      */
     let localConsumerFiles;
     let clonedLocalScope;
@@ -826,6 +776,9 @@ describe('bit import', function () {
     it('should keep the original directory structure of the main component', () => {
       const expectedLocation = path.join('components', 'bar', 'foo', 'bar', 'foo.js');
       expect(localConsumerFiles).to.include(expectedLocation);
+    });
+    it('should not generate index.js files because package.json main already takes care of finding the entry-point', () => {
+      localConsumerFiles.forEach(file => expect(file).to.not.include('index.js'));
     });
     it('should be able to require its direct dependency and print results from all dependencies', () => {
       const appJsFixture = "const barFoo = require('./components/bar/foo'); console.log(barFoo());";
@@ -1108,25 +1061,13 @@ describe('bit import', function () {
       const expectedLocation = path.join('components', 'bar', 'foo', 'dist', 'bar', 'foo.js');
       expect(localConsumerFiles).to.include(expectedLocation);
     });
-    it('should create an index.js file on the is-string dependency root dir pointing to the main file', () => {
+    it('should not create an index.js file on the is-string dependency', () => {
       const expectedLocation = path.join(isStringLocation, 'index.js');
-      expect(localConsumerFiles).to.include(expectedLocation);
-      const indexPath = path.join(helper.localScopePath, expectedLocation);
-      const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string(
-        "module.exports = require('./dist/is-string');",
-        'dependency index file point to the wrong place'
-      );
+      expect(localConsumerFiles).not.to.include(expectedLocation);
     });
-    it('should create an index.js file on the is-type dependency root dir pointing to the main file', () => {
+    it('should not create an index.js file on the is-type dependency', () => {
       const expectedLocation = path.join(isTypeLocation, 'index.js');
-      expect(localConsumerFiles).to.include(expectedLocation);
-      const indexPath = path.join(helper.localScopePath, expectedLocation);
-      const indexFileContent = fs.readFileSync(indexPath).toString();
-      expect(indexFileContent).to.have.string(
-        "module.exports = require('./dist/is-type');",
-        'dependency index file point to the wrong place'
-      );
+      expect(localConsumerFiles).not.to.include(expectedLocation);
     });
     it('should save the direct dependency nested to the main component', () => {
       const expectedLocation = path.join(isStringLocation, 'is-string.js');

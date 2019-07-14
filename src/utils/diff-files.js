@@ -23,7 +23,7 @@ export default (async function diffFiles(
     const result = await execa(gitExecutablePath, params);
     return result.stdout;
   } catch (err) {
-    if (err.stdout && err.stdout.includes('--git')) {
+    if (err.exitCode && Number.isInteger(err.exitCode) && err.stdout) {
       // diff has been found, return the diff results.
       return err.stdout;
     }
