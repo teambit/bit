@@ -94,14 +94,13 @@ install:
   # - ps: Update-NodeJsInstallation 10.16.0
   - ps: Install-Product node 10 x64 # since upgrading to babel 7, AppVeyor fails when node is 6
   - ps: npm i -g npm@6.9.0
-  - "npm ci"
+  - "npm install -g pkg"
+  - "npm install"
 
 build_script:
   - "npm run build"
 
 after_build:
-  - "npm install -g pkg"
-  - "npm install"
   # installing v0.18.5 since newer versions (up to 0.20.1) currently not working on windows
   # see more here https://github.com/zeit/ncc/issues/439
   # - "npm install -g @zeit/ncc@0.18.5"
