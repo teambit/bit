@@ -170,7 +170,7 @@ jobs:
       -
         run:
           name: 'npm link bit-javascript to bit'
-          command: 'cd bit && npm link ../bit-javascript'
+          command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run:
           name: 'Pack bit'
