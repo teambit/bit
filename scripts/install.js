@@ -1,5 +1,5 @@
 const fs = require('fs');
-// const os = require('os');
+const os = require('os');
 const fetch = require('make-fetch-happen');
 const semver = require('semver');
 const path = require('path');
@@ -7,9 +7,12 @@ const chalk = require('chalk');
 const { execSync } = require('child_process');
 const { version, scripts } = require('../package.json');
 const userHome = require('user-home');
-const { IS_WINDOWS } = require('../src/constants');
+// const { IS_WINDOWS } = require('../src/constants');
 
 const EXECUTABLE_CACHE_LOCATION = path.join(userHome, 'Library', 'Caches', 'Bit', 'bit-executable'); // TODO: get this from constants
+
+// This was temporarily copied from constants since constants has import statements that are not supported without build step
+const IS_WINDOWS = os.platform() === 'win32';
 
 const rootBitDir = path.join(__dirname, '..');
 
