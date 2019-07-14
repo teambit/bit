@@ -68,6 +68,11 @@ jobs:
       -
         image: 'circleci/node:10.16'
     working_directory: ~/bit
+    # skipping the pre-built binaries to make sure we build them by the pack step
+    # testing the install script will be done in different workflow dedicated for this
+    environment:
+      SKIP_FETCH_BINARY: true
+      SKIP_LOCAL_BUILD_BINARY: true
     steps:
       -
         run:
@@ -80,6 +85,10 @@ jobs:
       #   restore_cache:
       #     keys:
       #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
+      # -
+      #   run:
+      #     name: 'install pkg to support local build'
+      #     command: 'npm install -g pkg'
       -
         run:
           name: 'Install npm dependencies'
