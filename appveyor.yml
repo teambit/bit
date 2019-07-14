@@ -99,8 +99,9 @@ install:
   - ps: Install-Product node 10.16.0 x64 # since upgrading to babel 7, AppVeyor fails when node is 6
   - ps: npm i -g npm@6.9.0
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
+  - ps: Remove-Item package-lock.json
   - "npm install -g pkg"
-  - "npm ci"
+  - "npm i"
 
 build_script:
   # no need for now, since the install script will do it for us
