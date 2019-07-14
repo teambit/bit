@@ -313,11 +313,13 @@ export default class Scope {
     components,
     consumer,
     verbose,
+    dontPrintEnvMsg = false,
     rejectOnFailure = false
   }: {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
+    dontPrintEnvMsg: boolean,
     rejectOnFailure?: boolean
   }): Promise<SpecsResultsWithComponentId> {
     logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
@@ -334,7 +336,8 @@ export default class Scope {
         scope: this,
         rejectOnFailure,
         consumer,
-        verbose
+        verbose,
+        dontPrintEnvMsg
       });
       const pass = specs ? specs.every(spec => spec.pass) : true;
       return { componentId: component.id, specs, pass };

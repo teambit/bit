@@ -566,6 +566,7 @@ export default class Component {
     consumer,
     save,
     verbose,
+    dontPrintEnvMsg,
     isolated,
     directory,
     keep
@@ -575,6 +576,7 @@ export default class Component {
     consumer?: Consumer,
     save?: boolean,
     verbose?: boolean,
+    dontPrintEnvMsg?: boolean,
     isolated?: boolean,
     directory?: string,
     keep?: boolean
@@ -590,7 +592,7 @@ export default class Component {
       const componentDir = this.componentMap ? this.componentMap.getComponentDir() : undefined;
       const context = { dependentId: this.id, workspaceDir: consumerPath, componentDir };
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
-      await tester.install(scope, { verbose }, context);
+      await tester.install(scope, { verbose, dontPrintEnvMsg }, context);
       logger.debug('Environment components are installed');
     }
 

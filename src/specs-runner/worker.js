@@ -14,8 +14,10 @@ export type SerializedSpecsResultsWithComponentId = {
 };
 
 const testOneComponent = verbose => async (id: string) => {
+  // Never print the env message when originated from worker since we expect a valid json to return
+  const DONT_PRINT_ENV_MSG = true;
   // $FlowFixMe
-  const res = await testInProcess(id, false, verbose);
+  const res = await testInProcess(id, false, verbose, DONT_PRINT_ENV_MSG);
   return res[0];
 };
 
