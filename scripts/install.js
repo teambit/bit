@@ -100,13 +100,21 @@ async function main() {
     return;
   }
   log('Bit binary not found or corrupted, attempting to download a prebuilt version.');
-  await tryDownloadingBinary();
-  if (checkExistingBinary()) {
-    log('Prebuilt version downloaded successfully.');
-    return;
+  if (process.env.SKIP_FETCH_BINARY) {
+    log('SKIP_FETCH_BINARY is set to true, skipping fetching the binary file');
+  } else {
+    await tryDownloadingBinary();
+    if (checkExistingBinary()) {
+      log('Prebuilt version downloaded successfully.');
+      return;
+    }
   }
   log('unable to download pre-packaged version. packaging bit locally (this might take a few minutes)...');
-  tryBuildingBinary();
+  if (process.env.SKIP_LOCAL_BUILD_BINARY) {
+    log('SKIP_LOCAL_BUILD_BINARY is set to true, skipping building binary locally');
+  } else {
+    tryBuildingBinary();
+  }
   log('Compiled binary locally. All is well!');
 }
 
