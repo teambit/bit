@@ -7,7 +7,7 @@ import type { PathOsBased } from './utils/path';
 const userHome = require('user-home');
 const packageFile = require('../package.json');
 
-const isWindows = os.platform() === 'win32';
+export const IS_WINDOWS = os.platform() === 'win32';
 
 function getDirectory(): PathOsBased {
   if (process.platform === 'win32' && process.env.LOCALAPPDATA) {
@@ -118,7 +118,7 @@ export const DEFAULT_REMOTES = {};
 
 export const DEFAULT_DEPENDENCIES = {};
 
-export const SPINNER_TYPE = isWindows ? cliSpinners.line : cliSpinners.dots12;
+export const SPINNER_TYPE = IS_WINDOWS ? cliSpinners.line : cliSpinners.dots12;
 
 export const BASE_WEB_DOMAIN = 'bit.dev';
 
