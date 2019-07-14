@@ -37,9 +37,9 @@ for:
 
 # build cache to preserve files/folders between builds
 cache:
-  # - node_modules -> package.json, package-lock.json, appveyor.yml           # local npm modules
-  # - '%APPDATA%\npm-cache -> package.json, package-lock.json, appveyor.yml'  # npm cache
-  # - C:\pkg-cache -> package.json, package-lock.json, appveyor.yml
+  - node_modules -> package.json, package-lock.json, appveyor.yml           # local npm modules
+  - '%APPDATA%\npm-cache -> package.json, package-lock.json, appveyor.yml'  # npm cache
+  - C:\pkg-cache -> package.json, package-lock.json, appveyor.yml
 
 environment:
   nodejs_version: "10.15.3"
@@ -102,6 +102,7 @@ install:
   - ps: Remove-Item package-lock.json
   - "npm install -g pkg"
   - "npm i"
+  - "dir releases"
 
 build_script:
   # no need for now, since the install script will do it for us
