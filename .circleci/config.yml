@@ -379,10 +379,10 @@ jobs:
       #   run:
       #     name: 'bit import'
       #     command: 'cd bit && bit import'
-      -
-        run:
-          name: 'npm install'
-          command: 'cd bit && bit install'
+      # -
+      #   run:
+      #     name: 'npm install'
+      #     command: 'cd bit && bit install'
       -
         # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
