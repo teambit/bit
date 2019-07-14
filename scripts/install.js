@@ -1,10 +1,13 @@
 const fs = require('fs');
+// const os = require('os');
 const fetch = require('make-fetch-happen');
+const semver = require('semver');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
 const { version, scripts } = require('../package.json');
 const userHome = require('user-home');
+const { IS_WINDOWS } = require('../src/constants');
 
 const EXECUTABLE_CACHE_LOCATION = path.join(userHome, 'Library', 'Caches', 'Bit', 'bit-executable'); // TODO: get this from constants
 
@@ -18,7 +21,8 @@ const fileNames = {
 };
 
 const binaryDir = path.join(__dirname, '..', 'bin');
-const pathToBinaryFile = path.join(binaryDir, 'bit');
+const binaryName = IS_WINDOWS ? 'bit.ext' : 'bit';
+const pathToBinaryFile = path.join(binaryDir, binaryName);
 
 const baseUrl = 'https://github.com/teambit/bit/releases/download';
 
@@ -46,11 +50,8 @@ function checkExistingBinary() {
     if (!fs.existsSync(pathToBinaryFile)) {
       return false;
     }
-    const stdout = execSync(pathToBinaryFile, ['--help'], { stdio: 'ignore' });
-    if (stdout.toString().includes('usage: bit')) {
-      return true;
-    }
-    return false;
+    const stdout = execSync(pathToBinaryFile, ['--version'], { stdio: 'ignore' });
+    return !!semver.valid(stdout.toString());
   } catch (e) {
     return false;
   }
@@ -73,7 +74,8 @@ function pkgBinary() {
 }
 
 function copyBinary() {
-  const releaseFile = path.join(__dirname, '..', 'releases', 'bit');
+  const releaseFile = path.join(__dirname, '..', 'releases', binaryName);
+  log(`copying ${releaseFile} to ${pathToBinaryFile}`);
   fs.copyFileSync(releaseFile, pathToBinaryFile);
 }
 
@@ -103,7 +105,7 @@ async function main() {
     log('Prebuilt version downloaded successfully.');
     return;
   }
-  log('Failed to download prebuilt version. Compiling locally.');
+  log('unable to download pre-packaged version. packaging bit locally (this might take a few minutes)...');
   tryBuildingBinary();
   log('Compiled binary locally. All is well!');
 }
