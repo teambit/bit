@@ -38,13 +38,17 @@ export default function run(): Promise<void> {
       .then((results) => {
         const serializedResults = serializeResults(results.results);
         // $FlowFixMe
-        return process.send(serializedResults);
+        process.send(serializedResults);
+        // Make sure the child process will not hang
+        process.exit();
       })
       .catch((e) => {
         loader.off();
         const serializedResults = serializeResults(e);
         // $FlowFixMe
-        return process.send(serializedResults);
+        process.send(serializedResults);
+        // Make sure the child process will not hang
+        process.exit();
       });
   }
   const testAllP = ids.map(testOneComponent(verbose));
@@ -52,13 +56,17 @@ export default function run(): Promise<void> {
     .then((results) => {
       const serializedResults = serializeResults(results);
       // $FlowFixMe
-      return process.send(serializedResults);
+      process.send(serializedResults);
+      // Make sure the child process will not hang
+      process.exit();
     })
     .catch((e) => {
       loader.off();
       const serializedResults = serializeResults(e);
       // $FlowFixMe
-      return process.send(serializedResults);
+      process.send(serializedResults);
+      // Make sure the child process will not hang
+      process.exit();
     });
 }
 
