@@ -20,6 +20,15 @@ const testOneComponent = verbose => async (id: string) => {
 };
 
 export default function run(): Promise<void> {
+  const realRun: boolean = process.env.__run__ === true || process.env.__run__ === 'true';
+  // This is a hack to prevent the worker from running on app starting
+  // Because we usuall running the file as fork we call the run function immediatly
+  // We load this file with import statement to make sure pkg pack it as well
+  // A real solution will be to use the assets / scripts config for pkg but I couldn't make it work
+  if (!realRun) {
+    return Promise.resolve();
+  }
+
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
   const verbose: boolean = process.env.__verbose__ === true || process.env.__verbose__ === 'true';
   const includeUnmodified: boolean =

@@ -14,6 +14,9 @@ import ExternalBuildErrors from '../consumer/component/exceptions/external-build
 import ExternalTestErrors from '../consumer/component/exceptions/external-test-errors';
 import type { SpecsResultsWithMetaData } from '../consumer/specs-results/specs-results';
 import { BitId } from '../bit-id';
+// Make sure pkg pack worker file as well
+// TODO: use the asset/script option of pkg instead
+import './worker';
 
 export type Tester = {
   run: (filePath: string) => Promise<Results>,
@@ -97,6 +100,8 @@ async function runOnChildProcess({
     args.push('--all');
   }
   const baseEnv: Object = {
+    // This is a hack, for full details about it see comment in worker.js run function
+    __run__: true,
     __verbose__: verbose,
     __includeUnmodified__: includeUnmodified
   };
