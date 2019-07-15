@@ -49,7 +49,7 @@ export const testInProcess = async (
   dontPrintEnvMsg: ?boolean
 ): Promise<SpecsResultsWithComponentId> => {
   const consumer: Consumer = await loadConsumer();
-  const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose);
+  const components = await _getComponentsAfterBuild(consumer, id, includeUnmodified, verbose, dontPrintEnvMsg);
   const testsResults = await consumer.scope.testMultiple({ components, consumer, verbose, dontPrintEnvMsg });
   loader.stop();
   await consumer.onDestroy();
@@ -60,7 +60,8 @@ const _getComponentsAfterBuild = async (
   consumer: Consumer,
   id?: string,
   includeUnmodified: boolean = false,
-  verbose: ?boolean
+  verbose: ?boolean,
+  dontPrintEnvMsg: ?boolean
 ) => {
   let components;
   if (id) {
@@ -77,6 +78,6 @@ const _getComponentsAfterBuild = async (
     }
     loader.stop();
   }
-  await consumer.scope.buildMultiple(components, consumer, false, verbose);
+  await consumer.scope.buildMultiple(components, consumer, false, verbose, dontPrintEnvMsg);
   return components;
 };

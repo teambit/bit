@@ -537,6 +537,7 @@ export default class Component {
     consumer,
     noCache,
     verbose,
+    dontPrintEnvMsg,
     directory,
     keep
   }: {
@@ -546,6 +547,7 @@ export default class Component {
     noCache?: boolean,
     directory?: string,
     verbose?: boolean,
+    dontPrintEnvMsg?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
     return buildComponent({
@@ -556,6 +558,7 @@ export default class Component {
       noCache,
       directory,
       verbose,
+      dontPrintEnvMsg,
       keep
     });
   }

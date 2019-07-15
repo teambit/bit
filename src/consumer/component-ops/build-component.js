@@ -35,6 +35,7 @@ export default (async function buildComponent({
   noCache,
   directory,
   verbose,
+  dontPrintEnvMsg,
   keep
 }: {
   component: ConsumerComponent,
@@ -44,6 +45,7 @@ export default (async function buildComponent({
   noCache?: boolean,
   directory?: string,
   verbose?: boolean,
+  dontPrintEnvMsg?: boolean,
   keep?: boolean
 }): Promise<?Dists> {
   logger.debug(`consumer-component.build ${component.id.toString()}`);
@@ -80,7 +82,7 @@ export default (async function buildComponent({
   if (component.compiler && !component.compiler.loaded) {
     await component.compiler.install(
       scope,
-      { verbose: !!verbose },
+      { verbose: !!verbose, dontPrintEnvMsg },
       { workspaceDir: consumerPath, componentDir, dependentId: component.id }
     );
   }
