@@ -259,7 +259,7 @@ export default class Scope {
     consumer: Consumer,
     noCache: boolean,
     verbose: boolean,
-    dontPrintEnvMsg: boolean
+    dontPrintEnvMsg?: boolean = false
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
