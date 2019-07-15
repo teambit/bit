@@ -7,6 +7,12 @@ import ExternalErrors from '../error/external-errors';
 import ExternalError from '../error/external-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
+// Never print the env message when originated from worker since we expect a valid json to return
+const DONT_PRINT_ENV_MSG = true;
+// Never verbose when originated from worker since we expect a valid json to return
+// TODO: instead of printing to console when using verbose aggregate it and return in the json to the main process
+const VERBOSE = false;
+
 export type SerializedSpecsResultsWithComponentId = {
   type: 'error' | 'results',
   error?: Object,
@@ -14,10 +20,9 @@ export type SerializedSpecsResultsWithComponentId = {
 };
 
 const testOneComponent = verbose => async (id: string) => {
-  // Never print the env message when originated from worker since we expect a valid json to return
-  const DONT_PRINT_ENV_MSG = true;
+  const actualVerbose = verbose && VERBOSE;
   // $FlowFixMe
-  const res = await testInProcess(id, false, verbose, DONT_PRINT_ENV_MSG);
+  const res = await testInProcess(id, false, actualVerbose, DONT_PRINT_ENV_MSG);
   return res[0];
 };
 
@@ -31,7 +36,9 @@ export default function run({
   verbose: ?boolean
 }): Promise<SerializedSpecsResultsWithComponentId> {
   if (!ids || !ids.length) {
-    return testInProcess(undefined, includeUnmodified, verbose)
+    const actualVerbose = verbose && VERBOSE;
+    // Never print the env message when originated from worker since we expect a valid json to return
+    return testInProcess(undefined, includeUnmodified, actualVerbose, DONT_PRINT_ENV_MSG)
       .then((results) => {
         const serializedResults = serializeResults(results);
         return serializedResults;
