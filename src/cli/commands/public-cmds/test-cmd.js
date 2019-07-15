@@ -54,7 +54,7 @@ export default class Test extends Command {
     return res;
   }
 
-  report(results: SpecsResultsWithComponentId, args, flags): string {
+  report(results: SpecsResultsWithComponentId, args: string[], flags: Object): string {
     if (flags.json) return JSON.stringify(results, null, 2);
     if (Array.isArray(results)) return paintAllSpecsResults(results, verboseReport) + paintSummarySpecsResults(results);
     return "couldn't get test results...";
