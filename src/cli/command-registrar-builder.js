@@ -1,5 +1,6 @@
 /** @flow */
 import CommandRegistrar from './command-registrar';
+import type Command from './command';
 import { BIT_VERSION, BIT_USAGE, BIT_DESCRIPTION } from '../constants';
 import Init from './commands/public-cmds/init-cmd';
 import Isolate from './commands/public-cmds/isolate-cmd';
@@ -17,7 +18,6 @@ import Remote from './commands/public-cmds/remote-cmd';
 import Search from './commands/public-cmds/search-cmd';
 import Test from './commands/public-cmds/test-cmd';
 import Show from './commands/public-cmds/show-cmd';
-import TestWorker from './commands/private-cmds/test-worker-cmd';
 import DependencyStatus from './commands/private-cmds/dependency-status-cmd';
 import Status from './commands/public-cmds/status-cmd';
 import CatObject from './commands/private-cmds/cat-object-cmd';
@@ -55,7 +55,7 @@ import Eject from './commands/public-cmds/eject-cmd';
 import Watch from './commands/public-cmds/watch-cmd';
 import Doctor from './commands/public-cmds/doctor-cmd';
 
-export default function registerCommands(extensionsCommands): CommandRegistrar {
+export default function registerCommands(extensionsCommands: Command[]): CommandRegistrar {
   return new CommandRegistrar(
     BIT_USAGE,
     BIT_DESCRIPTION,
@@ -78,7 +78,6 @@ export default function registerCommands(extensionsCommands): CommandRegistrar {
       new Log(),
       new Search(),
       new Test(),
-      new TestWorker(),
       new Put(),
       new ScopeList(),
       new ScopeSearch(),
