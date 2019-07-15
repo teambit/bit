@@ -5,7 +5,7 @@ import { test } from '../../../api/consumer';
 import { paintAllSpecsResults, paintSummarySpecsResults } from '../../chalk-box';
 import { BASE_DOCS_DOMAIN, TESTS_FORK_LEVEL } from '../../../constants';
 import GeneralError from '../../../error/general-error';
-import type { SpecsResultsWithComponentId } from '../../../consumer/specs-results/specs-results';
+import type { SpecsResultsWithMetaData } from '../../../consumer/specs-results/specs-results';
 
 const validForkLevels = R.values(TESTS_FORK_LEVEL);
 
@@ -35,7 +35,7 @@ export default class Test extends Command {
       verbose: ?boolean,
       forkLevel: ?string
     }
-  ): Promise<{ __code: number, data: SpecsResultsWithComponentId }> {
+  ): Promise<{ __code: number, data: SpecsResultsWithMetaData }> {
     if (id && all) {
       throw new GeneralError(
         'use "--all" to test all components or use a component ID to test a specific component. run tests to all new and modified components by removing all flags and parameters'
@@ -46,7 +46,7 @@ export default class Test extends Command {
     }
     verboseReport = verbose || false;
     const testRes = await test(id, forkLevel, all, verbose);
-    const pass = testRes.every(comp => comp.pass);
+    const pass = testRes.results.every(comp => comp.pass);
     const res = {
       data: testRes,
       __code: pass ? 0 : 1
@@ -54,9 +54,9 @@ export default class Test extends Command {
     return res;
   }
 
-  report(results: SpecsResultsWithComponentId, args: string[], flags: Object): string {
+  report(results: SpecsResultsWithMetaData, args: string[], flags: Object): string {
     if (flags.json) return JSON.stringify(results, null, 2);
-    if (Array.isArray(results)) return paintAllSpecsResults(results, verboseReport) + paintSummarySpecsResults(results);
+    if (Array.isArray(results.results)) { return paintAllSpecsResults(results, verboseReport) + paintSummarySpecsResults(results.results); }
     return "couldn't get test results...";
   }
 }

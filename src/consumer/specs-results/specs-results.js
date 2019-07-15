@@ -62,6 +62,13 @@ export type SpecsResultsWithComponentId = Array<{
   pass: boolean
 }>;
 
+export type SpecsResultsWithMetaData = {
+  type: 'results' | 'error',
+  childOutput?: string,
+  error?: Error,
+  results?: SpecsResultsWithComponentId
+};
+
 export default class SpecsResults {
   tests: Test[];
   stats: Stats;

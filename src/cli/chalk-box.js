@@ -134,9 +134,10 @@ export const paintSpecsResults = (results?: SpecsResults[], verbose: boolean = f
   });
 };
 
-export const paintAllSpecsResults = (results: SpecsResultsWithComponentId, verbose: boolean = false): string => {
-  if (results.length === 0) return c.yellow('nothing to test');
-  return results
+export const paintAllSpecsResults = (results: SpecsResultsWithMetaData, verbose: boolean = false): string => {
+  const childOutput = results.childOutput || '';
+  if (results.length === 0) return `${childOutput}\n${c.yellow('nothing to test')}`;
+  const resultsOutput = results.results
     .map((result) => {
       const idStr = result.componentId.toString();
       if (result.missingTester) return paintMissingTester(idStr);
@@ -145,6 +146,7 @@ export const paintAllSpecsResults = (results: SpecsResultsWithComponentId, verbo
       return c.yellow(`tests are not defined for component: ${componentId}`);
     })
     .join('\n');
+  return `${childOutput}\n${resultsOutput}`;
 };
 
 export const paintSummarySpecsResults = (results: SpecsResultsWithComponentId): string => {

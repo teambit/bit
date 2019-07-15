@@ -7,12 +7,6 @@ import ExternalErrors from '../error/external-errors';
 import ExternalError from '../error/external-error';
 import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
 
-// Never print the env message when originated from worker since we expect a valid json to return
-const DONT_PRINT_ENV_MSG = true;
-// Never verbose when originated from worker since we expect a valid json to return
-// TODO: instead of printing to console when using verbose aggregate it and return in the json to the main process
-const VERBOSE = false;
-
 export type SerializedSpecsResultsWithComponentId = {
   type: 'error' | 'results',
   error?: Object,
@@ -20,47 +14,42 @@ export type SerializedSpecsResultsWithComponentId = {
 };
 
 const testOneComponent = verbose => async (id: string) => {
-  const actualVerbose = verbose && VERBOSE;
   // $FlowFixMe
-  const res = await testInProcess(id, false, actualVerbose, DONT_PRINT_ENV_MSG);
-  return res[0];
+  const res = await testInProcess(id, false, verbose);
+  return res.results[0];
 };
 
-export default function run({
-  ids,
-  includeUnmodified = false,
-  verbose
-}: {
-  ids?: ?(string[]),
-  includeUnmodified: boolean,
-  verbose: ?boolean
-}): Promise<SerializedSpecsResultsWithComponentId> {
+export default function run(): Promise<void> {
+  const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
+  const verbose: boolean = process.env.__verbose__ === true || process.env.__verbose__ === 'true';
+  const includeUnmodified: boolean =
+    process.env.__includeUnmodified__ === true || process.env.__includeUnmodified__ === 'true';
   if (!ids || !ids.length) {
-    const actualVerbose = verbose && VERBOSE;
-    // Never print the env message when originated from worker since we expect a valid json to return
-    return testInProcess(undefined, includeUnmodified, actualVerbose, DONT_PRINT_ENV_MSG)
+    return testInProcess(undefined, includeUnmodified, verbose)
       .then((results) => {
-        const serializedResults = serializeResults(results);
-        return serializedResults;
+        const serializedResults = serializeResults(results.results);
+        return process.send(serializedResults);
       })
       .catch((e) => {
         loader.off();
         const serializedResults = serializeResults(e);
-        return serializedResults;
+        return process.send(serializedResults);
       });
   }
   const testAllP = ids.map(testOneComponent(verbose));
   return Promise.all(testAllP)
     .then((results) => {
       const serializedResults = serializeResults(results);
-      return serializedResults;
+      return process.send(serializedResults);
     })
     .catch((e) => {
       loader.off();
       const serializedResults = serializeResults(e);
-      return serializedResults;
+      return process.send(serializedResults);
     });
 }
+
+run();
 
 function serializeResults(results): SerializedSpecsResultsWithComponentId {
   // if (!results) return undefined;
