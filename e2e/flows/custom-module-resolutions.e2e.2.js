@@ -435,6 +435,7 @@ describe('custom module resolutions', function () {
     });
   });
   describe('using alias', () => {
+    let scopeAfterAdding;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const bitJson = helper.readBitJson();
@@ -451,6 +452,7 @@ describe('custom module resolutions', function () {
       helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
       helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      scopeAfterAdding = helper.cloneLocalScope();
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.runCmd('bit status');
@@ -485,6 +487,7 @@ describe('custom module resolutions', function () {
     });
     describe('importing the component', () => {
       before(() => {
+        helper.getClonedLocalScope(scopeAfterAdding);
         helper.tagAllComponents();
         helper.exportAllComponents();
 
