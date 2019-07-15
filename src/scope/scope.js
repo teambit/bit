@@ -319,7 +319,7 @@ export default class Scope {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
-    dontPrintEnvMsg: boolean,
+    dontPrintEnvMsg?: boolean,
     rejectOnFailure?: boolean
   }): Promise<SpecsResultsWithComponentId> {
     logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');

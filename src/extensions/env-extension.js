@@ -78,7 +78,7 @@ export default class EnvExtension extends BaseExtension {
 
   async install(
     scope: Scope,
-    opts: { verbose: boolean, dontPrintEnvMsg: boolean },
+    opts: { verbose: boolean, dontPrintEnvMsg?: boolean },
     context?: Object
   ): Promise<?(ComponentWithDependencies[])> {
     Analytics.addBreadCrumb('env-extension', 'install env extension');
