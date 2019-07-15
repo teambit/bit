@@ -18,6 +18,7 @@ export default class Test extends Command {
   opts = [
     ['a', 'all', 'test all components in your workspace, including unmodified components'],
     ['v', 'verbose', 'showing npm verbose output for inspection and prints stack trace'],
+    ['j', 'json', 'return results in json format'],
     ['', 'fork-level <forkLevel>', 'NONE / ONE / COMPONENT how many child process create for test running']
   ];
   loader = true;
@@ -53,7 +54,8 @@ export default class Test extends Command {
     return res;
   }
 
-  report(results: SpecsResultsWithComponentId): string {
+  report(results: SpecsResultsWithComponentId, args, flags): string {
+    if (flags.json) return JSON.stringify(results, null, 2);
     if (Array.isArray(results)) return paintAllSpecsResults(results, verboseReport) + paintSummarySpecsResults(results);
     return "couldn't get test results...";
   }
