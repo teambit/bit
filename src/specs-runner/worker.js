@@ -28,11 +28,13 @@ export default function run(): Promise<void> {
     return testInProcess(undefined, includeUnmodified, verbose)
       .then((results) => {
         const serializedResults = serializeResults(results.results);
+        // $FlowFixMe
         return process.send(serializedResults);
       })
       .catch((e) => {
         loader.off();
         const serializedResults = serializeResults(e);
+        // $FlowFixMe
         return process.send(serializedResults);
       });
   }
@@ -40,11 +42,13 @@ export default function run(): Promise<void> {
   return Promise.all(testAllP)
     .then((results) => {
       const serializedResults = serializeResults(results);
+      // $FlowFixMe
       return process.send(serializedResults);
     })
     .catch((e) => {
       loader.off();
       const serializedResults = serializeResults(e);
+      // $FlowFixMe
       return process.send(serializedResults);
     });
 }
@@ -90,8 +94,9 @@ function serializeResults(results): SerializedSpecsResultsWithComponentId {
   };
 
   const serializeResult = (result) => {
-    if (!result.specs) return result;
-    result.specs = result.specs.map(serializeSpec);
+    const specs = result.specs;
+    if (!specs || !Array.isArray(specs)) return result;
+    result.specs = specs.map(serializeSpec);
     return result;
   };
 

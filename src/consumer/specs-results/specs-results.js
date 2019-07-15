@@ -125,6 +125,7 @@ export default class SpecsResults {
     });
 
     if (hasFailures) {
+      // $FlowFixMe
       failures = rawResults.failures.map((failure) => {
         failure.duration = failure.duration ? parseInt(failure.duration) : undefined;
         // $FlowFixMe

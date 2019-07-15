@@ -56,7 +56,10 @@ export default class Test extends Command {
 
   report(results: SpecsResultsWithMetaData, args: string[], flags: Object): string {
     if (flags.json) return JSON.stringify(results, null, 2);
-    if (Array.isArray(results.results)) { return paintAllSpecsResults(results, verboseReport) + paintSummarySpecsResults(results.results); }
+    const specsResultsWithComponentId = results.results;
+    if (specsResultsWithComponentId && Array.isArray(specsResultsWithComponentId)) {
+      return paintAllSpecsResults(results, verboseReport) + paintSummarySpecsResults(specsResultsWithComponentId);
+    }
     return "couldn't get test results...";
   }
 }
