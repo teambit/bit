@@ -161,8 +161,8 @@ jobs:
       -
         restore_cache:
           keys:
-            - 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
-            - pkg-cache-v1
+            - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            - pkg-cache-v2
       -
         run:
           name: 'set pkg path'
@@ -177,12 +177,12 @@ jobs:
           command: 'cd bit && npm run pkg'
       -
         save_cache:
-          key: 'pkg-cache-v1-{{ checksum "/home/circleci/pkg-target.txt" }}'
+          key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
           paths:
             - ~/pkg-cache
       -
         save_cache:
-          key: pkg-cache-v1
+          key: pkg-cache-v2
           paths:
             - /home/circleci/pkg-cache
       -
