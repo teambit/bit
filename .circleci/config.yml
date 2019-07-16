@@ -72,7 +72,7 @@ jobs:
     # testing the install script will be done in different workflow dedicated for this
     environment:
       SKIP_FETCH_BINARY: true
-      SKIP_LOCAL_BUILD_BINARY: true
+      # SKIP_LOCAL_BUILD_BINARY: true
     steps:
       -
         run:
@@ -353,14 +353,14 @@ jobs:
         run: 'ssh-add ~/.ssh/id_rsa'
       -
         run: 'cd bit && mkdir junit'
-      -
-        run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
-      -
-        run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       # -
-      #   run:
-      #     name: 'npm link bit to global'
-      #     command: cd bit && npm link
+      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+      # -
+      #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'npm link bit to global'
+          command: cd bit && npm link
       -
         run: which bit
       -
@@ -489,17 +489,19 @@ workflows:
         lint:
           requires:
             - install_npm_deps
-      -
-        pack:
-          requires:
-            - build
-            - build_bit_javascript
+      # -
+      #   pack:
+      #     requires:
+      #       - build
+      #       - build_bit_javascript
       -
         e2e_test:
           requires:
             - set_ssh_key
             - set_bitsrc_registry
-            - pack
+            - build
+            - build_bit_javascript
+            # - pack
             
   performence_tests:
     triggers:
