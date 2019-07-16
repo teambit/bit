@@ -99,7 +99,6 @@ install:
   - ps: Install-Product node 10.16.0 x64 # since upgrading to babel 7, AppVeyor fails when node is 6
   - ps: npm i -g npm@6.9.0
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
-  - ps: Remove-Item package-lock.json
   - "npm install -g pkg"
 
 build_script:
@@ -107,7 +106,7 @@ build_script:
   # - "npm run build"
   
   # We move this into here since leaving the build step blank make problems..
-  - "npm i"
+  - "npm ci"
 
 after_build:
   # installing v0.18.5 since newer versions (up to 0.20.1) currently not working on windows
