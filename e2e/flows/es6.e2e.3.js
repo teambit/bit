@@ -1,7 +1,7 @@
 import { expect } from 'chai';
 import Helper from '../e2e-helper';
 
-describe.only('es6 components', function () {
+describe('es6 components', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -20,7 +20,7 @@ describe.only('es6 components', function () {
       helper.addRemoteScope();
       helper.importComponent('bar/foo');
     });
-    it('the generated dependency link should not have duplicates', () => {
+    it.only('the generated dependency link should not have duplicates', () => {
       const dependencyLink = helper.readFile('components/bar/foo/utils/index.js');
       const requireStatement = `require('@bit/${helper.remoteScope}.index');`;
       const numOfOccurrences = dependencyLink.split(requireStatement).length - 1;

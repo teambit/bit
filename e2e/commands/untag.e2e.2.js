@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import * as fixtures from '../fixtures/fixtures';
 
-describe.only('bit untag command', function () {
+describe('bit untag command', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
@@ -262,7 +262,7 @@ describe.only('bit untag command', function () {
 
             helper.untag('-a 2.0.1');
           });
-          it('should change the version in the author package.json', () => {
+          it.only('should change the version in the author package.json', () => {
             const packageJsonUtilsIsString = helper.readPackageJson(packageJsonUtilsIsStringPath);
             expect(packageJsonUtilsIsString.version).to.equal('2.0.0');
           });
