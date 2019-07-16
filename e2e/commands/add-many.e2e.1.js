@@ -23,7 +23,7 @@ function sortComponentsArrayByComponentId(componentsArray) {
   });
 }
 
-describe('bit add many programmatically', function () {
+describe.skip('bit add many programmatically', function () {
   const helper = new Helper();
   after(() => {
     helper.destroyEnv();
