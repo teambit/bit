@@ -7,7 +7,12 @@ const chalk = require('chalk');
 const { execSync } = require('child_process');
 const userHome = require('user-home');
 const { version, scripts } = require('../package.json');
-const { CURRENT_BINARY_FILE_NAME, CURRENT_DEFAULT_BINARY_PATH, CURRENT_BINARY_PATH } = require('./scripts-constants');
+const {
+  CURRENT_BINARY_FILE_NAME,
+  CURRENT_DEFAULT_BINARY_PATH,
+  CURRENT_BINARY_PATH,
+  BINARY_FINAL_FILE_NAME
+} = require('./scripts-constants');
 // const { IS_WINDOWS } = require('../src/constants');
 
 const EXECUTABLE_CACHE_LOCATION = path.join(userHome, 'Library', 'Caches', 'Bit', 'bit-executable'); // TODO: get this from constants
@@ -17,7 +22,6 @@ const EXECUTABLE_CACHE_LOCATION = path.join(userHome, 'Library', 'Caches', 'Bit'
 const ROOT_BIT_DIR = path.join(__dirname, '..');
 
 const BASE_URL = 'https://github.com/teambit/bit/releases/download';
-const BIN_NAME = 'bit';
 
 function log(msg) {
   console.log(chalk.green('bit install:'), msg);
@@ -95,7 +99,7 @@ function getInstallationPath() {
 
 function getBinaryInstallationPath() {
   const binDir = getInstallationPath();
-  return path.join(binDir, BIN_NAME);
+  return path.join(binDir, BINARY_FINAL_FILE_NAME);
 }
 
 function copyBinaryToBinDir() {

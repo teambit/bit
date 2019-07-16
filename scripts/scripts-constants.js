@@ -14,6 +14,8 @@ const BINARY_FILE_NAMES = {
   darwin: 'bit-bin-macos'
 };
 
+const BINARY_FINAL_FILE_NAME = platform === 'win32' ? 'bit.exe' : 'bit';
+
 const BINARY_DIR = path.join(__dirname, '..', 'releases');
 const CURRENT_DEFAULT_BINARY_FILE_NAME = DEFAULT_BINARY_FILE_NAMES[platform];
 const CURRENT_BINARY_FILE_NAME = BINARY_FILE_NAMES[platform];
