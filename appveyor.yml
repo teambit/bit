@@ -100,8 +100,8 @@ install:
   - ps: npm i -g npm@6.9.0
   - "set PKG_CACHE_PATH=C:\\pkg-cache"
   - ps: Remove-Item package-lock.json
-  - ps: Remove-Item C:\projects\bit-wikt3\releases\bit.exe
-  - ps: Remove-Item C:\projects\bit-wikt3\bin\bit.exe
+  - ps: dir C:\projects\bit-wikt3\releases
+  - ps: dir C:\projects\bit-wikt3\bin
   - "npm install -g pkg"
 
 build_script:
