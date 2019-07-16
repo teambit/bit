@@ -365,7 +365,7 @@ jobs:
       -
         run:
           name: 'npm link bit to global'
-          command: cd bit && sudo npm link
+          command: cd bit && npm link
       -
         run: which bit
       -
