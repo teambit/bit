@@ -88,7 +88,7 @@ jobs:
       -
         run:
           name: 'install pkg to support local build'
-          command: 'npm install -g pkg'
+          command: 'sudo npm install -g pkg'
       -
         run:
           name: 'Install npm dependencies'
