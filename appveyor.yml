@@ -81,6 +81,7 @@ environment:
   matrix:
   - ruby_version: Ruby23-x64
 install:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - ps: $fileContent = "-----BEGIN RSA PRIVATE KEY-----`n"
   - ps: $fileContent += $env:testerBitsrcSSHPrivateKey.Replace(' ', "`n")
   - ps: $fileContent += "`n-----END RSA PRIVATE KEY-----`n"
