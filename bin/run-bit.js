@@ -5,7 +5,7 @@ const path = require('path');
 const { CURRENT_DEFAULT_BINARY_PATH, CURRENT_BINARY_PATH } = require('../scripts/scripts-constants');
 const fs = require('fs-extra');
 
-const argsForChild = process.argv && process.argv.length > 2 ? process.argv.slice(2).join(' ') : null;
+const argsForChild = process.argv && process.argv.length > 2 ? process.argv.slice(2).join(' ') : '';
 
 let existingBinary = CURRENT_DEFAULT_BINARY_PATH;
 if (fs.existsSync(CURRENT_DEFAULT_BINARY_PATH)) {
@@ -16,7 +16,6 @@ if (fs.existsSync(CURRENT_DEFAULT_BINARY_PATH)) {
   console.log('could not find bit executable');
   process.exit();
 }
-console.log('existingBinary', existingBinary);
 const child = exec(`${existingBinary} ${argsForChild}`);
 child.stdout.pipe(process.stdout);
 child.stderr.pipe(process.stderr);
