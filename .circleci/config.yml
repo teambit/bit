@@ -85,10 +85,10 @@ jobs:
       #   restore_cache:
       #     keys:
       #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
-      # -
-      #   run:
-      #     name: 'install pkg to support local build'
-      #     command: 'npm install -g pkg'
+      -
+        run:
+          name: 'install pkg to support local build'
+          command: 'npm install -g pkg'
       -
         run:
           name: 'Install npm dependencies'
