@@ -117,7 +117,7 @@ after_build:
   # - "npm run bundle:test-worker:debug"
   # - "dir C:\\pkg-cache"
   # - "dir C:\\projects\\bit-wikt3\\releases"
-  # - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
+  - ps: rename-item -path "./releases/bit-bin.exe" -newname "bit.exe"
   - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
   - "bit --version"
   - "bit config set set user.name tester"

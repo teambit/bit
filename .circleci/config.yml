@@ -353,8 +353,8 @@ jobs:
         run: 'ssh-add ~/.ssh/id_rsa'
       -
         run: 'cd bit && mkdir junit'
-      # -
-      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+      -
+        run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       -
         run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       # -
