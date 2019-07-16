@@ -86,7 +86,7 @@ function getInstallationPath() {
     if (!stdout || stdout.length === 0) {
       dir = getInstallationPathFromEnv();
     } else {
-      dir = stdout.trim();
+      dir = stdout.toString().trim();
     }
   } catch (e) {
     dir = getInstallationPathFromEnv();
