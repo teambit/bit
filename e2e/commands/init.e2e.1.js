@@ -46,7 +46,7 @@ describe('run bit init', function () {
       const bitmapPath = path.join(helper.localScopePath, '.bitmap');
       expect(bitmapPath).to.be.a.file('missing bitmap');
     });
-    it.only('bitmap should contain version"', () => {
+    it('bitmap should contain version"', () => {
       const bitMap = helper.readBitMap();
       expect(bitMap).to.have.property('version');
       expect(bitMap.version).to.equal(helper.getBitVersion());

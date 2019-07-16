@@ -463,7 +463,7 @@ describe('bit export command', function () {
         helper.runCmd('bit init --bare --shared nonExistGroup', helper.remoteScopePath);
         helper.addRemoteScope();
       });
-      it.only('should throw an error indicating that the group does not exist (unless it is Windows)', () => {
+      it('should throw an error indicating that the group does not exist (unless it is Windows)', () => {
         const output = helper.runWithTryCatch(`bit export ${helper.remoteScope}`);
         if (isWin) {
           expect(output).to.have.string('exported 1 components');
