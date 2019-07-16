@@ -106,7 +106,7 @@ function copyBinaryToBinDir() {
   const installationPath = getBinaryInstallationPath();
   const existingBinary = getExistingBinary();
   log(`copy binary from ${existingBinary} to ${installationPath}`);
-  fs.renameSync(existingBinary, installationPath);
+  fs.copyFileSync(existingBinary, installationPath);
 }
 
 function buildSrc() {
