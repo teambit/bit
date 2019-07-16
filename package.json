@@ -39,7 +39,7 @@
     "release": "npm run pkg:all && gh-release -a releases/bit-linux,releases/bit-win.exe,releases/bit-macos"
   },
   "bin": {
-    "bit": "bin/bit"
+    "bit": "bin/run-bit"
   },
   "repository": {
     "type": "git",
