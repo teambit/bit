@@ -381,6 +381,13 @@ export class List extends React.Component {
           const result = helper.runCmd('node app.js');
           expect(result.trim()).to.equal('got is-type and got is-string and got foo');
         });
+        it('should create index.d.ts file along with the index.js file inside the node_modules/custom-resolve', () => {
+          const expectedPath = path.join(
+            helper.localScopePath,
+            'components/bar/foo/node_modules/@/utils/is-string/index.d.ts'
+          );
+          expect(expectedPath).to.be.a.file();
+        });
       });
       describe('using bundler compiler that generates a dist file with a different name than the source', () => {
         before(() => {

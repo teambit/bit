@@ -435,6 +435,7 @@ describe('custom module resolutions', function () {
     });
   });
   describe('using alias', () => {
+    let scopeAfterAdding;
     before(() => {
       helper.setNewLocalAndRemoteScopes();
       const bitJson = helper.readBitJson();
@@ -451,6 +452,7 @@ describe('custom module resolutions', function () {
       helper.addComponent('src/utils/is-type.js', { i: 'utils/is-type' });
       helper.addComponent('src/utils/is-string.js', { i: 'utils/is-string' });
       helper.addComponent('src/bar/foo.js', { i: 'bar/foo' });
+      scopeAfterAdding = helper.cloneLocalScope();
     });
     it('bit status should not warn about missing packages', () => {
       const output = helper.runCmd('bit status');
@@ -466,8 +468,26 @@ describe('custom module resolutions', function () {
       expect(dependency.relativePaths[0].importSource).to.equal('@/utils/is-string');
       expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
     });
+    describe('when there is already a package with the same name of the alias and is possible to resolve to the package', () => {
+      before(() => {
+        helper.addNpmPackage('@'); // makes sure the package is there
+        helper.outputFile('node_modules/@/utils/is-string.js', ''); // makes sure it's possible to resolve to the package
+      });
+      // @see https://github.com/teambit/bit/issues/1779
+      it('should still resolve to the custom-resolve and not to the package', () => {
+        const output = helper.showComponentParsed('bar/foo');
+        expect(output.dependencies).to.have.lengthOf(1);
+        const dependency = output.dependencies[0];
+        expect(dependency.id).to.equal('utils/is-string');
+        expect(dependency.relativePaths[0].sourceRelativePath).to.equal('src/utils/is-string.js');
+        expect(dependency.relativePaths[0].destinationRelativePath).to.equal('src/utils/is-string.js');
+        expect(dependency.relativePaths[0].importSource).to.equal('@/utils/is-string');
+        expect(dependency.relativePaths[0].isCustomResolveUsed).to.be.true;
+      });
+    });
     describe('importing the component', () => {
       before(() => {
+        helper.getClonedLocalScope(scopeAfterAdding);
         helper.tagAllComponents();
         helper.exportAllComponents();
 
