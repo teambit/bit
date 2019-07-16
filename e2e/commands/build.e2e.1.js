@@ -8,7 +8,7 @@ chai.use(require('chai-fs'));
 
 chai.use(assertArrays);
 
-describe.only('bit build', function () {
+describe('bit build', function () {
   this.timeout(0);
   const helper = new Helper();
   after(() => {
