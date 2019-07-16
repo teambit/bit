@@ -17,7 +17,7 @@ const assertArrays = require('chai-arrays');
 chai.use(assertArrays);
 chai.use(require('chai-string'));
 
-describe('bit import', function () {
+describe.only('bit import', function () {
   this.timeout(0);
   const helper = new Helper();
 
