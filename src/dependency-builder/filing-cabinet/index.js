@@ -303,6 +303,17 @@ function commonJSLookup(options: Options) {
 
   let result = '';
 
+  if (!isRelativeImport(partial) && resolveConfig) {
+    debug(`trying to resolve using resolveConfig ${JSON.stringify(resolveConfig)}`);
+    result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
+    if (result) {
+      debug('successfully resolved using resolveConfig');
+      options.wasCustomResolveUsed = true;
+      return result;
+    }
+    debug('failed resolved using resolveConfig, fall back to the standard resolver');
+  }
+
   try {
     result = resolve.sync(partial, {
       extensions: resolveExtensions,
@@ -311,13 +322,7 @@ function commonJSLookup(options: Options) {
     });
     debug(`resolved path: ${result}`);
   } catch (e) {
-    if (!isRelativeImport(partial) && resolveConfig) {
-      debug(`trying to resolve using resolveConfig ${JSON.stringify(resolveConfig)}`);
-      result = resolveNonRelativePath(partial, filename, directory, resolveConfig);
-      if (result) options.wasCustomResolveUsed = true;
-    } else {
-      debug(`could not resolve ${partial}`);
-    }
+    debug(`could not resolve ${partial}`);
   }
 
   return result;
