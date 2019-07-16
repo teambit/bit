@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## [unreleased]
 
 - [#1779](https://github.com/teambit/bit/issues/1779) update bit-javascript to prioritize custom-resolve settings
+- avoid generating duplicate `require` statements within dependency links files of ES6
+- generate an index.d.ts file for node_modules links generated for custom-resolve-modules of typescript components
 - [#1808](https://github.com/teambit/bit/issues/1808) support adding dist-path-template as a package-json value, which gets replaced with the calculated dist path upon import
 - update execa to v2.0.3
 - [#1792](https://github.com/teambit/bit/issues/1792) don't generate entry-point files for nested dependencies when their `package.json` is written
