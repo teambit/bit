@@ -92,7 +92,7 @@ jobs:
       -
         run:
           name: 'Install npm dependencies'
-          command: 'cd bit && npm install'
+          command: 'cd bit && sudo npm install'
       # -
       #   save_cache:
       #     key: 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
@@ -365,7 +365,7 @@ jobs:
       -
         run:
           name: 'npm link bit to global'
-          command: cd bit && npm link
+          command: cd bit && sudo npm link
       -
         run: which bit
       -
