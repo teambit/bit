@@ -103,6 +103,7 @@ jobs:
           root: .
           paths:
             - bit/node_modules
+            - bit/releases
   install_bit_javascript_npm_deps:
     docker:
       -
@@ -357,6 +358,10 @@ jobs:
       #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
       # -
       #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run:
           name: 'npm link bit to global'
