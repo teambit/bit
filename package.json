@@ -30,7 +30,7 @@
     "clean": "rm -rf dist",
     "build": "babel src -d dist --verbose",
     "pkg": "pkg bin/bit.js --targets node10 --out-path releases/ --options --no-warnings --config package.json",
-    "pkg:all": "pkg bin/bit.js --targets node10-macos-x64,node10-win-x64,node10-linux-x64 --out-path releases/ --options --no-warnings",
+    "pkg:all": "pkg bin/bit.js --targets node10-macos-x64,node10-win-x64,node10-linux-x64 --out-path releases/ --options --no-warnings --config package.json",
     "watch": "babel --watch bin src -d dist --source-maps --verbose",
     "build-debug": "babel src -d dist --source-maps",
     "prepublishOnly": "npm run clean && npm run build",
