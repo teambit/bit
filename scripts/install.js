@@ -1,6 +1,7 @@
 const fs = require('fs');
 const fetch = require('make-fetch-happen');
 const semver = require('semver');
+const mkdirp = require('mkdirp');
 const path = require('path');
 const chalk = require('chalk');
 const { execSync } = require('child_process');
@@ -16,6 +17,7 @@ const EXECUTABLE_CACHE_LOCATION = path.join(userHome, 'Library', 'Caches', 'Bit'
 const ROOT_BIT_DIR = path.join(__dirname, '..');
 
 const BASE_URL = 'https://github.com/teambit/bit/releases/download';
+const BIN_NAME = 'bit';
 
 function log(msg) {
   console.log(chalk.green('bit install:'), msg);
@@ -36,7 +38,7 @@ async function fetchBinary(binaryFileUrl) {
   return res.buffer();
 }
 
-function checkExistingBinary() {
+function getExistingBinary() {
   try {
     let existingBinary = CURRENT_DEFAULT_BINARY_PATH;
     log(`searching for ${CURRENT_DEFAULT_BINARY_PATH} and ${CURRENT_BINARY_PATH}`);
@@ -50,11 +52,57 @@ function checkExistingBinary() {
     const cmd = `${existingBinary} --version`;
     const stdout = execSync(cmd);
     const isValidVersion = !!semver.valid(stdout.toString().trim());
-    return isValidVersion;
+    if (isValidVersion) {
+      return existingBinary;
+    }
+    return false;
   } catch (e) {
     console.log(e);
     return false;
   }
+}
+
+function getInstallationPathFromEnv() {
+  // We couldn't infer path from `npm bin`. Let's try to get it from
+  // Environment variables set by NPM when it runs.
+  // npm_config_prefix points to NPM's installation directory where `bin` folder is available
+  // Ex: /Users/foo/.nvm/versions/node/v4.3.0
+  const env = process.env;
+  if (env && env.npm_config_prefix) {
+    const dir = path.join(env.npm_config_prefix, 'bin');
+    return dir;
+  }
+}
+
+function getInstallationPath() {
+  let dir;
+  try {
+    // `npm bin` will output the path where binary files should be installed
+    const stdout = execSync('npm bin');
+    if (!stdout || stdout.length === 0) {
+      dir = getInstallationPathFromEnv();
+    } else {
+      dir = stdout.trim();
+    }
+  } catch (e) {
+    dir = getInstallationPathFromEnv();
+  }
+  if (dir) {
+    mkdirp.sync(dir);
+    return dir;
+  }
+}
+
+function getBinaryInstallationPath() {
+  const binDir = getInstallationPath();
+  return path.join(binDir, BIN_NAME);
+}
+
+function copyBinaryToBinDir() {
+  const installationPath = getBinaryInstallationPath();
+  const existingBinary = getExistingBinary();
+  log(`copy binary from ${existingBinary} to ${installationPath}`);
+  fs.renameSync(existingBinary, installationPath);
 }
 
 function buildSrc() {
@@ -76,20 +124,24 @@ function pkgBinary() {
 function tryBuildingBinary() {
   buildSrc();
   pkgBinary();
+  copyBinaryToBinDir();
 }
 
 async function tryDownloadingBinary() {
   try {
     const binaryFileUrl = findFileUrl();
     const binaryFile = await fetchBinary(binaryFileUrl);
-    fs.writeFileSync(CURRENT_BINARY_PATH, binaryFile);
-    fs.chmodSync(CURRENT_BINARY_PATH, '755');
+    const targetFilePath = getBinaryInstallationPath();
+    log(`writing binary at ${targetFilePath}`);
+    fs.writeFileSync(targetFilePath, binaryFile);
+    fs.chmodSync(targetFilePath, '755');
   } catch (e) {} // silently fail, we recover from all errors here by building on our own
 }
 
 async function main() {
-  if (checkExistingBinary()) {
+  if (getExistingBinary()) {
     log('Existing bit binary found.');
+    copyBinaryToBinDir();
     return;
   }
   log('Bit binary not found or corrupted, attempting to download a prebuilt version.');
@@ -97,7 +149,7 @@ async function main() {
     log('SKIP_FETCH_BINARY is set to true, skipping fetching the binary file');
   } else {
     await tryDownloadingBinary();
-    if (checkExistingBinary()) {
+    if (getExistingBinary()) {
       log('Prebuilt version downloaded successfully.');
       return;
     }

@@ -38,9 +38,6 @@
     "pre-release": "npm run pkg:all && gh-release -a releases/bit-linux,releases/bit-win.exe,releases/bit-macos --prerelease",
     "release": "npm run pkg:all && gh-release -a releases/bit-linux,releases/bit-win.exe,releases/bit-macos"
   },
-  "bin": {
-    "bit": "bin/run-bit.js"
-  },
   "pkg": {
     "assets": [
       "dist/analytics/analytics-sender.js",
