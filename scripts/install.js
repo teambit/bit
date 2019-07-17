@@ -11,7 +11,8 @@ const {
   CURRENT_BINARY_FILE_NAME,
   CURRENT_DEFAULT_BINARY_PATH,
   CURRENT_BINARY_PATH,
-  BINARY_FINAL_FILE_NAME
+  BINARY_FINAL_FILE_NAME,
+  IS_WINDOWS
 } = require('./scripts-constants');
 // const { IS_WINDOWS } = require('../src/constants');
 
@@ -78,6 +79,22 @@ function getInstallationPathFromEnv() {
   }
 }
 
+function correctInstallationPathForWindows(originalDir) {
+  const osPath = process.env.path;
+  const splittedOsPath = osPath.split(';');
+  const pathsExistingInOrigDir = splittedOsPath.filter((currPath) => {
+    const includs = currPath && originalDir.includes(currPath);
+    return includs;
+  });
+  if (!pathsExistingInOrigDir || !pathsExistingInOrigDir.length) {
+    return null;
+  }
+  pathsExistingInOrigDir.sort((a, b) => {
+    return b.length - a.length;
+  });
+  return pathsExistingInOrigDir[0];
+}
+
 function getInstallationPath() {
   let dir;
   try {
@@ -96,8 +113,14 @@ function getInstallationPath() {
   if (dir) {
     // taken from here: https://github.com/sanathkr/go-npm/pull/7
     dir = dir.replace(/node_modules.*\/\.bin/, 'node_modules/.bin');
-    mkdirp.sync(dir);
-    return dir;
+    let finalDir = dir;
+    if (IS_WINDOWS) {
+      log('change installation dir for windows');
+      const updatedDir = correctInstallationPathForWindows(dir);
+      finalDir = updatedDir || dir;
+    }
+    mkdirp.sync(finalDir);
+    return finalDir;
   }
 }
 

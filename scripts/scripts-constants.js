@@ -16,6 +16,7 @@ const BINARY_FILE_NAMES = {
 
 const BINARY_FINAL_FILE_NAME = platform === 'win32' ? 'bit.exe' : 'bit';
 
+const IS_WINDOWS = platform === 'win32';
 const BINARY_DIR = path.join(__dirname, '..', 'releases');
 const CURRENT_DEFAULT_BINARY_FILE_NAME = DEFAULT_BINARY_FILE_NAMES[platform];
 const CURRENT_BINARY_FILE_NAME = BINARY_FILE_NAMES[platform];
@@ -31,5 +32,6 @@ module.exports = {
   CURRENT_BINARY_FILE_NAME,
   BINARY_DIR,
   CURRENT_DEFAULT_BINARY_PATH,
-  CURRENT_BINARY_PATH
+  CURRENT_BINARY_PATH,
+  IS_WINDOWS
 };
