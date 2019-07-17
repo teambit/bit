@@ -59,7 +59,7 @@ export default class Helper {
     if (this.debugMode) console.log(rightpad(chalk.green('command: '), 20, ' '), cmd); // eslint-disable-line
     const cmdOutput = childProcess.execSync(cmd, { cwd, shell: true });
     if (this.debugMode) console.log(rightpad(chalk.green('output: '), 20, ' '), chalk.cyan(cmdOutput.toString())); // eslint-disable-line
-    return cmdOutput.toString();
+    return removeChalkCharacters(cmdOutput.toString());
   }
 
   parseOptions(options: Object): string {
