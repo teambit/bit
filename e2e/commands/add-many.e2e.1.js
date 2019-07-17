@@ -24,7 +24,7 @@ function sortComponentsArrayByComponentId(componentsArray) {
   });
 }
 
-describe.only('bit add many programmatically', function () {
+describe('bit add many programmatically', function () {
   const helper = new Helper();
   const components = [
     {
