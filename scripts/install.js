@@ -94,6 +94,8 @@ function getInstallationPath() {
     dir = getInstallationPathFromEnv();
   }
   if (dir) {
+    // taken from here: https://github.com/sanathkr/go-npm/pull/7
+    dir = dir.replace(/node_modules.*\/\.bin/, 'node_modules/.bin');
     mkdirp.sync(dir);
     return dir;
   }
