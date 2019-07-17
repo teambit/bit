@@ -16,7 +16,9 @@ if (fs.existsSync(CURRENT_DEFAULT_BINARY_PATH)) {
   console.log('could not find bit executable');
   process.exit();
 }
-const child = exec(`${existingBinary} ${argsForChild}`, { env: { FORCE_COLOR: 1 } });
+const child = exec(`${existingBinary} ${argsForChild}`, {
+  env: Object.assign({}, process.env, { FORCE_COLOR: 1 })
+});
 child.stdout.pipe(process.stdout);
 child.stderr.pipe(process.stderr);
 child.on('exit', function (code, signal) {
