@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- stop supporting node < 8.0.0 (node less than 8 is not maintained anymore)
 - [#1779](https://github.com/teambit/bit/issues/1779) update bit-javascript to prioritize custom-resolve settings
 - avoid generating duplicate `require` statements within dependency links files of ES6
 - generate an index.d.ts file for node_modules links generated for custom-resolve-modules of typescript components
