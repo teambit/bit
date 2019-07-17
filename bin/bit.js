@@ -27,7 +27,9 @@ function ensureDirectories() {
 function verifyCompatibility() {
   if (compatibilityStatus === 'unsupported') {
     console.log(
-      require('chalk').red(`Node version ${nodeVersion} is not supported, please use Node.js 4.0 or higher.`)
+      require('chalk').red(
+        `Node version ${nodeVersion} is not supported, please use Node.js 8.0 or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
+      )
     ); // eslint-disable-line
     return process.exit();
   }
@@ -45,12 +47,8 @@ function bitVersion() {
 }
 
 function getCompatibilityStatus() {
-  if (semver.satisfies(nodeVersion, '>=5.0.0')) {
+  if (semver.satisfies(nodeVersion, '>=8.0.0')) {
     return 'current';
-  }
-
-  if (semver.satisfies(nodeVersion, '>=4.0.0')) {
-    return 'legacy';
   }
 
   return 'unsupported';

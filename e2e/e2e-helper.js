@@ -156,10 +156,6 @@ export default class Helper {
   nodeStart(mainFilePath: string, cwd?: string) {
     return this.runCmd(`node ${mainFilePath}`, cwd);
   }
-
-  npmLink(libraryName: string, cwd: string = process.cwd()) {
-    return this.runCmd(`npm link ${libraryName}`, cwd);
-  }
   // #endregion
 
   // #region scopes utils (init, remote etc')
