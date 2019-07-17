@@ -5,7 +5,13 @@ const path = require('path');
 const { CURRENT_DEFAULT_BINARY_PATH, CURRENT_BINARY_PATH } = require('../scripts/scripts-constants');
 const fs = require('fs-extra');
 
-const argsForChild = process.argv && process.argv.length > 2 ? process.argv.slice(2).join(' ') : '';
+const argsForChild =
+  process.argv && process.argv.length > 2
+    ? process.argv
+      .slice(2)
+      .map(c => (/\s/.test(c) ? `"${c}"` : c))
+      .join(' ')
+    : '';
 
 let existingBinary = CURRENT_DEFAULT_BINARY_PATH;
 if (fs.existsSync(CURRENT_DEFAULT_BINARY_PATH)) {
