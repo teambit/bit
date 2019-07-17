@@ -27,7 +27,9 @@ function ensureDirectories() {
 function verifyCompatibility() {
   if (compatibilityStatus === 'unsupported') {
     console.log(
-      require('chalk').red(`Node version ${nodeVersion} is not supported, please use Node.js 8.0 or higher.`)
+      require('chalk').red(
+        `Node version ${nodeVersion} is not supported, please use Node.js 8.0 or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
+      )
     ); // eslint-disable-line
     return process.exit();
   }
