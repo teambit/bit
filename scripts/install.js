@@ -81,8 +81,10 @@ function getInstallationPathFromEnv() {
 function getInstallationPath() {
   let dir;
   try {
-    // `npm bin` will output the path where binary files should be installed
-    const stdout = execSync('npm bin');
+    // `$npm_execpath bin` will output the path where binary files should be installed
+    // using whichever package manager is current
+    const packageManager = process.env.npm_execpath || 'npm';
+    const stdout = execSync(`${packageManager} bin`);
     if (!stdout || stdout.length === 0) {
       dir = getInstallationPathFromEnv();
     } else {
