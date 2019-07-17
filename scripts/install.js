@@ -72,6 +72,7 @@ function getInstallationPathFromEnv() {
   // Environment variables set by NPM when it runs.
   // npm_config_prefix points to NPM's installation directory where `bin` folder is available
   // Ex: /Users/foo/.nvm/versions/node/v4.3.0
+  log('getting installation path from env.npm_config_prefix');
   const env = process.env;
   if (env && env.npm_config_prefix) {
     const dir = path.join(env.npm_config_prefix, 'bin');
@@ -83,8 +84,8 @@ function correctInstallationPathForWindows(originalDir) {
   const osPath = process.env.path;
   const splittedOsPath = osPath.split(';');
   const pathsExistingInOrigDir = splittedOsPath.filter((currPath) => {
-    const includs = currPath && originalDir.includes(currPath);
-    return includs;
+    const includes = currPath && originalDir.includes(currPath);
+    return includes;
   });
   if (!pathsExistingInOrigDir || !pathsExistingInOrigDir.length) {
     return null;
@@ -97,17 +98,22 @@ function correctInstallationPathForWindows(originalDir) {
 
 function getInstallationPath() {
   let dir;
+  let npmBinCmd;
   try {
     // `$npm_execpath bin` will output the path where binary files should be installed
     // using whichever package manager is current
-    const packageManager = process.env.npm_execpath || 'npm';
-    const stdout = execSync(`${packageManager} bin`);
-    if (!stdout || stdout.length === 0) {
-      dir = getInstallationPathFromEnv();
-    } else {
-      dir = stdout.toString().trim();
-    }
+    // const packageManager = process.env.npm_execpath || 'npm';
+    // npmBinCmd = `${packageManager} bin`;
+    // const stdout = execSync(npmBinCmd);
+    // if (!stdout || stdout.length === 0) {
+    //  dir = getInstallationPathFromEnv();
+    // } else {
+    //  dir = stdout.toString().trim();
+    // }
+    dir = getInstallationPathFromEnv();
   } catch (e) {
+    // log(`failing running ${npmBinCmd}`);
+    log('failing running getInstallationPathFromEnv');
     dir = getInstallationPathFromEnv();
   }
   if (dir) {
