@@ -147,7 +147,7 @@ jobs:
   pack:
     docker:
       -
-        image: 'circleci/node:10.16'
+        image: 'circleci/node:8.14.1'
     working_directory: ~/bit
     steps:
       -
@@ -507,7 +507,7 @@ workflows:
             - build
             - build_bit_javascript
             # - pack
-            
+
   performence_tests:
     triggers:
       - schedule:
