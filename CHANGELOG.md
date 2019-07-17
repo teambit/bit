@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-dev.11] - 2019-07-17
+
+- support packaging bit-bin into a binary file according to the OS by running `npm run pkg`
 - stop supporting node < 8.0.0 (node less than 8 is not maintained anymore)
 - [#1779](https://github.com/teambit/bit/issues/1779) update bit-javascript to prioritize custom-resolve settings
 - avoid generating duplicate `require` statements within dependency links files of ES6
