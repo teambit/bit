@@ -1,5 +1,6 @@
 // @flow
 import path from 'path';
+import bitJavascript from 'bit-javascript';
 import DriverNotFound from './exceptions/driver-not-found';
 import { DEFAULT_LANGUAGE } from '../constants';
 import logger from '../logger/logger';
@@ -23,15 +24,20 @@ export default class Driver {
   getDriver(silent: boolean = true): ?Object {
     if (this.driver) return this.driver;
     const langDriver = this.driverName();
-    try {
-      this.driver = require(langDriver);
-      return this.driver;
-    } catch (err) {
-      logger.error('failed to get the driver', err);
-      if (silent) return undefined;
-      if (err.code !== 'MODULE_NOT_FOUND' && err.message !== 'missing path') throw err;
-      throw new DriverNotFound(langDriver, this.lang);
+    if (langDriver === 'bit-javascript') {
+      this.driver = bitJavascript;
+    } else {
+      try {
+        this.driver = require(langDriver);
+      } catch (err) {
+        logger.error('failed to get the driver', err);
+        if (silent) return undefined;
+        if (err.code !== 'MODULE_NOT_FOUND' && err.message !== 'missing path') throw err;
+        throw new DriverNotFound(langDriver, this.lang);
+      }
     }
+
+    return this.driver;
   }
 
   runHook(hookName: string, param: *, returnValue?: *): Promise<*> {

@@ -24,7 +24,7 @@ type RegisteredHooksActions = {
   [string]: HookAction
 };
 
-type Commands = {
+export type Commands = {
   [string]: NewCommand
 };
 

@@ -5,10 +5,16 @@ import path from 'path';
 import format from 'string-format';
 import BaseExtension from './base-extension';
 import type Scope from '../scope/scope';
-import type { BaseExtensionProps, BaseLoadArgsProps, BaseExtensionOptions, BaseExtensionModel } from './base-extension';
+import type {
+  EnvType,
+  EnvLoadArgsProps,
+  EnvExtensionProps,
+  EnvExtensionModel,
+  EnvExtensionSerializedModel
+} from './env-extension-types';
+import type { BaseExtensionProps, BaseExtensionModel } from './base-extension';
 import BitId from '../bit-id/bit-id';
 import ExtensionFile from './extension-file';
-import type { ExtensionFileModel, ExtensionFileSerializedModel } from './extension-file';
 import { Repository } from '../scope/objects';
 import { pathJoinLinux, sortObject, sha1 } from '../utils';
 import removeFilesAndEmptyDirsRecursively from '../utils/fs/remove-files-and-empty-dirs-recursively';
@@ -33,34 +39,6 @@ import type Consumer from '../consumer/consumer';
 import type { ConsumerOverridesOfComponent } from '../consumer/config/consumer-overrides';
 import AbstractConfig from '../consumer/config/abstract-config';
 import makeEnv from './env-factory';
-
-// Couldn't find a good way to do this with consts
-// see https://github.com/facebook/flow/issues/627
-// I would expect something like:
-// type EnvType = CompilerEnvType | TesterEnvType would work
-export type EnvType = 'compiler' | 'tester';
-
-type EnvExtensionExtraProps = {
-  envType: EnvType,
-  dynamicPackageDependencies?: ?Object
-};
-
-export type EnvExtensionOptions = BaseExtensionOptions;
-
-export type EnvLoadArgsProps = BaseLoadArgsProps &
-  EnvExtensionExtraProps & {
-    bitJsonPath: PathOsBased,
-    files: string[]
-  };
-
-export type EnvExtensionProps = BaseExtensionProps & EnvExtensionExtraProps & { files: ExtensionFile[] };
-
-export type EnvExtensionModel = BaseExtensionModel & {
-  files?: ExtensionFileModel[]
-};
-export type EnvExtensionSerializedModel = BaseExtensionModel & {
-  files?: ExtensionFileSerializedModel[]
-};
 
 export default class EnvExtension extends BaseExtension {
   envType: EnvType;
@@ -98,7 +76,11 @@ export default class EnvExtension extends BaseExtension {
     this.files = extensionProps.files;
   }
 
-  async install(scope: Scope, opts: { verbose: boolean }, context?: Object): Promise<?(ComponentWithDependencies[])> {
+  async install(
+    scope: Scope,
+    opts: { verbose: boolean, dontPrintEnvMsg?: boolean },
+    context?: Object
+  ): Promise<?(ComponentWithDependencies[])> {
     Analytics.addBreadCrumb('env-extension', 'install env extension');
     logger.debug('env-extension - install env extension');
 

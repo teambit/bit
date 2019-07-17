@@ -258,7 +258,8 @@ export default class Scope {
     components: Component[],
     consumer: Consumer,
     noCache: boolean,
-    verbose: boolean
+    verbose: boolean,
+    dontPrintEnvMsg?: boolean = false
   ): Promise<{ component: string, buildResults: Object }> {
     logger.debugAndAddBreadCrumb('scope.buildMultiple', 'scope.buildMultiple: sequentially build multiple components');
     // Make sure to not start the loader if there are no components to build
@@ -266,7 +267,7 @@ export default class Scope {
       loader.start(BEFORE_RUNNING_BUILD);
     }
     const build = async (component: Component) => {
-      await component.build({ scope: this, consumer, noCache, verbose });
+      await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
       const buildResults = await component.dists.writeDists(component, consumer);
       return { component: component.id.toString(), buildResults };
     };
@@ -313,11 +314,13 @@ export default class Scope {
     components,
     consumer,
     verbose,
+    dontPrintEnvMsg = false,
     rejectOnFailure = false
   }: {
     components: Component[],
     consumer: Consumer,
     verbose: boolean,
+    dontPrintEnvMsg?: boolean,
     rejectOnFailure?: boolean
   }): Promise<SpecsResultsWithComponentId> {
     logger.debugAndAddBreadCrumb('scope.testMultiple', 'scope.testMultiple: sequentially test multiple components');
@@ -334,7 +337,8 @@ export default class Scope {
         scope: this,
         rejectOnFailure,
         consumer,
-        verbose
+        verbose,
+        dontPrintEnvMsg
       });
       const pass = specs ? specs.every(spec => spec.pass) : true;
       return { componentId: component.id, specs, pass };

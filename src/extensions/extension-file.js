@@ -9,7 +9,7 @@ import logger from '../logger/logger';
 import type { PathOsBased, PathLinux } from '../utils/path';
 import { Repository, Ref } from '../scope/objects';
 import Source from '../scope/models/source';
-import type { EnvType } from './env-extension';
+import type { EnvType } from './env-extension-types';
 import { pathNormalizeToLinux } from '../utils/path';
 
 export type ExtensionFileModel = {

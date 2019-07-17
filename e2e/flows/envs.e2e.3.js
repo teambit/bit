@@ -646,7 +646,10 @@ describe('envs', function () {
             expect(output).to.have.string('total duration');
             expect(output).to.have.string('✔   group of passed tests');
           });
-          it('should write config files to tmp directory', () => {
+          // This was skipped as part of the binary branch since we move the bit test to run inside bit
+          // and we expect a valid json to return from the command.
+          // See worker.js and search for "const VERBOSE = false" for more information
+          it.skip('should write config files to tmp directory', () => {
             const tmpFolder = path.join(helper.localScopePath, componentFolder, BIT_WORKSPACE_TMP_DIRNAME);
             const writingStr = `writing config files to ${tmpFolder}`;
             // Since the output comes from console.log it's with \n also in windows

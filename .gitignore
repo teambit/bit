@@ -82,6 +82,7 @@ _book
 
 # pkg releases
 releases/
+bin/bit
 
 # sonarcloud dir
 .scannerwork

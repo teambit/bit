@@ -5,16 +5,21 @@ import { testInProcess } from '../api/consumer/lib/test';
 import loader from '../cli/loader';
 import ExternalErrors from '../error/external-errors';
 import ExternalError from '../error/external-error';
+import type { SpecsResultsWithComponentId } from '../consumer/specs-results/specs-results';
+
+export type SerializedSpecsResultsWithComponentId = {
+  type: 'error' | 'results',
+  error?: Object,
+  results?: SpecsResultsWithComponentId[]
+};
 
 const testOneComponent = verbose => async (id: string) => {
   // $FlowFixMe
   const res = await testInProcess(id, false, verbose);
-  return res[0];
+  return res.results[0];
 };
 
-function run(): Promise<void> {
-  // Start the loader to make sure we show it on forked process
-  loader.on();
+export default function run(): Promise<void> {
   const ids = process.env.__ids__ ? process.env.__ids__.split() : undefined;
   const verbose: boolean = process.env.__verbose__ === true || process.env.__verbose__ === 'true';
   const includeUnmodified: boolean =
@@ -22,15 +27,19 @@ function run(): Promise<void> {
   if (!ids || !ids.length) {
     return testInProcess(undefined, includeUnmodified, verbose)
       .then((results) => {
-        const serializedResults = serializeResults(results);
+        const serializedResults = serializeResults(results.results);
         // $FlowFixMe
-        return process.send(serializedResults);
+        process.send(serializedResults);
+        // Make sure the child process will not hang
+        process.exit();
       })
       .catch((e) => {
         loader.off();
         const serializedResults = serializeResults(e);
         // $FlowFixMe
-        return process.send(serializedResults);
+        process.send(serializedResults);
+        // Make sure the child process will not hang
+        process.exit();
       });
   }
   const testAllP = ids.map(testOneComponent(verbose));
@@ -38,20 +47,28 @@ function run(): Promise<void> {
     .then((results) => {
       const serializedResults = serializeResults(results);
       // $FlowFixMe
-      return process.send(serializedResults);
+      process.send(serializedResults);
+      // Make sure the child process will not hang
+      process.exit();
     })
     .catch((e) => {
       loader.off();
       const serializedResults = serializeResults(e);
       // $FlowFixMe
-      return process.send(serializedResults);
+      process.send(serializedResults);
+      // Make sure the child process will not hang
+      process.exit();
     });
 }
 
 run();
 
-function serializeResults(results) {
-  if (!results) return undefined;
+function serializeResults(results): SerializedSpecsResultsWithComponentId {
+  // if (!results) return undefined;
+  if (!results) {
+    return { type: 'results', results: [] };
+  }
+
   if (results instanceof Error) {
     // In case of external error also serialize the original error
     if (results instanceof ExternalErrors) {
@@ -85,11 +102,13 @@ function serializeResults(results) {
   };
 
   const serializeResult = (result) => {
-    if (!result.specs) return result;
-    result.specs = result.specs.map(serializeSpec);
+    const specs = result.specs;
+    if (!specs || !Array.isArray(specs)) return result;
+    result.specs = specs.map(serializeSpec);
     return result;
   };
 
   const serializedResults = results.map(serializeResult);
+  // $FlowFixMe
   return { type: 'results', results: serializedResults };
 }

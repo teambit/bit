@@ -16,7 +16,6 @@ specs/specs-runner/fixtures/invalid-tester.js
 src/api/consumer/lib/isolate.js
 src/api/consumer/lib/migrate.js
 src/api/scope/lib/modify-ci-props.js
-src/cli/command-registrar-builder.js
 src/cli/commands/private-cmds/_delete-cmd.js
 src/cli/commands/private-cmds/migrate-cmd.js
 src/cli/commands/public-cmds/isolate-cmd.js

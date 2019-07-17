@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 'use strict'; // eslint-disable-line
-require('v8-compile-cache');
+// require('v8-compile-cache');
 
 const constants = require('../dist/constants');
 
@@ -14,7 +14,7 @@ bitVersion();
 const semver = require('semver');
 const mkdirp = require('mkdirp');
 const chalk = require('chalk');
-const bitUpdates = require('./bit-updates');
+// const bitUpdates = require('./bit-updates');
 
 const nodeVersion = process.versions.node.split('-')[0];
 const compatibilityStatus = getCompatibilityStatus();
@@ -54,13 +54,13 @@ function getCompatibilityStatus() {
   return 'unsupported';
 }
 
-function checkForUpdates(cb) {
-  return () => bitUpdates.checkUpdate(cb);
-}
+// function checkForUpdates(cb) {
+//   return () => bitUpdates.checkUpdate(cb);
+// }
 
-function updateOrLaunch(updateCommand) {
-  return updateCommand ? bitUpdates.runUpdate(updateCommand) : loadCli();
-}
+// function updateOrLaunch(updateCommand) {
+//   return updateCommand ? bitUpdates.runUpdate(updateCommand) : loadCli();
+// }
 
 function loadCli() {
   return require('../dist/app.js');
@@ -75,4 +75,4 @@ function promptAnalyticsIfNeeded(cb) {
 }
 verifyCompatibility();
 ensureDirectories();
-promptAnalyticsIfNeeded(checkForUpdates(updateOrLaunch));
+promptAnalyticsIfNeeded(loadCli);

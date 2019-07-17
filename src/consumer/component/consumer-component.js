@@ -48,7 +48,6 @@ import { Dependency, Dependencies } from './dependencies';
 import Dists from './sources/dists';
 import type { PathLinux, PathOsBased, PathOsBasedAbsolute, PathOsBasedRelative } from '../../utils/path';
 import type { RawTestsResults } from '../specs-results/specs-results';
-import { paintSpecsResults } from '../../cli/chalk-box';
 import ExternalTestErrors from './exceptions/external-test-errors';
 import GeneralError from '../../error/general-error';
 import { Analytics } from '../../analytics/analytics';
@@ -538,6 +537,7 @@ export default class Component {
     consumer,
     noCache,
     verbose,
+    dontPrintEnvMsg,
     directory,
     keep
   }: {
@@ -547,6 +547,7 @@ export default class Component {
     noCache?: boolean,
     directory?: string,
     verbose?: boolean,
+    dontPrintEnvMsg?: boolean,
     keep?: boolean
   }): Promise<?Dists> {
     return buildComponent({
@@ -557,6 +558,7 @@ export default class Component {
       noCache,
       directory,
       verbose,
+      dontPrintEnvMsg,
       keep
     });
   }
@@ -567,6 +569,7 @@ export default class Component {
     consumer,
     save,
     verbose,
+    dontPrintEnvMsg,
     isolated,
     directory,
     keep
@@ -576,6 +579,7 @@ export default class Component {
     consumer?: Consumer,
     save?: boolean,
     verbose?: boolean,
+    dontPrintEnvMsg?: boolean,
     isolated?: boolean,
     directory?: string,
     keep?: boolean
@@ -591,7 +595,7 @@ export default class Component {
       const componentDir = this.componentMap ? this.componentMap.getComponentDir() : undefined;
       const context = { dependentId: this.id, workspaceDir: consumerPath, componentDir };
       Analytics.addBreadCrumb('runSpecs', 'installing missing tester');
-      await tester.install(scope, { verbose }, context);
+      await tester.install(scope, { verbose, dontPrintEnvMsg }, context);
       logger.debug('Environment components are installed');
     }
 
@@ -726,11 +730,7 @@ export default class Component {
         // some or all the tests were failed.
         loader.stop();
         if (verbose) {
-          // $FlowFixMe this.specsResults is not null at this point
-          const specsResultsPretty = paintSpecsResults(this.specsResults).join('\n');
-          const componentIdPretty = c.bold.white(this.id.toString());
-          const specsResultsAndIdPretty = `${componentIdPretty}${specsResultsPretty}\n`;
-          return Promise.reject(new ComponentSpecsFailed(specsResultsAndIdPretty));
+          return Promise.reject(new ComponentSpecsFailed(this.id.toString(), this.specsResults));
         }
         return Promise.reject(new ComponentSpecsFailed());
       }

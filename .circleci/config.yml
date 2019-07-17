@@ -68,6 +68,11 @@ jobs:
       -
         image: 'circleci/node:8.14.1'
     working_directory: ~/bit
+    # skipping the pre-built binaries to make sure we build them by the pack step
+    # testing the install script will be done in different workflow dedicated for this
+    environment:
+      SKIP_FETCH_BINARY: true
+      # SKIP_LOCAL_BUILD_BINARY: true
     steps:
       -
         run:
@@ -82,6 +87,10 @@ jobs:
       #       - 'npm-deps-v14-{{ checksum "./bit/package.json" }}-{{ checksum "./bit/package-lock.json" }}-{{ checksum "./bit/.circleci/config.yml" }}'
       -
         run:
+          name: 'install pkg to support local build'
+          command: 'sudo npm install -g pkg'
+      -
+        run:
           name: 'Install npm dependencies'
           command: 'cd bit && npm install'
       # -
@@ -94,6 +103,7 @@ jobs:
           root: .
           paths:
             - bit/node_modules
+            - bit/releases
   install_bit_javascript_npm_deps:
     docker:
       -
@@ -134,6 +144,58 @@ jobs:
           root: .
           paths:
             - bit/dist
+  pack:
+    docker:
+      -
+        image: 'circleci/node:8.14.1'
+    working_directory: ~/bit
+    steps:
+      -
+        attach_workspace:
+          at: ./
+      -
+        run: 'sudo npm i -g pkg'
+      -
+        run:
+          name: 'save pkg targets names'
+          command: 'cat ./bit/package.json | jq .scripts.pkg | sed -E "s/^.*--targets (.*) -.*$/\1/" > /home/circleci/pkg-target.txt'
+      -
+        restore_cache:
+          keys:
+            - 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+            - pkg-cache-v2
+      -
+        run:
+          name: 'set pkg path'
+          command: 'echo ''export PKG_CACHE_PATH=/home/circleci/pkg-cache'' >> $BASH_ENV'
+      -
+        run:
+          name: 'npm link bit-javascript to bit'
+          command: 'cd bit && sudo npm link ../bit-javascript'
+      -
+        run:
+          name: 'Pack bit'
+          command: 'cd bit && npm run pkg'
+      -
+        save_cache:
+          key: 'pkg-cache-v2-{{ checksum "/home/circleci/pkg-target.txt" }}'
+          paths:
+            - ~/pkg-cache
+      -
+        save_cache:
+          key: pkg-cache-v2
+          paths:
+            - /home/circleci/pkg-cache
+      -
+        run:
+          name: 'copy unsuported files'
+          command: 'cd bit && cp ./node_modules/opn/xdg-open ./releases/xdg-open'
+      -
+        persist_to_workspace:
+          root: .
+          paths:
+            - bit/releases
+
   build_bit_javascript:
     docker:
       -
@@ -292,14 +354,20 @@ jobs:
         run: 'ssh-add ~/.ssh/id_rsa'
       -
         run: 'cd bit && mkdir junit'
+      # -
+      #   run: 'mv ./bit/releases/bit-bin ./bit/releases/bit'
+      # -
+      #   run: 'echo ''export PATH=~/bit/bit/releases:$PATH'' >> $BASH_ENV'
       -
         run:
           name: 'npm link bit-javascript to bit'
-          command: 'cd bit && npm link ../bit-javascript'
+          command: 'cd bit && sudo npm link ../bit-javascript'
       -
         run:
           name: 'npm link bit to global'
-          command: 'cd bit && npm link'
+          command: cd bit && npm link
+      -
+        run: which bit
       -
         run: 'bit config set analytics_reporting false'
       -
@@ -316,10 +384,10 @@ jobs:
       #   run:
       #     name: 'bit import'
       #     command: 'cd bit && bit import'
-      -
-        run:
-          name: 'npm install'
-          command: 'cd bit && bit install'
+      # -
+      #   run:
+      #     name: 'npm install'
+      #     command: 'cd bit && bit install'
       -
         # uncomment to configure circle to run against stg environment
         run: 'bit config set hub_domain hub-stg.bit.dev'
@@ -360,10 +428,6 @@ jobs:
         run: 'echo ''export PATH=~/.npm-global/bin:$PATH'' >> $BASH_ENV'
       -
         run: 'cd bit && mkdir junit'
-      -
-        run:
-          name: 'npm link bit-javascript to bit'
-          command: 'cd bit && npm link ../bit-javascript'
       -
         run:
           name: 'npm link bit to global'
@@ -430,13 +494,20 @@ workflows:
         lint:
           requires:
             - install_npm_deps
+      # -
+      #   pack:
+      #     requires:
+      #       - build
+      #       - build_bit_javascript
       -
         e2e_test:
           requires:
-            - build
-            - build_bit_javascript
             - set_ssh_key
             - set_bitsrc_registry
+            - build
+            - build_bit_javascript
+            # - pack
+
   performence_tests:
     triggers:
       - schedule:
