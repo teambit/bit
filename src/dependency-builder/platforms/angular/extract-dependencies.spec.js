@@ -38,4 +38,12 @@ describe('ExtractAngularDependencies', function () {
       expect(angularDependencies).to.include(componentDep);
     });
   });
+  describe('missing tsconfig.json file', () => {
+    const fixtureDir = path.join(__dirname, '/../../../../fixtures/angular/missing-tsconfig');
+    it('should throw an error saying the tsconfig was not found', () => {
+      const fileName = path.join(fixtureDir, 'index.ts');
+      const func = () => extractAngularDependencies(fixtureDir, fileName, {});
+      expect(func).to.throw('failed finding tsconfig.json file');
+    });
+  });
 });

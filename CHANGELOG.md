@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [2.0.12-dev.2] - 2019-07-17
+
+- propagate from component root dir backwards to find tsconfig.json for Angular projects
+
 ## [2.0.12-dev.1] - 2019-07-15
 
 - [#1779](https://github.com/teambit/bit/issues/1779) resolve first according to the custom-resolve settings and fallback to the standard resolver

@@ -3,6 +3,9 @@ import path from 'path';
 import fs from 'fs-extra';
 import { ProjectSymbols } from 'ngast';
 import R from 'ramda';
+import parents from 'parents';
+
+const debug = require('debug')('angular');
 
 export default function extractAngularDependencies(workspaceDir: string, fileName: string, existingAst: Object) {
   const contextSymbols = R.isEmpty(existingAst) ? getAst() : existingAst;
@@ -22,16 +25,18 @@ export default function extractAngularDependencies(workspaceDir: string, fileNam
       }
     };
 
-    const program = path.join(workspaceDir, 'tsconfig.json');
+    const tsconfigPath = _getTsconfigJsonPath();
     const defaultErrorReporter = (e, pathStr) => console.error(e, pathStr);
-    return new ProjectSymbols(program, resourceResolver, defaultErrorReporter);
+    return new ProjectSymbols(tsconfigPath, resourceResolver, defaultErrorReporter);
   }
 
   function getDependenciesFromDecorator(): string[] {
     const dependencies = [];
     if (!directive) return dependencies;
-    const templateUrl = directive.getNonResolvedMetadata().template.templateUrl;
-    const styleUrls = directive.getNonResolvedMetadata().template.styleUrls;
+    const directiveMetadata = directive.getNonResolvedMetadata();
+    if (!directiveMetadata.template) return dependencies;
+    const templateUrl = directiveMetadata.template.templateUrl;
+    const styleUrls = directiveMetadata.template.styleUrls;
     [templateUrl, ...styleUrls].forEach((url) => {
       if (url) {
         // for some reason, the url received is sometimes absolute sometimes relative to the fileName
@@ -43,13 +48,14 @@ export default function extractAngularDependencies(workspaceDir: string, fileNam
   }
 
   function getDependenciesFromTemplate(): string[] {
-    if (!directive) return [];
+    const dependencies = [];
+    if (!directive) return dependencies;
+    const directives = contextSymbols.getDirectives();
+    if (!directives) return dependencies;
     // dependencies from templates
-    const appSelectors = contextSymbols
-      .getDirectives()
-      .filter(d => d.isComponent())
-      .map(d => d.getNonResolvedMetadata().selector);
+    const appSelectors = directives.filter(d => d.isComponent()).map(d => d.getNonResolvedMetadata().selector);
     const templateAst = directive.getTemplateAst().templateAst;
+    if (!templateAst) return dependencies;
     const selectorsFromTemplate = templateAst
       .filter(t => t.name && t.constructor.name === 'ElementAst' && appSelectors.includes(t.name))
       .map(t => t.name);
@@ -58,5 +64,32 @@ export default function extractAngularDependencies(workspaceDir: string, fileNam
       .filter(d => selectorsFromTemplate.includes(d.getNonResolvedMetadata().selector))
       .map(d => d.symbol.filePath);
     return dependenciesFromTemplate;
+  }
+
+  /**
+   * propagate from the workspace dir (or component root dir if imported) backwards to find the
+   * tsconfig.json file.
+   */
+  function _getTsconfigJsonPath(): string {
+    const parentsDirs = parents(workspaceDir);
+    const findPath = (): ?string => {
+      for (let i = 0; i < parentsDirs.length; i += 1) {
+        const config = `${parentsDirs[i]}/tsconfig.json`;
+        try {
+          if (fs.lstatSync(config).isFile()) {
+            return config;
+          }
+        } catch (e) {
+          // that's fine, try the next directory
+        }
+      }
+      return null;
+    };
+    const tsConfigPath = findPath();
+    if (!tsConfigPath) {
+      throw new Error(`failed finding tsconfig.json file starting at "${workspaceDir}" directory`);
+    }
+    debug(`found tsconfig.json at ${tsConfigPath}`);
+    return tsConfigPath;
   }
 }
