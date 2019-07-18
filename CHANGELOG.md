@@ -7,95 +7,54 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.1.4-dev.12] - 2019-07-17
+## [14.2.0] - 2019-07-18
 
-- update bit-javascript to fix finding tsconfig.json for Angular projects
-- change the minimum node supported to v8.12.0 instead of v8.0.0, to be compatible with `execa`
+Bit is now available to install as a binary with all dependencies. This is the prefer method to install Bit, as it is bundled with its runtime. Note that when you install with npm / yarn Bit only supports node < `8.12.0`. 
 
-## [14.1.4-dev.11] - 2019-07-17
+### New
 
-- support packaging bit-bin into a binary file according to the OS by running `npm run pkg`
-- stop supporting node < 8.0.0 (node less than 8 is not maintained anymore)
-- [#1779](https://github.com/teambit/bit/issues/1779) update bit-javascript to prioritize custom-resolve settings
-- avoid generating duplicate `require` statements within dependency links files of ES6
-- generate an index.d.ts file for node_modules links generated for custom-resolve-modules of typescript components
-- [#1808](https://github.com/teambit/bit/issues/1808) support adding dist-path-template as a package-json value, which gets replaced with the calculated dist path upon import
-- update execa to v2.0.3
-- [#1792](https://github.com/teambit/bit/issues/1792) don't generate entry-point files for nested dependencies when their `package.json` is written
-- [#1817](https://github.com/teambit/bit/issues/1817) fix ComponentNotFound error when tagging after export & tag & untag for author using compiler that builds dependencies
+- Support packaging bit-bin into a binary file according to the OS by running `npm run pkg`
+- Enable compilers and testers to isolate components using capsule.
+- add `--no-cache` flag to `bit ci-update` command
+- [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file.
+- [#1770](https://github.com/teambit/bit/issues/1770) modify dependency links for compilers that bundle them.
+- [#1663](https://github.com/teambit/bit/issues/1663) Support toposort order when compiling components.
+- [#1808](https://github.com/teambit/bit/issues/1808) Adding `dist-path-template` as a `package.json` value, which gets replaced with the calculated dist path upon import.
+- Generate `index.d.ts` file for `node_modules` links generated for typescript's `custom-resolve-modules`.
+- Add a custom entry point file for Angular components
+- Support providing different main-file for dists by a compiler
+- Support identify angular dependencies
 
-## [14.1.4-dev.10] - 2019-07-11
-
-- [#1810](https://github.com/teambit/bit/issues/1810) avoid generating link files with ts/jsx/tsx extensions inside node_modules
-- [#1809](https://github.com/teambit/bit/issues/1809) avoid building components multiple times for compilers that support building dependencies
-- [#1807](https://github.com/teambit/bit/issues/1807) fix resolution of dependency when 2 files require it and one of them using alias
-
-## [14.1.4-dev.9] - 2019-07-10
-
-- [#1789](https://github.com/teambit/bit/issues/1789) prevent removal of peer-dependencies from capsule
-- [#1799](https://github.com/teambit/bit/issues/1799) strip shared directory before writing files into the capsule
-- [#1798](https://github.com/teambit/bit/issues/1798) fix replacing the component to full ids to work for all cases
-- [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
-
-## [14.1.4-dev.8] - 2019-07-07
-
-- [#1770](https://github.com/teambit/bit/issues/1770) update dependency link files when bundling them
-- [#1663](https://github.com/teambit/bit/issues/1663) allow compilers to get the capsule ready with dependencies built in a topological order
-- [#1788](https://github.com/teambit/bit/issues/1788) can't update the `pacakge.json` props from compiler who uses capsule
-
-## [14.1.4-dev.7] - 2019-07-03
-
-- await for a promise calls on post-add (one) hook
-
-## [14.1.4-dev.6] - 2019-07-02
+### Changes
 
 - fix require statements to an internal package file to not include extensions if they're [.js, .ts, .tsx, .jsx]
-- [#1762](https://github.com/teambit/bit/issues/1762) allow compilers to add properties to `package.json` file
+- [#1792](https://github.com/teambit/bit/issues/1792) don't generate entry-point files for nested dependencies when their `package.json` is written
 - change dependency links generated when dependencies are saved as components to be module paths and not relative paths
-- add a custom entry point file for Angular components
+
+### Bug fixes
+
+- [#1817](https://github.com/teambit/bit/issues/1817) fix `ComponentNotFound` error when tagging after `export`, `tag` and `untag` for author using compiler that builds dependencies.
+- [#1810](https://github.com/teambit/bit/issues/1810) avoid generating link files with `.ts`, `.jsx` and `.tsx` inside `node_modules`.
+- [#1807](https://github.com/teambit/bit/issues/1807) fix resolution of dependency when 2 files require it and one of them using alias
+- [#1796](https://github.com/teambit/bit/issues/1796) fix dependency resolution when 2 files of component import different things from a file of another component
+- [#1779](https://github.com/teambit/bit/issues/1779) update bit-javascript to prioritize custom-resolve settings
+- avoid generating duplicate `require` statements within dependency links files of ES6
+- update bit-javascript to fix finding tsconfig.json for Angular projects
 - [#1750](https://github.com/teambit/bit/issues/1750) improve the output to clarify when a dependency package is missing
 - [#1752](https://github.com/teambit/bit/issues/1752) fix dependency links generation when originally there were multiple link files
-- await for a promise calls on post-add (many) hook
-
-## [14.1.4-dev.5] - 2019-06-25
-
-- add experimental `post-add` hook
-
-## [14.1.4-dev.4] - 2019-06-24
-
-- add `--no-cache` flag to `bit ci-update` command
 - fix `directory` flag of `bit ci-update` command
-
-## [14.1.4-dev.3] - 2019-06-23
-
-- upgrade to babel 7
 - fix installation errors on Windows related to `posix` package by replacing it with `uid-number`
-
-## [14.1.4-dev.2] - 2019-06-18
-
-- improve isolation by capsule to install peer-dependencies
-- provide testers with a capsule isolate function
-
-## [14.1.4-dev.1] - 2019-06-17
-
-- fix publishing of bit-bin package to include the components directory
-
-## [14.1.4-angular.4] - 2019-06-14
-
 - [#1734](https://github.com/teambit/bit/issues/1734) fix error "unable to add the file ..." when the require statement was of `.` or `..` as the only string
 
-## [14.1.4-angular.3] - 2019-06-12
+### Experimental
 
-- support different main-file for dists
+- add `post-add` hook
+- add option to isolate component into "capsule" via `bit isolate` command
 
-## [14.1.4-angular.2] - 2019-06-11
+### Internal
 
-- add option to isolate component into "capsule"
-- enable compilers to isolate components using capsule
-
-## [14.1.4-angular.1] - 2019-06-10
-
-- support identify angular dependencies
+- update execa to v2.0.3
+- upgrade to babel 7
 
 ## [14.1.3] - 2019-06-06
 
