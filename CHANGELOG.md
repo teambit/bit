@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+## [14.1.4-dev.12] - 2019-07-17
+
 - update bit-javascript to fix finding tsconfig.json for Angular projects
 - change the minimum node supported to v8.12.0 instead of v8.0.0, to be compatible with `execa`
 
