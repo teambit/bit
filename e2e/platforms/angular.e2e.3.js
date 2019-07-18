@@ -2,8 +2,6 @@ import { expect } from 'chai';
 import Helper from '../e2e-helper';
 import { statusWorkspaceIsCleanMsg } from '../../src/cli/commands/public-cmds/status-cmd';
 
-chai.use(require('chai-fs'));
-
 const helper = new Helper();
 
 describe('angular', function () {
