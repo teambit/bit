@@ -75,7 +75,7 @@
     "fs-extra": "^6.0.0",
     "glob": "^7.1.1",
     "graphlib": "^2.1.5",
-    "group-array": "^0.3.3",
+    "group-array": "^0.3.4",
     "ignore": "^3.3.7",
     "is-array-buffer-x": "^1.0.13",
     "is-glob": "^4.0.0",
@@ -171,7 +171,7 @@
     "prettier-eslint-cli": "^4.7.1",
     "sinon": "^5.0.7",
     "tar": "^4.4.8",
-    "verdaccio": "^3.11.6"
+    "verdaccio": "^4.1.0"
   },
   "files": [
     "/bin",
