@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- change the minimum node supported to v8.12.0 instead of v8.0.0, to be compatible with `execa`
+
 ## [14.1.4-dev.11] - 2019-07-17
 
 - support packaging bit-bin into a binary file according to the OS by running `npm run pkg`

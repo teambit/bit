@@ -3,7 +3,7 @@ jobs:
   checkout_code:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       - checkout
@@ -24,7 +24,7 @@ jobs:
   set_ssh_key:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/.ssh
     steps:
       -
@@ -44,7 +44,7 @@ jobs:
   set_bitsrc_registry:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       # prod registry
@@ -66,7 +66,7 @@ jobs:
   install_npm_deps:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     # skipping the pre-built binaries to make sure we build them by the pack step
     # testing the install script will be done in different workflow dedicated for this
@@ -107,7 +107,7 @@ jobs:
   install_bit_javascript_npm_deps:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -125,7 +125,7 @@ jobs:
   build:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -147,7 +147,7 @@ jobs:
   pack:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -199,7 +199,7 @@ jobs:
   build_bit_javascript:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -221,7 +221,7 @@ jobs:
   unit_test:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -249,7 +249,7 @@ jobs:
   unit_test_bit_javascript:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -277,7 +277,7 @@ jobs:
   lint:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     steps:
       -
@@ -304,7 +304,7 @@ jobs:
   e2e_test:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
@@ -412,7 +412,7 @@ jobs:
   performence_test:
     docker:
       -
-        image: 'circleci/node:8.14.1'
+        image: 'circleci/node:8.12.0'
     working_directory: ~/bit
     environment:
       # change the npm config to avoid using sudo
