@@ -4,6 +4,8 @@
 
 const constants = require('../dist/constants');
 
+const MINIMUM_NODE_VERSION = '8.12.0';
+
 // set max listeners to a more appripriate numbers
 require('events').EventEmitter.defaultMaxListeners = 100;
 require('regenerator-runtime/runtime');
@@ -28,7 +30,7 @@ function verifyCompatibility() {
   if (compatibilityStatus === 'unsupported') {
     console.log(
       require('chalk').red(
-        `Node version ${nodeVersion} is not supported, please use Node.js 8.0 or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
+        `Node version ${nodeVersion} is not supported, please use Node.js ${MINIMUM_NODE_VERSION} or higher. If you must use legacy versions of Node.js, please use our binary installation methods. https://docs.bit.dev/docs/installation.html`
       )
     ); // eslint-disable-line
     return process.exit();
@@ -47,7 +49,7 @@ function bitVersion() {
 }
 
 function getCompatibilityStatus() {
-  if (semver.satisfies(nodeVersion, '>=8.0.0')) {
+  if (semver.satisfies(nodeVersion, `>=${MINIMUM_NODE_VERSION}`)) {
     return 'current';
   }
 
