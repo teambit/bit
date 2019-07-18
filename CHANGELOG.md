@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.2.0] - 2019-07-18
+## [[14.2.0] - 2019-07-18](https://github.com/teambit/bit/releases/tag/v14.2.0)
 
 Bit is now available to install as a binary with all dependencies. This is the prefer method to install Bit, as it is bundled with its runtime. Note that when you install with npm / yarn Bit only supports node < `8.12.0`. 
 
