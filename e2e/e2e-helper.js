@@ -360,7 +360,7 @@ export default class Helper {
     return fs.readJsonSync(path.join(this.localScopePath, filePathRelativeToLocalScope));
   }
 
-  outputFile(filePathRelativeToLocalScope: string, data: string): string {
+  outputFile(filePathRelativeToLocalScope: string, data: string = ''): string {
     return fs.outputFileSync(path.join(this.localScopePath, filePathRelativeToLocalScope), data);
   }
 
@@ -1085,6 +1085,10 @@ export default class Helper {
   installAndGetTypeScriptCompilerDir(): string {
     this.installNpmPackage('typescript');
     return path.join(this.localScopePath, 'node_modules', '.bin');
+  }
+  setProjectAsAngular() {
+    this.initNpm();
+    this.installNpmPackage('@angular/core');
   }
 }
 
