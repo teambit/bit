@@ -117,6 +117,8 @@ after_build:
   # - ps: $ENV:PATH="C:\projects\bit-wikt3\releases;C:\Ruby200-x64\bin;C:\Python27-x64;$ENV:PATH"
   - "npm link"
   - "bit --version"
+  # stg hub
+  - "bit config set hub_domain hub-stg.bit.dev"
   - "bit config set set user.name tester"
   - "bit config set user.email ci@bit.dev"
   - "bit config set ssh_key_file c:\\users\\appveyor\\.ssh\\id_rsa"
