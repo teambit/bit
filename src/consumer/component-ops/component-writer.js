@@ -180,8 +180,8 @@ export default class ComponentWriter {
       packageJson.addOrUpdateProperty('bit', componentConfig.toPlainObject());
       this._mergeChangedPackageJsonProps(packageJson);
       await this._populateEnvFilesIfNeeded();
-      this.component.dataToPersist.addFile(packageJson.toJSONFile());
-      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toJSONFile());
+      this.component.dataToPersist.addFile(packageJson.toVinylFile());
+      if (distPackageJson) this.component.dataToPersist.addFile(distPackageJson.toVinylFile());
       this.component.packageJsonFile = packageJson;
     }
     if (this.component.license && this.component.license.contents) {
