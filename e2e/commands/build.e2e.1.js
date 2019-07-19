@@ -63,8 +63,8 @@ describe('bit build', function () {
           expect(output).to.contain.string('staged');
         });
         beforeEach(() => {
-          helper.deleteFile(distFolder);
-          helper.deleteFile(compilerFolder);
+          helper.deletePath(distFolder);
+          helper.deletePath(compilerFolder);
           expect(distFolderFullPath).to.not.be.a.path();
           expect(compilerFolderFullPath).to.not.be.a.path();
         });
@@ -75,7 +75,7 @@ describe('bit build', function () {
             expect(compilerFolderFullPath).to.not.be.a.path();
           });
           it('should not take dist files from cache with --no-cache', () => {
-            helper.deleteFile(compilerFolder);
+            helper.deletePath(compilerFolder);
             const output = helper.buildComponentWithOptions('bar/foo', { '-no-cache': '' });
             expect(output).to.have.string(
               `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`
@@ -84,7 +84,7 @@ describe('bit build', function () {
             expect(compilerFolderFullPath).to.be.a.directory().and.not.empty;
           });
           it('should not take dist files from cache with -c', () => {
-            helper.deleteFile(compilerFolder);
+            helper.deletePath(compilerFolder);
             const output = helper.buildComponentWithOptions('bar/foo', { c: '' });
             expect(output).to.have.string(
               `successfully installed the ${helper.envScope}/compilers/babel@0.0.1 compiler`

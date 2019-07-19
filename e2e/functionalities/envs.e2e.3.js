@@ -1417,7 +1417,7 @@ describe('envs', function () {
         describe.skip('deleting the custom config directory', () => {
           before(() => {
             helper.getClonedLocalScope(importedScopeBeforeChanges);
-            helper.deleteFile(envFilesFolder);
+            helper.deletePath(envFilesFolder);
           });
           it('bit status should not throw an error', () => {
             const statusFunc = () => helper.status();

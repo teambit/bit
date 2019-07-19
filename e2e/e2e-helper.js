@@ -372,7 +372,7 @@ export default class Helper {
     fs.outputFileSync(filePath, `\n${content}`);
   }
 
-  deleteFile(relativePathToLocalScope: string) {
+  deletePath(relativePathToLocalScope: string) {
     return fs.removeSync(path.join(this.localScopePath, relativePathToLocalScope));
   }
   // #endregion
@@ -903,7 +903,7 @@ export default class Helper {
     return fs.writeJSONSync(bitMapPath, bitMap, { spaces: 2 });
   }
   deleteBitMap() {
-    return this.deleteFile(BIT_MAP);
+    return this.deletePath(BIT_MAP);
   }
   createBitMap(
     cwd: string = this.localScopePath,

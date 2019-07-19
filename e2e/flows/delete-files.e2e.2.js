@@ -14,7 +14,7 @@ describe('delete files from a component', function () {
       helper.createComponentBarFoo();
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.deleteFile('bar/baz.js');
+      helper.deletePath('bar/baz.js');
       statusOutput = helper.runCmd('bit status');
     });
     it('bit status should not throw an error and should show it as a new component', () => {
@@ -28,7 +28,7 @@ describe('delete files from a component', function () {
       helper.createComponentBarFoo();
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
-      helper.deleteFile('bar/baz.js');
+      helper.deletePath('bar/baz.js');
       helper.tagComponent('bar/foo');
     });
     it('should delete the file from bit.map', () => {
@@ -43,7 +43,7 @@ describe('delete files from a component', function () {
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
       helper.tagComponent('bar/foo');
-      helper.deleteFile('bar/baz.js');
+      helper.deletePath('bar/baz.js');
     });
     it('bit status should show the component as modified', () => {
       const output = helper.runCmd('bit status');
@@ -58,7 +58,7 @@ describe('delete files from a component', function () {
       helper.createFile('bar', 'baz.js');
       helper.addComponent('bar -i bar/foo -m bar/foo.js');
       helper.tagComponent('bar/foo');
-      helper.deleteFile('bar/baz.js');
+      helper.deletePath('bar/baz.js');
       helper.tagComponent('bar/foo');
     });
     it('should delete the file from bit.map', () => {
