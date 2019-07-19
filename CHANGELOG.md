@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "Cannot read property 'length' of undefined" error upon `bit status`
 - [#1705](https://github.com/teambit/bit/issues/1705) preserve newline type of `package.json` and add a newline at the end (same as NPM does)
 
 ## [[14.2.0] - 2019-07-18](https://github.com/teambit/bit/releases/tag/v14.2.0)

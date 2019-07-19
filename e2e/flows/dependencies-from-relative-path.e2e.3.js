@@ -26,9 +26,17 @@ describe('component that requires another component file by relative path', func
     it('should have all the import specifiers from both files', () => {
       expect(specifiersNames).to.have.members(['b1', 'b2', 'b3']);
     });
-
     it('should not have duplicate import specifiers', () => {
       expect(specifiersNames).to.have.lengthOf(3);
+    });
+    describe('adding another file that require that another component without any import specifiers', () => {
+      before(() => {
+        helper.addComponent('import-by-2-files/a3.js', { i: 'comp-a' });
+      });
+      it('bit status should not throw an error', () => {
+        const func = () => helper.status();
+        expect(func).to.not.throw();
+      });
     });
   });
 });
