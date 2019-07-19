@@ -204,7 +204,7 @@ export default class AbstractConfig {
     if (this.writeToPackageJson) {
       const packageJsonFile: PackageJsonFile = await PackageJsonFile.load(workspaceDir, componentDir);
       packageJsonFile.addOrUpdateProperty('bit', plainObject);
-      JsonFiles.push(packageJsonFile.toJSONFile());
+      JsonFiles.push(packageJsonFile.toVinylFile());
     }
     if (this.writeToBitJson) {
       const bitJsonPath = AbstractConfig.composeBitJsonPath(componentDir);

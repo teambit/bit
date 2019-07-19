@@ -69,7 +69,7 @@ export async function changeDependenciesToRelativeSyntax(
     const testerDeps = getPackages(component.testerDependencies, componentMap);
     packageJsonFile.addDependencies(getPackages(component.dependencies, componentMap));
     packageJsonFile.addDevDependencies({ ...devDeps, ...compilerDeps, ...testerDeps });
-    return packageJsonFile.toJSONFile();
+    return packageJsonFile.toVinylFile();
   };
   const packageJsonFiles = await Promise.all(components.map(component => updateComponentPackageJson(component)));
   // $FlowFixMe

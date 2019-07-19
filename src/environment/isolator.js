@@ -157,7 +157,7 @@ export default class Isolator {
 
   async _writeCapsulePackageJson() {
     const dataToPersist = new DataToPersist();
-    dataToPersist.addFile(this.capsulePackageJson.toJSONFile());
+    dataToPersist.addFile(this.capsulePackageJson.toVinylFile());
     dataToPersist.persistAllToCapsule(this.capsule);
   }
 

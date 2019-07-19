@@ -100,7 +100,7 @@ function getComponentLinks({
   const customResolveAliasesAdded = addCustomResolveAliasesToPackageJson(component, flattenLinks);
   if (customResolveAliasesAdded || shouldGeneratePostInstallScript) {
     // $FlowFixMe it has been verified above that component.packageJsonFile is not empty
-    const packageJsonFile = component.packageJsonFile.toJSONFile();
+    const packageJsonFile = component.packageJsonFile.toVinylFile();
     dataToPersist.addFile(packageJsonFile);
   }
 

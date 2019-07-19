@@ -324,6 +324,10 @@ describe('run bit init', function () {
         const packageJson = helper.readFile('package.json');
         expect(detectIndent(packageJson).amount).to.equal(2);
       });
+      it('should preserve the new line at the end of json as it was created by npm', () => {
+        const packageJson = helper.readFile('package.json');
+        expect(packageJson.endsWith('\n')).to.be.true;
+      });
     });
     describe('with --standalone flag', () => {
       before(() => {

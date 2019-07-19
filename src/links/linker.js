@@ -55,7 +55,7 @@ export async function getLinksInDistToWrite(
   const packageJsonFile = component.packageJsonFile;
   if (packageJsonFile) {
     packageJsonFile.addOrUpdateProperty('main', newMainFile);
-    dataToPersist.addFile(packageJsonFile.toJSONFile());
+    dataToPersist.addFile(packageJsonFile.toVinylFile());
   }
   const entryPoints = linkGenerator.getEntryPointsForComponent(component, consumer, bitMap);
   dataToPersist.addManyFiles(entryPoints);
