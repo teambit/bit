@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
+- fix "Cannot read property 'length' of undefined" error upon `bit status`
 - fix error "unable to link" upon `bit build` when dist is outside the components dir
 - [#1705](https://github.com/teambit/bit/issues/1705) preserve newline type of `package.json` and add a newline at the end (same as NPM does)
 
