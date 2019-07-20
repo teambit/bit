@@ -171,7 +171,7 @@ describe('capsule', function () {
     describe('building with shouldBuildDependencies option enabled', () => {
       let capsuleDir;
       before(() => {
-        helper.deleteFile('dist');
+        helper.deletePath('dist');
         const compilerPath = path.join('.bit/components/compilers/dummy', helper.envScope, '0.0.1/compiler.js');
         const compilerContent = helper.readFile(compilerPath);
         const compilerWithBuildDependenciesEnabled = compilerContent.replace(

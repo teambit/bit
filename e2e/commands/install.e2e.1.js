@@ -64,7 +64,7 @@ describe('run bit install', function () {
           helper.addRemoteScope();
           helper.runCmd('bit import');
           // @todo: to reproduce issue #1746, remove the next line
-          helper.deleteFile('package-lock.json');
+          helper.deletePath('package-lock.json');
           output = helper.runCmd('bit install');
         });
         it('bit install should npm-install all missing node-modules and link all components', () => {

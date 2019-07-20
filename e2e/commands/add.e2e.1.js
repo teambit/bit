@@ -50,8 +50,8 @@ describe('bit add command', function () {
       helper.reInitLocalScope();
       helper.initNewGitRepo();
       helper.deleteBitMap();
-      helper.deleteFile('.bit');
-      helper.deleteFile('bit.json');
+      helper.deletePath('.bit');
+      helper.deletePath('bit.json');
       helper.initLocalScope('bit init');
       helper.createFile('bar', 'foo.js');
       const addCmd = () => helper.addComponent('bar/foo.js', { i: 'bar/foo ' });
@@ -1060,7 +1060,7 @@ describe('bit add command', function () {
       helper.addComponent('bar/', { i: 'bar/foo ' });
       helper.tagAllComponents();
       helper.exportAllComponents();
-      helper.deleteFile('bar/foo2.js');
+      helper.deletePath('bar/foo2.js');
       helper.addComponent('bar/', { i: 'bar/foo ' });
       helper.runCmd('bit s');
       bitMap = helper.readBitMap();
@@ -1134,7 +1134,7 @@ describe('bit add command', function () {
       helper.createFile('bar', 'foo.js');
       helper.createFile('bar', 'foo-main.js');
       helper.addComponent('bar', { m: 'foo-main.js', i: 'bar/foo' });
-      helper.deleteFile('bar/foo-main.js');
+      helper.deletePath('bar/foo-main.js');
       const status = helper.status();
       expect(status).to.have.string(statusInvalidComponentsMsg);
       expect(status).to.have.string('main-file was removed');
