@@ -211,6 +211,20 @@ export default function foo() { return isString() + ' and got foo v2'; };`;
           expect(path.join(helper.localScopePath, 'dist/components/bar')).to.not.be.a.path();
         });
       });
+      describe('importing all components and then deleting the dist directory', () => {
+        before(() => {
+          helper.getClonedLocalScope(scopeAfterImport);
+          helper.importComponent('utils/is-string');
+          helper.importComponent('utils/is-type');
+          helper.addRemoteEnvironment();
+          helper.deletePath('dist');
+        });
+        it('should be able to build with no errors', () => {
+          // previously it was showing an error "unable to link remote/utils/is-type@0.0.1, the file /workspace/dist/components/utils/is-type is missing from the filesystem."
+          const func = () => helper.build('--no-cache');
+          expect(func).to.not.throw();
+        });
+      });
     });
   });
   describe('bit build', () => {

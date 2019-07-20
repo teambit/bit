@@ -253,6 +253,11 @@ export default class Scope {
    * Two reasons why not running them in parallel:
    * 1) when several components have the same environment, it'll try to install them multiple times.
    * 2) npm throws errors when running 'npm install' from several directories
+   *
+   * Also, make sure to first build and write dists files of all components, and only then, write
+   * the links inside the dists. otherwise, you it could fail when writing links of one component
+   * needs another component dists files. (see 'importing all components and then deleting the dist
+   * directory' test case)
    */
   async buildMultiple(
     components: Component[],
@@ -268,10 +273,14 @@ export default class Scope {
     }
     const build = async (component: Component) => {
       await component.build({ scope: this, consumer, noCache, verbose, dontPrintEnvMsg });
-      const buildResults = await component.dists.writeDists(component, consumer);
+      const buildResults = await component.dists.writeDists(component, consumer, false);
       return { component: component.id.toString(), buildResults };
     };
-    return pMapSeries(components, build);
+    const writeLinks = async (component: Component) => component.dists.writeDistsLinks(component, consumer);
+
+    const buildResults = await pMapSeries(components, build);
+    await pMapSeries(components, writeLinks);
+    return buildResults;
   }
 
   /**

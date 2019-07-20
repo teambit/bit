@@ -112,7 +112,7 @@ describe('workspace config', function () {
       describe('from package.json', () => {
         before(() => {
           helper.getClonedLocalScope(localScope);
-          helper.deleteFile('bit.json');
+          helper.deletePath('bit.json');
           helper.initNpm();
           helper.runCmd('bit init');
           const packageJson = helper.readPackageJson();

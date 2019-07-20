@@ -435,7 +435,7 @@ describe('bit status command', function () {
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/foo.js');
+        helper.deletePath('bar/foo.js');
       });
       it('should remove the files from bit.map', () => {
         const beforeRemoveBitMap = helper.readBitMap();
@@ -451,7 +451,7 @@ describe('bit status command', function () {
         helper.createFile('bar', 'foo1.js');
         helper.createFile('bar', 'foo2.js', 'var index = require("./foo1.js")');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/foo1.js');
+        helper.deletePath('bar/foo1.js');
         const output = helper.runCmd('bit status');
         expect(output).to.have.string('non-existing dependency files');
         expect(output).to.have.string('bar/foo2.js -> ./foo1.js');
@@ -462,7 +462,7 @@ describe('bit status command', function () {
           helper.createFile('bar', 'index.js');
           helper.createFile('bar', 'foo.js');
           helper.addComponent('bar/', { i: 'bar/foo' });
-          helper.deleteFile('bar/index.js');
+          helper.deletePath('bar/index.js');
         });
         it('should show an error indicating the mainFile was deleting', () => {
           const output = helper.runCmd('bit status');
@@ -478,8 +478,8 @@ describe('bit status command', function () {
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar/index.js');
-        helper.deleteFile('bar/foo.js');
+        helper.deletePath('bar/index.js');
+        helper.deletePath('bar/foo.js');
         output = helper.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {
@@ -514,7 +514,7 @@ describe('bit status command', function () {
         helper.createComponentBarFoo();
         helper.createFile('bar', 'index.js');
         helper.addComponent('bar/', { i: 'bar/foo' });
-        helper.deleteFile('bar');
+        helper.deletePath('bar');
         output = helper.runCmd('bit status');
       });
       it('should not delete the files from bit.map', () => {

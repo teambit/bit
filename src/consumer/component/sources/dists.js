@@ -167,6 +167,21 @@ export default class Dists {
   }
 
   /**
+   * write dist link files to the filesystem
+   */
+  async writeDistsLinks(component: Component, consumer: Consumer): Promise<void> {
+    if (this.isEmpty() || !this.writeDistsFiles) return;
+    const componentMap = consumer
+      ? consumer.bitMap.getComponent(component.id, { ignoreVersion: true })
+      : component.componentMap;
+    if (!componentMap) throw new Error('writeDistsLinks expect componentMap to be defined');
+    if (componentMap.origin !== COMPONENT_ORIGINS.IMPORTED) return;
+    const dataToPersist = await getLinksInDistToWrite(component, componentMap, consumer, consumer.bitMap);
+    dataToPersist.addBasePath(consumer.getPath());
+    await dataToPersist.persistAllToFS();
+  }
+
+  /**
    * In case there is a consumer and dist.entry should be stripped, it will be done before writing the files.
    * The originallySharedDir should be already stripped before accessing this method.
    */

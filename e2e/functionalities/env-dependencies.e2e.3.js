@@ -60,7 +60,7 @@ describe('environments with dependencies', function () {
   describe('when a dependency file is not in the file system', () => {
     before(() => {
       helper.getClonedLocalScope(scopeBeforeTagging);
-      helper.deleteFile('base.config.js');
+      helper.deletePath('base.config.js');
       helper.addFileToEnvInBitJson(undefined, 'base.config.js', './base.config.js', 'compiler');
       helper.addFileToEnvInBitJson(undefined, 'dev.config.js', './dev.config.js', 'compiler');
     });

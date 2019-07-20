@@ -18,7 +18,7 @@ describe('link generation', function () {
       helper.addComponent('foo1.js bar/foo2.js', { i: 'bar/foo', m: 'foo1.js' });
       helper.tagAllComponents();
       helper.exportAllComponents();
-      helper.deleteFile('bar');
+      helper.deletePath('bar');
       helper.status(); // removes the old directory 'bar' from .bitmap
       helper.createFile('', 'bar');
       helper.addComponent('bar', { i: 'bar/foo' });

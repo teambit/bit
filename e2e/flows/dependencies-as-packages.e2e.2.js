@@ -298,7 +298,7 @@ chai.use(require('chai-fs'));
         });
         describe('deleting the dependency package from the FS', () => {
           before(() => {
-            helper.deleteFile('components/bar/foo/node_modules/@ci');
+            helper.deletePath('components/bar/foo/node_modules/@ci');
           });
           it('bit status should show missing components and not untracked components', () => {
             const status = helper.status();
@@ -320,7 +320,7 @@ chai.use(require('chai-fs'));
             let symlinkPath;
             before(() => {
               symlinkPath = 'dist/components/bar/foo/node_modules/@ci';
-              helper.deleteFile(symlinkPath);
+              helper.deletePath(symlinkPath);
               helper.runCmd('bit link');
             });
             it('should recreate the symlink with the correct path', () => {

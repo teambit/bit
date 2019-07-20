@@ -376,7 +376,7 @@ describe('run bit init', function () {
       before(() => {
         helper.reInitLocalScope();
         helper.createBitMap();
-        helper.deleteFile('.bit');
+        helper.deletePath('.bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
         const lsCmd = () => helper.listLocalScope();
@@ -390,7 +390,7 @@ describe('run bit init', function () {
         helper.initNewGitRepo();
         helper.initLocalScope();
         helper.createBitMap();
-        helper.deleteFile('.git/bit');
+        helper.deletePath('.git/bit');
       });
       it('bit ls (or any other command) should not throw an error and should rebuild .bit dir', () => {
         const lsCmd = () => helper.listLocalScope();

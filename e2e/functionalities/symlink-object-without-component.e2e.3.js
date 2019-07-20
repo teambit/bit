@@ -29,7 +29,7 @@ describe('scope with a symlink object reference to a non-exist component', funct
     // delete manually the modelComponent object. there is no other known way how to get a scope
     // with only symlink without the component.
     const hash = modelComponent.hash;
-    helper.deleteFile(`.bit/objects/${hash.substr(0, 2)}/${hash.substr(2)}`);
+    helper.deletePath(`.bit/objects/${hash.substr(0, 2)}/${hash.substr(2)}`);
     const scopeAfterDelete = helper.catScope(true);
     expect(scopeAfterDelete).to.have.lengthOf(1);
 
