@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [unreleased]
 
-## [14.2.1-dev.1] - 2019-07-21
+## [14.2.1] - 2019-07-21
 
 - fix "Cannot read property 'length' of undefined" error upon `bit status`
 - fix error "unable to link" upon `bit build` when dist is outside the components dir
